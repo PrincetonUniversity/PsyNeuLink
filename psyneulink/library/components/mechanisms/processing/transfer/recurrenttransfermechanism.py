@@ -1266,7 +1266,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
-        return pnlvm.ir.LiteralStructType([transfer_t, projection_t])
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
 
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
@@ -1277,7 +1277,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _get_param_initializer(self, context):
         transfer_params = super()._get_param_initializer(context)
         projection_params = self.recurrent_projection._get_param_initializer(context)
-        return tuple([transfer_params, projection_params])
+        return (*transfer_params, projection_params)
 
     def _get_state_initializer(self, context):
         transfer_init = super()._get_state_initializer(context)
@@ -1374,7 +1374,8 @@ class RecurrentTransferMechanism(TransferMechanism):
             rec_params, rec_state = builder.function.args[0:2]
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
             recurrent_state = builder.gep(rec_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            recurrent_params = builder.gep(rec_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            recurrent_params = builder.gep(params, [ctx.int32_ty(0),
+                ctx.int32_ty(len(params.type.pointee) - 1)])
 
             # FIXME: Why does this have a wrapper struct?
             prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -1391,10 +1392,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
         transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         mech_state = builder.gep(transfer_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        mech_param = builder.gep(transfer_params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_param = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
                                                  "is_finished_flag")
         is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
@@ -1413,7 +1413,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         builder.position_at_end(loop_block)
 
         # Run the transfer mechanism
-        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, arg_in, arg_out)
+        builder = super()._gen_llvm_function_body(ctx, builder, params, transfer_state, arg_in, arg_out)
 
         prev_val_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
