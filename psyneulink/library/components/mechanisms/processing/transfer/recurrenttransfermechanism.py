@@ -1348,35 +1348,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, builder.load(cmp_val_ptr), threshold)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         # Allocate space for transfer mechanism.
         # This includes space for the autoprojection
-        transfer_input_type = super()._get_input_struct_type(ctx)
+        transfer_input_type = ctx.get_input_struct_type(super())
         transfer_in = builder.alloca(transfer_input_type)
-
-        mech_state_ptr = self._gen_llvm_get_is_finished_state_struct(ctx, builder, transfer_state)
-        mech_param_ptr = self._gen_llvm_get_is_finished_param_struct(ctx, builder, transfer_params)
-        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
-                                                 "is_finished_flag")
-        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
-                                                 "num_executions_before_finished")
-        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param_ptr,
-                                                "max_executions_before_finished")
-
-        # Reset the flag and counter
-        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
-        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_flag_ptr)
-
-        # Enter the loop
-        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
-        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
-        builder.branch(loop_block)
-        builder.position_at_end(loop_block)
-
-        # Get previous value
-        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         # FIXME: Assume only one input port
         #        (autoassociative projection connects to primary input port)
@@ -1402,11 +1378,14 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(ip_trans_input.type.pointee) - 1
             real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
+            # FIXME: We were passed the transfer_mech params and state, cheat and go one step up
+            rec_params, rec_state = builder.function.args[0:2]
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
-            recurrent_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            recurrent_state = builder.gep(rec_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            recurrent_params = builder.gep(rec_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
             # FIXME: Why does this have a wrapper struct?
+            prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
             recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
 
@@ -1416,14 +1395,41 @@ class RecurrentTransferMechanism(TransferMechanism):
             mod_afferent_in_ptr = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
             builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
-        # Run the transfer mechanism
-        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, transfer_in, arg_out)
+        return super()._gen_llvm_input_ports(ctx, builder, params, state, transfer_in)
 
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        transfer_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        mech_state_ptr = self._gen_llvm_get_is_finished_state_struct(ctx, builder, transfer_state)
+        mech_param_ptr = self._gen_llvm_get_is_finished_param_struct(ctx, builder, transfer_params)
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
+                                                 "is_finished_flag")
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state_ptr,
+                                                 "num_executions_before_finished")
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param_ptr,
+                                                "max_executions_before_finished")
+
+        # Reset the flag and counter
+        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
+        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_flag_ptr)
+
+        # Enter the loop
+        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
+        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
+        builder.branch(loop_block)
+        builder.position_at_end(loop_block)
+
+        # Run the transfer mechanism
+        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_state, arg_in, arg_out)
+
+        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
                                                            mech_param_ptr,
                                                            mech_state_ptr,
                                                            prev_val_ptr,
                                                            arg_out)
+        # Update previous value
         builder.store(builder.load(arg_out), prev_val_ptr)
 
         #FIXME: Flag and count should be int instead of float
