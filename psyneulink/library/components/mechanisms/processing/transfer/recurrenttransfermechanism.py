@@ -1289,9 +1289,20 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return (*transfer_init, tuple(retval_init), projection_init)
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, prev, current):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
         #FIXME: This should really be in TransferMechanism, but those don't
         #       support 'is_finished' yet
+        # previous_value is appended before AutoProjection in state struct
+        # FIXME: This should use standard "previous_value" param
+        rec_state = builder.function.args[1]
+        prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0),
+            ctx.int32_ty(len(rec_state.type.pointee) - 2)])
+
+        # preserve the old prev value
+        prev_val = builder.load(prev_val_ptr)
+        # Update previous value to make sure that repeated executions work
+        builder.store(builder.load(current), prev_val_ptr)
+
         if self.parameters.termination_threshold.get(None) is None or \
            not self.execute_until_finished:
             return pnlvm.ir.IntType(1)(1)
@@ -1330,10 +1341,10 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
                                                      ctx.int32_ty(1)])
-            prev_ptr = builder.gep(prev, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(prev_ptr), func_in_prev_ptr)
+            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
+
         else:
             assert False, "Not Supported: {}".format(self.termination_measure)
 
@@ -1417,16 +1428,10 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Run the transfer mechanism
         builder = super()._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out)
 
-        # previous_value is appended before AutoProjection in state struct
-        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
-            ctx.int32_ty(len(state.type.pointee) - 2)])
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
                                                            mech_param,
                                                            mech_state,
-                                                           prev_val_ptr,
                                                            arg_out)
-        # Update previous value
-        builder.store(builder.load(arg_out), prev_val_ptr)
 
         #FIXME: Flag and count should be int instead of float
         is_finished_count = builder.load(is_finished_count_ptr)
