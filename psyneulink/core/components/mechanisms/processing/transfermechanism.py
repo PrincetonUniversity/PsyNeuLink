@@ -1377,7 +1377,30 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        return pnlvm.ir.IntType(1)(1)
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_param = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "is_finished_flag")
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "num_executions_before_finished")
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_param,
+                                                "max_executions_before_finished")
+
+        # Reset the flag and counter
+        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
+        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+
+        # Enter the loop
+        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
+        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
+        builder.branch(loop_block)
+        builder.position_at_end(loop_block)
+
+        # Generate the 'core' of the function
         ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -1418,6 +1441,27 @@ class TransferMechanism(ProcessingMechanism_Base):
                     b1.store(val, ptro)
 
         builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
+
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
+                                                           mech_param,
+                                                           mech_state,
+                                                           arg_out)
+
+        #FIXME: Flag and count should be int instead of float
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+        is_finished_max = builder.load(is_finished_max_ptr)
+        max_reached = builder.fcmp_ordered(">=", is_finished_count,
+                                           is_finished_max)
+        is_finished_cond = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(is_finished_cond):
+            builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
+            builder.branch(end_block)
+
+        builder.branch(loop_block)
+        builder.position_at_end(end_block)
 
         return builder
 
