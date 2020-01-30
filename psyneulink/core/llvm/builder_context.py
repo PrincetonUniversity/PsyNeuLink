@@ -137,15 +137,16 @@ class LLVMBuilderContext:
             cache[obj] = obj._gen_llvm_function()
         return cache[obj]
 
-    def import_llvm_function(self, obj) -> ir.Function:
+    def import_llvm_function(self, fun) -> ir.Function:
         """
         Get function handle if function exists in current modele.
         Create function declaration if it exists in a older module.
         """
-        try:
-            f = self.gen_llvm_function(obj)
-        except AttributeError:
-            f = _find_llvm_function(obj, _all_modules | {self.module})
+        if isinstance(fun, str):
+            f = _find_llvm_function(fun, _all_modules | {self.module})
+        else:
+            f = self.gen_llvm_function(fun)
+
         # Add declaration to the current module
         if f.name not in self.module.globals:
             decl_f = ir.Function(self.module, f.type.pointee, f.name)
