@@ -1991,7 +1991,15 @@ class Port_Base(Port):
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
                         return
                 else:
-                    mod_value = type_match(projection_value, type(mod_param_value))
+                    try:
+                        mod_value = type_match(projection_value, type(mod_param_value))
+                    except TypeError:
+                        # if type_match fails, assume that the computation is
+                        # valid further down the line. This was implicitly true
+                        # before adding this catch block by manually setting the
+                        # modulated param value from None to a default
+                        mod_value = projection_value
+
                     if mod_param_name not in mod_proj_values.keys():
                         mod_proj_values[mod_param_name]=[mod_value]
                     else:
