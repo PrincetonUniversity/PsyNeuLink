@@ -260,9 +260,10 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
 .. _ContrastiveHebbian_Plus_Phase:
 
 * *plus phase:*  if `continuous <ContrastiveHebbianMechanism.continuous>` is `False`, then `current_activity
-  <ContrastiveHebbianMechanism.current_activity>` and the Mechanism's `previous_value
-  <Mechanism_Base.previous_value>` attribute are reinitialized to `initial_value
-  <Mechanism_Base.initial_value>`;  otherwise, these retain their value from the last execution in the
+  <ContrastiveHebbianMechanism.current_activity>` is reinitialized to
+  `initial_value <Mechanism_Base.initial_value>`, and the Mechanism's
+  previous `value <Mechanism_Base.value>` is reset to ``None``;
+  otherwise, these retain their value from the last execution in the
   *minus phase*.  In either case, the *RECURRENT* InputPort's `value <InputPort.value>` is combined with the *INPUT*
   InputPort's `value <InputPort.value>` (as during the `minus_phase
   <ContrastiveHebbianMechanism.minus_phase_activity>`) as well as that of *TARGET* InputPort (if that is `specified
@@ -506,8 +507,8 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     phase_convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
         specifies the function that determines when a `phase of execution <ContrastiveHebbian_Execution>` is complete
         if the termination condition for that phase is specified as *CONVERGENCE*, by comparing `current_activity
-        <ContrastiveHebbianMechanism.current_activity>` with the `previous_value
-        <Mechanism_Base.previous_value>` of the Mechanism;  can be any function that takes two 1d arrays
+        <ContrastiveHebbianMechanism.current_activity>` with the previous `value
+        <Mechanism_Base._value>` of the Mechanism;  can be any function that takes two 1d arrays
         of the same length as `variable <Mechanism_Base.variable>` and returns a scalar value. The default
         is the `Distance` Function, using the `MAX_ABS_DIFF` metric  which computes the elementwise difference between
         two arrays and returns the difference with the maximum absolute value.
@@ -574,8 +575,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     continuous : bool : default True
         determines whether or not `current_activity <ContrastiveHebbianMechanism.current_activity>` is reinitialized
-        at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of execution. If `False`, it (and
-        the Mechanism's `previous_value <Mechanism_Base.previous_value>` attribute) are set to `initial_value
+        at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of execution. If `False`, it is set to `initial_value
         <Mechanism_Base.initial_value>`.
 
     current_activity : 1d array of floats
@@ -621,8 +621,9 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     phase_convergence_function : function
         determines when a `phase of execution <ContrastiveHebbian_Execution>` is complete if the termination
         condition for that phase is specified as *CONVERGENCE*.  Compares the value of `current_activity
-        <ContrastiveHebbianMechanism.current_activity>` with `previous_value
-        <Mechanism_Base.previous_value>`; result is assigned as the value of `delta
+        <ContrastiveHebbianMechanism.current_activity>` with the
+        previous `value <Mechanism_Base.value>`; result is
+        assigned as the value of `delta
         <ContrastiveHebbianMechanism.delta>.
 
     minus_phase_termination_condition : CONVERGENCE or COUNT: default CONVERGENCE
@@ -1167,9 +1168,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         # self.parameters.is_finished_._set(False, context)
         self.parameters.is_finished_flag._set(False, context)
 
-        # Need to store this, as it will be updated in call to super
-        previous_value = self.parameters.previous_value._get(context)
-
         # Note _parse_function_variable selects actual input to function based on execution_phase
         current_activity = super()._execute(variable,
                                             context=context,
@@ -1184,7 +1182,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         # This is the first trial, so can't test for convergence
         #    (since that requires comparison with value from previous trial)
-        if previous_value is None:
+        # (here, the "previous value" is the current parameter value
+        # because it has not been updated with the results of this
+        # execution yet)
+        if self.parameters.value._get(context) is None:
             return current_activity
 
         current_termination_condition = self.parameters.current_termination_condition._get(context)
@@ -1274,15 +1275,19 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     def delta(self, value=NotImplemented, context=None):
         if value is NotImplemented:
-            value = self.parameters.value._get(context)
-        return self.phase_convergence_function([value[0], self.parameters.previous_value._get(context)[0]])
+            self.phase_convergence_function([
+                self.parameters.value._get(context)[0],
+                self.parameters.value.get_previous(context)[0]
+            ])
+        else:
+            return self.phase_convergence_function([value[0], self.parameters.value._get(context)[0]])
 
     @handle_external_context()
     def is_converged(self, value=NotImplemented, context=None):
         # Check for convergence
         if (
             self.phase_convergence_threshold is not None
-            and self.parameters.previous_value._get(context) is not None
+            and self.parameters.value.get_previous(context) is not None
             and self.initialization_status != ContextFlags.INITIALIZING
         ):
             if self.delta(value, context) <= self.phase_convergence_threshold:

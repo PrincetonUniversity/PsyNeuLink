@@ -952,7 +952,7 @@ from psyneulink.core.globals.keywords import \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
-    PARAMETER_PORT, PARAMETER_PORTS, PREVIOUS_VALUE, PROJECTIONS, REFERENCE_VALUE, RESULT, \
+    PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 
 from psyneulink.core.globals.parameters import Parameter
@@ -1170,10 +1170,6 @@ class Mechanism_Base(Mechanism):
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputPort.value>`
            of its `OutputPorts <Mechanism_Base.outputPorts>`.
-
-    previous_value : 2d np.array [array(float64)] : default None
-        `value <Mechanism_Base.value>` after the previous execution of the Mechanism.  It is assigned `None` on
-        the first execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
 
     output_port : OutputPort
         `primary OutputPort <OutputPort_Primary>` for the Mechanism;  same as first entry of its `output_ports
@@ -1405,19 +1401,11 @@ class Mechanism_Base(Mechanism):
                     :default value: None
                     :type:
                     :read only: True
-
-                previous_value
-                    see `previous_value <Mechanism_Base.previous_value>`
-
-                    :default value: None
-                    :type:
-                    :read only: True
         """
         variable = Parameter(np.array([[0]]),
                              read_only=True, pnl_internal=True,
                              constructor_argument='default_variable')
         value = Parameter(np.array([[0]]), read_only=True, pnl_internal=True)
-        previous_value = Parameter(None, read_only=True, pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)
 
         input_port_variables = Parameter(None, read_only=True, user=False,
@@ -1940,7 +1928,6 @@ class Mechanism_Base(Mechanism):
         raise MechanismError("{} does not support run() method".format(self.__class__.__name__))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.parameters.previous_value._set(None, context)
         self._instantiate_input_ports(context=context)
         self._instantiate_parameter_ports(function=function, context=context)
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -2062,12 +2049,14 @@ class Mechanism_Base(Mechanism):
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
-        """Reinitialize `previous_value <Mechanism_Base.previous_value>` if Mechanisms is stateful.
+        """Reinitialize `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
         effectively begins the function's accumulation over again at the specified value, and updates related
-        attributes on the mechanism.  It also reassigns `previous_value <Mechanism.previous_value>` to None.
+        attributes on the mechanism.  It also clears the
+        `value <Mechanism.value>` `history <Parameter.history`, thus
+        effectively setting the previous value to ``None``.
 
         If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reinitialize
         <Mechanism_Base.reinitialize>` method:
@@ -2286,9 +2275,6 @@ class Mechanism_Base(Mechanism):
             # VALIDATE InputPort(S) AND RUNTIME PARAMS
             self._check_args(params=runtime_params, target_set=runtime_params, context=context)
 
-            self._update_previous_value(context)
-
-
             # UPDATE VARIABLE and InputPort(s)
             # Executing or simulating Composition, so get input by updating input_ports
             if (input is None
@@ -2442,9 +2428,6 @@ class Mechanism_Base(Mechanism):
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
         return np.array(self.get_input_values(context))
-
-    def _update_previous_value(self, context=None):
-        self.parameters.previous_value._set(self.parameters.value._get(context), context)
 
     def _update_input_ports(self, context=None, runtime_params=None):
         """Update value for each InputPort in self.input_ports:

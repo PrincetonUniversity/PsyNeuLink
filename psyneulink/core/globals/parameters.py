@@ -241,6 +241,7 @@ import collections
 import copy
 import logging
 import types
+import typing
 import warnings
 import weakref
 
@@ -1124,6 +1125,32 @@ class Parameter(types.SimpleNamespace):
                 self.log.pop(eid, None)
         except TypeError:
             self.log.pop(execution_ids, None)
+
+    def clear_history(
+        self,
+        contexts: typing.Union[Context, typing.List[Context]] = NotImplemented
+    ):
+        """
+            Clears the history of this Parameter for every context in
+            `contexts`
+
+            Args:
+                contexts
+        """
+        if not isinstance(contexts, list):
+            contexts = [contexts]
+
+        contexts = [parse_context(c) for c in contexts]
+        execution_ids = [
+            c.execution_id if hasattr(c, 'execution_id') else c
+            for c in contexts
+        ]
+
+        for eid in execution_ids:
+            try:
+                self.history[eid].clear()
+            except KeyError:
+                pass
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
         from psyneulink.core.components.component import Component

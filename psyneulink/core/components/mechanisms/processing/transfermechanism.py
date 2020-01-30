@@ -1504,14 +1504,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         super().reinitialize(*args, context=context)
-        self.parameters.previous_value.set(None, context, override=True)
-
-    def _update_previous_value(self, context=None):
-        if self.parameters.integrator_mode._get(context):
-            value = self.parameters.value._get(context)
-            if value is None:
-                value = self.defaults.value
-            self.parameters.previous_value._set(value, context)
+        self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
         if context.source is ContextFlags.INSTANTIATE:
@@ -1597,7 +1590,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # comparator = self.parameters.termination_comparison_op._get(context)
         comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
-        previous_value = self.parameters.previous_value._get(context)
+        previous_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item

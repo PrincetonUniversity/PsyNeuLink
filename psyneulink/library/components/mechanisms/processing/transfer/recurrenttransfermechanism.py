@@ -813,8 +813,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value._set(None, context)
-
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_ports.key_values
@@ -998,12 +996,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             # projection's _update_parameter_ports, and accordingly are not updated here
             if port.name != AUTO and port.name != HETERO:
                 port._update(context=context, params=runtime_params)
-
-    def _update_previous_value(self, context=None):
-        value = self.parameters.value._get(context)
-        if value is None:
-            value = self.defaults.value
-        self.parameters.previous_value._set(value, context)
 
     @property
     def recurrent_size(self):
@@ -1232,7 +1224,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def reinitialize(self, *args, context=None):
         if self.parameters.integrator_mode.get(context):
             super().reinitialize(*args, context=context)
-        self.parameters.previous_value.set(None, context, override=True)
+        self.parameters.value.clear_history(context)
 
     @property
     def _learning_signal_source(self):
