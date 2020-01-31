@@ -101,9 +101,21 @@ class CUDAExecution:
 
         return private_attr
 
-    def __getattr__(self, attribute):
-        assert attribute.startswith("_cuda"), "Unknown attribute: {}".format(attribute)
-        return self.__get_cuda_buffer(attribute[5:])
+    @property
+    def _cuda_param_struct(self):
+        return self.__get_cuda_buffer("_param_struct")
+
+    @property
+    def _cuda_state_struct(self):
+        return self.__get_cuda_buffer("_state_struct")
+
+    @property
+    def _cuda_data_struct(self):
+        return self.__get_cuda_buffer("_data_struct")
+
+    @property
+    def _cuda_conditions(self):
+        return self.__get_cuda_buffer("_conditions")
 
     @property
     def _cuda_out(self):
