@@ -103,7 +103,7 @@ class PytorchModelCreator(torch.nn.Module):
                         self.projections_to_pytorch_weights[mapping_proj] = weights
                         
                 node_forward_info = {
-                    'value':value, 
+                    'value':value,
                     'function':function,
                     'afferents':afferents,
                     'component':component}
