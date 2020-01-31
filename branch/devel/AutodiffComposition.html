@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.3.0+87.g5b847d4 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.3.0+88.gd958f03 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.3.0+87
+                  0.7.3.0+88
                 </div>
               
             
@@ -243,6 +243,10 @@ arguments that are specific to the AutodiffComposition, as described below.</p>
 <p class="last">Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
 been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
 functionality.</p>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">When comparing models built in PyTorch to those using AutodiffComposition, the <code class="xref any docutils literal"><span class="pre">bias</span></code> parameter of PyTorch modules should be set to <code class="xref any docutils literal"><span class="pre">False</span></code>, as AutodiffComposition does not currently support trainable biases.</p>
 </div>
 <ul>
 <li><p class="first"><strong>param_init_from_pnl</strong> argument – determines how parameters are set up for the internal PyTorch representation of
@@ -805,7 +809,7 @@ correspond to the <code class="xref any docutils literal"><span class="pre">EXEC
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.3.0+87.g5b847d4',
+               VERSION:'0.7.3.0+88.gd958f03',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
