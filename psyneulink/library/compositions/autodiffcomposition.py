@@ -53,6 +53,8 @@ arguments that are specific to the AutodiffComposition, as described below.
    been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
    functionality.
 
+.. warning:: When comparing models built in PyTorch to those using AutodiffComposition, the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set to `False`, as AutodiffComposition does not currently support trainable biases.
+
 * **param_init_from_pnl** argument -- determines how parameters are set up for the internal PyTorch representation of
   the model.  If it is set to True:
 
