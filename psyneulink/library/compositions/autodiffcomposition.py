@@ -1227,9 +1227,8 @@ class AutodiffComposition(Composition):
                                            .format(self.name))
 
         weights = pytorch_representation.get_weights_for_projections()
-        biases = pytorch_representation.get_biases_for_mechanisms()
 
-        return weights, biases
+        return weights
 
     def _get_param_struct_type(self, ctx):
         # We only need input/output params (rest should be in pytorch model params)
