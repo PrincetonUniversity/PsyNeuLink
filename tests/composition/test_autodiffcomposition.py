@@ -430,7 +430,7 @@ class TestMiscTrainingFunctionality:
 
         # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
         # and get the parameters straight from pytorch
-        weights_get_params = xor.get_parameters()[0]
+        weights_get_params = xor.get_parameters()
         weights_straight_1 = xor.parameters.pytorch_representation.get(xor).params[0]
         weights_straight_2 = xor.parameters.pytorch_representation.get(xor).params[1]
 
@@ -2007,7 +2007,7 @@ class TestTrainingIdenticalness():
         g = g_f()
         result = sem_net.run(inputs=g_f)
 
-        comp_weights = sem_net.get_parameters()[0]
+        comp_weights = sem_net.get_parameters()
 
         # SET UP SYSTEM
         sem_net_sys = Composition()

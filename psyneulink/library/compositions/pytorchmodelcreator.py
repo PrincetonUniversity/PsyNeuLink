@@ -45,8 +45,6 @@ class PytorchModelCreator(torch.nn.Module):
         self.component_to_forward_info = {}
         # dict mapping PNL projections to Pytorch weights
         self.projections_to_pytorch_weights = {}
-        # dict mapping PNL mechanisms to Pytorch biases
-        self.mechanisms_to_pytorch_biases = {}
         # list that Pytorch optimizers will use to keep track of parameters
         self.params = nn.ParameterList()
         self.device = device
@@ -60,7 +58,6 @@ class PytorchModelCreator(torch.nn.Module):
             for component in current_exec_set:
 
                 value = None  # the node's (its mechanism's) value
-                biases = None  # the node's bias parameters
                 function = self.function_creator(
                     component, context)  # the node's function
                 afferents = {}  # dict for keeping track of afferent nodes and their connecting weights
@@ -77,14 +74,6 @@ class PytorchModelCreator(torch.nn.Module):
 
                 # if `node` is not an origin node (origin nodes don't have biases or afferent connections)
                 if i != 0:
-                    # if not copying parameters from psyneulink, set up pytorch biases for node
-                    if not param_init_from_pnl:
-                        input_length = len(
-                            component.input_ports[0].parameters.value.get(None))
-                        biases = nn.Parameter(torch.zeros(
-                            input_length, device=self.device).double())
-                        self.params.append(biases)
-                        self.mechanisms_to_pytorch_biases[component] = biases
                     # iterate over incoming projections and set up pytorch weights for them
                     for mapping_proj in component.path_afferents:
 
@@ -112,7 +101,12 @@ class PytorchModelCreator(torch.nn.Module):
                         afferents[input_node] = weights
                         self.params.append(weights)
                         self.projections_to_pytorch_weights[mapping_proj] = weights
-                node_forward_info = [value, biases, function, afferents, component]
+                        
+                node_forward_info = {
+                    'value':value, 
+                    'function':function,
+                    'afferents':afferents,
+                    'component':component}
 
                 self.component_to_forward_info[component] = node_forward_info
 
@@ -123,14 +117,14 @@ class PytorchModelCreator(torch.nn.Module):
 
     # gets the index of 'afferent_node' in the forward info weights list
     def _get_afferent_node_index(self,node,afferent_node):
-        forward_info_weights = self.component_to_forward_info[node][3]
+        forward_info_weights = self.component_to_forward_info[node]['afferents']
         for (idx,vertex) in enumerate(forward_info_weights):
             if vertex.component == afferent_node:
                 return idx
 
     # returns a list of all efferent nodes and weights stored in component_to_forward_info
     def _get_afferent_nodes(self,node):
-        forward_info_weights = self.component_to_forward_info[node][3]
+        forward_info_weights = self.component_to_forward_info[node]['afferents']
         return [(vertex.component,weights) for (vertex,weights) in forward_info_weights.items()]
 
     # defines input type
@@ -160,7 +154,7 @@ class PytorchModelCreator(torch.nn.Module):
             node_idx = self._composition._get_node_index(node)
 
             # 1) setup weights
-            afferents = forward_info[3]
+            afferents = forward_info['afferents']
             weight_array = [None] * len(afferents)
             for (afferent_vertex, weights) in afferents.items():
                 afferent_node = afferent_vertex.component
@@ -173,16 +167,6 @@ class PytorchModelCreator(torch.nn.Module):
                 weight_array[afferent_index] = afferent_weight
             node_params = [pnlvm.ir.types.LiteralStructType(weight_array)]
 
-            # 2) setup bias
-            bias = forward_info[1]
-            if bias is not None:
-                if "no_ref_pass" not in debug_env:
-                    # FIXME: This should use a pointer type
-                    node_params.append(pnlvm.ir.types.IntType(64))
-                else:
-                    node_params.append(ctx.convert_python_struct_to_llvm_ir(
-                        bias.detach().numpy()))
-
             param_list[node_idx] = pnlvm.ir.types.LiteralStructType(node_params)
         return pnlvm.ir.types.LiteralStructType(param_list)
 
@@ -194,7 +178,7 @@ class PytorchModelCreator(torch.nn.Module):
                 node_idx = self._composition._get_node_index(node)
 
                 # 1) initialize weights
-                afferents = forward_info[3]
+                afferents = forward_info['afferents']
                 weight_array = [None] * len(afferents)
                 for (afferent_vertex, weights) in afferents.items():
                     afferent_node = afferent_vertex.component
@@ -205,14 +189,6 @@ class PytorchModelCreator(torch.nn.Module):
                         afferent_weight = weights.detach().numpy()
                     weight_array[afferent_index] = afferent_weight
                 node_params = [weight_array]
-
-                # 2) initialize bias
-                bias = forward_info[1]
-                if bias is not None:
-                    if "no_ref_pass" not in debug_env:
-                        node_params += [bias.detach().numpy().ctypes.data]
-                    else:
-                        node_params.append(bias.detach().numpy())
 
                 param_list[node_idx] = node_params
             if "no_ref_pass" not in debug_env:
@@ -376,7 +352,7 @@ class PytorchModelCreator(torch.nn.Module):
     # gets a pointer for the weights matrix between node and afferent_node
     def _gen_get_node_weight_ptr(self, ctx, builder, params, node, afferent_node):
         node_idx = self._composition._get_node_index(node)
-        forward_info_weights = self.component_to_forward_info[node][3]
+        forward_info_weights = self.component_to_forward_info[node]['afferents']
         afferent_node_index = self._get_afferent_node_index(node,afferent_node)
         for (vertex,matrix) in forward_info_weights.items():
             if vertex.component == afferent_node:
@@ -405,9 +381,8 @@ class PytorchModelCreator(torch.nn.Module):
 
             for component in current_exec_set:
                 component_id = self._composition._get_node_index(component)
-                biases = self.component_to_forward_info[component][1]
                 value = self._get_output_value_ptr(ctx, builder, arg_out, component_id)
-                afferents = self.component_to_forward_info[component][3]
+                afferents = self.component_to_forward_info[component]['afferents']
 
                 mech_input_ty = ctx.get_input_struct_type(component)
                 mech_input = builder.alloca(mech_input_ty)
@@ -460,11 +435,6 @@ class PytorchModelCreator(torch.nn.Module):
                 builder.call(mech_func, [mech_param, mech_state,
                                          mech_input, mech_output])
 
-
-
-                # TODO: Add bias to value
-                # if biases is not None:
-                #   value = value + biases
                 if store_z_values is True:
                     ctx.inject_printf_float_array(builder, z_values[component], prefix=f"{component}\tforward input:\t")
                 ctx.inject_printf_float_array(builder, value, prefix=f"{component}\tforward output:\t")
@@ -704,13 +674,12 @@ class PytorchModelCreator(torch.nn.Module):
         for i, current_exec_set in enumerate(self.execution_sets):
             frozen_values = {}
             for component in current_exec_set:
-                frozen_values[component] = self.component_to_forward_info[component][0]
+                frozen_values[component] = self.component_to_forward_info[component]['value']
             for component in current_exec_set:
 
                 # get forward computation info for current component
-                biases = self.component_to_forward_info[component][1]
-                function = self.component_to_forward_info[component][2]
-                afferents = self.component_to_forward_info[component][3]
+                function = self.component_to_forward_info[component]['function']
+                afferents = self.component_to_forward_info[component]['afferents']
                 # forward computation if we have origin node
                 if i == 0:
                     value = function(inputs[component])
@@ -722,14 +691,11 @@ class PytorchModelCreator(torch.nn.Module):
                         if input_node.component in current_exec_set:
                             input_value = frozen_values[input_node.component]
                         else:
-                            input_value = self.component_to_forward_info[input_node.component][0]
+                            input_value = self.component_to_forward_info[input_node.component]['value']
                         value += torch.matmul(input_value, weights)
-
-                    if biases is not None:
-                        value = value + biases
                     value = function(value)
                 # store the current value of the node
-                self.component_to_forward_info[component][0] = value
+                self.component_to_forward_info[component]['value'] = value
                 if do_logging:
                     old_source = context.source
                     context.source = ContextFlags.COMMAND_LINE
@@ -759,9 +725,7 @@ class PytorchModelCreator(torch.nn.Module):
 
     def detach_all(self):
         for component, info in self.component_to_forward_info.items():
-            info[0].detach_()
-            if info[1] is not None:
-                info[1].detach_()
+            info['value'].detach_()
 
     def copy_weights_to_psyneulink(self, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
@@ -893,12 +857,3 @@ class PytorchModelCreator(torch.nn.Module):
         for projection, weights in self.projections_to_pytorch_weights.items():
             weights_in_numpy[projection] = weights.detach().cpu().numpy().copy()
         return weights_in_numpy
-
-    # returns dict mapping psyneulink mechanisms to corresponding pytorch biases, the same way as the above function.
-    # If composition is initialized with "param_init_from_PNL" set to true, then no biases are created in Pytorch,
-    # and when called, this function returns an empty list.
-    def get_biases_for_mechanisms(self):
-        biases_in_numpy = {}
-        for mechanism, biases in self.mechanisms_to_pytorch_biases.items():
-            biases_in_numpy[mechanism] = biases.detach().cpu().numpy().copy()
-        return biases_in_numpy
