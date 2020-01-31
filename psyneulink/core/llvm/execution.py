@@ -50,7 +50,6 @@ class CUDAExecution:
         self._uploaded_bytes = 0
         self._downloaded_bytes = 0
         self.__debug_env = debug_env
-        self.__vo_ty = None
 
     def __del__(self):
         if "cuda_data" in self.__debug_env:
@@ -66,14 +65,6 @@ class CUDAExecution:
     def _bin_func_multirun(self):
         # CUDA uses the same function for single and multi run
         return self._bin_func
-
-    @property
-    def _vo_ty(self):
-        if self.__vo_ty is None:
-            self.__vo_ty = self._bin_func.byref_arg_types[3]
-            if len(self._execution_contexts) > 1:
-                self.__vo_ty = self.__vo_ty * len(self._execution_contexts)
-        return self.__vo_ty
 
     def _get_ctype_bytes(self, data):
         # Return dummy buffer. CUDA does not handle 0 size well.
@@ -161,6 +152,7 @@ class FuncExecution(CUDAExecution):
             self.__param_struct = None
             self.__state_struct = None
 
+        self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
 
@@ -510,7 +502,7 @@ class CompExecution(CUDAExecution):
                                       threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
-        self._data_struct = self.download_ctype(self._cuda_data_struct, self._vo_ty)
+        self._data_struct = self.download_ctype(self._cuda_data_struct, type(self._data_struct))
 
     # Methods used to accelerate "Run"
 
