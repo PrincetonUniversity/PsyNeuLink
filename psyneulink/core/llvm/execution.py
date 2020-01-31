@@ -44,12 +44,11 @@ def _tupleize(x):
 
 
 class CUDAExecution:
-    def __init__(self, buffers=['param_struct', 'state_struct']):
+    def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self._uploaded_bytes = 0
         self._downloaded_bytes = 0
-        self.__cuda_out_buf = None
         self.__debug_env = debug_env
         self.__vo_ty = None
 
@@ -105,11 +104,11 @@ class CUDAExecution:
         return private_attr
 
     @property
-    def _cuda_out_buf(self):
-        if self.__cuda_out_buf is None:
+    def _cuda_out(self):
+        if self._buffer_cuda_out is None:
             size = ctypes.sizeof(self._vo_ty)
-            self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
-        return self.__cuda_out_buf
+            self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
+        return self._buffer_cuda_out
 
     def cuda_execute(self, variable):
         # Create input parameter
@@ -119,11 +118,11 @@ class CUDAExecution:
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
-                                 data_in, self._cuda_out_buf,
+                                 data_in, self._cuda_out,
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out_buf, self._vo_ty)
+        ct_res = self.download_ctype(self._cuda_out, self._vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
