@@ -91,17 +91,19 @@ class CUDAExecution:
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
         return ty.from_buffer(out_buf)
 
-    def __getattr__(self, attribute):
-        assert attribute.startswith("_cuda")
-
-        private_attr_name = "_buffer" + attribute
+    def __get_cuda_buffer(self, struct_name):
+        private_attr_name = "_buffer_cuda" + struct_name
         private_attr = getattr(self, private_attr_name)
         if private_attr is None:
             # Set private attribute to a new buffer
-            private_attr = self.upload_ctype(getattr(self, attribute[5:]))
+            private_attr = self.upload_ctype(getattr(self, struct_name))
             setattr(self, private_attr_name, private_attr)
 
         return private_attr
+
+    def __getattr__(self, attribute):
+        assert attribute.startswith("_cuda"), "Unknown attribute: {}".format(attribute)
+        return self.__get_cuda_buffer(attribute[5:])
 
     @property
     def _cuda_out(self):
