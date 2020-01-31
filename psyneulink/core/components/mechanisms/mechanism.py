@@ -2677,6 +2677,10 @@ class Mechanism_Base(Mechanism):
             elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
                 assert port_spec[1] < len(value.type.pointee)
                 return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
+            elif port_spec == OWNER_EXECUTION_COUNT:
+                mech_private_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+                execution_count = ctx.get_state_ptr(self, builder, mech_private_state, "execution_count")
+                return execution_count
             else:
                 #TODO: support more spec options
                 assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
@@ -2723,6 +2727,13 @@ class Mechanism_Base(Mechanism):
         value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
+
+        # Update execution counter
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        exec_count_ptr = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+        exec_count = builder.load(exec_count_ptr)
+        exec_count = builder.fadd(exec_count, exec_count.type(1))
+        builder.store(exec_count, exec_count_ptr)
 
         builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
         return builder, pnlvm.ir.IntType(1)(1)

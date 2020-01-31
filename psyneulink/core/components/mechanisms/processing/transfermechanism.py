@@ -1420,6 +1420,13 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
+        # Update execution counter
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        exec_count_ptr = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+        exec_count = builder.load(exec_count_ptr)
+        exec_count = builder.fadd(exec_count, exec_count.type(1))
+        builder.store(exec_count, exec_count_ptr)
+
         builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
                                                            mech_params,
