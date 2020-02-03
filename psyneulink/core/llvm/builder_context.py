@@ -62,7 +62,6 @@ class LLVMBuilderContext:
     def __init__(self):
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
-        self._learningcache = weakref.WeakKeyDictionary()
 
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
@@ -126,16 +125,13 @@ class LLVMBuilderContext:
 
     def gen_llvm_function(self, obj, *, tag:str="") -> ir.Function:
         cache = self._cache
-        try:
-            # HACK: allows for learning bin func and non-learning to differ
-            if obj.learning_enabled is True:
-                cache = self._learningcache
-        except AttributeError as e:
-            pass
-
         if obj not in cache:
-            cache[obj] = obj._gen_llvm_function(tag=tag)
-        return cache[obj]
+            cache[obj] = dict()
+        cache_variants = cache[obj]
+
+        if tag not in cache_variants:
+            cache_variants[tag] = obj._gen_llvm_function(tag=tag)
+        return cache_variants[tag]
 
     def import_llvm_function(self, fun, *, tag:str="") -> ir.Function:
         """
