@@ -7671,12 +7671,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __gen_node_wrapper(self, node, *, tag):
         name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
-        # TODO: pass this explicitly
-        # FIXME: Can we use node_roles here?
+        # FIXME: Replace this with tags!
         is_learning_autodiff = hasattr(node, 'learning_enabled') and node.learning_enabled
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node)
+            node_function = ctx.import_llvm_function(node, tag=tag)
 
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
@@ -7792,7 +7791,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj)
+                proj_function = ctx.import_llvm_function(proj, tag=tag)
 
                 if proj_out.type != proj_function.args[3].type:
                     warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
