@@ -100,8 +100,8 @@ class LLVMBuilderContext:
             function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
-    def create_llvm_function(self, args, component, name=None, return_type=ir.VoidType()):
-        name = str(component) if name is None else name
+    def create_llvm_function(self, args, component, name=None, *, return_type=ir.VoidType(), tag:str=""):
+        name = "_".join((str(component), tag)) if name is None else name
 
         # Builtins are already unique and need to keep their special name
         func_name = name if name.startswith(_BUILTIN_PREFIX) else self.get_unique_name(name)
