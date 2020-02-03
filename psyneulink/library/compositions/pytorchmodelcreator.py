@@ -498,7 +498,7 @@ class PytorchModelCreator(torch.nn.Module):
         # setup loss
         loss_type = self._composition.loss_spec
         if loss_type == 'mse':
-            loss = MSELoss(self)
+            loss = MSELoss()
         else:
             raise Exception("LOSS TYPE",loss_type,"NOT SUPPORTED")
 
