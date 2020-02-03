@@ -1747,7 +1747,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compiled resources
         self.__generated_node_wrappers = {}
-        self.__generated_simulation = None
 
         self._compilation_data = self._CompilationData(owner=self)
 
@@ -7652,15 +7651,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if tag.startswith("run"):
                 return ctx.gen_composition_run(self, tag=tag)
             else:
-                return ctx.gen_composition_exec(self)
-
-    @property
-    def _llvm_simulation(self):
-        if self.__generated_simulation is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_simulation = ctx.gen_composition_exec(self, True)
-
-        return self.__generated_simulation
+                return ctx.gen_composition_exec(self, tag=tag)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):

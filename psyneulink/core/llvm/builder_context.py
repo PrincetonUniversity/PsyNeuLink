@@ -421,8 +421,8 @@ class LLVMBuilderContext:
 
             return builder.function
 
-    def gen_composition_exec(self, composition, simulation=False):
-
+    def gen_composition_exec(self, composition, *, tag:str):
+        simulation = "simulation" in tag
         extra_args = []
         # If there is a node that needs learning input we need to export it
         # FIXME: Should we use node roles here?
@@ -558,7 +558,7 @@ class LLVMBuilderContext:
         return builder.function
 
     def gen_composition_run(self, composition, *, tag:str):
-        assert "run" in tag
+        assert tag.startswith("run")
         simulation = "simulation" in tag
         name = "wrap_" + tag + "_" + composition.name
         args = [self.get_state_struct_type(composition).as_pointer(),
@@ -615,10 +615,8 @@ class LLVMBuilderContext:
             data_in_ptr = b.gep(data_in, [input_idx])
 
             # Call execution
-            if simulation:
-                exec_f = self.import_llvm_function(composition._llvm_simulation.name)
-            else:
-                exec_f = self.import_llvm_function(composition)
+            exec_tag = tag.replace("run", "", 1).lstrip("_")
+            exec_f = self.import_llvm_function(composition, tag=exec_tag)
             b.call(exec_f, [state, params, data_in_ptr, data, cond])
 
             if not simulation:
