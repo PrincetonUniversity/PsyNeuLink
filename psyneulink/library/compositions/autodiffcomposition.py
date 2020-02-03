@@ -782,9 +782,9 @@ class AutodiffComposition(Composition):
     def _gen_llvm_function(self, tag):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             if self.learning_enabled is True:
-                return ctx.gen_autodiffcomp_learning_exec(self)
+                return ctx.gen_autodiffcomp_learning_exec(self, tag=tag)
             else:
-                return ctx.gen_autodiffcomp_exec(self)
+                return ctx.gen_autodiffcomp_exec(self, tag=tag)
 
     @handle_external_context()
     def execute(self,

@@ -345,7 +345,7 @@ class LLVMBuilderContext:
 
         builder.ret_void()
 
-    def gen_autodiffcomp_learning_exec(self, composition):
+    def gen_autodiffcomp_learning_exec(self, composition, *, tag:str):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         learning_struct_ty = pnlvm.ir.LiteralStructType((
@@ -357,7 +357,7 @@ class LLVMBuilderContext:
             learning_struct_ty.as_pointer(),
             self.get_output_struct_type(composition).as_pointer()
         ]
-        with self._gen_composition_exec_context(composition, tag="learning",
+        with self._gen_composition_exec_context(composition, tag=tag,
             extra_args=args) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond, learning, data_out = builder.function.args
             data_out.attributes.remove('nonnull')
@@ -393,12 +393,12 @@ class LLVMBuilderContext:
 
             return builder.function
 
-    def gen_autodiffcomp_exec(self, composition):
+    def gen_autodiffcomp_exec(self, composition, *, tag:str):
         """Creates llvm bin execute for autodiffcomp"""
         assert composition.controller is None
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        with self._gen_composition_exec_context(composition, tag="") as (builder, data, params, cond_gen):
+        with self._gen_composition_exec_context(composition, tag=tag) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
             # Call pytorch internal compiled llvm func
             input_cim_idx = composition._get_node_index(composition.input_CIM)
