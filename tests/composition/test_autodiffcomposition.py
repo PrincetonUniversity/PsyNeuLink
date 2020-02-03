@@ -2478,10 +2478,6 @@ class TestNested:
         result1 = parentComposition.run(inputs=input, bin_execute=mode)
         assert np.allclose(result1, [[0]], atol=0.1)
 
-        if mode != 'Python':
-            #FIXME: Enable the rest of the test when recompilation is supported
-            return
-
         xor_autodiff.learning_enabled = False
         result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
 
@@ -2555,10 +2551,6 @@ class TestNested:
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         result1 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
-        if mode != 'Python':
-            #FIXME: Enable the rest of the test when recompilation is supported
-            return
-
         xor_autodiff.learning_enabled = True
         result2 = parentComposition.run(inputs=input, bin_execute=mode)
 
