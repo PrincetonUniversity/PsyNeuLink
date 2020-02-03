@@ -47,7 +47,7 @@ VERBOSE = STANDARD_REPORTING
 
 
 # ControlSignal parameters
-COST_RATE = -.8 # -0.05
+COST_RATE = -.05 # -0.05
 COST_BIAS = 1
 # COST_RATE = 0#-0.0015
 # COST_BIAS = 0
@@ -104,7 +104,7 @@ def get_trial_type(observation):
 ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
                             eval_mode=True,
                             save_frames=False,
-                            # render=False
+                            render=RENDER,
                             env=gym_forager_env
                             )
 
@@ -118,6 +118,8 @@ def new_episode():
 
     # Initialize both states to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
+
+    return initial_observation
 
 def get_optimal_action(observation):
     # Get new state based on observation:
@@ -243,7 +245,7 @@ opt_comp.add_node(agent_comp)
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_episodes = 20
+num_episodes = 10
 outcome_log = []
 reward_log = []
 predator_control_log = []
@@ -277,14 +279,13 @@ def input_generator():
     steps = 0
     start_time = timeit.default_timer()
     for episode_i in range(num_episodes):
-        trialType = 0
+        trialType = 2
         prey_pred_trialType = 0
         single_prey_trialType = 0
         double_prey_trialType = 0
 
         ddqn_agent.env.trialType = trialType  # 0 is single prey, 1 is two prey, 2 is prey & predator
-        observation = ddqn_agent.env.reset()
-        new_episode()
+        observation = new_episode()
         while True:
 
             if VERBOSE >= STANDARD_REPORTING:
