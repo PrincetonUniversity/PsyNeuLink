@@ -1,5 +1,5 @@
 from psyneulink.core import llvm as pnlvm
-
+from psyneulink.library.compositions.pytorchllvmhelper import *
 
 __all__ = ['MSELoss']
 
@@ -73,7 +73,7 @@ class MSELoss(Loss):
 
         if sum_loss is False:
             # we take mean
-            self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target, output)
+            gen_inject_vec_sub(ctx, builder, value, target, output)
             # multiply each element i by 2/n to get dC/da_i
             scalar_mult = builder.fdiv(ctx.float_ty(2), ctx.float_ty(dim))
             with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim), "mse_mean_mult_loop") as (b1, index):
@@ -81,6 +81,7 @@ class MSELoss(Loss):
                 b1.store(b1.fmul(b1.load(element_ptr),scalar_mult),element_ptr)
         else:
             # in this case, we add the loss
-            tmp = self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target)
-            self._pytorch_model._gen_inject_vec_add(ctx, builder, output, tmp, output)
+            tmp = gen_inject_vec_sub(ctx, builder, value, target)
+            gen_inject_vec_add(ctx, builder, output, tmp, output)
         return output
+        
