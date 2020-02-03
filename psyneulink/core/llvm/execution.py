@@ -435,9 +435,9 @@ class CompExecution(CUDAExecution):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             try:
-                learning = 'learning' if self._composition.learning_enabled else None
+                learning = "learning" if self._composition.learning_enabled else ""
             except AttributeError:
-                learning = None
+                learning = ""
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tag=learning)
 
         return self.__bin_exec_func
@@ -522,7 +522,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            self.__bin_run_func = pnlvm.LLVMBinaryFunction.get(self._composition._llvm_run.name)
+            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tag="run")
 
         return self.__bin_run_func
 
