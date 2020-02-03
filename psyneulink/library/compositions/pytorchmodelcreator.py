@@ -8,6 +8,7 @@ from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer,SGDO
 from psyneulink.library.compositions.compiledloss import MSELoss
 import ctypes
 from collections import deque
+from psyneulink.library.compositions.pytorchllvmhelper import *
 
 debug_env = pnlvm.debug_env
 
@@ -208,138 +209,6 @@ class PytorchModelCreator(torch.nn.Module):
             builder.ret_void()
         return llvm_func
 
-    #FIXME: Move _gen functions to helper or change builtins to directly accept aggregate types
-    def _gen_inject_unary_function_call(self, ctx, builder, unary_func, vector, output_vec=None):
-        dim = len(vector.type.pointee)
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-        assert len(output_vec.type.pointee) == dim
-
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builder.call(unary_func, [vec_in, ctx.int32_ty(dim), vec_out])
-        return output_vec
-
-    def _gen_inject_vec_copy(self, ctx, builder, vector, output_vec=None):
-        dim = len(vector.type.pointee)
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-        assert len(output_vec.type.pointee) == dim
-
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builtin = ctx.import_llvm_function("__pnl_builtin_vec_copy")
-        builder.call(builtin, [vec_in, ctx.int32_ty(dim), vec_out])
-        return output_vec
-
-    def _gen_inject_vec_binop(self, ctx, builder, op, u, v, output_vec=None):
-        dim = len(u.type.pointee)
-        assert len(v.type.pointee) == dim
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-        assert len(output_vec.type.pointee) == dim
-
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builder.call(ctx.import_llvm_function(op), [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
-        return output_vec
-
-    def _gen_inject_vec_add(self, ctx, builder, u, v, output_vec=None):
-        return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_add", u, v, output_vec)
-
-    def _gen_inject_vec_sub(self, ctx, builder, u, v, output_vec=None):
-        return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_sub", u, v, output_vec)
-
-    def _gen_inject_vec_hadamard(self, ctx, builder, u ,v, output_vec=None):
-        return self._gen_inject_vec_binop(ctx, builder, "__pnl_builtin_vec_hadamard", u, v, output_vec)
-
-    def _gen_inject_mat_binop(self, ctx, builder, op, m1, m2, output_mat=None):
-        x = len(m1.type.pointee)
-        y = len(m1.type.pointee.element)
-        assert len(m2.type.pointee) == x and len(m2.type.pointee.element) == y
-
-        if output_mat is None:
-            output_mat = builder.alloca(
-                pnlvm.ir.types.ArrayType(
-                    pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
-        assert len(output_mat.type.pointee) == x
-        assert len(output_mat.type.pointee.element) == y
-
-        builtin = ctx.import_llvm_function(op)
-        builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
-                               builder.bitcast(m2, ctx.float_ty.as_pointer()),
-                               ctx.int32_ty(x), ctx.int32_ty(y),
-                               builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
-        return output_mat
-
-    def _gen_inject_mat_add(self, ctx, builder, m1, m2, output_mat=None):
-        return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_add", m1, m2, output_mat)
-
-    def _gen_inject_mat_sub(self, ctx, builder, m1, m2, output_mat=None):
-        return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_sub", m1, m2, output_mat)
-
-    def _gen_inject_mat_hadamard(self, ctx, builder, m1, m2, output_mat=None):
-        return self._gen_inject_mat_binop(ctx, builder, "__pnl_builtin_mat_hadamard", m1, m2, output_mat)
-
-    def _gen_inject_mat_scalar_mult(self, ctx, builder, m1, s, output_mat=None):
-        x = len(m1.type.pointee)
-        y = len(m1.type.pointee.element)
-        if output_mat is None:
-            output_mat = builder.alloca(
-                pnlvm.ir.types.ArrayType(
-                    pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
-        assert len(output_mat.type.pointee) == x
-        assert len(output_mat.type.pointee.element) == y
-
-        builtin = ctx.import_llvm_function("__pnl_builtin_mat_scalar_mult")
-        builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
-                               s, ctx.int32_ty(x), ctx.int32_ty(y),
-                               builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
-        return output_mat
-
-    def _gen_inject_vxm(self, ctx, builder, m1, m2, output_vec=None):
-        y = len(m2.type.pointee)
-        z = len(m2.type.pointee.element)
-        assert len(m1.type.pointee) == y
-        # create output vec
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, z))
-        assert len(output_vec.type.pointee) == z
-
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        v = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
-        builder.call(builtin, [v, builder.bitcast(m2, ctx.float_ty.as_pointer()),
-                               ctx.int32_ty(y), ctx.int32_ty(z), out])
-        return output_vec
-
-    def _gen_inject_vxm_transposed(self, ctx, builder, m1, m2, output_vec=None):
-        y = len(m2.type.pointee)
-        z = len(m2.type.pointee.element)
-        assert len(m1.type.pointee) == z
-        # create output vec
-        if output_vec is None:
-            output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, y))
-        assert len(output_vec.type.pointee) == y
-
-        # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-        v = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builtin = ctx.import_llvm_function("__pnl_builtin_vxm_transposed")
-        builder.call(builtin, [v, builder.bitcast(m2, ctx.float_ty.as_pointer()),
-                               ctx.int32_ty(y), ctx.int32_ty(z), out])
-        return output_vec
-
     # gets a pointer for the weights matrix between node and afferent_node
     def _gen_get_node_weight_ptr(self, ctx, builder, params, node, afferent_node):
         node_idx = self._composition._get_node_index(node)
@@ -398,20 +267,20 @@ class PytorchModelCreator(torch.nn.Module):
                         ctx.inject_printf_float_matrix(builder, weights_llvmlite, prefix=f"{source_node} -> {component}\tweight:\t")
                         # node inputs are 2d arrays in a struct
                         input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(j)])
-                        self._gen_inject_vxm(ctx, builder, input_value, weights_llvmlite, input_ptr)
+                        gen_inject_vxm(ctx, builder, input_value, weights_llvmlite, input_ptr)
                         if store_z_values:
                             if is_set == False:
                                 # copy weighted_inp to value
-                                self._gen_inject_vec_copy(ctx, builder, input_ptr, value)
+                                gen_inject_vec_copy(ctx, builder, input_ptr, value)
                                 is_set = True
                             else:
                                 # add to value
-                                self._gen_inject_vec_add(ctx, builder, input_ptr, value, value)
+                                gen_inject_vec_add(ctx, builder, input_ptr, value, value)
 
                     cmp_arg = value
                 # Apply Activation Func to values
                 if store_z_values is True:
-                    z_values[component] = self._gen_inject_vec_copy(ctx, builder, cmp_arg)
+                    z_values[component] = gen_inject_vec_copy(ctx, builder, cmp_arg)
 
                 mech_func = ctx.import_llvm_function(component)
                 mech_param = builder.gep(params, [ctx.int32_ty(0),
@@ -462,7 +331,7 @@ class PytorchModelCreator(torch.nn.Module):
         for i, node in enumerate(input_nodes):
             node_input_array_ptr = builder.gep(training_set, [trial_num, ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
             node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            self._gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
+            gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
 
             ctx.inject_printf_float_array(builder, node_model_input, prefix=f"{node}\tinput:\t")
 
@@ -493,7 +362,7 @@ class PytorchModelCreator(torch.nn.Module):
             node_idx = composition._get_node_index(node)
 
             activation_func_derivative_bin_func = ctx.import_llvm_function(self.bin_function_derivative_creator(ctx,node).name)
-            activation_func_derivative = self._gen_inject_unary_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
+            activation_func_derivative = gen_inject_unary_function_call(ctx, builder, activation_func_derivative_bin_func, z_values[node])
 
             error_val = builder.alloca(z_values[node].type.pointee)
 
@@ -516,7 +385,7 @@ class PytorchModelCreator(torch.nn.Module):
                 loss_derivative = loss._gen_inject_loss_differential(ctx, builder, node_output, node_target)
                 # compute δ_l = dσ/da ⊙ σ'(z)
 
-                self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, loss_derivative, error_val)
+                gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, loss_derivative, error_val)
 
             else:
                 # We propagate error backwards from next layer
@@ -532,14 +401,14 @@ class PytorchModelCreator(torch.nn.Module):
                     weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, efferent_node, node)
 
                     if is_set is False:
-                        self._gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite, error_val)
+                        gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite, error_val)
                         is_set = True
                     else:
-                        new_val = self._gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite)
+                        new_val = gen_inject_vxm_transposed(ctx, builder, efferent_node_error, weights_llvmlite)
 
-                        self._gen_inject_vec_add(ctx, builder, new_val, error_val, error_val)
+                        gen_inject_vec_add(ctx, builder, new_val, error_val, error_val)
 
-                self._gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, error_val, error_val)
+                gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, error_val, error_val)
 
             ctx.inject_printf_float_array(builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t")
             ctx.inject_printf_float_array(builder, error_val, prefix=f"{node}\terror:\t")
