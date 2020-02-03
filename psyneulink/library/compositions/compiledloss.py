@@ -6,9 +6,7 @@ __all__ = ['MSELoss']
 
 class Loss():
 
-    def __init__(self, pytorch_model):
-        self._pytorch_model = pytorch_model
-        self._composition = pytorch_model._composition
+    def __init__(self):
         self._structs = []
 
         self._DELTA_W_NUM = 0
@@ -26,22 +24,22 @@ class Loss():
 
 class MSELoss(Loss):
     """Implements compiled MSE Loss"""
-    def __init__(self, pytorch_model, reduction='sum'):
+    def __init__(self, reduction='sum'):
         if reduction not in ['sum']:
             raise Exception("Unsupported compiled reduction type " + reduction)
         
-        super().__init__(pytorch_model)
+        super().__init__()
         self.reduction = reduction
 
     def _gen_loss_function(self, ctx):
-        name = self._composition.name + "_MSE_CALL"
+        name = "LEARNING_MSE_CALL"
 
         # args:
         # 1) pointer to network output
         # 2) pointer to target
         # 3) dimensionality
         args = [ctx.float_ty.as_pointer(), ctx.int32_ty, ctx.float_ty.as_pointer()]
-        builder = ctx.create_llvm_function(args, self, name,return_type=ctx.float_ty)
+        builder = ctx.create_llvm_function(args, self, name, return_type=ctx.float_ty)
         value, dim, target = builder.function.args
 
         sum = builder.alloca(ctx.float_ty)
