@@ -516,11 +516,6 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
 
-
-        # store generated llvm functions
-        self.__generated_forward_exec = None
-        self.__generated_learning_exec = None
-
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
 
@@ -785,16 +780,11 @@ class AutodiffComposition(Composition):
             return outputs
 
     def _gen_llvm_function(self, tag):
-        if self.learning_enabled is True:
-            if self.__generated_learning_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_exec = ctx.gen_autodiffcomp_learning_exec(self)
-            return self.__generated_learning_exec
-        else:
-            if self.__generated_forward_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_forward_exec = ctx.gen_autodiffcomp_exec(self)
-            return self.__generated_forward_exec
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            if self.learning_enabled is True:
+                return ctx.gen_autodiffcomp_learning_exec(self)
+            else:
+                return ctx.gen_autodiffcomp_exec(self)
 
     @handle_external_context()
     def execute(self,
