@@ -370,10 +370,8 @@ class LLVMBuilderContext:
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
-            composition.learning_enabled = False
             forward_tag = tag.replace("learning", "").replace("__", "").lstrip("_")
             exec_f = self.import_llvm_function(composition, tag=forward_tag)
-            composition.learning_enabled = True
 
             runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
             runs = builder.load(runs_ptr, "runs")
@@ -425,8 +423,7 @@ class LLVMBuilderContext:
         simulation = "simulation" in tag
         extra_args = []
         # If there is a node that needs learning input we need to export it
-        # FIXME: Use 'learning' tag here!
-        for node in filter(lambda n: hasattr(n, 'learning_enabled') and n.learning_enabled, composition.nodes):
+        for node in filter(lambda n: hasattr(n, 'learning_enabled') and "learning" in tag, composition.nodes):
             node_wrap = composition._get_node_wrapper(node)
             node_f = self.import_llvm_function(node_wrap, tag=tag)
             extra_args = [node_f.args[-1].type]

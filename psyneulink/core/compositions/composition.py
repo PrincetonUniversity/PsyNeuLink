@@ -7672,7 +7672,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
         # FIXME: Replace this with tags!
-        is_learning_autodiff = hasattr(node, 'learning_enabled') and node.learning_enabled
+        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tag
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             node_function = ctx.import_llvm_function(node, tag=tag)
