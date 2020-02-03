@@ -557,9 +557,10 @@ class LLVMBuilderContext:
 
         return builder.function
 
-    def gen_composition_run(self, composition, simulation=False):
-        name = 'run_sim_wrap_' if simulation else 'run_wrap_'
-        name += composition.name
+    def gen_composition_run(self, composition, *, tag:str):
+        assert "run" in tag
+        simulation = "simulation" in tag
+        name = "wrap_" + tag + "_" + composition.name
         args = [self.get_state_struct_type(composition).as_pointer(),
                 self.get_param_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),

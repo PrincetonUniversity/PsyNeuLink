@@ -1109,7 +1109,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
 
-            sim_f = ctx.import_llvm_function(self.agent_rep._llvm_sim_run.name)
+            sim_f = ctx.import_llvm_function(self.agent_rep, tag="run_simulation")
 
             # Create a simulation copy of composition state
             comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
