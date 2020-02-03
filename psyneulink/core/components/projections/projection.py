@@ -980,7 +980,7 @@ class Projection_Base(Projection):
         return self._parameter_ports
 
     # Provide invocation wrapper
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
         mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
         mf_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
         main_function = ctx.import_llvm_function(self.function)

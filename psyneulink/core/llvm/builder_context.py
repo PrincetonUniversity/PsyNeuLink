@@ -124,7 +124,7 @@ class LLVMBuilderContext:
 
         return builder
 
-    def gen_llvm_function(self, obj) -> ir.Function:
+    def gen_llvm_function(self, obj, *, tag:str="") -> ir.Function:
         cache = self._cache
         try:
             # HACK: allows for learning bin func and non-learning to differ
@@ -134,10 +134,10 @@ class LLVMBuilderContext:
             pass
 
         if obj not in cache:
-            cache[obj] = obj._gen_llvm_function()
+            cache[obj] = obj._gen_llvm_function(tag=tag)
         return cache[obj]
 
-    def import_llvm_function(self, fun) -> ir.Function:
+    def import_llvm_function(self, fun, *, tag:str="") -> ir.Function:
         """
         Get function handle if function exists in current modele.
         Create function declaration if it exists in a older module.
@@ -145,7 +145,7 @@ class LLVMBuilderContext:
         if isinstance(fun, str):
             f = _find_llvm_function(fun, _all_modules | {self.module})
         else:
-            f = self.gen_llvm_function(fun)
+            f = self.gen_llvm_function(fun, tag=tag)
 
         # Add declaration to the current module
         if f.name not in self.module.globals:

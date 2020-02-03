@@ -215,7 +215,7 @@ class PytorchModelCreator(torch.nn.Module):
         return pnlvm.execution._tupleize(param_list)
 
     # generates llvm function for self.forward
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tag):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_state_struct_type(self._composition).as_pointer(),

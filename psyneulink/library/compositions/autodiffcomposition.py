@@ -784,7 +784,7 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, tag):
         if self.learning_enabled is True:
             if self.__generated_learning_exec is None:
                 with pnlvm.LLVMBuilderContext.get_global() as ctx:

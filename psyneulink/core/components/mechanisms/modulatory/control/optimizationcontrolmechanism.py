@@ -1186,7 +1186,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return llvm_func
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tag):
         from psyneulink.core.compositions.composition import Composition
         is_comp = isinstance(self.agent_rep, Composition)
         if is_comp:
@@ -1197,7 +1197,7 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             extra_args = []
 
-        f = super()._gen_llvm_function(extra_args)
+        f = super()._gen_llvm_function(extra_args=extra_args, tag=tag)
         if is_comp:
             for a in f.args[-len(extra_args):]:
                 a.attributes.add('nonnull')

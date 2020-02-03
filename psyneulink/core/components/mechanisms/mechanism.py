@@ -2744,7 +2744,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
         mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
