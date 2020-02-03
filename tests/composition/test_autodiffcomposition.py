@@ -430,7 +430,7 @@ class TestMiscTrainingFunctionality:
 
         # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
         # and get the parameters straight from pytorch
-        weights_get_params = xor.get_parameters()[0]
+        weights_get_params = xor.get_parameters()
         weights_straight_1 = xor.parameters.pytorch_representation.get(xor).params[0]
         weights_straight_2 = xor.parameters.pytorch_representation.get(xor).params[1]
 
@@ -706,8 +706,8 @@ class TestTrainingCorrectness:
                                       'epochs': eps}, bin_execute=mode)
 
         # CHECK CORRECTNESS
-        for i in range(len(result[0])): # go over trial outputs in the single results entry
-            for j in range(len(result[0][i])): # go over outputs for each output layer
+        for i in range(len(result)): # go over trial outputs in the single results entry
+            for j in range(len(result[i])): # go over outputs for each output layer
 
                 # get target for terminal node whose OutputPort corresponds to current output
                 correct_value = None
@@ -718,7 +718,7 @@ class TestTrainingCorrectness:
                         correct_value = targets_dict[node][i]
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[0][i][j]), correct_value)
+                assert np.allclose(np.round(result[i][j]), correct_value)
 
         benchmark(sem_net.run, inputs={'inputs': inputs_dict,
                                        'targets': targets_dict,
@@ -2007,7 +2007,7 @@ class TestTrainingIdenticalness():
         g = g_f()
         result = sem_net.run(inputs=g_f)
 
-        comp_weights = sem_net.get_parameters()[0]
+        comp_weights = sem_net.get_parameters()
 
         # SET UP SYSTEM
         sem_net_sys = Composition()
@@ -3155,3 +3155,19 @@ class TestBatching:
         assert np.allclose(c1_results[0][:2], c2_results[-2])
         assert np.allclose(c1_results[0][2:], c2_results[-1])
 
+    def test_cross_entropy_loss(self):
+        import torch
+
+        m1 = pnl.TransferMechanism()
+        p = pnl.MappingProjection()
+        m2 = pnl.TransferMechanism()
+        adc = pnl.AutodiffComposition(loss_spec='crossentropy')
+
+        adc.add_linear_processing_pathway([m1, p, m2])
+        adc._build_pytorch_representation()
+
+        classes = torch.Tensor([2, 1])
+        target = torch.Tensor([1])
+
+        # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
+        assert adc.loss(classes, target) == -1 + np.log(np.exp(2) + np.exp(1))

@@ -53,6 +53,8 @@ arguments that are specific to the AutodiffComposition, as described below.
    been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
    functionality.
 
+.. warning:: When comparing models built in PyTorch to those using AutodiffComposition, the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set to `False`, as AutodiffComposition does not currently support trainable biases.
+
 * **param_init_from_pnl** argument -- determines how parameters are set up for the internal PyTorch representation of
   the model.  If it is set to True:
 
@@ -595,7 +597,16 @@ class AutodiffComposition(Composition):
         elif loss_spec == 'sse':
             return nn.MSELoss(reduction='sum')
         elif loss_spec == 'crossentropy':
-            return nn.CrossEntropyLoss(reduction='sum')
+            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
+            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
+            # and where target is a 1d vector of type long specifying the index to the target category. This
+            # formatting is different from most other loss functions available to autodiff compositions,
+            # and therefore requires a wrapper function to properly package inputs.
+            cross_entropy_loss = nn.CrossEntropyLoss()
+            return lambda x, y: cross_entropy_loss(
+                    x.unsqueeze(0),
+                    y.type(torch.LongTensor)
+            )
         elif loss_spec == 'l1':
             return nn.L1Loss(reduction='sum')
         elif loss_spec == 'nll':
@@ -720,6 +731,7 @@ class AutodiffComposition(Composition):
                 # (outputs, targets, weights, and more) and returns a scalar
                 new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
                 curr_loss += new_loss
+
             # save average loss across all output neurons on current trial
             curr_losses[t] = curr_loss[0].item() / num_inputs
 
@@ -1103,7 +1115,7 @@ class AutodiffComposition(Composition):
                 results = full_results
 
             self.most_recent_context = context
-            return results
+            return results[-1]
 
         else:
             results = super(AutodiffComposition, self).run(inputs=inputs,
@@ -1205,9 +1217,8 @@ class AutodiffComposition(Composition):
                                            .format(self.name))
 
         weights = pytorch_representation.get_weights_for_projections()
-        biases = pytorch_representation.get_biases_for_mechanisms()
 
-        return weights, biases
+        return weights
 
     def _get_param_struct_type(self, ctx):
         # We only need input/output params (rest should be in pytorch model params)
