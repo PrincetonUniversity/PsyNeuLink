@@ -462,7 +462,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments, call_with_pruned_args
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -1003,12 +1003,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
         }
 
-        v = self._handle_default_variable(default_variable, size)
+        v = call_with_pruned_args(
+            self._handle_default_variable,
+            default_variable=default_variable,
+            size=size,
+            **parameter_values
+        )
         if v is None:
             default_variable = self.defaults.variable
         else:
             default_variable = v
             self.defaults.variable = default_variable
+            self.parameters.variable._user_specified = True
 
         self.parameters.has_initializers._set(False, context)
 
@@ -1128,12 +1134,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # Compilation support
     # ------------------------------------------------------------------------------------------------------------------
     def _get_compilation_state(self):
-        try:
-            stateful = self.stateful_attributes
-        except AttributeError:
-            stateful = []
+        # FIXME: MAGIC LIST, Use stateful tag for this
+        whitelist = {"previous_time", "previous_value", "previous_v",
+                     "previous_w", "random_state", "is_finished_flag",
+                     "num_executions_before_finished"}
+        # mechanism functions are handled separately
+        blacklist = {"function"} if hasattr(self, 'ports') else {}
+        def _is_compilation_state(p):
+            val = p.get()   # memoize for this function
+            return val is not None and p.name not in blacklist and \
+                   (p.name in whitelist or isinstance(val, Component))
 
-        return (p for p in self.parameters if p.name in stateful or isinstance(p.get(), Component))
+        return filter(_is_compilation_state, self.parameters)
 
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
@@ -1148,30 +1160,38 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
-            else:
+            try:
+                return (_convert(i) for i in x)
+            except:
                 return x
-        lists = (_convert(s) for s in self._get_state_values(context))
-        return pnlvm._tupleize(lists)
+        return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
-    def _get_compilation_params(self, context=None):
-        # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'initializer'}
-        try:
-            # Don't list stateful params, the are included in context
-            black_list.update(self.stateful_attributes)
-        except AttributeError:
-            pass
+    def _get_compilation_params(self):
+        # FIXME: MAGIC LIST, Use stateful tag for this
+        blacklist = {"previous_time", "previous_value", "previous_v",
+                     "previous_w", "random_state", "is_finished_flag",
+                     "num_executions_before_finished", "variable",
+                     "value", "initializer",
+                     # Invalid types
+                     "input_port_variables", "results", "simulation_results",
+                     "monitor_for_control", "feature_values", "simulation_ids",
+                     "input_labels_dict", "output_labels_dict",
+                     "modulated_mechanisms"}
+        # mechanism functions are handled separately
+        if hasattr(self, 'ports'):
+            blacklist.add("function")
         def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(context)
+            if p.name not in blacklist and not isinstance(p, ParameterAlias):
+                #FIXME: this should use defaults
+                val = p.get()
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, (str, ComponentsMeta))
+                return not isinstance(val, (str, dict, ComponentsMeta, ContentAddressableList, type(_is_compilation_param), type(max)))
             return False
 
         return filter(_is_compilation_param, self.parameters)
 
     def _get_param_ids(self, context=None):
-        return [p.name for p in self._get_compilation_params(context)]
+        return [p.name for p in self._get_compilation_params()]
 
     def _get_param_values(self, context=None):
         def _get_values(p):
@@ -1200,7 +1220,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param = np.asfarray(param[0]).tolist()
             return param
 
-        return tuple(map(_get_values, self._get_compilation_params(context)))
+        return tuple(map(_get_values, self._get_compilation_params()))
 
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
@@ -1239,23 +1259,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 a default variable if possible
                 None otherwise
         """
-        if self._default_variable_handled:
-            return default_variable
-
         default_variable = self._parse_arg_variable(default_variable)
 
         if default_variable is None:
             default_variable = self._handle_size(size, default_variable)
 
             if default_variable is None or default_variable is NotImplemented:
-                self._default_variable_handled = True
                 return None
             else:
                 self._default_variable_flexibility = DefaultsFlexibility.RIGID
         else:
             self._default_variable_flexibility = DefaultsFlexibility.RIGID
-
-        self._default_variable_handled = True
 
         return convert_to_np_array(default_variable, dimension=1)
 
@@ -2930,18 +2944,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @_default_variable_flexibility.setter
     def _default_variable_flexibility(self, value):
         self.__default_variable_flexibility = value
-
-    @property
-    def _default_variable_handled(self):
-        try:
-            return self.__default_variable_handled
-        except AttributeError:
-            self.__default_variable_handled = False
-            return self.__default_variable_handled
-
-    @_default_variable_handled.setter
-    def _default_variable_handled(self, value):
-        self.__default_variable_handled = value
 
     @classmethod
     def get_constructor_defaults(cls):

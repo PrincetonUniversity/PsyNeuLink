@@ -1023,7 +1023,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # # Flag for deferred initialization
         # self.initialization_status = ContextFlags.DEFERRED_INIT
-        # self.initialization_status = ContextFlags.DEFERRED_INIT
 
         super().__init__(
             default_variable=default_variable,

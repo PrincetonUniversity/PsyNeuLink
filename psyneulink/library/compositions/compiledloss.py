@@ -13,7 +13,13 @@ class Loss():
 
         self._DELTA_W_NUM = 0
 
-    def _gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):
+
+    def _gen_llvm_function(self):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            return self._gen_loss_function(ctx)
+
+
+    def gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):
         return builder.call(bin_func, [builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)]),
                                        ctx.int32_ty(len(value.type.pointee)),
                                        builder.gep(target, [ctx.int32_ty(0), ctx.int32_ty(0)])])
@@ -27,8 +33,7 @@ class MSELoss(Loss):
         super().__init__(pytorch_model)
         self.reduction = reduction
 
-    # creates a bin func that returns the mse loss
-    def _gen_call_function(self,ctx):
+    def _gen_loss_function(self, ctx):
         name = self._composition.name + "_MSE_CALL"
 
         # args:
@@ -49,6 +54,9 @@ class MSELoss(Loss):
             diff = b1.fmul(diff,diff)
             b1.store(b1.fadd(b1.load(sum),diff),sum)
 
+        # Average the values in sum by dimensionality
+        builder.store(builder.fdiv(builder.load(sum),builder.uitofp(dim, ctx.float_ty)), sum)
+        
         builder.ret(builder.load(sum))
 
         return builder.function
@@ -64,7 +72,13 @@ class MSELoss(Loss):
         assert len(output.type.pointee) == dim
 
         if sum_loss is False:
+            # we take mean
             self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target, output)
+            # multiply each element i by 2/n to get dC/da_i
+            scalar_mult = builder.fdiv(ctx.float_ty(2), ctx.float_ty(dim))
+            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim), "mse_mean_mult_loop") as (b1, index):
+                element_ptr = b1.gep(output, [ctx.int32_ty(0), index])
+                b1.store(b1.fmul(b1.load(element_ptr),scalar_mult),element_ptr)
         else:
             # in this case, we add the loss
             tmp = self._pytorch_model._gen_inject_vec_sub(ctx, builder, value, target)

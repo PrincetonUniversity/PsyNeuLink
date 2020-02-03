@@ -238,12 +238,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         self.has_initializers = True
 
-    # MODIFIED 6/21/19 NEW: [JDC]
-    def _handle_default_variable(self, default_variable=None, size=None):
-        if default_variable is not None:
-            self.parameters.variable._user_specified = True
-        return super()._handle_default_variable(default_variable, size)
-
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
         """Check inner dimension (length) of all parameters used for the function
@@ -2352,7 +2346,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, pnl_internal=True)
         seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2883,7 +2877,23 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     .. math::
 
-        rate \\cdot previous\\_value + variable + noise \\sqrt{time\\_step\\_size}
+        previous\\_value + (rate \\cdot previous\\_value + variable) \\cdot time\\_step\\_size +
+        noise \\sqrt{time\\_step\\_size}
+
+    where `rate <LeakyCompetingIntegrator.rate>` corresponds to :math:`k` (the leak parameter), `variable
+    <LeakyCompetingIntegrator.variable>` corresponds to :math:`\\rho_i` + :math:`\\beta` :math:`\\Sigma f(x_{\\neq i})`
+    (the net input to a unit), and `time_step_size <LeakyCompetingIntegrator.time_step_size>` corresponds to
+    :math:`\\frac{dt}{\\tau}` in Equation 2 of `Usher & McClelland (2001)
+    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+
+    .. note::
+        When used as the `function <Mechanism.function>` of an `LCAMechanism`, the value passed to `variable
+        <LeakyCompetingIntegrator.variable>` is the sum of the external and recurrent inputs to the Mechanism
+        (see `here <RecurrentTransferMechanism_Structure>` for how the external and recurrent inputs can be
+        configured in a `RecurrentTransferMechanism`, of which LCAMechanism is subclass).
+
+    .. hint::
+        ``leak`` can be used as an alias for `rate <LeakyCompetingIntegrator.rate>`.
 
     *Modulatory Parameters:*
 
@@ -2902,6 +2912,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
         to the integral on each time step.  If it is a list or array, it must be the same length as `variable
         <LeakyCompetingIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
+
+    leak : float, list or 1d array : default 1.0
+        alias for **rate**.
 
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;
@@ -2945,11 +2958,15 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     rate : float or 1d array
         scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
-        the `value <LeakyCompetingIntegrator.value>` on each time step. If it is a float or has a single element,
-        its value is applied to all the elements of `previous_value <LeakyCompetingIntegrator.previous_value>`; if it
-        is an array, each element is applied to the corresponding element of `previous_value
-        <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for `modulation
-        <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
+        the `value <LeakyCompetingIntegrator.value>` on each time step (corrsponding to the ``leak`` term of the
+        function described in Equation 2 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+        If it is a float or has a single element, its value is applied to all the elements of `previous_value
+        <LeakyCompetingIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
+        element of `previous_value <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
+        `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
+
+    leak : float, list or 1d array
+        alias for `rate <LeakyCompetingIntegrator.rate>`.
 
     noise : float, Function, or 1d array
         random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`.
@@ -3012,8 +3029,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                     :type: float
 
         """
-        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], function_arg=True)
-        offset = Parameter(None, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM, 'leak'], function_arg=True)
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
         time_step_size = Parameter(0.1, modulable=True, function_arg=True)
 
     @tc.typecheck
@@ -3071,9 +3088,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = self.get_current_function_param(TIME_STEP_SIZE, context)
         offset = self.get_current_function_param(OFFSET, context)
 
-        if offset is None:
-            offset = 0.0
-
         # execute noise if it is a function
         noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
         previous_value = self.get_previous_value(context)
@@ -3091,6 +3105,41 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
             self.parameters.previous_value._set(adjusted_value, context)
 
         return self.convert_output_type(adjusted_value)
+
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
+        time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
+
+        # Get the only context member -- previous value
+        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        in_ptr = builder.gep(vi, [ctx.int32_ty(0), index])
+        in_val = builder.load(in_ptr)
+
+        ret = builder.fmul(prev_val, rate)
+        ret = builder.fadd(ret, in_val)
+        ret = builder.fmul(ret, time_step)
+
+        sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
+        mod_step = builder.call(sqrt_f, [time_step])
+        mod_noise = builder.fmul(noise, mod_step)
+
+        ret = builder.fadd(ret, prev_val)
+        ret = builder.fadd(ret, mod_noise)
+        ret = builder.fadd(ret, offset)
+
+        out_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(ret, out_ptr)
+        builder.store(ret, prev_ptr)
 
 
 class FitzHughNagumoIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------

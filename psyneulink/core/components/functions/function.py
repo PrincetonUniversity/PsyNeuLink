@@ -148,7 +148,6 @@ import types
 import warnings
 
 from enum import Enum, IntEnum
-from random import randint
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.shellclasses import Function, Mechanism
@@ -511,7 +510,6 @@ class Function_Base(Function):
         self,
         default_variable,
         params,
-        function=None,
         owner=None,
         name=None,
         prefs=None,
@@ -545,7 +543,6 @@ class Function_Base(Function):
 
         super().__init__(
             default_variable=default_variable,
-            function=function,
             param_defaults=params,
             name=name,
             prefs=prefs,
@@ -916,7 +913,7 @@ class ArgumentTherapy(Function_Base):
         statement = variable
         propensity = self.get_current_function_param(PROPENSITY, context)
         pertinacity = self.get_current_function_param(PERTINACITY, context)
-        whim = randint(-10, 10)
+        whim = np.random.randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:
             value = whim < pertinacity

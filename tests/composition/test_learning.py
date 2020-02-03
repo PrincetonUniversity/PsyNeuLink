@@ -636,7 +636,7 @@ class TestBackProp:
                                   )
         if 'AUTODIFF' in models:
             result = xor_autodiff.run(inputs=inputs_dict)
-            autodiff_weights = xor_autodiff.get_parameters()[0]
+            autodiff_weights = xor_autodiff.get_parameters()
     
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
     

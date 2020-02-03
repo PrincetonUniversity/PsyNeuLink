@@ -713,7 +713,7 @@ class DDM(ProcessingMechanism):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
-        random_state = Parameter("random_state", loggable=False)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
@@ -1078,13 +1078,6 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _get_mech_state_struct_type(self, ctx):
-        return ctx.convert_python_struct_to_llvm_ir(self.random_state)
-
-    def _get_mech_state_init(self, context):
-        random_state = self.get_current_mechanism_param("random_state", context)
-        return pnlvm._tupleize(random_state.get_state()[1:])
-
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
         mech_out = builder.alloca(mech_out_ty)
@@ -1132,7 +1125,8 @@ class DDM(ProcessingMechanism):
                                               func_params, THRESHOLD)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
-            random_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            random_state = ctx.get_state_ptr(self, builder, mech_state, "random_state")
             random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
             builder.call(random_f, [random_state, random_val_ptr])

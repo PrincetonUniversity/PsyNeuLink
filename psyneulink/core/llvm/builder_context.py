@@ -49,7 +49,7 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'printf'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
 
 
 class LLVMBuilderContext:
@@ -90,7 +90,7 @@ class LLVMBuilderContext:
     @classmethod
     def get_unique_name(cls, name: str):
         cls.__uniq_counter += 1
-        name = re.sub(r"[- ()\[\]]", "_", name)
+        name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         return name + '_' + str(cls.__uniq_counter)
 
     def get_builtin(self, name: str, args=[], function_type=None):
@@ -137,15 +137,15 @@ class LLVMBuilderContext:
             cache[obj] = obj._gen_llvm_function()
         return cache[obj]
 
-    def import_llvm_function(self, name) -> ir.Function:
+    def import_llvm_function(self, obj) -> ir.Function:
         """
         Get function handle if function exists in current modele.
         Create function declaration if it exists in a older module.
         """
         try:
-            f = self.gen_llvm_function(name)
+            f = self.gen_llvm_function(obj)
         except AttributeError:
-            f = _find_llvm_function(name, _all_modules | {self.module})
+            f = _find_llvm_function(obj, _all_modules | {self.module})
         # Add declaration to the current module
         if f.name not in self.module.globals:
             decl_f = ir.Function(self.module, f.type.pointee, f.name)
@@ -235,10 +235,11 @@ class LLVMBuilderContext:
         return builder.gep(params_ptr, [self.int32_ty(0), idx],
                            name="ptr_param_{}_{}".format(param_name, component.name))
 
-    def get_state_ptr(self, component, builder, state_ptr, port_Name):
-        idx = self.int32_ty(component._get_state_ids().index(port_Name))
+    def get_state_ptr(self, component, builder, state_ptr, stateful_name):
+        idx = self.int32_ty(component._get_state_ids().index(stateful_name))
         return builder.gep(state_ptr, [self.int32_ty(0), idx],
-                           name="ptr_state_{}_{}".format(port_Name, component.name))
+                           name="ptr_state_{}_{}".format(stateful_name,
+                                                         component.name))
 
     def unwrap_2d_array(self, builder, element):
         if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
@@ -249,37 +250,55 @@ class LLVMBuilderContext:
     def inject_printf(self, builder, fmt, *args, override_debug=False):
         if "print_values" not in debug_env and not override_debug:
             return
-        fmt += "\0"
+        #FIXME: Fix builtin printf and use that instead of this
+        try:
+            import llvmlite.binding as llvm
+            libc = ctypes.util.find_library("c")
+            llvm.load_library_permanently(libc)
+            # Address will be none if the symbol is not found
+            printf_address = llvm.address_of_symbol("printf")
+            # Direct pointer constants don't work
+            printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+            printf = builder.inttoptr(pnlvm.ir.IntType(64)(printf_address), printf_ty.as_pointer())
+            ir_module = builder.function.module
+            fmt += "\0"
 
-        int8 = ir.IntType(8)
-        stack_save = self.get_builtin("stacksave", [],
-                                      ir.FunctionType(int8.as_pointer(), []))
-        stack_restore = self.get_builtin("stackrestore", [],
-                                         ir.FunctionType(ir.VoidType(), [int8.as_pointer()]))
+            int8 = ir.IntType(8)
+            fmt_data = bytearray(fmt.encode("utf8"))
+            fmt_ty = ir.ArrayType(int8, len(fmt_data))
+            global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                        name="printf_fmt_" + str(len(ir_module.globals)))
+            global_fmt.linkage = "internal"
+            global_fmt.global_constant = True
+            global_fmt.initializer = fmt_ty(fmt_data)
 
-        old_stack = builder.call(stack_save, [])
-        fmt_data = bytearray(fmt.encode("utf8"))
+            fmt_ptr = builder.gep(global_fmt, [self.int32_ty(0), self.int32_ty(0)])
+            builder.call(printf, [fmt_ptr] + list(args))
+        except:
+            return
 
-        # Allocate array to ease initialization
-        fmt = builder.alloca(ir.ArrayType(int8, len(fmt_data)))
-        builder.store(fmt.type.pointee(fmt_data), fmt)
-        fmt_ptr = builder.gep(fmt, [self.int32_ty(0), self.int32_ty(0)])
+            
 
-        printf = self.get_builtin("printf")
-        builder.call(printf, [fmt_ptr] + list(args))
-
-        builder.call(stack_restore, [old_stack])
 
     def inject_printf_float_array(self, builder, array, prefix="", suffix="\n", override_debug=False):
         self.inject_printf(builder, prefix, override_debug=override_debug)
 
         with pnlvm.helpers.array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-            self.inject_printf(b1, "%f ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
+            self.inject_printf(b1, "%lf ", b1.load(b1.gep(array, [self.int32_ty(0), i])), override_debug=override_debug)
 
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
+    def inject_printf_float_matrix(self, builder, matrix, prefix="", suffix="\n", override_debug=False):
+        self.inject_printf(builder, prefix, override_debug=override_debug)
+        with pnlvm.helpers.array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+            row = b1.gep(matrix, [self.int32_ty(0), i])
+            with pnlvm.helpers.array_ptr_loop(b1, row, "print_col_loop") as (b2, j):
+                self.inject_printf(b2, "%lf ", b2.load(b2.gep(row, [self.int32_ty(0), j])), override_debug=override_debug)
+            self.inject_printf(b2, "\n",override_debug=override_debug)
+        self.inject_printf(builder, suffix, override_debug=override_debug)
+
     @contextmanager
-    def _gen_composition_exec_context(self, composition, simulation=False, suffix=""):
+    def _gen_composition_exec_context(self, composition, simulation=False, suffix="", extra_args=[]):
         cond_gen = ConditionGenerator(self, composition)
 
         name = 'exec_sim_wrap_' if simulation else 'exec_wrap_'
@@ -289,13 +308,13 @@ class LLVMBuilderContext:
                 self.get_input_struct_type(composition).as_pointer(),
                 self.get_data_struct_type(composition).as_pointer(),
                 cond_gen.get_condition_struct_type().as_pointer()]
-        builder = self.create_llvm_function(args, composition, name)
+        builder = self.create_llvm_function(args + extra_args, composition, name)
         llvm_func = builder.function
 
         for a in llvm_func.args:
             a.attributes.add('noalias')
 
-        state, params, comp_in, data_arg, cond = llvm_func.args
+        state, params, comp_in, data_arg, cond, *_ = llvm_func.args
         if "const_params" in debug_env:
             const_params = params.type.pointee(composition._get_param_initializer(None))
             params = builder.alloca(const_params.type, name="const_params_loc")
@@ -307,6 +326,17 @@ class LLVMBuilderContext:
             builder.store(data_vals, data)
         else:
             data = data_arg
+
+        # Call input CIM
+        input_cim_node = composition._get_node_wrapper(composition.input_CIM)
+        input_cim_f = self.import_llvm_function(input_cim_node)
+
+        builder.call(input_cim_f, [state, params, comp_in, data, data])
+
+        # Call parameter CIM
+        param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
+        param_cim_f = self.import_llvm_function(param_cim_w)
+        builder.call(param_cim_f, [state, params, comp_in, data, data])
 
         yield builder, data, params, cond_gen
 
@@ -322,16 +352,48 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, simulation=False):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        with self._gen_composition_exec_context(composition, simulation, "_learning") as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond = builder.function.args
+        learning_struct_ty = pnlvm.ir.LiteralStructType((
+            self.int32_ty,
+            self.int32_ty,
+            pytorch_model._get_learning_struct_type(self).as_pointer(),
+        ))
+        args=[
+            learning_struct_ty.as_pointer(),
+            self.get_output_struct_type(composition).as_pointer()
+        ]
+        with self._gen_composition_exec_context(composition, simulation,
+            "_learning", extra_args=args) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond, learning, data_out = builder.function.args
+            data_out.attributes.remove('nonnull')
 
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
-                                                           params, comp_in, data)
+                                                           params, data, learning)
             # Call output CIM
             output_cim_w = composition._get_node_wrapper(composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
+
+            composition.learning_enabled = False
+            exec_f = self.import_llvm_function(composition)
+            composition.learning_enabled = True
+
+            runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
+            runs = builder.load(runs_ptr, "runs")
+            with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
+                data_in_ptr = builder.gep(comp_in, [iters])
+                b.call(exec_f, [state, params, data_in_ptr, data, cond])
+
+                # Extract output_CIM result
+                output_cond = builder.icmp_unsigned("!=", data_out, data_out.type(None))
+                with builder.if_then(output_cond):
+                    idx = composition._get_node_index(composition.output_CIM)
+                    result_ptr = b.gep(data, [self.int32_ty(0),
+                                              self.int32_ty(0),
+                                              self.int32_ty(idx)])
+                    result = b.load(result_ptr)
+                    output_ptr = b.gep(data_out, [iters])
+                    b.store(result, output_ptr)
 
             return builder.function
 
@@ -342,17 +404,8 @@ class LLVMBuilderContext:
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-            # Call input CIM
-            input_cim_w = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_f = self.import_llvm_function(input_cim_w)
-
-            builder.call(input_cim_f, [state, params, comp_in, data, data])
-
             # Call pytorch internal compiled llvm func
             input_cim_idx = composition._get_node_index(composition.input_CIM)
-
-            model_params = builder.gep(params, [self.int32_ty(0),
-                                                self.int32_ty(2)])
 
             # Extract the input that should be inserted into the model
             model_input = builder.gep(data, [self.int32_ty(0),
@@ -361,29 +414,29 @@ class LLVMBuilderContext:
             model_output = builder.gep(data, [self.int32_ty(0)])
 
             pytorch_forward_func = self.import_llvm_function(pytorch_model)
-            builder.call(pytorch_forward_func, [state, model_params,
+            builder.call(pytorch_forward_func, [state, params,
                                                 model_input, model_output])
 
             # Call output CIM
             output_cim_w = composition._get_node_wrapper(composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w)
-            builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
             return builder.function
 
     def gen_composition_exec(self, composition, simulation=False):
-        with self._gen_composition_exec_context(composition, simulation) as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond = builder.function.args
-            # Call input CIM
-            input_cim_w = composition._get_node_wrapper(composition.input_CIM)
-            input_cim_f = self.import_llvm_function(input_cim_w)
-            builder.call(input_cim_f, [state, params, comp_in, data, data])
 
-            # Call parameter CIM
-            param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
-            param_cim_f = self.import_llvm_function(param_cim_w)
-            builder.call(param_cim_f, [state, params, comp_in, data, data])
+        extra_args = []
+        # If there is a node that needs learning input we need to export it
+        # FIXME: Should we use node roles here?
+        for node in filter(lambda n: hasattr(n, 'learning_enabled') and n.learning_enabled, composition.nodes):
+            node_wrap = composition._get_node_wrapper(node)
+            node_f = self.import_llvm_function(node_wrap)
+            extra_args = [node_f.args[-1].type]
+
+
+        with self._gen_composition_exec_context(composition, simulation, extra_args=extra_args) as (builder, data, params, cond_gen):
+            state, _, comp_in, _, cond, *learning = builder.function.args
 
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
@@ -424,43 +477,46 @@ class LLVMBuilderContext:
             any_cond = ir.IntType(1)(0)
 
             # Calculate execution set before running the mechanisms
-            for idx, mech in enumerate(composition.nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr,
+            for idx, node in enumerate(composition.nodes):
+                run_set_node_ptr = builder.gep(run_set_ptr,
                                                [zero, self.int32_ty(idx)],
-                                               name="run_cond_ptr_" + mech.name)
-                mech_cond = cond_gen.generate_sched_condition(
-                    builder, composition._get_processing_condition_set(mech),
-                    cond, mech)
-                ran = cond_gen.generate_ran_this_pass(builder, cond, mech)
-                mech_cond = builder.and_(mech_cond, builder.not_(ran),
-                                         name="run_cond_" + mech.name)
-                any_cond = builder.or_(any_cond, mech_cond, name="any_ran_cond")
-                builder.store(mech_cond, run_set_mech_ptr)
+                                               name="run_cond_ptr_" + node.name)
+                node_cond = cond_gen.generate_sched_condition(
+                    builder, composition._get_processing_condition_set(node),
+                    cond, node)
+                ran = cond_gen.generate_ran_this_pass(builder, cond, node)
+                node_cond = builder.and_(node_cond, builder.not_(ran),
+                                         name="run_cond_" + node.name)
+                any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
+                builder.store(node_cond, run_set_node_ptr)
 
-            for idx, mech in enumerate(composition.nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_should_run")
-                with builder.if_then(mech_cond):
-                    mech_w = composition._get_node_wrapper(mech)
-                    mech_f = self.import_llvm_function(mech_w)
-                    builder.block.name = "invoke_" + mech_f.name
+            for idx, node in enumerate(composition.nodes):
+                run_set_node_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
+                node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
+                with builder.if_then(node_cond):
+                    node_w = composition._get_node_wrapper(node)
+                    node_f = self.import_llvm_function(node_w)
+                    builder.block.name = "invoke_" + node_f.name
                     # Wrappers do proper indexing of all structures
-                    if len(mech_f.args) == 5:  # Mechanism wrappers have 5 inputs
-                        builder.call(mech_f, [state, params, comp_in, data, output_storage])
-                    else:
-                        builder.call(mech_f, [state, params, comp_in, data, output_storage, cond])
+                    # Mechanisms have only 5 args
+                    args = [state, params, comp_in, data, output_storage]
+                    if len(node_f.args) >= 6:  # Composition wrappers have 6 args
+                        args.append(cond)
+                    if len(node_f.args) == 7:  # Learning wrappers have 7 args
+                        args.append(*learning)
+                    builder.call(node_f, args)
 
-                    cond_gen.generate_update_after_run(builder, cond, mech)
-                builder.block.name = "post_invoke_" + mech_f.name
+                    cond_gen.generate_update_after_run(builder, cond, node)
+                builder.block.name = "post_invoke_" + node_f.name
 
             # Writeback results
-            for idx, mech in enumerate(composition.nodes):
-                run_set_mech_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
-                mech_cond = builder.load(run_set_mech_ptr, name="mech_" + mech.name + "_ran")
-                with builder.if_then(mech_cond):
-                    out_ptr = builder.gep(output_storage, [zero, zero, self.int32_ty(idx)], name="result_ptr_" + mech.name)
+            for idx, node in enumerate(composition.nodes):
+                run_set_node_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
+                node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
+                with builder.if_then(node_cond):
+                    out_ptr = builder.gep(output_storage, [zero, zero, self.int32_ty(idx)], name="result_ptr_" + node.name)
                     data_ptr = builder.gep(data, [zero, zero, self.int32_ty(idx)],
-                                           name="data_result_" + mech.name)
+                                           name="data_result_" + node.name)
                     builder.store(builder.load(out_ptr), data_ptr)
 
             # Update step counter
@@ -504,7 +560,7 @@ class LLVMBuilderContext:
 
         return builder.function
 
-    def gen_composition_run(self, composition, simulation=False, learning=False):
+    def gen_composition_run(self, composition, simulation=False):
         name = 'run_sim_wrap_' if simulation else 'run_wrap_'
         name += composition.name
         args = [self.get_state_struct_type(composition).as_pointer(),
@@ -554,12 +610,6 @@ class LLVMBuilderContext:
         cond_init = cond_type(cond_gen.get_condition_initializer())
         builder.store(cond_init, cond)
 
-        if learning:
-            # Call training function
-            data_in_ptr = builder.gep(data_in, [self.int32_ty(0)])
-            exec_learning_f = self.import_llvm_function(composition)
-            builder.call(exec_learning_f, [state, params, data_in_ptr, data, cond])
-
         runs = builder.load(runs_ptr, "runs")
         with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
             # Get the right input stimulus
@@ -567,14 +617,10 @@ class LLVMBuilderContext:
             data_in_ptr = b.gep(data_in, [input_idx])
 
             # Call execution
-            if learning:
-                composition.learning_enabled = False
             if simulation:
                 exec_f = self.import_llvm_function(composition._llvm_simulation.name)
             else:
                 exec_f = self.import_llvm_function(composition)
-            if learning:
-                composition.learning_enabled = True
             b.call(exec_f, [state, params, data_in_ptr, data, cond])
 
             if not simulation:

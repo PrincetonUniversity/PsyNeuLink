@@ -1,6 +1,4 @@
 import pytest
-import random
-# import time
 import numpy as np
 
 from psyneulink.core.llvm import ptx_enabled
@@ -48,7 +46,6 @@ def pytest_runtest_setup(item):
 def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))
     seed = 0
-    random.seed(seed)
     np.random.seed(seed)
     from psyneulink.core.globals.utilities import set_global_seed
     set_global_seed(seed)

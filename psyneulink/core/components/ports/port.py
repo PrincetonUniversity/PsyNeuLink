@@ -2210,7 +2210,7 @@ class Port_Base(Port):
             input_types.append(ctx.get_output_struct_type(mod))
         return pnlvm.ir.LiteralStructType(input_types)
 
-    def _get_compilation_params(self, context=None):
+    def _get_compilation_params(self):
         return [self.parameters.function]
 
     def _get_compilation_state(self):
