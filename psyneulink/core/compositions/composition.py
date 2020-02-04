@@ -7599,13 +7599,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
-
-        data = [pnlvm.ir.LiteralStructType(output_type_list)]
-        for node in self.nodes:
-            nested_data = ctx.get_data_struct_type(node)
-            data.append(nested_data)
-        return pnlvm.ir.LiteralStructType(data)
+        output_type_list = (ctx.get_output_struct_type(n) for n in self._all_nodes)
+        output_type = pnlvm.ir.LiteralStructType(output_type_list)
+        nested_types = (ctx.get_data_struct_type(n) for n in self._all_nodes)
+        return pnlvm.ir.LiteralStructType((output_type, *nested_types))
 
     def _get_state_initializer(self, context=None, simulation=False):
         mech_contexts = (m._get_state_initializer(context=context)
@@ -7621,12 +7618,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_data_initializer(self, context=None):
         output = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
-        data = [pnlvm._tupleize(output)]
-        for node in self.nodes:
-            nested_data = node._get_data_initializer(context=context) \
-                if hasattr(node, '_get_data_initializer') else ()
-            data.append(nested_data)
-        return tuple(data)
+        nested_data = (node._get_data_initializer(context=context)
+                       if hasattr(node, '_get_data_initializer') else ()
+                       for node in self._all_nodes)
+        return (pnlvm._tupleize(output), *nested_data)
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
