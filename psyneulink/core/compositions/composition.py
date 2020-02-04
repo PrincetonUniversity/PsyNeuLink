@@ -1747,9 +1747,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compiled resources
         self.__generated_node_wrappers = {}
-        self.__generated_run = None
-        self.__generated_simulation = None
-        self.__generated_sim_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
 
@@ -7602,34 +7599,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
-
-        data = [pnlvm.ir.LiteralStructType(output_type_list)]
-        for node in self.nodes:
-            nested_data = ctx.get_data_struct_type(node)
-            data.append(nested_data)
-        return pnlvm.ir.LiteralStructType(data)
+        output_type_list = (ctx.get_output_struct_type(n) for n in self._all_nodes)
+        output_type = pnlvm.ir.LiteralStructType(output_type_list)
+        nested_types = (ctx.get_data_struct_type(n) for n in self._all_nodes)
+        return pnlvm.ir.LiteralStructType((output_type, *nested_types))
 
     def _get_state_initializer(self, context=None, simulation=False):
-        mech_contexts = (tuple(m._get_state_initializer(context=context))
+        mech_contexts = (m._get_state_initializer(context=context)
                          for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_state_initializer(context=context)) for p in self.projections)
+        proj_contexts = (p._get_state_initializer(context=context) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def _get_param_initializer(self, context, simulation=False):
-        mech_params = (tuple(m._get_param_initializer(context))
+        mech_params = (m._get_param_initializer(context)
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(context)) for p in self.projections)
+        proj_params = (p._get_param_initializer(context) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self, context=None):
-        output = [(os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes]
-        data = [output]
-        for node in self.nodes:
-            nested_data = node._get_data_initializer(context=context) \
-                if hasattr(node,'_get_data_initializer') else []
-            data.append(nested_data)
-        return pnlvm._tupleize(data)
+        output = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
+        nested_data = (node._get_data_initializer(context=context)
+                       if hasattr(node, '_get_data_initializer') else ()
+                       for node in self._all_nodes)
+        return (pnlvm._tupleize(output), *nested_data)
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
@@ -7641,41 +7633,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 def __init__(self, node, gen_f):
                     self._node = node
                     self._gen_f = gen_f
-                def _gen_llvm_function(self):
-                    return self._gen_f(self._node)
-            wrapper = node_wrapper(node, self.__gen_node_wrapper)
+                def _gen_llvm_function(self, *, tags:tuple):
+                    return self._gen_f(self._node, tags=tags)
+            wrapper = node_wrapper(node, self._gen_node_wrapper)
             self.__generated_node_wrappers[node] = wrapper
             return wrapper
 
         return self.__generated_node_wrappers[node]
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                return ctx.gen_composition_exec(self)
-
-    @property
-    def _llvm_run(self):
-        if self.__generated_run is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_run = ctx.gen_composition_run(self)
-
-        return self.__generated_run
-
-    @property
-    def _llvm_simulation(self):
-        if self.__generated_simulation is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_simulation = ctx.gen_composition_exec(self, True)
-
-        return self.__generated_simulation
-
-    @property
-    def _llvm_sim_run(self):
-        if self.__generated_sim_run is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_sim_run = ctx.gen_composition_run(self, True)
-
-        return self.__generated_sim_run
+            if "run" in tags:
+                return ctx.gen_composition_run(self, tags=tags)
+            else:
+                return ctx.gen_composition_exec(self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):
@@ -7692,15 +7663,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
-    def __gen_node_wrapper(self, node):
+    def _gen_node_wrapper(self, node, *, tags:tuple):
         name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
-        # TODO: pass this explicitly
-        # FIXME: Can we use node_roles here?
-        is_learning_autodiff = hasattr(node, 'learning_enabled') and node.learning_enabled
+        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node)
+            node_function = ctx.import_llvm_function(node, tags=tags)
 
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
@@ -7816,7 +7785,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj)
+                proj_function = ctx.import_llvm_function(proj, tags=tags)
 
                 if proj_out.type != proj_function.args[3].type:
                     warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))

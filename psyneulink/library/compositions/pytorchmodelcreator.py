@@ -48,9 +48,6 @@ class PytorchModelCreator(torch.nn.Module):
         # list that Pytorch optimizers will use to keep track of parameters
         self.params = nn.ParameterList()
         self.device = device
-        self.__bin_exec_func = None
-        self._cached_param_list = None
-        self._cached_tupleized_param_list = None
 
         self._composition = composition
 
@@ -171,36 +168,30 @@ class PytorchModelCreator(torch.nn.Module):
         return pnlvm.ir.types.LiteralStructType(param_list)
 
     def _get_param_initializer(self):
-        if self._cached_param_list is None:
-            param_list = [None] * len(self._composition.nodes)
-            for (node, forward_info) in self.component_to_forward_info.items():
+        param_list = [None] * len(self._composition.nodes)
+        for (node, forward_info) in self.component_to_forward_info.items():
 
-                node_idx = self._composition._get_node_index(node)
+            node_idx = self._composition._get_node_index(node)
 
-                # 1) initialize weights
-                afferents = forward_info['afferents']
-                weight_array = [None] * len(afferents)
-                for (afferent_vertex, weights) in afferents.items():
-                    afferent_node = afferent_vertex.component
-                    afferent_index = self._get_afferent_node_index(node,afferent_node)
-                    if "no_ref_pass" not in debug_env: # this gets the actual memory address of the weights - is static (according to https://github.com/numpy/numpy/issues/13906)
-                        afferent_weight = weights.detach().numpy().ctypes.data
-                    else:
-                        afferent_weight = weights.detach().numpy()
-                    weight_array[afferent_index] = afferent_weight
-                node_params = [weight_array]
+            # 1) initialize weights
+            afferents = forward_info['afferents']
+            weight_array = [None] * len(afferents)
+            for (afferent_vertex, weights) in afferents.items():
+                afferent_node = afferent_vertex.component
+                afferent_index = self._get_afferent_node_index(node,afferent_node)
+                afferent_weight = weights.detach().numpy()
+                if "no_ref_pass" not in debug_env:
+                    # this gets the actual memory address of the weights
+                    # it is static (according to https://github.com/numpy/numpy/issues/13906)
+                    afferent_weight = afferent_weight.ctypes.data
+                weight_array[afferent_index] = afferent_weight
+            node_params = [weight_array]
 
-                param_list[node_idx] = node_params
-            if "no_ref_pass" not in debug_env:
-                self._cached_param_list = pnlvm.execution._tupleize(param_list)
-            else:
-                self._cached_param_list = param_list
-        if "no_ref_pass" not in debug_env:
-            return self._cached_param_list
-        return pnlvm.execution._tupleize(self._cached_param_list)
+            param_list[node_idx] = node_params
+        return pnlvm.execution._tupleize(param_list)
 
     # generates llvm function for self.forward
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags:tuple):
         llvm_func = None
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_state_struct_type(self._composition).as_pointer(),

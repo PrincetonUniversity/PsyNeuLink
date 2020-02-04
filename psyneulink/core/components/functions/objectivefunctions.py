@@ -398,7 +398,7 @@ class Stability(ObjectiveFunction):
 
         super()._update_default_variable(new_default_variable, context)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
         matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
@@ -971,7 +971,7 @@ class Distance(ObjectiveFunction):
         acc_y2_val = builder.fadd(acc_y2_val, y2)
         builder.store(acc_y2_val, acc_y2)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
         # FIXME python version also ignores other vectors

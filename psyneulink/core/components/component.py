@@ -1137,7 +1137,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished"}
+                     "num_executions_before_finished", "execution_count"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
@@ -1225,13 +1225,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
 
-    def _gen_llvm_function(self, extra_args=[]):
+    def _gen_llvm_function(self, *, extra_args=[], tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_state_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_output_struct_type(self).as_pointer()]
-            builder = ctx.create_llvm_function(args + extra_args, self)
+            builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
             llvm_func = builder.function
 
             llvm_func.attributes.add('alwaysinline')
@@ -1240,7 +1240,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for p in params, state, arg_in, arg_out:
                     p.attributes.add('noalias')
 
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
             builder.ret_void()
 
         return llvm_func

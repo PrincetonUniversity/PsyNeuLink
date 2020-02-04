@@ -14,7 +14,7 @@ class Loss():
         self._DELTA_W_NUM = 0
 
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             return self._gen_loss_function(ctx)
 

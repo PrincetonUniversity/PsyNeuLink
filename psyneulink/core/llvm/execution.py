@@ -44,14 +44,12 @@ def _tupleize(x):
 
 
 class CUDAExecution:
-    def __init__(self, buffers=['param_struct', 'state_struct']):
+    def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self._uploaded_bytes = 0
         self._downloaded_bytes = 0
-        self.__cuda_out_buf = None
         self.__debug_env = debug_env
-        self.__vo_ty = None
 
     def __del__(self):
         if "cuda_data" in self.__debug_env:
@@ -67,14 +65,6 @@ class CUDAExecution:
     def _bin_func_multirun(self):
         # CUDA uses the same function for single and multi run
         return self._bin_func
-
-    @property
-    def _vo_ty(self):
-        if self.__vo_ty is None:
-            self.__vo_ty = self._bin_func.byref_arg_types[3]
-            if len(self._execution_contexts) > 1:
-                self.__vo_ty = self.__vo_ty * len(self._execution_contexts)
-        return self.__vo_ty
 
     def _get_ctype_bytes(self, data):
         # Return dummy buffer. CUDA does not handle 0 size well.
@@ -92,24 +82,38 @@ class CUDAExecution:
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
         return ty.from_buffer(out_buf)
 
-    def __getattr__(self, attribute):
-        assert attribute.startswith("_cuda")
-
-        private_attr_name = "_buffer" + attribute
+    def __get_cuda_buffer(self, struct_name):
+        private_attr_name = "_buffer_cuda" + struct_name
         private_attr = getattr(self, private_attr_name)
         if private_attr is None:
             # Set private attribute to a new buffer
-            private_attr = self.upload_ctype(getattr(self, attribute[5:]))
+            private_attr = self.upload_ctype(getattr(self, struct_name))
             setattr(self, private_attr_name, private_attr)
 
         return private_attr
 
     @property
-    def _cuda_out_buf(self):
-        if self.__cuda_out_buf is None:
+    def _cuda_param_struct(self):
+        return self.__get_cuda_buffer("_param_struct")
+
+    @property
+    def _cuda_state_struct(self):
+        return self.__get_cuda_buffer("_state_struct")
+
+    @property
+    def _cuda_data_struct(self):
+        return self.__get_cuda_buffer("_data_struct")
+
+    @property
+    def _cuda_conditions(self):
+        return self.__get_cuda_buffer("_conditions")
+
+    @property
+    def _cuda_out(self):
+        if self._buffer_cuda_out is None:
             size = ctypes.sizeof(self._vo_ty)
-            self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
-        return self.__cuda_out_buf
+            self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
+        return self._buffer_cuda_out
 
     def cuda_execute(self, variable):
         # Create input parameter
@@ -119,11 +123,11 @@ class CUDAExecution:
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
-                                 data_in, self._cuda_out_buf,
+                                 data_in, self._cuda_out,
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out_buf, self._vo_ty)
+        ct_res = self.download_ctype(self._cuda_out, self._vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
@@ -148,6 +152,7 @@ class FuncExecution(CUDAExecution):
             self.__param_struct = None
             self.__state_struct = None
 
+        self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
 
@@ -211,7 +216,7 @@ class MechExecution(FuncExecution):
         #   a) the input is vector of input ports
         #   b) input ports take vector of projection outputs
         #   c) projection output is a vector (even 1 element vector)
-        new_var = np.asfarray([np.atleast_2d(x) for x in np.atleast_1d(variable)])
+        new_var = [np.atleast_2d(x) for x in np.atleast_1d(variable)]
         return super().execute(new_var)
 
 
@@ -430,10 +435,12 @@ class CompExecution(CUDAExecution):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             try:
-                learning = 'learning' if self._composition.learning_enabled else None
+                learning = ("learning",) if self._composition.learning_enabled else ()
             except AttributeError:
-                learning = None
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tag=learning)
+                learning = ()
+            if len([n for n in self._composition.nodes if hasattr(n, 'learning_enabled') and n.learning_enabled]):
+                learning = ("learning",)
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=learning)
 
         return self.__bin_exec_func
 
@@ -497,7 +504,7 @@ class CompExecution(CUDAExecution):
                                       threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
-        self._data_struct = self.download_ctype(self._cuda_data_struct, self._vo_ty)
+        self._data_struct = self.download_ctype(self._cuda_data_struct, type(self._data_struct))
 
     # Methods used to accelerate "Run"
 
@@ -517,7 +524,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            self.__bin_run_func = pnlvm.LLVMBinaryFunction.get(self._composition._llvm_run.name)
+            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=("run",))
 
         return self.__bin_run_func
 

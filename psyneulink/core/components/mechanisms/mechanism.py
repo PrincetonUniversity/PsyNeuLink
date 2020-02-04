@@ -2569,6 +2569,13 @@ class Mechanism_Base(Mechanism):
 
         return (port_state_init, function_state_init, mech_state_init)
 
+    def _gen_llvm_function(self, *, extra_args=[], tags:tuple):
+        if "node_wrapper" in tags:
+            node_tags = tuple(t for t in tags if t != "node_wrapper")
+            return self.composition._gen_node_wrapper(self, tags=node_tags)
+        else:
+            return super()._gen_llvm_function(extra_args=extra_args, tags=tags)
+
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
                         mech_params, mech_state, mech_input):
@@ -2677,6 +2684,10 @@ class Mechanism_Base(Mechanism):
             elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
                 assert port_spec[1] < len(value.type.pointee)
                 return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
+            elif port_spec == OWNER_EXECUTION_COUNT:
+                mech_private_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+                execution_count = ctx.get_state_ptr(self, builder, mech_private_state, "execution_count")
+                return execution_count
             else:
                 #TODO: support more spec options
                 assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
@@ -2712,7 +2723,7 @@ class Mechanism_Base(Mechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
 
         is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
@@ -2724,14 +2735,72 @@ class Mechanism_Base(Mechanism):
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
+        # Update execution counter
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        exec_count_ptr = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+        exec_count = builder.load(exec_count_ptr)
+        exec_count = builder.fadd(exec_count, exec_count.type(1))
+        builder.store(exec_count, exec_count_ptr)
+
         builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
-        return builder
+        return builder, pnlvm.ir.IntType(1)(1)
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
 
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "is_finished_flag")
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "num_executions_before_finished")
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_params,
+                                                "max_executions_before_finished")
+
+        # Reset the flag and counter
+        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
+        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+
+        # Enter the loop
+        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
+        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
+        builder.branch(loop_block)
+        builder.position_at_end(loop_block)
+
+        # Get internal function
+        args_t = [a.type for a in builder.function.args]
+        internal_builder = ctx.create_llvm_function(args_t, self,
+                                                    name=builder.function.name + "_internal",
+                                                    return_type=pnlvm.ir.IntType(1))
+        internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
+                                                                         params, state, arg_in, arg_out)
+        internal_builder.ret(is_finished)
+
+        # Call Internal Function
+        internal_f = internal_builder.function
+        is_finished_cond = builder.call(internal_f, builder.function.args)
+
+        #FIXME: Flag and count should be int instead of float
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+        is_finished_max = builder.load(is_finished_max_ptr)
+        max_reached = builder.fcmp_ordered(">=", is_finished_count,
+                                           is_finished_max)
+        is_finished_cond = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(is_finished_cond):
+            builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
+            builder.branch(end_block)
+
+        builder.branch(loop_block)
+        builder.position_at_end(end_block)
+
+        return builder
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None, context=None):
 

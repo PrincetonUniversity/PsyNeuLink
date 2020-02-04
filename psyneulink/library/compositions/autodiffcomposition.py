@@ -518,11 +518,6 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
 
-
-        # store generated llvm functions
-        self.__generated_forward_exec = None
-        self.__generated_learning_exec = None
-
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
 
@@ -796,17 +791,12 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
-    def _gen_llvm_function(self):
-        if self.learning_enabled is True:
-            if self.__generated_learning_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_exec = ctx.gen_autodiffcomp_learning_exec(self)
-            return self.__generated_learning_exec
-        else:
-            if self.__generated_forward_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_forward_exec = ctx.gen_autodiffcomp_exec(self)
-            return self.__generated_forward_exec
+    def _gen_llvm_function(self, *, tags:tuple):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            if "learning" in tags:
+                return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
+            else:
+                return ctx.gen_autodiffcomp_exec(self, tags=tags)
 
     @handle_external_context()
     def execute(self,
@@ -1249,13 +1239,12 @@ class AutodiffComposition(Composition):
 
     def _get_param_initializer(self, context):
         mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
+        proj_params = (p._get_param_initializer(context) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
-        param_args = (tuple(mech_params), tuple(proj_params), pytorch_params)
-        return tuple(param_args)
+        return (tuple(mech_params), tuple(proj_params), pytorch_params)
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):

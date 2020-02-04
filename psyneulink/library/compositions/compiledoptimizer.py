@@ -74,7 +74,7 @@ class Optimizer():
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         builder.store(optim_struct.type.pointee(None), optim_struct)
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             return self.step(ctx)
 

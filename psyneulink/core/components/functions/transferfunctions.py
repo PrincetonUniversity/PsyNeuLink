@@ -106,7 +106,7 @@ class TransferFunction(Function_Base):
         bounds = None
 
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -264,7 +264,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         #       workaround.
         return ctx.get_input_struct_type(self)
 
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:tuple):
         val = builder.load(arg_in)
         builder.store(val, arg_out)
         return builder
@@ -2360,7 +2360,7 @@ class SoftMax(TransferFunction):
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:tuple):
         if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
@@ -2930,7 +2930,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             return np.array(specification)
 
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:tuple):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
             warnings.warn("Unexpected data shape: {} got 2D input: {}".format(self, self.defaults.variable))
@@ -4108,7 +4108,7 @@ class TransferWithCosts(TransferFunction):
         self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
         return enabled_cost_functions
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())

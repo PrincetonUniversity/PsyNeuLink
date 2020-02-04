@@ -1408,7 +1408,7 @@ class LinearCombination(
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(val, ptro)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:tuple):
         # Sometimes we arg_out to 2d array
         arg_out = ctx.unwrap_2d_array(builder, arg_out)
 
