@@ -2569,6 +2569,13 @@ class Mechanism_Base(Mechanism):
 
         return (port_state_init, function_state_init, mech_state_init)
 
+    def _gen_llvm_function(self, *, extra_args=[], tag):
+        if tag.startswith("node_wrapper"):
+            node_tag = tag.replace("node_wrapper", "").lstrip("_")
+            return self.composition._gen_node_wrapper(self, tag=node_tag)
+        else:
+            return super()._gen_llvm_function(extra_args=extra_args, tag=tag)
+
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
                         mech_params, mech_state, mech_input):

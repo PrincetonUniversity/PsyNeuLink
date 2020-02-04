@@ -7640,7 +7640,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._gen_f = gen_f
                 def _gen_llvm_function(self, *, tag):
                     return self._gen_f(self._node, tag=tag)
-            wrapper = node_wrapper(node, self.__gen_node_wrapper)
+            wrapper = node_wrapper(node, self._gen_node_wrapper)
             self.__generated_node_wrappers[node] = wrapper
             return wrapper
 
@@ -7668,7 +7668,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
-    def __gen_node_wrapper(self, node, *, tag):
+    def _gen_node_wrapper(self, node, *, tag:str):
         name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
         # FIXME: Replace this with tags!
