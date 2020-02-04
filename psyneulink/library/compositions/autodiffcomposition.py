@@ -1239,13 +1239,12 @@ class AutodiffComposition(Composition):
 
     def _get_param_initializer(self, context):
         mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
+        proj_params = (p._get_param_initializer(context) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
                        else tuple() for p in self.projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
-        param_args = (tuple(mech_params), tuple(proj_params), pytorch_params)
-        return tuple(param_args)
+        return (tuple(mech_params), tuple(proj_params), pytorch_params)
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):

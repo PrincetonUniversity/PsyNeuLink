@@ -7608,25 +7608,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return pnlvm.ir.LiteralStructType(data)
 
     def _get_state_initializer(self, context=None, simulation=False):
-        mech_contexts = (tuple(m._get_state_initializer(context=context))
+        mech_contexts = (m._get_state_initializer(context=context)
                          for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_state_initializer(context=context)) for p in self.projections)
+        proj_contexts = (p._get_state_initializer(context=context) for p in self.projections)
         return (tuple(mech_contexts), tuple(proj_contexts))
 
     def _get_param_initializer(self, context, simulation=False):
-        mech_params = (tuple(m._get_param_initializer(context))
+        mech_params = (m._get_param_initializer(context)
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(context)) for p in self.projections)
+        proj_params = (p._get_param_initializer(context) for p in self.projections)
         return (tuple(mech_params), tuple(proj_params))
 
     def _get_data_initializer(self, context=None):
-        output = [(os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes]
-        data = [output]
+        output = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
+        data = [pnlvm._tupleize(output)]
         for node in self.nodes:
             nested_data = node._get_data_initializer(context=context) \
-                if hasattr(node,'_get_data_initializer') else []
+                if hasattr(node, '_get_data_initializer') else ()
             data.append(nested_data)
-        return pnlvm._tupleize(data)
+        return tuple(data)
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
