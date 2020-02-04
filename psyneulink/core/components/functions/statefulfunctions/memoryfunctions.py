@@ -763,7 +763,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
         return (*my_init, distance_init, selection_init)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         # PRNG
         rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")

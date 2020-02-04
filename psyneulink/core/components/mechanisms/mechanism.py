@@ -2569,12 +2569,12 @@ class Mechanism_Base(Mechanism):
 
         return (port_state_init, function_state_init, mech_state_init)
 
-    def _gen_llvm_function(self, *, extra_args=[], tag):
-        if tag.startswith("node_wrapper"):
-            node_tag = tag.replace("node_wrapper", "").lstrip("_")
-            return self.composition._gen_node_wrapper(self, tag=node_tag)
+    def _gen_llvm_function(self, *, extra_args=[], tags:tuple):
+        if "node_wrapper" in tags:
+            node_tags = tuple(t for t in tags if t != "node_wrapper")
+            return self.composition._gen_node_wrapper(self, tags=node_tags)
         else:
-            return super()._gen_llvm_function(extra_args=extra_args, tag=tag)
+            return super()._gen_llvm_function(extra_args=extra_args, tags=tags)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
@@ -2751,7 +2751,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,

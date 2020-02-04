@@ -7638,20 +7638,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 def __init__(self, node, gen_f):
                     self._node = node
                     self._gen_f = gen_f
-                def _gen_llvm_function(self, *, tag):
-                    return self._gen_f(self._node, tag=tag)
+                def _gen_llvm_function(self, *, tags:tuple):
+                    return self._gen_f(self._node, tags=tags)
             wrapper = node_wrapper(node, self._gen_node_wrapper)
             self.__generated_node_wrappers[node] = wrapper
             return wrapper
 
         return self.__generated_node_wrappers[node]
 
-    def _gen_llvm_function(self, *, tag):
+    def _gen_llvm_function(self, *, tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            if tag.startswith("run"):
-                return ctx.gen_composition_run(self, tag=tag)
+            if "run" in tags:
+                return ctx.gen_composition_run(self, tags=tags)
             else:
-                return ctx.gen_composition_exec(self, tag=tag)
+                return ctx.gen_composition_exec(self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):
@@ -7668,14 +7668,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
-    def _gen_node_wrapper(self, node, *, tag:str):
+    def _gen_node_wrapper(self, node, *, tags:tuple):
         name = 'comp_wrap_'
         is_mech = isinstance(node, Mechanism)
-        # FIXME: Replace this with tags!
-        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tag
+        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node, tag=tag)
+            node_function = ctx.import_llvm_function(node, tags=tags)
 
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
@@ -7791,7 +7790,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj, tag=tag)
+                proj_function = ctx.import_llvm_function(proj, tags=tags)
 
                 if proj_out.type != proj_function.args[3].type:
                     warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))

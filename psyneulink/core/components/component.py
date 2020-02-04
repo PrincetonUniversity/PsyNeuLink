@@ -1225,13 +1225,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
 
-    def _gen_llvm_function(self, *, extra_args=[], tag):
+    def _gen_llvm_function(self, *, extra_args=[], tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_state_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_output_struct_type(self).as_pointer()]
-            builder = ctx.create_llvm_function(args + extra_args, self)
+            builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
             llvm_func = builder.function
 
             llvm_func.attributes.add('alwaysinline')
@@ -1240,7 +1240,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for p in params, state, arg_in, arg_out:
                     p.attributes.add('noalias')
 
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tag=tag)
+            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
             builder.ret_void()
 
         return llvm_func

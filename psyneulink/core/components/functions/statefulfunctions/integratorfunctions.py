@@ -358,7 +358,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     def _function(self, *args, **kwargs):
         raise FunctionError("IntegratorFunction is not meant to be called explicitly")
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         # Get rid of 2d array.
         # When part of a Mechanism, the input and output are 2d arrays.
         arg_in = ctx.unwrap_2d_array(builder, arg_in)
@@ -4112,7 +4112,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         return previous_v, previous_w, previous_time
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         zero_i32 = ctx.int32_ty(0)
 
         # Get rid of 2d array. When part of a Mechanism the input,

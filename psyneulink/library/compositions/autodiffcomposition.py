@@ -791,12 +791,12 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
-    def _gen_llvm_function(self, tag):
+    def _gen_llvm_function(self, *, tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            if "learning" in tag:
-                return ctx.gen_autodiffcomp_learning_exec(self, tag=tag)
+            if "learning" in tags:
+                return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
             else:
-                return ctx.gen_autodiffcomp_exec(self, tag=tag)
+                return ctx.gen_autodiffcomp_exec(self, tags=tags)
 
     @handle_external_context()
     def execute(self,

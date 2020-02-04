@@ -257,7 +257,7 @@ class OneHot(SelectionFunction):
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
-    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out, *, tags:tuple):
         idx_ptr = builder.alloca(ctx.int32_ty)
         builder.store(ctx.int32_ty(0), idx_ptr)
 

@@ -1253,7 +1253,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         return moments
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
 
         def load_scalar_param(name):
             param_ptr = ctx.get_param_ptr(self, builder, params, name)

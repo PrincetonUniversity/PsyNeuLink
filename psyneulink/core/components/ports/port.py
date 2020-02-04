@@ -2216,7 +2216,7 @@ class Port_Base(Port):
     def _get_compilation_state(self):
         return [self.parameters.function]
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
         state_f = ctx.import_llvm_function(self.function)
 
         # Create a local copy of the function parameters

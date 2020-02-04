@@ -744,7 +744,7 @@ class DefaultAllocationFunction(Function_Base):
         # Override Component.reinitialize which requires that the Component is stateful
         pass
 
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:tuple):
         val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         val = builder.load(val_ptr)
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "alloc_loop") as (b, idx):

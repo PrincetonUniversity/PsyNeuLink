@@ -187,7 +187,7 @@ class InterfacePortMap(InterfaceFunction):
         input_type = ctx.get_input_struct_type(self)
         return input_type.elements[index]
 
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tag):
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:tuple):
         index = self.corresponding_input_port.position_in_mechanism
         val = builder.load(builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(index)]))
         builder.store(val, arg_out)
