@@ -30,7 +30,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
@@ -375,9 +375,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                   and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
-                    "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                        .format(noise, self.defaults.variable, self.name,
-                                np.shape(np.array(self.defaults.variable))))
+                    "must be specified as a float, a function, or an array of the appropriate shape ({}).".format(
+                        noise, self.defaults.variable, self.name,
+                        np.shape(np.array(self.defaults.variable))
+                    ),
+                    component=self
+                )
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -408,7 +411,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
                         param[i][j] = param[i][j]()
-            param = param.reshape(param_shape)
+            try:
+                param = param.reshape(param_shape)
+            except ValueError:
+                if object_has_single_value(param):
+                    param = np.full(param_shape, float(param))
 
         # param is one function
         elif callable(param):

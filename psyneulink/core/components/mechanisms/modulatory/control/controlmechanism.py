@@ -736,7 +736,7 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         # Override Component.reset which requires that the Component is stateful
         pass
 
@@ -1695,7 +1695,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         based on specified `control_allocation <ControlMechanism.control_allocation>`
         (used by controller of a Composition in simulations)
         """
-        value = [np.atleast_1d(a) for a in control_allocation]
+        value = [a for a in control_allocation]
         self.parameters.value._set(value, context)
         self._update_output_ports(runtime_params, context)
 

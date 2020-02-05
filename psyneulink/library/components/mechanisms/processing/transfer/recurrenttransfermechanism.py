@@ -972,6 +972,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
+
+            # creating a recurrent_projection changes the default variable shape
+            # so we have to reshape any Paramter Functions
+            self._update_parameter_class_variables(context)
+
         self.aux_components.append(self.recurrent_projection)
 
         if self.learning_enabled:
@@ -1228,9 +1233,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input, context)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
-        if self.parameters.integrator_mode.get(context):
-            super().reset(*args, context=context)
+    def reset(self, *args, force=False, context=None):
+        super().reset(*args, force=force, context=context)
         self.parameters.value.clear_history(context)
 
     @property
