@@ -971,7 +971,7 @@ class Distance(ObjectiveFunction):
         acc_y2_val = builder.fadd(acc_y2_val, y2)
         builder.store(acc_y2_val, acc_y2)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:tuple):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
         # FIXME python version also ignores other vectors
