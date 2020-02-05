@@ -1214,7 +1214,15 @@ class TestStatefulness:
         assert I.has_initializers
         assert hasattr(I, "reinitialize_when")
 
-    def test_reinitialize_when_composition(self):
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_reinitialize_when_composition(self, mode):
         I1 = pnl.IntegratorMechanism()
         I2 = pnl.IntegratorMechanism()
         I2.reinitialize_when = pnl.AtTrial(2)
@@ -1222,9 +1230,7 @@ class TestStatefulness:
         C.add_node(I1)
         C.add_node(I2)
 
-        C.run(inputs={I1: [[1.0]],
-                      I2: [[1.0]]},
-              num_trials=7)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
 
         expected_results = [[np.array([0.5]), np.array([0.5])],
                             [np.array([0.75]), np.array([0.75])],

@@ -1171,7 +1171,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "variable",
-                     "value", "initializer",
+                     "value", "has_initializers",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
@@ -1225,6 +1225,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
 
+    def _gen_llvm_function_reinitialize(self, ctx, builder, *_, tags):
+        assert "reinitialize" in tags
+        return builder
+
     def _gen_llvm_function(self, *, extra_args=[], tags:tuple):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
@@ -1240,7 +1244,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for p in params, state, arg_in, arg_out:
                     p.attributes.add('noalias')
 
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+            if "reinitialize" in tags:
+                builder = self._gen_llvm_function_reinitialize(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+            else:
+                builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
             builder.ret_void()
 
         return llvm_func

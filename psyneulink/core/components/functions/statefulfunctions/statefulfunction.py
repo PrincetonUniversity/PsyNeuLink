@@ -562,6 +562,15 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.parameters.value.set(value, context, override=True)
         return value
 
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+        assert "reinitialize" in tags
+        for i, a in enumerate(self.stateful_attributes):
+            source_ptr = ctx.get_param_ptr(self, builder, params, self.initializers[i])
+            dest_ptr = ctx.get_state_ptr(self, builder, state, a)
+            builder.store(builder.load(source_ptr), dest_ptr)
+
+        return builder
+
     @abc.abstractmethod
     def _function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")

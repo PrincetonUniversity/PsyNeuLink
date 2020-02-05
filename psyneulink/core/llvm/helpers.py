@@ -272,9 +272,11 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, EveryNCalls
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtTrial, EveryNCalls, Never
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
+        if isinstance(condition, Never):
+            return ir.IntType(1)(0)
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
@@ -288,6 +290,12 @@ class ConditionGenerator:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
+        elif isinstance(condition, AtTrial):
+            trial_num = condition.args[0]
+            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+            ts = builder.load(ts_ptr)
+            trial = builder.extract_value(ts, 0)
+            return builder.icmp_unsigned("==", trial, trial.type(trial_num))
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
