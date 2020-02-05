@@ -1214,6 +1214,28 @@ class TestStatefulness:
         assert I.has_initializers
         assert hasattr(I, "reinitialize_when")
 
+    def test_reinitialize_when_composition(self):
+        I1 = pnl.IntegratorMechanism()
+        I2 = pnl.IntegratorMechanism()
+        I2.reinitialize_when = pnl.AtTrial(2)
+        C = pnl.Composition()
+        C.add_node(I1)
+        C.add_node(I2)
+
+        C.run(inputs={I1: [[1.0]],
+                      I2: [[1.0]]},
+              num_trials=7)
+
+        expected_results = [[np.array([0.5]), np.array([0.5])],
+                            [np.array([0.75]), np.array([0.75])],
+                            [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+                            [np.array([0.9375]), np.array([0.75])],
+                            [np.array([0.96875]), np.array([0.875])],
+                            [np.array([0.984375]), np.array([0.9375])],
+                            [np.array([0.9921875]), np.array([0.96875])]]
+
+        assert np.allclose(expected_results, C.results)
+
     def test_reinitialize_when(self):
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()
@@ -1236,11 +1258,6 @@ class TestStatefulness:
                             [np.array([0.9375]), np.array([0.96875])]]
 
         assert np.allclose(expected_results, S.results)
-
-
-
-
-
 
 
 class TestDualAdaptiveIntegrator:
