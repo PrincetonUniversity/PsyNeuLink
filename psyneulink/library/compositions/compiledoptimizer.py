@@ -93,7 +93,7 @@ class AdamOptimizer(Optimizer):
         super().__init__(pytorch_model)
         self.lr = lr
         self.betas = betas
-        self.eps = 1e-8
+        self.eps = eps
         self.weight_decay = weight_decay
 
         self._M_T_NUM = 1
