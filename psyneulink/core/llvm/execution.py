@@ -434,13 +434,14 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            try:
-                learning = {"learning"} if self._composition.learning_enabled else {}
-            except AttributeError:
-                learning = {}
-            if len([n for n in self._composition.nodes if hasattr(n, 'learning_enabled') and n.learning_enabled]):
-                learning = {"learning"}
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=frozenset(learning))
+            def is_learning(obj):
+                return getattr(obj, 'learning_enabled', False)
+            tags=frozenset()
+            if is_learning(self._composition) or \
+               any(is_learning(n) for n in self._composition.nodes):
+                tags=frozenset({"learning"})
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
+                self._composition, tags=tags)
 
         return self.__bin_exec_func
 
