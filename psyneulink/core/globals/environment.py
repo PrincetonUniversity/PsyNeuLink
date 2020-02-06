@@ -764,7 +764,7 @@ def run(obj,
     """
     from psyneulink.core.globals.context import ContextFlags
 
-    if inputs == None:
+    if inputs is None:
         inputs = {}
 
     # small version of 'sequence' format in the once case where it was still working (single origin mechanism)

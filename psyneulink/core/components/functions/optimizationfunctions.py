@@ -898,7 +898,7 @@ class GradientOptimization(OptimizationFunction):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            if all(s == None for s in search_space):
+            if all(s is None for s in search_space):
                 return
             # If search space is a single 2-item list or tuple with numbers (i.e., bounds),
             #     wrap in list for handling below
