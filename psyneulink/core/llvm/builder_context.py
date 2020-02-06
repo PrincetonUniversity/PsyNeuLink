@@ -100,7 +100,7 @@ class LLVMBuilderContext:
             function_type = pnlvm.ir.FunctionType(args[0], [args[0], args[0]])
         return self.module.declare_intrinsic("llvm." + name, args, function_type)
 
-    def create_llvm_function(self, args, component, name=None, *, return_type=ir.VoidType(), tags:tuple=()):
+    def create_llvm_function(self, args, component, name=None, *, return_type=ir.VoidType(), tags:frozenset=frozenset()):
         name = "_".join((str(component), *tags)) if name is None else name
 
         # Builtins are already unique and need to keep their special name
@@ -124,7 +124,7 @@ class LLVMBuilderContext:
 
         return builder
 
-    def gen_llvm_function(self, obj, *, tags:tuple) -> ir.Function:
+    def gen_llvm_function(self, obj, *, tags:frozenset) -> ir.Function:
         cache = self._cache
         if obj not in cache:
             cache[obj] = dict()
@@ -134,7 +134,7 @@ class LLVMBuilderContext:
             cache_variants[tags] = obj._gen_llvm_function(tags=tags)
         return cache_variants[tags]
 
-    def import_llvm_function(self, fun, *, tags:tuple=()) -> ir.Function:
+    def import_llvm_function(self, fun, *, tags:frozenset=frozenset()) -> ir.Function:
         """
         Get function handle if function exists in current modele.
         Create function declaration if it exists in a older module.
@@ -296,7 +296,7 @@ class LLVMBuilderContext:
         self.inject_printf(builder, suffix, override_debug=override_debug)
 
     @contextmanager
-    def _gen_composition_exec_context(self, composition, *, tags:tuple, suffix="", extra_args=[]):
+    def _gen_composition_exec_context(self, composition, *, tags:frozenset, suffix="", extra_args=[]):
         cond_gen = ConditionGenerator(self, composition)
 
         name = "_".join(("wrap_exec", *tags ,composition.name + suffix))
@@ -324,7 +324,7 @@ class LLVMBuilderContext:
         else:
             data = data_arg
 
-        node_tags = ("node_wrapper",) + tags
+        node_tags = tags.union({"node_wrapper"})
         # Call input CIM
         input_cim_f = self.import_llvm_function(composition.input_CIM, tags=node_tags)
         builder.call(input_cim_f, [state, params, comp_in, data, data])
@@ -345,7 +345,7 @@ class LLVMBuilderContext:
 
         builder.ret_void()
 
-    def gen_autodiffcomp_learning_exec(self, composition, *, tags:tuple):
+    def gen_autodiffcomp_learning_exec(self, composition, *, tags:frozenset):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         learning_struct_ty = pnlvm.ir.LiteralStructType((
@@ -364,14 +364,14 @@ class LLVMBuilderContext:
 
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
                                                            params, data, learning)
-            node_tags = ("node_wrapper",) + tags
+            node_tags = tags.union({"node_wrapper"})
             # Call output CIM
             output_cim_f = self.import_llvm_function(composition.output_CIM,
                                                      tags=node_tags)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
-            forward_tags = tuple(t for t in tags if t != "learning")
+            forward_tags = tags.difference({"learning"})
             exec_f = self.import_llvm_function(composition, tags=forward_tags)
 
             runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
@@ -393,7 +393,7 @@ class LLVMBuilderContext:
 
             return builder.function
 
-    def gen_autodiffcomp_exec(self, composition, *, tags:tuple):
+    def gen_autodiffcomp_exec(self, composition, *, tags:frozenset):
         """Creates llvm bin execute for autodiffcomp"""
         assert composition.controller is None
         composition._build_pytorch_representation(composition.default_execution_id)
@@ -413,7 +413,7 @@ class LLVMBuilderContext:
             builder.call(pytorch_forward_func, [state, params,
                                                 model_input, model_output])
 
-            node_tags = ("node_wrapper",) + tags
+            node_tags = tags.union({"node_wrapper"})
             # Call output CIM
             output_cim_f = self.import_llvm_function(composition.output_CIM,
                                                      tags=node_tags)
@@ -421,14 +421,14 @@ class LLVMBuilderContext:
 
             return builder.function
 
-    def gen_composition_exec(self, composition, *, tags:tuple):
+    def gen_composition_exec(self, composition, *, tags:frozenset):
         simulation = "simulation" in tags
-        node_tags = ("node_wrapper",) + tags
+        node_tags = tags.union({"node_wrapper"})
         extra_args = []
         # If there is a node that needs learning input we need to export it
         for node in filter(lambda n: hasattr(n, 'learning_enabled') and "learning" in tags, composition.nodes):
             node_wrap = composition._get_node_wrapper(node)
-            node_f = self.import_llvm_function(node_wrap, tags=tags)
+            node_f = self.import_llvm_function(node_wrap, tags=node_tags)
             extra_args = [node_f.args[-1].type]
 
 
@@ -448,7 +448,7 @@ class LLVMBuilderContext:
                     builder, when, cond, node)
                 with builder.if_then(run_cond):
                     node_w = composition._get_node_wrapper(node)
-                    node_reinit_f = self.import_llvm_function(node_w, tags=node_tags + ("reinitialize",))
+                    node_reinit_f = self.import_llvm_function(node_w, tags=node_tags.union({"reinitialize"}))
                     builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
             if simulation is False and composition.enable_controller and \
@@ -509,7 +509,7 @@ class LLVMBuilderContext:
                 node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
                 with builder.if_then(node_cond):
                     node_w = composition._get_node_wrapper(node)
-                    node_f = self.import_llvm_function(node_w, tags=tags)
+                    node_f = self.import_llvm_function(node_w, tags=node_tags)
                     builder.block.name = "invoke_" + node_f.name
                     # Wrappers do proper indexing of all structures
                     # Mechanisms have only 5 args
@@ -574,7 +574,7 @@ class LLVMBuilderContext:
 
         return builder.function
 
-    def gen_composition_run(self, composition, *, tags:tuple):
+    def gen_composition_run(self, composition, *, tags:frozenset):
         assert "run" in tags
         simulation = "simulation" in tags
         name = "_".join(("wrap",  *tags, composition.name))
@@ -632,7 +632,7 @@ class LLVMBuilderContext:
             data_in_ptr = b.gep(data_in, [input_idx])
 
             # Call execution
-            exec_tags = tuple(t for t in tags if t != "run")
+            exec_tags = tags.difference({"run"})
             exec_f = self.import_llvm_function(composition, tags=exec_tags)
             b.call(exec_f, [state, params, data_in_ptr, data, cond])
 

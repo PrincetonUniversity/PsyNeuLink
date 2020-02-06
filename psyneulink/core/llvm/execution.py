@@ -268,7 +268,7 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper"}))
 
     @property
     def _conditions(self):
@@ -435,12 +435,12 @@ class CompExecution(CUDAExecution):
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
             try:
-                learning = ("learning",) if self._composition.learning_enabled else ()
+                learning = {"learning"} if self._composition.learning_enabled else {}
             except AttributeError:
-                learning = ()
+                learning = {}
             if len([n for n in self._composition.nodes if hasattr(n, 'learning_enabled') and n.learning_enabled]):
-                learning = ("learning",)
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=learning)
+                learning = {"learning"}
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=frozenset(learning))
 
         return self.__bin_exec_func
 
@@ -524,7 +524,8 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tags=("run",))
+            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
+                self._composition, tags=frozenset({"run"}))
 
         return self.__bin_run_func
 

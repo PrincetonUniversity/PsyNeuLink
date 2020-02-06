@@ -7691,7 +7691,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 def __init__(self, node, gen_f):
                     self._node = node
                     self._gen_f = gen_f
-                def _gen_llvm_function(self, *, tags:tuple):
+                def _gen_llvm_function(self, *, tags:frozenset):
                     return self._gen_f(self._node, tags=tags)
             wrapper = node_wrapper(node, self._gen_node_wrapper)
             self.__generated_node_wrappers[node] = wrapper
@@ -7699,7 +7699,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return self.__generated_node_wrappers[node]
 
-    def _gen_llvm_function(self, *, tags:tuple):
+    def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             if "run" in tags:
                 return ctx.gen_composition_run(self, tags=tags)
@@ -7721,8 +7721,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
-    def _gen_node_wrapper(self, node, *, tags:tuple):
-        func_tags = tuple((t for t in tags if t != "node_wrapper"))
+    def _gen_node_wrapper(self, node, *, tags:frozenset):
+        assert "node_wrapper" in tags
+        func_tags = tags.difference({"node_wrapper"})
         is_mech = isinstance(node, Mechanism)
         is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 

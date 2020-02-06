@@ -1109,7 +1109,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
 
-            sim_f = ctx.import_llvm_function(self.agent_rep, tags=("run", "simulation"))
+            sim_f = ctx.import_llvm_function(self.agent_rep,
+                                             tags=frozenset({"run", "simulation"}))
 
             # Create a simulation copy of composition state
             comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
@@ -1186,7 +1187,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return llvm_func
 
-    def _gen_llvm_function(self, *, tags:tuple):
+    def _gen_llvm_function(self, *, tags:frozenset):
         from psyneulink.core.compositions.composition import Composition
         is_comp = isinstance(self.agent_rep, Composition)
         if is_comp:
