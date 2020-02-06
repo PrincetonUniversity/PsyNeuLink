@@ -26,6 +26,7 @@ try:
 except ImportError:
     torch_available = False
 
+from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import AFTER, BEFORE
 
@@ -434,12 +435,29 @@ class LLVMBuilderContext:
         with self._gen_composition_exec_context(composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond, *learning = builder.function.args
 
+            # Check if there's anything to reinitialize
+            for node in composition._all_nodes:
+                when = getattr(node, "reinitialize_when", Never())
+                # FIXME: This should not be necessary. The code gets DCE'd,
+                # but there are still some problems with generation
+                # 'reinitialize' function
+                if node is composition.controller:
+                    continue
+
+                run_cond = cond_gen.generate_sched_condition(
+                    builder, when, cond, node)
+                with builder.if_then(run_cond):
+                    node_w = composition._get_node_wrapper(node)
+                    node_reinit_f = self.import_llvm_function(node_w, tags=node_tags + ("reinitialize",))
+                    builder.call(node_reinit_f, [state, params, comp_in, data, data])
+
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
                 assert composition.controller is not None
                 controller_f = self.import_llvm_function(composition.controller,
                                                          tags=node_tags)
                 builder.call(controller_f, [state, params, comp_in, data, data])
+
 
             # Allocate run set structure
             run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
@@ -677,6 +695,8 @@ class LLVMBuilderContext:
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
+            if len(t) == 0:
+                return ir.LiteralStructType([])
             assert all(type(x) is type(t[0]) for x in t)
             elem_t = self.convert_python_struct_to_llvm_ir(t[0])
             return ir.ArrayType(elem_t, len(t))

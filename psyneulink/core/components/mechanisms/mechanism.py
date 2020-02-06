@@ -2730,8 +2730,8 @@ class Mechanism_Base(Mechanism):
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_ctx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
+        mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
@@ -2751,7 +2751,20 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
 
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+        assert "reinitialize" in tags
+        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
+        reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
+                                   reinit_out])
+
+        return builder
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+        assert "reinitialize" not in tags
         mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,

@@ -7722,12 +7722,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
     def _gen_node_wrapper(self, node, *, tags:tuple):
-        name = 'comp_wrap_'
+        func_tags = tuple((t for t in tags if t != "node_wrapper"))
         is_mech = isinstance(node, Mechanism)
         is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node, tags=tags)
+            node_function = ctx.import_llvm_function(node, tags=func_tags)
 
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
@@ -7736,7 +7736,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr]
 
-            if not is_mech:
+            if not is_mech and "reinitialize" not in tags:
                 # Add condition struct of the parent composition
                 # This includes structures of all nested compositions
                 cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
@@ -7747,7 +7747,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if is_learning_autodiff:
                     args.append(node_function.args[-2].type)
 
-            builder = ctx.create_llvm_function(args, node, name + node.name)
+            builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
             llvm_func = builder.function
             llvm_func.attributes.add('alwaysinline')
             for a in llvm_func.args:
@@ -7778,6 +7778,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # and the entire call should be optimized out.
                 node_in = builder.alloca(node_function.args[2].type.pointee)
                 incoming_projections = node.afferents
+
+            if "reinitialize" in tags:
+                incoming_projections = []
 
             # Execute all incoming projections
             # TODO: This should filter out projections with different execution ID
@@ -7843,7 +7846,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj, tags=tags)
+                proj_function = ctx.import_llvm_function(proj, tags=func_tags)
 
                 if proj_out.type != proj_function.args[3].type:
                     warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
@@ -7861,7 +7864,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert node is self.controller
                     call_args += [params, context, data_in]
                 builder.call(node_function, call_args)
-            else:
+            elif "reinitialize" not in tags:
+                # FIXME: reinitialization of compositions is not supported
                 # Condition and data structures includes parent first
                 nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
                 node_data = builder.gep(data_in, [zero, nested_idx])
