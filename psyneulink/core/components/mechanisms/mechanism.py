@@ -2569,10 +2569,9 @@ class Mechanism_Base(Mechanism):
 
         return (port_state_init, function_state_init, mech_state_init)
 
-    def _gen_llvm_function(self, *, extra_args=[], tags:tuple):
+    def _gen_llvm_function(self, *, extra_args=[], tags:frozenset):
         if "node_wrapper" in tags:
-            node_tags = tuple(t for t in tags if t != "node_wrapper")
-            return self.composition._gen_node_wrapper(self, tags=node_tags)
+            return self.composition._gen_node_wrapper(self, tags=tags)
         else:
             return super()._gen_llvm_function(extra_args=extra_args, tags=tags)
 
@@ -2751,7 +2750,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -2763,7 +2762,7 @@ class Mechanism_Base(Mechanism):
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" not in tags
         mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])

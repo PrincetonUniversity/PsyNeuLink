@@ -562,7 +562,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.parameters.value.set(value, context, override=True)
         return value
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
         for i, a in enumerate(self.stateful_attributes):
             source_ptr = ctx.get_param_ptr(self, builder, params, self.initializers[i])

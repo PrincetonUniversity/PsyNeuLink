@@ -96,7 +96,7 @@ class LLVMBinaryFunction:
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def from_obj(obj, *, tags:tuple=()):
+    def from_obj(obj, *, tags:frozenset=frozenset()):
         name = LLVMBuilderContext.get_global().gen_llvm_function(obj, tags=tags).name
         return LLVMBinaryFunction.get(name)
 
