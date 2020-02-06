@@ -1289,6 +1289,36 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
         return (*transfer_init, tuple(retval_init), projection_init)
 
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:tuple):
+        assert "reinitialize" in tags
+
+        # Reinit main function
+        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
+        reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
+                                   reinit_out])
+
+        # Reinit integrator function
+        if self.integrator_mode:
+            mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+            reinit_f = ctx.import_llvm_function(self.integrator_function,
+                                                tags=tags)
+            reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
+            reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
+            reinit_params = ctx.get_param_ptr(self, builder, mech_params, "integrator_function")
+            reinit_state = ctx.get_state_ptr(self, builder, mech_state, "integrator_function")
+            builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
+                                    reinit_out])
+
+        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
+            ctx.int32_ty(len(state.type.pointee) - 2)])
+        builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
+        return builder
+
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
         #FIXME: This should really be in TransferMechanism, but those don't
         #       support 'is_finished' yet
