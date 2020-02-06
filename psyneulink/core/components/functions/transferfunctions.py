@@ -1530,8 +1530,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self.get_current_function_param(GAIN, context)
         leak = self.get_current_function_param(LEAK, context)
 
-        if (input > 0): return gain
-        else: return gain * leak
+        return gain if input > 0 else gain * leak
 
 
 # **********************************************************************************************************************
