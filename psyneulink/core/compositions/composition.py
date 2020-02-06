@@ -1159,7 +1159,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
-from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
+from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
@@ -6278,6 +6278,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             log=False,
             initial_values=None,
             reinitialize_values=None,
+            reinitialize_nodes_when=Never(),
             runtime_params=None,
             skip_initialization=False,
             animate=False,
@@ -6447,6 +6448,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node], context=context)
+
+        # cache and set reinitialize_when conditions for nodes, matching
+        # old System behavior
+        # Validate
+        if not isinstance(reinitialize_nodes_when, Condition):
+            raise CompositionError(
+                "{} is not a valid specification for "
+                "reinitialize_nodes_when of {}. "
+                "reinitialize_nodes_when must be a Condition.".format(
+                    reinitialize_nodes_when,
+                    self.name
+                )
+            )
+
+        self._reinitialize_nodes_when_cache = {}
+        for node in self.nodes:
+            try:
+                if isinstance(node.reinitialize_when, Never):
+                    self._reinitialize_nodes_when_cache[node] = node.reinitialize_when
+                    node.reinitialize_when = reinitialize_nodes_when
+            except AttributeError:
+                pass
 
         if ContextFlags.SIMULATION not in context.execution_phase:
             try:
@@ -6723,6 +6746,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 movie = Image.open(movie_path)
                 movie.show()
 
+        # Undo override of reinitialize_when conditions
+        for node in self.nodes:
+            try:
+                node.reinitialize_when = self._reinitialize_nodes_when_cache[node]
+            except KeyError:
+                pass
+
         return trial_output
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
@@ -6860,6 +6890,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(INITIAL_FRAME, context)
                 context.execution_id = old_eid
 
+        # Reinitialize any nodes that have satisfied 'reinitialize_when'
+        # conditions. This mimics the behavior used for Systems. (only
+        # checking for reinitialization at the beginning of a trial)
+        for node in self.nodes:
+            if node.parameters.has_initializers._get(context):
+                try:
+                    if (
+                        node.reinitialize_when.is_satisfied(
+                            scheduler=execution_scheduler,
+                            context=context
+                        )
+                    ):
+                        node.reinitialize(None, context=context)
+                except AttributeError:
+                    pass
+
         # EXECUTE INPUT CIM ********************************************************************************************
 
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
@@ -6891,6 +6937,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
+
+        # 1 because call_before_pass is called before the main
+        # scheduler loop to ensure it happens regardless of whether
+        # the scheduler terminates a trial immediately
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -7011,6 +7061,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
             # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
+            # KDM 1/15/20: Because we can't tell at the end of this
+            # code block whether a PASS has ended or not. The scheduler
+            # only modifies the pass after we receive an execution_set.
+            # So, we only know a PASS has ended in retrospect after the
+            # scheduler has changed the clock to indicate it. So, we
+            # have to run call_after_pass before the next PASS (here) or
+            # after this code block (see the call to call_after_pass
+            # below)
             if call_after_pass:
                 if next_pass_after == \
                         execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
