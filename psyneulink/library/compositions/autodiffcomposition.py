@@ -275,6 +275,7 @@ Class Reference
 
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.compositions.composition import CompositionError
@@ -544,7 +545,8 @@ class AutodiffComposition(Composition):
         if self.scheduler is None:  # if learning_enabled has never been run yet
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.execution_sets is None:
-            self.execution_sets = list(self.scheduler.run(context=context))
+            self.execution_sets = [ x - set(self.get_nodes_by_role(NodeRole.LEARNING)) for x in self.scheduler.run(context=context)]
+            self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
         if self.parameters.pytorch_representation._get(context) is None:
             model = PytorchModelCreator(self.graph_processing,
                                         self.param_init_from_pnl,
@@ -623,24 +625,24 @@ class AutodiffComposition(Composition):
         required_keys = {"inputs", "targets"}
         return required_keys.issubset(set(input_dict.keys()))
 
-    def _adjust_stimulus_dict(self, inputs):
-        if self.learning_enabled:
-            if isinstance(inputs, dict):
-                if self._has_required_keys(inputs):
-                    return inputs
-                raise AutodiffCompositionError("Invalid input specification.")
-            elif isinstance(inputs, list):
-                for input_dict in inputs:
-                    if not self._has_required_keys(input_dict):
-                        raise AutodiffCompositionError("Invalid input specification.")
-                return inputs
+    # def _adjust_stimulus_dict(self, inputs):
+    #     if self.learning_enabled:
+    #         if isinstance(inputs, dict):
+    #             if self._has_required_keys(inputs):
+    #                 return inputs
+    #             raise AutodiffCompositionError("Invalid input specification.")
+    #         elif isinstance(inputs, list):
+    #             for input_dict in inputs:
+    #                 if not self._has_required_keys(input_dict):
+    #                     raise AutodiffCompositionError("Invalid input specification.")
+    #             return inputs
 
-        # If learning is disabled, but inputs are provided in the same format as used for learning,
-        #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
-        elif isinstance(inputs, dict) and "inputs" in inputs.keys():
-            inputs = inputs["inputs"]
+    #     # If learning is disabled, but inputs are provided in the same format as used for learning,
+    #     #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
+    #     elif isinstance(inputs, dict) and "inputs" in inputs.keys():
+    #         inputs = inputs["inputs"]
 
-        return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
+    #     return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
     def autodiff_processing(self, inputs, context=None, do_logging=False, scheduler=None):
@@ -657,23 +659,13 @@ class AutodiffComposition(Composition):
         return outputs
 
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, total_epochs, curr_epoch, context=None, do_logging=False, scheduler=None):
+    def autodiff_training(self, inputs, targets, context=None, do_logging=False, scheduler=None):
 
         # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
         # the input for an origin component equals the number of desired trials. We could clean this up
         # by perhaps using modular arithmetic on t, or by being more explicit about number of desired trials
         first_input_value = list(inputs.values())[0]
         num_inputs = len(first_input_value)
-
-        patience = self.parameters.patience._get(context)
-
-        if patience is not None:
-            # set up object for early stopping
-            early_stopper = EarlyStopping(patience=patience, min_delta=self.parameters.min_delta._get(context))
-
-        # if training over trial sets in random order, set up array for mapping random order back to original order
-        if self.randomize:
-            rand_train_order_reverse = np.zeros(num_inputs)
 
         # get total number of output neurons from the dimensionality of targets on the first trial
         # (this is for computing average loss across neurons on each trial later)
@@ -702,10 +694,7 @@ class AutodiffComposition(Composition):
         # iterate over inputs, targets
         for t in range(num_inputs):
 
-            if self.randomize:
-                input_index = rand_train_order[t]
-            else:
-                input_index = t
+            input_index = t
             curr_tensor_inputs = {}
             curr_tensor_targets = {}
             for component in inputs.keys():
@@ -732,15 +721,12 @@ class AutodiffComposition(Composition):
             # save average loss across all output neurons on current trial
             curr_losses[t] = curr_loss[0].item() / num_inputs
 
-            # save outputs of model if this is final epoch or if using early stopping
-            if patience is not None or curr_epoch == total_epochs - 1:
-                curr_output_list = []
-                for input_port in self.output_CIM.input_ports:
-                    assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                    component = input_port.all_afferents[0].sender.owner
-                    curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-                outputs.append(curr_output_list)
-                # outputs.extend(curr_output_list)
+            curr_output_list = []
+            for input_port in self.output_CIM.input_ports:
+                assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+                component = input_port.all_afferents[0].sender.owner
+                curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+            outputs.append(curr_output_list)
 
         optimizer = self.parameters.optimizer._get(context)
 
@@ -757,36 +743,13 @@ class AutodiffComposition(Composition):
         optimizer.step()
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
-        if curr_epoch == total_epochs - 1 and not do_logging:
-            self.parameters.pytorch_representation._get(context).\
-                copy_outputs_to_psyneulink(curr_tensor_outputs, context)
-
         scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
         # save average loss on the current epoch
         average_loss = np.mean(curr_losses)
         self.parameters.losses._get(context).append(average_loss)
 
-        # update early stopper with most recent average loss
-        if self.parameters.patience._get(context) is not None:
-            should_stop = early_stopper.step(average_loss)
-            if should_stop:
-                logger.warning('Due to early stopping, stopped training early after {} epochs'.format(curr_epoch))
-                if self.randomize:
-                    outputs_list = [None] * len(outputs)
-                    for i in range(len(outputs)):
-                        outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
-                    return outputs_list
-                else:
-                    return outputs
-
-        if self.randomize:  # save outputs in a list in correct order, return them
-            outputs_list = [None] * len(outputs)
-            for i in range(len(outputs)):
-                outputs_list[i] = outputs[int(rand_train_order_reverse[i])]
-            return outputs_list
-        else:
-            return outputs
+        return outputs
 
     def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
@@ -794,6 +757,70 @@ class AutodiffComposition(Composition):
                 return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
             else:
                 return ctx.gen_autodiffcomp_exec(self, tags=tags)
+
+    def _infer_output_nodes(self, nodes: dict):
+        """
+        Maps targets onto target mechanisms (as needed by learning)
+
+        Returns
+        ---------
+        A dict mapping TargetMechanisms -> target values
+        """
+        ret = {}
+        for node, values in nodes.items():
+            if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
+                comparators = [x for x in node.efferents if (isinstance(type(x), ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                output_nodes = [t for t in c.afferents
+                                        if (NodeRole.OUTPUT in self.get_roles_by_node(t))
+                                        for c in comparators]
+                
+                if len(output_nodes) != 1:
+                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer output node from target node {node}!")
+                
+                ret[output_nodes[0]] = values
+            else:
+                ret[node] = values
+        return ret
+
+    def _infer_output_nodes(self, nodes: dict):
+        """
+        Maps targets onto target mechanisms (as needed by learning)
+
+        Returns
+        ---------
+        A dict mapping TargetMechanisms -> target values
+        """
+        ret = {}
+        for node, values in nodes.items():
+            if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
+                node_efferent_mechanisms = [x.receiver._owner for x in node.efferents]
+                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                comparator_afferent_mechanisms = [x.sender._owner for c in comparators for x in c.afferents]
+                output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
+                
+                if len(output_nodes) != 1:
+                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer learning target node from output node {node}!")
+                
+                ret[output_nodes[0]] = values
+            else:
+                ret[node] = values
+        return ret
+    
+    def _infer_input_nodes(self, nodes: dict):
+        """
+        Maps targets onto target mechanisms (as needed by learning)
+
+        Returns
+        ---------
+        A dict mapping TargetMechanisms -> target values
+        """
+        ret = {}
+        for node, values in nodes.items():
+            if NodeRole.INPUT in self.get_roles_by_node(node) and not NodeRole.TARGET in self.get_roles_by_node(node):
+                ret[node] = values
+        return ret
 
     @handle_external_context()
     def execute(self,
@@ -815,8 +842,9 @@ class AutodiffComposition(Composition):
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
-                skip_initialization=False,
                 bin_execute=False,
+                skip_initialization=False,
+                learning_mode=False
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -852,64 +880,23 @@ class AutodiffComposition(Composition):
                           self.name, str(e)))
 
 
-            autodiff_inputs = inputs["inputs"]
-            autodiff_targets = inputs["targets"]
-            autodiff_epochs = 1
-            if "epochs" in inputs:
-                autodiff_epochs = inputs["epochs"]
+            autodiff_inputs = self._infer_input_nodes(inputs)
+            autodiff_targets = self._infer_output_nodes(inputs)
 
-            minibatch = {
-                'inputs': {
-                    k: [] for k in inputs['inputs'].keys()
-                },
-                'targets': {
-                    k: [] for k in inputs['targets'].keys()
-                }
-            }
-
-            if num_trials is None:
-                num_trials = len(list(inputs['inputs'].values())[0])
-            if minibatch_size == TRAINING_SET:
-                minibatch_size = num_trials
-
-            results = []
             self._build_pytorch_representation(context)
-
-            for current_epoch in range(autodiff_epochs):
-                for trial_num in range(num_trials):
-                    for k,v in inputs['inputs'].items():
-                        minibatch['inputs'][k].append(v[trial_num])
-                    for k, v in inputs['targets'].items():
-                        minibatch['targets'][k].append(v[trial_num])
-                    minibatch_results = []
-                    if len(list(minibatch['inputs'].values())[0]) == minibatch_size or \
-                            trial_num == num_trials - 1:
-                        if call_before_minibatch:
-                            call_before_minibatch()
-                        output = self.autodiff_training(minibatch['inputs'],
-                                                        minibatch['targets'],
-                                                        autodiff_epochs,
-                                                        current_epoch,
-                                                        context,
-                                                        do_logging,
-                                                        scheduler)
-                        if call_after_minibatch:
-                            call_after_minibatch()
-                        self.most_recent_context = context
-                        for k, v in inputs['inputs'].items():
-                            minibatch['inputs'][k] = []
-                        for k, v in inputs['targets'].items():
-                            minibatch['targets'][k] = []
-                        if current_epoch == autodiff_epochs - 1:
-                            results.extend(output)
+            output = self.autodiff_training(autodiff_inputs,
+                                            autodiff_targets,
+                                            context,
+                                            do_logging,
+                                            scheduler)
 
             context.add_flag(ContextFlags.PROCESSING)
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=results[-1], context=context)
+            self.output_CIM.execute(input=output, context=context)
             context.remove_flag(ContextFlags.PROCESSING)
-            return results
+            return output
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
                                                         scheduler=scheduler,
@@ -922,220 +909,13 @@ class AutodiffComposition(Composition):
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
-                                                        skip_initialization=skip_initialization,
                                                         bin_execute=bin_execute,
                                                         )
 
-    # what the user calls for doing processing/training, similar to the run function of the normal composition
-    @handle_external_context()
-    def run(
-        self,
-        inputs=None,
-        do_logging=False,
-        scheduler=None,
-        termination_processing=None,
-        context=None,
-        num_trials=None,
-        minibatch_size=1,
-        call_before_time_step=None,
-        call_after_time_step=None,
-        call_before_pass=None,
-        call_after_pass=None,
-        call_before_trial=None,
-        call_after_trial=None,
-        call_before_minibatch=None,
-        call_after_minibatch=None,
-        clamp_input=SOFT_CLAMP,
-        bin_execute=False,
-        initial_values=None,
-        reinitialize_values=None,
-        runtime_params=None,
-    ):
-        """Passes inputs to AutodiffComposition, then execute sets of nodes that are eligible to run until termination
-        conditions are met.
-
-            Arguments
-            ---------
-
-            inputs: {'inputs': {`Mechanism <Mechanism>`: list}, 'targets': {`Mechanism <Mechanism>`: list}, 'epochs': int }
-                a key-value pair with the keys "inputs", "targets", and "epochs". The value corresponding
-                to the "inputs" key should itself be a key-value pair for each Node in the composition that receives
-                inputs from the user. For each pair, the key is the Node and the value is a list of inputs. Each input
-                in the list corresponds to one `TRIAL`. Analogously, the value corresponding with 'targets' should be a
-                key-value pair with keys for each terminal Node in the composition and a corresponding list of the Node's
-                target values for each trial. The value corresponding to the 'epochs' key is an int specifying how many
-                times the Composition should run through the entire input set.
-
-            scheduler: Scheduler
-                the scheduler object that owns the conditions that will instruct the execution of the Composition.
-                If not specified, the Composition will use its automatically generated scheduler.
-
-            context
-                context will be set to self.default_execution_id if unspecified
-
-            base_context
-                the context corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **context**
-
-            num_trials: int
-                typically, the composition will infer the number of trials from the length of its input specification.
-                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-                or use default inputs, and select a number of trials with num_trials.
-
-            minibatch_size: int or `TRAINING_SET`
-                if learning is enabled, the number of trials to be executed by the autodiff composition between weight
-                updates. if set to `TRAINING_SET`, weights will be updated after each full traversal of the provided
-                inputs (i.e. after each epoch).
-
-            call_before_time_step: callable
-                Not currently implemented for autodiff compositions.
-
-            call_after_time_step: callable
-                Not currently implemented for autodiff compositions.
-
-            call_before_pass: callable
-                Not currently implemented for autodiff compositions.
-
-            call_after_pass: callable
-                Not currently implemented for autodiff compositions.
-
-            call_before_trial: callable
-                Not currently implemented for autodiff compositions.
-
-            call_after_trial: callable
-                Not currently implemented for autodiff compositions.
-
-            call_before_minibatch: callable
-                will be called before each minibatch is executed.
-
-            call_after_minibatch: callable
-                will be called after each minibatch is executed.
-
-            initial_values: Dict[Node: Node Value]
-                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
-                used before that node executes for the first time (usually due to recurrence or control).
-
-            runtime_params: Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
-                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
-                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `Run` when the specified `Condition` is met.
-
-                Outer dictionary:
-                    - *key* - Node
-                    - *value* - Runtime Parameter Specification Dictionary
-
-                Runtime Parameter Specification Dictionary:
-                    - *key* - keyword corresponding to a parameter of the Node
-                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
-                      a `Condition`
-
-                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
-
-            log: bool, LogCondition
-                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
-                `projection <Composition.projections>` in this Composition, if it is not already set.
-
-                .. note::
-                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
-                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
-
-        COMMENT:
-        REPLACE WITH EVC/OCM EXAMPLE
-        Examples
-        --------
-
-        This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_learning** argument specified as *ALL*:
-
-        .. _Composition_XXX_movie:
-
-        .. figure:: _static/XXX_movie.gif
-           :alt: Animation of Composition in XXX example script
-           :scale: 50 %
-
-        This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
-
-        .. _Composition_XXX_movie:
-
-        .. figure:: _static/XXX_movie.gif
-           :alt: Animation of Composition in XXX example script
-           :scale: 150 %
-        COMMENT
-
-        Returns
-        ---------
-
-        output value of the final Node executed in the composition : various
-        """
-        # TBI: Handle trials, timesteps, etc
-        self._assign_execution_ids(context)
-        context.composition = self
-
-        if scheduler is None:
-            scheduler = self.scheduler
-
-        scheduler._init_clock(context)
-
-        if self.learning_enabled:
-            self._analyze_graph()
-            self._initialize_from_context(context, base_context=Context(execution_id=None), override=False)
-            if self.refresh_losses or (self.parameters.losses._get(context) is None):
-                self.parameters.losses._set([], context)
-            if callable(inputs):
-                stimuli = inputs()
-            elif isgenerator(inputs):
-                stimuli = inputs
-            else:
-                stimuli = self._adjust_stimulus_dict(inputs)
-
-            if isinstance(stimuli, dict):
-                stimuli = [stimuli]
-
-            for stimulus_set in stimuli:
-                trial_output = self.execute(
-                    inputs=stimulus_set,
-                    minibatch_size=minibatch_size,
-                    call_before_minibatch=call_before_minibatch,
-                    call_after_minibatch=call_after_minibatch,
-                    num_trials=num_trials,
-                    context=context,
-                    do_logging=do_logging,
-                    bin_execute=bin_execute
-                )
-                full_results = self.parameters.results._get(context)
-                if full_results is None:
-                    full_results = trial_output
-                else:
-                    full_results.append(trial_output)
-                self.parameters.results._set(full_results, context)
-                results = full_results
-
-            self.most_recent_context = context
-            return results[-1]
-
-        else:
-            results = super(AutodiffComposition, self).run(inputs=inputs,
-                                                    scheduler=scheduler,
-                                                    termination_processing=termination_processing,
-                                                    context=context,
-                                                    num_trials=num_trials,
-                                                    call_before_time_step=call_before_time_step,
-                                                    call_after_time_step=call_after_time_step,
-                                                    call_before_pass=call_before_pass,
-                                                    call_after_pass=call_after_pass,
-                                                    call_before_trial=call_before_trial,
-                                                    call_after_trial=call_after_trial,
-                                                    clamp_input=clamp_input,
-                                                    bin_execute=bin_execute,
-                                                    initial_values=initial_values,
-                                                    reinitialize_values=reinitialize_values,
-                                                    runtime_params=runtime_params,
-                                                    )
-
-        scheduler.get_clock(context)._increment_time(TimeScale.RUN)
-        return results
-
+    def learn(self, inputs: dict, targets: dict = None, num_trials: int = None, epochs: int = 1):
+        from psyneulink.library.compositions import CompositionRunner
+        runner = CompositionRunner(self)
+        return runner.run_learning(inputs=inputs, targets=targets, num_trials=num_trials, epochs=epochs)
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):
 
@@ -1248,44 +1028,3 @@ class AutodiffComposition(Composition):
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
         return (tuple(mech_params), tuple(proj_params), pytorch_params)
-
-class EarlyStopping(object):
-    def __init__(self, mode='min', min_delta=0, patience=10):
-        self.mode = mode
-        self.min_delta = min_delta
-        self.patience = patience
-        self.best = None
-        self.num_bad_epochs = 0
-        self.is_better = None
-        self._init_is_better(mode, min_delta)
-
-        if patience == 0:
-            self.is_better = lambda a, b: True
-
-    def step(self, metrics):
-        if self.best is None:
-            self.best = metrics
-            return False
-
-        if np.isnan(metrics):
-            return True
-
-        if self.is_better(metrics, self.best):
-            self.num_bad_epochs = 0
-            self.best = metrics
-        else:
-            self.num_bad_epochs += 1
-
-        if self.num_bad_epochs >= self.patience:
-            return True
-
-        return False
-
-    def _init_is_better(self, mode, min_delta):
-        if mode not in {'min', 'max'}:
-            raise ValueError('mode ' + mode + ' is unknown!')
-        if mode == 'min':
-            self.is_better = lambda a, best: a < best - min_delta
-        if mode == 'max':
-            self.is_better = lambda a, best: a > best + min_delta
-

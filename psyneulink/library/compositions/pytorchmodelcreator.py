@@ -54,7 +54,8 @@ class PytorchModelCreator(torch.nn.Module):
 
         for i, current_exec_set in enumerate(self.execution_sets):
             for component in current_exec_set:
-
+                if NodeRole.LEARNING in self._composition.get_roles_by_node(component) or NodeRole.TARGET in self._composition.get_roles_by_node(component):
+                    continue
                 value = None  # the node's (its mechanism's) value
                 function = self.function_creator(
                     component, context)  # the node's function
@@ -534,9 +535,12 @@ class PytorchModelCreator(torch.nn.Module):
         for i, current_exec_set in enumerate(self.execution_sets):
             frozen_values = {}
             for component in current_exec_set:
+                if NodeRole.LEARNING in self._composition.get_roles_by_node(component) or NodeRole.TARGET in self._composition.get_roles_by_node(component):
+                    continue
                 frozen_values[component] = self.component_to_forward_info[component]['value']
             for component in current_exec_set:
-
+                if NodeRole.LEARNING in self._composition.get_roles_by_node(component) or NodeRole.TARGET in self._composition.get_roles_by_node(component):
+                    continue
                 # get forward computation info for current component
                 function = self.component_to_forward_info[component]['function']
                 afferents = self.component_to_forward_info[component]['afferents']
