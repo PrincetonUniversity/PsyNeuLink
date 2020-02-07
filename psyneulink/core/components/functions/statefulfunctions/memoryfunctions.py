@@ -1204,8 +1204,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             if (not self.duplicate_keys
                     and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
                             for other in indices_of_selected_items[1:])):
-                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
-                                  f'{self.owner.name} even though {repr("duplicate_keys")} is False')
+                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of '
+                              f'{self.owner.name} even though {repr("duplicate_keys")} is False')
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:

@@ -51,7 +51,7 @@ class TestACConstructor:
 
     def test_pytorch_representation(self):
         comp = AutodiffComposition()
-        assert comp.pytorch_representation == None
+        assert comp.pytorch_representation is None
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
