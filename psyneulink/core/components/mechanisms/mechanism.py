@@ -959,7 +959,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2286,6 +2286,10 @@ class Mechanism_Base(Mechanism):
             else:
                 if context.source & ContextFlags.COMMAND_LINE:
                     context.execution_phase = ContextFlags.PROCESSING
+
+                    if input is not None:
+                        input = convert_all_elements_to_np_array(input)
+
                 if input is None:
                     input = self.defaults.variable
                 #     FIX:  this input value is sent to input CIMs when compositions are nested
