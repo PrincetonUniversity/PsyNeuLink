@@ -7662,15 +7662,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_types = (ctx.get_data_struct_type(n) for n in self._all_nodes)
         return pnlvm.ir.LiteralStructType((output_type, *nested_types))
 
-    def _get_state_initializer(self, context, simulation=False):
-        node_states = (m._get_state_initializer(context=context)
-                       for m in self._all_nodes if m is not self.controller or not simulation)
+    def _get_state_initializer(self, context):
+        node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
         proj_states = (p._get_state_initializer(context=context) for p in self.projections)
         return (tuple(node_states), tuple(proj_states))
 
-    def _get_param_initializer(self, context, simulation=False):
-        node_states = (m._get_param_initializer(context)
-                       for m in self._all_nodes if m is not self.controller or not simulation)
+    def _get_param_initializer(self, context):
+        node_states = (m._get_param_initializer(context) for m in self._all_nodes)
         proj_states = (p._get_param_initializer(context) for p in self.projections)
         return (tuple(node_states), tuple(proj_states))
 
