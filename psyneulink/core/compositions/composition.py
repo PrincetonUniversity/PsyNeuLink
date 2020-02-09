@@ -7662,19 +7662,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_types = (ctx.get_data_struct_type(n) for n in self._all_nodes)
         return pnlvm.ir.LiteralStructType((output_type, *nested_types))
 
-    def _get_state_initializer(self, context=None, simulation=False):
-        mech_contexts = (m._get_state_initializer(context=context)
-                         for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (p._get_state_initializer(context=context) for p in self.projections)
-        return (tuple(mech_contexts), tuple(proj_contexts))
+    def _get_state_initializer(self, context, simulation=False):
+        node_states = (m._get_state_initializer(context=context)
+                       for m in self._all_nodes if m is not self.controller or not simulation)
+        proj_states = (p._get_state_initializer(context=context) for p in self.projections)
+        return (tuple(node_states), tuple(proj_states))
 
     def _get_param_initializer(self, context, simulation=False):
-        mech_params = (m._get_param_initializer(context)
+        node_states = (m._get_param_initializer(context)
                        for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (p._get_param_initializer(context) for p in self.projections)
-        return (tuple(mech_params), tuple(proj_params))
+        proj_states = (p._get_param_initializer(context) for p in self.projections)
+        return (tuple(node_states), tuple(proj_states))
 
-    def _get_data_initializer(self, context=None):
+    def _get_data_initializer(self, context):
         output = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
         nested_data = (node._get_data_initializer(context=context)
                        if hasattr(node, '_get_data_initializer') else ()
