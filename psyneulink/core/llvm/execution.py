@@ -464,7 +464,7 @@ class CompExecution(CUDAExecution):
         else:
             extra_args = ()
             if autodiff_stimuli is not None:
-                nested_autodiff = [n for n in self._composition.nodes if hasattr(n, 'learning_enabled') and n.learning_enabled]
+                nested_autodiff = [n for n in self._composition.nodes if getattr(n, 'learning_enabled', False)]
                 assert len(nested_autodiff) <= 1
                 if len(nested_autodiff) == 1:
                     autodiff_stimuli = autodiff_stimuli[nested_autodiff[0]]
