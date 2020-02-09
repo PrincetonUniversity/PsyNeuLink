@@ -7673,11 +7673,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return (tuple(node_states), tuple(proj_states))
 
     def _get_data_initializer(self, context):
-        output = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
-        nested_data = (node._get_data_initializer(context=context)
-                       if hasattr(node, '_get_data_initializer') else ()
+        output_data = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
+        nested_data = (getattr(node, '_get_data_initializer', lambda _: ())(context)
                        for node in self._all_nodes)
-        return (pnlvm._tupleize(output), *nested_data)
+        return (pnlvm._tupleize(output_data), *nested_data)
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
