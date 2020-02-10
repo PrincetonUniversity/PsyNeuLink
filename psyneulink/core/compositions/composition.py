@@ -7641,17 +7641,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      p.receiver.owner is not self.parameter_CIM)
 
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_param_type_list),
+            pnlvm.ir.LiteralStructType(node_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
     def _get_state_struct_type(self, ctx):
-        mech_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
         proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_state_type_list),
+            pnlvm.ir.LiteralStructType(node_state_type_list),
             pnlvm.ir.LiteralStructType(proj_state_type_list)))
 
     def _get_input_struct_type(self, ctx):
