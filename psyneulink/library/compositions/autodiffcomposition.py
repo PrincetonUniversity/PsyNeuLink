@@ -1222,11 +1222,15 @@ class AutodiffComposition(Composition):
         return weights
 
     def _get_param_struct_type(self, ctx):
-        # We only need input/output params (rest should be in pytorch model params)
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
 
-        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
-                                else pnlvm.ir.LiteralStructType([]) for p in self.projections)
+        # We only need input_CIM/output_CIM projection
+        # (the rest should be in pytorch model params)
+        proj_param_type_list = (ctx.get_param_struct_type(p)
+                                if (p.sender.owner is self.input_CIM or
+                                    p.receiver.owner is self.output_CIM)
+                                else pnlvm.ir.LiteralStructType([])
+                                for p in self._inner_projections)
 
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(
@@ -1240,8 +1244,10 @@ class AutodiffComposition(Composition):
 
     def _get_param_initializer(self, context):
         mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-        proj_params = (p._get_param_initializer(context) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
-                       else tuple() for p in self.projections)
+        proj_params = (p._get_param_initializer(context)
+                       if (p.sender.owner is self.input_CIM or
+                           p.receiver.owner is self.output_CIM)
+                       else tuple() for p in self._inner_projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()

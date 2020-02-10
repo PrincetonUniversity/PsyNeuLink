@@ -7632,19 +7632,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           LLVM
     # ******************************************************************************************************************
 
+    @property
+    def _inner_projections(self):
+        # PNL considers afferent projections to input_CIM to be part
+        # of the nested composition. Filter them out.
+        return (p for p in self.projections
+                  if p.receiver.owner is not self.input_CIM and
+                     p.receiver.owner is not self.parameter_CIM)
+
     def _get_param_struct_type(self, ctx):
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
-        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(mech_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
     def _get_state_struct_type(self, ctx):
-        mech_ctx_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
-        proj_ctx_type_list = (ctx.get_state_struct_type(p) for p in self.projections)
+        mech_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_ctx_type_list),
-            pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
+            pnlvm.ir.LiteralStructType(mech_state_type_list),
+            pnlvm.ir.LiteralStructType(proj_state_type_list)))
 
     def _get_input_struct_type(self, ctx):
         pathway = ctx.get_input_struct_type(self.input_CIM)
@@ -7664,13 +7672,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_state_initializer(self, context):
         node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
-        proj_states = (p._get_state_initializer(context=context) for p in self.projections)
+        proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
         return (tuple(node_states), tuple(proj_states))
 
     def _get_param_initializer(self, context):
-        node_states = (m._get_param_initializer(context) for m in self._all_nodes)
-        proj_states = (p._get_param_initializer(context) for p in self.projections)
-        return (tuple(node_states), tuple(proj_states))
+        node_params = (m._get_param_initializer(context) for m in self._all_nodes)
+        proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
+        return (tuple(node_params), tuple(proj_params))
 
     def _get_data_initializer(self, context):
         output_data = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
@@ -7781,7 +7789,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 incoming_projections = []
 
             # Execute all incoming projections
-            # TODO: This should filter out projections with different execution ID
+            inner_projections = list(self._inner_projections)
             for proj in incoming_projections:
                 # Skip autoassociative projections
                 if proj.sender.owner is proj.receiver.owner:
@@ -7840,7 +7848,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_out = builder.gep(node_in, [ctx.int32_ty(i) for i in indices])
 
                 # Get projection parameters and state
-                proj_idx = self.projections.index(proj)
+                proj_idx = inner_projections.index(proj)
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
