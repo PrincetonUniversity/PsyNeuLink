@@ -7690,20 +7690,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _get_node_wrapper(self, node):
-        if node not in self.__generated_node_wrappers:
-            class node_wrapper():
-                def __init__(self, node, gen_f):
-                    self._node = node
-                    self._gen_f = gen_f
-                def _gen_llvm_function(self, *, tags:frozenset):
-                    return self._gen_f(self._node, tags=tags)
-            wrapper = node_wrapper(node, self._gen_node_wrapper)
-            self.__generated_node_wrappers[node] = wrapper
-            return wrapper
-
-        return self.__generated_node_wrappers[node]
-
     def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             if "run" in tags:
@@ -7725,6 +7711,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __ptx_initialize(self, context=None):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
+
+    def _get_node_wrapper(self, node):
+        """Return a (memoized) wrapper instance that generates node invocation sequence.
+
+           Since nodes in general don't know about their owning composition this structure ties together composition and its nodes.
+        """
+        if node not in self.__generated_node_wrappers:
+            class node_wrapper():
+                def __init__(self, node, gen_f):
+                    self._node = node
+                    self._gen_f = gen_f
+                def _gen_llvm_function(self, *, tags:frozenset):
+                    return self._gen_f(self._node, tags=tags)
+            wrapper = node_wrapper(node, self._gen_node_wrapper)
+            self.__generated_node_wrappers[node] = wrapper
+            return wrapper
+
+        return self.__generated_node_wrappers[node]
 
     def _gen_node_wrapper(self, node, *, tags:frozenset):
         assert "node_wrapper" in tags
