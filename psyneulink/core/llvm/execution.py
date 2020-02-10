@@ -464,7 +464,7 @@ class CompExecution(CUDAExecution):
         else:
             extra_args = ()
             if autodiff_stimuli is not None:
-                nested_autodiff = [n for n in self._composition.nodes if hasattr(n, 'learning_enabled') and n.learning_enabled]
+                nested_autodiff = [n for n in self._composition.nodes if getattr(n, 'learning_enabled', False)]
                 assert len(nested_autodiff) <= 1
                 if len(nested_autodiff) == 1:
                     autodiff_stimuli = autodiff_stimuli[nested_autodiff[0]]
@@ -554,8 +554,8 @@ class CompExecution(CUDAExecution):
         training_name = autodiff_stimuli_cty._fields_[-1][0]
         training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
         training_data_ty = training_p_cty._type_ * num_trials
-        inputs_data = zip(*([[np.atleast_2d(x)] for x in inputs[n]] for n in input_nodes))
-        target_data = zip(*([[np.atleast_2d(x)] for x in targets[n]] for n in output_nodes))
+        inputs_data = zip(*(([np.atleast_2d(x)] for x in inputs[n]) for n in input_nodes))
+        target_data = zip(*(([np.atleast_2d(x)] for x in targets[n]) for n in output_nodes))
         training_data_init = pnlvm._tupleize(zip(inputs_data, target_data))
         training_data = training_data_ty(*training_data_init)
 
