@@ -294,6 +294,7 @@ from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
 import ctypes
+import warnings
 from collections.abc import Iterable
 from toposort import toposort
 from inspect import isgenerator
@@ -849,9 +850,9 @@ class AutodiffComposition(Composition):
 
                 except Exception as e:
                     if bin_execute is not True:
-                        raise e
+                        raise e from None
 
-                    print("WARNING: Failed to Run execution `{}': {}".format(
+                    warnings.warn("Failed to Run execution `{}': {}".format(
                           self.name, str(e)))
 
 
