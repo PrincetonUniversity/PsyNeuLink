@@ -7632,19 +7632,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           LLVM
     # ******************************************************************************************************************
 
+    @property
+    def _inner_projections(self):
+        # PNL considers afferent projections to input_CIM to be part
+        # of the nested composition. Filter them out.
+        return (p for p in self.projections
+                  if p.receiver.owner is not self.input_CIM and
+                     p.receiver.owner is not self.parameter_CIM)
+
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
-        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
+        node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_param_type_list),
+            pnlvm.ir.LiteralStructType(node_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
     def _get_state_struct_type(self, ctx):
-        mech_ctx_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
-        proj_ctx_type_list = (ctx.get_state_struct_type(p) for p in self.projections)
+        node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_ctx_type_list),
-            pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
+            pnlvm.ir.LiteralStructType(node_state_type_list),
+            pnlvm.ir.LiteralStructType(proj_state_type_list)))
 
     def _get_input_struct_type(self, ctx):
         pathway = ctx.get_input_struct_type(self.input_CIM)
@@ -7662,42 +7670,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nested_types = (ctx.get_data_struct_type(n) for n in self._all_nodes)
         return pnlvm.ir.LiteralStructType((output_type, *nested_types))
 
-    def _get_state_initializer(self, context=None, simulation=False):
-        mech_contexts = (m._get_state_initializer(context=context)
-                         for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (p._get_state_initializer(context=context) for p in self.projections)
-        return (tuple(mech_contexts), tuple(proj_contexts))
+    def _get_state_initializer(self, context):
+        node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
+        proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
+        return (tuple(node_states), tuple(proj_states))
 
-    def _get_param_initializer(self, context, simulation=False):
-        mech_params = (m._get_param_initializer(context)
-                       for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (p._get_param_initializer(context) for p in self.projections)
-        return (tuple(mech_params), tuple(proj_params))
+    def _get_param_initializer(self, context):
+        node_params = (m._get_param_initializer(context) for m in self._all_nodes)
+        proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
+        return (tuple(node_params), tuple(proj_params))
 
-    def _get_data_initializer(self, context=None):
-        output = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
-        nested_data = (node._get_data_initializer(context=context)
-                       if hasattr(node, '_get_data_initializer') else ()
+    def _get_data_initializer(self, context):
+        output_data = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
+        nested_data = (getattr(node, '_get_data_initializer', lambda _: ())(context)
                        for node in self._all_nodes)
-        return (pnlvm._tupleize(output), *nested_data)
+        return (pnlvm._tupleize(output_data), *nested_data)
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
         return node_list.index(node)
-
-    def _get_node_wrapper(self, node):
-        if node not in self.__generated_node_wrappers:
-            class node_wrapper():
-                def __init__(self, node, gen_f):
-                    self._node = node
-                    self._gen_f = gen_f
-                def _gen_llvm_function(self, *, tags:frozenset):
-                    return self._gen_f(self._node, tags=tags)
-            wrapper = node_wrapper(node, self._gen_node_wrapper)
-            self.__generated_node_wrappers[node] = wrapper
-            return wrapper
-
-        return self.__generated_node_wrappers[node]
 
     def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
@@ -7720,6 +7711,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __ptx_initialize(self, context=None):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
+
+    def _get_node_wrapper(self, node):
+        """Return a (memoized) wrapper instance that generates node invocation sequence.
+
+           Since nodes in general don't know about their owning composition this structure ties together composition and its nodes.
+        """
+        if node not in self.__generated_node_wrappers:
+            class node_wrapper():
+                def __init__(self, node, gen_f):
+                    self._node = node
+                    self._gen_f = gen_f
+                def _gen_llvm_function(self, *, tags:frozenset):
+                    return self._gen_f(self._node, tags=tags)
+            wrapper = node_wrapper(node, self._gen_node_wrapper)
+            self.__generated_node_wrappers[node] = wrapper
+            return wrapper
+
+        return self.__generated_node_wrappers[node]
 
     def _gen_node_wrapper(self, node, *, tags:frozenset):
         assert "node_wrapper" in tags
@@ -7784,7 +7793,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 incoming_projections = []
 
             # Execute all incoming projections
-            # TODO: This should filter out projections with different execution ID
+            inner_projections = list(self._inner_projections)
             for proj in incoming_projections:
                 # Skip autoassociative projections
                 if proj.sender.owner is proj.receiver.owner:
@@ -7843,7 +7852,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_out = builder.gep(node_in, [ctx.int32_ty(i) for i in indices])
 
                 # Get projection parameters and state
-                proj_idx = self.projections.index(proj)
+                proj_idx = inner_projections.index(proj)
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
