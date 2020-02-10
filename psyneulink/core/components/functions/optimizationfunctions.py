@@ -898,7 +898,7 @@ class GradientOptimization(OptimizationFunction):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            if all(s == None for s in search_space):
+            if all(s is None for s in search_space):
                 return
             # If search space is a single 2-item list or tuple with numbers (i.e., bounds),
             #     wrap in list for handling below
@@ -1346,7 +1346,7 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
@@ -1358,7 +1358,7 @@ class GridSearch(OptimizationFunction):
         except AttributeError:
             extra_args = []
 
-        f = super()._gen_llvm_function(extra_args)
+        f = super()._gen_llvm_function(extra_args=extra_args, tags=tags)
         if len(extra_args) > 0:
             for a in f.args[-len(extra_args):]:
                 a.attributes.add('nonnull')
@@ -1460,7 +1460,7 @@ class GridSearch(OptimizationFunction):
             val[0] = [0.0] * len(self.search_space)
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
             assert ocm.function is self

@@ -294,6 +294,7 @@ from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
 import ctypes
+import warnings
 from collections.abc import Iterable
 from toposort import toposort
 from inspect import isgenerator
@@ -517,11 +518,6 @@ class AutodiffComposition(Composition):
         self.weight_decay = weight_decay
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
-
-
-        # store generated llvm functions
-        self.__generated_forward_exec = None
-        self.__generated_learning_exec = None
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -796,17 +792,12 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
-    def _gen_llvm_function(self):
-        if self.learning_enabled is True:
-            if self.__generated_learning_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_exec = ctx.gen_autodiffcomp_learning_exec(self)
-            return self.__generated_learning_exec
-        else:
-            if self.__generated_forward_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_forward_exec = ctx.gen_autodiffcomp_exec(self)
-            return self.__generated_forward_exec
+    def _gen_llvm_function(self, *, tags:frozenset):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            if "learning" in tags:
+                return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
+            else:
+                return ctx.gen_autodiffcomp_exec(self, tags=tags)
 
     @handle_external_context()
     def execute(self,
@@ -859,9 +850,9 @@ class AutodiffComposition(Composition):
 
                 except Exception as e:
                     if bin_execute is not True:
-                        raise e
+                        raise e from None
 
-                    print("WARNING: Failed to Run execution `{}': {}".format(
+                    warnings.warn("Failed to Run execution `{}': {}".format(
                           self.name, str(e)))
 
 
@@ -1231,11 +1222,15 @@ class AutodiffComposition(Composition):
         return weights
 
     def _get_param_struct_type(self, ctx):
-        # We only need input/output params (rest should be in pytorch model params)
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
 
-        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
-                                else pnlvm.ir.LiteralStructType([]) for p in self.projections)
+        # We only need input_CIM/output_CIM projection
+        # (the rest should be in pytorch model params)
+        proj_param_type_list = (ctx.get_param_struct_type(p)
+                                if (p.sender.owner is self.input_CIM or
+                                    p.receiver.owner is self.output_CIM)
+                                else pnlvm.ir.LiteralStructType([])
+                                for p in self._inner_projections)
 
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(
@@ -1249,13 +1244,14 @@ class AutodiffComposition(Composition):
 
     def _get_param_initializer(self, context):
         mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
-                       else tuple() for p in self.projections)
+        proj_params = (p._get_param_initializer(context)
+                       if (p.sender.owner is self.input_CIM or
+                           p.receiver.owner is self.output_CIM)
+                       else tuple() for p in self._inner_projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
-        param_args = (tuple(mech_params), tuple(proj_params), pytorch_params)
-        return tuple(param_args)
+        return (tuple(mech_params), tuple(proj_params), pytorch_params)
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):

@@ -763,7 +763,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
         return (*my_init, distance_init, selection_init)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
         rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
@@ -1204,8 +1204,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             if (not self.duplicate_keys
                     and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
                             for other in indices_of_selected_items[1:])):
-                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
-                                  f'{self.owner.name} even though {repr("duplicate_keys")} is False')
+                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of '
+                              f'{self.owner.name} even though {repr("duplicate_keys")} is False')
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:

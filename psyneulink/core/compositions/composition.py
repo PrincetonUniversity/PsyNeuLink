@@ -1159,7 +1159,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
-from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls
+from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
@@ -1747,9 +1747,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Compiled resources
         self.__generated_node_wrappers = {}
-        self.__generated_run = None
-        self.__generated_simulation = None
-        self.__generated_sim_run = None
 
         self._compilation_data = self._CompilationData(owner=self)
 
@@ -6281,6 +6278,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             log=False,
             initial_values=None,
             reinitialize_values=None,
+            reinitialize_nodes_when=Never(),
             runtime_params=None,
             skip_initialization=False,
             animate=False,
@@ -6450,6 +6448,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node in reinitialize_values:
             node.reinitialize(*reinitialize_values[node], context=context)
+
+        # cache and set reinitialize_when conditions for nodes, matching
+        # old System behavior
+        # Validate
+        if not isinstance(reinitialize_nodes_when, Condition):
+            raise CompositionError(
+                "{} is not a valid specification for "
+                "reinitialize_nodes_when of {}. "
+                "reinitialize_nodes_when must be a Condition.".format(
+                    reinitialize_nodes_when,
+                    self.name
+                )
+            )
+
+        self._reinitialize_nodes_when_cache = {}
+        for node in self.nodes:
+            try:
+                if isinstance(node.reinitialize_when, Never):
+                    self._reinitialize_nodes_when_cache[node] = node.reinitialize_when
+                    node.reinitialize_when = reinitialize_nodes_when
+            except AttributeError:
+                pass
 
         if ContextFlags.SIMULATION not in context.execution_phase:
             try:
@@ -6716,6 +6736,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 movie = Image.open(movie_path)
                 movie.show()
 
+        # Undo override of reinitialize_when conditions
+        for node in self.nodes:
+            try:
+                node.reinitialize_when = self._reinitialize_nodes_when_cache[node]
+            except KeyError:
+                pass
+
         return trial_output
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
@@ -6853,6 +6880,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(INITIAL_FRAME, context)
                 context.execution_id = old_eid
 
+        # Reinitialize any nodes that have satisfied 'reinitialize_when'
+        # conditions. This mimics the behavior used for Systems. (only
+        # checking for reinitialization at the beginning of a trial)
+        for node in self.nodes:
+            if node.parameters.has_initializers._get(context):
+                try:
+                    if (
+                        node.reinitialize_when.is_satisfied(
+                            scheduler=execution_scheduler,
+                            context=context
+                        )
+                    ):
+                        node.reinitialize(None, context=context)
+                except AttributeError:
+                    pass
+
         # EXECUTE INPUT CIM ********************************************************************************************
 
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
@@ -6887,6 +6930,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
+
+        # 1 because call_before_pass is called before the main
+        # scheduler loop to ensure it happens regardless of whether
+        # the scheduler terminates a trial immediately
         next_pass_before = 1
         next_pass_after = 1
         if clamp_input:
@@ -7007,6 +7054,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
             # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
+            # KDM 1/15/20: Because we can't tell at the end of this
+            # code block whether a PASS has ended or not. The scheduler
+            # only modifies the pass after we receive an execution_set.
+            # So, we only know a PASS has ended in retrospect after the
+            # scheduler has changed the clock to indicate it. So, we
+            # have to run call_after_pass before the next PASS (here) or
+            # after this code block (see the call to call_after_pass
+            # below)
             if call_after_pass:
                 if next_pass_after == \
                         execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
@@ -7570,19 +7625,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           LLVM
     # ******************************************************************************************************************
 
+    @property
+    def _inner_projections(self):
+        # PNL considers afferent projections to input_CIM to be part
+        # of the nested composition. Filter them out.
+        return (p for p in self.projections
+                  if p.receiver.owner is not self.input_CIM and
+                     p.receiver.owner is not self.parameter_CIM)
+
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
-        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self.projections)
+        node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_param_type_list),
+            pnlvm.ir.LiteralStructType(node_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list)))
 
     def _get_state_struct_type(self, ctx):
-        mech_ctx_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
-        proj_ctx_type_list = (ctx.get_state_struct_type(p) for p in self.projections)
+        node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(mech_ctx_type_list),
-            pnlvm.ir.LiteralStructType(proj_ctx_type_list)))
+            pnlvm.ir.LiteralStructType(node_state_type_list),
+            pnlvm.ir.LiteralStructType(proj_state_type_list)))
 
     def _get_input_struct_type(self, ctx):
         pathway = ctx.get_input_struct_type(self.input_CIM)
@@ -7595,80 +7658,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return ctx.get_output_struct_type(self.output_CIM)
 
     def _get_data_struct_type(self, ctx):
-        output_type_list = (ctx.get_output_struct_type(m) for m in self._all_nodes)
+        output_type_list = (ctx.get_output_struct_type(n) for n in self._all_nodes)
+        output_type = pnlvm.ir.LiteralStructType(output_type_list)
+        nested_types = (ctx.get_data_struct_type(n) for n in self._all_nodes)
+        return pnlvm.ir.LiteralStructType((output_type, *nested_types))
 
-        data = [pnlvm.ir.LiteralStructType(output_type_list)]
-        for node in self.nodes:
-            nested_data = ctx.get_data_struct_type(node)
-            data.append(nested_data)
-        return pnlvm.ir.LiteralStructType(data)
+    def _get_state_initializer(self, context):
+        node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
+        proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
+        return (tuple(node_states), tuple(proj_states))
 
-    def _get_state_initializer(self, context=None, simulation=False):
-        mech_contexts = (tuple(m._get_state_initializer(context=context))
-                         for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_contexts = (tuple(p._get_state_initializer(context=context)) for p in self.projections)
-        return (tuple(mech_contexts), tuple(proj_contexts))
+    def _get_param_initializer(self, context):
+        node_params = (m._get_param_initializer(context) for m in self._all_nodes)
+        proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
+        return (tuple(node_params), tuple(proj_params))
 
-    def _get_param_initializer(self, context, simulation=False):
-        mech_params = (tuple(m._get_param_initializer(context))
-                       for m in self._all_nodes if m is not self.controller or not simulation)
-        proj_params = (tuple(p._get_param_initializer(context)) for p in self.projections)
-        return (tuple(mech_params), tuple(proj_params))
-
-    def _get_data_initializer(self, context=None):
-        output = [(os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes]
-        data = [output]
-        for node in self.nodes:
-            nested_data = node._get_data_initializer(context=context) \
-                if hasattr(node,'_get_data_initializer') else []
-            data.append(nested_data)
-        return pnlvm._tupleize(data)
+    def _get_data_initializer(self, context):
+        output_data = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
+        nested_data = (getattr(node, '_get_data_initializer', lambda _: ())(context)
+                       for node in self._all_nodes)
+        return (pnlvm._tupleize(output_data), *nested_data)
 
     def _get_node_index(self, node):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _get_node_wrapper(self, node):
-        if node not in self.__generated_node_wrappers:
-            class node_wrapper():
-                def __init__(self, node, gen_f):
-                    self._node = node
-                    self._gen_f = gen_f
-                def _gen_llvm_function(self):
-                    return self._gen_f(self._node)
-            wrapper = node_wrapper(node, self.__gen_node_wrapper)
-            self.__generated_node_wrappers[node] = wrapper
-            return wrapper
-
-        return self.__generated_node_wrappers[node]
-
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                return ctx.gen_composition_exec(self)
-
-    @property
-    def _llvm_run(self):
-        if self.__generated_run is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_run = ctx.gen_composition_run(self)
-
-        return self.__generated_run
-
-    @property
-    def _llvm_simulation(self):
-        if self.__generated_simulation is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_simulation = ctx.gen_composition_exec(self, True)
-
-        return self.__generated_simulation
-
-    @property
-    def _llvm_sim_run(self):
-        if self.__generated_sim_run is None:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                self.__generated_sim_run = ctx.gen_composition_run(self, True)
-
-        return self.__generated_sim_run
+            if "run" in tags:
+                return ctx.gen_composition_run(self, tags=tags)
+            else:
+                return ctx.gen_composition_exec(self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):
@@ -7685,15 +7705,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
 
-    def __gen_node_wrapper(self, node):
-        name = 'comp_wrap_'
+    def _get_node_wrapper(self, node):
+        """Return a (memoized) wrapper instance that generates node invocation sequence.
+
+           Since nodes in general don't know about their owning composition this structure ties together composition and its nodes.
+        """
+        if node not in self.__generated_node_wrappers:
+            class node_wrapper():
+                def __init__(self, node, gen_f):
+                    self._node = node
+                    self._gen_f = gen_f
+                def _gen_llvm_function(self, *, tags:frozenset):
+                    return self._gen_f(self._node, tags=tags)
+            wrapper = node_wrapper(node, self._gen_node_wrapper)
+            self.__generated_node_wrappers[node] = wrapper
+            return wrapper
+
+        return self.__generated_node_wrappers[node]
+
+    def _gen_node_wrapper(self, node, *, tags:frozenset):
+        assert "node_wrapper" in tags
+        func_tags = tags.difference({"node_wrapper"})
         is_mech = isinstance(node, Mechanism)
-        # TODO: pass this explicitly
-        # FIXME: Can we use node_roles here?
-        is_learning_autodiff = hasattr(node, 'learning_enabled') and node.learning_enabled
+        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node)
+            node_function = ctx.import_llvm_function(node, tags=func_tags)
 
             data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
             args = [
@@ -7702,7 +7739,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctx.get_input_struct_type(self).as_pointer(),
                 data_struct_ptr, data_struct_ptr]
 
-            if not is_mech:
+            if not is_mech and "reinitialize" not in tags:
                 # Add condition struct of the parent composition
                 # This includes structures of all nested compositions
                 cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
@@ -7713,7 +7750,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if is_learning_autodiff:
                     args.append(node_function.args[-2].type)
 
-            builder = ctx.create_llvm_function(args, node, name + node.name)
+            builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
             llvm_func = builder.function
             llvm_func.attributes.add('alwaysinline')
             for a in llvm_func.args:
@@ -7745,8 +7782,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_in = builder.alloca(node_function.args[2].type.pointee)
                 incoming_projections = node.afferents
 
+            if "reinitialize" in tags:
+                incoming_projections = []
+
             # Execute all incoming projections
-            # TODO: This should filter out projections with different execution ID
+            inner_projections = list(self._inner_projections)
             for proj in incoming_projections:
                 # Skip autoassociative projections
                 if proj.sender.owner is proj.receiver.owner:
@@ -7805,11 +7845,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 proj_out = builder.gep(node_in, [ctx.int32_ty(i) for i in indices])
 
                 # Get projection parameters and state
-                proj_idx = self.projections.index(proj)
+                proj_idx = inner_projections.index(proj)
                 # Projections are listed second in param and state structure
                 proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
                 proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj)
+                proj_function = ctx.import_llvm_function(proj, tags=func_tags)
 
                 if proj_out.type != proj_function.args[3].type:
                     warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
@@ -7827,7 +7867,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert node is self.controller
                     call_args += [params, context, data_in]
                 builder.call(node_function, call_args)
-            else:
+            elif "reinitialize" not in tags:
+                # FIXME: reinitialization of compositions is not supported
                 # Condition and data structures includes parent first
                 nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
                 node_data = builder.gep(data_in, [zero, nested_idx])

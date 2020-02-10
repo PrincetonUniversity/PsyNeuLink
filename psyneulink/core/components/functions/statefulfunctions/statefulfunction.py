@@ -562,6 +562,21 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.parameters.value.set(value, context, override=True)
         return value
 
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reinitialize" in tags
+        for i, a in enumerate(self.stateful_attributes):
+            source_ptr = ctx.get_param_ptr(self, builder, params, self.initializers[i])
+            dest_ptr = ctx.get_state_ptr(self, builder, state, a)
+            if source_ptr.type != dest_ptr.type:
+                warnings.warn("Shape mismatch between stateful param and initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
+                # Take a guess that dest just has an extra dimension
+                assert len(dest_ptr.type.pointee) == 1
+                dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(0)])
+            builder.store(builder.load(source_ptr), dest_ptr)
+
+        return builder
+
     @abc.abstractmethod
     def _function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
