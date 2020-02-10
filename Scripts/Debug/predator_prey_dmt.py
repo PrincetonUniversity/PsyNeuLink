@@ -43,7 +43,7 @@ ACTION = AGENT_ACTION
 # Verbosity levels for console printout
 ACTION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = STANDARD_REPORTING
+VERBOSE = 0
 
 
 # ControlSignal parameters
@@ -113,7 +113,6 @@ def new_episode():
 
     global new_episode_flag
     initial_observation = ddqn_agent.env.reset()
-    print(f"initial_observation = {initial_observation}")
     new_episode_flag = True
 
     # Initialize both states to verdical state based on first observation
@@ -245,7 +244,7 @@ opt_comp.add_node(agent_comp)
 # ******************************************   RUN SIMULATION  ********************************************************
 # *********************************************************************************************************************
 
-num_episodes = 10
+num_episodes = 100
 outcome_log = []
 reward_log = []
 predator_control_log = []
@@ -283,6 +282,7 @@ def input_generator():
         prey_pred_trialType = 0
         single_prey_trialType = 0
         double_prey_trialType = 0
+        print(f'EPISODE {episode_i}')
 
         ddqn_agent.env.trialType = trialType  # 0 is single prey, 1 is two prey, 2 is prey & predator
         observation = new_episode()
@@ -361,7 +361,8 @@ def input_generator():
             # Get observation for next iteration based on optimal action taken in this one
             observation, reward, done, _ = ddqn_agent.env.step(action)
 
-            print(f'\nAction Taken (using {ACTION}): {action}')
+            if VERBOSE >= STANDARD_REPORTING:
+                print(f'\nAction Taken (using {ACTION}): {action}')
 
             new_episode_flag = False
             steps += 1
