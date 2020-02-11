@@ -2774,8 +2774,13 @@ class Mechanism_Base(Mechanism):
                                                 "max_executions_before_finished")
 
         # Reset the flag and counter
-        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
-        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+        # FIXME: Use int for flag
+        # FIXME: continue previous computation if not finished
+        current_flag = builder.load(is_finished_flag_ptr)
+        was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
+        with builder.if_then(was_finished):
+            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+            builder.store(current_flag.type(0), is_finished_flag_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
@@ -2801,9 +2806,10 @@ class Mechanism_Base(Mechanism):
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
-        is_finished_cond = builder.or_(is_finished_cond, max_reached)
-        with builder.if_then(is_finished_cond):
-            builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
+        iter_end = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(iter_end):
+            new_flag = builder.uitofp(is_finished_cond, current_flag.type)
+            builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 
         # FIXME: updating the count after the check matches PNL behaviour

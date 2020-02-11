@@ -1193,9 +1193,12 @@ class TestCustomCombinationFunction:
         C = pnl.Composition()
         C.add_node(I1)
 
-        C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
         # Result after 5 iterations
-        assert np.allclose([[[0.984375]]], C.results)
+        assert np.allclose([[[0.984375]]], results)
+        # Result after 6 iterations, PNL continue previous computation in next trial
+        assert np.allclose([[[0.9921875]]], results2)
 
 class TestDebugProperties:
 
