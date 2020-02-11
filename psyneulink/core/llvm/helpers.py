@@ -151,7 +151,7 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     return builder.load(all_ptr)
 
 
-def inject_printf(builder, fmt, *args, override_debug=False):
+def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
         return
     #FIXME: Fix builtin printf and use that instead of this
@@ -182,21 +182,21 @@ def inject_printf(builder, fmt, *args, override_debug=False):
         return
 
 
-def inject_printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
-    inject_printf(builder, prefix, override_debug=override_debug)
+def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
 
     with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
-        inject_printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
+        printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
 
-    inject_printf(builder, suffix, override_debug=override_debug)
+    printf(builder, suffix, override_debug=override_debug)
 
 
-def inject_printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
-    inject_printf(builder, prefix, override_debug=override_debug)
+def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
     with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
         row = b1.gep(matrix, [ir.IntType(32)(0), i])
-        inject_printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
-    inject_printf(builder, suffix, override_debug=override_debug)
+        printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
+    printf(builder, suffix, override_debug=override_debug)
 
 
 class ConditionGenerator:

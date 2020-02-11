@@ -147,10 +147,10 @@ class AdamOptimizer(Optimizer):
         one_minus_b1_pow = builder.fsub(one_float, b1_pow)
         one_minus_b2_pow = builder.fsub(one_float, b2_pow)
         
-        pnlvm.helpers.inject_printf(
+        pnlvm.helpers.printf(
                 builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow)
         alpha_mult = builder.call(sqrt, [one_minus_b2_pow])
-        pnlvm.helpers.inject_printf(
+        pnlvm.helpers.printf(
                 builder, f"%f\n",alpha_mult)
         alpha_mult = builder.fdiv(alpha_mult, one_minus_b1_pow)
 
@@ -161,7 +161,7 @@ class AdamOptimizer(Optimizer):
 
         # 2) update first moments
         for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            pnlvm.helpers.inject_printf(
+            pnlvm.helpers.printf(
                 builder, f"\t\t\t\tOPTIM UPDATE FIRST MOMENT {afferent_node.name} {node.name}\n")
 
             node_idx_ir = ctx.int32_ty(node_idx)
@@ -183,7 +183,7 @@ class AdamOptimizer(Optimizer):
 
         # 3) update second moments
         for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            pnlvm.helpers.inject_printf(
+            pnlvm.helpers.printf(
                 builder, f"\t\t\t\tOPTIM UPDATE SECOND MOMENT {afferent_node.name} {node.name}\n")
 
             node_idx_ir = ctx.int32_ty(node_idx)
@@ -221,7 +221,7 @@ class AdamOptimizer(Optimizer):
             # this is messy - #TODO - cleanup this
             weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
                 ctx, builder, params, node, afferent_node)
-            pnlvm.helpers.inject_printf(
+            pnlvm.helpers.printf(
                 builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
             weight_row = None
             with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "optimizer_w_upd_outer") as (b1, weight_row):
@@ -249,10 +249,10 @@ class AdamOptimizer(Optimizer):
                     b2.store(value, old_weight_ptr)
 
                     delta_w_val = b2.load(b2.gep(delta_w_ptr,[zero, weight_row, weight_column]))
-                    pnlvm.helpers.inject_printf(b2,"%f ",delta_w_val,override_debug=False)
-                pnlvm.helpers.inject_printf(b1,"\n",override_debug=False)
+                    pnlvm.helpers.printf(b2,"%f ",delta_w_val,override_debug=False)
+                pnlvm.helpers.printf(b1,"\n",override_debug=False)
                 
-        pnlvm.helpers.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
+        pnlvm.helpers.printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
 
         builder.ret_void()
 
