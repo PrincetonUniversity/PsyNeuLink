@@ -1358,6 +1358,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             # FIXME: HACK the distance function is not initialized
             self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
             self.termination_measure.defaults.value = float(0)
+            warnings.warn("Shape mismatch: Termination measure is not initialized")
 
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = ctx.get_param_ptr(self, builder, params, "termination_measure")
