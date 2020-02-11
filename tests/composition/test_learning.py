@@ -1437,3 +1437,45 @@ class TestRumelhartSemanticNetwork:
     #           #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
     #           #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
     #           )
+
+class TestLearningPathwayMethods:
+    def test_multiple_of_same_learning_pathway(self):
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                       default_variable=np.zeros(2))
+    
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                        in_to_hidden_comp,
+                                                                        hidden_comp,
+                                                                        hidden_to_out_comp,
+                                                                        output_comp],
+                                                                    learning_rate=10)
+        # Try readd the same learning pathway (shouldn't error)
+        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                        in_to_hidden_comp,
+                                                                        hidden_comp,
+                                                                        hidden_to_out_comp,
+                                                                        output_comp],
+                                                                    learning_rate=10)
