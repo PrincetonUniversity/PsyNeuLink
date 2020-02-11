@@ -4196,7 +4196,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
-            next((lp.receiver.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
+            next((lp.sender.owner for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                   if isinstance(lp, LearningProjection)),
                  None)
 
