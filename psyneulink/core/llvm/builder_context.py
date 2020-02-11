@@ -394,9 +394,9 @@ class LLVMBuilderContext:
                 if node is composition.controller:
                     continue
 
-                run_cond = cond_gen.generate_sched_condition(
+                reinit_cond = cond_gen.generate_sched_condition(
                     builder, when, cond, node)
-                with builder.if_then(run_cond):
+                with builder.if_then(reinit_cond):
                     node_w = composition._get_node_wrapper(node)
                     node_reinit_f = self.import_llvm_function(node_w, tags=node_tags.union({"reinitialize"}))
                     builder.call(node_reinit_f, [state, params, comp_in, data, data])
