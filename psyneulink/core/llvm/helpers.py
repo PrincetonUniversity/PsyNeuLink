@@ -195,9 +195,7 @@ def inject_printf_float_matrix(builder, matrix, prefix="", suffix="\n", override
     inject_printf(builder, prefix, override_debug=override_debug)
     with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
         row = b1.gep(matrix, [ir.IntType(32)(0), i])
-        with array_ptr_loop(b1, row, "print_col_loop") as (b2, j):
-            inject_printf(b2, "%lf ", b2.load(b2.gep(row, [ir.IntType(32)(0), j])), override_debug=override_debug)
-        inject_printf(b2, "\n",override_debug=override_debug)
+        inject_printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
     inject_printf(builder, suffix, override_debug=override_debug)
 
 
