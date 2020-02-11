@@ -10,6 +10,10 @@
 
 from llvmlite import ir
 from contextlib import contextmanager
+import ctypes
+
+
+from .debug import debug_env
 
 
 @contextmanager
@@ -145,6 +149,56 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
         b1.store(all_val, all_ptr)
 
     return builder.load(all_ptr)
+
+
+def inject_printf(builder, fmt, *args, override_debug=False):
+    if "print_values" not in debug_env and not override_debug:
+        return
+    #FIXME: Fix builtin printf and use that instead of this
+    try:
+        import llvmlite.binding as llvm
+        libc = ctypes.util.find_library("c")
+        llvm.load_library_permanently(libc)
+        # Address will be none if the symbol is not found
+        printf_address = llvm.address_of_symbol("printf")
+        # Direct pointer constants don't work
+        printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+        printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
+        ir_module = builder.function.module
+        fmt += "\0"
+
+        int8 = ir.IntType(8)
+        fmt_data = bytearray(fmt.encode("utf8"))
+        fmt_ty = ir.ArrayType(int8, len(fmt_data))
+        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                    name="printf_fmt_" + str(len(ir_module.globals)))
+        global_fmt.linkage = "internal"
+        global_fmt.global_constant = True
+        global_fmt.initializer = fmt_ty(fmt_data)
+
+        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+        builder.call(printf, [fmt_ptr] + list(args))
+    except Exception as e:
+        return
+
+
+def inject_printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
+    inject_printf(builder, prefix, override_debug=override_debug)
+
+    with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
+        inject_printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
+
+    inject_printf(builder, suffix, override_debug=override_debug)
+
+
+def inject_printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
+    inject_printf(builder, prefix, override_debug=override_debug)
+    with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+        row = b1.gep(matrix, [ir.IntType(32)(0), i])
+        with array_ptr_loop(b1, row, "print_col_loop") as (b2, j):
+            inject_printf(b2, "%lf ", b2.load(b2.gep(row, [ir.IntType(32)(0), j])), override_debug=override_debug)
+        inject_printf(b2, "\n",override_debug=override_debug)
+    inject_printf(builder, suffix, override_debug=override_debug)
 
 
 class ConditionGenerator:
