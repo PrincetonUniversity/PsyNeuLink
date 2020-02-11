@@ -1176,6 +1176,27 @@ class TestCustomCombinationFunction:
 
         assert np.allclose(expected, C.results)
 
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_max_executions_before_finished(self, mode):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5,
+                                            termination_threshold=0.0,
+                                            max_executions_before_finished=5,
+                                            execute_until_finished=True)
+        C = pnl.Composition()
+        C.add_node(I1)
+
+        C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        # Result after 5 iterations
+        assert np.allclose([[[0.984375]]], C.results)
+
 class TestDebugProperties:
 
     def test_defaults(self):

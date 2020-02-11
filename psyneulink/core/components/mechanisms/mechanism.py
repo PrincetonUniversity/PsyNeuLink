@@ -2798,9 +2798,6 @@ class Mechanism_Base(Mechanism):
 
         #FIXME: Flag and count should be int instead of float
         is_finished_count = builder.load(is_finished_count_ptr)
-        is_finished_count = builder.fadd(is_finished_count,
-                                         is_finished_count.type(1))
-        builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
@@ -2809,6 +2806,11 @@ class Mechanism_Base(Mechanism):
             builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
             builder.branch(end_block)
 
+        # FIXME: updating the count after the check matches PNL behaviour
+        #        although it does not count the number of iterations
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
         builder.branch(loop_block)
         builder.position_at_end(end_block)
 
