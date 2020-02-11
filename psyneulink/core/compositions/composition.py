@@ -4234,15 +4234,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_projections.append(error_projection)
 
         self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+        try:
+            act_in_projection = MappingProjection(sender=input_source.output_ports[0],
+                                                receiver=learning_mechanism.input_ports[0])
+            act_out_projection = MappingProjection(sender=output_source.output_ports[0],
+                                                receiver=learning_mechanism.input_ports[1])
+            self.add_projections([act_in_projection, act_out_projection] + error_projections)
 
-        act_in_projection = MappingProjection(sender=input_source.output_ports[0],
-                                              receiver=learning_mechanism.input_ports[0])
-        act_out_projection = MappingProjection(sender=output_source.output_ports[0],
-                                               receiver=learning_mechanism.input_ports[1])
-        self.add_projections([act_in_projection, act_out_projection] + error_projections)
-
-        learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
-        self.add_projection(learning_projection, feedback=True)
+            learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
+            self.add_projection(learning_projection, feedback=True)
+        except DuplicateProjectionError as e:
+            # we don't care if there is a duplicate
+            return learning_mechanism
+        except Exception as e:
+            raise e
 
         return learning_mechanism
 
