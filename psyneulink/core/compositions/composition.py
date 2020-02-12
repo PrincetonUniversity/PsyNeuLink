@@ -4438,11 +4438,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                       name=ERROR_SIGNAL,
                                                                       context=Context(source=ContextFlags.METHOD)),
-                                                            context=Context(source=ContextFlags.METHOD))
+                                                            context=Context(source=ContextFlags.METHOD))[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
-                    error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
+                    try:
+                        error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                                                                receiver=error_signal_input_port))
+                    except DuplicateProjectionError:
+                        pass
+                    except Exception as e:
+                        raise e
 
         # Return error_sources so they can be used to create a new LearningMechanism if needed
         # Return error_projections created to existing learning_mech
