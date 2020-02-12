@@ -769,31 +769,6 @@ class AutodiffComposition(Composition):
         ret = {}
         for node, values in nodes.items():
             if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
-                comparators = [x for x in node.efferents if (isinstance(type(x), ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                output_nodes = [t for t in c.afferents
-                                        if (NodeRole.OUTPUT in self.get_roles_by_node(t))
-                                        for c in comparators]
-                
-                if len(output_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer output node from target node {node}!")
-                
-                ret[output_nodes[0]] = values
-            else:
-                ret[node] = values
-        return ret
-
-    def _infer_output_nodes(self, nodes: dict):
-        """
-        Maps targets onto target mechanisms (as needed by learning)
-
-        Returns
-        ---------
-        A dict mapping TargetMechanisms -> target values
-        """
-        ret = {}
-        for node, values in nodes.items():
-            if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
                 node_efferent_mechanisms = [x.receiver._owner for x in node.efferents]
                 comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
                 comparator_afferent_mechanisms = [x.sender._owner for c in comparators for x in c.afferents]
@@ -844,7 +819,7 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 bin_execute=False,
                 skip_initialization=False,
-                learning_mode=False
+                learning_mode=False,
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -859,8 +834,6 @@ class AutodiffComposition(Composition):
             # TBI: How are we supposed to use base_context and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
-
-            self._analyze_graph()  # ADDED by CW 12/17/18: unsure if correct here
 
             if (bin_execute is True or str(bin_execute).endswith('Exec')):
                 try:
@@ -912,10 +885,6 @@ class AutodiffComposition(Composition):
                                                         bin_execute=bin_execute,
                                                         )
 
-    def learn(self, inputs: dict, targets: dict = None, num_trials: int = None, epochs: int = 1):
-        from psyneulink.library.compositions import CompositionRunner
-        runner = CompositionRunner(self)
-        return runner.run_learning(inputs=inputs, targets=targets, num_trials=num_trials, epochs=epochs)
     # validates properties of the autodiff composition, and arguments to run, when run is called
     def _validate_params(self, targets, epochs):
 
