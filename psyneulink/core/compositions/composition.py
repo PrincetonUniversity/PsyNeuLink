@@ -4226,6 +4226,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
+    def infer_backpropagation_learning_pathways(self):
+        """Convenience method that automatically creates backpropapagation learning pathways for every Input Node --> Output Node pathway"""
+        self._analyze_graph()
+        # returns a list of all pathways from start -> output node
+        def bfs(start):
+            pathways = []
+            prev = {}
+            queue = collections.deque([start])
+            while len(queue) > 0:
+                curr_node = queue.popleft()
+                if NodeRole.OUTPUT in self.get_roles_by_node(curr_node):
+                    p = []
+                    while curr_node in prev:
+                        p.insert(0, curr_node)
+                        curr_node = prev[curr_node]
+                    p.insert(0, curr_node)
+                    pathways.append(p)
+                    continue
+                for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
+                    prev[efferent_node] = projection
+                    prev[projection] = curr_node
+                    queue.append(efferent_node)
+            return pathways
+        
+        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) for p in bfs(n)]
+        for pathway in pathways:
+            self.add_backpropagation_learning_pathway(pathway=pathway)
+
     def _create_terminal_backprop_learning_components(self,
                                                       input_source,
                                                       output_source,
