@@ -560,12 +560,11 @@ class PytorchModelCreator(torch.nn.Module):
                     value = function(value)
                 # store the current value of the node
                 self.component_to_forward_info[component]['value'] = value
-                if do_logging:
-                    old_source = context.source
-                    context.source = ContextFlags.COMMAND_LINE
-                    detached_value = value.detach().cpu().numpy()
-                    component.parameters.value._log_value(detached_value, context)
-                    context.source = old_source
+                old_source = context.source
+                context.source = ContextFlags.COMMAND_LINE
+                detached_value = value.detach().cpu().numpy()
+                component.parameters.value._set(detached_value, context)
+                context.source = old_source
 
                 # save value in output list if we're at a node in the last execution set
                 if i == len(self.execution_sets) - 1:
@@ -576,14 +575,13 @@ class PytorchModelCreator(torch.nn.Module):
                     TimeScale.TIME_STEP)
 
         # Maybe need to comment this out!
-        self.copy_outputs_to_psyneulink(outputs, context)
+        # self.copy_outputs_to_psyneulink(outputs, context)
 
-        if do_logging:
-            old_source = context.source
-            context.source = ContextFlags.COMMAND_LINE
-            self.log_weights(context)
-            self.copy_outputs_to_psyneulink(outputs, context)
-            context.source = old_source
+        old_source = context.source
+        context.source = ContextFlags.COMMAND_LINE
+        self.log_weights(context)
+        self.copy_outputs_to_psyneulink(outputs, context)
+        context.source = old_source
 
         return outputs
 
@@ -607,7 +605,7 @@ class PytorchModelCreator(torch.nn.Module):
     @handle_external_context()
     def log_weights(self, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
-            projection.parameters.matrix._log_value(
+            projection.parameters.matrix._set(
                 weights.detach().cpu().numpy(), context)
 
     # Helper method that creates a bin func that returns the derivative of the function into the builder
