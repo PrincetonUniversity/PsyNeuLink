@@ -1292,7 +1292,19 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
 
-        # Reinit main function
+        # Get useful locations
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+        # Check if we have reinitializers
+        has_reinitializers_ptr = ctx.get_param_ptr(self, builder, mech_params, "has_initializers")
+        has_initializers = builder.load(has_reinitializers_ptr)
+        not_initializers = builder.fcmp_ordered("==", has_initializers,
+                                                has_initializers.type(0))
+        with builder.if_then(not_initializers):
+            builder.ret_void()
+
+        # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -1303,8 +1315,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reinit integrator function
         if self.integrator_mode:
-            mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-            mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
             reinit_f = ctx.import_llvm_function(self.integrator_function,
                                                 tags=tags)
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
