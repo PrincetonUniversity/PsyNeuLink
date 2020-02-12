@@ -46,11 +46,12 @@ class CompositionRunner():
         """
         # 1) Convert from key-value representation of values into separated representation
         if 'targets' in inputs:
-            targets = inputs['targets']
+            targets = inputs['targets'].copy()
 
         if 'inputs' in inputs:
-            inputs = inputs['inputs']
+            inputs = inputs['inputs'].copy()
 
+        # 2) Convert output node keys -> target node keys (learning always needs target nodes!)
         if targets is not None:
             targets = self._infer_target_nodes(targets)
             inputs.update(targets)
@@ -92,6 +93,10 @@ class CompositionRunner():
         ---------
         Outputs from the executions
         """
+        
+        if 'epochs' in inputs:
+            epochs = inputs['epochs']
+    
         inputs = self._parse_inputs(inputs, targets)
 
         if num_trials is None:
@@ -99,12 +104,15 @@ class CompositionRunner():
 
         results = [None] * num_trials
 
+        skip_initialization = False
         for curr_epoch in range(epochs):
             for minibatch, indices in _chunk_inputs(inputs, num_trials, minibatch_size, randomize_minibatches):
-                minibatch_results = self._composition.run(inputs=minibatch, learning_mode=True)
+                minibatch_results = self._composition.run(inputs=minibatch, learning_mode=True, skip_initialization=skip_initialization, skip_analyze_graph=skip_initialization)
+                skip_initialization = True
                 if curr_epoch == epochs - 1:
                     # Only store results on final epoch
                     for i, j in enumerate(indices):
                         # Reorder minibatch to match up with original order
                         results[j] = minibatch_results[i]
         return results
+        
