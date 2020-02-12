@@ -6903,6 +6903,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return trial_output
 
+    def learn(
+            self, 
+            inputs: dict, 
+            targets: dict = None, 
+            num_trials: int = None, 
+            epochs: int = 1, 
+            bin_execute=False, 
+            randomize_minibatches=False):
+        
+        from psyneulink.library.compositions import CompositionRunner
+        runner = CompositionRunner(self)
+        return runner.run_learning(inputs=inputs, targets=targets, num_trials=num_trials, epochs=epochs, randomize_minibatches=randomize_minibatches)
+
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
             self,
