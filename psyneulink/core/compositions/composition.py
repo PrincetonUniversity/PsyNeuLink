@@ -7517,19 +7517,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         adjusted_stimuli[node].append(stim)
                 nums_input_sets.add(len(stimuli[node]))
+        
+        num_trials = max(nums_input_sets)
+        for node, stim in adjusted_stimuli.items():
+            if len(stim) == 1:
+                adjusted_stimuli[node] *= max(nums_input_sets)
+        nums_input_sets.discard(1)
         if len(nums_input_sets) > 1:
-            if 1 in nums_input_sets:
-                nums_input_sets.remove(1)
-                if len(nums_input_sets) > 1:
-                    raise CompositionError("The input dictionary for {} contains input specifications of different "
-                                           "lengths ({}). The same number of inputs must be provided for each node "
-                                           "in a Composition.".format(self.name, nums_input_sets))
-            else:
-                raise CompositionError("The input dictionary for {} contains input specifications of different "
-                                       "lengths ({}). The same number of inputs must be provided for each node "
-                                       "in a Composition.".format(self.name, nums_input_sets))
-        num_input_sets = nums_input_sets.pop()
-        return adjusted_stimuli, num_input_sets, autodiff_stimuli
+            raise CompositionError("The input dictionary for {} contains input specifications of different "
+                                    "lengths ({}). The same number of inputs must be provided for each node "
+                                    "in a Composition.".format(self.name, nums_input_sets))
+        return adjusted_stimuli, num_trials, autodiff_stimuli
 
     def _adjust_execution_stimuli(self, stimuli):
         adjusted_stimuli = {}
