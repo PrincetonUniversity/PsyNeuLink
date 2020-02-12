@@ -776,11 +776,11 @@ class TestBackProp:
     
             xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
             xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
+            xor_autodiff.infer_backpropagation_learning_pathways()
     
             inputs_dict = {"inputs": {input_autodiff:xor_inputs},
                            "targets": {output_autodiff:xor_targets},
                            "epochs": num_epochs}
-
         # RUN MODELS -----------------------------------------------------------------------------------
     
         if pnl.SYSTEM in models:
@@ -794,7 +794,7 @@ class TestBackProp:
                                   num_trials=(num_epochs * xor_inputs.shape[0]),
                                   )
         if 'AUTODIFF' in models:
-            result = xor_autodiff.run(inputs=inputs_dict)
+            result = xor_autodiff.learn(inputs=inputs_dict)
             autodiff_weights = xor_autodiff.get_parameters()
     
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
