@@ -1170,7 +1170,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "variable",
-                     "value", "has_initializers",
+                     "value",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
