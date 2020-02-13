@@ -520,11 +520,15 @@ a model.  For example, including the following lines in the script for ``Stroop_
     task.log.set_log_conditions(VALUE)
     control.log.set_log_conditions(VARIABLE)
     control.log.set_log_conditions(VALUE)
-    ...
-    # After call to Stroop_model.run:
+
+logs the value of the ``control`` and ``task`` Mechanisms each time they are executed.  Information in the log can be
+printed out to the console using its `print_entries <Log.print_entries>` method, and specifying the desired information
+in its **display** argument.  For example, calling the following after ``Stroop_model.run`` has been called::
+
     Stroop_model.log.print_entries(display=[TIME, VALUE])
 
-report the value of the ``control`` and ``task`` Mechanims each time they executed for three trials::
+generates the following report of the time at which the ``control`` and ``task`` Mechanisms were executed and their
+value for each execution (only the first part of the output is reproduced here)::
 
     Log for Stroop Model:
 
@@ -554,11 +558,17 @@ report the value of the ``control`` and ``task`` Mechanims each time they execut
     'TASK'         0:1:8:1      [[0.8  0.41]]
     'TASK'         0:1:9:1      [[0.81 0.4 ]]
 
-The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism,
-since it only executed once per trial, but there are ten entries for the ``task`` Mechanism since it executed ten
-times, as specified in the Conditions described above.  The output of the `Log` can also be reported in various other
-formats, including a `numpy <https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html>`_ array,
-a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format.
+The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism
+per trial, since it is executed only once per trial; but there are ten entries for the ``task`` Mechanism for each
+trial since it executed ten times, as specified in the Conditions described above.
+
+.. XXX NEED TO GET THIS STRAIGHT:
+.. Note also that the ``control`` Mechanism executes for the first time in the second trial, since ???
+
+The output of a `Log` can also be reported in various other formats, including as a `numpy <https://docs.scipy
+.org/doc/numpy/reference/generated/numpy.array.html>`_ array (using its `nparray <Log.nparray>` method, as a
+dictionary of values for each entry (using its `nparray_dictionary <Log.nparray_dictionary>` method), and in `CSV
+<https://en.wikipedia.org/wiki/Comma-separated_values>`_ format (using its `csv <Log.csv>` method.
 
 .. _BasicsAndPrimer_Learning:
 
