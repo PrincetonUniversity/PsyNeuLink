@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import parameter_spec
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
@@ -140,6 +140,7 @@ class NormalDist(DistributionFunction):
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, stateful=True)
 
     @tc.typecheck
     def __init__(self,
@@ -148,11 +149,19 @@ class NormalDist(DistributionFunction):
                  standard_deviation=1.0,
                  params=None,
                  owner=None,
+                 seed=None,
                  prefs: is_pref_set = None):
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
         super().__init__(
             default_variable=default_variable,
             mean=mean,
             standard_deviation=standard_deviation,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -173,8 +182,9 @@ class NormalDist(DistributionFunction):
                  ):
         mean = self._get_current_function_param(DIST_MEAN, context)
         standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
+        random_state = self._get_current_function_param("random_state", context)
 
-        result = np.random.normal(mean, standard_deviation)
+        result = random_state.normal(mean, standard_deviation)
 
         return self.convert_output_type(result)
 
