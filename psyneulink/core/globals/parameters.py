@@ -551,6 +551,17 @@ class Parameter(types.SimpleNamespace):
 
             :default: False
 
+        function_parameter
+            indicates that this Parameter is not a "true" Parameter of a
+            Component, but a reference to an equally named Parameter on
+            the Component's function.
+
+            :default: False
+
+            :Developer Notes: In the future, these will use custom
+            default getters and setters that simply reference the
+            equivalent Parameters on the function
+
         pnl_internal
             whether the parameter is an idiosyncrasy of PsyNeuLink or it is more intrinsic to the conceptual operation
             of the Component on which it resides
