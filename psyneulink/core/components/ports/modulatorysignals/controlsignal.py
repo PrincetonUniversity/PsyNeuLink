@@ -671,23 +671,24 @@ class ControlSignal(ModulatorySignal):
             ----------
 
                 variable
-                    see `variable <ModulatorySignal.variable>`
+                    see `variable <ControlSignal.variable>`
 
                     :default value: numpy.array([1.])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 value
                     see `value <ControlSignal.value>`
 
                     :default value: numpy.array([1.])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 adjustment_cost
                     see `adjustment_cost <ControlSignal.adjustment_cost>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
+                    :read only: True
 
                 adjustment_cost_function
                     see `adjustment_cost_function <ControlSignal.adjustment_cost_function>`
@@ -712,6 +713,7 @@ class ControlSignal(ModulatorySignal):
 
                     :default value: None
                     :type:
+                    :read only: True
 
                 cost_options
                     see `cost_options <ControlSignal.cost_options>`
@@ -723,7 +725,8 @@ class ControlSignal(ModulatorySignal):
                     see `duration_cost <ControlSignal.duration_cost>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
+                    :read only: True
 
                 duration_cost_function
                     see `duration_cost_function <ControlSignal.duration_cost_function>`
@@ -731,11 +734,18 @@ class ControlSignal(ModulatorySignal):
                     :default value: `SimpleIntegrator`
                     :type: `Function`
 
+                function
+                    see `function <ControlSignal.function>`
+
+                    :default value: `TransferWithCosts`
+                    :type: `Function`
+
                 intensity_cost
                     see `intensity_cost <ControlSignal.intensity_cost>`
 
                     :default value: None
                     :type:
+                    :read only: True
 
                 intensity_cost_function
                     see `intensity_cost_function <ControlSignal.intensity_cost_function>`
@@ -743,6 +753,11 @@ class ControlSignal(ModulatorySignal):
                     :default value: `Exponential`
                     :type: `Function`
 
+                transfer_function
+                    see `transfer_function <ControlSignal.transfer_function>`
+
+                    :default value: `Linear`
+                    :type: `Function`
         """
         # FIX: if the specification of this getter is happening in several other classes, should consider
         #      refactoring Parameter to allow individual attributes to be inherited, othwerise, leaving this is an

@@ -990,12 +990,18 @@ class Port_Base(Port):
                     :default value: `Linear`
                     :type: `Function`
 
+                projections
+                    see `projections <Port_Base.projections>`
+
+                    :default value: None
+                    :type:
+
                 require_projection_in_composition
                     specifies whether the InputPort requires a projection when instantiated in a Composition;
                     if so, but none exists, a warning is issued.
 
                     :default value: True
-                    :type:
+                    :type: ``bool``
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
@@ -1991,7 +1997,15 @@ class Port_Base(Port):
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
                         return
                 else:
-                    mod_value = type_match(projection_value, type(mod_param_value))
+                    try:
+                        mod_value = type_match(projection_value, type(mod_param_value))
+                    except TypeError:
+                        # if type_match fails, assume that the computation is
+                        # valid further down the line. This was implicitly true
+                        # before adding this catch block by manually setting the
+                        # modulated param value from None to a default
+                        mod_value = projection_value
+
                     if mod_param_name not in mod_proj_values.keys():
                         mod_proj_values[mod_param_name]=[mod_value]
                     else:
@@ -2210,13 +2224,13 @@ class Port_Base(Port):
             input_types.append(ctx.get_output_struct_type(mod))
         return pnlvm.ir.LiteralStructType(input_types)
 
-    def _get_compilation_params(self, context=None):
+    def _get_compilation_params(self):
         return [self.parameters.function]
 
     def _get_compilation_state(self):
         return [self.parameters.function]
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         state_f = ctx.import_llvm_function(self.function)
 
         # Create a local copy of the function parameters

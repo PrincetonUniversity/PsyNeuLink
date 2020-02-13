@@ -49,14 +49,10 @@ jobs:
       run: |
         choco install --no-progress -y graphviz
         python -m pip install --upgrade pip
-        if ($Env:PY_VER -ne '3.8') { pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html }
+        pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html
       if: matrix.os == 'windows-latest'
       env:
         PY_VER: ${{ matrix.python-version }}
-    - name: Python3.8 dependencies setup
-      run: |
-        sed "-i.tmp" "/torch/d" requirements.txt
-      if: matrix.python-version == '3.8' && matrix.os != 'ubuntu-latest'
     - name: Shared dependencies
       shell: bash
       run: |

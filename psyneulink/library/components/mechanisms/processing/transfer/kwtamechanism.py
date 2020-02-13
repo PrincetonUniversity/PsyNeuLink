@@ -295,7 +295,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     see `average_based <KWTAMechanism.average_based>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 function
                     see `function <KWTAMechanism.function>`
@@ -307,26 +307,25 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     see `inhibition_only <KWTAMechanism.inhibition_only>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 k_value
                     see `k_value <KWTAMechanism.k_value>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 ratio
                     see `ratio <KWTAMechanism.ratio>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 threshold
                     see `threshold <KWTAMechanism.threshold>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         function = Parameter(Logistic, stateful=False, loggable=False)
         k_value = Parameter(0.5, modulable=True)
@@ -422,11 +421,11 @@ class KWTAMechanism(RecurrentTransferMechanism):
         self.indexOfInhibitionInputPort = len(self.input_ports) - 1
 
     def _kwta_scale(self, current_input, context=None):
-        k_value = self.get_current_mechanism_param("k_value", context)
-        threshold = self.get_current_mechanism_param("threshold", context)
-        average_based = self.get_current_mechanism_param("average_based", context)
-        ratio = self.get_current_mechanism_param("ratio", context)
-        inhibition_only = self.get_current_mechanism_param("inhibition_only", context)
+        k_value = self._get_current_mechanism_param("k_value", context)
+        threshold = self._get_current_mechanism_param("threshold", context)
+        average_based = self._get_current_mechanism_param("average_based", context)
+        ratio = self._get_current_mechanism_param("ratio", context)
+        inhibition_only = self._get_current_mechanism_param("inhibition_only", context)
 
         try:
             int_k_value = int(k_value[0])
