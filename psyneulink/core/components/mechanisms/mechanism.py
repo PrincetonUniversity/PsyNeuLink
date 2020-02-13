@@ -2325,11 +2325,13 @@ class Mechanism_Base(Mechanism):
             num_executions = self.parameters.num_executions_before_finished._get(context)
             max_executions = self.parameters.max_executions_before_finished._get(context)
 
+            self.parameters.num_executions_before_finished._set(num_executions + 1, override=True, context=context)
+            # FIX 2/13/20:  Should it also update num_executions here (i.e., before testing against max_executions)?
+
             if  num_executions >= max_executions:
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
+                self.parameters.is_finished_flag._set(True, context)
                 break
-
-            self.parameters.num_executions_before_finished._set(num_executions + 1, override=True, context=context)
 
             if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
                 self.parameters.is_finished_flag._set(True, context)
