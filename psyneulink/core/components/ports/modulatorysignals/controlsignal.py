@@ -777,6 +777,7 @@ class ControlSignal(ModulatorySignal):
             Linear,
             stateful=False,
             loggable=False,
+            function_parameter=True
         )
 
         value = Parameter(
@@ -794,33 +795,53 @@ class ControlSignal(ModulatorySignal):
             setter=_cost_options_setter,
             valid_types=(CostFunctions, list)
         )
-        intensity_cost = Parameter(None, read_only=True, getter=_intensity_cost_getter)
-        adjustment_cost = Parameter(0, read_only=True, getter=_adjustment_cost_getter)
-        duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
+        intensity_cost = Parameter(
+            None,
+            read_only=True,
+            getter=_intensity_cost_getter,
+            function_parameter=True
+        )
+        adjustment_cost = Parameter(
+            0,
+            read_only=True,
+            getter=_adjustment_cost_getter,
+            function_parameter=True
+        )
+        duration_cost = Parameter(
+            0,
+            read_only=True,
+            getter=_duration_cost_getter,
+            function_parameter=True
+        )
+
         cost = Parameter(None, read_only=True, getter=_cost_getter)
 
         intensity_cost_function = Parameter(
             Exponential,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_intensity_cost_function_getter
         )
         adjustment_cost_function = Parameter(
             Linear,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_adjustment_cost_function_getter
         )
         duration_cost_function = Parameter(
             SimpleIntegrator,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_duration_cost_function_getter
         )
         combine_costs_function = Parameter(
             Reduce(operation=SUM),
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_combine_costs_function_getter
         )
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
