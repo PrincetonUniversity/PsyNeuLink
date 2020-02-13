@@ -24,8 +24,8 @@ test_data = [
 #    (Functions.DriftDiffusionAnalytical, 1e-4, {"drift_rate": 1e-5, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, "Rounding errors",
 #     (0.5828813465336954, 0.04801236718458773, 0.532471083815943, 0.09633801362499317, 6.111833139205608, 1.5821207676710864, 0.5392724012504414, 1.8065252817609618)),
     # Two tests with different inputs to show that input is ignored.
-    (Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2}, "Not implemented", (1.0890232855122397)),
-    (Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2}, "Not implemented", (1.0890232855122397)),
+    (Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
+    (Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
 ]
 
 # use list, naming function produces ugly names

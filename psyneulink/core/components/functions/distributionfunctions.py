@@ -188,6 +188,24 @@ class NormalDist(DistributionFunction):
 
         return self.convert_output_type(result)
 
+    def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
+        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+        mean_ptr = ctx.get_param_ptr(self, builder, params, "mean")
+        std_dev_ptr = ctx.get_param_ptr(self, builder, params, "standard_deviation")
+        ret_val_ptr = builder.alloca(ctx.float_ty)
+        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        builder.call(norm_rand_f, [random_state, ret_val_ptr])
+
+        ret_val = builder.load(ret_val_ptr)
+        mean = builder.load(mean_ptr)
+        std_dev = builder.load(std_dev_ptr)
+
+        ret_val = builder.fmul(ret_val, std_dev)
+        ret_val = builder.fadd(ret_val, mean)
+
+        builder.store(ret_val, arg_out)
+        return builder
+
 
 class UniformToNormalDist(DistributionFunction):
     """
