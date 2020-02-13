@@ -72,9 +72,8 @@ class CombinationFunction(Function_Base):
                     see `variable <CombinationFunction.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # variable = np.array([0, 0])
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
@@ -165,14 +164,13 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                     see `offset <Concatenate.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Concatenate.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -254,8 +252,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             in an array that is one dimension less than `variable <Concatenate.variable>`.
 
         """
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         result = np.hstack(variable) * scale + offset
 
@@ -375,7 +373,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
             ----------
 
                 arrangement
-                    see `arrangement <Rearrange.arrangement>`
+                    see `arrangement <Rearrange_Arrangement>`
 
                     :default value: None
                     :type:
@@ -384,14 +382,13 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     see `offset <Rearrange.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Rearrange.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         arrangement = Parameter(None, modulable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -521,8 +518,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         """
         variable = np.atleast_2d(variable)
 
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
         arrangement = self.parameters.arrangement.get(context)
 
         if arrangement is None:
@@ -667,26 +664,25 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                     see `offset <Reduce.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <Reduce.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <Reduce.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <Reduce.weights>`
 
                     :default value: None
                     :type:
-
         """
         weights = None
         exponents = None
@@ -805,11 +801,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-        weights = self.get_current_function_param(WEIGHTS, context)
-        exponents = self.get_current_function_param(EXPONENTS, context)
-        operation = self.get_current_function_param(OPERATION, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        weights = self._get_current_function_param(WEIGHTS, context)
+        exponents = self._get_current_function_param(EXPONENTS, context)
+        operation = self._get_current_function_param(OPERATION, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -839,7 +835,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
-                                format(self.get_current_function_param(OPERATION, context)))
+                                format(self._get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1042,26 +1038,25 @@ class LinearCombination(
                     see `offset <LinearCombination.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <LinearCombination.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <LinearCombination.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <LinearCombination.weights>`
 
                     :default value: None
                     :type:
-
         """
         operation = SUM
 
@@ -1231,16 +1226,16 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-        weights = self.get_current_function_param(WEIGHTS, context)
-        exponents = self.get_current_function_param(EXPONENTS, context)
+        weights = self._get_current_function_param(WEIGHTS, context)
+        exponents = self._get_current_function_param(EXPONENTS, context)
         # if self.initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
         #         exponents = exponents.reshape(variable.shape)
-        operation = self.get_current_function_param(OPERATION, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        operation = self._get_current_function_param(OPERATION, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1611,26 +1606,25 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                     see `offset <CombineMeans.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <CombineMeans.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <CombineMeans.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <CombineMeans.weights>`
 
                     :default value: None
                     :type:
-
         """
         weights = None
         exponents = None
@@ -1778,11 +1772,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-        exponents = self.get_current_function_param(EXPONENTS, context)
-        weights = self.get_current_function_param(WEIGHTS, context)
-        operation = self.get_current_function_param(OPERATION, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        scale = self.get_current_function_param(SCALE, context)
+        exponents = self._get_current_function_param(EXPONENTS, context)
+        weights = self._get_current_function_param(WEIGHTS, context)
+        operation = self._get_current_function_param(OPERATION, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1829,7 +1823,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
-                                format(self.get_current_function_param(OPERATION, context)))
+                                format(self._get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1886,14 +1880,13 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                     see `variable <PredictionErrorDeltaFunction.variable>`
 
                     :default value: numpy.array([[1], [1]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 gamma
                     see `gamma <PredictionErrorDeltaFunction.gamma>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
@@ -2016,7 +2009,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self.get_current_function_param(GAMMA, context)
+        gamma = self._get_current_function_param(GAMMA, context)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

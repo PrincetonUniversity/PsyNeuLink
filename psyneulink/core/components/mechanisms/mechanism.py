@@ -1364,14 +1364,14 @@ class Mechanism_Base(Mechanism):
                     see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <Mechanism_Base.value>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 function
@@ -1380,13 +1380,38 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
+                input_labels_dict
+                    see `input_labels_dict <Mechanism_Base.input_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                input_ports
+                    see `input_ports <Mechanism_Base.input_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                output_labels_dict
+                    see `output_labels_dict <Mechanism_Base.output_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                output_ports
+                    see `output_ports <Mechanism_Base.output_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 
                     :default value: None
                     :type:
                     :read only: True
-
         """
         variable = Parameter(np.array([[0]]),
                              read_only=True, pnl_internal=True,
@@ -2073,7 +2098,7 @@ class Mechanism_Base(Mechanism):
 
         .. note::
                 The reinitialize method of an IntegratorFunction Function typically resets the function's
-                `previous_value <IntegratorFunction.previous_value>` (and any other `portful_attributes
+                `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
                 quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in
@@ -2125,9 +2150,9 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reinitialize.")
 
-    def get_current_mechanism_param(self, param_name, context=None):
+    def _get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
-            raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
+            raise MechanismError(f"The method '_get_current_mechanism_param' is intended for retrieving the current "
                                  f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
                                  f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
         try:

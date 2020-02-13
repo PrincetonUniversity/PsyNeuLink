@@ -990,12 +990,18 @@ class Port_Base(Port):
                     :default value: `Linear`
                     :type: `Function`
 
+                projections
+                    see `projections <Port_Base.projections>`
+
+                    :default value: None
+                    :type:
+
                 require_projection_in_composition
                     specifies whether the InputPort requires a projection when instantiated in a Composition;
                     if so, but none exists, a warning is issued.
 
                     :default value: True
-                    :type:
+                    :type: ``bool``
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)

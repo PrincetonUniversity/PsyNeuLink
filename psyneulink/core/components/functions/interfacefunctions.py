@@ -97,6 +97,16 @@ class InterfacePortMap(InterfaceFunction):
     }
 
     class Parameters(InterfaceFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                corresponding_input_port
+                    see `corresponding_input_port <InterfacePortMap.corresponding_input_port>`
+
+                    :default value: None
+                    :type:
+        """
         corresponding_input_port = Parameter(
             None,
             structural=True,

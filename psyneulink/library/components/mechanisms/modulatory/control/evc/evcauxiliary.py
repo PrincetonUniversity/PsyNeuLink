@@ -579,11 +579,11 @@ def compute_EVC(ctlr, allocation_vector, runtime_params, context):
 
         if isinstance(mechanism.function, StatefulFunction):
             for attr in mechanism.function.stateful_attributes:
-                reinitialization_value.append(mechanism.function.get_current_function_param(attr, context))
+                reinitialization_value.append(mechanism.function._get_current_function_param(attr, context))
         elif hasattr(mechanism, "integrator_function"):
             if isinstance(mechanism.integrator_function, IntegratorFunction):
                 for attr in mechanism.integrator_function.stateful_attributes:
-                    reinitialization_value.append(mechanism.integrator_function.get_current_function_param(attr, context))
+                    reinitialization_value.append(mechanism.integrator_function._get_current_function_param(attr, context))
 
         reinitialization_values[mechanism] = reinitialization_value
 
@@ -841,18 +841,23 @@ class PredictionMechanism(IntegratorMechanism):
                     :default value: None
                     :type:
 
+                input_type
+                    see `input_type <PredictionMechanism.input_type>`
+
+                    :default value: None
+                    :type:
+
                 rate
                     see `rate <PredictionMechanism.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 window_size
                     see `window_size <PredictionMechanism.window_size>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         window_size = Parameter(1, stateful=False, loggable=False)
         filter_function = Parameter(None, stateful=False, loggable=False)

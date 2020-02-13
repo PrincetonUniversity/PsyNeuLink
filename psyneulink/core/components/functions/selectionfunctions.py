@@ -175,14 +175,13 @@ class OneHot(SelectionFunction):
                     see `mode <OneHot.mode>`
 
                     :default value: `MAX_VAL`
-                    :type: str
+                    :type: ``str``
 
                 random_state
                     see `random_state <OneHot.random_state>`
 
                     :default value: None
-                    :type:
-
+                    :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
         random_state = Parameter(None, stateful=True, loggable=False)
@@ -422,7 +421,7 @@ class OneHot(SelectionFunction):
             if not prob_dist.any():
                 return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
-            random_state = self.get_current_function_param("random_state", context)
+            random_state = self._get_current_function_param("random_state", context)
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)

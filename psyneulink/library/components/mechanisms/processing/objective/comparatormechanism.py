@@ -267,10 +267,10 @@ class ComparatorMechanism(ObjectiveMechanism):
             ----------
 
                 variable
-                    see `variable <Mechanism_Base.variable>`
+                    see `variable <ComparatorMechanism.variable>`
 
                     :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 function
@@ -278,6 +278,13 @@ class ComparatorMechanism(ObjectiveMechanism):
 
                     :default value: `LinearCombination`(weights=numpy.array([[-1], [ 1]]))
                     :type: `Function`
+
+                output_ports
+                    see `output_ports <ComparatorMechanism.output_ports>`
+
+                    :default value: [`OUTCOME`]
+                    :type: ``list``
+                    :read only: True
 
                 sample
                     see `sample <ComparatorMechanism.sample>`
@@ -290,7 +297,6 @@ class ComparatorMechanism(ObjectiveMechanism):
 
                     :default value: None
                     :type:
-
         """
         # By default, ComparatorMechanism compares two 1D np.array input_ports
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')

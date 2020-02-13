@@ -632,20 +632,25 @@ class LCControlMechanism(ControlMechanism):
                     see `base_level_gain <LCControlMechanism.base_level_gain>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 function
-                    see `function <LCControlMechanism.function>`
+                    see `function <LCControlMechanism_Function>`
 
                     :default value: `FitzHughNagumoIntegrator`
                     :type: `Function`
+
+                modulated_mechanisms
+                    see `modulated_mechanisms <LCControlMechanism_Modulated_Mechanisms>`
+
+                    :default value: None
+                    :type:
 
                 scaling_factor_gain
                     see `scaling_factor_gain <LCControlMechanism.scaling_factor_gain>`
 
                     :default value: 3.0
-                    :type: float
-
+                    :type: ``float``
         """
         function = Parameter(FitzHughNagumoIntegrator, stateful=False, loggable=False)
 

@@ -172,7 +172,6 @@ class ModulatoryMechanism_Base(Mechanism_Base):
 
                     :default value: None
                     :type:
-
         """
         modulation = None
 

@@ -106,6 +106,16 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     class Parameters(ProcessingMechanism_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <CompositionInterfaceMechanism.function>`
+
+                    :default value: `Identity`
+                    :type: `Function`
+        """
         function = Parameter(Identity, stateful=False, loggable=False)
 
     @tc.typecheck

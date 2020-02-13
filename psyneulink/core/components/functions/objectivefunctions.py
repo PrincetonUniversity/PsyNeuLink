@@ -66,8 +66,7 @@ class ObjectiveFunction(Function_Base):
                     see `normalize <ObjectiveFunction.normalize>`
 
                     :default value: False
-                    :type: bool
-
+                    :type: ``bool``
         """
         normalize = False
         metric = Parameter(None, stateful=False)
@@ -184,13 +183,13 @@ class Stability(ObjectiveFunction):
                     see `matrix <Stability.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 metric
                     see `metric <Stability.metric>`
 
                     :default value: `ENERGY`
-                    :type: str
+                    :type: ``str``
 
                 metric_fct
                     see `metric_fct <Stability.metric_fct>`
@@ -203,7 +202,6 @@ class Stability(ObjectiveFunction):
 
                     :default value: None
                     :type:
-
         """
         matrix = HOLLOW_MATRIX
         metric = Parameter(ENERGY, stateful=False)
@@ -460,7 +458,7 @@ class Stability(ObjectiveFunction):
             variable = np.squeeze(variable)
         # MODIFIED 6/12/19 END
 
-        matrix = self.get_current_function_param(MATRIX, context)
+        matrix = self._get_current_function_param(MATRIX, context)
 
         current = variable
 
@@ -769,15 +767,14 @@ class Distance(ObjectiveFunction):
                     see `variable <Distance.variable>`
 
                     :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 metric
                     see `metric <Distance.metric>`
 
                     :default value: `DIFFERENCE`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)

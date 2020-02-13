@@ -11,3 +11,4 @@ pytest-pycodestyle
 pytest-pydocstyle
 pytest-xdist
 sphinx
+sphinx_autodoc_typehints

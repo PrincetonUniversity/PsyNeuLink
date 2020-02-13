@@ -322,15 +322,14 @@ class LearningSignal(ModulatorySignal):
                     see `value <LearningSignal.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 learning_rate
-                    see `learning_rate <LearningSignal.learning_rate>`
+                    see `learning_rate <LearningSignal_Learning_Rate>`
 
                     :default value: None
                     :type:
-
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['learning_signal'], pnl_internal=True)
         learning_rate = None

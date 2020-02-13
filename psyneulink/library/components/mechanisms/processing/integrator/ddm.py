@@ -688,17 +688,19 @@ class DDM(ProcessingMechanism):
                     see `initializer <DDM.initializer>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 input_format
                     see `input_format <DDM.input_format>`
 
                     :default value: `SCALAR`
-                    :type: str
+                    :type: ``str``
 
                 random_state
-                    :type: np.random.RandomState
+                    see `random_state <DDM.random_state>`
 
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         function = Parameter(
             DriftDiffusionAnalytical(
@@ -1070,8 +1072,8 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function.get_current_function_param(THRESHOLD, context))
-            random_state = self.get_current_mechanism_param("random_state", context)
+            threshold = float(self.function._get_current_function_param(THRESHOLD, context))
+            random_state = self._get_current_mechanism_param("random_state", context)
             if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
@@ -1176,14 +1178,14 @@ class DDM(ProcessingMechanism):
                     break
 
         if (
-            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context)
+            abs(single_value) >= self.function._get_current_function_param(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function.get_current_function_param(THRESHOLD, context)
+                    self.function._get_current_function_param(THRESHOLD, context)
                 )
             )
             return True
