@@ -546,6 +546,11 @@ class Parameter(types.SimpleNamespace):
 
             :Developer Notes: Can be manually set, but will trigger a warning unless override=True
 
+        function_arg
+            TBD
+
+            :default: False
+
         pnl_internal
             whether the parameter is an idiosyncrasy of PsyNeuLink or it is more intrinsic to the conceptual operation
             of the Component on which it resides
