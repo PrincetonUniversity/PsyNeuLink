@@ -380,11 +380,24 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
         return builder
 
-    def _gen_llvm_load_param(self, ctx, builder, params, index, param):
+    def _gen_llvm_load_param(self, ctx, builder, params, index, param, *,
+                             state=None):
         param_p = ctx.get_param_ptr(self, builder, params, param)
-        if isinstance(param_p.type.pointee, pnlvm.ir.ArrayType) and param_p.type.pointee.count > 1:
-            param_p = builder.gep(param_p, [ctx.int32_ty(0), index])
-        return pnlvm.helpers.load_extract_scalar_array_one(builder, param_p)
+        if param == NOISE and isinstance(param_p.type.pointee, pnlvm.ir.LiteralStructType):
+            # This is a noise function so call it to get value
+            assert state is not None
+            state_p = ctx.get_state_ptr(self, builder, state, NOISE)
+            noise_f = ctx.import_llvm_function(self.parameters.noise.get())
+            noise_in = builder.alloca(noise_f.args[2].type.pointee)
+            noise_out = builder.alloca(noise_f.args[3].type.pointee)
+            builder.call(noise_f, [param_p, state_p, noise_in, noise_out])
+            value_p = noise_out
+
+        elif isinstance(param_p.type.pointee, pnlvm.ir.ArrayType) and param_p.type.pointee.count > 1:
+            value_p = builder.gep(param_p, [ctx.int32_ty(0), index])
+        else:
+            value_p = param_p
+        return pnlvm.helpers.load_extract_scalar_array_one(builder, value_p)
 
 
 
@@ -859,8 +872,9 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+                                          state=state)
 
         # Get the only context member -- previous value
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
@@ -1121,8 +1135,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+                                          state=state)
 
         # Get the only context member -- previous value
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
@@ -2485,7 +2500,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         # Get parameter pointers
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+                                          state=state)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
@@ -3132,7 +3148,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
-        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+                                          state=state)
         offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
         time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 

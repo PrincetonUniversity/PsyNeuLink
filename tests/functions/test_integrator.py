@@ -141,8 +141,6 @@ def test_execute(func, mode, variable, noise, params, benchmark):
         assert isinstance(noise, pnl.DistributionFunction)
         if func[1] == DriftIntFun:
             pytest.skip("DriftDiffusionIntegrator doesn't support functional noise")
-        if mode != "Python":
-            pytest.skip("Compilation doesn't support functional noise")
 
     f = func[0](default_variable=variable, noise=noise, **params)
     if mode == "Python":
