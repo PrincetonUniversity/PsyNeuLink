@@ -779,7 +779,7 @@ class AutodiffComposition(Composition):
                     raise Exception(f"Unable to infer learning target node from output node {node}!")
                 
                 ret[output_nodes[0]] = values
-            else:
+            elif NodeRole.OUTPUT in self.get_roles_by_node(node):
                 ret[node] = values
         return ret
     
