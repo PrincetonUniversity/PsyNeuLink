@@ -189,7 +189,7 @@ class TestTransferMechanismNoise:
         )
         T.reinitialize_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
+        assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -205,10 +205,9 @@ class TestTransferMechanismNoise:
         )
         T.reinitialize_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [-0.10321885179355784, 0.41059850193837233, 0.144043571160878, 1.454273506962975]
-        # expected = [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]
-        for i in range(len(val[0])):
-            assert val[0][i] == expected[i]
+        expected = [-1.5640434149388383, -3.013204030356897, -1.225036779097983,
+       1.3093711955796925]
+        assert np.allclose(np.asfarray(val[0]), expected)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -290,7 +289,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
+        assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1550,6 +1549,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        assert np.allclose(val, [[3.60569184,  3.6136458], [9.00036006, 14.09938081]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism

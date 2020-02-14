@@ -1364,14 +1364,14 @@ class Mechanism_Base(Mechanism):
                     see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <Mechanism_Base.value>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 function
@@ -1380,13 +1380,38 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
+                input_labels_dict
+                    see `input_labels_dict <Mechanism_Base.input_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                input_ports
+                    see `input_ports <Mechanism_Base.input_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                output_labels_dict
+                    see `output_labels_dict <Mechanism_Base.output_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                output_ports
+                    see `output_ports <Mechanism_Base.output_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 
                     :default value: None
                     :type:
                     :read only: True
-
         """
         variable = Parameter(np.array([[0]]),
                              read_only=True, pnl_internal=True,
@@ -2073,7 +2098,7 @@ class Mechanism_Base(Mechanism):
 
         .. note::
                 The reinitialize method of an IntegratorFunction Function typically resets the function's
-                `previous_value <IntegratorFunction.previous_value>` (and any other `portful_attributes
+                `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
                 quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in
@@ -2125,9 +2150,9 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reinitialize.")
 
-    def get_current_mechanism_param(self, param_name, context=None):
+    def _get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
-            raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
+            raise MechanismError(f"The method '_get_current_mechanism_param' is intended for retrieving the current "
                                  f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
                                  f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
         try:
@@ -2774,8 +2799,13 @@ class Mechanism_Base(Mechanism):
                                                 "max_executions_before_finished")
 
         # Reset the flag and counter
-        builder.store(is_finished_flag_ptr.type.pointee(0), is_finished_flag_ptr)
-        builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+        # FIXME: Use int for flag
+        # FIXME: continue previous computation if not finished
+        current_flag = builder.load(is_finished_flag_ptr)
+        was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
+        with builder.if_then(was_finished):
+            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+            builder.store(current_flag.type(0), is_finished_flag_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
@@ -2798,17 +2828,20 @@ class Mechanism_Base(Mechanism):
 
         #FIXME: Flag and count should be int instead of float
         is_finished_count = builder.load(is_finished_count_ptr)
-        is_finished_count = builder.fadd(is_finished_count,
-                                         is_finished_count.type(1))
-        builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
-        is_finished_cond = builder.or_(is_finished_cond, max_reached)
-        with builder.if_then(is_finished_cond):
-            builder.store(is_finished_flag_ptr.type.pointee(1), is_finished_flag_ptr)
+        iter_end = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(iter_end):
+            new_flag = builder.uitofp(is_finished_cond, current_flag.type)
+            builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 
+        # FIXME: updating the count after the check matches PNL behaviour
+        #        although it does not count the number of iterations
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
         builder.branch(loop_block)
         builder.position_at_end(end_block)
 

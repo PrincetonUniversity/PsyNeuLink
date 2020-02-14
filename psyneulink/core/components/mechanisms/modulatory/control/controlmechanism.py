@@ -715,8 +715,7 @@ class DefaultAllocationFunction(Function_Base):
                     see `num_control_signals <DefaultAllocationFunction.num_control_signals>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         num_control_signals = Parameter(1, stateful=False)
 
@@ -736,7 +735,7 @@ class DefaultAllocationFunction(Function_Base):
                  context=None,
                  params=None,
                  ):
-        num_ctl_sigs = self.get_current_function_param('num_control_signals')
+        num_ctl_sigs = self._get_current_function_param('num_control_signals')
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
@@ -988,38 +987,31 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     see `variable <ControlMechanism.variable>`
 
                     :default value: numpy.array([[1.]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 value
                     see `value <ControlMechanism.value>`
 
-                    :default value: numpy.array([[1.]])
-                    :type: numpy.ndarray
+                    :default value: numpy.array([1.])
+                    :type: ``numpy.ndarray``
 
                 combine_costs
                     see `combine_costs <ControlMechanism.combine_costs>`
 
-                    :default value: numpy.core.fromnumeric.sum
-                    :type: <class 'function'>
+                    :default value: sum
+                    :type: ``types.FunctionType``
 
                 compute_net_outcome
                     see `compute_net_outcome <ControlMechanism.compute_net_outcome>`
 
                     :default value: lambda outcome, cost: outcome - cost
-                    :type: <class 'function'>
+                    :type: ``types.FunctionType``
 
                 compute_reconfiguration_cost
                     see `compute_reconfiguration_cost <ControlMechanism.compute_reconfiguration_cost>`
 
                     :default value: None
                     :type:
-
-                control_allocation
-                    see `control_allocation <ControlMechanism.control_allocation>`
-
-                    :default value: numpy.array([1.])
-                    :type: numpy.ndarray
-                    :read only: True
 
                 control_signal_costs
                     see `control_signal_costs <ControlMechanism.control_signal_costs>`
@@ -1038,21 +1030,28 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 default_allocation
                     see `default_allocation <ControlMechanism.default_allocation>`
 
-                    :default value: (None,)
-                    :type: <class 'tuple'>
+                    :default value: None
+                    :type:
 
-                gating_allocation
-                    see `gating_allocation <ControlMechanism.gating_allocation>`
+                input_ports
+                    see `input_ports <ControlMechanism.input_ports>`
 
-                    :default value: numpy.array([0.5])
-                    :type: numpy.ndarray
+                    :default value: [`OUTCOME`]
+                    :type: ``list``
                     :read only: True
 
                 modulation
                     see `modulation <ControlMechanism.modulation>`
 
-                    :default value: MULTIPLICATIVE
-                    :type: str
+                    :default value: `MULTIPLICATIVE_PARAM`
+                    :type: ``str``
+
+                monitor_for_control
+                    see `monitor_for_control <ControlMechanism.monitor_for_control>`
+
+                    :default value: [`OUTCOME`]
+                    :type: ``list``
+                    :read only: True
 
                 net_outcome
                     see `net_outcome <ControlMechanism.net_outcome>`
@@ -1061,6 +1060,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
+                objective_mechanism
+                    see `objective_mechanism <ControlMechanism.objective_mechanism>`
+
+                    :default value: None
+                    :type:
+
                 outcome
                     see `outcome <ControlMechanism.outcome>`
 
@@ -1068,13 +1073,25 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
-                reconfiguration_cost
-                    see `reconfiguration_cost <ControlMechanism.reconfiguration_cost>`
+                output_ports
+                    see `output_ports <ControlMechanism.output_ports>`
 
                     :default value: None
                     :type:
                     :read only: True
 
+                reconfiguration_cost
+                    see `reconfiguration_cost <ControlMechanism_Reconfiguration_Cost>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                system
+                    see `system <ControlMechanism.system>`
+
+                    :default value: None
+                    :type:
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
         variable = Parameter(np.array([[defaultControlAllocation]]), pnl_internal=True, constructor_argument='default_variable')

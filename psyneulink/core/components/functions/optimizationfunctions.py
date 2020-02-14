@@ -261,7 +261,7 @@ class OptimizationFunction(Function_Base):
                     see `variable <OptimizationFunction.variable>`
 
                     :default value: numpy.array([0, 0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 max_iterations
@@ -274,52 +274,51 @@ class OptimizationFunction(Function_Base):
                     see `objective_function <OptimizationFunction.objective_function>`
 
                     :default value: lambda x: 0
-                    :type: <class 'function'>
+                    :type: ``types.FunctionType``
 
                 save_samples
                     see `save_samples <OptimizationFunction.save_samples>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 save_values
                     see `save_values <OptimizationFunction.save_values>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 saved_samples
                     see `saved_samples <OptimizationFunction.saved_samples>`
 
                     :default value: []
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 saved_values
                     see `saved_values <OptimizationFunction.saved_values>`
 
                     :default value: []
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 search_function
                     see `search_function <OptimizationFunction.search_function>`
 
                     :default value: lambda x: x
-                    :type: <class 'function'>
+                    :type: ``types.FunctionType``
 
                 search_space
                     see `search_space <OptimizationFunction.search_space>`
 
                     :default value: [`SampleIterator`]
-                    :type: list
+                    :type: ``list``
 
                 search_termination_function
                     see `search_termination_function <OptimizationFunction.search_termination_function>`
 
                     :default value: lambda x, y, z: True
-                    :type: <class 'function'>
-
+                    :type: ``types.FunctionType``
         """
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -771,7 +770,7 @@ class GradientOptimization(OptimizationFunction):
                     see `variable <GradientOptimization.variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 annealing_function
@@ -784,19 +783,19 @@ class GradientOptimization(OptimizationFunction):
                     see `convergence_criterion <GradientOptimization.convergence_criterion>`
 
                     :default value: `VALUE`
-                    :type: str
+                    :type: ``str``
 
                 convergence_threshold
                     see `convergence_threshold <GradientOptimization.convergence_threshold>`
 
                     :default value: 0.001
-                    :type: float
+                    :type: ``float``
 
                 direction
                     see `direction <GradientOptimization.direction>`
 
                     :default value: `ASCENT`
-                    :type: str
+                    :type: ``str``
 
                 gradient_function
                     see `gradient_function <GradientOptimization.gradient_function>`
@@ -808,28 +807,27 @@ class GradientOptimization(OptimizationFunction):
                     see `max_iterations <GradientOptimization.max_iterations>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 previous_value
                     see `previous_value <GradientOptimization.previous_value>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 previous_variable
                     see `previous_variable <GradientOptimization.previous_variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 step_size
                     see `step_size <GradientOptimization.step_size>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -1213,7 +1211,7 @@ class GridSearch(OptimizationFunction):
                     see `direction <GridSearch.direction>`
 
                     :default value: `MAXIMIZE`
-                    :type: str
+                    :type: ``str``
 
                 grid
                     see `grid <GridSearch.grid>`
@@ -1225,20 +1223,19 @@ class GridSearch(OptimizationFunction):
                     see `random_state <GridSearch.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 save_samples
                     see `save_samples <GridSearch.save_samples>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 save_values
                     see `save_values <GridSearch.save_values>`
 
                     :default value: True
-                    :type: bool
-
+                    :type: ``bool``
         """
         grid = Parameter(None)
         save_samples = Parameter(True, pnl_internal=True)
@@ -1715,7 +1712,7 @@ class GridSearch(OptimizationFunction):
                     # swap with probability = 1/optimal_value_count in order to achieve
                     # uniformly random selection from identical outcomes
                     probability = 1 / optimal_value_count
-                    random_state = self.get_current_function_param("random_state", context)
+                    random_state = self._get_current_function_param("random_state", context)
                     random_value = random_state.rand()
 
                     if random_value < probability:
@@ -1881,27 +1878,26 @@ class GaussianProcess(OptimizationFunction):
                     see `variable <GaussianProcess.variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 direction
                     see `direction <GaussianProcess.direction>`
 
                     :default value: `MAXIMIZE`
-                    :type: str
+                    :type: ``str``
 
                 save_samples
                     see `save_samples <GaussianProcess.save_samples>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 save_values
                     see `save_values <GaussianProcess.save_values>`
 
                     :default value: True
-                    :type: bool
-
+                    :type: ``bool``
         """
         variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -2145,27 +2141,26 @@ class ParamEstimationFunction(OptimizationFunction):
                     see `variable <ParamEstimationFunction.variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
-                direction
-                    see `direction <ParamEstimationFunction.direction>`
+                random_state
+                    see `random_state <ParamEstimationFunction.random_state>`
 
-                    :default value: `MAXIMIZE`
-                    :type: str
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
 
                 save_samples
                     see `save_samples <ParamEstimationFunction.save_samples>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 save_values
                     see `save_values <ParamEstimationFunction.save_values>`
 
                     :default value: True
-                    :type: bool
-
+                    :type: ``bool``
         """
         variable = Parameter([[0], [0]], read_only=True)
         random_state = Parameter(None, stateful=True, loggable=False)
@@ -2429,7 +2424,7 @@ class ParamEstimationFunction(OptimizationFunction):
         # number of simulations. N is not the total number of simulation
         # samples. We will return a random sample from this set for the
         # "optimal" control allocation.
-        random_state = self.get_current_function_param("random_state", context)
+        random_state = self._get_current_function_param("random_state", context)
         sample_idx = random_state.randint(low=0, high=result.n_samples)
         return_optimal_sample = np.array(result.samples_array[sample_idx])
         return_optimal_value = result.discrepancies[sample_idx]

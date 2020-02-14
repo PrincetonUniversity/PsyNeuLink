@@ -550,7 +550,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 combination_function
                     see `combination_function <RecurrentTransferMechanism.combination_function>`
@@ -562,19 +562,25 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
+
+                has_recurrent_input_port
+                    see `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>`
+
+                    :default value: None
+                    :type:
 
                 hetero
                     see `hetero <RecurrentTransferMechanism.hetero>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 integration_rate
                     see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -598,20 +604,19 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `matrix <RecurrentTransferMechanism.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 noise
                     see `noise <RecurrentTransferMechanism.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 smoothing_factor
                     see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
 
                     :default value: 0.5
-                    :type: float
-
+                    :type: ``float``
         """
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)
@@ -1292,7 +1297,19 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
 
-        # Reinit main function
+        # Get useful locations
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+
+        # Check if we have reinitializers
+        has_reinitializers_ptr = ctx.get_param_ptr(self, builder, mech_params, "has_initializers")
+        has_initializers = builder.load(has_reinitializers_ptr)
+        not_initializers = builder.fcmp_ordered("==", has_initializers,
+                                                has_initializers.type(0))
+        with builder.if_then(not_initializers):
+            builder.ret_void()
+
+        # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
@@ -1303,8 +1320,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reinit integrator function
         if self.integrator_mode:
-            mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-            mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
             reinit_f = ctx.import_llvm_function(self.integrator_function,
                                                 tags=tags)
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
@@ -1358,6 +1373,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             # FIXME: HACK the distance function is not initialized
             self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
             self.termination_measure.defaults.value = float(0)
+            warnings.warn("Shape mismatch: Termination measure is not initialized")
 
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = ctx.get_param_ptr(self, builder, params, "termination_measure")

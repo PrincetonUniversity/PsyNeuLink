@@ -170,26 +170,25 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     see `initializer <StatefulFunction.initializer>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 noise
                     see `noise <StatefulFunction.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 previous_value
                     see `previous_value <StatefulFunction.previous_value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 rate
                     see `rate <StatefulFunction.rate>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         noise = Parameter(0.0, modulable=True)
         rate = Parameter(1.0, modulable=True)
@@ -302,7 +301,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _validate_initializers(self, default_variable, context=None):
         for initial_value_name in self.initializers:
 
-            initial_value = self.get_current_function_param(initial_value_name, context=context)
+            initial_value = self._get_current_function_param(initial_value_name, context=context)
 
             if isinstance(initial_value, (list, np.ndarray)):
                 if len(initial_value) != 1:
@@ -507,13 +506,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
-                reinitialization_values.append(self.get_current_function_param(initializer_name, context))
+                reinitialization_values.append(self._get_current_function_param(initializer_name, context))
 
         elif len(args) == len(self.initializers):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 if args[i] is None:
-                    reinitialization_values.append(self.get_current_function_param(initializer_name, context))
+                    reinitialization_values.append(self._get_current_function_param(initializer_name, context))
                 else:
                     # Not sure if np.atleast_1d is necessary here:
                     reinitialization_values.append(np.atleast_1d(args[i]))

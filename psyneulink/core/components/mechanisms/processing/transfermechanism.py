@@ -825,7 +825,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     see `integration_rate <TransferMechanism.integration_rate>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 integrator_function
                     see `integrator_function <TransferMechanism.integrator_function>`
@@ -837,52 +837,58 @@ class TransferMechanism(ProcessingMechanism_Base):
                     see `integrator_function_value <TransferMechanism.integrator_function_value>`
 
                     :default value: [[0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 integrator_mode
-                    see `integrator_mode <TransferMechanism.integrator_mode>`
+                    see `integrator_mode <TransferMechanism_Integrator_Mode>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 noise
                     see `noise <TransferMechanism.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 on_resume_integrator_mode
                     see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
 
-                    :default value: `INSTANTAENOUS_MODE_VALUE`
-                    :type: str
+                    :default value: `INSTANTANEOUS_MODE_VALUE`
+                    :type: ``str``
+
+                output_ports
+                    see `output_ports <TransferMechanism.output_ports>`
+
+                    :default value: [`RESULTS`]
+                    :type: ``list``
+                    :read only: True
+
+                termination_comparison_op
+                    see `termination_comparison_op <TransferMechanism.termination_comparison_op>`
+
+                    :default value: ``operator.le``
+                    :type: ``types.FunctionType``
 
                 termination_measure
                     see `termination_measure <TransferMechanism.termination_measure>`
 
-                    :default value: Distance(metric=MAX_ABS_DIFF))
-                    :type: function
+                    :default value: `Distance`(metric=max_abs_diff)
+                    :type: `Function`
 
                 termination_measure_value
                     see `termination_measure_value <TransferMechanism.termination_measure_value>`
 
-                    :default value: None
-                    :type: float or array
+                    :default value: 0.0
+                    :type: ``float``
+                    :read only: True
 
                 termination_threshold
                     see `termination_threshold <TransferMechanism.termination_threshold>`
 
                     :default value: None
-                    :type: float or int
-
-
-=                termination_comparison_op
-                    see `termination_comparison_op <TransferMechanism.termination_comparison_op>`
-
-                    :default value: LESS_THAN_OR_EQUAL
-                    :type: str
-
+                    :type:
         """
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
         integration_rate = Parameter(0.5, modulable=True)
@@ -1337,7 +1343,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, context)
+        integration_rate = self._get_current_mechanism_param(INTEGRATION_RATE, context)
 
         if (
             self.initialization_status == ContextFlags.INITIALIZING
@@ -1484,7 +1490,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_PORT
         # Clip outputs
-        clip = self.get_current_mechanism_param("clip", context)
+        clip = self._get_current_mechanism_param("clip", context)
 
         value = super(Mechanism, self)._execute(variable=variable,
                                                 context=context,
@@ -1514,12 +1520,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.parameters.integrator_mode._get(context)
-        noise = self.get_current_mechanism_param(NOISE, context)
+        noise = self._get_current_mechanism_param(NOISE, context)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self.get_current_mechanism_param(INITIAL_VALUE, context)
+            initial_value = self._get_current_mechanism_param(INITIAL_VALUE, context)
 
             value = self._get_integrated_function_input(variable,
                                                         initial_value,

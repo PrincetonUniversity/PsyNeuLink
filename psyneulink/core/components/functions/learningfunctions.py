@@ -123,15 +123,14 @@ class LearningFunction(Function_Base):
                     see `variable <LearningFunction.variable>`
 
                     :default value: numpy.array([0, 0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 learning_rate
                     see `learning_rate <LearningFunction.learning_rate>`
 
                     :default value: 0.05
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(0.05, modulable=True)
@@ -315,94 +314,93 @@ class BayesGLM(LearningFunction):
                     see `variable <BayesGLM.variable>`
 
                     :default value: [numpy.array([0, 0, 0]), numpy.array([0])]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 value
                     see `value <BayesGLM.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 Lambda_0
                     see `Lambda_0 <BayesGLM.Lambda_0>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 Lambda_n
                     see `Lambda_n <BayesGLM.Lambda_n>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 Lambda_prior
                     see `Lambda_prior <BayesGLM.Lambda_prior>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 gamma_shape_0
                     see `gamma_shape_0 <BayesGLM.gamma_shape_0>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_shape_n
                     see `gamma_shape_n <BayesGLM.gamma_shape_n>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_shape_prior
                     see `gamma_shape_prior <BayesGLM.gamma_shape_prior>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_size_0
                     see `gamma_size_0 <BayesGLM.gamma_size_0>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_size_n
                     see `gamma_size_n <BayesGLM.gamma_size_n>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 gamma_size_prior
                     see `gamma_size_prior <BayesGLM.gamma_size_prior>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 mu_0
                     see `mu_0 <BayesGLM.mu_0>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 mu_n
                     see `mu_n <BayesGLM.mu_n>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 mu_prior
                     see `mu_prior <BayesGLM.mu_prior>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 sigma_0
                     see `sigma_0 <BayesGLM.sigma_0>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'], pnl_internal=True)
@@ -558,11 +556,11 @@ class BayesGLM(LearningFunction):
         # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior
-        Lambda_prior = self.get_current_function_param('Lambda_n', context)
-        mu_prior = self.get_current_function_param('mu_n', context)
+        Lambda_prior = self._get_current_function_param('Lambda_n', context)
+        mu_prior = self._get_current_function_param('mu_n', context)
         # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
-        # gamma_shape_prior = self.get_current_function_param('gamma_shape_n', context)
-        # gamma_size_prior = self.get_current_function_param('gamma_size_n', context)
+        # gamma_shape_prior = self._get_current_function_param('gamma_shape_n', context)
+        # gamma_size_prior = self._get_current_function_param('gamma_size_n', context)
         # MODIFIED 6/3/19 NEW:
         gamma_shape_prior = self.parameters.gamma_shape_n.default_value
         gamma_size_prior = self.parameters.gamma_size_n.default_value
@@ -718,16 +716,15 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                 variable
                     see `variable <Kohonen.variable>`
 
-                    :default value: [[0, 0], [0, 0], [[0, 0], [0, 0]]]
-                    :type: list
+                    :default value: [[0, 0], [0, 0], numpy.array([[0, 0], [0, 0]])]
+                    :type: ``list``
                     :read only: True
 
                 distance_function
                     see `distance_function <Kohonen.distance_function>`
 
                     :default value: `GAUSSIAN`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
         distance_function = Parameter(GAUSSIAN, stateful=False)
@@ -855,7 +852,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
@@ -994,15 +991,14 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     see `variable <Hebbian.variable>`
 
                     :default value: numpy.array([0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 learning_rate
                     see `learning_rate <Hebbian.learning_rate>`
 
                     :default value: 0.05
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = 0.05
@@ -1082,7 +1078,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
         # learning_rate = self.learning_rate
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
@@ -1229,9 +1225,8 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                     see `variable <ContrastiveHebbian.variable>`
 
                     :default value: numpy.array([0, 0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -1312,7 +1307,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
@@ -1489,30 +1484,36 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                     see `variable <Reinforcement.variable>`
 
                     :default value: numpy.array([[0], [0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 activation_input
                     see `activation_input <Reinforcement.activation_input>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 activation_output
                     see `activation_output <Reinforcement.activation_output>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
+                    :read only: True
+
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <Reinforcement.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
                     :read only: True
 
                 error_signal
                     see `error_signal <Reinforcement.error_signal>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
-
         """
         variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
@@ -1607,9 +1608,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         self._check_args(variable=variable, context=context, params=params)
 
-        output = self.get_current_function_param(ACTIVATION_OUTPUT, context)
-        error = self.get_current_function_param(ERROR_SIGNAL, context)
-        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
+        output = self._get_current_function_param(ACTIVATION_OUTPUT, context)
+        error = self._get_current_function_param(ERROR_SIGNAL, context)
+        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -1813,21 +1814,27 @@ class BackPropagation(LearningFunction):
                     see `variable <BackPropagation.variable>`
 
                     :default value: numpy.array([[0], [0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
+
+                activation_derivative_fct
+                    see `activation_derivative_fct <BackPropagation.activation_derivative_fct>`
+
+                    :default value: `Logistic`.derivative
+                    :type: ``types.FunctionType``
 
                 activation_input
                     see `activation_input <BackPropagation.activation_input>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 activation_output
                     see `activation_output <BackPropagation.activation_output>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 error_matrix
@@ -1841,22 +1848,21 @@ class BackPropagation(LearningFunction):
                     see `error_signal <BackPropagation.error_signal>`
 
                     :default value: [0]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 learning_rate
                     see `learning_rate <BackPropagation.learning_rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 loss_function
                     see `loss_function <BackPropagation.loss_function>`
 
-                    :default value: 'MSE'
-                    :type: string
+                    :default value: None
+                    :type:
                     :read only: True
-
         """
         variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)
@@ -2075,26 +2081,26 @@ class BackPropagation(LearningFunction):
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self.get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
         # make activation_input a 1D row array
-        activation_input = self.get_current_function_param(ACTIVATION_INPUT, context)
+        activation_input = self._get_current_function_param(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
         if loss_function is MSE:
-            num_output_units = self.get_current_function_param(ERROR_SIGNAL, context).shape[0]
-            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context)) / num_output_units * 2
+            num_output_units = self._get_current_function_param(ERROR_SIGNAL, context).shape[0]
+            dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context)) / num_output_units * 2
         elif loss_function is SSE:
-            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context)) * 2
+            dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context)) * 2
         else:
-            dE_dA = np.dot(error_matrix, self.get_current_function_param(ERROR_SIGNAL, context))
+            dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
-        activation_output = self.get_current_function_param(ACTIVATION_OUTPUT, context)
+        activation_output = self._get_current_function_param(ACTIVATION_OUTPUT, context)
         # FIX: THIS ASSUMES DERIVATIVE CAN BE COMPUTED FROM output OF FUNCTION (AS IT CAN FOR THE Logistic)
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 

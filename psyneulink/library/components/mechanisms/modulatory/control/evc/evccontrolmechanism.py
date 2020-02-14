@@ -778,14 +778,14 @@ class EVCControlMechanism(ControlMechanism):
                     see `EVC_policies <EVCControlMechanism.EVC_policies>`
 
                     :default value: []
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 EVC_values
                     see `EVC_values <EVCControlMechanism.EVC_values>`
 
                     :default value: []
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 combine_outcome_and_cost_function
@@ -816,8 +816,14 @@ class EVCControlMechanism(ControlMechanism):
                 modulation
                     see `modulation <EVCControlMechanism.modulation>`
 
-                    :default value: MULTIPLICATIVE
-                    :type: str
+                    :default value: `MULTIPLICATIVE_PARAM`
+                    :type: ``str``
+
+                origin_objective_mechanism
+                    see `origin_objective_mechanism <EVCControlMechanism.origin_objective_mechanism>`
+
+                    :default value: None
+                    :type:
 
                 predicted_input
                     see `predicted_input <EVCControlMechanism.predicted_input>`
@@ -826,18 +832,29 @@ class EVCControlMechanism(ControlMechanism):
                     :type:
                     :read only: True
 
+                prediction_mechanisms
+                    see `prediction_mechanisms <EVCControlMechanism_Prediction_Mechanisms>`
+
+                    :default value: None
+                    :type:
+
                 save_all_values_and_policies
                     see `save_all_values_and_policies <EVCControlMechanism.save_all_values_and_policies>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
+
+                terminal_objective_mechanism
+                    see `terminal_objective_mechanism <EVCControlMechanism.terminal_objective_mechanism>`
+
+                    :default value: None
+                    :type:
 
                 value_function
                     see `value_function <EVCControlMechanism.value_function>`
 
                     :default value: `ValueFunction`
                     :type: `Function`
-
         """
         function = Parameter(ControlSignalGridSearch, stateful=False, loggable=False)
         value_function = Parameter(ValueFunction, stateful=False, loggable=False)

@@ -147,7 +147,6 @@ class IntegratorMechanism(ProcessingMechanism_Base):
 
                     :default value: `AdaptiveIntegrator`(initializer=numpy.array([0]), rate=0.5)
                     :type: `Function`
-
         """
         function = Parameter(AdaptiveIntegrator(rate=0.5), stateful=False, loggable=False)
 

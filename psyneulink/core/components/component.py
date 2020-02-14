@@ -809,55 +809,54 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     see `variable <Component_Variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <Component_Value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                execution_count
-                    see `execution_count <Component_Execution_Count>`
-
-                    :default value: 0
-                    :type: int
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 execute_until_finished
                     see `execute_until_finished <Component_Execute_Until_Finished>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
+
+                execution_count
+                    see `execution_count <Component_Execution_Count>`
+
+                    :default value: 0
+                    :type: ``int``
+                    :read only: True
 
                 has_initializers
                     see `has_initializers <Component.has_initializers>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 is_finished_flag
                     internal parameter used by some Component types to track previous status of is_finished() method,
                     or to set the status reported by the is_finished (see `is_finished <Component_Is_Finished>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 max_executions_before_finished
                     see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 num_executions_before_finished
                     see `num_executions_before_finished <Component_Num_Executions_Before_Finished>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
                     :read only: True
-
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
@@ -1171,7 +1170,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "variable",
-                     "value", "has_initializers",
+                     "value",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",

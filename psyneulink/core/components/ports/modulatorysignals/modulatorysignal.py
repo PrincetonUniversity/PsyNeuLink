@@ -547,11 +547,10 @@ class ModulatorySignal(OutputPort):
             ----------
 
                 modulation
-                    see `modulation <ModulatorySignal.modulation>`
+                    see `modulation <ModulatorySignal_Modulation>`
 
                     :default value: None
                     :type:
-
         """
         modulation = None
 
