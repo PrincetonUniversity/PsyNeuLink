@@ -78,30 +78,56 @@ class TestBuffer():
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_function(self, benchmark):
-        np.random.seed(22)
         B = Buffer(history=3, rate = 1.0, noise=NormalDist(standard_deviation=0.1))
-        B.execute([1,2,3])
-        B.execute([4,5,6])
-        B.execute([7,8,9])
+        B.execute([1, 2, 3])
+        B.execute([4, 5, 6])
+        B.execute([7, 8, 9])
         val = B.execute([10,11,12])
-        assert np.allclose(deque(np.atleast_1d([[ 3.8925223, 5.03957263, 6.00262384],
-                                                [ 7.00288551, 7.97692328, 9.05877522],
+        assert np.allclose(deque(np.atleast_1d([[ 4.10105279, 5.34507377, 6.02430687],
+                                                [ 7.00103478, 8.09010473, 9.09586966],
                                                 [10, 11, 12]])), val)
         benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_function_in_array(self, benchmark):
-        B = Buffer(history=3, noise=[10, NormalDist(standard_deviation=0.1), 20])
-        np.random.seed(22)
-        B.execute([1,2,3])
-        B.execute([4,5,6])
-        B.execute([7,8,9])
-        val = B.execute([10,11,12])
-        expected_val = [[24, 5.0800314416734444, 46], [17, 8.040015720836722, 29], [10, 11, 12]]
-        for i in range(len(val)):
-            for j in range(len(val[i])):
-                assert np.allclose(expected_val[i][j], val[i][j])
+        B = Buffer(history=3)
+        # Set noise parameter ouside of a constructor to avoid problems
+        # with extra copying
+        B.parameters.noise.set([10, NormalDist(standard_deviation=0.1), 20])
+        B.execute([1, 2, 3])
+        B.execute([4, 5, 6])
+        B.execute([7, 8, 9])
+        val = B.execute([10, 11, 12])
+        expected_val = [[24, 4.693117564500052, 46], [17, 7.744647273059847, 29], [10, 11, 12]]
+        for v_v, v_e in zip(val, expected_val):
+            for v, e in zip(v_v, v_e):
+                assert np.allclose(v, e)
         benchmark(B.execute, [1, 2, 3])
+
+    @pytest.mark.benchmark(group="BufferFunction")
+    def test_buffer_standalone_noise_function_invocation(self, benchmark):
+        class CallCount:
+            def __init__(self):
+                self.count = 0
+            def __call__(self):
+                self.count += 1
+                return self.count
+
+        counter_f = CallCount()
+        # Set noise parameter ouside of a constructor to avoid problems
+        # with extra copying. This test fails if noise is passed to constructor
+        B = Buffer(history=3)
+        B.parameters.noise.set([10, counter_f, 20])
+        B.execute([1, 2, 3])
+        B.execute([4, 5, 6])
+        B.execute([7, 8, 9])
+        val = B.execute([10, 11, 12])
+
+        assert counter_f.count == 4
+        expected_val = [[24, 12.0, 46], [17, 12.0, 29], [10, 11, 12]]
+        for v_v, v_e in zip(val, expected_val):
+            for v, e in zip(v_v, v_e):
+                assert np.allclose(v, e)
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_initializer_len_3(self, benchmark):
