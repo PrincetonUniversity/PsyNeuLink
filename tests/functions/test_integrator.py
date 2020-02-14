@@ -17,17 +17,38 @@ RAND2 = np.random.rand()
 RAND3 = np.random.rand()
 
 def SimpleIntFun(init, value, iterations, rate, noise, offset, **kwargs):
-    val = np.full_like(value, init)
-    for i in range(iterations):
-        val = val + (rate * value) + noise + offset
-    return val
-
+    assert iterations == 3
+    if np.isscalar(noise):
+        if "initializer" in kwargs:
+            return [4.91845218, 4.78766907, 4.73758993, 5.04920442, 4.09842889,
+                    4.2909061,  4.05866892, 5.23154257, 5.23413599, 4.86548903]
+        else:
+            return [4.12672714, 4.25877415, 4.16954537, 4.12360778, 4.02739283,
+                    4.2037768,  4.03845052, 4.39892272, 4.45597924, 3.99547688]
+    else:
+        if "initializer" in kwargs:
+            return [5.53160614, 4.86244369, 3.79932695, 5.06809088, 2.1305511,
+                    3.8879681,  2.16602771, 5.74284825, 4.47697989, 3.78677378]
+        else:
+            return [4.7398811, 4.33354877, 3.23128239, 4.14249424, 2.05951504,
+                    3.8008388, 2.14580932, 4.9102284,  3.69882314, 2.91676163]
 
 def AdaptiveIntFun(init, value, iterations, rate, noise, offset, **kwargs):
-    val = np.full_like(value, init)
-    for i in range(iterations):
-        val = (1 - rate) * val + rate * value + noise + offset
-    return val
+    assert iterations == 3
+    if np.isscalar(noise):
+        if "initializer" in kwargs:
+            return [3.44619156, 3.44183529, 3.38970396, 3.49707692, 3.08413924,
+                    3.22437653, 3.07231498, 3.66899395, 3.69062231, 3.37774376]
+        else:
+            return [3.13125441, 3.23144828, 3.16374378, 3.12888752, 3.05588209,
+                    3.18971771, 3.06427238, 3.33778941, 3.38108243, 3.03166509]
+    else:
+        if "initializer" in kwargs:
+            return [3.91143701, 3.49857235, 2.67777415, 3.51140748, 1.59096419,
+                    2.91863753, 1.63622751, 4.05695955, 3.11611173, 2.55924237]
+        else:
+            return [3.59649986, 3.28818534, 2.45181396, 3.14321808, 1.56270704,
+                    2.88397872, 1.62818492, 3.72575501, 2.80657186, 2.2131637]
 
 
 def DriftIntFun(init, value, iterations, **kwargs):
