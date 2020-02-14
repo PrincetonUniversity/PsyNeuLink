@@ -132,7 +132,6 @@ GROUP_PREFIX="IntegratorFunction "
 def test_execute(func, mode, variable, noise, params, benchmark):
     benchmark.group = GROUP_PREFIX + func[0].componentName
     try:
-        onoise = noise
         noise = noise()
     except TypeError as e:
         if "object is not callable" not in str(e):
