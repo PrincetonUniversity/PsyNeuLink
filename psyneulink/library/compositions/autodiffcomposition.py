@@ -769,9 +769,9 @@ class AutodiffComposition(Composition):
         ret = {}
         for node, values in nodes.items():
             if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver._owner for x in node.efferents]
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
                 comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender._owner for c in comparators for x in c.afferents]
+                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
                 output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
                 
                 if len(output_nodes) != 1:
