@@ -1549,6 +1549,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        assert np.allclose(val, [[3.60569184,  3.6136458], [9.00036006, 14.09938081]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
