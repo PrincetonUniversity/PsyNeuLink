@@ -33,8 +33,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html
       if: matrix.os == 'windows-latest'
-      env:
-        PY_VER: ${{ matrix.python-version }}
     - name: Shared dependencies
       shell: bash
       run: |
