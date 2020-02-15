@@ -398,9 +398,6 @@ def setup_pnl_intrinsics(ctx):
     ir.Function(ctx.module, single_intr_ty, name=_BUILTIN_PREFIX + "log")
     ir.Function(ctx.module, double_intr_ty, name=_BUILTIN_PREFIX + "pow")
 
-    # Printf declaration
-    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
-    ir.Function(ctx.module, printf_ty, name=_BUILTIN_PREFIX + "printf")
 
 
 def _generate_intrinsic_wrapper(module, name, ret, args):
@@ -414,32 +411,6 @@ def _generate_intrinsic_wrapper(module, name, ret, args):
     builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
     builder.ret(builder.call(intrinsic, function.args))
 
-
-def _generate_cpu_printf_wrapper(module):
-    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
-    function = ir.Function(module, printf_ty, name=_BUILTIN_PREFIX + "printf")
-    function.attributes.add('alwaysinline')
-    block = function.append_basic_block(name="entry")
-    builder = ir.IRBuilder(block)
-    builder.debug_metadata = LLVMBuilderContext.get_debug_location(function, None)
-
-    try:
-        import llvmlite.binding as llvm
-        libc = ctypes.util.find_library("c")
-        llvm.load_library_permanently(libc)
-        # Address will be none if the symbol is not found
-        printf_address = llvm.address_of_symbol("printf")
-    except:
-        printf_address = None
-
-    if printf_address is not None:
-        # Direct pointer constants don't work
-        printf = builder.inttoptr(pnlvm.ir.IntType(64)(printf_address), printf_ty.as_pointer())
-        builder.ret(builder.call(printf, function.args))
-    else:
-        builder.ret(ir.IntType(32)(-1))
-
-
 def _generate_cpu_builtins_module(_float_ty):
     """Generate function wrappers for log, exp, and pow intrinsics."""
     module = ir.Module(name="cpu_builtins")
@@ -447,7 +418,6 @@ def _generate_cpu_builtins_module(_float_ty):
         _generate_intrinsic_wrapper(module, intrinsic, _float_ty, [_float_ty])
 
     _generate_intrinsic_wrapper(module, "pow", _float_ty, [_float_ty, _float_ty])
-    _generate_cpu_printf_wrapper(module)
     return module
 
 

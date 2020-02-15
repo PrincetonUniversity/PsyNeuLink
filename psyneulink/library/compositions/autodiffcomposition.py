@@ -53,6 +53,8 @@ arguments that are specific to the AutodiffComposition, as described below.
    been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
    functionality.
 
+.. warning:: When comparing models built in PyTorch to those using AutodiffComposition, the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set to `False`, as AutodiffComposition does not currently support trainable biases.
+
 * **param_init_from_pnl** argument -- determines how parameters are set up for the internal PyTorch representation of
   the model.  If it is set to True:
 
@@ -292,6 +294,7 @@ from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
 import ctypes
+import warnings
 from collections.abc import Iterable
 from toposort import toposort
 from inspect import isgenerator
@@ -435,7 +438,7 @@ class AutodiffComposition(Composition):
                     see `learning_rate <AutodiffComposition.learning_rate>`
 
                     :default value: 0.001
-                    :type: float
+                    :type: ``float``
 
                 losses
                     see `losses <AutodiffComposition.losses>`
@@ -447,7 +450,7 @@ class AutodiffComposition(Composition):
                     see `min_delta <AutodiffComposition.min_delta>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 optimizer
                     see `optimizer <AutodiffComposition.optimizer>`
@@ -466,7 +469,6 @@ class AutodiffComposition(Composition):
 
                     :default value: None
                     :type:
-
         """
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
@@ -515,11 +517,6 @@ class AutodiffComposition(Composition):
         self.weight_decay = weight_decay
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
-
-
-        # store generated llvm functions
-        self.__generated_forward_exec = None
-        self.__generated_learning_exec = None
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
@@ -600,7 +597,16 @@ class AutodiffComposition(Composition):
         elif loss_spec == 'sse':
             return nn.MSELoss(reduction='sum')
         elif loss_spec == 'crossentropy':
-            return nn.CrossEntropyLoss(reduction='sum')
+            # Cross entropy loss is used for multiclass categorization and needs inputs in shape
+            # ((# minibatch_size, C), targets) where C is a 1-d vector of probabilities for each potential category
+            # and where target is a 1d vector of type long specifying the index to the target category. This
+            # formatting is different from most other loss functions available to autodiff compositions,
+            # and therefore requires a wrapper function to properly package inputs.
+            cross_entropy_loss = nn.CrossEntropyLoss()
+            return lambda x, y: cross_entropy_loss(
+                    x.unsqueeze(0),
+                    y.type(torch.LongTensor)
+            )
         elif loss_spec == 'l1':
             return nn.L1Loss(reduction='sum')
         elif loss_spec == 'nll':
@@ -725,6 +731,7 @@ class AutodiffComposition(Composition):
                 # (outputs, targets, weights, and more) and returns a scalar
                 new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
                 curr_loss += new_loss
+
             # save average loss across all output neurons on current trial
             curr_losses[t] = curr_loss[0].item() / num_inputs
 
@@ -784,17 +791,12 @@ class AutodiffComposition(Composition):
         else:
             return outputs
 
-    def _gen_llvm_function(self):
-        if self.learning_enabled is True:
-            if self.__generated_learning_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_learning_exec = ctx.gen_autodiffcomp_learning_exec(self)
-            return self.__generated_learning_exec
-        else:
-            if self.__generated_forward_exec is None:
-                with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                    self.__generated_forward_exec = ctx.gen_autodiffcomp_exec(self)
-            return self.__generated_forward_exec
+    def _gen_llvm_function(self, *, tags:frozenset):
+        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+            if "learning" in tags:
+                return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
+            else:
+                return ctx.gen_autodiffcomp_exec(self, tags=tags)
 
     @handle_external_context()
     def execute(self,
@@ -847,9 +849,9 @@ class AutodiffComposition(Composition):
 
                 except Exception as e:
                     if bin_execute is not True:
-                        raise e
+                        raise e from None
 
-                    print("WARNING: Failed to Run execution `{}': {}".format(
+                    warnings.warn("Failed to Run execution `{}': {}".format(
                           self.name, str(e)))
 
 
@@ -1113,7 +1115,7 @@ class AutodiffComposition(Composition):
                 results = full_results
 
             self.most_recent_context = context
-            return results
+            return results[-1]
 
         else:
             results = super(AutodiffComposition, self).run(inputs=inputs,
@@ -1215,16 +1217,19 @@ class AutodiffComposition(Composition):
                                            .format(self.name))
 
         weights = pytorch_representation.get_weights_for_projections()
-        biases = pytorch_representation.get_biases_for_mechanisms()
 
-        return weights, biases
+        return weights
 
     def _get_param_struct_type(self, ctx):
-        # We only need input/output params (rest should be in pytorch model params)
         mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
 
-        proj_param_type_list = (ctx.get_param_struct_type(p) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
-                                else pnlvm.ir.LiteralStructType([]) for p in self.projections)
+        # We only need input_CIM/output_CIM projection
+        # (the rest should be in pytorch model params)
+        proj_param_type_list = (ctx.get_param_struct_type(p)
+                                if (p.sender.owner is self.input_CIM or
+                                    p.receiver.owner is self.output_CIM)
+                                else pnlvm.ir.LiteralStructType([])
+                                for p in self._inner_projections)
 
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(
@@ -1238,13 +1243,14 @@ class AutodiffComposition(Composition):
 
     def _get_param_initializer(self, context):
         mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-        proj_params = (tuple(p._get_param_initializer(context)) if (p.sender in self.input_CIM.input_ports or p.receiver in self.output_CIM.input_ports)
-                       else tuple() for p in self.projections)
+        proj_params = (p._get_param_initializer(context)
+                       if (p.sender.owner is self.input_CIM or
+                           p.receiver.owner is self.output_CIM)
+                       else tuple() for p in self._inner_projections)
         self._build_pytorch_representation(self.default_execution_id)
         model = self.parameters.pytorch_representation.get(self.default_execution_id)
         pytorch_params = model._get_param_initializer()
-        param_args = (tuple(mech_params), tuple(proj_params), pytorch_params)
-        return tuple(param_args)
+        return (tuple(mech_params), tuple(proj_params), pytorch_params)
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):

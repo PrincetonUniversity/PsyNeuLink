@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import parameter_spec
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
@@ -130,17 +130,17 @@ class NormalDist(DistributionFunction):
                     see `mean <NormalDist.mean>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <NormalDist.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, stateful=True)
 
     @tc.typecheck
     def __init__(self,
@@ -149,11 +149,19 @@ class NormalDist(DistributionFunction):
                  standard_deviation=1.0,
                  params=None,
                  owner=None,
+                 seed=None,
                  prefs: is_pref_set = None):
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
         super().__init__(
             default_variable=default_variable,
             mean=mean,
             standard_deviation=standard_deviation,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -172,12 +180,31 @@ class NormalDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-        mean = self.get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
+        random_state = self._get_current_function_param("random_state", context)
 
-        result = np.random.normal(mean, standard_deviation)
+        result = random_state.normal(mean, standard_deviation)
 
         return self.convert_output_type(result)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
+        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+        mean_ptr = ctx.get_param_ptr(self, builder, params, "mean")
+        std_dev_ptr = ctx.get_param_ptr(self, builder, params, "standard_deviation")
+        ret_val_ptr = builder.alloca(ctx.float_ty)
+        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        builder.call(norm_rand_f, [random_state, ret_val_ptr])
+
+        ret_val = builder.load(ret_val_ptr)
+        mean = builder.load(mean_ptr)
+        std_dev = builder.load(std_dev_ptr)
+
+        ret_val = builder.fmul(ret_val, std_dev)
+        ret_val = builder.fadd(ret_val, mean)
+
+        builder.store(ret_val, arg_out)
+        return builder
 
 
 class UniformToNormalDist(DistributionFunction):
@@ -272,21 +299,20 @@ class UniformToNormalDist(DistributionFunction):
                     see `variable <UniformToNormalDist.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 mean
                     see `mean <UniformToNormalDist.mean>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <UniformToNormalDist.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -320,8 +346,8 @@ class UniformToNormalDist(DistributionFunction):
         except:
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
 
-        mean = self.get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
 
         sample = np.random.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
@@ -399,8 +425,7 @@ class ExponentialDist(DistributionFunction):
                     see `beta <ExponentialDist.beta>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
@@ -425,7 +450,7 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  ):
 
-        beta = self.get_current_function_param(BETA, context)
+        beta = self._get_current_function_param(BETA, context)
         result = np.random.exponential(beta)
 
         return self.convert_output_type(result)
@@ -503,14 +528,13 @@ class UniformDist(DistributionFunction):
                     see `high <UniformDist.high>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 low
                     see `low <UniformDist.low>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
@@ -538,8 +562,8 @@ class UniformDist(DistributionFunction):
                  params=None,
                  ):
 
-        low = self.get_current_function_param(LOW, context)
-        high = self.get_current_function_param(HIGH, context)
+        low = self._get_current_function_param(LOW, context)
+        high = self._get_current_function_param(HIGH, context)
         result = np.random.uniform(low, high)
 
         return self.convert_output_type(result)
@@ -624,14 +648,13 @@ class GammaDist(DistributionFunction):
                     see `dist_shape <GammaDist.dist_shape>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <GammaDist.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -659,8 +682,8 @@ class GammaDist(DistributionFunction):
                  params=None,
                  ):
 
-        scale = self.get_current_function_param(SCALE, context)
-        dist_shape = self.get_current_function_param(DIST_SHAPE, context)
+        scale = self._get_current_function_param(SCALE, context)
+        dist_shape = self._get_current_function_param(DIST_SHAPE, context)
 
         result = np.random.gamma(dist_shape, scale)
 
@@ -744,14 +767,13 @@ class WaldDist(DistributionFunction):
                     see `mean <WaldDist.mean>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <WaldDist.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -779,8 +801,8 @@ class WaldDist(DistributionFunction):
                  params=None,
                  ):
 
-        scale = self.get_current_function_param(SCALE, context)
-        mean = self.get_current_function_param(DIST_MEAN, context)
+        scale = self._get_current_function_param(SCALE, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
 
         result = np.random.wald(mean, scale)
 
@@ -932,39 +954,45 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     see `bias <DriftDiffusionAnalytical.bias>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
                     :read only: True
 
                 drift_rate
                     see `drift_rate <DriftDiffusionAnalytical.drift_rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
+
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <DriftDiffusionAnalytical.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
+                    :read only: True
 
                 noise
                     see `noise <DriftDiffusionAnalytical.noise>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 starting_point
                     see `starting_point <DriftDiffusionAnalytical.starting_point>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 t0
                     see `t0 <DriftDiffusionAnalytical.t0>`
 
                     :default value: 0.2
-                    :type: float
+                    :type: ``float``
 
                 threshold
                     see `threshold <DriftDiffusionAnalytical.threshold>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         drift_rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1077,13 +1105,13 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         """
 
-        attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, context))
+        attentional_drift_rate = float(self._get_current_function_param(DRIFT_RATE, context))
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
-        threshold = self.get_current_function_param(THRESHOLD, context)
-        starting_point = float(self.get_current_function_param(STARTING_POINT, context))
-        noise = float(self.get_current_function_param(NOISE, context))
-        t0 = float(self.get_current_function_param(NON_DECISION_TIME, context))
+        threshold = self._get_current_function_param(THRESHOLD, context)
+        starting_point = float(self._get_current_function_param(STARTING_POINT, context))
+        noise = float(self._get_current_function_param(NOISE, context))
+        t0 = float(self._get_current_function_param(NON_DECISION_TIME, context))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
@@ -1253,7 +1281,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         return moments
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         def load_scalar_param(name):
             param_ptr = ctx.get_param_ptr(self, builder, params, name)
@@ -1567,9 +1595,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             <DriftDiffusionAnalytical.drift_rate>`.
 
         """
-        Z = output or self.get_current_function_param(THRESHOLD, context)
-        A = input or self.get_current_function_param(DRIFT_RATE, context)
-        c = self.get_current_function_param(NOISE, context)
+        Z = output or self._get_current_function_param(THRESHOLD, context)
+        A = input or self._get_current_function_param(DRIFT_RATE, context)
+        c = self._get_current_function_param(NOISE, context)
         c_sq = c ** 2
         E = np.exp(-2 * Z * A / c_sq)
         D_iti = 0

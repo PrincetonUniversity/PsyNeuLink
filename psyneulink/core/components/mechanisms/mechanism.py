@@ -1364,14 +1364,14 @@ class Mechanism_Base(Mechanism):
                     see `variable <Mechanism_Base.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <Mechanism_Base.value>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 function
@@ -1380,13 +1380,38 @@ class Mechanism_Base(Mechanism):
                     :default value: `Linear`
                     :type: `Function`
 
+                input_labels_dict
+                    see `input_labels_dict <Mechanism_Base.input_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                input_ports
+                    see `input_ports <Mechanism_Base.input_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                output_labels_dict
+                    see `output_labels_dict <Mechanism_Base.output_labels_dict>`
+
+                    :default value: {}
+                    :type: <class 'dict'>
+
+                output_ports
+                    see `output_ports <Mechanism_Base.output_ports>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
                 previous_value
                     see `previous_value <Mechanism_Base.previous_value>`
 
                     :default value: None
                     :type:
                     :read only: True
-
         """
         variable = Parameter(np.array([[0]]),
                              read_only=True, pnl_internal=True,
@@ -2073,7 +2098,7 @@ class Mechanism_Base(Mechanism):
 
         .. note::
                 The reinitialize method of an IntegratorFunction Function typically resets the function's
-                `previous_value <IntegratorFunction.previous_value>` (and any other `portful_attributes
+                `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
                 quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in
@@ -2125,9 +2150,9 @@ class Mechanism_Base(Mechanism):
             raise MechanismError(f"Reinitializing {self.name} is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reinitialize.")
 
-    def get_current_mechanism_param(self, param_name, context=None):
+    def _get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
-            raise MechanismError(f"The method 'get_current_mechanism_param' is intended for retrieving the current "
+            raise MechanismError(f"The method '_get_current_mechanism_param' is intended for retrieving the current "
                                  f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
                                  f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
         try:
@@ -2492,7 +2517,7 @@ class Mechanism_Base(Mechanism):
         return ctx.get_param_struct_type(self.function)
 
     def _get_mech_param_struct_type(self, ctx):
-        return pnlvm.ir.LiteralStructType(())
+        return ctx.get_param_struct_type(super())
 
     def _get_param_struct_type(self, ctx):
         states_param_struct = self._get_states_param_struct_type(ctx)
@@ -2511,7 +2536,7 @@ class Mechanism_Base(Mechanism):
         return ctx.get_state_struct_type(self.function)
 
     def _get_mech_state_struct_type(self, ctx):
-        return pnlvm.ir.LiteralStructType(())
+        return ctx.get_state_struct_type(super())
 
     def _get_state_struct_type(self, ctx):
         ports_state_struct = self._get_ports_state_struct_type(ctx)
@@ -2550,7 +2575,7 @@ class Mechanism_Base(Mechanism):
         return (port_param_init, function_param_init, mech_param_init)
 
     def _get_mech_params_init(self, context):
-        return ()
+        return super()._get_param_initializer(context)
 
     def _get_ports_state_initializer(self, context):
         gen = (s._get_state_initializer(context) for s in self.ports)
@@ -2560,7 +2585,7 @@ class Mechanism_Base(Mechanism):
         return self.function._get_state_initializer(context)
 
     def _get_mech_state_init(self, context):
-        return ()
+        return super()._get_state_initializer(context)
 
     def _get_state_initializer(self, context):
         port_state_init = self._get_ports_state_initializer(context)
@@ -2568,6 +2593,12 @@ class Mechanism_Base(Mechanism):
         mech_state_init = self._get_mech_state_init(context)
 
         return (port_state_init, function_state_init, mech_state_init)
+
+    def _gen_llvm_function(self, *, extra_args=[], tags:frozenset):
+        if "node_wrapper" in tags:
+            return self.composition._gen_node_wrapper(self, tags=tags)
+        else:
+            return super()._gen_llvm_function(extra_args=extra_args, tags=tags)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,
@@ -2677,6 +2708,10 @@ class Mechanism_Base(Mechanism):
             elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
                 assert port_spec[1] < len(value.type.pointee)
                 return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
+            elif port_spec == OWNER_EXECUTION_COUNT:
+                mech_private_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+                execution_count = ctx.get_state_ptr(self, builder, mech_private_state, "execution_count")
+                return execution_count
             else:
                 #TODO: support more spec options
                 assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
@@ -2712,26 +2747,105 @@ class Mechanism_Base(Mechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
 
         is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_ctx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_ctx, is_output)
+        mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
+        # Update execution counter
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        exec_count_ptr = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+        exec_count = builder.load(exec_count_ptr)
+        exec_count = builder.fadd(exec_count, exec_count.type(1))
+        builder.store(exec_count, exec_count_ptr)
+
         builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
-        return builder
+        return builder, pnlvm.ir.IntType(1)(1)
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
 
     def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
         return mf_out, builder
+
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reinitialize" in tags
+        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
+        reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
+                                   reinit_out])
+
+        return builder
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reinitialize" not in tags
+        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "is_finished_flag")
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
+                                                 "num_executions_before_finished")
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_params,
+                                                "max_executions_before_finished")
+
+        # Reset the flag and counter
+        # FIXME: Use int for flag
+        # FIXME: continue previous computation if not finished
+        current_flag = builder.load(is_finished_flag_ptr)
+        was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
+        with builder.if_then(was_finished):
+            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
+            builder.store(current_flag.type(0), is_finished_flag_ptr)
+
+        # Enter the loop
+        loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
+        end_block = builder.append_basic_block(builder.basic_block.name + "_end")
+        builder.branch(loop_block)
+        builder.position_at_end(loop_block)
+
+        # Get internal function
+        args_t = [a.type for a in builder.function.args]
+        internal_builder = ctx.create_llvm_function(args_t, self,
+                                                    name=builder.function.name + "_internal",
+                                                    return_type=pnlvm.ir.IntType(1))
+        internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
+                                                                         params, state, arg_in, arg_out)
+        internal_builder.ret(is_finished)
+
+        # Call Internal Function
+        internal_f = internal_builder.function
+        is_finished_cond = builder.call(internal_f, builder.function.args)
+
+        #FIXME: Flag and count should be int instead of float
+        is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_max = builder.load(is_finished_max_ptr)
+        max_reached = builder.fcmp_ordered(">=", is_finished_count,
+                                           is_finished_max)
+        iter_end = builder.or_(is_finished_cond, max_reached)
+        with builder.if_then(iter_end):
+            new_flag = builder.uitofp(is_finished_cond, current_flag.type)
+            builder.store(new_flag, is_finished_flag_ptr)
+            builder.branch(end_block)
+
+        # FIXME: updating the count after the check matches PNL behaviour
+        #        although it does not count the number of iterations
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
+        builder.branch(loop_block)
+        builder.position_at_end(end_block)
+
+        return builder
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None, context=None):
 

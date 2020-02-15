@@ -10,6 +10,10 @@
 
 from llvmlite import ir
 from contextlib import contextmanager
+import ctypes
+
+
+from .debug import debug_env
 
 
 @contextmanager
@@ -147,6 +151,54 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     return builder.load(all_ptr)
 
 
+def printf(builder, fmt, *args, override_debug=False):
+    if "print_values" not in debug_env and not override_debug:
+        return
+    #FIXME: Fix builtin printf and use that instead of this
+    try:
+        import llvmlite.binding as llvm
+        libc = ctypes.util.find_library("c")
+        llvm.load_library_permanently(libc)
+        # Address will be none if the symbol is not found
+        printf_address = llvm.address_of_symbol("printf")
+        # Direct pointer constants don't work
+        printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+        printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
+        ir_module = builder.function.module
+        fmt += "\0"
+
+        int8 = ir.IntType(8)
+        fmt_data = bytearray(fmt.encode("utf8"))
+        fmt_ty = ir.ArrayType(int8, len(fmt_data))
+        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                    name="printf_fmt_" + str(len(ir_module.globals)))
+        global_fmt.linkage = "internal"
+        global_fmt.global_constant = True
+        global_fmt.initializer = fmt_ty(fmt_data)
+
+        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+        builder.call(printf, [fmt_ptr] + list(args))
+    except Exception as e:
+        return
+
+
+def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
+
+    with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
+        printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
+
+    printf(builder, suffix, override_debug=override_debug)
+
+
+def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
+    with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+        row = b1.gep(matrix, [ir.IntType(32)(0), i])
+        printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
+    printf(builder, suffix, override_debug=override_debug)
+
+
 class ConditionGenerator:
     def __init__(self, ctx, composition):
         self.ctx = ctx
@@ -272,9 +324,11 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, EveryNCalls
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, Never
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
+        if isinstance(condition, Never):
+            return ir.IntType(1)(0)
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
@@ -288,6 +342,19 @@ class ConditionGenerator:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
+        elif isinstance(condition, AtTrial):
+            trial_num = condition.args[0]
+            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+            ts = builder.load(ts_ptr)
+            trial = builder.extract_value(ts, 0)
+            return builder.icmp_unsigned("==", trial, trial.type(trial_num))
+        elif isinstance(condition, AtPass):
+            pass_num = condition.args[0]
+            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+            ts = builder.load(ts_ptr)
+            current_pass = builder.extract_value(ts, 1)
+            return builder.icmp_unsigned("==", current_pass,
+                                         current_pass.type(pass_num))
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 

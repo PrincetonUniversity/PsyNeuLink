@@ -1953,22 +1953,22 @@ class TestSampleIterator:
         assert next(sample_iterator, None) is None
 
     def test_function(self):
-        fun = pnl.NormalDist(mean=5.0).function
+        fun = pnl.NormalDist(mean=5.0)
         spec = SampleSpec(function=fun)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
+        expected = [3.4359565850611617, 4.4847029144020505, 2.4464727305984764, 5.302845918582278, 4.306822898004032]
 
         for i in range(5):
             assert np.allclose(next(sample_iterator), expected[i])
 
     def test_function_with_num(self):
-        fun = pnl.NormalDist(mean=5.0).function
+        fun = pnl.NormalDist(mean=5.0)
         spec = SampleSpec(function=fun,
                           num=4)
         sample_iterator = SampleIterator(specification=spec)
 
-        expected = [5.978737984105739, 7.240893199201458, 6.867557990149967, 4.022722120123589, 5.950088417525589]
+        expected = [3.4359565850611617, 4.4847029144020505, 2.4464727305984764, 5.302845918582278]
 
         for i in range(4):
             assert np.allclose(next(sample_iterator), expected[i])

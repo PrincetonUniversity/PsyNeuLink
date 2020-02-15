@@ -725,7 +725,7 @@ class InputPort(Port_Base):
                     :type:
 
                 function
-                    see `function <InputPort.function>`
+                    see `function <InputPort_Function>`
 
                     :default value: `LinearCombination`
                     :type: `Function`
@@ -734,14 +734,14 @@ class InputPort(Port_Base):
                     see `internal_only <InputPort.internal_only>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 shadow_inputs
                     specifies whether InputPort shadows inputs of another InputPort;
                     if not None, must be assigned another InputPort
 
                     :default value: None
-                    :type: InputPort
+                    :type:
                     :read only: True
 
                 weight
@@ -749,7 +749,6 @@ class InputPort(Port_Base):
 
                     :default value: None
                     :type:
-
         """
         function = Parameter(LinearCombination(operation=SUM), stateful=False, loggable=False)
         weight = Parameter(None, modulable=True)

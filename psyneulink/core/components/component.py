@@ -809,55 +809,54 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     see `variable <Component_Variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <Component_Value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
-                    :read only: True
-
-                execution_count
-                    see `execution_count <Component_Execution_Count>`
-
-                    :default value: 0
-                    :type: int
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 execute_until_finished
                     see `execute_until_finished <Component_Execute_Until_Finished>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
+
+                execution_count
+                    see `execution_count <Component_Execution_Count>`
+
+                    :default value: 0
+                    :type: ``int``
+                    :read only: True
 
                 has_initializers
                     see `has_initializers <Component.has_initializers>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 is_finished_flag
                     internal parameter used by some Component types to track previous status of is_finished() method,
                     or to set the status reported by the is_finished (see `is_finished <Component_Is_Finished>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 max_executions_before_finished
                     see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 num_executions_before_finished
                     see `num_executions_before_finished <Component_Num_Executions_Before_Finished>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
                     :read only: True
-
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
@@ -1134,12 +1133,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # Compilation support
     # ------------------------------------------------------------------------------------------------------------------
     def _get_compilation_state(self):
-        try:
-            stateful = self.stateful_attributes
-        except AttributeError:
-            stateful = []
+        # FIXME: MAGIC LIST, Use stateful tag for this
+        whitelist = {"previous_time", "previous_value", "previous_v",
+                     "previous_w", "random_state", "is_finished_flag",
+                     "num_executions_before_finished", "execution_count"}
+        # mechanism functions are handled separately
+        blacklist = {"function"} if hasattr(self, 'ports') else {}
+        def _is_compilation_state(p):
+            val = p.get()   # memoize for this function
+            return val is not None and p.name not in blacklist and \
+                   (p.name in whitelist or isinstance(val, Component))
 
-        return (p for p in self.parameters if p.name in stateful or isinstance(p.get(), Component))
+        return filter(_is_compilation_state, self.parameters)
 
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
@@ -1154,30 +1159,38 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
-            else:
+            try:
+                return (_convert(i) for i in x)
+            except:
                 return x
-        lists = (_convert(s) for s in self._get_state_values(context))
-        return pnlvm._tupleize(lists)
+        return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
-    def _get_compilation_params(self, context=None):
-        # Filter out known unused/invalid params
-        black_list = {'variable', 'value', 'initializer'}
-        try:
-            # Don't list stateful params, the are included in context
-            black_list.update(self.stateful_attributes)
-        except AttributeError:
-            pass
+    def _get_compilation_params(self):
+        # FIXME: MAGIC LIST, Use stateful tag for this
+        blacklist = {"previous_time", "previous_value", "previous_v",
+                     "previous_w", "random_state", "is_finished_flag",
+                     "num_executions_before_finished", "variable",
+                     "value",
+                     # Invalid types
+                     "input_port_variables", "results", "simulation_results",
+                     "monitor_for_control", "feature_values", "simulation_ids",
+                     "input_labels_dict", "output_labels_dict",
+                     "modulated_mechanisms"}
+        # mechanism functions are handled separately
+        if hasattr(self, 'ports'):
+            blacklist.add("function")
         def _is_compilation_param(p):
-            if p.name not in black_list and not isinstance(p, ParameterAlias):
-                val = p.get(context)
+            if p.name not in blacklist and not isinstance(p, ParameterAlias):
+                #FIXME: this should use defaults
+                val = p.get()
                 # Check if the value is string (like integration_method)
-                return not isinstance(val, (str, ComponentsMeta))
+                return not isinstance(val, (str, dict, ComponentsMeta, ContentAddressableList, type(_is_compilation_param), type(max)))
             return False
 
         return filter(_is_compilation_param, self.parameters)
 
     def _get_param_ids(self, context=None):
-        return [p.name for p in self._get_compilation_params(context)]
+        return [p.name for p in self._get_compilation_params()]
 
     def _get_param_values(self, context=None):
         def _get_values(p):
@@ -1206,18 +1219,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param = np.asfarray(param[0]).tolist()
             return param
 
-        return tuple(map(_get_values, self._get_compilation_params(context)))
+        return tuple(map(_get_values, self._get_compilation_params()))
 
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
 
-    def _gen_llvm_function(self, extra_args=[]):
+    def _gen_llvm_function_reinitialize(self, ctx, builder, *_, tags):
+        assert "reinitialize" in tags
+        return builder
+
+    def _gen_llvm_function(self, *, extra_args=[], tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_state_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),
                     ctx.get_output_struct_type(self).as_pointer()]
-            builder = ctx.create_llvm_function(args + extra_args, self)
+            builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
             llvm_func = builder.function
 
             llvm_func.attributes.add('alwaysinline')
@@ -1226,7 +1243,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 for p in params, state, arg_in, arg_out:
                     p.attributes.add('noalias')
 
-            builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out)
+            if "reinitialize" in tags:
+                builder = self._gen_llvm_function_reinitialize(ctx, builder, params, state, arg_in, arg_out, tags=tags)
+            else:
+                builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
             builder.ret_void()
 
         return llvm_func

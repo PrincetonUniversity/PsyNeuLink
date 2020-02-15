@@ -314,7 +314,7 @@ class TestReinitialize:
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
 
-    def test_LCAMechanism_valid(self):
+    def test_LCIIntegrator_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=LeakyCompetingIntegrator(),
@@ -1098,8 +1098,8 @@ class TestIntegratorNoise:
 
         val2 = float(I.execute(0))
 
-        np.testing.assert_allclose(val, 9.02272212012359)
-        np.testing.assert_allclose(val2, 5.950088417525589)
+        np.testing.assert_allclose(val, 10.302846)
+        np.testing.assert_allclose(val2, 4.306823)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1114,7 +1114,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [10.44386323, 10.33367433, 11.49407907, 9.79484174])
+        np.testing.assert_allclose(val, [8.607749, 10.660535, 11.108879,  9.084011])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1128,7 +1128,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        np.testing.assert_allclose(val, -0.977277879876411)
+        np.testing.assert_allclose(val, 0.3028459185822786)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1142,7 +1142,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute([10, 10, 10, 10])[0]
-        np.testing.assert_allclose(val, [0.44386323, 0.33367433, 1.49407907, -0.20515826])
+        np.testing.assert_allclose(val, [-1.39225086, 0.66053518, 1.10887925, -0.9159893])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1156,7 +1156,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        np.testing.assert_allclose(val, 9.02272212012359)
+        np.testing.assert_allclose(val, 10.302846)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1171,7 +1171,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [10.44386323, 10.33367433, 11.49407907, 9.79484174])
+        np.testing.assert_allclose(val, [8.607749, 10.660535, 11.108879,  9.084011])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1214,6 +1214,53 @@ class TestStatefulness:
         assert I.has_initializers
         assert hasattr(I, "reinitialize_when")
 
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('cond0, cond1, expected', [
+        (pnl.Never(), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.75]), np.array([0.75])],
+          [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.9375]), np.array([0.75])],
+          [np.array([0.96875]), np.array([0.875])],
+          [np.array([0.984375]), np.array([0.9375])],
+          [np.array([0.9921875]), np.array([0.96875])]]),
+        (pnl.Never(), pnl.AtTrialStart(),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.75]), np.array([0.5])],
+          [np.array([0.875]), np.array([0.5])],
+          [np.array([0.9375]), np.array([0.5])],
+          [np.array([0.96875]), np.array([0.5])],
+          [np.array([0.984375]), np.array([0.5])],
+          [np.array([0.9921875]), np.array([0.5])]]),
+        (pnl.AtPass(0), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.875])],
+          [np.array([0.5]), np.array([0.9375])],
+          [np.array([0.5]), np.array([0.96875])]]),
+        ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
+    def test_reinitialize_when_composition(self, mode, cond0, cond1, expected):
+        I1 = pnl.IntegratorMechanism()
+        I2 = pnl.IntegratorMechanism()
+        I1.reinitialize_when = cond0
+        I2.reinitialize_when = cond1
+        C = pnl.Composition()
+        C.add_node(I1)
+        C.add_node(I2)
+
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+
+        assert np.allclose(expected, C.results)
+
     def test_reinitialize_when(self):
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()
@@ -1236,11 +1283,6 @@ class TestStatefulness:
                             [np.array([0.9375]), np.array([0.96875])]]
 
         assert np.allclose(expected_results, S.results)
-
-
-
-
-
 
 
 class TestDualAdaptiveIntegrator:

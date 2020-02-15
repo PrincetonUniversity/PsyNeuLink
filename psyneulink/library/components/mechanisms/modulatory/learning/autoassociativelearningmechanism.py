@@ -275,12 +275,25 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             Attributes
             ----------
 
-                modulation
-                    see `modulation <AutoAssociativeLearningMechanism.modulation>`
+                function
+                    see `function <AutoAssociativeLearningMechanism.function>`
 
-                    :default value: ADDITIVE
-                    :type: str
+                    :default value: `Hebbian`
+                    :type: `Function`
 
+                input_ports
+                    see `input_ports <AutoAssociativeLearningMechanism.input_ports>`
+
+                    :default value: [`ACTIVATION_INPUT`]
+                    :type: ``list``
+                    :read only: True
+
+                output_ports
+                    see `output_ports <AutoAssociativeLearningMechanism.output_ports>`
+
+                    :default value: ["{name: LearningSignal, variable: (OWNER_VALUE, 0)}"]
+                    :type: ``list``
+                    :read only: True
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
         modulation = ADDITIVE

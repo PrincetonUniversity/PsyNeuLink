@@ -44,14 +44,12 @@ def _tupleize(x):
 
 
 class CUDAExecution:
-    def __init__(self, buffers=['param_struct', 'state_struct']):
+    def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self._uploaded_bytes = 0
         self._downloaded_bytes = 0
-        self.__cuda_out_buf = None
         self.__debug_env = debug_env
-        self.__vo_ty = None
 
     def __del__(self):
         if "cuda_data" in self.__debug_env:
@@ -67,14 +65,6 @@ class CUDAExecution:
     def _bin_func_multirun(self):
         # CUDA uses the same function for single and multi run
         return self._bin_func
-
-    @property
-    def _vo_ty(self):
-        if self.__vo_ty is None:
-            self.__vo_ty = self._bin_func.byref_arg_types[3]
-            if len(self._execution_contexts) > 1:
-                self.__vo_ty = self.__vo_ty * len(self._execution_contexts)
-        return self.__vo_ty
 
     def _get_ctype_bytes(self, data):
         # Return dummy buffer. CUDA does not handle 0 size well.
@@ -92,24 +82,38 @@ class CUDAExecution:
         jit_engine.pycuda.driver.memcpy_dtoh(out_buf, source)
         return ty.from_buffer(out_buf)
 
-    def __getattr__(self, attribute):
-        assert attribute.startswith("_cuda")
-
-        private_attr_name = "_buffer" + attribute
+    def __get_cuda_buffer(self, struct_name):
+        private_attr_name = "_buffer_cuda" + struct_name
         private_attr = getattr(self, private_attr_name)
         if private_attr is None:
             # Set private attribute to a new buffer
-            private_attr = self.upload_ctype(getattr(self, attribute[5:]))
+            private_attr = self.upload_ctype(getattr(self, struct_name))
             setattr(self, private_attr_name, private_attr)
 
         return private_attr
 
     @property
-    def _cuda_out_buf(self):
-        if self.__cuda_out_buf is None:
+    def _cuda_param_struct(self):
+        return self.__get_cuda_buffer("_param_struct")
+
+    @property
+    def _cuda_state_struct(self):
+        return self.__get_cuda_buffer("_state_struct")
+
+    @property
+    def _cuda_data_struct(self):
+        return self.__get_cuda_buffer("_data_struct")
+
+    @property
+    def _cuda_conditions(self):
+        return self.__get_cuda_buffer("_conditions")
+
+    @property
+    def _cuda_out(self):
+        if self._buffer_cuda_out is None:
             size = ctypes.sizeof(self._vo_ty)
-            self.__cuda_out_buf = jit_engine.pycuda.driver.mem_alloc(size)
-        return self.__cuda_out_buf
+            self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
+        return self._buffer_cuda_out
 
     def cuda_execute(self, variable):
         # Create input parameter
@@ -119,11 +123,11 @@ class CUDAExecution:
 
         self._bin_func.cuda_call(self._cuda_param_struct,
                                  self._cuda_state_struct,
-                                 data_in, self._cuda_out_buf,
+                                 data_in, self._cuda_out,
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out_buf, self._vo_ty)
+        ct_res = self.download_ctype(self._cuda_out, self._vo_ty)
         return _convert_ctype_to_python(ct_res)
 
 
@@ -148,6 +152,7 @@ class FuncExecution(CUDAExecution):
             self.__param_struct = None
             self.__state_struct = None
 
+        self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
 
@@ -211,7 +216,7 @@ class MechExecution(FuncExecution):
         #   a) the input is vector of input ports
         #   b) input ports take vector of projection outputs
         #   c) projection output is a vector (even 1 element vector)
-        new_var = np.asfarray([np.atleast_2d(x) for x in np.atleast_1d(variable)])
+        new_var = [np.atleast_2d(x) for x in np.atleast_1d(variable)]
         return super().execute(new_var)
 
 
@@ -263,7 +268,7 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper"}))
 
     @property
     def _conditions(self):
@@ -321,7 +326,7 @@ class CompExecution(CUDAExecution):
     @property
     def _data_struct(self):
         # Run wrapper changed argument order
-        arg = 2 if len(self._bin_func.byref_arg_types) > 5 else 3
+        arg = 2 if self._bin_func is self.__bin_run_func else 3
 
         if len(self._execution_contexts) > 1:
             if self.__data_struct is None:
@@ -429,11 +434,14 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            try:
-                learning = 'learning' if self._composition.learning_enabled else None
-            except AttributeError:
-                learning = None
-            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(self._composition, tag=learning)
+            def is_learning(obj):
+                return getattr(obj, 'learning_enabled', False)
+            tags=frozenset()
+            if is_learning(self._composition) or \
+               any(is_learning(n) for n in self._composition.nodes):
+                tags=frozenset({"learning"})
+            self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
+                self._composition, tags=tags)
 
         return self.__bin_exec_func
 
@@ -444,7 +452,7 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_exec_multi_func
 
-    def execute(self, inputs):
+    def execute(self, inputs, autodiff_stimuli=None):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         if len(self._execution_contexts) > 1:
@@ -454,17 +462,26 @@ class CompExecution(CUDAExecution):
                                                 self._data_struct,
                                                 self._conditions, self._ct_len)
         else:
-            self._bin_exec_func(self._state_struct,
-                                self._param_struct,
+            extra_args = ()
+            if autodiff_stimuli is not None:
+                nested_autodiff = [n for n in self._composition.nodes if getattr(n, 'learning_enabled', False)]
+                assert len(nested_autodiff) <= 1
+                if len(nested_autodiff) == 1:
+                    autodiff_stimuli = autodiff_stimuli[nested_autodiff[0]]
+                    # autodiff stimuli is passed in the last arg
+                    extra_args = [self._initialize_autodiff_struct(autodiff_stimuli, -1, nested_autodiff[0])]
+            self._bin_exec_func(self._state_struct, self._param_struct,
                                 self._get_input_struct(inputs),
-                                self._data_struct, self._conditions)
+                                self._data_struct, self._conditions, *extra_args)
 
     def execute_learning(self, inputs):
         # Special case for autodiff, everything is stored in inputs param
         assert self._composition.learning_enabled
         runs = len(next(iter(inputs["inputs"].values())))
         outputs = (self._bin_exec_func.byref_arg_types[-1] * runs)()
-        autodiff_struct = self._initialize_autodiff_struct(inputs)
+        # Autodiff stimuli is in the second to last argument
+        autodiff_struct = self._initialize_autodiff_struct(inputs, -2,
+                                                           self._composition)
         r_data = self._get_compilation_param('data_struct', '_get_data_initializer', 3, self._execution_contexts[0])
 
         c_input = self._bin_exec_func.byref_arg_types[2] * runs
@@ -488,7 +505,7 @@ class CompExecution(CUDAExecution):
                                       threads=len(self._execution_contexts))
 
         # Copy the data struct from the device
-        self._data_struct = self.download_ctype(self._cuda_data_struct, self._vo_ty)
+        self._data_struct = self.download_ctype(self._cuda_data_struct, type(self._data_struct))
 
     # Methods used to accelerate "Run"
 
@@ -508,7 +525,8 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            self.__bin_run_func = pnlvm.LLVMBinaryFunction.get(self._composition._llvm_run.name)
+            self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
+                self._composition, tags=frozenset({"run"}))
 
         return self.__bin_run_func
 
@@ -520,23 +538,24 @@ class CompExecution(CUDAExecution):
         return self.__bin_run_multi_func
 
     # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
-    def _initialize_autodiff_struct(self, autodiff_stimuli):
+    def _initialize_autodiff_struct(self, autodiff_stimuli, arg_index,
+                                    composition):
         inputs = autodiff_stimuli.get("inputs", {})
         targets = autodiff_stimuli.get("targets", {})
         epochs = autodiff_stimuli.get("epochs", 1)
 
         num_trials = len(next(iter(inputs.values())))
 
-        input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        output_nodes = self._composition.get_nodes_by_role(NodeRole.OUTPUT)
+        input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
+        output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
 
-        autodiff_stimuli_cty = self._bin_func.byref_arg_types[-2]
+        autodiff_stimuli_cty = self._bin_exec_func.byref_arg_types[arg_index]
 
         training_name = autodiff_stimuli_cty._fields_[-1][0]
         training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
         training_data_ty = training_p_cty._type_ * num_trials
-        inputs_data = zip(*([[np.atleast_2d(x)] for x in inputs[n]] for n in input_nodes))
-        target_data = zip(*([[np.atleast_2d(x)] for x in targets[n]] for n in output_nodes))
+        inputs_data = zip(*(([np.atleast_2d(x)] for x in inputs[n]) for n in input_nodes))
+        target_data = zip(*(([np.atleast_2d(x)] for x in targets[n]) for n in output_nodes))
         training_data_init = pnlvm._tupleize(zip(inputs_data, target_data))
         training_data = training_data_ty(*training_data_init)
 

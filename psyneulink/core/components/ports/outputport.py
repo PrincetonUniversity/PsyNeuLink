@@ -904,9 +904,8 @@ class OutputPort(Port_Base):
                     see `variable <OutputPort.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         variable = Parameter(np.array([0]), read_only=True, getter=_output_port_variable_getter, pnl_internal=True, constructor_argument='default_variable')
 

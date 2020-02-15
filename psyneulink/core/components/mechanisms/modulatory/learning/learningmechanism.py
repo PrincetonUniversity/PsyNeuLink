@@ -913,37 +913,63 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     :type:
 
                 error_signal
-                    see `error_signal <LearningMechanism.error_signal>`
+                    see `error_signal <LearningMechanism_Error_Signal>`
 
                     :default value: None
                     :type:
                     :read only: True
 
                 function
-                    see `function <LearningMechanism.function>`
+                    see `function <LearningMechanism_Function>`
 
                     :default value: `BackPropagation`
                     :type: `Function`
+
+                input_ports
+                    see `input_ports <LearningMechanism.input_ports>`
+
+                    :default value: [`ACTIVATION_INPUT`, `ACTIVATION_OUTPUT`, `ERROR_SIGNAL`]
+                    :type: ``list``
+                    :read only: True
 
                 learning_enabled
                     see `learning_enabled <LearningMechanism.learning_enabled>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 learning_rate
-                    see `learning_rate <LearningMechanism.learning_rate>`
+                    see `learning_rate <LearningMechanism_Learning_Rate>`
 
                     :default value: None
                     :type:
 
                 learning_signal
-                    see `learning_signal <LearningMechanism.learning_signal>`
+                    see `learning_signal <LearningMechanism_Learning_Signal>`
 
                     :default value: None
                     :type:
                     :read only: True
 
+                learning_signals
+                    see `learning_signals <LearningMechanism_Learning_Signals>`
+
+                    :default value: ["{name: LearningSignal, variable: (OWNER_VALUE, 0)}"]
+                    :type: ``list``
+                    :read only: True
+
+                modulation
+                    see `modulation <LearningMechanism.modulation>`
+
+                    :default value: `ADDITIVE_PARAM`
+                    :type: ``str``
+
+                output_ports
+                    see `output_ports <LearningMechanism.output_ports>`
+
+                    :default value: ["{name: error_signal, port_type: OutputPort, variable: (OWNER_VALUE, 1)}"]
+                    :type: ``list``
+                    :read only: True
         """
         function = Parameter(BackPropagation, stateful=False, loggable=False)
         error_matrix = Parameter(None, modulable=True)
