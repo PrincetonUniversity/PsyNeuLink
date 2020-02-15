@@ -1390,10 +1390,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         if self.integrator_mode:
-            if_state = ctx.get_state_ptr(self, builder, mech_state,
+            if_state = ctx.get_state_ptr(self, builder, state,
                                          "integrator_function")
             if_param_raw = ctx.get_param_ptr(self, builder, mech_params,
                                              "integrator_function")
@@ -1406,7 +1405,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             mf_in = ip_out
 
-        mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_state = ctx.get_state_ptr(self, builder, state, "function")
         mf_param_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
                                                         builder, params, state, arg_in)
@@ -1427,8 +1426,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     b1.store(val, ptro)
 
         # Update execution counter
-        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        exec_count_ptr = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+        exec_count_ptr = ctx.get_state_ptr(self, builder, state, "execution_count")
         exec_count = builder.load(exec_count_ptr)
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
@@ -1436,7 +1434,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder,
                                                            mech_params,
-                                                           mech_state, arg_out)
+                                                           state, arg_out)
 
         return builder, is_finished_cond
 

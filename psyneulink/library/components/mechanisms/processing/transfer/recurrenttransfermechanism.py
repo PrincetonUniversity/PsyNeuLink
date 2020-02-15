@@ -1290,7 +1290,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         assert "reinitialize" in tags
 
         # Get useful locations
-        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
 
         # Check if we have reinitializers
@@ -1304,7 +1303,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_state = ctx.get_state_ptr(self, builder, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
@@ -1317,7 +1316,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
             reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
             reinit_params = ctx.get_param_ptr(self, builder, mech_params, "integrator_function")
-            reinit_state = ctx.get_state_ptr(self, builder, mech_state, "integrator_function")
+            reinit_state = ctx.get_state_ptr(self, builder, state, "integrator_function")
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
                                     reinit_out])
 
@@ -1331,9 +1330,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         #       support 'is_finished' yet
         # previous_value is appended before AutoProjection in state struct
         # FIXME: This should use standard "previous_value" param
-        rec_state = builder.function.args[1]
-        prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0),
-            ctx.int32_ty(len(rec_state.type.pointee) - 2)])
+        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
+            ctx.int32_ty(len(state.type.pointee) - 2)])
 
         # preserve the old prev value
         prev_val = builder.load(prev_val_ptr)
