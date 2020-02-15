@@ -1260,6 +1260,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return pnlvm.ir.LiteralStructType(input_type_list)
 
+    def _get_param_ids(self):
+        return super()._get_param_ids() + ["recurrent_projection"]
+
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
@@ -1418,9 +1421,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             recurrent_state = ctx.get_state_ptr(self, builder, state,
                                                 "recurrent_projection")
-            # Autoprojection params are appended to the end of param struct
-            recurrent_params = builder.gep(params, [ctx.int32_ty(0),
-                ctx.int32_ty(len(params.type.pointee) - 1)])
+            recurrent_params = ctx.get_param_ptr(self, builder, params,
+                                                 "recurrent_projection")
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
             prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
