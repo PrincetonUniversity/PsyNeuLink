@@ -1265,6 +1265,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
 
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["old_val", "recurrent_projection"]
+
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
         projection_t = ctx.get_state_struct_type(self.recurrent_projection)
@@ -1320,8 +1323,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
                                     reinit_out])
 
-        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
-            ctx.int32_ty(len(state.type.pointee) - 2)])
+        prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
         builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
         return builder
 
@@ -1330,8 +1332,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         #       support 'is_finished' yet
         # previous_value is appended before AutoProjection in state struct
         # FIXME: This should use standard "previous_value" param
-        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
-            ctx.int32_ty(len(state.type.pointee) - 2)])
+        prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
 
         # preserve the old prev value
         prev_val = builder.load(prev_val_ptr)
@@ -1418,16 +1419,14 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(ip_trans_input.type.pointee) - 1
             real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            # Autoprojection state is appended to the end of state struct
-            recurrent_state = builder.gep(state, [ctx.int32_ty(0),
-                ctx.int32_ty(len(state.type.pointee) - 1)])
+            recurrent_state = ctx.get_state_ptr(self, builder, state,
+                                                "recurrent_projection")
             # Autoprojection params are appended to the end of param struct
             recurrent_params = builder.gep(params, [ctx.int32_ty(0),
                 ctx.int32_ty(len(params.type.pointee) - 1)])
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
-            prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
-                ctx.int32_ty(len(state.type.pointee) - 2)])
+            prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
             # Extract the correct output port
             recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
                 ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
