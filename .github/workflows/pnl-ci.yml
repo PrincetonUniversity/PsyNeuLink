@@ -60,8 +60,10 @@ jobs:
       run: |
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
+      if: contains(github.ref, 'tags')
     - name: Upload dist packages
       uses: actions/upload-artifact@v1
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}
         path: dist/
+      if: contains(github.ref, 'tags')
