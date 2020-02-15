@@ -373,7 +373,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     # Construct the Composition using the control Mechanism as its controller:
     Stroop_model = Composition(name='Stroop Model', controller=control)
 
-    # Print statements show state of
+    # Print statement called by run method (below), that show state of Components after each trial
     np.set_printoptions(precision=2)
     global t
     t = 0
@@ -386,7 +386,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
         print(f'\t\t\t\tred   green')
         print(f'\toutput:\t\t{output.value[0]}')
         print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
-        print(f'\tconflict:\t  {control._objective_mechanism.value[0]}')
+        print(f'\tconflict:\t  {control.objective_mechanism.value[0]}')
         t += 1
 
     # Set up run and then execute it
@@ -497,13 +497,6 @@ internal simulations to optimize the amount of control to optimize some criterio
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
 
-.. XXXX
-.. Change names of:
-..   - ``output`` Mechanism above to ``phonology``
-..   - ``color_hidden`` to ``color``
-..   - ``word_hidden`` to ``orthography``
-
-
 .. _BasicsAndPrimer_Logging_and_Animation:
 
 Logging and Animation
@@ -522,20 +515,21 @@ a model.  For example, including the following lines in the script for ``Stroop_
     control.log.set_log_conditions(VALUE)
 
 logs the value of the ``control`` and ``task`` Mechanisms each time they are executed.  Information in the log can be
-printed out to the console using its `print_entries <Log.print_entries>` method, and specifying the desired information
+printed to the console using its `print_entries <Log.print_entries>` method, and specifying the desired information
 in its **display** argument.  For example, calling the following after ``Stroop_model.run`` has been called::
 
     Stroop_model.log.print_entries(display=[TIME, VALUE])
 
 generates the following report of the time at which the ``control`` and ``task`` Mechanisms were executed and their
-value for each execution (only the first part of the output is reproduced here)::
+value for each execution (only the first two trials worth of the output are reproduced here)::
 
     Log for Stroop Model:
 
     Logged Item:   Time          Value
 
-    'CONTROL'      0:1:0:0      [[0.51]]
-    'CONTROL'      0:2:0:0      [[0.59]]
+    'CONTROL'      0:0:10:0     [[0.51]]
+    'CONTROL'      0:1:10:0     [[0.59]]
+    ...
 
     'TASK'         0:0:0:1      [[0.57 0.56]]
     'TASK'         0:0:1:1      [[0.58 0.55]]
@@ -557,13 +551,11 @@ value for each execution (only the first part of the output is reproduced here):
     'TASK'         0:1:7:1      [[0.78 0.42]]
     'TASK'         0:1:8:1      [[0.8  0.41]]
     'TASK'         0:1:9:1      [[0.81 0.4 ]]
+    ...
 
 The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism
 per trial, since it is executed only once per trial; but there are ten entries for the ``task`` Mechanism for each
 trial since it executed ten times, as specified in the Conditions described above.
-
-.. XXX NEED TO GET THIS STRAIGHT:
-.. Note also that the ``control`` Mechanism executes for the first time in the second trial, since ???
 
 The output of a `Log` can also be reported in various other formats, including as a `numpy <https://docs.scipy
 .org/doc/numpy/reference/generated/numpy.array.html>`_ array (using its `nparray <Log.nparray>` method, as a
