@@ -1292,11 +1292,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
 
-        # Get useful locations
-        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-
         # Check if we have reinitializers
-        has_reinitializers_ptr = ctx.get_param_ptr(self, builder, mech_params, "has_initializers")
+        has_reinitializers_ptr = ctx.get_param_ptr(self, builder, params, "has_initializers")
         has_initializers = builder.load(has_reinitializers_ptr)
         not_initializers = builder.fcmp_ordered("==", has_initializers,
                                                 has_initializers.type(0))
@@ -1305,7 +1302,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_params = ctx.get_param_ptr(self, builder, params, "function")
         reinit_state = ctx.get_state_ptr(self, builder, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
@@ -1318,7 +1315,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                 tags=tags)
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
             reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
-            reinit_params = ctx.get_param_ptr(self, builder, mech_params, "integrator_function")
+            reinit_params = ctx.get_param_ptr(self, builder, params, "integrator_function")
             reinit_state = ctx.get_state_ptr(self, builder, state, "integrator_function")
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
                                     reinit_out])

@@ -1122,7 +1122,7 @@ class DDM(ProcessingMechanism):
             
             # Load mechanism state and function threshold parameter
             params, state, _, _ = builder.function.args
-            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            func_params = ctx.get_param_ptr(self, builder, params, "function")
             threshold_ptr = ctx.get_param_ptr(self.function, builder,
                                               func_params, THRESHOLD)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
