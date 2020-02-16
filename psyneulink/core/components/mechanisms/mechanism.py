@@ -2342,10 +2342,12 @@ class Mechanism_Base(Mechanism):
 
             self.parameters.num_executions_before_finished._set(num_executions + 1, override=True, context=context)
 
-            if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
+            if self.is_finished(context):
                 self.parameters.is_finished_flag._set(True, context)
                 break
             self.parameters.is_finished_flag._set(False, context)
+            if not self.parameters.execute_until_finished._get(context):
+                break
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
