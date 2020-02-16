@@ -7,7 +7,8 @@ Basics and Primer
     * `BasicsAndPrimer_Elaborate_Configurations`
     * `BasicsAndPrimer_Dynamics_of_Execution`
     * `BasicsAndPrimer_Control`
-    * `BasicsAndPrimer_Logging_and_Animation`
+    * `BasicsAndPrimer_Parameters`
+    * `BasicsAndPrimer_Monitoring_Values`
     * `BasicsAndPrimer_Learning`
     * `BasicsAndPrimer_Customization`
 
@@ -264,6 +265,7 @@ a non-zero `noise <DriftDiffusionAnalytical.noise>` term).
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. XXX
 .. - Execute at multiple times scales:
 ..   • run DDM in integrator mode
 ..   • but notice that it only executes one step of integration
@@ -497,18 +499,84 @@ internal simulations to optimize the amount of control to optimize some criterio
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
 
-.. _BasicsAndPrimer_Logging_and_Animation:
+.. _BasicsAndPrimer_Parameters
 
-Logging and Animation
-~~~~~~~~~~~~~~~~~~~~~
+Parameters
+~~~~~~~~~~
 
-The print statements in the example are generated using the **call_after_trial** argument in the Composition's `run
-<Composition.run>` method, that calls the ``print_after`` function defined in Python.  There are other similar "hooks"
-in the `run <Composition.run>` method that can be used to carry out custom operations at various points during
-execution (before and/or after each `run <TimeScale.RUN>`, `run <TimeScale.TRIAL>` or execution of the Components
-in a trial).  PsyNeuLink also has powerful logging capabilities that can be used to track and report any parameter of
-a model.  For example, including the following lines in the script for ``Stroop_model``,  after the ``task`` and
-``control`` Mechanisms are constructed::
+Every Component has a set of `parameters <Parameters>` that determine how the Component operates or contain information
+about the state of its operation.  For example, every Component has a `value <Component_Value>` parameter, that stores
+the result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
+generic use of the term "value" to designate the quantity assigned to a parameter, and its use as the name of a
+*particular* parameter of a Component.)  Although parameters are attributes of a Component (and can be accessed like
+any other Python attribute, as described below), they areactually instances of a special `Parameters` class, that
+supports a number of important features, including the ability to simultaneously have different values in different
+contexts (often referred to as "statefulness"), and the ability to be modulated by other Components in PsyNeuLink.
+These features are suppored by a number of methods on the Parameter class.
+
+*Accessing Parameter Values*.  The current value of a parameter can be accessed like any other attrriute in Python,
+by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
+``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
+<Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively. This returns the most
+recently assigned value of their `value <Component.value>` parameter.  However, as an instance of the `Parameters`
+class, they can have more than one value associated with them. For example, PsyNeuLink has the capacity to execute
+the same Component in different contexts, as part of different Compositions or, within the same Composition, as part
+of `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
+<Composition_Controller>.  The value of a parameter in a particular context can be accessed by using the `get
+<ParametersBase.get>` method for the parameter and providing the context, such as
+``ouput.parameters.value.get('my context')`` (see XXX for specifying context).  Previous values of the parameter can
+also be accessed, using the `get_previous <ParametersBase.get_previous>` method with an index, specifying how far back
+to look, and optionaly a context.  For example, ``ouput.parameters.value.get_previous(<'my context'>, 1)`` returns
+the value asigned to the parameter in the specified context immediately preceding its currently assigned value.
+XXXX TRUE: In fact, dot notation is simply an alias for get_previous(context=None,0).
+
+*Modulation*.
+MECHANISMS & PARAMETER PORTS
+MOD_PARAMETER NOTATION
+
+*Initialization* ???XXX
+
+-----------
+
+
+CONTEXT
+HISTORY
+
+mech.parameters.value.get(comp)
+
+DISTINGUISH FUNCTION PARAMETERS FROM COMPONENT PARAMATERS -- mod_xxx NOTATION
+EXPLAIN VALUE IS A PARAMERETs
+EXPLAIN PARAMETER CONTEXTS
+
+`contexts <Parameter_statefulness>`
+`contexts <Composition_Scope_of_Execution>`
+
+XXX PSYNEULINK HAS THE CAPACITY EXECUTION THE SAME COMPONENT IN DIFFERENT CONTEXTS (STATEFULLNESS -- LINK TO DOCS):
+- SAME MECHANISM IN DIFFERENT COMPOSITIONS
+- IN SAME COMPOSITION, AS PART OF MODEL-BASED SIMULATION EXECUTED BY A CONTOLLER (OCM)
+
+        print(f'\ttask:\t\t{task.value[0]}')
+        print(f'\ttask gain:\t   {task.parameter_ports[GAIN].value}')
+        print(f'\t\t\t\tred   green')
+        print(f'\toutput:\t\t{output.value[0]}')
+        print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
+        print(f'\tconflict:\t  {control.objective_mechanism.value[0]}')
+
+
+.. _BasicsAndPrimer_Monitoring_Values:
+
+Monitoring Parameter Values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Displaying values* The console output in the example above was generated using the **call_after_trial** argument in
+the Composition's `run <Composition.run>` method, that calls the ``print_after`` function defined in Python.  There
+are other similar "hooks" in the `run <Composition.run>` method that can be used not only to monitor values, but also
+to carry out custom operations at various points during execution (before and/or after each `run <TimeScale.RUN>`,
+`run <TimeScale.TRIAL>` or execution of the Components in a trial).
+
+*Logging values*. PsyNeuLink also has powerful logging capabilities that can be used to track and report any
+parameter of a model.  For example, including the following lines in the script for ``Stroop_model``,  after the
+``task`` and ``control`` Mechanisms are constructed::
 
     task.log.set_log_conditions(VALUE)
     control.log.set_log_conditions(VARIABLE)
@@ -619,8 +687,8 @@ components created by the call to ``add_backpropagation_pathway``:
 .. figure:: _static/BasicsAndPrimer_XOR_Model_fig.svg
    :width: 100%
 
-    **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
-    diamonds represent MappingProjections, shown as nodes so that the `LearningProjections` to them can be shown.
+   **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
+   diamonds represent MappingProjections, shown as nodes so that the `LearningProjections` to them can be shown.
 
 
 Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
@@ -686,11 +754,11 @@ The figure below shows this network with all of its `learning components <Compos
 .. figure:: _static/BasicsAndPrimer_Rumelhart_Network.svg
    :width: 75%
 
-    **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
-    ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
-    `LearningProjections` to them can be shown.
+   **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
+   ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
+   `LearningProjections` to them can be shown.
 
-.. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
+.. XXX ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
 
 Given the number of learning components, training the model above using standard PsyNeuLink components can take a
 considerable amount of time.  However, the same Composition can be implemented using the `AutodiffComposition`, by
