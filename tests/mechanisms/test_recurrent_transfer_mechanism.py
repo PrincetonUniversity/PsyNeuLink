@@ -1233,7 +1233,7 @@ class TestCustomCombinationFunction:
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     @pytest.mark.parametrize('until_finished, expected', [
-        (True, [[[[0.984375]]], [[[0.99975586]]]]), # The 5th and the 10th iteration
+        (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
         (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
     ], ids=['until_finished', 'oneshot'])
     def test_max_executions_before_finished(self, mode, until_finished, expected):
