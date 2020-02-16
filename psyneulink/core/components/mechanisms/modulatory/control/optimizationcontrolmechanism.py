@@ -1200,8 +1200,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return llvm_func
 
     def _gen_llvm_function(self, *, tags:frozenset):
-        from psyneulink.core.compositions.composition import Composition
-        is_comp = isinstance(self.agent_rep, Composition)
+        is_comp = not isinstance(self.agent_rep, Function)
         if is_comp:
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
