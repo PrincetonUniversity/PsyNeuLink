@@ -1026,7 +1026,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports))
+        intensity_cost = tuple(os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports)
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
@@ -1035,7 +1035,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_state_initializer(self, context):
-        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports))
+        intensity_cost = tuple(os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports)
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1200,8 +1200,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return llvm_func
 
     def _gen_llvm_function(self, *, tags:frozenset):
-        from psyneulink.core.compositions.composition import Composition
-        is_comp = isinstance(self.agent_rep, Composition)
+        is_comp = not isinstance(self.agent_rep, Function)
         if is_comp:
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),

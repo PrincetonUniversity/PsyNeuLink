@@ -2492,43 +2492,33 @@ class Mechanism_Base(Mechanism):
         self.parameters.value.set(np.atleast_1d(value), context, override=True)
         self._update_output_ports(context=context)
 
-    def _get_states_param_struct_type(self, ctx):
-        gen = (ctx.get_param_struct_type(s) for s in self.ports)
-        return pnlvm.ir.LiteralStructType(gen)
-
-    def _get_function_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(self.function)
-
-    def _get_mech_param_struct_type(self, ctx):
-        return ctx.get_param_struct_type(super())
+    def _get_param_ids(self):
+        #FIXME: ports and function should be part of generated params
+        return ["ports", "function"] + super()._get_param_ids()
 
     def _get_param_struct_type(self, ctx):
-        states_param_struct = self._get_states_param_struct_type(ctx)
-        function_param_struct = self._get_function_param_struct_type(ctx)
-        mech_param_struct = self._get_mech_param_struct_type(ctx)
+        ports_params = (ctx.get_param_struct_type(s) for s in self.ports)
+        ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
+        function_param_struct = ctx.get_param_struct_type(self.function)
+        mech_param_struct = ctx.get_param_struct_type(super())
 
-        return pnlvm.ir.LiteralStructType((states_param_struct,
+        return pnlvm.ir.LiteralStructType((ports_param_struct,
                                            function_param_struct,
-                                           mech_param_struct))
+                                           *mech_param_struct))
 
-    def _get_ports_state_struct_type(self, ctx):
-        gen = (ctx.get_state_struct_type(s) for s in self.ports)
-        return pnlvm.ir.LiteralStructType(gen)
-
-    def _get_function_state_struct_type(self, ctx):
-        return ctx.get_state_struct_type(self.function)
-
-    def _get_mech_state_struct_type(self, ctx):
-        return ctx.get_state_struct_type(super())
+    def _get_state_ids(self):
+        #FIXME: ports and function should be part of generated state
+        return ["ports", "function"] + super()._get_state_ids()
 
     def _get_state_struct_type(self, ctx):
-        ports_state_struct = self._get_ports_state_struct_type(ctx)
-        function_state_struct = self._get_function_state_struct_type(ctx)
-        mech_state_struct = self._get_mech_state_struct_type(ctx)
+        ports_state = (ctx.get_state_struct_type(s) for s in self.ports)
+        ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
+        function_state_struct = ctx.get_state_struct_type(self.function)
+        mech_state_struct = ctx.get_state_struct_type(super())
 
         return pnlvm.ir.LiteralStructType((ports_state_struct,
                                            function_state_struct,
-                                           mech_state_struct))
+                                           *mech_state_struct))
 
     def _get_output_struct_type(self, ctx):
         output_type_list = (ctx.get_output_struct_type(port) for port in self.output_ports)
@@ -2543,39 +2533,19 @@ class Mechanism_Base(Mechanism):
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
         return pnlvm.ir.LiteralStructType(input_type_list)
 
-    def _get_port_param_initializer(self, context):
-        gen = (s._get_param_initializer(context) for s in self.ports)
-        return tuple(gen)
-
-    def _get_function_param_initializer(self, context):
-        return self.function._get_param_initializer(context)
-
     def _get_param_initializer(self, context):
-        port_param_init = self._get_port_param_initializer(context)
-        function_param_init = self._get_function_param_initializer(context)
-        mech_param_init = self._get_mech_params_init(context)
+        port_param_init = tuple(s._get_param_initializer(context) for s in self.ports)
+        function_param_init = self.function._get_param_initializer(context)
+        mech_param_init = super()._get_param_initializer(context)
 
-        return (port_param_init, function_param_init, mech_param_init)
-
-    def _get_mech_params_init(self, context):
-        return super()._get_param_initializer(context)
-
-    def _get_ports_state_initializer(self, context):
-        gen = (s._get_state_initializer(context) for s in self.ports)
-        return tuple(gen)
-
-    def _get_function_state_initializer(self, context):
-        return self.function._get_state_initializer(context)
-
-    def _get_mech_state_init(self, context):
-        return super()._get_state_initializer(context)
+        return (port_param_init, function_param_init, *mech_param_init)
 
     def _get_state_initializer(self, context):
-        port_state_init = self._get_ports_state_initializer(context)
-        function_state_init = self._get_function_state_initializer(context)
-        mech_state_init = self._get_mech_state_init(context)
+        port_state_init = tuple(s._get_state_initializer(context) for s in self.ports)
+        function_state_init = self.function._get_state_initializer(context)
+        mech_state_init = super()._get_state_initializer(context)
 
-        return (port_state_init, function_state_init, mech_state_init)
+        return (port_state_init, function_state_init, *mech_state_init)
 
     def _gen_llvm_function(self, *, extra_args=[], tags:frozenset):
         if "node_wrapper" in tags:
@@ -2613,12 +2583,12 @@ class Mechanism_Base(Mechanism):
                 builder.store(afferent_val, mod_out_ptr)
 
             port_idx = all_ports.index(port)
-            p_params = builder.gep(mech_params, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(0),
+            ports_param = ctx.get_param_ptr(self, builder, mech_params, "ports")
+            p_params = builder.gep(ports_param, [ctx.int32_ty(0),
                                                  ctx.int32_ty(port_idx)])
-            p_state = builder.gep(mech_state, [ctx.int32_ty(0),
-                                               ctx.int32_ty(0),
-                                               ctx.int32_ty(port_idx)])
+            ports_state = ctx.get_state_ptr(self, builder, mech_state, "ports")
+            p_state = builder.gep(ports_state, [ctx.int32_ty(0),
+                                                ctx.int32_ty(port_idx)])
 
             builder.call(p_function, [p_params, p_state, p_input, p_output])
 
@@ -2692,8 +2662,7 @@ class Mechanism_Base(Mechanism):
                 assert port_spec[1] < len(value.type.pointee)
                 return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
             elif port_spec == OWNER_EXECUTION_COUNT:
-                mech_private_state = builder.gep(mech_state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-                execution_count = ctx.get_state_ptr(self, builder, mech_private_state, "execution_count")
+                execution_count = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
                 return execution_count
             else:
                 #TODO: support more spec options
@@ -2734,17 +2703,16 @@ class Mechanism_Base(Mechanism):
 
         is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-        mf_params_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_params_ptr = ctx.get_param_ptr(self, builder, params, "function")
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        mf_state = ctx.get_state_ptr(self, builder, state, "function")
         value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
         # Update execution counter
-        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        exec_count_ptr = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+        exec_count_ptr = ctx.get_state_ptr(self, builder, state, "execution_count")
         exec_count = builder.load(exec_count_ptr)
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
@@ -2761,8 +2729,8 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_params = ctx.get_param_ptr(self, builder, params, "function")
+        reinit_state = ctx.get_state_ptr(self, builder, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
@@ -2772,13 +2740,11 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" not in tags
-        mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, mech_state,
+        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, state,
                                                  "is_finished_flag")
-        is_finished_count_ptr = ctx.get_state_ptr(self, builder, mech_state,
+        is_finished_count_ptr = ctx.get_state_ptr(self, builder, state,
                                                  "num_executions_before_finished")
-        is_finished_max_ptr = ctx.get_param_ptr(self, builder, mech_params,
+        is_finished_max_ptr = ctx.get_param_ptr(self, builder, params,
                                                 "max_executions_before_finished")
 
         # Reset the flag and counter
