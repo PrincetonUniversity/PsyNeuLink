@@ -848,10 +848,9 @@ class LCControlMechanism(ControlMechanism):
 
         # Load mechanism parameters
         params, _, _, _ = builder.function.args
-        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        scaling_factor_ptr = ctx.get_param_ptr(self, builder, mech_params,
+        scaling_factor_ptr = ctx.get_param_ptr(self, builder, params,
                                                "scaling_factor_gain")
-        base_factor_ptr = ctx.get_param_ptr(self, builder, mech_params,
+        base_factor_ptr = ctx.get_param_ptr(self, builder, params,
                                            "base_level_gain")
         scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)

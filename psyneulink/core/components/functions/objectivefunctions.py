@@ -1140,8 +1140,15 @@ class Distance(ObjectiveFunction):
 
         """
 
-        v1 = variable[0]
-        v2 = variable[1]
+        try:
+            v1 = np.hstack(variable[0])
+        except TypeError:
+            v1 = variable[0]
+
+        try:
+            v2 = np.hstack(variable[1])
+        except TypeError:
+            v2 = variable[1]
 
         # Maximum of  Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_ABS_DIFF:

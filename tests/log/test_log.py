@@ -44,7 +44,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'RESULT': 'OFF',
             'value': 'OFF',
@@ -79,7 +78,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -138,7 +136,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -172,7 +169,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -296,7 +292,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -330,7 +325,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'num_executions_before_finished': 'OFF',
             'noise': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -393,7 +387,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -427,7 +420,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -542,7 +534,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -576,7 +567,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -615,7 +605,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -654,7 +643,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'

@@ -736,36 +736,25 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.stateful_attributes = ["random_state", "previous_value"]
 
     def _get_state_ids(self):
-        # Keep the ids in the same order as the structure generated below
-        return self.stateful_attributes + ["distance_function", "selection_function"]
+        return super()._get_state_ids() + ["ring_memory"]
 
     def _get_state_struct_type(self, ctx):
-        # FIXME: We need explicit override because the ring buffer structure
-        #        is not easily derived from "previous_value" 2d array.
-        distance_state_struct = ctx.get_state_struct_type(self.distance_function)
-        selection_state_struct = ctx.get_state_struct_type(self.selection_function)
-        # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.parameters.random_state.get())
         # Construct a ring buffer
         max_entries = self.parameters.max_entries.get()
         key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
         keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
-        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
+        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1])
         vals_struct = pnlvm.ir.ArrayType(val_type, max_entries)
         ring_buffer_struct = pnlvm.ir.LiteralStructType((
             keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty))
-        return pnlvm.ir.LiteralStructType((random_state_struct,
-                                           ring_buffer_struct,
-                                           distance_state_struct,
-                                           selection_state_struct))
+        generic_struct = ctx.get_state_struct_type(super())
+        return pnlvm.ir.LiteralStructType((*generic_struct,
+                                           ring_buffer_struct))
 
     def _get_state_initializer(self, context):
-        distance_init = self.distance_function._get_state_initializer(context)
-        selection_init = self.selection_function._get_state_initializer(context)
-        random_state = self.parameters.random_state.get(context).get_state()[1:]
         memory = self.get_previous_value(context)
-        my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
-        return (*my_init, distance_init, selection_init)
+        mem_init = pnlvm._tupleize([memory[0], memory[1], 0, 0])
+        return (*super()._get_state_initializer(context), mem_init)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
@@ -773,7 +762,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
-        buffer_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        buffer_ptr = ctx.get_state_ptr(self, builder, state, "ring_memory")
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -805,8 +794,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         max_entries = len(vals_ptr.type.pointee)
         entries = builder.load(count_ptr)
         entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
-        # The call to random function needs to be behind jump to match python
-        # code
+        # The call to random function needs to be after check to match python
         with builder.if_then(retr_rand):
             rand_ptr = builder.alloca(ctx.float_ty)
             builder.call(uniform_f, [rand_struct, rand_ptr])
