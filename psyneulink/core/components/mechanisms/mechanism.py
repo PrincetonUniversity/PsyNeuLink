@@ -2337,6 +2337,7 @@ class Mechanism_Base(Mechanism):
             max_executions = self.parameters.max_executions_before_finished._get(context)
 
             if  num_executions >= max_executions:
+                self.parameters.is_finished_flag._set(True, context)
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
                 break
 
@@ -2818,7 +2819,7 @@ class Mechanism_Base(Mechanism):
                                            is_finished_max)
         iter_end = builder.or_(is_finished_cond, max_reached)
         with builder.if_then(iter_end):
-            new_flag = builder.uitofp(is_finished_cond, current_flag.type)
+            new_flag = builder.uitofp(iter_end, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 
