@@ -55,6 +55,7 @@ jobs:
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: tests_out.xml
+      if: always()
 
     - name: Build dist
       run: |
