@@ -1232,21 +1232,25 @@ class TestCustomCombinationFunction:
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_max_executions_before_finished(self, mode):
+    @pytest.mark.parametrize('until_finished, expected', [
+        (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
+        (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
+    ], ids=['until_finished', 'oneshot'])
+    def test_max_executions_before_finished(self, mode, until_finished, expected):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5,
                                             termination_threshold=0.0,
                                             max_executions_before_finished=5,
-                                            execute_until_finished=True)
+                                            execute_until_finished=until_finished)
         C = pnl.Composition()
         C.add_node(I1)
 
         results = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        if mode == 'Python':
+            assert I1.parameters.is_finished_flag.get(C) is until_finished
         results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
-        # Result after 5 iterations
-        assert np.allclose([[[0.984375]]], results)
-        # Result after 6 iterations, PNL continue previous computation in next trial
-        assert np.allclose([[[0.9921875]]], results2)
+        assert np.allclose(expected[0], results)
+        assert np.allclose(expected[1], results2)
 
 class TestDebugProperties:
 

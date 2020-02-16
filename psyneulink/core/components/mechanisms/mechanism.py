@@ -2333,19 +2333,22 @@ class Mechanism_Base(Mechanism):
             self._update_output_ports(context=context, runtime_params=runtime_params)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
-            num_executions = self.parameters.num_executions_before_finished._get(context)
             max_executions = self.parameters.max_executions_before_finished._get(context)
+            num_executions = self.parameters.num_executions_before_finished._get(context) + 1
+
+            self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
 
             if  num_executions >= max_executions:
+                self.parameters.is_finished_flag._set(True, context)
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
                 break
 
-            self.parameters.num_executions_before_finished._set(num_executions + 1, override=True, context=context)
-
-            if self.is_finished(context) or not self.parameters.execute_until_finished._get(context):
+            if self.is_finished(context):
                 self.parameters.is_finished_flag._set(True, context)
                 break
             self.parameters.is_finished_flag._set(False, context)
+            if not self.parameters.execute_until_finished._get(context):
+                break
 
         # REPORT EXECUTION
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
@@ -2777,20 +2780,18 @@ class Mechanism_Base(Mechanism):
 
         #FIXME: Flag and count should be int instead of float
         is_finished_count = builder.load(is_finished_count_ptr)
+        is_finished_count = builder.fadd(is_finished_count,
+                                         is_finished_count.type(1))
+        builder.store(is_finished_count, is_finished_count_ptr)
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
         iter_end = builder.or_(is_finished_cond, max_reached)
         with builder.if_then(iter_end):
-            new_flag = builder.uitofp(is_finished_cond, current_flag.type)
+            new_flag = builder.uitofp(iter_end, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 
-        # FIXME: updating the count after the check matches PNL behaviour
-        #        although it does not count the number of iterations
-        is_finished_count = builder.fadd(is_finished_count,
-                                         is_finished_count.type(1))
-        builder.store(is_finished_count, is_finished_count_ptr)
         builder.branch(loop_block)
         builder.position_at_end(end_block)
 
