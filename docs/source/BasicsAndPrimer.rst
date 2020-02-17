@@ -516,7 +516,7 @@ These features are suppored by methods on the Parameter class, as described belo
 
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The most recently assigned value of a parameter can be accessed like any other attrriute in Python,
+The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
 by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
 <Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, they
