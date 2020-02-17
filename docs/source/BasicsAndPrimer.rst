@@ -579,7 +579,7 @@ Function can be accessed in either of the following ways::
 
 Modulable Parameters
 ^^^^^^^^^^^^^^^^^^^^
-Some parameters of Components can be `modulable,` meaning they can be modified by another Component (specifically,
+Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
 a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a `Projection` is
 modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or Projection and
 can receive a Projection from a ModulatorySignal, allowing another component to modulate the value of the parameter.
