@@ -512,7 +512,7 @@ any other Python attribute (as described below), they are actually instances of 
 supports a number of important features. These include the ability to simultaneously have different values in
 different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
 previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
-These features are suppored by a number of methods on the Parameter class, as described below.
+These features are suppored by methods on the Parameter class, as described below.
 
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
