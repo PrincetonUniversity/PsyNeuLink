@@ -511,7 +511,7 @@ generic use of the term "value" to designate the quantity assigned to a paramete
 any other Python attribute (as described below), they are actually instances of a special `Parameters` class that
 supports a number of important features. These include the ability to simultaneously have different values in
 different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
-previously values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
+previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
 These features are suppored by a number of methods on the Parameter class, as described below.
 
 Accessing Parameter Values
