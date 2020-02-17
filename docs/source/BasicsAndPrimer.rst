@@ -521,13 +521,13 @@ by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, t
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
 <Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, they
 access the first element of the output Mechanism's value, ``output.value[0]``, and the first and second elements of the
-decison Mechanism's `value).  This returns their most recently assigned values. However, as an instance of the
-`Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more than one value
-associated with it. For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
-<Parameter_statefulness>`, either as part of different Compositions or, within the same Composition, as part of
-`model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
-<Composition_Controller>`.  The value of a parameter in a particular context can be accessed by using the `get
-<Parameter.get>` method for the parameter and providing the context, for example::
+decison Mechanism's `value <MechanismBase.value>`).  This returns their most recently assigned values. However, as an
+instance of the `Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more
+than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
+different `contexts <Parameter_statefulness>`, either as part of different Compositions or, within the same
+Composition, as part of `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the
+Composition's `controller <Composition_Controller>`.  The value of a parameter in a particular context can be
+accessed by using the `get <Parameter.get>` method for the parameter and providing the context, for example::
 
     >>> output.parameters.value.get('Stroop Model - Conflict Monitoring')[0]
     [ 0.65  0.35]
