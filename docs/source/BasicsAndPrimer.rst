@@ -561,15 +561,16 @@ Notice that this is the value from Trial 1 in the example above.
 
 Function Parameters
 ^^^^^^^^^^^^^^^^^^^
-The ``parameters`` attribute of a Component contains a list all of its parameters. It is important here to recognize
-the difference between the parameters of a Component and those of its `function <Component_Function>`.  In the examples
-above, `value <Component_Value>` is a parameter of the ``output`` and ``decision`` Mechanisms themselves.  However,
-each of those Mechanisms also has a `function <Mechanism_Base.function>`; and, since those are PsyNeuLink `Functions
-<Function>` which are also Compoments, those too have parameters.  For example, the ``output`` Mechanism was assigned
-the `Logistic` `Function`, which has a `gain <Logistic.gain>` and a `bias <Logistic.bias>` parameter (as well as
-others).  The parameters of a Component's `function <Component_Function>` can also be accessed using dot notation, by
-referencing the function in the specification.  For example, the current value of the `gain <Logistic.gain>` parameter
-of the ``output``\'s Logistc Function can be accessed in either of the following ways::
+The `parameters <Component_Parameters>` attribute of a Component contains a list all of its parameters. It is important
+here to recognize the difference between the parameters of a Component and those of its `function
+<Component_Function>`.  In the examples above, `value <Component_Value>` is a parameter of the ``output`` and
+``decision`` Mechanisms themselves.  However, each of those Mechanisms also has a `function <Mechanism_Base
+.function>`; and, since those are PsyNeuLink `Functions <Function>` which are also Compoments, those too have
+parameters.  For example, the ``output`` Mechanism was assigned the `Logistic` `Function`, which has a `gain
+<Logistic.gain>` and a `bias <Logistic.bias>` parameter (as well as others).  The parameters of a Component's
+`function <Component_Function>` can also be accessed using dot notation, by referencing the function in the
+specification.  For example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistc
+Function can be accessed in either of the following ways::
 
     >>> output.function.gain
     1.0
