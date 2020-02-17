@@ -511,23 +511,23 @@ Every Component has a set of parameters that determine how the Component operate
 the state of its operation.  For example, every Component has a `value <Component_Value>` parameter that stores the
 result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
 generic use of the term "value" to designate the quantity assigned to a parameter, and its use as the name of a
-*particular* parameter of a Component.)  Although parameters are attributes of a Component (and can be accessed like
-any other Python attribute, as described below), they are actually instances of a special `Parameters` class that
-supports a number of important features, including the ability to simultaneously have different values in different
-contexts (often referred to as `"statefulness" <Parameter_statefulness>`), and the ability to be `modulated
-<ModulatorySignal_Modulation>` by other Components in PsyNeuLink.  These features are suppored by a number of methods
-on the Parameter class, as described below.
+*particular* parameter of a Component.)  Although parameters are attributes of a Component, and can be accessed like
+any other Python attribute (as described below), they are actually instances of a special `Parameters` class that
+supports a number of important features. These include the ability to simultaneously have different values in
+different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
+previously values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
+These features are suppored by a number of methods on the Parameter class, as described below.
 
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The most recently assigned value of a parameter can be directly, like any other attrriute in Python,
+The most recently assigned value of a parameter can be accessed like any other attrriute in Python,
 by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
-<Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, the
-first element of the output Mechanism's value, ``output.value[0]``, and the first and second elements of the decison
-Mechanism's `value).  This returns their most recently assigned values. However, as an instance of the `Parameters`
-class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more than one value associated with
-it. For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
+<Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, they
+access the first element of the output Mechanism's value, ``output.value[0]``, and the first and second elements of the
+decison Mechanism's `value).  This returns their most recently assigned values. However, as an instance of the
+`Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more than one value
+associated with it. For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
 <Parameter_statefulness>`, either as part of different Compositions or, within the same Composition, as part of
 `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
 <Composition_Controller>`.  The value of a parameter in a particular context can be accessed by using the `get
@@ -536,21 +536,22 @@ it. For example, PsyNeuLink has the capacity to execute the same Component in di
     >>> output.parameters.value.get('Stroop Model - Conflict Monitoring')[0]
     [ 0.65  0.35]
 
-Notice that this returns the same value as the dot notation (i.e., ``output.value[0]``.  Notice also that the
-name of the Composition in which the Mechanism was executed is used as the context (see
-`Composition_Scope_of_Execution` for additional information about execution contexts).  If no context is specified,
+Notice that, here, the name of the Composition in which the Mechanism was executed is used as the context; see
+`Composition_Scope_of_Execution` for additional information about how to specify contexts.  If no context is specified,
 then the `get <Parameter.get>` method returns the most recently assigned value of the parameter, just like dot
-notation.  The previous value of a parameter can also be accessed, using the `get_previous <Parameter.get_previous>`
+notation.
+
+The previous value of a parameter can also be accessed, using the `get_previous <Parameter.get_previous>`
 method, for example::
 
     >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring')[0]
     [ 0.55  0.45]
 
 Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
-(Trail 3).  By default, parameters only preserve one previous value.  However, they can be specified to have a longer
-'history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can be used to access earlier
-values.  For example, the following sets output Mechanism's `value <MechanismBase.value>` parameter to store up to
-three previous values::
+(Trail 3).  By default, parameters only preserve only one previous value.  However, a parameter can be specified to
+have a longer 'history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can be used to
+access earlier values.  For example, the following sets output Mechanism's `value <MechanismBase.value>` parameter to
+store up to three previous values::
 
     >>> output.parameters.value.history_max_length = 3
 
@@ -564,34 +565,52 @@ Notice that this is the value from Trial 1 in the example above.
 
 Function Parameters
 ^^^^^^^^^^^^^^^^^^^
-It is  important to recognize the difference between the parameters of a Component and those of its `function
-<Component_Function>`.  In the examples above, `value <Component_Value>` was a parameter of the ``output`` and
-``decision`` Mechanisms themselves.  However, each of those Mechanisms also has a function; and, since a function is
-also a PsyNeuLink Component, it too has parameters.  For example, the ``output`` Mechanism was assigned the `Logistic`
-`Function`, which has a `gain <Logistic.gain>` and a `bias <Logistic.bias>` parameter, as well as others.  The
-parameter of Component's function can be accessed by simply referencing the function in the specification.  For
-example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistc Function can be
-accessed either as ``output.function.gain``, or ``output.function.parameters.gain.get()``.
+The ``parameters`` attribute of a Component contains a list all of its parameters. It is important here to recognize
+the difference between the parameters of a Component and those of its `function <Component_Function>`.  In the examples
+above, `value <Component_Value>` is a parameter of the ``output`` and ``decision`` Mechanisms themselves.  However,
+each of those Mechanisms also has a `function <MechanismBase.function>`; and, since those are PsyNeuLink `Functions
+<Function>` which are also Compoments, those too have parameters.  For example, the ``output`` Mechanism was assigned
+the `Logistic` `Function`, which has a `gain <Logistic.gain>` and a `bias <Logistic.bias>` parameter (as well as
+others).  The parameters of a Component's `function <Component_Function>` can also be accessed using dot notation, by
+referencing the function in the specification.  For example, the current value of the `gain <Logistic.gain>` parameter
+of the ``output``\'s Logistc Function can be accessed in either of the following ways::
+
+    >>> output.function.gain
+    1.0
+    >>> output.function.parameters.gain.get()
+    1.0
 
 Modulable Parameters
 ^^^^^^^^^^^^^^^^^^^^
-Some parameters of Components can be `modulable,` meaning they can be modified by another Component
-(specifically, a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a
-`Projection` is modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or
-Projection, and that can receive a Projection from a ModulatorySignal,  allowing another component to modulate the
-value of the parameter.  ParameterPorts are created for every modulable parameter of a Mechanism or of its `function
-<MechanismBase.function>`, and similarly for Projections.  These determine the value of the parameter that is
-actually used when the Component executes, which may be different than the base value returned by accessing the
-parameter directly (as in the examples above); see `ModulatorySignal_Modulation` for a more complete description of
-modulation.  The current modulated value of a parameter can be accessed from the `value <ParameterPort.value>` of the
-corresponding ParameterPort.  For instance, the print statement in the example above used
-``task.parameter_ports[GAIN].value`` to report the modulated value of the `gain <Logistic.gain>` parameter of the
-``task`` Mechanism's `Logistic` function when the simulation was run. For convenience, it is also possible to access
-the value of a modulable parameter by adding the prefix ``mod_`` to the name of the parameter.  This works for any
-modulable parameters of the Mechanism or its `function <MechanismBase.function>`. For example, ``task.mod_gain``
-returns the same value as above (note that here neither the ``parameters`` nor the ``function`` atributes of the
-Mechanism need to be included in the reference.
+Some parameters of Components can be `modulable,` meaning they can be modified by another Component (specifically,
+a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a `Projection` is
+modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or Projection and
+can receive a Projection from a ModulatorySignal, allowing another component to modulate the value of the parameter.
+ParameterPorts are created for every modulable parameter of a Mechanism or of its `function <MechanismBase.function>`,
+and similarly for Projections.  These determine the value of the parameter that is actually used when the Component
+is executed, which may be different than the base value returned by accessing the parameter directly (as in the
+examples above); see `ModulatorySignal_Modulation` for a more complete description of modulation.  The current
+*modulated* value of a parameter can be accessed from the `value <ParameterPort.value>` of the corresponding
+ParameterPort.  For instance, the print statement in the example above used ``task.parameter_ports[GAIN].value`` to
+report the modulated value of the `gain <Logistic.gain>` parameter of the ``task`` Mechanism's `Logistic` function
+when the simulation was run.  For convenience, it is also possible to access the value of a modulable parameter by
+adding the prefix ``mod_`` to the name of the parameter;  this returns the `value <ParameterPort.value>` of the
+ParameterPort for the parameter::
 
+    >>> task.parameter_ports[GAIN].value
+    [0.62]
+    >>> task.mod_gain
+    [0.62]
+
+This works for any modulable parameters of the Mechanism or its `function <MechanismBase.function>`.  Note that,
+here, neither the ``parameters`` nor the ``function`` atributes of the Mechanism need to be included in the reference.
+Note also that, as explained above, the value returned is different from the base value of the function's gain
+parameter::
+
+    >>> task.function.gain
+    [1.0]
+
+This is because when the Compoistion was run, the ``control`` Mechanism modulated the value of the gain parameter.
 
 .. *Initialization* ???XXX
 
