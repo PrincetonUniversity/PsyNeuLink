@@ -188,8 +188,8 @@ pnlv_graphics_spec = {
                 "y": 398
             },
             "TASK_INPUT": {
-                "x": 673,
-                "y": 401
+                "x": 670,
+                "y": 435
             },
             "WORDS_HIDDEN": {
                 "x": 877,
