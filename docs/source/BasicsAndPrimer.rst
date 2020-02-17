@@ -521,7 +521,7 @@ by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, t
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
 <Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, they
 access the first element of the output Mechanism's value, ``output.value[0]``, and the first and second elements of the
-decison Mechanism's `value <MechanismBase.value>`).  This returns their most recently assigned values. However, as an
+decison Mechanism's `value <Mechanism_Base.value>`).  This returns their most recently assigned values. However, as an
 instance of the `Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more
 than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
 different `contexts <Parameter_statefulness>`, either as part of different Compositions or, within the same
@@ -545,8 +545,8 @@ If a parameter is `stateful <Parameter.stateful>`, then its previous value can a
 
 Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
 (Trail 3).  By default, stateful parameters only preserve only one previous value.  However, a parameter can be
-specified to have a longer 'history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can
-be used to access earlier values.  For example, the following sets output Mechanism's `value <MechanismBase.value>`
+specified to have a longer `history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can
+be used to access earlier values.  For example, the following sets output Mechanism's `value <Mechanism_Base.value>`
 parameter to store up to three previous values::
 
     >>> output.parameters.value.history_max_length = 3
@@ -564,7 +564,7 @@ Function Parameters
 The ``parameters`` attribute of a Component contains a list all of its parameters. It is important here to recognize
 the difference between the parameters of a Component and those of its `function <Component_Function>`.  In the examples
 above, `value <Component_Value>` is a parameter of the ``output`` and ``decision`` Mechanisms themselves.  However,
-each of those Mechanisms also has a `function <MechanismBase.function>`; and, since those are PsyNeuLink `Functions
+each of those Mechanisms also has a `function <Mechanism_Base.function>`; and, since those are PsyNeuLink `Functions
 <Function>` which are also Compoments, those too have parameters.  For example, the ``output`` Mechanism was assigned
 the `Logistic` `Function`, which has a `gain <Logistic.gain>` and a `bias <Logistic.bias>` parameter (as well as
 others).  The parameters of a Component's `function <Component_Function>` can also be accessed using dot notation, by
@@ -582,7 +582,7 @@ Some parameters of Components can be `modulable,` meaning they can be modified b
 a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a `Projection` is
 modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or Projection and
 can receive a Projection from a ModulatorySignal, allowing another component to modulate the value of the parameter.
-ParameterPorts are created for every modulable parameter of a Mechanism or of its `function <MechanismBase.function>`,
+ParameterPorts are created for every modulable parameter of a Mechanism or of its `function <Mechanism_Base.function>`,
 and similarly for Projections.  These determine the value of the parameter that is actually used when the Component
 is executed, which may be different than the base value returned by accessing the parameter directly (as in the
 examples above); see `ModulatorySignal_Modulation` for a more complete description of modulation.  The current
@@ -598,7 +598,7 @@ ParameterPort for the parameter::
     >>> task.mod_gain
     [0.62]
 
-This works for any modulable parameters of the Mechanism or its `function <MechanismBase.function>`.  Note that,
+This works for any modulable parameters of the Mechanism or its `function <Mechanism_Base.function>`.  Note that,
 here, neither the ``parameters`` nor the ``function`` atributes of the Mechanism need to be included in the reference.
 Note also that, as explained above, the value returned is different from the base value of the function's gain
 parameter::
