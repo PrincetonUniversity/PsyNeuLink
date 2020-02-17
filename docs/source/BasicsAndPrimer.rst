@@ -504,69 +504,67 @@ script), or to implement `model-based learning <https://royalsocietypublishing.o
 Parameters
 ~~~~~~~~~~
 
-Every Component has a set of `parameters <Parameters>` that determine how the Component operates or contain information
-about the state of its operation.  For example, every Component has a `value <Component_Value>` parameter, that stores
-the result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
+Every Component has a set of parameters that determine how the Component operates, or that contain information about
+the state of its operation.  For example, every Component has a `value <Component_Value>` parameter that stores the
+result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
 generic use of the term "value" to designate the quantity assigned to a parameter, and its use as the name of a
 *particular* parameter of a Component.)  Although parameters are attributes of a Component (and can be accessed like
-any other Python attribute, as described below), they areactually instances of a special `Parameters` class, that
+any other Python attribute, as described below), they are actually instances of a special `Parameters` class that
 supports a number of important features, including the ability to simultaneously have different values in different
-contexts (often referred to as "statefulness"), and the ability to be modulated by other Components in PsyNeuLink.
-These features are suppored by a number of methods on the Parameter class.
+contexts (often referred to as `"statefulness" <Parameter_statefulness>`), and the ability to be `modulated
+<ModulatorySignal_Modulation>` by other Components in PsyNeuLink. These features are suppored by a number of methods
+on the Parameter class, as described below.
 
 *Accessing Parameter Values*.  The current value of a parameter can be accessed like any other attrriute in Python,
 by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
 <Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively. This returns the most
 recently assigned value of their `value <Component.value>` parameter.  However, as an instance of the `Parameters`
-class, they can have more than one value associated with them. For example, PsyNeuLink has the capacity to execute
-the same Component in different contexts, as part of different Compositions or, within the same Composition, as part
-of `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
+class, a parameter be `stateful <Parameter.stateful>`, which means it can have more than one value associated with it.
+For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
+<Parameter_statefulness>`, as part of different Compositions or, within the same Composition, as part of `model-based
+simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
 <Composition_Controller>.  The value of a parameter in a particular context can be accessed by using the `get
-<ParametersBase.get>` method for the parameter and providing the context, such as
-``ouput.parameters.value.get('my context')`` (see XXX for specifying context).  Previous values of the parameter can
-also be accessed, using the `get_previous <ParametersBase.get_previous>` method with an index, specifying how far back
-to look, and optionaly a context.  For example, ``ouput.parameters.value.get_previous(<'my context'>, 1)`` returns
-the value asigned to the parameter in the specified context immediately preceding its currently assigned value.
-XXXX TRUE: In fact, dot notation is simply an alias for get_previous(context=None,0).
+<ParametersBase.get>` method for the parameter and providing the context, such as ``ouput.parameters.value.get('my
+context')`` (see `Composition_Scope_of_Execution` for specifying context).  Previous values of the parameter can also
+be accessed, using the `get_previous <ParametersBase.get_previous>` method with an index, specifying how far back to
+look, and optionaly a context.  For example, ``ouput.parameters.value.get_previous (<'my context'>, 1)`` returns the
+value asigned to the parameter in the specified context immediately preceding its currently assigned value. XXX ??IS
+THIS TRUE: In fact, dot notation is simply an alias for ``get_previous(context=None,0)``.
 
-*Modulation*.
-MECHANISMS & PARAMETER PORTS
-MOD_PARAMETER NOTATION
+It is also important to recognize the difference between the parameters of a Component and of its `function
+<Component_Function>`.  In the examples above, `value <Component_Value>` was a parameter of the ``output`` and
+``decision`` Mechanisms themselves.  However, each of those Mechanisms also has a function; and, since a function is
+also a PsyNeuLink Component, it too has parameters.  For example, the ``output`` Mechanism was assigned the `Logistic`
+`Function`, which has a `gain <Logistic.gain>` and a `bias <Logistic.bias>` parameter, as well as others.  The
+parameter of Component's function can be accessed by simply referencing the function in the specification.  For
+example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistc Function can be
+accessed either as ``output.function.gain``, or ``output.function.parameters.gain.get()``.
 
-*Initialization* ???XXX
+*Modulation*.  Some parameters of Components can be `modulable,` meaning they can be modified by another Component
+(specifically, a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a
+`Projection` is modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or
+Projection, and that can receive a Projection from a ModulatorySignal,  allowing another component to modulate the
+value of the parameter.  ParameterPorts are created for every modulable parameter of a Mechanism or of its `function
+<MechanismBase.function>`, and similarly for Projections.  These determine the value of the parameter that is
+actually used when the Component executes, which may be different than the base value returned by accessing the
+parameter directly (as in the examples above); see `ModulatorySignal_Modulation` for a more complete description of
+modulation.  The current modulated value of a parameter can be accessed from the `value <ParameterPort.value>` of the
+corresponding ParameterPort.  For instance, the print statement in the example above used
+``task.parameter_ports[GAIN].value`` to report the modulated value of the `gain <Logistic.gain>` parameter of the
+``task`` Mechanism's `Logistic` function when the simulation was run. For convenience, it is also possible to access
+the value of a modulable parameter by adding the prefix ``mod_`` to the name of the parameter.  This works for any
+modulable parameters of the Mechanism or its `function <MechanismBase.function>`. For example, ``task.mod_gain``
+returns the same value as above (note that here neither the ``parameters`` nor the ``function`` atributes of the
+Mechanism need to be included in the reference.
 
------------
 
-
-CONTEXT
-HISTORY
-
-mech.parameters.value.get(comp)
-
-DISTINGUISH FUNCTION PARAMETERS FROM COMPONENT PARAMATERS -- mod_xxx NOTATION
-EXPLAIN VALUE IS A PARAMERETs
-EXPLAIN PARAMETER CONTEXTS
-
-`contexts <Parameter_statefulness>`
-`contexts <Composition_Scope_of_Execution>`
-
-XXX PSYNEULINK HAS THE CAPACITY EXECUTION THE SAME COMPONENT IN DIFFERENT CONTEXTS (STATEFULLNESS -- LINK TO DOCS):
-- SAME MECHANISM IN DIFFERENT COMPOSITIONS
-- IN SAME COMPOSITION, AS PART OF MODEL-BASED SIMULATION EXECUTED BY A CONTOLLER (OCM)
-
-        print(f'\ttask:\t\t{task.value[0]}')
-        print(f'\ttask gain:\t   {task.parameter_ports[GAIN].value}')
-        print(f'\t\t\t\tred   green')
-        print(f'\toutput:\t\t{output.value[0]}')
-        print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
-        print(f'\tconflict:\t  {control.objective_mechanism.value[0]}')
-
+.. *Initialization* ???XXX
 
 .. _BasicsAndPrimer_Monitoring_Values:
 
-Monitoring Parameter Values
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Displaying and Logging Values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 *Displaying values* The console output in the example above was generated using the **call_after_trial** argument in
 the Composition's `run <Composition.run>` method, that calls the ``print_after`` function defined in Python.  There
