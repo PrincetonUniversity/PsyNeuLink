@@ -503,10 +503,6 @@ script), or to implement `model-based learning <https://royalsocietypublishing.o
 
 Parameters
 ~~~~~~~~~~
-
-.. XXX REWORK AS PRIMER VS. MANUAL
-.. XXX ADD EXAMPLES
-
 Every Component has a set of parameters that determine how the Component operates, or that contain information about
 the state of its operation.  For example, every Component has a `value <Component_Value>` parameter that stores the
 result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
