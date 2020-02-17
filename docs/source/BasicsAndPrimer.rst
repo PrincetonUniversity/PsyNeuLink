@@ -551,8 +551,8 @@ parameter to store up to three previous values::
 
     >>> output.parameters.value.history_max_length = 3
 
-If included in the script above, then the following would return the ``output`` Mechanism's value from two trials
-before the last one run::
+If included in the script above, then the following would return the ``output`` Mechanism's `value
+<Mechanism_Base.value>` from two trials before the last one run::
 
     >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring', 2)[0]
     [ 0.38 0.62]
