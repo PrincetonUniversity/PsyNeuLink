@@ -580,19 +580,19 @@ Function can be accessed in either of the following ways::
 Modulable Parameters
 ^^^^^^^^^^^^^^^^^^^^
 Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
-a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a `Projection` is
-modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or Projection and
-can receive a Projection from a ModulatorySignal, allowing another component to modulate the value of the parameter.
-ParameterPorts are created for every modulable parameter of a Mechanism or of its `function <Mechanism_Base.function>`,
-and similarly for Projections.  These determine the value of the parameter that is actually used when the Component
-is executed, which may be different than the base value returned by accessing the parameter directly (as in the
-examples above); see `ModulatorySignal_Modulation` for a more complete description of modulation.  The current
-*modulated* value of a parameter can be accessed from the `value <ParameterPort.value>` of the corresponding
-ParameterPort.  For instance, the print statement in the example above used ``task.parameter_ports[GAIN].value`` to
-report the modulated value of the `gain <Logistic.gain>` parameter of the ``task`` Mechanism's `Logistic` function
-when the simulation was run.  For convenience, it is also possible to access the value of a modulable parameter by
-adding the prefix ``mod_`` to the name of the parameter;  this returns the `value <ParameterPort.value>` of the
-ParameterPort for the parameter::
+a `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`).  If the parameter
+of a `Mechanism` or a `Projection` is modulable, it is assigned a `ParameterPort` -- this is a Component that belongs
+to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing another component to
+modulate the value of the parameter. ParameterPorts are created for every modulable parameter of a Mechanism or of
+its `function <Mechanism_Base.function>`, and similarly for Projections.  These determine the value of the parameter
+that is actually used when the Component is executed, which may be different than the base value returned by
+accessing the parameter directly (as in the examples above); see `ModulatorySignal_Modulation` for a more complete
+description of modulation.  The current *modulated* value of a parameter can be accessed from the `value
+<ParameterPort.value>` of the corresponding ParameterPort.  For instance, the print statement in the example above
+used ``task.parameter_ports[GAIN].value`` to report the modulated value of the `gain <Logistic.gain>` parameter of
+the ``task`` Mechanism's `Logistic` function when the simulation was run.  For convenience, it is also possible to
+access the value of a modulable parameter by adding the prefix ``mod_`` to the name of the parameter;  this returns
+the `value <ParameterPort.value>` of the ParameterPort for the parameter::
 
     >>> task.parameter_ports[GAIN].value
     [0.62]
