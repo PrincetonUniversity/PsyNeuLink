@@ -97,15 +97,15 @@ class CompositionRunner():
         return total_loss
 
     def run_learning(self,
-        inputs: dict,
-        targets: dict = None,
-        num_trials: int = None,
-        epochs: int = 1,
-        minibatch_size: int = 1,
-        patience: int = None,
-        min_delta: int = 0,
-        randomize_minibatches: bool = True,
-        context=None):
+                     inputs: dict,
+                     targets: dict = None,
+                     num_trials: int = None,
+                     epochs: int = 1,
+                     minibatch_size: int = 1,
+                     patience: int = None,
+                     min_delta: int = 0,
+                     randomize_minibatches: bool = True,
+                     context=None):
         """
         Runs the composition repeatedly with the specified parameters
 
