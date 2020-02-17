@@ -538,7 +538,7 @@ then the `get <Parameter.get>` method returns the most recently assigned value o
 notation.
 
 If a parameter is `stateful <Parameter.stateful>`, then its previous value can also be accessed, using the
-`get_previous <Parameter.get_previous>` method, for example::
+`get_previous <Parameter.get_previous>` method; for example::
 
     >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring')[0]
     [ 0.55  0.45]
