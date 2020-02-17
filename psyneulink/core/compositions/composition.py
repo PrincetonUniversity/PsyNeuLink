@@ -515,7 +515,7 @@ MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
 a list or ndarray of **initial_values**[...] The **initial_values** are
 assigned at the start of a `TRIAL` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
 and listed in the Composition's ?? attribute),
-
+COMMENT
 
 .. _Composition_Scope_of_Execution:
 
@@ -556,12 +556,10 @@ When looking for values after a run, it's important to know the execution contex
         >>> print(t.parameters.value.get(d))
         [[10.]]
         >>> print(t.parameters.value.get('custom execution id'))
-        [[20.]]
+        [[20.]]Composition_Controller
 
 In general, anything that happens outside of a Composition run and without an explicit setting of execution context
 occurs in the `None` execution context.
-
-COMMENT
 
 .. _Composition_Controller:
 

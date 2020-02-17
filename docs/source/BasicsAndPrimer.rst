@@ -499,7 +499,7 @@ internal simulations to optimize the amount of control to optimize some criterio
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
 
-.. _BasicsAndPrimer_Parameters
+.. _BasicsAndPrimer_Parameters:
 
 Parameters
 ~~~~~~~~~~
@@ -515,22 +515,24 @@ contexts (often referred to as `"statefulness" <Parameter_statefulness>`), and t
 <ModulatorySignal_Modulation>` by other Components in PsyNeuLink. These features are suppored by a number of methods
 on the Parameter class, as described below.
 
-*Accessing Parameter Values*.  The current value of a parameter can be accessed like any other attrriute in Python,
+Accessing Parameter Values
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The current value of a parameter can be accessed like any other attrriute in Python,
 by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
 <Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively. This returns the most
 recently assigned value of their `value <Component.value>` parameter.  However, as an instance of the `Parameters`
-class, a parameter be `stateful <Parameter.stateful>`, which means it can have more than one value associated with it.
-For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
-<Parameter_statefulness>`, as part of different Compositions or, within the same Composition, as part of `model-based
-simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
-<Composition_Controller>.  The value of a parameter in a particular context can be accessed by using the `get
-<ParametersBase.get>` method for the parameter and providing the context, such as ``ouput.parameters.value.get('my
+class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more than one value associated with
+it. For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
+<Parameter_statefulness>`, either as part of different Compositions or, within the same Composition, as part of
+`model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
+<Composition_Controller>`.  The value of a parameter in a particular context can be accessed by using the `get
+<Parameter.get>` method for the parameter and providing the context, such as ``ouput.parameters.value.get('my
 context')`` (see `Composition_Scope_of_Execution` for specifying context).  Previous values of the parameter can also
-be accessed, using the `get_previous <ParametersBase.get_previous>` method with an index, specifying how far back to
-look, and optionaly a context.  For example, ``ouput.parameters.value.get_previous (<'my context'>, 1)`` returns the
-value asigned to the parameter in the specified context immediately preceding its currently assigned value. XXX ??IS
-THIS TRUE: In fact, dot notation is simply an alias for ``get_previous(context=None,0)``.
+be accessed, using the `get_previous <Parameter.get_previous>` method with an index specifying how far back to look,
+and optionally a context.  For example, ``ouput.parameters.value.get_previous (<'my context'>, 1)`` returns the value
+asigned to the parameter in the specified context immediately preceding its currently assigned value. XXX ??IS THIS
+TRUE: In fact, dot notation is simply an alias for ``get_previous(context=None,0)``.
 
 It is also important to recognize the difference between the parameters of a Component and of its `function
 <Component_Function>`.  In the examples above, `value <Component_Value>` was a parameter of the ``output`` and
@@ -541,7 +543,9 @@ parameter of Component's function can be accessed by simply referencing the func
 example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistc Function can be
 accessed either as ``output.function.gain``, or ``output.function.parameters.gain.get()``.
 
-*Modulation*.  Some parameters of Components can be `modulable,` meaning they can be modified by another Component
+Modulable Parameters
+^^^^^^^^^^^^^^^^^^^^
+Some parameters of Components can be `modulable,` meaning they can be modified by another Component
 (specifically, a `ModulatorySignal` belonging to a `ModulatoryMechanism`).  If the parameter of a `Mechanism` or a
 `Projection` is modulable, it is assigned a `ParameterPort` -- this is a Component that belongs to the Mechanism or
 Projection, and that can receive a Projection from a ModulatorySignal,  allowing another component to modulate the
