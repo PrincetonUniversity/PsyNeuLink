@@ -3170,4 +3170,4 @@ class TestBatching:
         target = torch.Tensor([1])
 
         # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
-        assert adc.loss(classes, target) == -1 + np.log(np.exp(2) + np.exp(1))
+        assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))

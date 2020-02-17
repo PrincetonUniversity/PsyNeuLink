@@ -394,7 +394,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     # Set up run and then execute it
     task.initial_value = [0.5,0.5]         # Assign "neutral" starting point for task units on each trial
     task.reinitialize_when=AtTrialStart()  # Reinitialize task units at beginning of each trial
-    num_trials = 5
+    num_trials = 4
     stimuli = {color_input:[red]*num_trials,
                word_input:[green]*num_trials,
                task_input:[color]*num_trials}
@@ -446,7 +446,7 @@ used to generate an animation of the Composition's execution, as shown below:
    with ``animate={"show_controller":True}`` in call to the `run <Composition.run>`.
 
 
-Running it for several `trials <TimeScale.TRIAL>` produces the following output::
+Running it for four `trials <TimeScale.TRIAL>` produces the following output::
 
     .. _Stroop_model_output:
 
@@ -504,6 +504,9 @@ script), or to implement `model-based learning <https://royalsocietypublishing.o
 Parameters
 ~~~~~~~~~~
 
+.. XXX REWORK AS PRIMER VS. MANUAL
+.. XXX ADD EXAMPLES
+
 Every Component has a set of parameters that determine how the Component operates, or that contain information about
 the state of its operation.  For example, every Component has a `value <Component_Value>` parameter that stores the
 result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
@@ -512,29 +515,56 @@ generic use of the term "value" to designate the quantity assigned to a paramete
 any other Python attribute, as described below), they are actually instances of a special `Parameters` class that
 supports a number of important features, including the ability to simultaneously have different values in different
 contexts (often referred to as `"statefulness" <Parameter_statefulness>`), and the ability to be `modulated
-<ModulatorySignal_Modulation>` by other Components in PsyNeuLink. These features are suppored by a number of methods
+<ModulatorySignal_Modulation>` by other Components in PsyNeuLink.  These features are suppored by a number of methods
 on the Parameter class, as described below.
 
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-The current value of a parameter can be accessed like any other attrriute in Python,
+The most recently assigned value of a parameter can be directly, like any other attrriute in Python,
 by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
 ``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
-<Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively. This returns the most
-recently assigned value of their `value <Component.value>` parameter.  However, as an instance of the `Parameters`
+<Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, the
+first element of the output Mechanism's value, ``output.value[0]``, and the first and second elements of the decison
+Mechanism's `value).  This returns their most recently assigned values. However, as an instance of the `Parameters`
 class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more than one value associated with
 it. For example, PsyNeuLink has the capacity to execute the same Component in different `contexts
 <Parameter_statefulness>`, either as part of different Compositions or, within the same Composition, as part of
 `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the Composition's `controller
 <Composition_Controller>`.  The value of a parameter in a particular context can be accessed by using the `get
-<Parameter.get>` method for the parameter and providing the context, such as ``ouput.parameters.value.get('my
-context')`` (see `Composition_Scope_of_Execution` for specifying context).  Previous values of the parameter can also
-be accessed, using the `get_previous <Parameter.get_previous>` method with an index specifying how far back to look,
-and optionally a context.  For example, ``ouput.parameters.value.get_previous (<'my context'>, 1)`` returns the value
-asigned to the parameter in the specified context immediately preceding its currently assigned value. XXX ??IS THIS
-TRUE: In fact, dot notation is simply an alias for ``get_previous(context=None,0)``.
+<Parameter.get>` method for the parameter and providing the context, for example::
 
-It is also important to recognize the difference between the parameters of a Component and of its `function
+    >>> output.parameters.value.get('Stroop Model - Conflict Monitoring')[0]
+    [ 0.65  0.35]
+
+Notice that this returns the same value as the dot notation (i.e., ``output.value[0]``.  Notice also that the
+name of the Composition in which the Mechanism was executed is used as the context (see
+`Composition_Scope_of_Execution` for additional information about execution contexts).  If no context is specified,
+then the `get <Parameter.get>` method returns the most recently assigned value of the parameter, just like dot
+notation.  The previous value of a parameter can also be accessed, using the `get_previous <Parameter.get_previous>`
+method, for example::
+
+    >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring')[0]
+    [ 0.55  0.45]
+
+Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
+(Trail 3).  By default, parameters only preserve one previous value.  However, they can be specified to have a longer
+'history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can be used to access earlier
+values.  For example, the following sets output Mechanism's `value <MechanismBase.value>` parameter to store up to
+three previous values::
+
+    >>> output.parameters.value.history_max_length = 3
+
+If included in the script above, then the following would return the ``output`` Mechanism's value from two trials
+before the last one run::
+
+    >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring', 2)[0]
+    [ 0.38 0.62]
+
+Notice that this is the value from Trial 1 in the example above.
+
+Function Parameters
+^^^^^^^^^^^^^^^^^^^
+It is  important to recognize the difference between the parameters of a Component and those of its `function
 <Component_Function>`.  In the examples above, `value <Component_Value>` was a parameter of the ``output`` and
 ``decision`` Mechanisms themselves.  However, each of those Mechanisms also has a function; and, since a function is
 also a PsyNeuLink Component, it too has parameters.  For example, the ``output`` Mechanism was assigned the `Logistic`
