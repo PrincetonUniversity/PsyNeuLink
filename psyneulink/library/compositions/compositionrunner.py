@@ -8,6 +8,8 @@
 
 # ********************************************* AutodiffComposition *************************************************
 import random
+import numpy as np
+import collections.abc
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.utilities import NodeRole
