@@ -34,15 +34,25 @@ def _chunk_inputs(inputs: dict, num_trials: int, chunksize: int = 1, randomize: 
         chunks.append((chunk, curr_indices))
     return chunks
 
+def _recursive_update(d, u):
+    """
+    Recursively calls update on dictionaries, which prevents deletion of keys
+    """
+    for key, val in u.items():
+        if isinstance(val, collections.abc.Mapping):
+            d[key] = _recursive_update(d.get(key, {}), val)
+        else:
+            d[key] = val
+    return d
 class CompositionRunner():
 
     def __init__(self, compostion: Composition):
         self._composition = compostion
-    
+
     def _parse_inputs(self, inputs: dict, targets: dict):
         """
         Converts inputs and targets to a standardized form
-        
+
         Returns
         ---------
         Dict mapping mechanisms to values (with TargetMechanisms inferred if needed)
@@ -57,7 +67,7 @@ class CompositionRunner():
         # 2) Convert output node keys -> target node keys (learning always needs target nodes!)
         if targets is not None:
             targets = self._infer_target_nodes(targets)
-            inputs.update(targets)
+            inputs = _recursive_update(inputs, targets)
 
         return inputs
 
