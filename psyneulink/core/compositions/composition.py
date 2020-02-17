@@ -4245,6 +4245,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
+                    if not projection.learnable:
+                        continue
                     prev[efferent_node] = projection
                     prev[projection] = curr_node
                     queue.append(efferent_node)
