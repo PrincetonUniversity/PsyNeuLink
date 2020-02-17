@@ -105,8 +105,8 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _Component_Function:
 
-* **function** - determines the computation that a Component carries out. It is always a PsyNeuLink `Function <Function>`
-  object (itself a PsyNeuLink Component).
+* **function** - determines the computation that a Component carries out. It is always a PsyNeuLink `Function
+  <Function>` object (itself also a PsyNeuLink Component).
 
   .. note::
      The `function <Component.function>` of a Component can be assigned either a `Function` object or any other

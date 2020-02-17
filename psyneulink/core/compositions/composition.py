@@ -515,7 +515,7 @@ MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
 a list or ndarray of **initial_values**[...] The **initial_values** are
 assigned at the start of a `TRIAL` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
 and listed in the Composition's ?? attribute),
-
+COMMENT
 
 .. _Composition_Scope_of_Execution:
 
@@ -556,12 +556,10 @@ When looking for values after a run, it's important to know the execution contex
         >>> print(t.parameters.value.get(d))
         [[10.]]
         >>> print(t.parameters.value.get('custom execution id'))
-        [[20.]]
+        [[20.]]Composition_Controller
 
 In general, anything that happens outside of a Composition run and without an explicit setting of execution context
 occurs in the `None` execution context.
-
-COMMENT
 
 .. _Composition_Controller:
 
@@ -769,7 +767,7 @@ TBI:  Supervised learning is implemented using a Composition's `add_learning_pat
 appropriate `LearningFunction <LearningFunctions>` in its **learning_function** argument.
 XXXMORE HERE ABOUT TYPES OF FUNCTIONS
 • MODIFY REFERENCE TO LEARNING COMPONENT NAMES WHEN THEY ARE IMPLEMENTED AS AN ENUM CLASS
-• ADD EXAMPLES - POINT TO ONES IN BasicsAndSampler
+• ADD EXAMPLES - POINT TO ONES IN BasicsAndPrimer
 COMMENT
 
 .. _Composition_Learning_Methods:
@@ -883,7 +881,7 @@ The following example implements a simple three-layered network that learns the 
 
 The description and example above pertain to simple linear sequences.  However, more complex configurations,
 with convergent, divergent and/or intersecting sequences can be built using multiple calls to the learning method
-(see `example <BasicsAndSampler_Rumelhart_Model>` in `BasicsAndSampler`).  In each call, the learning method determines
+(see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  In each call, the learning method determines
 how the sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates
 andconfigures the relevant learning components so that the error terms are properly computed and propagated by each
 LearningMechanism to the next in the configuration. It is important to note that, in doing so, the status of a
@@ -956,7 +954,7 @@ Change reference to example below to point to Rumelhart Semantic Network Model S
 COMMENT
 
 The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
-<https://pytorch.org>`_ (see `example <BasicsAndSampler_Rumelhart_Model>` in `BasicsAndSampler`).  The
+<https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
 etc.) as any other Composition, and it is executed using its `run <AutodiffComposition.run>` method.   Note that
