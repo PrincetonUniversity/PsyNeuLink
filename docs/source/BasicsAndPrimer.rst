@@ -544,10 +544,10 @@ If a parameter is `stateful <Parameter.stateful>`, then its previous value can a
     [ 0.55  0.45]
 
 Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
-(Trail 3).  By default, parameters only preserve only one previous value.  However, a parameter can be specified to
-have a longer 'history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can be used to
-access earlier values.  For example, the following sets output Mechanism's `value <MechanismBase.value>` parameter to
-store up to three previous values::
+(Trail 3).  By default, stateful parameters only preserve only one previous value.  However, a parameter can be
+specified to have a longer 'history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can
+be used to access earlier values.  For example, the following sets output Mechanism's `value <MechanismBase.value>`
+parameter to store up to three previous values::
 
     >>> output.parameters.value.history_max_length = 3
 
