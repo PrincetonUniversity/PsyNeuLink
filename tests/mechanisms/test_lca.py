@@ -214,7 +214,15 @@ class TestLCA:
             assert lca.num_executions_before_finished == 19
         benchmark(comp.run, inputs={lca:[0,1,2]}, bin_execute=mode)
 
-    def test_equivalance_of_threshold_and_termination_specifications_just_threshold(self):
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_equivalance_of_threshold_and_termination_specifications_just_threshold(self, mode):
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and
         #       generic TransferMechanism termination_<*> arguments
 
@@ -222,16 +230,16 @@ class TestLCA:
         response = ProcessingMechanism(size=2)
         comp = Composition()
         comp.add_linear_processing_pathway([lca_thresh, response])
-        result1 = comp.run(inputs={lca_thresh:[1,0]})
+        result1 = comp.run(inputs={lca_thresh:[1,0]}, bin_execute=mode)
 
         lca_termination = LCAMechanism(size=2,
                                        termination_threshold=0.7,
-                                       termination_measure=lambda x: max(x),
+                                       termination_measure=max,
                                        termination_comparison_op='>=')
         comp2 = Composition()
         response2 = ProcessingMechanism(size=2)
         comp2.add_linear_processing_pathway([lca_termination,response2])
-        result2 = comp2.run(inputs={lca_termination:[1,0]})
+        result2 = comp2.run(inputs={lca_termination:[1,0]}, bin_execute=mode)
         assert np.allclose(result1, result2)
 
     def test_equivalance_of_threshold_and_termination_specifications_max_vs_next(self):
