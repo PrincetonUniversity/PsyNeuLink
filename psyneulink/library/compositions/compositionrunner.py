@@ -14,7 +14,7 @@ import collections.abc
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, COMPARATOR_MECHANISM, LEARNING_MECHANISM
+from psyneulink.core.globals.keywords import TARGET_MECHANISM, COMPARATOR_MECHANISM, LEARNING_MECHANISM, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
 def _chunk_inputs(inputs: dict, num_trials: int, chunksize: int = 1, randomize: bool = True):
@@ -30,7 +30,7 @@ def _chunk_inputs(inputs: dict, num_trials: int, chunksize: int = 1, randomize: 
         curr_indices = indices[i:i + chunksize]
         chunk = {}
         for k, v in inputs.items():
-            chunk[k] = [v[i] for i in curr_indices]
+            chunk[k] = [v[i % len(v)] for i in curr_indices]
         chunks.append((chunk, curr_indices))
     return chunks
 
@@ -115,6 +115,8 @@ class CompositionRunner():
                      patience: int = None,
                      min_delta: int = 0,
                      randomize_minibatches: bool = True,
+                     call_before_minibatch = None,
+                     call_after_minibatch = None,
                      context=None):
         """
         Runs the composition repeatedly with the specified parameters
@@ -132,18 +134,24 @@ class CompositionRunner():
         if num_trials is None:
             num_trials = len(list(inputs.values())[0])
 
-        results = [None] * num_trials
+        if minibatch_size == TRAINING_SET:
+            minibatch_size = num_trials
+        results = []
         if patience is not None:
             early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
         skip_initialization = False
         for curr_epoch in range(epochs):
             for minibatch, indices in _chunk_inputs(inputs, num_trials, minibatch_size, randomize_minibatches):
+                if call_before_minibatch is not None:
+                    call_before_minibatch()
+                
                 minibatch_results = self._composition.run(inputs=minibatch, learning_mode=True, skip_initialization=skip_initialization, skip_analyze_graph=skip_initialization, context=context)
                 skip_initialization = True
-                for i, j in enumerate(indices):
-                    # Reorder minibatch to match up with original order
-                    results[j] = minibatch_results[i]
+                results.append(minibatch_results[-1])
+
+                if call_after_minibatch is not None:
+                    call_after_minibatch()
             epoch_loss = self._get_loss()
             if (patience is not None and early_stopper.step(epoch_loss)) or curr_epoch == epochs - 1:
                 # return highest index result
