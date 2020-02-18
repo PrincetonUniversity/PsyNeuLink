@@ -743,8 +743,6 @@ class AutodiffComposition(Composition):
         optimizer.step()
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
-        scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
         # save average loss on the current epoch
         average_loss = np.mean(curr_losses)
         self.parameters.losses._get(context).append(average_loss)
