@@ -254,7 +254,7 @@ def test_DDM_Integrator_Bogacz(benchmark, mode):
 @pytest.mark.parametrize("noise, expected", [
     (0., 10),
     (0.5, 8.194383551861414),
-    (2, 6.388767103722829),
+    (2., 6.388767103722829),
     ], ids=["0", "0.5", "2.0"])
 @pytest.mark.parametrize("mode", [
     "Python",
@@ -265,7 +265,7 @@ def test_DDM_noise(mode, benchmark, noise, expected):
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
-            noise=0.5,
+            noise=noise,
             rate=1.0,
             time_step_size=1.0
         )
@@ -278,7 +278,7 @@ def test_DDM_noise(mode, benchmark, noise, expected):
         ex = pnlvm.execution.MechExecution(T).cuda_execute
 
     val = ex([10])
-    assert np.allclose(val[0][0][0], 8.194383551861414)
+    assert np.allclose(val[0][0][0], expected)
     benchmark(ex, [10])
 
 # ------------------------------------------------------------------------------------------------
