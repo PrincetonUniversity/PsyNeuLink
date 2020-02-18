@@ -75,7 +75,7 @@ models in PsyNeuLink.
 Primer
 ------
 
-The examples below are intended to provide a quick illustrations of some of PsyNeuLink's basic and more advanced
+The examples below are intended to provide quick illustrations of some of PsyNeuLink's basic and more advanced
 capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
 `tutorial <>` provides additional introductory material for those who are newer to computational modeling, as well as a
 more detailed and comprehensive introduction to the use of PsyNeuLink.
@@ -88,8 +88,8 @@ Simple Configurations
 Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
 applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
 Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list --
-PsyNeuLink provides the necessary Projections that connects each to the next one in the list, making reasonable
-assumptions about their connectivity.  For example, the following example creates a 3-layered 5-2-5 neural network
+PsyNeuLink provides the necessary Projections that connect each to the next one in the list, making reasonable
+assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 neural network
 encoder network, the first layer of which takes an an array of length 5 as its input, and uses a `Linear` function
 (the default for a `ProcessingMechanism`), and the other two of which take 1d arrays of the specified sizes and use a
 `Logistic` function::
@@ -145,9 +145,9 @@ PsyNeuLink picks sensible defaults when necessary Components are not specified. 
 `MappingProjections<MappingProjection>`), and sized them appropriately to connect each pair of Mechanisms. Each
 Projection has a `matrix <Projection.matrix>` parameter that weights the connections between the elements of the output
 of its `sender <Projection.sender>` and those of the input to its `receiver <Projection.receiver>`.  Here, the
-default is to use a `FULL_CONNECTIVIT_MATRIX`, that connects every element of the sender's array to every element of
-the receiver's array weight of 1 (a ). However, it is easy to specify a Projection explicitly, including its matrix,
-simply by inserting them in between the Mechanisms in the pathway::
+default is to use a `FULL_CONNECTIVITY_MATRIX`, that connects every element of the sender's array to every element of
+the receiver's array with a weight of 1. However, it is easy to specify a Projection explicitly, including its
+matrix, simply by inserting them in between the Mechanisms in the pathway::
 
     my_projection = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) - .1))
     my_encoder = Composition()
@@ -235,7 +235,7 @@ Composition's `show_graph <Composition.show_graph>` method.
 Running the model is as simple as generating some inputs and then providing them to the `run <Composition.run>`
 method.  Inputs are specified in a dictionary, with one entry for each of the Composition's `INPUT`
 Mechanisms;  each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
-The following defines two stimui to use as the color and word inputs (``red`` and ``green``, and two for use as the
+The following defines two stimuli to use as the color and word inputs (``red`` and ``green``), and two for use as the
 task input (``color`` and ``word``), and then uses them to run the model for a color naming congruent trial, followed
 by a color naming incongruent trial::
 
@@ -512,7 +512,7 @@ any other Python attribute (as described below), they are actually instances of 
 supports a number of important features. These include the ability to simultaneously have different values in
 different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
 previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
-These features are suppored by methods on the Parameter class, as described below.
+These features are supported by methods on the Parameter class, as described below.
 
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -544,7 +544,7 @@ If a parameter is `stateful <Parameter.stateful>`, then its previous value can a
     [ 0.55  0.45]
 
 Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
-(Trail 3).  By default, stateful parameters only preserve only one previous value.  However, a parameter can be
+(Trial 3).  By default, stateful parameters preserve only one previous value.  However, a parameter can be
 specified to have a longer `history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can
 be used to access earlier values.  For example, the following sets output Mechanism's `value <Mechanism_Base.value>`
 parameter to store up to three previous values::
@@ -561,15 +561,15 @@ Notice that this is the value from Trial 1 in the example above.
 
 Function Parameters
 ^^^^^^^^^^^^^^^^^^^
-The `parameters <Component_Parameters>` attribute of a Component contains a list all of its parameters. It is important
-here to recognize the difference between the parameters of a Component and those of its `function
+The `parameters <Component_Parameters>` attribute of a Component contains a list of all of its parameters. It is
+important here to recognize the difference between the parameters of a Component and those of its `function
 <Component_Function>`.  In the examples above, `value <Component_Value>` is a parameter of the ``output`` and
 ``decision`` Mechanisms themselves.  However, each of those Mechanisms also has a `function <Mechanism_Base
 .function>`; and, since those are PsyNeuLink `Functions <Function>` which are also Compoments, those too have
 parameters.  For example, the ``output`` Mechanism was assigned the `Logistic` `Function`, which has a `gain
 <Logistic.gain>` and a `bias <Logistic.bias>` parameter (as well as others).  The parameters of a Component's
 `function <Component_Function>` can also be accessed using dot notation, by referencing the function in the
-specification.  For example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistc
+specification.  For example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistic
 Function can be accessed in either of the following ways::
 
     >>> output.function.gain
@@ -685,21 +685,21 @@ Learning
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
 mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
-Python-based environments.  Currently, has builtin intregration with `PyTorch <https://pytorch.org>`_, however
-other envirnoments can be accessed using `UserDefinedFunctions <UserDefinedFunction>`.  Since such environments are
-becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink is designed with
-a complemenatry set of the goals: modularity and exposition, rather than efficiency of computation.  That is, it is
-better suited for "story-boarding" a model that includes learning components, and for illustrating process flow
-during learning, than it is for large scale simulations involving learning.  However, the specification of the
-learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can then be
-integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of specifying
-learning components is described below.
+Python-based environments.  Currently, PsyNeuLink has builtin intregration with `PyTorch <https://pytorch.org>`_,
+however other envirnoments can be accessed using `UserDefinedFunctions <UserDefinedFunction>`.  Since such
+environments are becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink
+is designed with a complementary set of goals: modularity and exposition, rather than efficiency of computation.
+That is, it is better suited for "story-boarding" a model that includes learning components, and for illustrating
+process flow during learning, than it is for large scale simulations involving learning.  However, the specification
+of the learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can
+then be integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of
+specifying learning components is described below.
 
 LearningMechanisms
 ^^^^^^^^^^^^^^^^^^
 
 PsyNeuLink has a native class -- `LearningMechanism` -- that can be used to implement various forms of learning,
-including unsupervised forms (such as `Hebbian`) and supervised forms (such as reinforcment learning and
+including unsupervised forms (such as `Hebbian`) and supervised forms (such as reinforcement learning and
 backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
 `MappingProjection` from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
 LearningMechanisms use `LearningSignals` (a type of `OutputPort`) to send a `LearningProjection` to the
@@ -822,11 +822,11 @@ Customization
 ~~~~~~~~~~~~~
 
 The Mechanisms in the examples above all use PsyNeuLink `Functions`.  However, as noted earlier, a Mechanism can be
-assigned any Ptyhon function, so long as it is compatible with the Mechanism's type.  More specifically, its
+assigned any Python function, so long as it is compatible with the Mechanism's type.  More specifically, its
 first argument must accept a variable that has the same shape as the Mechanism's variable.  For most Mechanism types
 this can be specified in the **default_variable** argument of their constructors, so in practice this places little
 constraint on the type of functions that can be assigned.  For example, the script below defines a function that
-returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assignes this to a
+returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assigns this to a
 `ProcessingMechanism`::
 
         >>> def my_sinusoidal_fct(input=[[0],[0]],
