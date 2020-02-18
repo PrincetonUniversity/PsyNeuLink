@@ -75,15 +75,9 @@ arguments that are specific to the AutodiffComposition, as described below.
 
     If it is set to False:
 
-        * in addition to the weight parameters created for each MappingProjection, a trainable bias parameter
-          is created for each for each Mechanism in the Composition;
-
         * weight parameters have the same dimensionality as the `matrix <MappingProjection.matrix>` parameter of the
           corresponding `MappingProjections <MappingProjection>`;  however, their values -- and those of the bias
           parameters -- are sampled from a random distribution;
-
-        * in addition to the trainable biases created for each Mechanism, the Pytorch function implemented for each
-          Mechanism's `function <Mechanism_Base.function>` still incorporates its scalar, untrainable bias.
 
 * **patience** -- allows the model to halt training early. The  model tracks how many consecutive 'bad' epochs of
   training have failed to significantly reduce the model's loss. When this number exceeds **patience**, the model stops
@@ -347,7 +341,7 @@ class AutodiffComposition(Composition):
     ---------
 
     param_init_from_pnl : boolean : default True
-        a Boolean specifying how parameters are initialized. (See
+        a Boolean specifying how parameters are initialized. **WARNING: deprecated!** (See
         `Creating an AutodiffComposition <AutodiffComposition_Creation>` for details)
 
     patience : int or None : default None
@@ -520,7 +514,10 @@ class AutodiffComposition(Composition):
 
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
-
+        
+        if param_init_from_pnl is False:
+            warnings.warn("WARNING: Autodiffcomposition.param_init_from_pnl is deprecated! Please do not use it!")
+            
         # keeps track of average loss per epoch
         self.losses = []
 
