@@ -149,7 +149,7 @@ class CompositionRunner():
                 if call_before_minibatch is not None:
                     call_before_minibatch()
                 
-                minibatch_results = self._composition.run(inputs=minibatch, learning_mode=True, skip_initialization=skip_initialization, skip_analyze_graph=skip_initialization, context=context)
+                minibatch_results = self._composition.run(inputs=minibatch, learning_mode=True, skip_initialization=skip_initialization, context=context)
                 skip_initialization = True
                 results.append(minibatch_results[-1])
 
