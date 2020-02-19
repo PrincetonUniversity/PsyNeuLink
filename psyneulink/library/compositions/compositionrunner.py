@@ -125,6 +125,9 @@ class CompositionRunner():
         ---------
         Outputs from the final execution
         """
+        # FIXME: support generators
+        if callable(inputs):
+            inputs = inputs()
 
         if 'epochs' in inputs:
             epochs = inputs['epochs']
