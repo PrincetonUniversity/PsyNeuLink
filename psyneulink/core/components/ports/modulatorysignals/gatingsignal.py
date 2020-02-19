@@ -370,13 +370,13 @@ class GatingSignal(ControlSignal):
                     see `variable <GatingSignal.variable>`
 
                     :default value: numpy.array([0.5])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 value
                     see `value <GatingSignal.value>`
 
                     :default value: numpy.array([0.5])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 allocation_samples
@@ -385,6 +385,11 @@ class GatingSignal(ControlSignal):
                     :default value: None
                     :type:
 
+                modulation
+                    see `modulation <GatingSignal_Modulation>`
+
+                    :default value: None
+                    :type:
         """
         variable = Parameter(np.array([defaultGatingAllocation]),
                              aliases='allocation',

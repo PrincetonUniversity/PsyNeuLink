@@ -149,5 +149,5 @@ def test_reinforcement_fixed_targets():
         targets=targets
     )
 
-    assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+    assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
                                                 [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])

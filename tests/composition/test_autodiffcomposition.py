@@ -51,7 +51,7 @@ class TestACConstructor:
 
     def test_pytorch_representation(self):
         comp = AutodiffComposition()
-        assert comp.pytorch_representation == None
+        assert comp.pytorch_representation is None
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
@@ -430,7 +430,7 @@ class TestMiscTrainingFunctionality:
 
         # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
         # and get the parameters straight from pytorch
-        weights_get_params = xor.get_parameters()[0]
+        weights_get_params = xor.get_parameters()
         weights_straight_1 = xor.parameters.pytorch_representation.get(xor).params[0]
         weights_straight_2 = xor.parameters.pytorch_representation.get(xor).params[1]
 
@@ -706,8 +706,8 @@ class TestTrainingCorrectness:
                                       'epochs': eps}, bin_execute=mode)
 
         # CHECK CORRECTNESS
-        for i in range(len(result[0])): # go over trial outputs in the single results entry
-            for j in range(len(result[0][i])): # go over outputs for each output layer
+        for i in range(len(result)): # go over trial outputs in the single results entry
+            for j in range(len(result[i])): # go over outputs for each output layer
 
                 # get target for terminal node whose OutputPort corresponds to current output
                 correct_value = None
@@ -718,7 +718,7 @@ class TestTrainingCorrectness:
                         correct_value = targets_dict[node][i]
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[0][i][j]), correct_value)
+                assert np.allclose(np.round(result[i][j]), correct_value)
 
         benchmark(sem_net.run, inputs={'inputs': inputs_dict,
                                        'targets': targets_dict,
@@ -942,7 +942,7 @@ class TestTrainingCorrectness:
                              0.05186586, 0.05829845, 0.05179337, 0.03504668, 0.05379566,
                              0.07103772, 0.03544133, 0.03019486, 0.12605846, 0.03976812])
 
-        np.allclose(output,comparator)
+        assert np.allclose(output,comparator)
 
     def test_pytorch_equivalence_with_autodiff_training_disabled_on_proj(self):
         iSs = np.array(
@@ -2007,7 +2007,7 @@ class TestTrainingIdenticalness():
         g = g_f()
         result = sem_net.run(inputs=g_f)
 
-        comp_weights = sem_net.get_parameters()[0]
+        comp_weights = sem_net.get_parameters()
 
         # SET UP SYSTEM
         sem_net_sys = Composition()
@@ -2414,20 +2414,15 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMExec', marks=[pytest.mark.llvm,pytest.mark.skip]), # Not implemented
-                                    ])
-    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate, patience, min_delta,mode):
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+                                      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                     ])
+    def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
+                                            patience, min_delta, mode):
+        # the inputs we will provide to the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        # the outputs we wish to see from the model
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         # -----------------------------------------------------------------
 
@@ -2480,12 +2475,12 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
-        result1 = parentComposition.run(inputs=input)
+        result1 = parentComposition.run(inputs=input, bin_execute=mode)
+        assert np.allclose(result1, [[0]], atol=0.1)
 
         xor_autodiff.learning_enabled = False
-        result2 = parentComposition.run(inputs=no_training_input,bin_execute=mode)
+        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
 
-        assert np.allclose(result1, [[0]], atol=0.1)
         assert np.allclose(result2, [[0]], atol=0.1)
 
     @pytest.mark.parametrize(
@@ -2493,18 +2488,16 @@ class TestNested:
             (2000, 4, 10, .00001),
         ]
     )
-    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate, patience, min_delta):
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-             [0, 1],
-             [1, 0],
-             [1, 1]])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                     ])
+    def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
+                                            patience, min_delta, mode):
+        # the inputs we will provide to the model
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0],
-             [1],
-             [1],
-             [0]])
+        # the outputs we wish to see from the model
+        xor_targets = np.array([[0], [1], [1], [0]])
 
         # -----------------------------------------------------------------
 
@@ -2557,10 +2550,9 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
 
-        result1 = parentComposition.run(inputs=no_training_input)
-
+        result1 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
         xor_autodiff.learning_enabled = True
-        result2 = parentComposition.run(inputs=input)
+        result2 = parentComposition.run(inputs=input, bin_execute=mode)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2650,7 +2642,10 @@ class TestNested:
             (1, 'sgd'),
         ]
     )
-    def test_semantic_net_nested(self, eps, opt):
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                     ])
+    def test_semantic_net_nested(self, eps, opt, mode):
 
         # SET UP MECHANISMS FOR SEMANTIC NET:
 
@@ -2895,7 +2890,11 @@ class TestNested:
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}
 
-        parentComposition.run(inputs=input)
+        parentComposition.run(inputs=input, bin_execute=mode)
+
+        if mode != 'Python':
+            #FIXME: Enable the rest of the test when recompilation is supported
+            return
 
         sem_net.learning_enabled = False
 
@@ -3156,3 +3155,19 @@ class TestBatching:
         assert np.allclose(c1_results[0][:2], c2_results[-2])
         assert np.allclose(c1_results[0][2:], c2_results[-1])
 
+    def test_cross_entropy_loss(self):
+        import torch
+
+        m1 = pnl.TransferMechanism()
+        p = pnl.MappingProjection()
+        m2 = pnl.TransferMechanism()
+        adc = pnl.AutodiffComposition(loss_spec='crossentropy')
+
+        adc.add_linear_processing_pathway([m1, p, m2])
+        adc._build_pytorch_representation()
+
+        classes = torch.Tensor([2, 1])
+        target = torch.Tensor([1])
+
+        # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
+        assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))

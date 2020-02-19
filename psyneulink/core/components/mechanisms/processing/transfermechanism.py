@@ -825,7 +825,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     see `integration_rate <TransferMechanism.integration_rate>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 integrator_function
                     see `integrator_function <TransferMechanism.integrator_function>`
@@ -837,52 +837,58 @@ class TransferMechanism(ProcessingMechanism_Base):
                     see `integrator_function_value <TransferMechanism.integrator_function_value>`
 
                     :default value: [[0]]
-                    :type: list
+                    :type: ``list``
                     :read only: True
 
                 integrator_mode
-                    see `integrator_mode <TransferMechanism.integrator_mode>`
+                    see `integrator_mode <TransferMechanism_Integrator_Mode>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 noise
                     see `noise <TransferMechanism.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 on_resume_integrator_mode
                     see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
 
-                    :default value: `INSTANTAENOUS_MODE_VALUE`
-                    :type: str
+                    :default value: `INSTANTANEOUS_MODE_VALUE`
+                    :type: ``str``
+
+                output_ports
+                    see `output_ports <TransferMechanism.output_ports>`
+
+                    :default value: [`RESULTS`]
+                    :type: ``list``
+                    :read only: True
+
+                termination_comparison_op
+                    see `termination_comparison_op <TransferMechanism.termination_comparison_op>`
+
+                    :default value: ``operator.le``
+                    :type: ``types.FunctionType``
 
                 termination_measure
                     see `termination_measure <TransferMechanism.termination_measure>`
 
-                    :default value: Distance(metric=MAX_ABS_DIFF))
-                    :type: function
+                    :default value: `Distance`(metric=max_abs_diff)
+                    :type: `Function`
 
                 termination_measure_value
                     see `termination_measure_value <TransferMechanism.termination_measure_value>`
 
-                    :default value: None
-                    :type: float or array
+                    :default value: 0.0
+                    :type: ``float``
+                    :read only: True
 
                 termination_threshold
                     see `termination_threshold <TransferMechanism.termination_threshold>`
 
                     :default value: None
-                    :type: float or int
-
-
-=                termination_comparison_op
-                    see `termination_comparison_op <TransferMechanism.termination_comparison_op>`
-
-                    :default value: LESS_THAN_OR_EQUAL
-                    :type: str
-
+                    :type:
         """
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
         integration_rate = Parameter(0.5, modulable=True)
@@ -1337,7 +1343,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        integration_rate = self.get_current_mechanism_param(INTEGRATION_RATE, context)
+        integration_rate = self._get_current_mechanism_param(INTEGRATION_RATE, context)
 
         if (
             self.initialization_status == ContextFlags.INITIALIZING
@@ -1377,61 +1383,32 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _get_function_param_struct_type(self, ctx):
-        param_type_list = [ctx.get_param_struct_type(self.function)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            param_type_list.append(ctx.get_param_struct_type(self.integrator_function))
-        return pnlvm.ir.LiteralStructType(param_type_list)
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        return pnlvm.ir.IntType(1)(1)
 
-    def _get_function_state_struct_type(self, ctx):
-        state_struct_type_list = [ctx.get_state_struct_type(self.function)]
-        if self.integrator_mode:
-           assert self.integrator_function is not None
-           state_struct_type_list.append(ctx.get_state_struct_type(self.integrator_function))
-
-        return pnlvm.ir.LiteralStructType(state_struct_type_list)
-
-    def _get_function_param_initializer(self, context):
-        function_param_list = [self.function._get_param_initializer(context)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            function_param_list.append(self.integrator_function._get_param_initializer(context))
-        return tuple(function_param_list)
-
-    def _get_function_state_initializer(self, context):
-        context_list = [self.function._get_state_initializer(context)]
-        if self.integrator_mode:
-            assert self.integrator_function is not None
-            context_list.append(self.integrator_function._get_state_initializer(context))
-        return tuple(context_list)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        is_out, builder = self._gen_llvm_input_ports(ctx, builder, params, context, arg_in)
-
-        # Parameters and context for both integrator and main function
-        f_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        f_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
+        ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         if self.integrator_mode:
-            # IntegratorFunction function is the second in the function param aggregate
-            if_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            if_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            if_state = ctx.get_state_ptr(self, builder, state,
+                                         "integrator_function")
+            if_param_raw = ctx.get_param_ptr(self, builder, params,
+                                             "integrator_function")
             if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
-                                                            if_param_ptr, ctx, builder, params, context, arg_in)
+                                                            if_param_raw, ctx, builder,
+                                                            params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
-                                                            if_params, if_context, is_out)
+                                                            if_params, if_state, ip_out)
         else:
-            mf_in = is_out
+            mf_in = ip_out
 
-        # Main function is the first in the function param aggregate
-        mf_context = builder.gep(f_context, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        mf_param_ptr = builder.gep(f_params, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        mf_state = ctx.get_state_ptr(self, builder, state, "function")
+        mf_param_ptr = ctx.get_param_ptr(self, builder, params, "function")
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
-                                                        builder, params, context, arg_in)
+                                                        builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_context, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
 
         # FIXME: Convert to runtime instead of compile time
         clip = self.parameters.clip.get()
@@ -1446,9 +1423,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, context, arg_in, arg_out)
+        # Update execution counter
+        exec_count_ptr = ctx.get_state_ptr(self, builder, state, "execution_count")
+        exec_count = builder.load(exec_count_ptr)
+        exec_count = builder.fadd(exec_count, exec_count.type(1))
+        builder.store(exec_count, exec_count_ptr)
 
-        return builder
+        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
+                                                           state, arg_out)
+
+        return builder, is_finished_cond
 
     def _execute(self,
         variable=None,
@@ -1500,7 +1485,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_PORT
         # Clip outputs
-        clip = self.get_current_mechanism_param("clip", context)
+        clip = self._get_current_mechanism_param("clip", context)
 
         value = super(Mechanism, self)._execute(variable=variable,
                                                 context=context,
@@ -1514,14 +1499,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
         super().reinitialize(*args, context=context)
-        self.parameters.previous_value.set(None, context, override=True)
-
-    def _update_previous_value(self, context=None):
-        if self.parameters.integrator_mode._get(context):
-            value = self.parameters.value._get(context)
-            if value is None:
-                value = self.defaults.value
-            self.parameters.previous_value._set(value, context)
+        self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
         if context.source is ContextFlags.INSTANTIATE:
@@ -1530,12 +1508,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.parameters.integrator_mode._get(context)
-        noise = self.get_current_mechanism_param(NOISE, context)
+        noise = self._get_current_mechanism_param(NOISE, context)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self.get_current_mechanism_param(INITIAL_VALUE, context)
+            initial_value = self._get_current_mechanism_param(INITIAL_VALUE, context)
 
             value = self._get_integrated_function_input(variable,
                                                         initial_value,
@@ -1607,7 +1585,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # comparator = self.parameters.termination_comparison_op._get(context)
         comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
-        previous_value = self.parameters.previous_value._get(context)
+        previous_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item

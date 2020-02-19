@@ -608,7 +608,7 @@ class OptimizationControlMechanism(ControlMechanism):
             ----------
 
                 agent_rep
-                    see `agent_rep <OptimizationControlMechanism.agent_rep>`
+                    see `agent_rep <OptimizationControlMechanism_Agent_Rep>`
 
                     :default value: None
                     :type:
@@ -617,7 +617,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     see `comp_execution_mode <OptimizationControlMechanism.comp_execution_mode>`
 
                     :default value: `PYTHON`
-                    :type: str
+                    :type: ``str``
 
                 control_allocation_search_space
                     see `control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>`
@@ -626,28 +626,41 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
 
                 feature_function
-                    see `feature_function <OptimizationControlMechanism.feature_function>`
-
-                    :default value: None
-                    :type:
-
-                features
-                    see `features <OptimizationControlMechanism.features>`
+                    see `feature_function <OptimizationControlMechanism_Feature_Function>`
 
                     :default value: None
                     :type:
 
                 function
-                    see `function <OptimizationControlMechanism.function>`
+                    see `function <OptimizationControlMechanism_Function>`
 
                     :default value: None
                     :type:
 
+                input_ports
+                    see `input_ports <OptimizationControlMechanism.input_ports>`
+
+                    :default value: ["{name: OUTCOME, params: {internal_only: True}}"]
+                    :type: ``list``
+                    :read only: True
+
                 num_estimates
                     see `num_estimates <OptimizationControlMechanism.num_estimates>`
 
-                    :default value: 1
-                    :type: int
+                    :default value: None
+                    :type:
+
+                saved_samples
+                    see `saved_samples <OptimizationControlMechanism.saved_samples>`
+
+                    :default value: None
+                    :type:
+
+                saved_values
+                    see `saved_values <OptimizationControlMechanism.saved_values>`
+
+                    :default value: None
+                    :type:
 
                 search_function
                     see `search_function <OptimizationControlMechanism.search_function>`
@@ -659,14 +672,13 @@ class OptimizationControlMechanism(ControlMechanism):
                     see `search_statefulness <OptimizationControlMechanism.search_statefulness>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 search_termination_function
                     see `search_termination_function <OptimizationControlMechanism.search_termination_function>`
 
                     :default value: None
                     :type:
-
         """
         function = Parameter(None, stateful=False, loggable=False)
         feature_function = Parameter(None, stateful=False, loggable=False)
@@ -1014,7 +1026,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple((os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports))
+        intensity_cost = tuple(os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports)
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
@@ -1023,7 +1035,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_state_initializer(self, context):
-        intensity_cost = tuple((os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports))
+        intensity_cost = tuple(os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports)
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1109,7 +1121,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
 
-            sim_f = ctx.import_llvm_function(self.agent_rep._llvm_sim_run.name)
+            sim_f = ctx.import_llvm_function(self.agent_rep,
+                                             tags=frozenset({"run", "simulation"}))
 
             # Create a simulation copy of composition state
             comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
@@ -1186,9 +1199,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return llvm_func
 
-    def _gen_llvm_function(self):
-        from psyneulink.core.compositions.composition import Composition
-        is_comp = isinstance(self.agent_rep, Composition)
+    def _gen_llvm_function(self, *, tags:frozenset):
+        is_comp = not isinstance(self.agent_rep, Function)
         if is_comp:
             ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
@@ -1197,7 +1209,7 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             extra_args = []
 
-        f = super()._gen_llvm_function(extra_args)
+        f = super()._gen_llvm_function(extra_args=extra_args, tags=tags)
         if is_comp:
             for a in f.args[-len(extra_args):]:
                 a.attributes.add('nonnull')

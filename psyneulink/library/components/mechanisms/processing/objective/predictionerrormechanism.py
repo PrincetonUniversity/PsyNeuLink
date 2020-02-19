@@ -258,7 +258,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
             ----------
 
                 variable
-                    see `variable <Mechanism_Base.variable>`
+                    see `variable <PredictionErrorMechanism.variable>`
 
                     :default value: None
                     :type:
@@ -274,8 +274,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
                     see `learning_rate <PredictionErrorMechanism.learning_rate>`
 
                     :default value: 0.3
-                    :type: float
-
+                    :type: ``float``
         """
 
         variable = Parameter(None, read_only=True, pnl_internal=True, constructor_argument='default_variable')

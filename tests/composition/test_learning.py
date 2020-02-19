@@ -62,7 +62,7 @@ class TestReinforcement:
 
 
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
                                                         [2.08614798], [1.85006765], [2.30401336], [2.08614798],
                                                         [1.85006765]])
 
@@ -166,7 +166,7 @@ class TestReinforcement:
 
 
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
                                                         [2.08614798], [1.85006765], [2.30401336], [2.08614798],
                                                         [1.85006765]])
 
@@ -175,7 +175,7 @@ class TestReinforcement:
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
             comp.run(inputs=inputs_dict)
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336], \
+            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
                                                         [2.08614798], [1.85006765], [2.30401336], [2.08614798],
                                                         [1.85006765]])
 
@@ -185,7 +185,7 @@ class TestReinforcement:
                            target_mechanism: [[10.], [10.]]}
             comp.run(inputs=inputs_dict)
             assert np.allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672], \
+            assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
                                                         [0.118109771], [1.32123733], [0.978989672], [0.118109771],
                                                         [1.32123733]])
 
@@ -326,6 +326,165 @@ class TestNestedLearning:
         #
         # print(model.run(inputs=stimuli))
 
+    def test_nested_learn_then_run(self):
+        iSs = np.array(
+            [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
+                    0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
+                    0.60783064, 0.32504722, 0.58185035, 0.4143686, 0.4746975]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                    0.1059076, 0.21655035, 0.13521817, 0.324141, 0.65314,
+                    0.17090958, 0.35815218, 0.03842543, 0.63427407, 0.95894927]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                    0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.65314,
+                    0.17090958, 0.35815218, 0.58185035, 0.4143686, 0.4746975]),
+             np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                    0.73691815, 0.14967486, 0.22232139, 0.38648897, 0.75068617,
+                    0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+             np.array([0.47360805, 0.8009108, 0.5204775, 0.47360042, 0.18633235,
+                    0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                    0.09928035, 0.96980906, 0.03842543, 0.63427407, 0.95894927]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                    0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                    0.09928035, 0.96980906, 0.03842543, 0.63427407, 0.95894927]),
+             np.array([0.47360805, 0.8009108, 0.5204775, 0.47360042, 0.18633235,
+                    0.73691815, 0.14967486, 0.22232139, 0.38648897, 0.65314,
+                    0.17090958, 0.35815218, 0.58185035, 0.4143686, 0.4746975]),
+             np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                    0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
+                    0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+             np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
+                    0.1059076, 0.21655035, 0.13521817, 0.324141, 0.75068617,
+                    0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                    0.1059076, 0.14967486, 0.22232139, 0.38648897, 0.9023486,
+                    0.09928035, 0.96980906, 0.03842543, 0.63427407, 0.95894927]),
+             np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                    0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                    0.09928035, 0.96980906, 0.6527903, 0.6350589, 0.9952996]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.47360042, 0.18633235,
+                    0.73691815, 0.14967486, 0.22232139, 0.38648897, 0.75068617,
+                    0.60783064, 0.32504722, 0.03842543, 0.63427407, 0.95894927]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.53737324, 0.7586156,
+                    0.1059076, 0.14967486, 0.22232139, 0.38648897, 0.65314,
+                    0.17090958, 0.35815218, 0.03842543, 0.63427407, 0.95894927]),
+             np.array([0.95715517, 0.14035077, 0.87008727, 0.47360042, 0.18633235,
+                    0.73691815, 0.21655035, 0.13521817, 0.324141, 0.75068617,
+                    0.60783064, 0.32504722, 0.6527903, 0.6350589, 0.9952996]),
+             np.array([0.33739617, 0.6481719, 0.36824155, 0.47360042, 0.18633235,
+                    0.73691815, 0.9025985, 0.44994998, 0.61306345, 0.9023486,
+                    0.09928035, 0.96980906, 0.6527903, 0.6350589, 0.9952996])
+             ],
+        )
+
+        cSs = np.array(
+            [np.array(
+                [0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.]),
+             np.array(
+                 [0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]),
+             np.array(
+                 [0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array(
+                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1.])]
+        )
+
+        oSs = np.array(
+            [np.array([0., 1., -0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([1., 0., -0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., -0., 0., 1., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., -0., 0.]),
+             np.array([0., 0., 0., 0., 1., -0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., -0., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., -0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., -0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 1., -0., 0., 0., 0., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., -0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0.]),
+             np.array([0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 1., 0.])]
+        )
+
+        nf = 3
+        nd = 5
+        nh = 200
+
+        D_i = nf * nd
+        D_c = nd ** 2
+        D_h = nh
+        D_o = nf * nd
+
+        wih = np.random.rand(D_i, D_h) * 0.02 - 0.01
+        wch = np.random.rand(D_c, D_h) * 0.02 - 0.01
+        wco = np.random.rand(D_c, D_o) * 0.02 - 0.01
+        who = np.random.rand(D_h, D_o) * 0.02 - 0.01
+
+        il = pnl.TransferMechanism(size=D_i, name='input')
+        cl = pnl.TransferMechanism(size=D_c, name='control')
+        hl = pnl.TransferMechanism(size=D_h, name='hidden',
+                                   function=pnl.Logistic(bias=-2))
+        ol = pnl.TransferMechanism(size=D_o, name='output',
+                                   function=pnl.Logistic(bias=-2))
+        pih = pnl.MappingProjection(matrix=wih)
+        pch = pnl.MappingProjection(matrix=wch)
+        pco = pnl.MappingProjection(matrix=wco)
+        pho = pnl.MappingProjection(matrix=who)
+
+        mnet = pnl.Composition(enable_learning=True)
+
+        target_mech = mnet.add_backpropagation_learning_pathway(
+            [il, pih, hl, pho, ol],
+            learning_rate=100
+        )[pnl.TARGET_MECHANISM]
+
+        mnet.add_backpropagation_learning_pathway(
+            [cl, pch, hl, pho, ol],
+            learning_rate=100
+        )
+
+        mnet.add_backpropagation_learning_pathway(
+            [cl, pco, ol],
+            learning_rate=100
+        )
+
+        mnet._analyze_graph()
+
+        inputs = {
+            il: iSs,
+            cl: cSs,
+            target_mech: oSs
+        }
+
+        outer = Composition("outer-composition")
+        outer.add_node(mnet)
+        mnet.run(inputs=inputs)
+
+        mnet.enable_learning = False
+        del inputs[target_mech]
+        # This run should not error, as we are no longer in learning mode (and hence, we shouldn't need the target mech inputs)
+        outer.run(inputs={mnet: inputs})
 
 class TestBackProp:
 
@@ -636,7 +795,7 @@ class TestBackProp:
                                   )
         if 'AUTODIFF' in models:
             result = xor_autodiff.run(inputs=inputs_dict)
-            autodiff_weights = xor_autodiff.get_parameters()[0]
+            autodiff_weights = xor_autodiff.get_parameters()
     
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
     
@@ -1437,3 +1596,87 @@ class TestRumelhartSemanticNetwork:
     #           #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
     #           #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
     #           )
+
+class TestLearningPathwayMethods:
+    def test_multiple_of_same_learning_pathway(self):
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                       default_variable=np.zeros(2))
+    
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                        in_to_hidden_comp,
+                                                                        hidden_comp,
+                                                                        hidden_to_out_comp,
+                                                                        output_comp],
+                                                                    learning_rate=10)
+        # Try readd the same learning pathway (shouldn't error)
+        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                        in_to_hidden_comp,
+                                                                        hidden_comp,
+                                                                        hidden_to_out_comp,
+                                                                        output_comp],
+                                                                    learning_rate=10)
+    def test_run_no_targets(self):
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                       default_variable=np.zeros(2))
+    
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                        in_to_hidden_comp,
+                                                                        hidden_comp,
+                                                                        hidden_to_out_comp,
+                                                                        output_comp],
+                                                                    learning_rate=10)
+        # Try to run without any targets (non-learning
+        xor_comp.enable_learning = False
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+            [0, 1],
+            [1, 0],
+            [1, 1]])
+        xor_comp.run(inputs={input_comp:xor_inputs})
+    

@@ -1127,6 +1127,130 @@ class TestCustomCombinationFunction:
         result = R2.execute([1,2])
         np.testing.assert_allclose(result, [[0,0]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('cond0, cond1, expected', [
+        (pnl.Never(), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.75]), np.array([0.75])],
+          [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.9375]), np.array([0.75])],
+          [np.array([0.96875]), np.array([0.875])],
+          [np.array([0.984375]), np.array([0.9375])],
+          [np.array([0.9921875]), np.array([0.96875])]]),
+        (pnl.Never(), pnl.AtTrialStart(),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.75]), np.array([0.5])],
+          [np.array([0.875]), np.array([0.5])],
+          [np.array([0.9375]), np.array([0.5])],
+          [np.array([0.96875]), np.array([0.5])],
+          [np.array([0.984375]), np.array([0.5])],
+          [np.array([0.9921875]), np.array([0.5])]]),
+        (pnl.AtPass(0), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.875])],
+          [np.array([0.5]), np.array([0.9375])],
+          [np.array([0.5]), np.array([0.96875])]]),
+        ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
+    def test_reinitialize_when_composition(self, mode, cond0, cond1, expected):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I1.reinitialize_when = cond0
+        I2.reinitialize_when = cond1
+        C = pnl.Composition()
+        C.add_node(I1)
+        C.add_node(I2)
+
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+
+        assert np.allclose(expected, C.results)
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('cond0, cond1, expected', [
+        (pnl.AtPass(0), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.875])],
+          [np.array([0.5]), np.array([0.9375])],
+          [np.array([0.5]), np.array([0.96875])]]),
+        ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
+    @pytest.mark.parametrize('has_initializers2', [True, False],
+                             ids=lambda x: "initializers1" if x else "NO initializers1")
+    @pytest.mark.parametrize('has_initializers1', [True, False],
+                             ids=lambda x: "initializers2" if x else "NO initializers2")
+    def test_reinitialize_when_has_initializers_composition(self, mode, cond0, cond1, expected,
+                                           has_initializers1, has_initializers2):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I1.reinitialize_when = cond0
+        I2.reinitialize_when = cond1
+        I1.has_initializers = has_initializers1
+        I2.has_initializers = has_initializers2
+        C = pnl.Composition()
+        C.add_node(I1)
+        C.add_node(I2)
+        exp = expected.copy()
+        def_res = [np.array([0.5]), np.array([0.75]), np.array([0.875]),
+                   np.array([0.9375]), np.array([0.96875]),
+                   np.array([0.984375]), np.array([0.9921875])]
+        if not has_initializers1:
+            exp = list(zip(def_res, (x[1] for x in exp)))
+        if not has_initializers2:
+            exp = list(zip((x[0] for x in exp), def_res))
+
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+
+        assert np.allclose(exp, C.results)
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('until_finished, expected', [
+        (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
+        (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
+    ], ids=['until_finished', 'oneshot'])
+    def test_max_executions_before_finished(self, mode, until_finished, expected):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5,
+                                            termination_threshold=0.0,
+                                            max_executions_before_finished=5,
+                                            execute_until_finished=until_finished)
+        C = pnl.Composition()
+        C.add_node(I1)
+
+        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        if mode == 'Python':
+            assert I1.parameters.is_finished_flag.get(C) is until_finished
+        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        assert np.allclose(expected[0], results)
+        assert np.allclose(expected[1], results2)
 
 class TestDebugProperties:
 

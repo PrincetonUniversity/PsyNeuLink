@@ -1,6 +1,7 @@
 from psyneulink.core import llvm as pnlvm
+from psyneulink.library.compositions.pytorchllvmhelper import *
 
-__all__ = ['AdamOptimizer','SGDOptimizer']
+__all__ = ['AdamOptimizer', 'SGDOptimizer']
 
 
 class Optimizer():
@@ -74,7 +75,7 @@ class Optimizer():
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         builder.store(optim_struct.type.pointee(None), optim_struct)
 
-    def _gen_llvm_function(self):
+    def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             return self.step(ctx)
 
@@ -92,7 +93,7 @@ class AdamOptimizer(Optimizer):
         super().__init__(pytorch_model)
         self.lr = lr
         self.betas = betas
-        self.eps = 1e-8
+        self.eps = eps
         self.weight_decay = weight_decay
 
         self._M_T_NUM = 1
@@ -146,10 +147,10 @@ class AdamOptimizer(Optimizer):
         one_minus_b1_pow = builder.fsub(one_float, b1_pow)
         one_minus_b2_pow = builder.fsub(one_float, b2_pow)
         
-        ctx.inject_printf(
-                builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow,one_minus_b2_pow)
+        pnlvm.helpers.printf(
+                builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow)
         alpha_mult = builder.call(sqrt, [one_minus_b2_pow])
-        ctx.inject_printf(
+        pnlvm.helpers.printf(
                 builder, f"%f\n",alpha_mult)
         alpha_mult = builder.fdiv(alpha_mult, one_minus_b1_pow)
 
@@ -160,7 +161,7 @@ class AdamOptimizer(Optimizer):
 
         # 2) update first moments
         for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            ctx.inject_printf(
+            pnlvm.helpers.printf(
                 builder, f"\t\t\t\tOPTIM UPDATE FIRST MOMENT {afferent_node.name} {node.name}\n")
 
             node_idx_ir = ctx.int32_ty(node_idx)
@@ -172,17 +173,17 @@ class AdamOptimizer(Optimizer):
                 delta_w, [zero, node_idx_ir, afferent_node_index_ir])
 
             # m_t = m_t * b1
-            self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, m_t_ptr, b1, m_t_ptr)
+            gen_inject_mat_scalar_mult(ctx, builder, m_t_ptr, b1, m_t_ptr)
 
             # (1 - b1)*g_t
-            tmp_val = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, one_minus_b1)
+            tmp_val = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, one_minus_b1)
 
             # m_t = m_t + (1-b1)*g_t
-            self._pytorch_model._gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
+            gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
 
         # 3) update second moments
         for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            ctx.inject_printf(
+            pnlvm.helpers.printf(
                 builder, f"\t\t\t\tOPTIM UPDATE SECOND MOMENT {afferent_node.name} {node.name}\n")
 
             node_idx_ir = ctx.int32_ty(node_idx)
@@ -194,16 +195,16 @@ class AdamOptimizer(Optimizer):
                 delta_w, [zero, node_idx_ir, afferent_node_index_ir])
 
             # v_t = v_t * b2
-            self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, v_t_ptr, b2, v_t_ptr)
+            gen_inject_mat_scalar_mult(ctx, builder, v_t_ptr, b2, v_t_ptr)
 
             # g_t * g_t
-            delta_w_sqrd = self._pytorch_model._gen_inject_mat_hadamard(ctx, builder, delta_w_ptr, delta_w_ptr)
+            delta_w_sqrd = gen_inject_mat_hadamard(ctx, builder, delta_w_ptr, delta_w_ptr)
 
             # (1-b2)*(g_t)^2
-            self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_sqrd, one_minus_b2, delta_w_sqrd)
+            gen_inject_mat_scalar_mult(ctx, builder, delta_w_sqrd, one_minus_b2, delta_w_sqrd)
 
             # v_t = v_t + (1-b2)*(g_t)^2
-            self._pytorch_model._gen_inject_mat_add(ctx, builder, v_t_ptr, delta_w_sqrd, v_t_ptr)
+            gen_inject_mat_add(ctx, builder, v_t_ptr, delta_w_sqrd, v_t_ptr)
 
         # 4) update weights
 
@@ -220,7 +221,7 @@ class AdamOptimizer(Optimizer):
             # this is messy - #TODO - cleanup this
             weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
                 ctx, builder, params, node, afferent_node)
-            ctx.inject_printf(
+            pnlvm.helpers.printf(
                 builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
             weight_row = None
             with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "optimizer_w_upd_outer") as (b1, weight_row):
@@ -248,10 +249,10 @@ class AdamOptimizer(Optimizer):
                     b2.store(value, old_weight_ptr)
 
                     delta_w_val = b2.load(b2.gep(delta_w_ptr,[zero, weight_row, weight_column]))
-                    ctx.inject_printf(b2,"%f ",delta_w_val,override_debug=False)
-                ctx.inject_printf(b1,"\n",override_debug=False)
+                    pnlvm.helpers.printf(b2,"%f ",delta_w_val,override_debug=False)
+                pnlvm.helpers.printf(b1,"\n",override_debug=False)
                 
-        ctx.inject_printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
+        pnlvm.helpers.printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
 
         builder.ret_void()
 
@@ -290,8 +291,8 @@ class SGDOptimizer(Optimizer):
             delta_w_ptr = builder.gep(delta_w,[zero,node_idx_ir,afferent_node_index_ir])
             weights_llvmlite, _, _ = self._pytorch_model._gen_get_node_weight_ptr(ctx, builder, params, node, afferent_node)
             
-            multiplied_delta_w = self._pytorch_model._gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
-            self._pytorch_model._gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)
+            multiplied_delta_w = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
+            gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)
                 
         builder.ret_void()
 

@@ -867,6 +867,41 @@ class System(System_Base):
                     :default value: None
                     :type:
 
+                enable_controller
+                    see `enable_controller <System.enable_controller>`
+
+                    :default value: None
+                    :type:
+
+                initial_values
+                    see `initial_values <System.initial_values>`
+
+                    :default value: None
+                    :type:
+
+                learning_rate
+                    see `learning_rate <System.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                monitor_for_control
+                    see `monitor_for_control <System.monitor_for_control>`
+
+                    :default value: None
+                    :type:
+
+                processes
+                    see `processes <System.processes>`
+
+                    :default value: None
+                    :type:
+
+                targets
+                    see `targets <System.targets>`
+
+                    :default value: None
+                    :type:
         """
         variable = Parameter(None, pnl_internal=True, constructor_argument='default_variable')
 
@@ -5014,16 +5049,15 @@ class SystemInputPort(OutputPort):
                     see `variable <SystemInputPort.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <SystemInputPort.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # just grabs input from the process
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')

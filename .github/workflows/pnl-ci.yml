@@ -14,31 +14,13 @@ jobs:
             python-version: 3.8
 
     steps:
-    - name: Git checkout ${{ github.repository }} ${{ github.ref }} ${{ github.sha }}
-      shell: bash
-      run: |
-        git version
-        git init "$GITHUB_WORKSPACE" #/home/runner/work/PsyNeuLink/PsyNeuLink
-        git remote add origin "https://github.com/$GITHUB_REPOSITORY"
-        git config --local gc.auto 0
-        # Authentication is only needed for private repositories
-        # git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
-        # git config --local http.https://github.com/.extraheader AUTHORIZATION: basic '***'
-        GITHUB_BRANCH=`echo $GITHUB_REF | sed 's%refs/heads/%%'`
-        git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +$GITHUB_SHA:refs/remotes/origin/$GITHUB_BRANCH
-        git checkout --progress --force -B $GITHUB_BRANCH refs/remotes/origin/$GITHUB_BRANCH
-        git log -1
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 10
     - name: Set up Python ${{ matrix.python-version }}
-      shell: bash
-      run: |
-        PYTHON_DIR=`ls -d ${RUNNER_TOOL_CACHE}/Python/${PYTHON_VERSION}*/x64`
-        echo "::add-path::$PYTHON_DIR"
-        echo "::add-path::$PYTHON_DIR/bin"
-        echo "::add-path::$PYTHON_DIR/Scripts"
-      env:
-        PYTHON_VERSION: ${{ matrix.python-version }}
-    - name: Test Python ${{ matrix.python-version }}
-      run: python --version
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: MacOS dependencies
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
       if: matrix.os == 'macos-latest'
@@ -49,14 +31,8 @@ jobs:
       run: |
         choco install --no-progress -y graphviz
         python -m pip install --upgrade pip
-        if ($Env:PY_VER -ne '3.8') { pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html }
+        pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html
       if: matrix.os == 'windows-latest'
-      env:
-        PY_VER: ${{ matrix.python-version }}
-    - name: Python3.8 dependencies setup
-      run: |
-        sed "-i.tmp" "/torch/d" requirements.txt
-      if: matrix.python-version == '3.8' && matrix.os != 'ubuntu-latest'
     - name: Shared dependencies
       shell: bash
       run: |
@@ -72,4 +48,23 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
-      run: pytest
+      run: pytest --junit-xml=tests_out.xml
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v1
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: tests_out.xml
+      if: always()
+
+    - name: Build dist
+      run: |
+        pip install setuptools wheel
+        python setup.py sdist bdist_wheel
+      if: contains(github.ref, 'tags')
+    - name: Upload dist packages
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist-${{ matrix.os }}-${{ matrix.python-version }}
+        path: dist/
+      if: contains(github.ref, 'tags')

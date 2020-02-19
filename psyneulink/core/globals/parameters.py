@@ -4,7 +4,7 @@
 
 PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`. `Parameter`\\ s have
 names, default values, and other attributes that define how they are used in models. `Parameter` \\s also maintain and provide
-access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_portfulness>`, `previous values <Parameter.history>`,
+access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_statefulness>`, `previous values <Parameter.history>`,
 and `logged values <Log>`.
 
 
@@ -25,7 +25,7 @@ and are used to validate compatibility between this instance and other PNL objec
     ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default noise value for *t*
 
 
-.. _Parameter_portfulness:
+.. _Parameter_statefulness:
 
 Statefulness of Parameters
 ==========================
@@ -241,6 +241,7 @@ import collections
 import copy
 import logging
 import types
+import typing
 import warnings
 import weakref
 
@@ -940,24 +941,80 @@ class Parameter(types.SimpleNamespace):
                     return None
 
     @handle_external_context()
-    def get_previous(self, context=None, index=1):
+    def get_previous(
+        self,
+        context=None,
+        index: int = 1,
+        range_start: int = None,
+        range_end: int = None,
+    ):
         """
-            Gets the value set before the current value of this `Parameter` in the context of **context**
+            Gets the value set before the current value of this
+            `Parameter` in the context of **context**. To return a range
+            of values, use `range_start` and `range_end`. Range takes
+            precedence over `index`. All history values can be accessed
+            directly as a list in `Parameter.history`.
 
-            Arguments
-            ---------
-
+            Args:
                 context : Context, execution_id, Composition
-                    the context for which the value is stored; if a Composition, uses **context**.default_execution_id
+                    the context for which the value is stored; if a
+                    Composition, uses **context**.default_execution_id
 
-                index : int : 1
-                    how far back to look into the history. A value of 1 means the first previous value
+                index
+                    how far back to look into the history. An index of
+                    1 means the value this Parameter had just before
+                    its current value. An index of 2 means the value
+                    before that
+
+                range_start
+                    Inclusive. The index of the oldest history value to
+                    return. If ``None``, the range begins at the oldest
+                    value stored in history
+
+                range_end
+                    Inclusive. The index of the newest history value to
+                    return. If ``None``, the range ends at the newest
+                    value stored in history (does not include current
+                    value in `Parameter.values`)
+
+            Returns:
+                the stored value or list of values in Parameter history
 
         """
-        try:
-            return self.history[context.execution_id][-1 * index]
-        except (KeyError, IndexError):
-            return None
+        def parse_index(x, arg_name=None):
+            try:
+                if x < 0:
+                    raise ValueError(f'{arg_name} cannot be negative')
+                return -x
+            except TypeError:
+                return x
+
+        # inverted because the values represent "___ from the end of history"
+        index = parse_index(index, arg_name='index')
+        range_start = parse_index(range_start, arg_name='range_start')
+
+        # override index with ranges
+        if range_start == range_end and range_start is not None:
+            index = range_start
+            range_start = range_end = None
+
+        # fix 0 to "-0" / None
+        if range_end == 0:
+            range_end = None
+        elif range_end is not None:
+            # range_end + 1 for inclusive range
+            range_end = range_end + 1
+
+        if range_start is not None or range_end is not None:
+            try:
+                return list(self.history[context.execution_id])[range_start:range_end]
+            except (KeyError, IndexError):
+                return None
+        else:
+            try:
+                return self.history[context.execution_id][index]
+            except (KeyError, IndexError):
+                return None
 
     @handle_external_context()
     def get_delta(self, context=None):
@@ -1124,6 +1181,32 @@ class Parameter(types.SimpleNamespace):
                 self.log.pop(eid, None)
         except TypeError:
             self.log.pop(execution_ids, None)
+
+    def clear_history(
+        self,
+        contexts: typing.Union[Context, typing.List[Context]] = NotImplemented
+    ):
+        """
+            Clears the history of this Parameter for every context in
+            `contexts`
+
+            Args:
+                contexts
+        """
+        if not isinstance(contexts, list):
+            contexts = [contexts]
+
+        contexts = [parse_context(c) for c in contexts]
+        execution_ids = [
+            c.execution_id if hasattr(c, 'execution_id') else c
+            for c in contexts
+        ]
+
+        for eid in execution_ids:
+            try:
+                self.history[eid].clear()
+            except KeyError:
+                pass
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
         from psyneulink.core.components.component import Component

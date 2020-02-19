@@ -367,7 +367,7 @@ class Scheduler(JSONDumpable):
         :param composition: (Composition) - the Composition this scheduler is scheduling for
         :param conditions: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         """
-        self.conditions = conditions if conditions is not None else ConditionSet()
+        self.conditions = ConditionSet(conditions)
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
