@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+
+<!-- Page 1 -->
+<svg x="0" y="0" width="1391" height="1015" viewBox="0 0 1391 1015" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+style="display: block;margin-left: auto;margin-right: auto;">
+<defs>
+
+<style type="text/css"><![CDATA[
+
+.g1_1{
+fill: none;
+stroke: #00FF00;
+stroke-width: 4.5833335;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g2_1{
+fill: none;
+stroke: #000000;
+stroke-width: 1.5277778;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g3_1{
+stroke: #000000;
+stroke-width: 1.5277778;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g4_1{
+fill: none;
+stroke: #FF0000;
+stroke-width: 4.5833335;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+
+.s1_1{
+font-size: 18.33px;
+font-family: ArialMT_8;
+fill: #000000;
+}
+.s2_1{
+font-size: 15.28px;
+font-family: ArialMT_8;
+fill: #000000;
+}
+
+]]></style>
+
+</defs>
+<path d="M0,0
+L0,1015
+L1391,1015
+L1391,0 Z " 
+fill="#FFFFFF" stroke="none" />
+<path d="M459.2,901.5c0,-29.4,-45.4,-53.3,-101.4,-53.3c-56,0,-101.3,23.9,-101.3,53.3c0,29.4,45.3,53.3,101.3,53.3c56,0,101.4,-23.9,101.4,-53.3Z" class="g1_1" />
+<text 
+x="331" 
+y="884" 
+dx="0,0,0,0,0,0,0" 
+class="s1_1"
+>out (3)</text>
+
+<text 
+x="298" 
+y="905" 
+dx="0,0,0,0,0,-0.3,0,0,-1.4,0,0" 
+class="s1_1"
+>INPUT LAYER</text>
+
+<text 
+x="336" 
+y="926" 
+dx="0,0,0,0,0,0" 
+class="s1_1"
+>in (3)</text>
+
+<path d="M482.7,704.6c0,-29.4,-55.9,-53.2,-124.9,-53.2c-69,0,-124.9,23.8,-124.9,53.2c0,29.4,55.9,53.3,124.9,53.3c69,0,124.9,-23.9,124.9,-53.3Z" class="g2_1" />
+<text 
+x="331" 
+y="687" 
+dx="0,0,0,0,0,0,0" 
+class="s1_1"
+>out (3)</text>
+
+<text 
+x="281" 
+y="708" 
+dx="0,0,0,0,0,0,0,0,0,0,0,-1.4,0,0" 
+class="s1_1"
+>DECISION LAYER</text>
+
+<text 
+x="336" 
+y="729" 
+dx="0,0,0,0,0,0" 
+class="s1_1"
+>in (3)</text>
+
+<path d="M357.8,848c0,-22.8,0,-49.9,0,-74.2" class="g2_1" />
+<path d="M352.5,773.5l5.3,-15.3l5.4,15.3Z" class="g3_1" />
+<text 
+x="357" 
+y="797" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-0.3,0,0,-1.1,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>MappingProjection from INPUT LAYER[RESULTS] to DECISION LAYER[InputPort-0]</text>
+
+<text 
+x="631" 
+y="815" 
+dx="0,0,0,0,0" 
+class="s2_1"
+>(3x3)</text>
+
+<path d="M476.8,721.7c19.9,-2.4,33.6,-8.1,33.6,-17.1c0,-6.4,-7.1,-11.2,-18.4,-14.2" class="g2_1" />
+<path d="M490.9,695.6l-14.1,-8l16,-2.5Z" class="g3_1" />
+<text 
+x="510" 
+y="699" 
+dx="0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>DECISION LAYER recurrent projection</text>
+
+<text 
+x="624" 
+y="716" 
+dx="0,0,0,0,0" 
+class="s2_1"
+>(3x3)</text>
+
+<path d="M385.4,114C385.4,84.6,325.2,60.8,250.9,60.8C176.6,60.8,116.4,84.6,116.4,114c0,29.5,60.2,53.3,134.5,53.3c74.3,0,134.5,-23.8,134.5,-53.3Z" class="g4_1" />
+<text 
+x="224" 
+y="97" 
+dx="0,0,0,0,0,0,0" 
+class="s1_1"
+>out (2)</text>
+
+<text 
+x="168" 
+y="118" 
+dx="0,0,0,0,0,0,0,0,0,0,0,-1.4,0,0" 
+class="s1_1"
+>RESPONSE LAYER</text>
+
+<text 
+x="229" 
+y="139" 
+dx="0,0,0,0,0,0" 
+class="s1_1"
+>in (2)</text>
+
+<path d="M287.5,659.9C217.8,612.6,115.4,529.5,71.9,426.9C32.4,333.8,114.8,233.6,180.5,172.8" class="g2_1" />
+<path d="M177.3,168.5l14.9,-6.2l-7.8,14.2Z" class="g3_1" />
+<text 
+x="72" 
+y="403" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>MappingProjection from DECISION LAYER[RESULT] to RESPONSE LAYER[InputPort-0]</text>
+
+<text 
+x="360" 
+y="421" 
+dx="0,0,0,0,0" 
+class="s2_1"
+>(3x2)</text>
+
+<path d="M651.6,507.8c0,-29.4,-49.4,-53.3,-110.5,-53.3c-61,0,-110.4,23.9,-110.4,53.3c0,29.4,49.4,53.2,110.4,53.2c61.1,0,110.5,-23.8,110.5,-53.2Z" class="g2_1" />
+<text 
+x="514" 
+y="490" 
+dx="0,0,0,0,0,0,0" 
+class="s1_1"
+>out (1)</text>
+
+<text 
+x="475" 
+y="511" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s1_1"
+>Combine values</text>
+
+<text 
+x="520" 
+y="532" 
+dx="0,0,0,0,0,0" 
+class="s1_1"
+>in (1)</text>
+
+<path d="M346.5,651.1c-1.7,-21,0.2,-44.4,12.1,-62.5c16,-24,40.9,-40.9,67.3,-52.6" class="g2_1" />
+<path d="M424.5,530.8L440.7,530l-12.1,10.7Z" class="g3_1" />
+<text 
+x="359" 
+y="600" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>MappingProjection from DECISION LAYER[RESULT] to Combine values[InputPort-0]</text>
+
+<text 
+x="633" 
+y="618" 
+dx="0,0,0,0,0" 
+class="s2_1"
+>(3x1)</text>
+
+<path d="M788.4,310.9c0,-29.4,-29.3,-53.2,-65.4,-53.2c-36.2,0,-65.5,23.8,-65.5,53.2c0,29.4,29.3,53.3,65.5,53.3c36.1,0,65.4,-23.9,65.4,-53.3Z" class="g2_1" />
+<text 
+x="688" 
+y="293" 
+dx="0,0,0,0,0,0,0,0,0" 
+class="s1_1"
+>out (1,1)</text>
+
+<text 
+x="711" 
+y="315" 
+dx="0,0" 
+class="s1_1"
+>LC</text>
+
+<text 
+x="702" 
+y="336" 
+dx="0,0,0,0,0,0" 
+class="s1_1"
+>in (1)</text>
+
+<path d="M788.2,318.8c47.7,8.4,109.7,27.9,142.5,73c182.5,250.2,45.9,191.6,10.7,232c-56.3,64.5,-288.8,78.5,-442.8,80.5" class="g2_1" />
+<path d="M498.4,709.7l-15.3,-5.2L498.3,699Z" class="g3_1" />
+<text 
+x="1022" 
+y="502" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>ControlProjection for DECISION LAYER[gain]</text>
+
+<text 
+x="1167" 
+y="519" 
+dx="0,0,0" 
+class="s2_1"
+>(1)</text>
+
+<path d="M665.1,285.6C588.5,254.2,452.1,198.2,356.8,159.1" class="g2_1" />
+<path d="M354.6,163.9L342.5,153.2l16.2,0.8Z" class="g3_1" />
+<text 
+x="530" 
+y="207" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>ControlProjection for RESPONSE LAYER[gain]</text>
+
+<text 
+x="680" 
+y="224" 
+dx="0,0,0" 
+class="s2_1"
+>(1)</text>
+
+<path d="M378.5,130.9c20.4,-2.4,34.3,-8.1,34.3,-16.9c0,-6.3,-7.3,-11,-19.2,-14.1" class="g2_1" />
+<path d="M392.6,105.1L378.5,97.2l16,-2.6Z" class="g3_1" />
+<text 
+x="412" 
+y="108" 
+dx="0,0,0,0,0,0,0,0,0,0,0,-1.1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>RESPONSE LAYER recurrent projection</text>
+
+<text 
+x="532" 
+y="126" 
+dx="0,0,0,0,0" 
+class="s2_1"
+>(2x2)</text>
+
+<path d="M627.5,474.5c22.8,-11.9,45.6,-27.5,61.8,-47.6c11,-13.5,18.4,-30.5,23.4,-47.3" class="g2_1" />
+<path d="M707.6,377.9l9,-13.5l1.4,16.1Z" class="g3_1" />
+<text 
+x="707" 
+y="403" 
+dx="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" 
+class="s2_1"
+>Combine values outcome signal</text>
+
+<text 
+x="798" 
+y="421" 
+dx="0,0,0,0,0" 
+class="s2_1"
+>(1x1)</text>
+
+
+
+<!-- Any embedded fonts defined here -->
+<style type="text/css" ><![CDATA[
+
+@font-face {
+	font-family: ArialMT_8;
+	src: url("fonts/ArialMT_8.woff") format("woff");
+}
+
+]]></style>
+
+</svg>
