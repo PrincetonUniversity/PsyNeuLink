@@ -862,6 +862,9 @@ class AutodiffComposition(Composition):
                                             scheduler)
 
             context.add_flag(ContextFlags.PROCESSING)
+            
+            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
