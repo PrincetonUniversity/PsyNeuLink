@@ -560,9 +560,8 @@ class AutodiffComposition(Composition):
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(context)
         if old_opt is not None:
-            logger.warning("Overwriting optimizer for AutodiffComposition {}! Old optimizer: {}".format(
-                self, old_opt))
-
+            return old_opt
+        
         opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
         self.parameters.optimizer._set(opt, context)
 
