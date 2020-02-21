@@ -101,9 +101,10 @@ class CompositionRunner():
         Returns a value that is the sum of all the losses from the last iteration
         """
         total_loss = 0
-        for output_node, terminal_sequence in self._composition._terminal_backprop_sequences.items():
+        for terminal_sequence in self._composition._terminal_backprop_sequences.values():
             comparator = terminal_sequence[COMPARATOR_MECHANISM]
             total_loss += comparator.value[0][0]
+
         return total_loss
 
     def run_learning(self,
