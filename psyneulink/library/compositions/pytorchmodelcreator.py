@@ -570,17 +570,13 @@ class PytorchModelCreator(torch.nn.Module):
                 if i == len(self.execution_sets) - 1:
                     outputs[component] = value
 
-            if scheduler is not None:
-                scheduler.get_clock(context)._increment_time(
-                    TimeScale.TIME_STEP)
-
         # Maybe need to comment this out!
         # self.copy_outputs_to_psyneulink(outputs, context)
 
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
-        self.log_weights(context)
-        self.copy_outputs_to_psyneulink(outputs, context)
+        # self.log_weights(context)
+        # self.copy_outputs_to_psyneulink(outputs, context)
         context.source = old_source
 
         return outputs
