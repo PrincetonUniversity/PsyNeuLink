@@ -10,6 +10,7 @@
 import random
 import numpy as np
 import collections.abc
+import inspect
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.utilities import NodeRole
@@ -17,6 +18,11 @@ from psyneulink.library.components.mechanisms.processing.objective.comparatormec
 from psyneulink.core.globals.keywords import TARGET_MECHANISM, COMPARATOR_MECHANISM, LEARNING_MECHANISM, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
+
+def inf_yield_none():
+    while True:
+        yield None
+
 def _chunk_inputs(inputs: dict, num_trials: int, chunksize: int = 1, randomize: bool = True):
     """
     Chunks input dict into pieces where each chunk is a dict with values of length chunksize (or for the last chunk, the remainder)
@@ -140,17 +146,16 @@ class CompositionRunner():
         if isinstance(targets, dict):
             targets = [targets]
         elif targets is None:
-            targets = [None] * len(inputs)
+            targets = inf_yield_none()
 
         if callable(epochs):
             epochs = epochs()
-        
+
         if not isinstance(epochs, list) and not isinstance(epochs, tuple):
             epochs = [epochs]
         elif epochs is None:
-            epochs = [None] * len(inputs)
-        
-        results = []
+            epochs = inf_yield_none()
+
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if 'epochs' in stim_input:
@@ -168,11 +173,12 @@ class CompositionRunner():
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             skip_initialization = False
-            for curr_epoch in range(epochs):
+            for curr_epoch in range(stim_epoch):
+                results = []
                 for minibatch, indices in _chunk_inputs(stim_input, num_trials, minibatch_size, randomize_minibatches):
                     if call_before_minibatch is not None:
                         call_before_minibatch()
-                    
+
                     minibatch_results = self._composition.run(inputs=minibatch, skip_initialization=skip_initialization, context=context, skip_analyze_graph=skip_initialization)
                     skip_initialization = True
                     results.extend(minibatch_results)
@@ -180,9 +186,10 @@ class CompositionRunner():
                     if call_after_minibatch is not None:
                         call_after_minibatch()
                 epoch_loss = self._get_loss()
-                if (patience is not None and early_stopper.step(epoch_loss)) or curr_epoch == epochs - 1:
-                    # return highest index result
-                    return results
+                if (patience is not None and early_stopper.step(epoch_loss)) or curr_epoch == stim_epoch - 1:
+                    break
+        
+        return results
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
