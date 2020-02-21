@@ -575,7 +575,8 @@ class PytorchModelCreator(torch.nn.Module):
 
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
-        # self.log_weights(context)
+        #TODO: Optimize this weight logging
+        self.log_weights(context)
         # self.copy_outputs_to_psyneulink(outputs, context)
         context.source = old_source
 
