@@ -110,7 +110,7 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                      ])
-    def test_training_then_processing(self,mode):
+    def test_training_then_processing(self, mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -133,7 +133,8 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
+        xor.infer_backpropagation_learning_pathways()
+        
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
              [0, 1],
@@ -150,7 +151,7 @@ class TestMiscTrainingFunctionality:
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
-        results_before_proc = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+        results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                               "targets": {xor_out:xor_targets},
                                               "epochs": 10}, bin_execute=mode)
 
@@ -200,6 +201,7 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor.infer_backpropagation_learning_pathways()
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
@@ -213,14 +215,14 @@ class TestMiscTrainingFunctionality:
              [1],
              [0]])
 
-        xor.run(inputs = {"inputs": {xor_in:xor_inputs},
+        xor.learn(inputs = {"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
                           "epochs": 10}, bin_execute=mode)
 
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMExec', marks=[pytest.mark.llvm, pytest.mark.skip]), # Not implemented?
                                      ])
-    def test_pytorch_loss_spec(self,mode):
+    def test_pytorch_loss_spec(self, mode):
         import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 
@@ -246,17 +248,17 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
+        xor.infer_backpropagation_learning_pathways()
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
 
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0], [1], [1], [0]])
 
-        xor.run(inputs={"inputs": {xor_in:xor_inputs},
+        xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                         "targets": {xor_out:xor_targets},
                         "epochs": 10}, bin_execute=mode)
-        xor.run(inputs={"inputs": {xor_in: xor_inputs},
+        xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
                         "epochs": 10}, bin_execute=mode)
 
@@ -296,6 +298,7 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor.infer_backpropagation_learning_pathways()
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -307,11 +310,11 @@ class TestMiscTrainingFunctionality:
         # results_before_proc = xor.run(inputs={xor_in:xor_inputs},
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
-        results_before_proc = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+        results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                               "targets": {xor_out:xor_targets},
                                               "epochs": 10}, bin_execute=mode)
 
-        benchmark(xor.run, inputs={"inputs": {xor_in:xor_inputs},
+        benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                    "targets": {xor_out:xor_targets},
                                    "epochs": 10}, bin_execute=mode)
 
@@ -355,6 +358,7 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor.infer_backpropagation_learning_pathways()
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -363,7 +367,7 @@ class TestMiscTrainingFunctionality:
             [[0], [1], [1], [0]])
 
         # train the model for a few epochs
-        result = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+        result = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                  "targets": {xor_out:xor_targets},
                                  "epochs": 10}, bin_execute=mode)
 
@@ -441,8 +445,9 @@ class TestMiscTrainingFunctionality:
         assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
         assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
+        xor.infer_backpropagation_learning_pathways()
         # call run to train the pytorch parameters
-        results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+        results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                   "targets": {xor_out:xor_targets},
                                   "epochs": 10}, bin_execute=mode)
 
@@ -496,6 +501,7 @@ class TestTrainingCorrectness:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
+        xor.infer_backpropagation_learning_pathways()
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
 
@@ -503,7 +509,7 @@ class TestTrainingCorrectness:
             [[0], [1], [1], [0]])
 
         if calls == 'single':
-            results = xor.run(inputs={"inputs": {xor_in:xor_inputs},
+            results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                       "targets": {xor_out:xor_targets},
                                       "epochs": eps}, bin_execute=mode)
 
@@ -511,19 +517,19 @@ class TestTrainingCorrectness:
                 assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
 
         else:
-            results = xor.run(inputs={"inputs": {xor_in: xor_inputs},
+            results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                                       "targets": {xor_out: xor_targets},
                                       "epochs": 1}, bin_execute=mode)
 
             for i in range(eps - 1):
-                results = xor.run(inputs={"inputs": {xor_in: xor_inputs},
+                results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                                           "targets": {xor_out: xor_targets},
                                           "epochs": 1}, bin_execute=mode)
 
             for i in range(len(results[eps - 1])):
                 assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
 
-        benchmark(xor.run, inputs={'inputs': {xor_in: xor_inputs},
+        benchmark(xor.learn, inputs={'inputs': {xor_in: xor_inputs},
                                    'targets': {xor_out: xor_targets},
                                    'epochs': eps}, bin_execute=mode)
 
@@ -631,6 +637,7 @@ class TestTrainingCorrectness:
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
 
+        sem_net.infer_backpropagation_learning_pathways()
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -701,7 +708,8 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        result = sem_net.run(inputs={'inputs': inputs_dict,
+        sem_net.enable_learning = False
+        result = sem_net.learn(inputs={'inputs': inputs_dict,
                                       'targets': targets_dict,
                                       'epochs': eps}, bin_execute=mode)
 
@@ -720,7 +728,7 @@ class TestTrainingCorrectness:
                 # compare model output for terminal node on current trial with target for terminal node on current trial
                 assert np.allclose(np.round(result[i][j]), correct_value)
 
-        benchmark(sem_net.run, inputs={'inputs': inputs_dict,
+        benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
                                        'targets': targets_dict,
                                        'epochs': eps}, bin_execute=mode)
 
@@ -870,8 +878,7 @@ class TestTrainingCorrectness:
         mnet = AutodiffComposition(param_init_from_pnl=True,
                                    patience=patience,
                                    min_delta=min_delt,
-                                   learning_rate=learning_rate,
-                                   learning_enabled=True)
+                                   learning_rate=learning_rate)
 
         mnet.add_node(il)
         mnet.add_node(cl)
@@ -882,18 +889,20 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        mnet.run(
+        mnet.infer_backpropagation_learning_pathways()
+        mnet.enable_learning = False
+        mnet.learn(
             inputs=input_set,
             minibatch_size=1,
+            patience=patience,
+            min_delta=min_delt,
             bin_execute=mode
         )
         mnet.learning_enabled = False
-
         mnet.run(
-            inputs=input_set,
+            inputs=input_set['inputs'],
             bin_execute=mode
         )
-
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
 
         comparator = np.array([0.02288846, 0.11646781, 0.03473711, 0.0348004, 0.01679579,
@@ -1089,8 +1098,7 @@ class TestTrainingCorrectness:
         mnet = AutodiffComposition(param_init_from_pnl=True,
                                    patience=patience,
                                    min_delta=min_delt,
-                                   learning_rate=learning_rate,
-                                   learning_enabled=True)
+                                   learning_rate=learning_rate)
 
         mnet.add_node(il)
         mnet.add_node(cl)
@@ -1101,16 +1109,20 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        mnet.run(
+        mnet.infer_backpropagation_learning_pathways()
+        
+        mnet.learn(
                 inputs=input_set,
                 minibatch_size=1,
+                patience=patience,
+                min_delta=min_delt
         )
-        mnet.learning_enabled = False
 
         print(mnet.parameters.results.get(mnet))
-
+        mnet.learning_enabled = False
+        mnet.enable_learning = False
         mnet.run(
-                inputs=input_set,
+                inputs=input_set['inputs'],
         )
 
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
@@ -1918,7 +1930,7 @@ class TestTrainingIdenticalness():
         sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
-
+        sem_net.infer_backpropagation_learning_pathways()
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -1992,20 +2004,20 @@ class TestTrainingIdenticalness():
         inputs_dict_sys[nouns_in_sys] = inputs_dict[nouns_in]
         inputs_dict_sys[rels_in_sys] = inputs_dict[rels_in]
 
-        sem_net.learning_enabled=False
+        sem_net.enable_learning = False
+        sem_net.learning_enabled = False
         result = sem_net.run(inputs=inputs_dict)
 
         # comp_weights = sem_net.get_parameters()[0]
 
         # TRAIN COMPOSITION
-        sem_net.learning_enabled=True
-
         def g_f():
             yield {"inputs": inputs_dict,
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        result = sem_net.run(inputs=g_f)
+        sem_net.learning_enabled = True
+        result = sem_net.learn(inputs=g_f)
 
         comp_weights = sem_net.get_parameters()
 
@@ -2059,7 +2071,7 @@ class TestTrainingIdenticalness():
         inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_can]
 
         # TRAIN SYSTEM
-        results = sem_net_sys.run(inputs=inputs_dict_sys,
+        results = sem_net_sys.learn(inputs=inputs_dict_sys,
                                   num_trials=(len(inputs_dict_sys[nouns_in_sys]) * eps))
 
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
@@ -2110,7 +2122,7 @@ class TestTrainingIdenticalness():
 
         xor_dict.add_projection(sender=xor_in_dict, projection=hid_map_dict, receiver=xor_hid_dict)
         xor_dict.add_projection(sender=xor_hid_dict, projection=out_map_dict, receiver=xor_out_dict)
-
+        xor_dict.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_dict = np.array(  # the inputs we will provide to the model
@@ -2134,7 +2146,7 @@ class TestTrainingIdenticalness():
                 }
             }
 
-        result_dict = xor_dict.run(inputs=input_dict)
+        result_dict = xor_dict.learn(inputs=input_dict)
 
         # SET UP MECHANISMS FOR COMPOSITION
         xor_in_func = TransferMechanism(name='xor_in',
@@ -2170,6 +2182,7 @@ class TestTrainingIdenticalness():
 
         xor_func.add_projection(sender=xor_in_func, projection=hid_map_func, receiver=xor_hid_func)
         xor_func.add_projection(sender=xor_hid_func, projection=out_map_func, receiver=xor_out_func)
+        xor_func.infer_backpropagation_learning_pathways()
 
         # SET UP INPUTS AND TARGETS
 
@@ -2195,7 +2208,7 @@ class TestTrainingIdenticalness():
                 }
             }
 
-        result_func = xor_func.run(inputs=get_inputs)
+        result_func = xor_func.learn(inputs=get_inputs)
 
         # SET UP MECHANISMS FOR COMPOSITION
         xor_in_gen = TransferMechanism(name='xor_in',
@@ -2231,7 +2244,7 @@ class TestTrainingIdenticalness():
 
         xor_gen.add_projection(sender=xor_in_gen, projection=hid_map_gen, receiver=xor_hid_gen)
         xor_gen.add_projection(sender=xor_hid_gen, projection=out_map_gen, receiver=xor_out_gen)
-
+        xor_gen.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_gen = np.array(  # the inputs we will provide to the model
@@ -2258,7 +2271,7 @@ class TestTrainingIdenticalness():
 
         g = get_inputs_gen()
 
-        result_gen = xor_gen.run(inputs=g)
+        result_gen = xor_gen.learn(inputs=g)
 
         # SET UP MECHANISMS FOR COMPOSITION
         xor_in_gen_func = TransferMechanism(name='xor_in',
@@ -2294,7 +2307,7 @@ class TestTrainingIdenticalness():
 
         xor_gen_func.add_projection(sender=xor_in_gen_func, projection=hid_map_gen_func, receiver=xor_hid_gen_func)
         xor_gen_func.add_projection(sender=xor_hid_gen_func, projection=out_map_gen_func, receiver=xor_out_gen_func)
-
+        xor_gen_func.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_gen_func = np.array(  # the inputs we will provide to the model
@@ -2319,7 +2332,7 @@ class TestTrainingIdenticalness():
                 }
             }
 
-        result_gen_func = xor_gen_func.run(inputs=get_inputs_gen_func)
+        result_gen_func = xor_gen_func.learn(inputs=get_inputs_gen_func)
 
         assert result_dict == result_func == result_gen == result_gen_func
 
@@ -2343,13 +2356,8 @@ class TestACLogging:
         out_map = MappingProjection()
 
         xor = AutodiffComposition(param_init_from_pnl=True)
-
-        xor.add_node(xor_in)
-        xor.add_node(xor_hid)
-        xor.add_node(xor_out)
-
-        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+        hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
@@ -2365,9 +2373,9 @@ class TestACLogging:
 
         # train model for a few epochs
         num_epochs = 10
-        xor.run(inputs={"inputs": {xor_in: xor_inputs},
+        xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": num_epochs}, do_logging=True)
+                        "epochs": num_epochs})
 
         exec_id = xor.default_execution_id
 
@@ -2375,12 +2383,12 @@ class TestACLogging:
         in_np_vals = xor_in.log.nparray()[1][1][4][1:]
 
         hid_map_np_dict_mats = hid_map.log.nparray_dictionary()[exec_id]['matrix']
-        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][4][1:])
+        hid_map_np_mats = np.array(hid_map.log.nparray()[1][1][5][1:])
 
         hid_np_dict_vals = xor_hid.log.nparray_dictionary()[exec_id]['value']
 
         out_map_np_dict_mats = out_map.log.nparray_dictionary()[exec_id]['matrix']
-        out_map_np_mats = np.array(out_map.log.nparray()[1][1][4][1:])
+        out_map_np_mats = np.array(out_map.log.nparray()[1][1][5][1:])
 
         out_np_dict_vals = xor_out.log.nparray_dictionary()[exec_id]['value']
 
@@ -2455,31 +2463,26 @@ class TestNested:
             min_delta=min_delta,
             learning_rate=learning_rate,
             randomize=False,
-            learning_enabled=True
         )
-
-        xor_autodiff.add_node(xor_in)
-        xor_autodiff.add_node(xor_hid)
-        xor_autodiff.add_node(xor_out)
-
-        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor_autodiff.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
 
         # -----------------------------------------------------------------
 
         no_training_input_dict = {xor_in: xor_inputs}
-        input_dict = {'inputs': {xor_in: xor_inputs}, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
+        input_dict = {'inputs': {xor_in: xor_inputs }, 'targets': {xor_out: xor_targets}, 'epochs': num_epochs}
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(xor_autodiff)
+        
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
-
-        result1 = parentComposition.run(inputs=input, bin_execute=mode)
-        assert np.allclose(result1, [[0]], atol=0.1)
-
+        
+        learning_context = Context()
+        result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context)
+        result1 = np.array(result1).flatten()
+        assert np.allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
         xor_autodiff.learning_enabled = False
-        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
+        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2530,15 +2533,9 @@ class TestNested:
             min_delta=min_delta,
             learning_rate=learning_rate,
             randomize=False,
-            learning_enabled=False
         )
 
-        xor_autodiff.add_node(xor_in)
-        xor_autodiff.add_node(xor_hid)
-        xor_autodiff.add_node(xor_out)
-
-        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor_autodiff.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
 
         # -----------------------------------------------------------------
 
@@ -2549,10 +2546,13 @@ class TestNested:
         parentComposition.add_node(xor_autodiff)
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
-
-        result1 = parentComposition.run(inputs=no_training_input, bin_execute=mode)
+        learning_context = Context()
+        xor_autodiff.learning_enabled = False
+        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], bin_execute=mode, context=learning_context)
         xor_autodiff.learning_enabled = True
-        result2 = parentComposition.run(inputs=input, bin_execute=mode)
+        xor_autodiff.learn(inputs=input_dict, bin_execute=mode, context=learning_context)
+        xor_autodiff.learning_enabled = False
+        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2808,6 +2808,7 @@ class TestNested:
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
 
+        sem_net.infer_backpropagation_learning_pathways()
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -2890,14 +2891,13 @@ class TestNested:
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}
 
-        parentComposition.run(inputs=input, bin_execute=mode)
+        sem_net.learn(inputs=input_dict, bin_execute=mode)
 
         if mode != 'Python':
             #FIXME: Enable the rest of the test when recompilation is supported
             return
 
         sem_net.learning_enabled = False
-
         parentComposition.run(inputs=no_training_input)
 
 @pytest.mark.pytorch
@@ -2939,7 +2939,7 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
+        xor.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_1 = np.array(  # the inputs we will provide to the model
@@ -2964,7 +2964,7 @@ class TestBatching:
         def cbm(a):
             a[0] += 1
 
-        xor.run(
+        xor.learn(
             inputs=inputs_dict_1,
             call_before_minibatch=lambda: cbm(a)
         )
@@ -3008,6 +3008,7 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+        xor.infer_backpropagation_learning_pathways()
 
         # SET UP INPUTS AND TARGETS
 
@@ -3033,7 +3034,7 @@ class TestBatching:
         def cam(a):
             a[0] += 1
 
-        xor.run(
+        xor.learn(
             inputs=inputs_dict_1,
             call_after_minibatch=lambda: cam(a)
         )
@@ -3082,7 +3083,7 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
+        xor.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_1 = np.array(  # the inputs we will provide to the model
@@ -3104,7 +3105,7 @@ class TestBatching:
                          "targets": {xor_out: xor_targets_1},
                          "epochs": eps}
 
-        xor.run(
+        xor.learn(
             inputs=inputs_dict_1,
             context=c1,
             minibatch_size=2
@@ -3138,12 +3139,12 @@ class TestBatching:
                          "targets": {xor_out: xor_targets_3},
                          "epochs": 1}
         for _ in range(eps):
-            xor.run(
+            xor.learn(
                 inputs=inputs_dict_2,
                 context=c2,
                 minibatch_size=TRAINING_SET
             )
-            xor.run(
+            xor.learn(
                 inputs=inputs_dict_3,
                 context=c2,
                 minibatch_size=TRAINING_SET
@@ -3152,8 +3153,8 @@ class TestBatching:
         c1_results = xor.parameters.results._get(c1)
         c2_results = xor.parameters.results._get(c2)
 
-        assert np.allclose(c1_results[0][:2], c2_results[-2])
-        assert np.allclose(c1_results[0][2:], c2_results[-1])
+        assert np.allclose(c1_results[0][:2], c2_results[0][:2])
+        assert np.allclose(c1_results[0][2:], c2_results[0][2:])
 
     def test_cross_entropy_loss(self):
         import torch

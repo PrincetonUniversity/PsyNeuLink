@@ -789,7 +789,7 @@ class TestBackProp:
                                       num_trials=(num_epochs * xor_inputs.shape[0]),
                                       )
         if pnl.COMPOSITION in models:
-            result = xor_comp.run(inputs={input_comp:xor_inputs,
+            result = xor_comp.learn(inputs={input_comp:xor_inputs,
                                           target_mech:xor_targets},
                                   num_trials=(num_epochs * xor_inputs.shape[0]),
                                   )
@@ -1345,7 +1345,7 @@ class TestBackProp:
         pco = pnl.MappingProjection(matrix=wco)
         pho = pnl.MappingProjection(matrix=who)
 
-        mnet = pnl.Composition(enable_learning=True)
+        mnet = pnl.Composition()
 
         target_mech = mnet.add_backpropagation_learning_pathway(
             [il, pih, hl, pho, ol],
@@ -1370,10 +1370,8 @@ class TestBackProp:
             target_mech: oSs
         }
 
-        mnet.run(inputs=inputs)
-
+        mnet.learn(inputs=inputs)
         mnet.enable_learning = False
-
         mnet.run(inputs=inputs)
         
         comparator = np.array([0.02288846, 0.11646781, 0.03473711, 0.0348004, 0.01679579,
