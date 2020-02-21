@@ -6432,6 +6432,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reinitialize_nodes_when=Never(),
             runtime_params=None,
             skip_initialization=False,
+            skip_analyze_graph=False,
             animate=False,
             context=None,
             base_context=Context(execution_id=None),
@@ -6647,15 +6648,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
         # If a scheduler was passed in, first call _analyze_graph with default scheduler
         if scheduler is not self.scheduler:
-            self._analyze_graph(context=context)
+            if not skip_analyze_graph:
+                self._analyze_graph(context=context)
         # Then call _analyze graph with scheduler actually being used (passed in or default)
         try:
             if ContextFlags.SIMULATION not in context.execution_phase:
-                self._analyze_graph(scheduler=scheduler, context=context)
+                if not skip_analyze_graph:
+                    self._analyze_graph(scheduler=scheduler, context=context)
         except AttributeError:
             # if context is None, it has not been created for this context yet,
             # so it is not in a simulation
-            self._analyze_graph(scheduler=scheduler, context=context)
+            if not skip_analyze_graph:
+                self._analyze_graph(scheduler=scheduler, context=context)
         # MODIFIED 8/27/19 END
 
         # set auto logging if it's not already set, and if log argument is True
