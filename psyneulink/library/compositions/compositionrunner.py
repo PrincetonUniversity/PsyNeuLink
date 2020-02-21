@@ -49,7 +49,7 @@ class CompositionRunner():
     def __init__(self, compostion: Composition):
         self._composition = compostion
 
-    def _parse_inputs(self, inputs: dict, targets: dict):
+    def _parse_stim_inputs(self, inputs: dict, targets: dict):
         """
         Converts inputs and targets to a standardized form
 
@@ -125,40 +125,63 @@ class CompositionRunner():
         ---------
         Outputs from the final execution
         """
-        # FIXME: support generators
+
+        # Handle function and generator inputs
         if callable(inputs):
             inputs = inputs()
 
-        if 'epochs' in inputs:
-            epochs = inputs['epochs']
+        if isinstance(inputs, dict):
+            inputs = [inputs]
 
-        inputs = self._parse_inputs(inputs, targets)
+        if callable(targets):
+            targets = targets()
 
-        if num_trials is None:
-            num_trials = len(list(inputs.values())[0])
+        if isinstance(targets, dict):
+            targets = [targets]
+        elif targets is None:
+            targets = [None] * len(inputs)
 
-        if minibatch_size == TRAINING_SET:
-            minibatch_size = num_trials
+        if callable(epochs):
+            epochs = epochs()
+        
+        if not isinstance(epochs, list) and not isinstance(epochs, tuple):
+            epochs = [epochs]
+        elif epochs is None:
+            epochs = [None] * len(inputs)
+        
         results = []
-        if patience is not None:
-            early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
-        skip_initialization = False
-        for curr_epoch in range(epochs):
-            for minibatch, indices in _chunk_inputs(inputs, num_trials, minibatch_size, randomize_minibatches):
-                if call_before_minibatch is not None:
-                    call_before_minibatch()
-                
-                minibatch_results = self._composition.run(inputs=minibatch, learning_mode=True, skip_initialization=skip_initialization, context=context)
-                skip_initialization = True
-                results.append(minibatch_results[-1])
+        for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
+            if 'epochs' in stim_input:
+                stim_epoch = stim_input['epochs']
 
-                if call_after_minibatch is not None:
-                    call_after_minibatch()
-            epoch_loss = self._get_loss()
-            if (patience is not None and early_stopper.step(epoch_loss)) or curr_epoch == epochs - 1:
-                # return highest index result
-                return results[-1]
+            stim_input = self._parse_stim_inputs(stim_input, stim_target)
+
+            if num_trials is None:
+                num_trials = len(list(stim_input.values())[0])
+
+            if minibatch_size == TRAINING_SET:
+                minibatch_size = num_trials
+
+            if patience is not None:
+                early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
+
+            skip_initialization = False
+            for curr_epoch in range(epochs):
+                for minibatch, indices in _chunk_inputs(stim_input, num_trials, minibatch_size, randomize_minibatches):
+                    if call_before_minibatch is not None:
+                        call_before_minibatch()
+                    
+                    minibatch_results = self._composition.run(inputs=minibatch, skip_initialization=skip_initialization, context=context, skip_analyze_graph=skip_initialization)
+                    skip_initialization = True
+                    results.extend(minibatch_results)
+
+                    if call_after_minibatch is not None:
+                        call_after_minibatch()
+                epoch_loss = self._get_loss()
+                if (patience is not None and early_stopper.step(epoch_loss)) or curr_epoch == epochs - 1:
+                    # return highest index result
+                    return results
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
