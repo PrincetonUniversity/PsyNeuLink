@@ -825,8 +825,6 @@ class AutodiffComposition(Composition):
         if scheduler is None:
             scheduler = self.scheduler
 
-        scheduler._init_clock(context.execution_id, base_context.execution_id)
-
         if self.learning_enabled:
             # TBI: How are we supposed to use base_context and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
@@ -862,13 +860,13 @@ class AutodiffComposition(Composition):
 
             context.add_flag(ContextFlags.PROCESSING)
             
-            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+            self.output_CIM.execute(output[-1], context=context)
+            context.remove_flag(ContextFlags.PROCESSING)
 
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
             # is not having its parameters populated correctly, and this should be fixed in the long run.
-            self.output_CIM.execute(input=output[-1], context=context)
-            context.remove_flag(ContextFlags.PROCESSING)
+            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
             return output
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
