@@ -61,7 +61,7 @@ class CompositionRunner():
 
         Returns
         ---------
-        Dict mapping mechanisms to values (with TargetMechanisms inferred if needed)
+        Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
         """
         # 1) Convert from key-value representation of values into separated representation
         if 'targets' in inputs:
@@ -74,7 +74,10 @@ class CompositionRunner():
         if targets is not None:
             targets = self._infer_target_nodes(targets)
             inputs = _recursive_update(inputs, targets)
-
+        
+        # 3) Resize inputs to be of the form [[[]]],
+        # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
+        inputs,_,_ = self._composition._adjust_stimulus_dict(inputs)
         return inputs
 
     def _infer_target_nodes(self, targets: dict):
@@ -132,7 +135,6 @@ class CompositionRunner():
         ---------
         Outputs from the final execution
         """
-
         # Handle function and generator inputs
         if callable(inputs):
             inputs = inputs()
@@ -179,7 +181,7 @@ class CompositionRunner():
                     if call_before_minibatch is not None:
                         call_before_minibatch()
 
-                    minibatch_results = self._composition.run(inputs=minibatch, skip_initialization=skip_initialization, context=context, skip_analyze_graph=skip_initialization)
+                    minibatch_results = self._composition.run(inputs=minibatch, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True)
                     skip_initialization = True
                     results.extend(minibatch_results)
 

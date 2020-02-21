@@ -1832,6 +1832,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._scheduler = None
 
+        self.disable_learning = False
         self.enable_learning = False
 
         # status attributes
@@ -6776,7 +6777,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Loop over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
-
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
                 call_with_pruned_args(call_before_trial, context=context)
@@ -6832,6 +6832,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # execute processing
             # pass along the stimuli for this trial
+
             trial_output = self.execute(inputs=execution_stimuli,
                                         autodiff_stimuli=execution_autodiff_stimuli,
                                         scheduler=scheduler,
@@ -6933,6 +6934,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
 
+        self._analyze_graph()
+        context.add_flag(ContextFlags.LEARNING_MODE)
+
         learning_results = runner.run_learning(
             inputs=inputs, 
             targets=targets, 
@@ -6945,7 +6949,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch, 
             context=context)
-
+        
+        context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
         
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
@@ -7304,7 +7309,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
 
             # If learning is turned off, check for any learning related nodes and remove them from the execution set
-            if not self.enable_learning:
+            if not self._is_learning(context):
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -7354,7 +7359,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
                     #    Implementation Note: RecurrentTransferMechanisms are special cased as the AutoAssociativeMechanism 
                     #    should be handling learning - not the RTM itself.
-                    if self.enable_learning and not isinstance(node, RecurrentTransferMechanism):
+                    if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
                         projections = set(self.projections).intersection(set(node.path_afferents))
                         if any([p for p in projections if
                                 any([a for a in p.parameter_ports[MATRIX].mod_afferents
@@ -7391,7 +7396,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         node.function._runtime_params_reset[context.execution_id] = {}
 
                     # Set execution_phase for node's context back to IDLE
-                    if self.enable_learning:
+                    if self._is_learning(context):
                         context.replace_flag(ContextFlags.LEARNING, ContextFlags.PROCESSING)
                     context.remove_flag(ContextFlags.PROCESSING)
 
@@ -7486,7 +7491,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.PROCESSING)
 
         # Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
-        if self.enable_learning:
+        if self._is_learning(context):
             context.add_flag(ContextFlags.LEARNING)
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
@@ -7596,6 +7601,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return False
             return "heterogeneous"
         return False
+
+    def _is_learning(self, context):
+        """Returns true if this composition can learn in the given context"""
+        return (not self.disable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
 
     def _adjust_stimulus_dict(self, stimuli):
 
