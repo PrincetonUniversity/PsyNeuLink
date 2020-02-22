@@ -3018,6 +3018,7 @@ class System(System_Base):
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler learning termination conditions: {1}'.format(self, self.termination_learning))
 
+        context.add_flag(ContextFlags.LEARNING_MODE)
         for next_execution_set in self.scheduler_learning.run(context=context, termination_conds=self.termination_learning):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
 
@@ -3070,7 +3071,7 @@ class System(System_Base):
 
                 # # TEST PRINT LEARNING:
                 # print(component._parameter_ports[MATRIX].value)
-
+        context.remove_flag(ContextFlags.LEARNING_MODE)
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
             # Report learning for target_nodes (and the processes to which they belong)
