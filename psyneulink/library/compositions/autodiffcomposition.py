@@ -816,7 +816,6 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 bin_execute=False,
                 skip_initialization=False,
-                learning_mode=False,
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -825,7 +824,7 @@ class AutodiffComposition(Composition):
         if scheduler is None:
             scheduler = self.scheduler
 
-        if self.learning_enabled:
+        if self._is_learning(context):
             # TBI: How are we supposed to use base_context and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
