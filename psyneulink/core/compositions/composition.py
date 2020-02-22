@@ -6437,7 +6437,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate=False,
             context=None,
             base_context=Context(execution_id=None),
-            learning_mode=False,
             ):
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
@@ -6847,7 +6846,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         runtime_params=runtime_params,
                                         skip_initialization=True,
                                         bin_execute=bin_execute,
-                                        learning_mode=learning_mode
                                         )
 
             # ---------------------------------------------------------------------------------
@@ -6969,7 +6967,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
             skip_initialization=False,
-            learning_mode=False,
             bin_execute=False,
             ):
         """
