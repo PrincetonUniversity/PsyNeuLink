@@ -22,9 +22,9 @@ class TestHebbian:
         src = [1, 0, 0, 1, 0, 0, 1, 0, 0]
 
         inputs_dict = {Hebb2: np.array(src)}
-
+        Hebb_C.enable_learning = True
         Hebb_C.run(num_trials=5,
-                   inputs=inputs_dict)
+                   inputs=inputs_dict)  
         activity = Hebb2.value
 
         assert np.allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])

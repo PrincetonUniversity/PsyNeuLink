@@ -1233,6 +1233,7 @@ from psyneulink.core.components.mechanisms.processing.compositioninterfacemechan
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 from psyneulink.core.components.projections.projection import DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -7275,7 +7276,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
                     #    for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
-                    if self.enable_learning:
+                    #    Implementation Note: RecurrentTransferMechanisms are special cased as the AutoAssociativeMechanism 
+                    #    should be handling learning - not the RTM itself.
+                    if self.enable_learning and not isinstance(node, RecurrentTransferMechanism):
                         projections = set(self.projections).intersection(set(node.path_afferents))
                         if any([p for p in projections if
                                 any([a for a in p.parameter_ports[MATRIX].mod_afferents
