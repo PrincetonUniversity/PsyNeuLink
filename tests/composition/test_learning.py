@@ -23,8 +23,9 @@ class TestHebbian:
 
         inputs_dict = {Hebb2: np.array(src)}
         Hebb_C.enable_learning = True
-        Hebb_C.run(num_trials=5,
-                   inputs=inputs_dict)  
+        output = Hebb_C.learn(num_trials=5,
+                   inputs=inputs_dict)
+
         activity = Hebb2.value
 
         assert np.allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
@@ -58,7 +59,7 @@ class TestReinforcement:
             comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
 
             target_mechanism.log.set_log_conditions(items=pnl.VALUE)
-            comp.run(inputs=inputs_dict)
+            comp.learn(inputs=inputs_dict)
 
 
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
@@ -113,7 +114,7 @@ class TestReinforcement:
                   target_mechanism: targets}
 
 
-        comp.run(inputs=inputs)
+        comp.learn(inputs=inputs)
 
         delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
 
@@ -162,7 +163,7 @@ class TestReinforcement:
             comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
 
             target_mechanism.log.set_log_conditions(items=pnl.VALUE)
-            comp.run(inputs=inputs_dict)
+            comp.learn(inputs=inputs_dict)
 
 
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
@@ -171,7 +172,6 @@ class TestReinforcement:
                                                         [1.85006765]])
 
             # Pause learning -- values are the same as the previous trial (because we pass in the same inputs)
-            comp.enable_learning = False
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
             comp.run(inputs=inputs_dict)
             assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
@@ -180,10 +180,9 @@ class TestReinforcement:
                                                         [1.85006765]])
 
             # Resume learning
-            comp.enable_learning = True
             inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
                            target_mechanism: [[10.], [10.]]}
-            comp.run(inputs=inputs_dict)
+            comp.learn(inputs=inputs_dict)
             assert np.allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])])
             assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
                                                         [0.118109771], [1.32123733], [0.978989672], [0.118109771],
@@ -238,7 +237,7 @@ class TestReinforcement:
         inputs2 = {sample_mechanism: samples[30:50],
                    target_mechanism: targets[30:50]}
 
-        comp.run(inputs=inputs1)
+        comp.learn(inputs=inputs1)
 
         delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
 
@@ -256,12 +255,10 @@ class TestReinforcement:
         assert np.allclose(trial_30_expected, delta_vals[29][0])
 
         # Pause Learning
-        comp.enable_learning = False
         comp.run(inputs={sample_mechanism: samples[0:3]})
 
         # Resume Learning
-        comp.enable_learning = True
-        comp.run(inputs=inputs2)
+        comp.learn(inputs=inputs2)
         delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
 
         trial_50_expected = [0.] * 40
@@ -452,7 +449,7 @@ class TestNestedLearning:
         pco = pnl.MappingProjection(matrix=wco)
         pho = pnl.MappingProjection(matrix=who)
 
-        mnet = pnl.Composition(enable_learning=True)
+        mnet = pnl.Composition()
 
         target_mech = mnet.add_backpropagation_learning_pathway(
             [il, pih, hl, pho, ol],
@@ -479,9 +476,8 @@ class TestNestedLearning:
 
         outer = Composition("outer-composition")
         outer.add_node(mnet)
-        mnet.run(inputs=inputs)
+        mnet.learn(inputs=inputs)
 
-        mnet.enable_learning = False
         del inputs[target_mech]
         # This run should not error, as we are no longer in learning mode (and hence, we shouldn't need the target mech inputs)
         outer.run(inputs={mnet: inputs})
@@ -516,7 +512,7 @@ class TestBackProp:
         # comp.show_graph(show_node_structure=True)
         eid="eid"
 
-        comp.run(inputs={input_layer: [[1.0, 1.0]],
+        comp.learn(inputs={input_layer: [[1.0, 1.0]],
                          target_mechanism: [[1.0, 1.0]]},
                  num_trials=5,
                  context=eid)
@@ -597,7 +593,7 @@ class TestBackProp:
 
         # comp.show_graph()
 
-        comp.run(inputs=input_dictionary,
+        comp.learn(inputs=input_dictionary,
                  num_trials=10)
     
         objective_output_layer = comp.nodes[5]
@@ -1174,10 +1170,10 @@ class TestBackProp:
 
         # print('\nEXECUTING COMPOSITION-----------------------\n')
         target = comp.get_nodes_by_role(pnl.NodeRole.TARGET)[0]
-        results_comp = comp.run(inputs={color_comp: [[1, 1]],
-                                        word_comp: [[-2, -2]],
-                                        target: [[1, 1]]},
-                                num_trials=num_trials)
+        results_comp = comp.learn(inputs={color_comp: [[1, 1]],
+                                          word_comp: [[-2, -2]],
+                                          target: [[1, 1]]},
+                                  num_trials=num_trials)
         # print('\nCOMPOSITION RESULTS')
         # print(f'Results: {comp.results}')
         # print(f'color_to_hidden_comp: {comp.projections[0].get_mod_matrix(comp)}')
@@ -1209,7 +1205,7 @@ class TestBackProp:
                  [ 0.03080958, 1.02830959],
                  [ 2.00464242, 3.00426575],
              ])),
-            (results_comp, [np.array([0.51044657, 0.5483048])]),
+            ([results_comp[-1]], [np.array([0.51044657, 0.5483048])]),
         ]
 
         for i in range(len(composition_and_expected_outputs)):
@@ -1371,7 +1367,6 @@ class TestBackProp:
         }
 
         mnet.learn(inputs=inputs)
-        mnet.enable_learning = False
         mnet.run(inputs=inputs)
         
         comparator = np.array([0.02288846, 0.11646781, 0.03473711, 0.0348004, 0.01679579,
@@ -1501,7 +1496,7 @@ class TestRumelhartSemanticNetwork:
         # comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)
 
-        comp.run(
+        comp.learn(
               num_trials=2,
               inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
                       rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
@@ -1670,7 +1665,6 @@ class TestLearningPathwayMethods:
                                                                         output_comp],
                                                                     learning_rate=10)
         # Try to run without any targets (non-learning
-        xor_comp.enable_learning = False
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
             [0, 1],
