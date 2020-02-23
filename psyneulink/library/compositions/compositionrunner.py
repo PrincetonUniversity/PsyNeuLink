@@ -23,23 +23,26 @@ def inf_yield_none():
     while True:
         yield None
 
-def _chunk_inputs(inputs: dict, num_trials: int, chunksize: int = 1, randomize: bool = True):
+def _batch_inputs(inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, randomize: bool = True, call_before_minibatch=None, call_after_minibatch=None):
     """
-    Chunks input dict into pieces where each chunk is a dict with values of length chunksize (or for the last chunk, the remainder)
+    Chunks input dict into pieces where each chunk is a dict with values of length batch_size (or for the last chunk, the remainder)
     """
-    chunks = []
-    indices = list(range(0, num_trials))
-    if randomize:
-        random.shuffle(indices)
-
-    for i in range(0, num_trials, chunksize):
-        curr_indices = indices[i:i + chunksize]
+    #This is a generator for performance reasons, since we don't want to copy any data (especially for very large inputs or epoch counts!)
+    for epoch in range(epochs):
         chunk = {}
-        for k, v in inputs.items():
-            chunk[k] = [v[i % len(v)] for i in curr_indices]
-        chunks.append((chunk, curr_indices))
-    return chunks
-
+        indices = list(range(0, num_trials))
+        if randomize:
+            random.shuffle(indices)
+        for i in range(0, num_trials, batch_size):
+            if call_before_minibatch:
+                call_before_minibatch()
+            curr_indices = indices[i:i + batch_size]
+            for idx in curr_indices:
+                for k, v in inputs.items():
+                        chunk[k] = v[idx % len(v)]
+                yield chunk
+            if call_after_minibatch:
+                call_after_minibatch()
 def _recursive_update(d, u):
     """
     Recursively calls update on dictionaries, which prevents deletion of keys
@@ -127,7 +130,8 @@ class CompositionRunner():
                      randomize_minibatches: bool = True,
                      call_before_minibatch = None,
                      call_after_minibatch = None,
-                     context=None):
+                     context=None,
+                     bin_execute=False):
         """
         Runs the composition repeatedly with the specified parameters
 
@@ -175,23 +179,12 @@ class CompositionRunner():
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             skip_initialization = False
-            for curr_epoch in range(stim_epoch):
-                results = []
-                for minibatch, indices in _chunk_inputs(stim_input, num_trials, minibatch_size, randomize_minibatches):
-                    if call_before_minibatch is not None:
-                        call_before_minibatch()
+            minibatched_input = _batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch)
+            
+            self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute)
+            skip_initialization = True
 
-                    minibatch_results = self._composition.run(inputs=minibatch, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True)
-                    skip_initialization = True
-                    results.extend(minibatch_results)
-
-                    if call_after_minibatch is not None:
-                        call_after_minibatch()
-                epoch_loss = self._get_loss()
-                if (patience is not None and early_stopper.step(epoch_loss)) or curr_epoch == stim_epoch - 1:
-                    break
-        
-        return results
+            return [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
 
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
