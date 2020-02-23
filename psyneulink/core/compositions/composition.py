@@ -1875,9 +1875,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_parameter_components()
 
         self.initialization_status = ContextFlags.INITIALIZED
-        #FIXME: This removes `composition.parameters.values`, as it was not being 
-        # populated correctly in the first place. `composition.parameters.results` 
-        # should be used instead - in the long run, we should look into possibly 
+        #FIXME: This removes `composition.parameters.values`, as it was not being
+        # populated correctly in the first place. `composition.parameters.results`
+        # should be used instead - in the long run, we should look into possibly
         # populating both values and results, as it would be more consistent with
         # the behavior of components
         del self.parameters.value
