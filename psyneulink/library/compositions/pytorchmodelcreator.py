@@ -9,7 +9,7 @@ from psyneulink.library.compositions.compiledloss import MSELoss
 import ctypes
 from collections import deque
 from psyneulink.library.compositions.pytorchllvmhelper import *
-
+from psyneulink.core.globals.keywords import TARGET_MECHANISM
 debug_env = pnlvm.debug_env
 
 try:
@@ -53,9 +53,8 @@ class PytorchModelCreator(torch.nn.Module):
         self._composition = composition
 
         for i, current_exec_set in enumerate(self.execution_sets):
+            self.execution_sets[i] = current_exec_set - set(composition.get_nodes_by_role(NodeRole.LEARNING))
             for component in current_exec_set:
-                if NodeRole.LEARNING in self._composition.get_roles_by_node(component) or NodeRole.TARGET in self._composition.get_roles_by_node(component):
-                    continue
                 value = None  # the node's (its mechanism's) value
                 function = self.function_creator(
                     component, context)  # the node's function
@@ -127,14 +126,14 @@ class PytorchModelCreator(torch.nn.Module):
         return [(vertex.component,weights) for (vertex,weights) in forward_info_weights.items()]
 
     # defines input type
-    def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
-        input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        assert set(input_nodes) == set(self.execution_sets[0])
-        # FIXME: Why remove nesting? 'elements[0]' removes outer struct,
-        # and '.element' removes outer array dimension
-        input_list = (ctx.get_input_struct_type(node).elements[0].element for node in input_nodes)
-        input_struct = pnlvm.ir.LiteralStructType(input_list)
-        return input_struct
+    # def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
+    #     input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
+    #     assert set(input_nodes) == set(self.execution_sets[0])
+    #     # FIXME: Why remove nesting? 'elements[0]' removes outer struct,
+    #     # and '.element' removes outer array dimension
+    #     input_list = (ctx.get_input_struct_type(node).elements[0].element for node in input_nodes)
+    #     input_struct = pnlvm.ir.LiteralStructType(input_list)
+    #     return input_struct
 
     def _get_data_struct_type(self, ctx):
         # Ensures that data struct is the same as the autodiffcomp
@@ -198,15 +197,16 @@ class PytorchModelCreator(torch.nn.Module):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             args = [ctx.get_state_struct_type(self._composition).as_pointer(),
                     ctx.get_param_struct_type(self._composition).as_pointer(),
-                    ctx.get_input_struct_type(self).as_pointer(),
-                    ctx.get_data_struct_type(self).as_pointer()
+                    ctx.get_data_struct_type(self._composition).as_pointer()
                     ]
             builder = ctx.create_llvm_function(args, self)
             llvm_func = builder.function
 
-            context, params, arg_in, arg_out = llvm_func.args
-            self._gen_llvm_forward_function_body(
-                ctx, builder, context, params, arg_in, arg_out)
+            state, params, data = llvm_func.args
+            if "learning" in tags:
+                self._gen_llvm_training_function_body(ctx, builder, state, params, data)
+            else:
+                self._gen_llvm_forward_function_body(ctx, builder, state, params, data)
             builder.ret_void()
         return llvm_func
 
@@ -215,20 +215,23 @@ class PytorchModelCreator(torch.nn.Module):
         node_idx = self._composition._get_node_index(node)
         forward_info_weights = self.component_to_forward_info[node]['afferents']
         afferent_node_index = self._get_afferent_node_index(node,afferent_node)
+        projection = [i for i in afferent_node.efferents if i.receiver.owner == node][0]
+        inner_projections = list(self._composition._inner_projections)
+        projection_idx = inner_projections.index(projection)
+        projection_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(projection_idx)])
+
         for (vertex,matrix) in forward_info_weights.items():
             if vertex.component == afferent_node:
                 weight_matrix = matrix
                 break
         dim_x,dim_y = weight_matrix.detach().numpy().shape
-        node_weights = builder.gep(params, [ctx.int32_ty(0),
-                                            ctx.int32_ty(2),
-                                            ctx.int32_ty(node_idx),
-                                            ctx.int32_ty(0),
-                                            ctx.int32_ty(afferent_node_index)])
-        if "no_ref_pass" not in debug_env:
-            mem_addr = builder.load(node_weights)
-            node_weights = builder.inttoptr(mem_addr, pnlvm.ir.types.ArrayType(
-                pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
+        node_weights = ctx.get_param_ptr(projection, builder, projection_params, "matrix")
+        node_weights = builder.bitcast(node_weights, pnlvm.ir.types.ArrayType(
+                 pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
+        # if "no_ref_pass" not in debug_env:
+        #     mem_addr = builder.load(node_weights)
+        #     node_weights = builder.inttoptr(mem_addr, pnlvm.ir.types.ArrayType(
+        #         pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
 
         return node_weights,dim_x,dim_y
 
@@ -236,10 +239,8 @@ class PytorchModelCreator(torch.nn.Module):
         out_t = arg_out.type.pointee
         if isinstance(out_t, pnlvm.ir.ArrayType) and isinstance(out_t.element, pnlvm.ir.ArrayType):
             assert len(out_t) == 1
-
         z_values = {}
         for i, current_exec_set in enumerate(self.execution_sets):
-
             for component in current_exec_set:
                 component_id = self._composition._get_node_index(component)
                 value = self._get_output_value_ptr(ctx, builder, arg_out, component_id)
@@ -265,7 +266,7 @@ class PytorchModelCreator(torch.nn.Module):
 
                         # We cast the ctype weights array to llvmlite pointer
                         weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, component, source_node)
-                        pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix=f"{source_node} -> {component}\tweight:\t")
+                        pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix=f"{source_node} -> {component}\tweight:\n")
                         # node inputs are 2d arrays in a struct
                         input_ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(j)])
                         gen_inject_vxm(ctx, builder, input_value, weights_llvmlite, input_ptr)
@@ -298,8 +299,8 @@ class PytorchModelCreator(torch.nn.Module):
 
                 if store_z_values is True:
                     pnlvm.helpers.printf_float_array(builder, z_values[component], prefix=f"{component}\tforward input:\t")
-                pnlvm.helpers.printf_float_array(builder, value, prefix=f"{component}\tforward output:\t")
-
+                pnlvm.helpers.printf_float_array(builder, value, prefix=f"{component}\tforward output:\t", suffix="\t")
+                pnlvm.helpers.printf(builder, "\n")
         return z_values
 
     # generates a function responsible for a single epoch of the training
@@ -307,11 +308,8 @@ class PytorchModelCreator(torch.nn.Module):
         composition = self._composition
         args = [ctx.get_state_struct_type(composition).as_pointer(),
                 ctx.get_param_struct_type(composition).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                ctx.get_data_struct_type(self).as_pointer(),
+                ctx.get_data_struct_type(composition).as_pointer(),
                 optimizer._get_optimizer_struct_type(ctx).as_pointer(),
-                self._get_learning_struct_type(ctx).as_pointer(), # training set
-                ctx.int32_ty  # input idx
                 ]
         name = self._composition.name + "_training_backprop"
         builder = ctx.create_llvm_function(args, self, name)
@@ -320,7 +318,8 @@ class PytorchModelCreator(torch.nn.Module):
             if isinstance(a.type, pnlvm.ir.PointerType):
                 a.attributes.add('noalias')
 
-        context, params, model_input, model_output, optim_struct, training_set, trial_num = llvm_func.args
+        context, params, model_output, optim_struct = llvm_func.args
+        model_input = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
         # setup useful mappings
         input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
         output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
@@ -330,22 +329,17 @@ class PytorchModelCreator(torch.nn.Module):
 
         # first we copy input values to data struct of input_CIM
         for i, node in enumerate(input_nodes):
-            node_input_array_ptr = builder.gep(training_set, [trial_num, ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0), ctx.int32_ty(0)])
             node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            gen_inject_vec_copy(ctx, builder, node_input_array_ptr, node_model_input)
-
             pnlvm.helpers.printf_float_array(builder, node_model_input, prefix=f"{node}\tinput:\t")
 
         # 2) call forward computation
-        model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
         z_values = self._gen_llvm_forward_function_body(
             ctx, builder, context, params, model_input, model_output, store_z_values=True)
         # 3) compute errors
 
-
         error_dict = {}
         backprop_queue = deque()
-        for node in output_nodes:
+        for node in set(output_nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
             backprop_queue.append(node)
 
         loss_fn = ctx.import_llvm_function(loss)
@@ -369,11 +363,11 @@ class PytorchModelCreator(torch.nn.Module):
 
             error_dict[node] = error_val
 
-            if node in output_nodes:
+            if node in set(output_nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
                 # We handle output layer here
                 # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
                 out_node_idx = output_nodes.index(node)
-                node_target = builder.gep(training_set, [trial_num, ctx.int32_ty(1), ctx.int32_ty(out_node_idx), ctx.int32_ty(0), ctx.int32_ty(0)])
+                node_target = self._get_target_value_ptr(ctx, builder, model_input, node )
                 node_output = self._get_output_value_ptr(ctx, builder, model_output, node_idx)
 
                 tmp_loss = loss.gen_inject_lossfunc_call(ctx, builder, loss_fn, node_output, node_target)
@@ -396,7 +390,7 @@ class PytorchModelCreator(torch.nn.Module):
                 # We calculate δ_(l-1) = sum (a_(l-1) W^T) ⊙ δ_l, where (l-1) is the current layer, l is layer of efferents, summed over all efferents
                 efferents = [
                     proj.receiver._owner for proj in node.efferents]
-                for efferent_node in efferents:
+                for efferent_node in set(efferents) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
                     efferent_node_error = error_dict[efferent_node]
 
                     weights_llvmlite, _, _ = self._gen_get_node_weight_ptr(ctx, builder, params, efferent_node, node)
@@ -454,36 +448,13 @@ class PytorchModelCreator(torch.nn.Module):
         target_struct = pnlvm.ir.LiteralStructType(ctx.get_input_struct_type(node) for node in self._composition.get_nodes_by_role(NodeRole.OUTPUT))
         return pnlvm.ir.LiteralStructType((input_struct, target_struct))
 
-    def _gen_llvm_training_function_body(self, ctx, builder, context, params, data, autodiff_stimuli_struct):
+    def _gen_llvm_training_function_body(self, ctx, builder, state, params, data):
         # 1) Setup autodiff learning stuff
         # if "ref_pass" not in debug_env:
         #    raise Exception("ref_pass must be enabled in debug!")
         # gets a reference to the autodiff_stimuli_struct from params
         composition = self._composition
 
-        epochs = builder.load(builder.gep(autodiff_stimuli_struct,
-                                          [ctx.int32_ty(0), ctx.int32_ty(0)]))
-        num_trials = builder.load(builder.gep(autodiff_stimuli_struct,
-                                              [ctx.int32_ty(0), ctx.int32_ty(1)]))
-
-        # Get pointer to the training set
-        training_set_ptr = builder.gep(autodiff_stimuli_struct,
-                                       [ctx.int32_ty(0), ctx.int32_ty(2)])
-        training_set_array = builder.load(training_set_ptr)
-
-        pnlvm.helpers.printf(builder,"Running Autodiff Training with params:\n\tepoch count: %d \n\tnum_trials: %d \n",
-                            epochs,
-                            num_trials)
-
-        pnlvm.helpers.printf(builder,"\tlearning_struct_addr: 0x%Lx \n",
-                            training_set_array)
-        input_cim_idx = composition._get_node_index(composition.input_CIM)
-        model_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-
-        # Extract the input that should be inserted into the model
-        model_input = builder.gep(data, [ctx.int32_ty(0),
-                                         ctx.int32_ty(0),
-                                         ctx.int32_ty(input_cim_idx)])
 
         # setup optimizer
         optimizer_type = self._composition.optimizer_type
@@ -508,24 +479,22 @@ class PytorchModelCreator(torch.nn.Module):
         optimizer_zero_grad = ctx.import_llvm_function(optimizer.zero_grad(ctx).name)
         optimizer.initialize_optimizer_struct(ctx, builder, optimizer_struct)
         backprop = ctx.import_llvm_function(self._gen_llvm_training_backprop(ctx, optimizer, loss).name)
-        with pnlvm.helpers.for_loop_zero_inc(builder, epochs, "epoch_loop") as (b1, epoch_idx):
-            pnlvm.helpers.printf(builder, "\033[0;32mEPOCH %d\033[0m\n", epoch_idx)
-            with pnlvm.helpers.for_loop_zero_inc(b1, num_trials, "input_loop") as (b2, trial_num):
-                pnlvm.helpers.printf(b2, "\n\033[0;31mINPUT %d\033[0m\n", trial_num)
-                pnlvm.helpers.printf(b2, "OPTIMIZER ZERO GRAD %d\n", trial_num)
-                # FIXME: converting this call to direct code results in
-                # significant longer compilation times
-                b2.call(optimizer_zero_grad, [optimizer_struct])
-                pnlvm.helpers.printf(b2, "TRIAL %d\n", trial_num)
-                b2.call(backprop, [context, params, model_input, data,
-                                   optimizer_struct, training_set_array,
-                                   trial_num])
-                pnlvm.helpers.printf(b2, "OPTIMIZER STEP %d\n", trial_num)
-                b2.call(optimizer_step_f, [optimizer_struct, params])
+        
+        # # FIXME: converting this call to direct code results in
+        # # significant longer compilation times
+        builder.call(optimizer_zero_grad, [optimizer_struct])
+        builder.call(backprop, [state, params, data,
+                            optimizer_struct])
+        builder.call(optimizer_step_f, [optimizer_struct, params])
 
 
     def _get_output_value_ptr(self, ctx, builder, arg_out, index):
         return builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(index), ctx.int32_ty(0)])
+    
+    def _get_target_value_ptr(self, ctx, builder, arg_in, output_node):
+        terminal_sequence = self._composition._terminal_backprop_sequences[output_node]
+        idx = self._composition.get_nodes_by_role(NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
+        return builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
 
     # performs forward computation for the model
     @handle_external_context()

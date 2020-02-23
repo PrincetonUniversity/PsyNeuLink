@@ -15,7 +15,7 @@ import copy
 import ctypes
 from collections import defaultdict
 import numpy as np
-
+from inspect import isgenerator
 from psyneulink.core import llvm as pnlvm
 from . import helpers, jit_engine
 from .debug import debug_env
@@ -222,7 +222,7 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, execution_ids=[None]):
+    def __init__(self, composition, execution_ids=[None], additional_tags=[]):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self._execution_contexts = [
@@ -235,6 +235,7 @@ class CompExecution(CUDAExecution):
         self.__bin_run_multi_func = None
         self.__debug_env = debug_env
         self.__frozen_vals = None
+        self.__additional_tags = additional_tags
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -268,7 +269,7 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper"}))
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper", *self.__additional_tags}))
 
     @property
     def _conditions(self):
@@ -434,12 +435,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            def is_learning(obj):
-                return getattr(obj, 'learning_enabled', False)
-            tags=frozenset()
-            if is_learning(self._composition) or \
-               any(is_learning(n) for n in self._composition.nodes):
-                tags=frozenset({"learning"})
+            tags=frozenset({*self.__additional_tags})
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
                 self._composition, tags=tags)
 
@@ -519,14 +515,13 @@ class CompExecution(CUDAExecution):
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
         run_inputs = ((([iv] for m in origins for iv in inp[m][i]) for i in range(num_input_sets)) for inp in inputs)
-
         return c_input(*_tupleize(run_inputs))
 
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=frozenset({"run"}))
+                self._composition, tags=frozenset({"run", *self.__additional_tags}))
 
         return self.__bin_run_func
 
@@ -567,6 +562,16 @@ class CompExecution(CUDAExecution):
 
 
     def run(self, inputs, runs=0, num_input_sets=0, learning=False):
+        if isgenerator(inputs):
+            list_inputs = list(inputs)
+            inputs = {k:[list(v)] for (k,v) in list_inputs[0].items()}
+            for i, inp in enumerate(list_inputs):
+                if i == 0:
+                    continue
+                for k,v in inp.items():
+                    inputs[k].append(v)
+            num_input_sets = len(next(iter(inputs.values())))
+            runs = num_input_sets
         inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs

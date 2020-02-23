@@ -728,10 +728,12 @@ class AutodiffComposition(Composition):
 
     def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            if "learning" in tags:
+            if "run" in tags:
+                return ctx.gen_composition_run(self, tags=tags)
+            elif "learning" in tags:
                 return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
             else:
-                return ctx.gen_autodiffcomp_exec(self, tags=tags)
+                return ctx.gen_composition_exec(self, tags=tags)
 
     def _infer_output_nodes(self, nodes: dict):
         """
@@ -806,23 +808,6 @@ class AutodiffComposition(Composition):
             # TBI: How are we supposed to use base_context and statefulness here?
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
-
-            if (bin_execute is True or str(bin_execute).endswith('Exec')):
-                try:
-                    if bin_execute is True or bin_execute.startswith('LLVM'):
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        results = _comp_ex.execute_learning(inputs)
-                    else:
-                        assert False, "Execution method `{}' not supported".format(bin_execute)
-
-                    return results
-
-                except Exception as e:
-                    if bin_execute is not True:
-                        raise e from None
-
-                    warnings.warn("Failed to Run execution `{}': {}".format(
-                          self.name, str(e)))
 
 
             autodiff_inputs = self._infer_input_nodes(inputs)
@@ -940,35 +925,26 @@ class AutodiffComposition(Composition):
         weights = pytorch_representation.get_weights_for_projections()
 
         return weights
-
+    
     def _get_param_struct_type(self, ctx):
-        mech_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
-
-        # We only need input_CIM/output_CIM projection
-        # (the rest should be in pytorch model params)
-        proj_param_type_list = (ctx.get_param_struct_type(p)
-                                if (p.sender.owner is self.input_CIM or
-                                    p.receiver.owner is self.output_CIM)
-                                else pnlvm.ir.LiteralStructType([])
-                                for p in self._inner_projections)
-
-        self._build_pytorch_representation(self.default_execution_id)
-        model = self.parameters.pytorch_representation.get(
-            self.default_execution_id)
-        pytorch_params = model._get_param_struct_type(ctx)
-
-        param_args = [pnlvm.ir.LiteralStructType(mech_param_type_list),
-                      pnlvm.ir.LiteralStructType(proj_param_type_list),
-                      pytorch_params]
-        return pnlvm.ir.LiteralStructType(param_args)
-
+        node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
+        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
+        return pnlvm.ir.LiteralStructType((
+            pnlvm.ir.LiteralStructType(node_param_type_list),
+            pnlvm.ir.LiteralStructType(proj_param_type_list)))
+    
     def _get_param_initializer(self, context):
-        mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-        proj_params = (p._get_param_initializer(context)
-                       if (p.sender.owner is self.input_CIM or
-                           p.receiver.owner is self.output_CIM)
-                       else tuple() for p in self._inner_projections)
-        self._build_pytorch_representation(self.default_execution_id)
-        model = self.parameters.pytorch_representation.get(self.default_execution_id)
-        pytorch_params = model._get_param_initializer()
-        return (tuple(mech_params), tuple(proj_params), pytorch_params)
+        node_params = (m._get_param_initializer(context) for m in self._all_nodes)
+        proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
+        return (tuple(node_params), tuple(proj_params))
+        
+    # def _get_param_initializer(self, context):
+    #     mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
+    #     proj_params = (p._get_param_initializer(context)
+    #                    if (p.sender.owner is self.input_CIM or
+    #                        p.receiver.owner is self.output_CIM)
+    #                    else tuple() for p in self._inner_projections)
+    #     self._build_pytorch_representation(self.default_execution_id)
+    #     model = self.parameters.pytorch_representation.get(self.default_execution_id)
+    #     pytorch_params = model._get_param_initializer()
+    #     return (tuple(mech_params), tuple(proj_params), pytorch_params)

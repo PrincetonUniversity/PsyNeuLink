@@ -307,39 +307,23 @@ class LLVMBuilderContext:
             learning_struct_ty.as_pointer(),
             self.get_output_struct_type(composition).as_pointer()
         ]
-        with self._gen_composition_exec_context(composition, tags=tags,
-            extra_args=args) as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond, learning, data_out = builder.function.args
-            data_out.attributes.remove('nonnull')
-
+        with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
+            state, _, comp_in, data, cond, = builder.function.args
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
-                                                           params, data, learning)
+                                                           params, data)
             node_tags = tags.union({"node_wrapper"})
-            # Call output CIM
+            # # Call output CIM
             output_cim_f = self.import_llvm_function(composition.output_CIM,
                                                      tags=node_tags)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
             forward_tags = tags.difference({"learning"})
-            exec_f = self.import_llvm_function(composition, tags=forward_tags)
 
-            runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
-            runs = builder.load(runs_ptr, "runs")
-            with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
-                data_in_ptr = builder.gep(comp_in, [iters])
-                b.call(exec_f, [state, params, data_in_ptr, data, cond])
-
-                # Extract output_CIM result
-                output_cond = builder.icmp_unsigned("!=", data_out, data_out.type(None))
-                with builder.if_then(output_cond):
-                    idx = composition._get_node_index(composition.output_CIM)
-                    result_ptr = b.gep(data, [self.int32_ty(0),
-                                              self.int32_ty(0),
-                                              self.int32_ty(idx)])
-                    result = b.load(result_ptr)
-                    output_ptr = b.gep(data_out, [iters])
-                    b.store(result, output_ptr)
+            # Call output CIM
+            output_cim_f = self.import_llvm_function(composition.output_CIM,
+                                                     tags=node_tags)
+            builder.call(output_cim_f, [state, params, comp_in, data, data])
 
             return builder.function
 

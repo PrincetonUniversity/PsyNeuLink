@@ -1,5 +1,6 @@
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.pytorchllvmhelper import *
+from psyneulink.core.globals.utilities import NodeRole
 
 __all__ = ['AdamOptimizer', 'SGDOptimizer']
 
@@ -15,8 +16,8 @@ class Optimizer():
 
     # gets the type of the delta_w struct
     def _get_delta_w_struct_type(self, ctx):
-        delta_w = [None] * len(self._composition.nodes)
-        for node in self._composition.nodes:
+        delta_w = [None] * len(set(self._composition.nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)))
+        for node in set(self._composition.nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
             node_idx = self._composition._get_node_index(node)
             afferent_nodes = self._pytorch_model._get_afferent_nodes(node)
             delta_w[node_idx] = [None] * len(afferent_nodes)
@@ -42,7 +43,7 @@ class Optimizer():
 
     def _get_listof_gradient_struct_values(self):
         values = []
-        for node in self._composition.nodes:
+        for node in set(self._composition.nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
             node_idx = self._composition._get_node_index(node)
             afferent_nodes = self._pytorch_model._get_afferent_nodes(node)
             for (afferent_node, matrix) in afferent_nodes:
@@ -116,143 +117,143 @@ class AdamOptimizer(Optimizer):
                 ctx.get_param_struct_type(self._composition).as_pointer()]
         builder = ctx.create_llvm_function(args, self, name)
         llvm_func = builder.function
-        optim_struct, params = llvm_func.args
+        # optim_struct, params = llvm_func.args
 
-        # setup values
-        zero = ctx.int32_ty(0)
-        one_float = ctx.float_ty(1)
+        # # setup values
+        # zero = ctx.int32_ty(0)
+        # one_float = ctx.float_ty(1)
 
-        delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
-        m_t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._M_T_NUM)])
-        v_t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._V_T_NUM)])
-        t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._T_NUM)])
+        # delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
+        # m_t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._M_T_NUM)])
+        # v_t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._V_T_NUM)])
+        # t = builder.gep(optim_struct, [zero, ctx.int32_ty(self._T_NUM)])
 
-        # get methods needed
-        pow = ctx.import_llvm_function("__pnl_builtin_pow")
-        sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
+        # # get methods needed
+        # pow = ctx.import_llvm_function("__pnl_builtin_pow")
+        # sqrt = ctx.get_builtin("sqrt", [ctx.float_ty])
 
-        lr = ctx.float_ty(self.lr)
-        eps = ctx.float_ty(self.eps)
-        b1 = ctx.float_ty(self.betas[0])
-        b2 = ctx.float_ty(self.betas[1])
-        one_minus_b1 = builder.fsub(one_float, b1)
-        one_minus_b2 = builder.fsub(one_float, b2)
+        # lr = ctx.float_ty(self.lr)
+        # eps = ctx.float_ty(self.eps)
+        # b1 = ctx.float_ty(self.betas[0])
+        # b2 = ctx.float_ty(self.betas[1])
+        # one_minus_b1 = builder.fsub(one_float, b1)
+        # one_minus_b2 = builder.fsub(one_float, b2)
 
-        # 1) increment t
-        builder.store(builder.fadd(builder.load(t), one_float), t)
-        t_val = builder.load(t)
-        # 1.5) calculate values to be used later (based on incremented t)
-        b1_pow = builder.call(pow, [b1, t_val])
-        b2_pow = builder.call(pow, [b2, t_val])
-        one_minus_b1_pow = builder.fsub(one_float, b1_pow)
-        one_minus_b2_pow = builder.fsub(one_float, b2_pow)
+        # # 1) increment t
+        # builder.store(builder.fadd(builder.load(t), one_float), t)
+        # t_val = builder.load(t)
+        # # 1.5) calculate values to be used later (based on incremented t)
+        # b1_pow = builder.call(pow, [b1, t_val])
+        # b2_pow = builder.call(pow, [b2, t_val])
+        # one_minus_b1_pow = builder.fsub(one_float, b1_pow)
+        # one_minus_b2_pow = builder.fsub(one_float, b2_pow)
         
-        pnlvm.helpers.printf(
-                builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow)
-        alpha_mult = builder.call(sqrt, [one_minus_b2_pow])
-        pnlvm.helpers.printf(
-                builder, f"%f\n",alpha_mult)
-        alpha_mult = builder.fdiv(alpha_mult, one_minus_b1_pow)
+        # pnlvm.helpers.printf(
+        #         builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow)
+        # alpha_mult = builder.call(sqrt, [one_minus_b2_pow])
+        # pnlvm.helpers.printf(
+        #         builder, f"%f\n",alpha_mult)
+        # alpha_mult = builder.fdiv(alpha_mult, one_minus_b1_pow)
 
-        # this is the new learning rate to use
-        alpha_t = builder.fmul(alpha_mult, lr)
+        # # this is the new learning rate to use
+        # alpha_t = builder.fmul(alpha_mult, lr)
 
-        gradient_struct_values = self._get_listof_gradient_struct_values()
+        # gradient_struct_values = self._get_listof_gradient_struct_values()
 
-        # 2) update first moments
-        for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            pnlvm.helpers.printf(
-                builder, f"\t\t\t\tOPTIM UPDATE FIRST MOMENT {afferent_node.name} {node.name}\n")
+        # # 2) update first moments
+        # for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
+        #     pnlvm.helpers.printf(
+        #         builder, f"\t\t\t\tOPTIM UPDATE FIRST MOMENT {afferent_node.name} {node.name}\n")
 
-            node_idx_ir = ctx.int32_ty(node_idx)
-            afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
+        #     node_idx_ir = ctx.int32_ty(node_idx)
+        #     afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
 
-            m_t_ptr = builder.gep(
-                m_t, [zero, node_idx_ir, afferent_node_index_ir])
-            delta_w_ptr = builder.gep(
-                delta_w, [zero, node_idx_ir, afferent_node_index_ir])
+        #     m_t_ptr = builder.gep(
+        #         m_t, [zero, node_idx_ir, afferent_node_index_ir])
+        #     delta_w_ptr = builder.gep(
+        #         delta_w, [zero, node_idx_ir, afferent_node_index_ir])
 
-            # m_t = m_t * b1
-            gen_inject_mat_scalar_mult(ctx, builder, m_t_ptr, b1, m_t_ptr)
+        #     # m_t = m_t * b1
+        #     gen_inject_mat_scalar_mult(ctx, builder, m_t_ptr, b1, m_t_ptr)
 
-            # (1 - b1)*g_t
-            tmp_val = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, one_minus_b1)
+        #     # (1 - b1)*g_t
+        #     tmp_val = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, one_minus_b1)
 
-            # m_t = m_t + (1-b1)*g_t
-            gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
+        #     # m_t = m_t + (1-b1)*g_t
+        #     gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
 
-        # 3) update second moments
-        for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            pnlvm.helpers.printf(
-                builder, f"\t\t\t\tOPTIM UPDATE SECOND MOMENT {afferent_node.name} {node.name}\n")
+        # # 3) update second moments
+        # for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
+        #     pnlvm.helpers.printf(
+        #         builder, f"\t\t\t\tOPTIM UPDATE SECOND MOMENT {afferent_node.name} {node.name}\n")
 
-            node_idx_ir = ctx.int32_ty(node_idx)
-            afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
+        #     node_idx_ir = ctx.int32_ty(node_idx)
+        #     afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
 
-            v_t_ptr = builder.gep(
-                v_t, [zero, node_idx_ir, afferent_node_index_ir])
-            delta_w_ptr = builder.gep(
-                delta_w, [zero, node_idx_ir, afferent_node_index_ir])
+        #     v_t_ptr = builder.gep(
+        #         v_t, [zero, node_idx_ir, afferent_node_index_ir])
+        #     delta_w_ptr = builder.gep(
+        #         delta_w, [zero, node_idx_ir, afferent_node_index_ir])
 
-            # v_t = v_t * b2
-            gen_inject_mat_scalar_mult(ctx, builder, v_t_ptr, b2, v_t_ptr)
+        #     # v_t = v_t * b2
+        #     gen_inject_mat_scalar_mult(ctx, builder, v_t_ptr, b2, v_t_ptr)
 
-            # g_t * g_t
-            delta_w_sqrd = gen_inject_mat_hadamard(ctx, builder, delta_w_ptr, delta_w_ptr)
+        #     # g_t * g_t
+        #     delta_w_sqrd = gen_inject_mat_hadamard(ctx, builder, delta_w_ptr, delta_w_ptr)
 
-            # (1-b2)*(g_t)^2
-            gen_inject_mat_scalar_mult(ctx, builder, delta_w_sqrd, one_minus_b2, delta_w_sqrd)
+        #     # (1-b2)*(g_t)^2
+        #     gen_inject_mat_scalar_mult(ctx, builder, delta_w_sqrd, one_minus_b2, delta_w_sqrd)
 
-            # v_t = v_t + (1-b2)*(g_t)^2
-            gen_inject_mat_add(ctx, builder, v_t_ptr, delta_w_sqrd, v_t_ptr)
+        #     # v_t = v_t + (1-b2)*(g_t)^2
+        #     gen_inject_mat_add(ctx, builder, v_t_ptr, delta_w_sqrd, v_t_ptr)
 
-        # 4) update weights
+        # # 4) update weights
 
-        for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
-            node_idx_ir = ctx.int32_ty(node_idx)
-            afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
+        # for (node, node_idx, afferent_node, afferent_node_index, matrix, weights_dim_x, weights_dim_y) in gradient_struct_values:
+        #     node_idx_ir = ctx.int32_ty(node_idx)
+        #     afferent_node_index_ir = ctx.int32_ty(afferent_node_index)
             
-            m_t_ptr = builder.gep(
-                m_t, [zero, node_idx_ir, afferent_node_index_ir])
-            v_t_ptr = builder.gep(
-                v_t, [zero, node_idx_ir, afferent_node_index_ir])
-            delta_w_ptr = builder.gep(
-                delta_w, [zero, node_idx_ir, afferent_node_index_ir])
-            # this is messy - #TODO - cleanup this
-            weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
-                ctx, builder, params, node, afferent_node)
-            pnlvm.helpers.printf(
-                builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
-            weight_row = None
-            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "optimizer_w_upd_outer") as (b1, weight_row):
-                weight_column = None
-                with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(weights_dim_y), "optimizer_w_upd_inner") as (b2, weight_column):
-                    # sqrt(v_t) + eps
-                    v_t_value = b2.load(b2.gep(
-                        v_t_ptr, [zero, weight_row, weight_column]))
-                    value = b2.call(sqrt, [v_t_value])
-                    value = b2.fadd(value, eps)
+        #     m_t_ptr = builder.gep(
+        #         m_t, [zero, node_idx_ir, afferent_node_index_ir])
+        #     v_t_ptr = builder.gep(
+        #         v_t, [zero, node_idx_ir, afferent_node_index_ir])
+        #     delta_w_ptr = builder.gep(
+        #         delta_w, [zero, node_idx_ir, afferent_node_index_ir])
+        #     # this is messy - #TODO - cleanup this
+        #     weights_llvmlite, weights_dim_x, weights_dim_y = self._pytorch_model._gen_get_node_weight_ptr(
+        #         ctx, builder, params, node, afferent_node)
+        #     pnlvm.helpers.printf(
+        #         builder, f"OPTIM UPDATE WEIGHTS {afferent_node.name} {node.name}\n",override_debug=False)
+        #     weight_row = None
+        #     with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(weights_dim_x), "optimizer_w_upd_outer") as (b1, weight_row):
+        #         weight_column = None
+        #         with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(weights_dim_y), "optimizer_w_upd_inner") as (b2, weight_column):
+        #             # sqrt(v_t) + eps
+        #             v_t_value = b2.load(b2.gep(
+        #                 v_t_ptr, [zero, weight_row, weight_column]))
+        #             value = b2.call(sqrt, [v_t_value])
+        #             value = b2.fadd(value, eps)
 
-                    # alpha_t * m_t
-                    m_t_value = b2.load(b2.gep(
-                        m_t_ptr, [zero, weight_row, weight_column]))
-                    m_t_value = b2.fmul(alpha_t, m_t_value)
+        #             # alpha_t * m_t
+        #             m_t_value = b2.load(b2.gep(
+        #                 m_t_ptr, [zero, weight_row, weight_column]))
+        #             m_t_value = b2.fmul(alpha_t, m_t_value)
 
-                    # value = alpha_t * m_t / (sqrt(v_t) + eps)
-                    value = b2.fdiv(m_t_value, value)
+        #             # value = alpha_t * m_t / (sqrt(v_t) + eps)
+        #             value = b2.fdiv(m_t_value, value)
 
-                    old_weight_ptr = b2.gep(
-                        weights_llvmlite, [zero, weight_row, weight_column])
+        #             old_weight_ptr = b2.gep(
+        #                 weights_llvmlite, [zero, weight_row, weight_column])
                     
-                    # new_weight = old_weight - value
-                    value = b2.fsub(b2.load(old_weight_ptr), value)
-                    b2.store(value, old_weight_ptr)
+        #             # new_weight = old_weight - value
+        #             value = b2.fsub(b2.load(old_weight_ptr), value)
+        #             b2.store(value, old_weight_ptr)
 
-                    delta_w_val = b2.load(b2.gep(delta_w_ptr,[zero, weight_row, weight_column]))
-                    pnlvm.helpers.printf(b2,"%f ",delta_w_val,override_debug=False)
-                pnlvm.helpers.printf(b1,"\n",override_debug=False)
+        #             delta_w_val = b2.load(b2.gep(delta_w_ptr,[zero, weight_row, weight_column]))
+        #             pnlvm.helpers.printf(b2,"%f ",delta_w_val,override_debug=False)
+        #         pnlvm.helpers.printf(b1,"\n",override_debug=False)
                 
-        pnlvm.helpers.printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
+        # pnlvm.helpers.printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
 
         builder.ret_void()
 
