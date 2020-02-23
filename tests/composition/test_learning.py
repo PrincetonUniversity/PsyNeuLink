@@ -22,7 +22,6 @@ class TestHebbian:
         src = [1, 0, 0, 1, 0, 0, 1, 0, 0]
 
         inputs_dict = {Hebb2: np.array(src)}
-        Hebb_C.enable_learning = True
         output = Hebb_C.learn(num_trials=5,
                    inputs=inputs_dict)
 

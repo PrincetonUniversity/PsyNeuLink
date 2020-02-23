@@ -61,7 +61,7 @@ class TestContrastiveHebbian:
         C.add_node(R)
 
         inputs_dict = {R:[1,0,1,0]}
-        C.run(num_trials=4,
+        C.learn(num_trials=4,
               inputs=inputs_dict)
 
         # KDM 10/2/18: removing this test from here, as it's kind of unimportant to this specific test
@@ -87,7 +87,7 @@ class TestContrastiveHebbian:
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
         R.output_port.parameters.value.set([0, 0, 0, 0], C, override=True)
         inputs_dict = {R:[0,1,0,1]}
-        C.run(num_trials=4,
+        C.learn(num_trials=4,
               inputs=inputs_dict)
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(C),
@@ -127,9 +127,9 @@ class TestContrastiveHebbian:
                 # auto=0,
                 hetero=np.full((size,size),0.0)
         )
+
         P=pnl.Process(pathway=[R])
         S=pnl.System(processes=[P])
-
         inputs_dict = {R:[1,0,1,0]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -214,7 +214,7 @@ class TestContrastiveHebbian:
         c = pnl.Composition()
         c.add_linear_processing_pathway([m,o])
         c.scheduler.add_condition(o, pnl.WhenFinished(m))
-        c.run(inputs={m:[2,2]}, num_trials=4)
+        c.learn(inputs={m:[2,2]}, num_trials=4)
         results = c.parameters.results.get(c)
         np.testing.assert_allclose(results, [[[2.671875]],
                                              [[2.84093837]],
