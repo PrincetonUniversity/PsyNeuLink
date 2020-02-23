@@ -7428,20 +7428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         is_simulating = False
 
 
-                    # Execute Composition
-                    # FIX: 6/12/19 WHERE IS COMPILED EXECUTION OF NESTED NODE?
-                    # autodiff compositions must be passed extra inputs
-                    pytorch_enabled = False
-                    if hasattr(node, "pytorch_representation"):
-                        if node.learning_enabled:
-                            pytorch_enabled = True
-                    # Autodiff execution
-                    if pytorch_enabled:
-                        ret = node.execute(inputs=autodiff_stimuli[node],
-                                           context=context)
-                    # Standard execution
-                    else:
-                        ret = node.execute(context=context)
+                    ret = node.execute(context=context)
 
                     if is_simulating:
                         context.add_flag(ContextFlags.SIMULATION)
@@ -7493,7 +7480,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.PROCESSING)
 
         # Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
-        if self._is_learning(context):
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        if self._is_learning(context) and not isinstance(self, AutodiffComposition):
             context.add_flag(ContextFlags.LEARNING)
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
