@@ -6946,7 +6946,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             randomize_minibatches=randomize_minibatches,
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch, 
-            context=context)
+            context=context,
+            bin_execute=bin_execute)
         
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
@@ -7606,12 +7607,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _adjust_stimulus_dict(self, stimuli):
 
         autodiff_stimuli = {}
-        all_stimuli_keys = list(stimuli.keys())
-        for node in all_stimuli_keys:
-            if hasattr(node, "pytorch_representation"):
-                if node.learning_enabled:
-                    autodiff_stimuli[node] = stimuli[node]
-                    del stimuli[node]
 
         # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
