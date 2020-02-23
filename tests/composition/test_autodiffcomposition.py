@@ -708,7 +708,6 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        sem_net.enable_learning = False
         result = sem_net.learn(inputs={'inputs': inputs_dict,
                                       'targets': targets_dict,
                                       'epochs': eps}, bin_execute=mode)
@@ -726,7 +725,7 @@ class TestTrainingCorrectness:
                         correct_value = targets_dict[node][i]
 
                 # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[0][i][j]), correct_value)
+                assert np.allclose(np.round(result[i][j]), correct_value)
 
         benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
                                        'targets': targets_dict,
@@ -890,7 +889,6 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
         mnet.infer_backpropagation_learning_pathways()
-        mnet.enable_learning = False
         mnet.learn(
             inputs=input_set,
             minibatch_size=1,
@@ -898,7 +896,6 @@ class TestTrainingCorrectness:
             min_delta=min_delt,
             bin_execute=mode
         )
-        mnet.learning_enabled = False
         mnet.run(
             inputs=input_set['inputs'],
             bin_execute=mode
@@ -1119,8 +1116,6 @@ class TestTrainingCorrectness:
         )
 
         print(mnet.parameters.results.get(mnet))
-        mnet.learning_enabled = False
-        mnet.enable_learning = False
         mnet.run(
                 inputs=input_set['inputs'],
         )
@@ -2004,8 +1999,6 @@ class TestTrainingIdenticalness():
         inputs_dict_sys[nouns_in_sys] = inputs_dict[nouns_in]
         inputs_dict_sys[rels_in_sys] = inputs_dict[rels_in]
 
-        sem_net.enable_learning = False
-        sem_net.learning_enabled = False
         result = sem_net.run(inputs=inputs_dict)
 
         # comp_weights = sem_net.get_parameters()[0]
@@ -2016,7 +2009,6 @@ class TestTrainingIdenticalness():
                    "targets": targets_dict,
                    "epochs": eps}
         g = g_f()
-        sem_net.learning_enabled = True
         result = sem_net.learn(inputs=g_f)
 
         comp_weights = sem_net.get_parameters()
@@ -2481,7 +2473,6 @@ class TestNested:
         result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context)
         result1 = np.array(result1).flatten()
         assert np.allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
-        xor_autodiff.learning_enabled = False
         result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
@@ -2547,11 +2538,8 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
         learning_context = Context()
-        xor_autodiff.learning_enabled = False
         result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], bin_execute=mode, context=learning_context)
-        xor_autodiff.learning_enabled = True
         xor_autodiff.learn(inputs=input_dict, bin_execute=mode, context=learning_context)
-        xor_autodiff.learning_enabled = False
         result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
@@ -2897,7 +2885,6 @@ class TestNested:
             #FIXME: Enable the rest of the test when recompilation is supported
             return
 
-        sem_net.learning_enabled = False
         parentComposition.run(inputs=no_training_input)
 
 @pytest.mark.pytorch
