@@ -478,7 +478,6 @@ class AutodiffComposition(Composition):
                  patience=None,
                  min_delta=0,
                  learning_rate=None,
-                 learning_enabled=True,
                  optimizer_type='sgd',
                  weight_decay=0,
                  loss_spec='mse',
@@ -497,13 +496,11 @@ class AutodiffComposition(Composition):
                                                   patience = patience,
                                                   min_delta = min_delta,
                                                   learning_rate = learning_rate,
-                                                  learning_enabled = learning_enabled,
                                                   optimizer_type = optimizer_type,
                                                   weight_decay = weight_decay,
                                                   loss_spec = loss_spec,
                                                   randomize = randomize)
 
-        self.learning_enabled = learning_enabled
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
         self.randomize = randomize
@@ -623,25 +620,6 @@ class AutodiffComposition(Composition):
     def _has_required_keys(self, input_dict):
         required_keys = {"inputs", "targets"}
         return required_keys.issubset(set(input_dict.keys()))
-
-    # def _adjust_stimulus_dict(self, inputs):
-    #     if self.learning_enabled:
-    #         if isinstance(inputs, dict):
-    #             if self._has_required_keys(inputs):
-    #                 return inputs
-    #             raise AutodiffCompositionError("Invalid input specification.")
-    #         elif isinstance(inputs, list):
-    #             for input_dict in inputs:
-    #                 if not self._has_required_keys(input_dict):
-    #                     raise AutodiffCompositionError("Invalid input specification.")
-    #             return inputs
-
-    #     # If learning is disabled, but inputs are provided in the same format as used for learning,
-    #     #    ignore dict in "targets" entry, and pass dict in "inputs" entry along as inputs
-    #     elif isinstance(inputs, dict) and "inputs" in inputs.keys():
-    #         inputs = inputs["inputs"]
-
-    #     return super(AutodiffComposition, self)._adjust_stimulus_dict(inputs)
 
     # performs forward computation for one input
     def autodiff_processing(self, inputs, context=None, do_logging=False, scheduler=None):
