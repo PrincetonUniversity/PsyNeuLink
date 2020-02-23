@@ -6745,13 +6745,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert not is_simulation
             try:
                 if bin_execute is True or bin_execute.startswith('LLVM'):
-                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                    comp_ex_tags = []
+                    # Add learning tags if the composition is to be ran in learning mode
+                    from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+                    if self._is_learning(context) and isinstance(self, AutodiffComposition):
+                        comp_ex_tags.append("learning")
+                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
                 elif bin_execute.startswith('PTX'):
                     self.__ptx_initialize(context)
                     EX = self._compilation_data.ptx_execution._get(context)
                     results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
-
                 full_results = self.parameters.results._get(context)
                 if full_results is None:
                     full_results = results
