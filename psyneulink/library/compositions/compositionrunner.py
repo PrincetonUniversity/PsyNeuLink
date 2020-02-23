@@ -29,7 +29,6 @@ def _batch_inputs(inputs: dict, epochs: int, num_trials: int, batch_size: int = 
     """
     #This is a generator for performance reasons, since we don't want to copy any data (especially for very large inputs or epoch counts!)
     for epoch in range(epochs):
-        chunk = {}
         indices = list(range(0, num_trials))
         if randomize:
             random.shuffle(indices)
@@ -38,6 +37,7 @@ def _batch_inputs(inputs: dict, epochs: int, num_trials: int, batch_size: int = 
                 call_before_minibatch()
             curr_indices = indices[i:i + batch_size]
             for idx in curr_indices:
+                chunk = {}
                 for k, v in inputs.items():
                         chunk[k] = v[idx % len(v)]
                 yield chunk
@@ -162,7 +162,7 @@ class CompositionRunner():
         elif epochs is None:
             epochs = inf_yield_none()
 
-
+        results = []
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
@@ -184,8 +184,9 @@ class CompositionRunner():
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute)
             skip_initialization = True
 
-            return [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
-
+            results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
+            
+        return results
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
         self.mode = mode
