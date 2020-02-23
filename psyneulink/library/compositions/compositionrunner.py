@@ -184,7 +184,7 @@ class CompositionRunner():
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute)
             skip_initialization = True
 
-            results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
+            results = [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
             
         return results
 class EarlyStopping(object):
