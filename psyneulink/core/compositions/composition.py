@@ -6919,19 +6919,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def learn(
-            self, 
-            inputs: dict, 
-            targets: dict = None, 
-            num_trials: int = None, 
+            self,
+            inputs: dict,
+            targets: dict = None,
+            num_trials: int = None,
             epochs: int = 1,
             minibatch_size: int = 1,
             patience: int = None,
             min_delta: int = 0,
             context: Context = None,
-            bin_execute=False, 
+            bin_execute=False,
             randomize_minibatches=False,
             call_before_minibatch = None,
-            call_after_minibatch = None,):
+            call_after_minibatch = None):
         
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
@@ -6940,16 +6940,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.add_flag(ContextFlags.LEARNING_MODE)
 
         learning_results = runner.run_learning(
-            inputs=inputs, 
-            targets=targets, 
-            num_trials=num_trials, 
-            epochs=epochs, 
-            minibatch_size=minibatch_size, 
-            patience=patience, 
-            min_delta=min_delta, 
+            inputs=inputs,
+            targets=targets,
+            num_trials=num_trials,
+            epochs=epochs,
+            minibatch_size=minibatch_size,
+            patience=patience,
+            min_delta=min_delta,
             randomize_minibatches=randomize_minibatches,
             call_before_minibatch=call_before_minibatch,
-            call_after_minibatch=call_after_minibatch, 
+            call_after_minibatch=call_after_minibatch,
             context=context,
             bin_execute=bin_execute)
         
@@ -7359,7 +7359,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
                     #    for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
-                    #    Implementation Note: RecurrentTransferMechanisms are special cased as the AutoAssociativeMechanism 
+                    #    Implementation Note: RecurrentTransferMechanisms are special cased as the AutoAssociativeMechanism
                     #    should be handling learning - not the RTM itself.
                     if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
                         projections = set(self.projections).intersection(set(node.path_afferents))
