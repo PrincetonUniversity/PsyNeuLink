@@ -470,26 +470,6 @@ class CompExecution(CUDAExecution):
                                 self._get_input_struct(inputs),
                                 self._data_struct, self._conditions, *extra_args)
 
-    def execute_learning(self, inputs):
-        # Special case for autodiff, everything is stored in inputs param
-        assert self._composition.learning_enabled
-        runs = len(next(iter(inputs["inputs"].values())))
-        outputs = (self._bin_exec_func.byref_arg_types[-1] * runs)()
-        # Autodiff stimuli is in the second to last argument
-        autodiff_struct = self._initialize_autodiff_struct(inputs, -2,
-                                                           self._composition)
-        r_data = self._get_compilation_param('data_struct', '_get_data_initializer', 3, self._execution_contexts[0])
-
-        c_input = self._bin_exec_func.byref_arg_types[2] * runs
-        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        input_data = (([inputs["inputs"][n][i]] for n in origins) for i in range(runs))
-        r_inputs = c_input(*_tupleize(input_data))
-
-        self._bin_exec_func.wrap_call(self._state_struct, self._param_struct,
-                                      r_inputs, r_data, self._conditions,
-                                      autodiff_struct, outputs)
-        return _convert_ctype_to_python(outputs)
-
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
