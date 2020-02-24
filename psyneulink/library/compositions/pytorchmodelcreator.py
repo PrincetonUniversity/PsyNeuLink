@@ -386,12 +386,11 @@ class PytorchModelCreator(torch.nn.Module):
             raise Exception("LOSS TYPE",loss_type,"NOT SUPPORTED")
 
         optimizer_step_f = ctx.import_llvm_function(optimizer)
-        optimizer_struct = builder.alloca(optimizer_step_f.args[0].type.pointee)
+        optimizer_struct = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
         optimizer_zero_grad = ctx.import_llvm_function(optimizer.zero_grad(ctx).name)
-        optimizer.initialize_optimizer_struct(ctx, builder, optimizer_struct)
         backprop = ctx.import_llvm_function(self._gen_llvm_training_backprop(ctx, optimizer, loss).name)
         
-        # # FIXME: converting this call to direct code results in
+        # # FIXME: converting this call to inlined code results in
         # # significant longer compilation times
         builder.call(optimizer_zero_grad, [optimizer_struct])
         builder.call(backprop, [state, params, data,
@@ -411,10 +410,8 @@ class PytorchModelCreator(torch.nn.Module):
         # setup optimizer
         optimizer_type = self._composition.optimizer_type
         if optimizer_type == 'adam':
-            pnlvm.helpers.printf(builder,"Running with ADAM optimizer\n")
             optimizer = AdamOptimizer(self,lr = self._composition.learning_rate)
         elif optimizer_type == 'sgd':
-            pnlvm.helpers.printf(builder,"Running with SGD optimizer\n")
             optimizer = SGDOptimizer(self,lr = self._composition.learning_rate)
         else:
             raise Exception("OPTIMIZER TYPE",optimizer_type,"NOT SUPPORTED")

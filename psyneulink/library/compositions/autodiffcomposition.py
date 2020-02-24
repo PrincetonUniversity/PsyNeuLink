@@ -556,11 +556,9 @@ class AutodiffComposition(Composition):
 
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(context)
-        if old_opt is not None:
-            return old_opt
-        
-        opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
-        self.parameters.optimizer._set(opt, context)
+        if old_opt is None:
+            opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
+            self.parameters.optimizer._set(opt, context)
 
         # Set up loss function
         if self.loss is not None:
@@ -570,6 +568,8 @@ class AutodiffComposition(Composition):
             self.loss = self.loss_spec
         else:
             self.loss = self._get_loss(self.loss_spec)
+        
+        return self.parameters.pytorch_representation._get(context)
 
     def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, context):
         if not isinstance(learning_rate, (int, float)):
@@ -926,25 +926,19 @@ class AutodiffComposition(Composition):
 
         return weights
     
-    def _get_param_struct_type(self, ctx):
-        node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
-        proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
+    def _get_state_struct_type(self, ctx):
+        """Gets state struct for compiled autodiff"""
+        node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
+        proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
+        pytorch_representation = self._build_pytorch_representation()
+        optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(node_param_type_list),
-            pnlvm.ir.LiteralStructType(proj_param_type_list)))
-    
-    def _get_param_initializer(self, context):
-        node_params = (m._get_param_initializer(context) for m in self._all_nodes)
-        proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
-        return (tuple(node_params), tuple(proj_params))
-        
-    # def _get_param_initializer(self, context):
-    #     mech_params = (n._get_param_initializer(context) for n in self._all_nodes)
-    #     proj_params = (p._get_param_initializer(context)
-    #                    if (p.sender.owner is self.input_CIM or
-    #                        p.receiver.owner is self.output_CIM)
-    #                    else tuple() for p in self._inner_projections)
-    #     self._build_pytorch_representation(self.default_execution_id)
-    #     model = self.parameters.pytorch_representation.get(self.default_execution_id)
-    #     pytorch_params = model._get_param_initializer()
-    #     return (tuple(mech_params), tuple(proj_params), pytorch_params)
+            pnlvm.ir.LiteralStructType(node_state_type_list),
+            pnlvm.ir.LiteralStructType(proj_state_type_list),
+            optimizer_state_type),
+            )
+
+    def _get_state_initializer(self, context):
+        node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
+        proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
+        return (tuple(node_states), tuple(proj_states), tuple())

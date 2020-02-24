@@ -298,15 +298,6 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, *, tags:frozenset):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        learning_struct_ty = pnlvm.ir.LiteralStructType((
-            self.int32_ty,
-            self.int32_ty,
-            pytorch_model._get_learning_struct_type(self).as_pointer(),
-        ))
-        args=[
-            learning_struct_ty.as_pointer(),
-            self.get_output_struct_type(composition).as_pointer()
-        ]
         with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
             state, _, comp_in, data, cond, = builder.function.args
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
