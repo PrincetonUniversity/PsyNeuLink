@@ -125,72 +125,6 @@ class PytorchModelCreator(torch.nn.Module):
         forward_info_weights = self.component_to_forward_info[node]['afferents']
         return [(vertex.component,weights) for (vertex,weights) in forward_info_weights.items()]
 
-    # defines input type
-    # def _get_input_struct_type(self, ctx):  # Test case: {[1 x [2 x double]]}
-    #     input_nodes = self._composition.get_nodes_by_role(NodeRole.INPUT)
-    #     assert set(input_nodes) == set(self.execution_sets[0])
-    #     # FIXME: Why remove nesting? 'elements[0]' removes outer struct,
-    #     # and '.element' removes outer array dimension
-    #     input_list = (ctx.get_input_struct_type(node).elements[0].element for node in input_nodes)
-    #     input_struct = pnlvm.ir.LiteralStructType(input_list)
-    #     return input_struct
-
-    def _get_data_struct_type(self, ctx):
-        # Ensures that data struct is the same as the autodiffcomp
-        return self._composition._get_data_struct_type(ctx)
-
-    # gets the params (i.e. weights and biases) structure for llvm
-    # param struct shape:
-    #   For weights:    [component_id][0][efferent_id_map_id]
-    #   For bias:       [component_id][1]
-    # The efferent id map is needed for weights because we must start from index 0, so each node keeps track of its efferents by iterating them
-    def _get_param_struct_type(self, ctx):
-
-        param_list = [None] * len(self._composition.nodes)
-        for (node, forward_info) in self.component_to_forward_info.items():
-
-            node_idx = self._composition._get_node_index(node)
-
-            # 1) setup weights
-            afferents = forward_info['afferents']
-            weight_array = [None] * len(afferents)
-            for (afferent_vertex, weights) in afferents.items():
-                afferent_node = afferent_vertex.component
-                afferent_index = self._get_afferent_node_index(node,afferent_node)
-                if "no_ref_pass" not in debug_env:
-                    afferent_weight = pnlvm.ir.types.IntType(64)
-                else:
-                    afferent_weight = ctx.convert_python_struct_to_llvm_ir(
-                        weights.detach().numpy())
-                weight_array[afferent_index] = afferent_weight
-            node_params = [pnlvm.ir.types.LiteralStructType(weight_array)]
-
-            param_list[node_idx] = pnlvm.ir.types.LiteralStructType(node_params)
-        return pnlvm.ir.types.LiteralStructType(param_list)
-
-    def _get_param_initializer(self):
-        param_list = [None] * len(self._composition.nodes)
-        for (node, forward_info) in self.component_to_forward_info.items():
-
-            node_idx = self._composition._get_node_index(node)
-
-            # 1) initialize weights
-            afferents = forward_info['afferents']
-            weight_array = [None] * len(afferents)
-            for (afferent_vertex, weights) in afferents.items():
-                afferent_node = afferent_vertex.component
-                afferent_index = self._get_afferent_node_index(node,afferent_node)
-                afferent_weight = weights.detach().numpy()
-                if "no_ref_pass" not in debug_env:
-                    # this gets the actual memory address of the weights
-                    # it is static (according to https://github.com/numpy/numpy/issues/13906)
-                    afferent_weight = afferent_weight.ctypes.data
-                weight_array[afferent_index] = afferent_weight
-            node_params = [weight_array]
-
-            param_list[node_idx] = node_params
-        return pnlvm.execution._tupleize(param_list)
-
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, tags:frozenset):
         llvm_func = None
@@ -228,10 +162,6 @@ class PytorchModelCreator(torch.nn.Module):
         node_weights = ctx.get_param_ptr(projection, builder, projection_params, "matrix")
         node_weights = builder.bitcast(node_weights, pnlvm.ir.types.ArrayType(
                  pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
-        # if "no_ref_pass" not in debug_env:
-        #     mem_addr = builder.load(node_weights)
-        #     node_weights = builder.inttoptr(mem_addr, pnlvm.ir.types.ArrayType(
-        #         pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
 
         return node_weights,dim_x,dim_y
 
@@ -442,31 +372,12 @@ class PytorchModelCreator(torch.nn.Module):
 
         return builder.function
 
-    def _get_learning_struct_type(self, ctx):
-        input_struct = pnlvm.ir.LiteralStructType(ctx.get_input_struct_type(node) for node in self._composition.get_nodes_by_role(NodeRole.INPUT))
-
-        target_struct = pnlvm.ir.LiteralStructType(ctx.get_input_struct_type(node) for node in self._composition.get_nodes_by_role(NodeRole.OUTPUT))
-        return pnlvm.ir.LiteralStructType((input_struct, target_struct))
-
     def _gen_llvm_training_function_body(self, ctx, builder, state, params, data):
         # 1) Setup autodiff learning stuff
-        # if "ref_pass" not in debug_env:
-        #    raise Exception("ref_pass must be enabled in debug!")
         # gets a reference to the autodiff_stimuli_struct from params
         composition = self._composition
 
-
-        # setup optimizer
-        optimizer_type = self._composition.optimizer_type
-        if optimizer_type == 'adam':
-            pnlvm.helpers.printf(builder,"Running with ADAM optimizer\n")
-            optimizer = AdamOptimizer(self,lr = self._composition.learning_rate)
-        elif optimizer_type == 'sgd':
-            pnlvm.helpers.printf(builder,"Running with SGD optimizer\n")
-            optimizer = SGDOptimizer(self,lr = self._composition.learning_rate)
-        else:
-            raise Exception("OPTIMIZER TYPE",optimizer_type,"NOT SUPPORTED")
-
+        optimizer = self._get_compiled_optimizer()
         # setup loss
         loss_type = self._composition.loss_spec
         if loss_type == 'mse':
@@ -496,6 +407,18 @@ class PytorchModelCreator(torch.nn.Module):
         idx = self._composition.get_nodes_by_role(NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
         return builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
 
+    def _get_compiled_optimizer(self):
+        # setup optimizer
+        optimizer_type = self._composition.optimizer_type
+        if optimizer_type == 'adam':
+            pnlvm.helpers.printf(builder,"Running with ADAM optimizer\n")
+            optimizer = AdamOptimizer(self,lr = self._composition.learning_rate)
+        elif optimizer_type == 'sgd':
+            pnlvm.helpers.printf(builder,"Running with SGD optimizer\n")
+            optimizer = SGDOptimizer(self,lr = self._composition.learning_rate)
+        else:
+            raise Exception("OPTIMIZER TYPE",optimizer_type,"NOT SUPPORTED")
+        return optimizer
     # performs forward computation for the model
     @handle_external_context()
     def forward(self, inputs, context=None, do_logging=True, scheduler=None):
