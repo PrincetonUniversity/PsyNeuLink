@@ -6655,7 +6655,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if len(next_inputs[node]) == 1:
                             execution_stimuli[node] = next_inputs[node][0]
                             continue
-                        execution_stimuli[node] = next_inputs[node][stimulus_index]
+                        else:
+                            raise CompositionError("Generators used for Composition input must return one trial's "
+                                                   f"worth of input on each yield. Current generator returned "
+                                                   f"{len(next_inputs[node])} trials' worth of input on its last "
+                                                   f"yield.")
                 except StopIteration:
                     break
             else:
