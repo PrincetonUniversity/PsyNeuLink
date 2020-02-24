@@ -309,13 +309,6 @@ class LLVMBuilderContext:
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
-            forward_tags = tags.difference({"learning"})
-
-            # Call output CIM
-            output_cim_f = self.import_llvm_function(composition.output_CIM,
-                                                     tags=node_tags)
-            builder.call(output_cim_f, [state, params, comp_in, data, data])
-
             return builder.function
 
     def gen_autodiffcomp_exec(self, composition, *, tags:frozenset):
