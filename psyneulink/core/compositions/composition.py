@@ -6642,26 +6642,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
-                # If 'inputs' argument is a function, call the function here with results from last trial
-                execution_stimuli = inputs(self.env, trial_output)
-                if not isinstance(execution_stimuli, dict):
-                    return trial_output
-            elif hasattr(inputs, '__next__'):
+                next_inputs = inputs()
+            elif isgenerator(inputs):
                 try:
                     next_inputs = inputs.__next__()
-                    next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs)
-                    execution_stimuli = {}
-                    for node in next_inputs:
-                        if len(next_inputs[node]) == 1:
-                            execution_stimuli[node] = next_inputs[node][0]
-                            continue
-                        else:
-                            raise CompositionError("Generators used for Composition input must return one trial's "
-                                                   f"worth of input on each yield. Current generator returned "
-                                                   f"{len(next_inputs[node])} trials' worth of input on its last "
-                                                   f"yield.")
                 except StopIteration:
                     break
+
+            if callable(inputs) or isgenerator(inputs):
+                next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs)
+                execution_stimuli = {}
+                for node in next_inputs:
+                    if len(next_inputs[node]) == 1:
+                        execution_stimuli[node] = next_inputs[node][0]
+                        continue
+                    else:
+                        input_type = 'Generator' if isgenerator(inputs) else 'Function'
+                        raise CompositionError(f"{input_type}s used for Composition input must return one trial's "
+                                               f"worth of input on each call. Current generator returned "
+                                               f"{len(next_inputs[node])} trials' worth of input on its last call.")
             else:
                 execution_stimuli = {}
                 stimulus_index = trial_num % num_inputs_sets
@@ -6670,7 +6669,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         execution_stimuli[node] = inputs[node][0]
                         continue
                     execution_stimuli[node] = inputs[node][stimulus_index]
-
             execution_autodiff_stimuli = {}
             for node in autodiff_stimuli:
                 if isinstance(autodiff_stimuli[node], list):
