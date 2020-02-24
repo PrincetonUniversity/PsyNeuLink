@@ -162,7 +162,6 @@ class CompositionRunner():
         elif epochs is None:
             epochs = inf_yield_none()
 
-        results = []
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
@@ -184,8 +183,12 @@ class CompositionRunner():
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute)
             skip_initialization = True
 
+        # FIXME: compiled run values differ from pytorch run 
+        if bin_execute is not False:
+            results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
+        else:
             results = [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
-            
+
         return results
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
