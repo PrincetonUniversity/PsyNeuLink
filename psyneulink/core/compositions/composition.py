@@ -6746,8 +6746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 comp_ex_tags = frozenset({})
                 # Add learning tags if the composition is to be ran in learning mode
-                from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-                if self._is_learning(context) and isinstance(self, AutodiffComposition):
+                if self._is_learning(context):
                     comp_ex_tags = comp_ex_tags.union(frozenset({"learning"}))
                 if bin_execute is True or bin_execute.startswith('LLVM'):
                     _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
