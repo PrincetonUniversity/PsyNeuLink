@@ -4744,6 +4744,26 @@ class TestInputSpecifications:
               num_trials=1)
         assert c.parameters.results.get(c) == [[np.array([0.])]]
 
+    def test_error_on_malformed_generator(self):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_generator():
+            yield {
+                m1: [[1],[2]]
+            }
+
+        t_g = test_generator()
+
+        try:
+            c.run(inputs=t_g)
+        except Exception as e:
+            assert isinstance(e, pnl.CompositionError)
+
     @pytest.mark.parametrize(
             "with_outer_controller,with_inner_controller",
             [(True, True), (True, False), (False, True), (False, False)]
