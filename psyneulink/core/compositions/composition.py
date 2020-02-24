@@ -6744,16 +6744,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Simulations are run as part of the controller node wrapper.
             assert not is_simulation
             try:
+                comp_ex_tags = frozenset({})
+                # Add learning tags if the composition is to be ran in learning mode
+                from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+                if self._is_learning(context) and isinstance(self, AutodiffComposition):
+                    comp_ex_tags = comp_ex_tags.union(frozenset({"learning"}))
                 if bin_execute is True or bin_execute.startswith('LLVM'):
-                    comp_ex_tags = []
-                    # Add learning tags if the composition is to be ran in learning mode
-                    from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-                    if self._is_learning(context) and isinstance(self, AutodiffComposition):
-                        comp_ex_tags.append("learning")
                     _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
                 elif bin_execute.startswith('PTX'):
-                    self.__ptx_initialize(context)
+                    self.__ptx_initialize(context, additional_tags=comp_ex_tags)
                     EX = self._compilation_data.ptx_execution._get(context)
                     results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
                 full_results = self.parameters.results._get(context)
@@ -7895,9 +7895,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._compilation_data.data_struct.set(None, context)
         self._compilation_data.scheduler_conditions.set(None, context)
 
-    def __ptx_initialize(self, context=None):
+    def __ptx_initialize(self, context=None, additional_tags=frozenset()):
         if self._compilation_data.ptx_execution._get(context) is None:
-            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id]), context)
+            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id], additional_tags=additional_tags), context)
 
     def _get_node_wrapper(self, node):
         """Return a (memoized) wrapper instance that generates node invocation sequence.

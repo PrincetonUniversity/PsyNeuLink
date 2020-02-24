@@ -222,7 +222,7 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, execution_ids=[None], additional_tags=[]):
+    def __init__(self, composition, execution_ids=[None], additional_tags=frozenset()):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self._execution_contexts = [
@@ -235,7 +235,7 @@ class CompExecution(CUDAExecution):
         self.__bin_run_multi_func = None
         self.__debug_env = debug_env
         self.__frozen_vals = None
-        self.__additional_tags = additional_tags
+        self.__additional_tags = frozenset(additional_tags)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -520,8 +520,9 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
+            run_tags = frozenset({"run"}.union(self.__additional_tags))
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=frozenset({"run", *self.__additional_tags}))
+                self._composition, tags=run_tags)
 
         return self.__bin_run_func
 
