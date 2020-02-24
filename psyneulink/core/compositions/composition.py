@@ -469,12 +469,14 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
 
 .. _Composition_Input_as_Function:
 
-*Run with Input Function*
-=========================
+*Run with Input Function, Generator, or Generator Function*
+===========================================================
 
-An alternative way to specify inputs is with a function. The function must return a dictionary that satisfies
-the rules above for standard input specification. The only difference is that on each execution, the function returns
-the input values for each INPUT Node for a single trial.
+Inputs can also be specified with a function, generator, or generator function. In the latter case, the Composition
+will instantiate and use the generator returned from the generator function as though it were passed directly by the
+user. The function or generator must return a dictionary that satisfies rules above for standard input specification.
+The only difference is that on each execution, the function or generator must return the input values for each INPUT
+Node for a single trial.
 
 COMMENT:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
