@@ -108,7 +108,7 @@ class TestMiscTrainingFunctionality:
 
     # test whether processing doesn't interfere with pytorch parameters after training
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_training_then_processing(self, mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -270,7 +270,7 @@ class TestMiscTrainingFunctionality:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
@@ -322,6 +322,7 @@ class TestMiscTrainingFunctionality:
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     @pytest.mark.parametrize("mode", ['Python',
                                     #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    #   LLVM test is disabled since parameters are currently not written back
                                      ])
     def test_params_stay_separate(self,mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -387,6 +388,8 @@ class TestMiscTrainingFunctionality:
     # test whether the autodiff composition's get_parameters method works as desired
     @pytest.mark.parametrize("mode", ['Python',
                                     #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    #   LLVM test is disabled since parameters are currently not written back
+
                                      ])
     def test_get_params(self, mode):
 
@@ -473,7 +476,7 @@ class TestTrainingCorrectness:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_not, mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
@@ -543,7 +546,7 @@ class TestTrainingCorrectness:
         ]
     )
     @pytest.mark.parametrize("mode", ["Python",
-                                    #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_not, mode, benchmark):
 
@@ -732,7 +735,7 @@ class TestTrainingCorrectness:
                                        'epochs': eps}, bin_execute=mode)
 
     @pytest.mark.parametrize("mode", ["Python",
-                                # pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                 ])
     def test_pytorch_equivalence_with_autodiff_composition(self, mode):
         iSs = np.array(
@@ -1184,7 +1187,7 @@ class TestTrainingTime:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    # pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                     ])
     def test_and_training_time(self, eps, opt,mode):
 
@@ -1301,7 +1304,7 @@ class TestTrainingTime:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    # pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                     ])
     def test_xor_training_time(self, eps, opt,mode):
 
