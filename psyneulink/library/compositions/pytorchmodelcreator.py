@@ -140,7 +140,8 @@ class PytorchModelCreator(torch.nn.Module):
             if "learning" in tags:
                 self._gen_llvm_training_function_body(ctx, builder, state, params, data)
             else:
-                self._gen_llvm_forward_function_body(ctx, builder, state, params, data)
+                model_input = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
+                self._gen_llvm_forward_function_body(ctx, builder, state, params, model_input, data)
             builder.ret_void()
         return llvm_func
 
@@ -257,10 +258,6 @@ class PytorchModelCreator(torch.nn.Module):
         # initialize optimizer params:
         delta_w = builder.gep(optim_struct, [ctx.int32_ty(0), ctx.int32_ty(optimizer._DELTA_W_NUM)])
 
-        # first we copy input values to data struct of input_CIM
-        for i, node in enumerate(input_nodes):
-            node_model_input = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            pnlvm.helpers.printf_float_array(builder, node_model_input, prefix=f"{node}\tinput:\t")
 
         # 2) call forward computation
         z_values = self._gen_llvm_forward_function_body(

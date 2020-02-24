@@ -325,18 +325,9 @@ class LLVMBuilderContext:
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-            # Call pytorch internal compiled llvm func
-            input_cim_idx = composition._get_node_index(composition.input_CIM)
-
-            # Extract the input that should be inserted into the model
-            model_input = builder.gep(data, [self.int32_ty(0),
-                                             self.int32_ty(0),
-                                             self.int32_ty(input_cim_idx)])
-            model_output = builder.gep(data, [self.int32_ty(0)])
 
             pytorch_forward_func = self.import_llvm_function(pytorch_model, tags=tags)
-            builder.call(pytorch_forward_func, [state, params,
-                                                model_input, model_output])
+            builder.call(pytorch_forward_func, [state, params, data])
 
             node_tags = tags.union({"node_wrapper"})
             # Call output CIM

@@ -733,7 +733,7 @@ class AutodiffComposition(Composition):
             elif "learning" in tags:
                 return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
             else:
-                return ctx.gen_composition_exec(self, tags=tags)
+                return ctx.gen_autodiffcomp_exec(self, tags=tags)
 
     def _infer_output_nodes(self, nodes: dict):
         """
