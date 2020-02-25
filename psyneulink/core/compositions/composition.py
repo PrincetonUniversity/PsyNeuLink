@@ -17,8 +17,8 @@ Contents
   * `Composition_Creation`
       - `Composition_Nested`
   * `Composition_Run`
-      - `Composition_Run_Inputs`
-      - `Composition_Input_as_Function`
+      - `Composition_Run_Static_Inputs`
+      - `Composition_Run_Dynamic_Inputs`
       - `Composition_Scope_of_Execution`
   * `Composition_Controller`
       - `Composition_Controller_Assignment`
@@ -206,10 +206,10 @@ the nested composition just as for any other node.
 Running a Composition
 ---------------------
 
-.. _Composition_Run_Inputs:
+.. _Composition_Run_Static_Inputs:
 
 *Run with Input Dictionary*
-===========================
+============================
 
 The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_ports of the INPUT Nodes in the
 `scope of execution <Composition_Scope_of_Execution>`. These input values are specified in the **inputs** argument of
@@ -467,16 +467,116 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
         >>> comp.run(inputs=input_list)
 ..
 
-.. _Composition_Input_as_Function:
+.. _Composition_Run_Dynamic_Inputs:
 
-*Run with Input Function, Generator, or Generator Function*
+*Run with Function, Generator, or Generator Function*
 ===========================================================
 
-Inputs can also be specified with a function, generator, or generator function. In the latter case, the Composition
-will instantiate and use the generator returned from the generator function as though it were passed directly by the
-user. The function or generator must return a dictionary that satisfies rules above for standard input specification.
-The only difference is that on each execution, the function or generator must return the input values for each INPUT
-Node for a single trial.
+Inputs can also be specified with a function, generator, or generator function.
+
+A function used as input must take as its sole argument the current trial number and return a value that satisfies
+all rules above for standard input specification. The only difference is that on each execution, the function must
+return the input values for each INPUT Node for a single trial.
+
+.. note::
+    Default behavior when passing a function as input to a Composition is to execute for only one trial. Remember to
+    set the num_trials argument of Composition.run if you intend to cycle through multiple trials.
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[1.0, 2.0, 3.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = pnl.Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> def function_as_input(trial_num):
+        ...     a_inputs = [[1.0, 2.0, 3.0],[4.0, 5.0, 6.0]]
+        ...     this_trials_inputs = {
+        ...         a: a_inputs[trial_num]
+        ...     }
+        ...     return this_trials_inputs
+
+        >>> comp.run(inputs=function_as_input,
+        ...          num_trials=2)
+
+..
+
+A generator can also be used as input. On each yield, it should return a value that satisfies all rules above for
+standard input specification. The only difference is that on each execution, the generator must yield the input values
+for each INPUT Node for a single trial.
+
+.. note::
+    Default behavior when passing a generator is to execute until the generator is exhausted. If the num_trials
+    argument of Composition.run is set, the Composition will execute EITHER until exhaustion, or until num_trials has
+    been reached - whichever comes first.
+
+Complete input specification:
+
+::
+
+    >>> import psyneulink as pnl
+
+    >>> a = pnl.TransferMechanism(name='a',default_variable = [[1.0, 2.0, 3.0]])
+    >>> b = pnl.TransferMechanism(name='b')
+
+    >>> pathway1 = [a, b]
+
+    >>> comp = pnl.Composition(name='comp')
+
+    >>> comp.add_linear_processing_pathway(pathway1)
+
+    >>> def generator_as_input():
+    ...    a_inputs = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
+    ...    for i in range(len(a_inputs)):
+    ...        this_trials_inputs = {a: a_inputs[i]}
+    ...        yield this_trials_inputs
+
+    >>> generator_instance = generator_as_input()
+
+    >>> # Because the num_trials argument is set to 2, the below call to run will result in only 2 executions of
+    ... # comp, even though it would take three executions to exhaust the generator.
+    >>> comp.run(inputs=generator_instance,
+    ...          num_trials=2)
+
+..
+
+If a generator function is used, the Composition will instantiate the generator and use that as its input. Thus,
+the returned generator instance of a generator function must follow the same rules as a generator instance passed
+directly to the Composition.
+
+Complete input specification:
+
+::
+
+    >>> import psyneulink as pnl
+
+    >>> a = pnl.TransferMechanism(name='a',default_variable = [[1.0, 2.0, 3.0]])
+    >>> b = pnl.TransferMechanism(name='b')
+
+    >>> pathway1 = [a, b]
+
+    >>> comp = pnl.Composition(name='comp')
+
+    >>> comp.add_linear_processing_pathway(pathway1)
+
+    >>> def generator_function_as_input():
+    ...    a_inputs = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
+    ...    for i in range(len(a_inputs)):
+    ...        this_trials_inputs = {a: a_inputs[i]}
+    ...        yield this_trials_inputs
+
+    >>> comp.run(inputs=generator_function_as_input)
+
+..
 
 COMMENT:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
@@ -6644,7 +6744,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
-                next_inputs = inputs()
+                next_inputs = inputs(trial_num)
             elif isgenerator(inputs):
                 try:
                     next_inputs = inputs.__next__()

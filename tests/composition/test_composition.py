@@ -4703,7 +4703,26 @@ class TestInputSpecifications:
         assert np.allclose(C.get_output_values(comp), [[0.]])
         assert np.allclose(D.get_output_values(comp), [[4.]])
 
-    def test_generator_as_inputs(self):
+    def test_function_as_input(self):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_function(trial_num):
+            stimuli = list(range(10))
+            return {
+                m1: stimuli[trial_num]
+            }
+
+        c.run(inputs=test_function,
+              num_trials=10)
+        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                                               [np.array([8.])], [np.array([9.])]]
+    def test_generator_as_input(self):
         c = pnl.Composition()
 
         m1 = pnl.TransferMechanism()
@@ -4724,7 +4743,7 @@ class TestInputSpecifications:
                                                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
                                                [np.array([8.])], [np.array([9.])]]
 
-    def test_generator_as_inputs_with_num_trials(self):
+    def test_generator_as_input_with_num_trials(self):
         c = pnl.Composition()
 
         m1 = pnl.TransferMechanism()
