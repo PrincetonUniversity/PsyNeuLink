@@ -567,7 +567,7 @@ class LLVMBuilderContext:
 
         if not simulation and "const_input" in debug_env:
             if not debug_env["const_input"]:
-                input_init = pnlvm._tupleize([[os.defaults.variable] for os in composition.input_CIM.input_ports])
+                input_init = [[os.defaults.variable.tolist()] for os in composition.input_CIM.input_ports]
                 print("Setting default input: ", input_init)
             else:
                 input_init = ast.literal_eval(debug_env["const_input"])
