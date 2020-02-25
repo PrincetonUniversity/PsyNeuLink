@@ -183,7 +183,7 @@ class CompositionRunner():
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute)
             skip_initialization = True
 
-        # FIXME: compiled run values differ from pytorch run 
+        # FIXME: compiled run values differ from pytorch run
         if bin_execute is not False and bin_execute != 'Python':
             results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
         else:
