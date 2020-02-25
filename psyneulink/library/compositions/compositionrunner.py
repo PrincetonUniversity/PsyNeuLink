@@ -184,7 +184,8 @@ class CompositionRunner():
             skip_initialization = True
 
         # FIXME: compiled run values differ from pytorch run 
-        if bin_execute is not False:
+        import pdb; pdb.set_trace()
+        if bin_execute is not False and bin_execute != 'Python':
             results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
         else:
             results = [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
