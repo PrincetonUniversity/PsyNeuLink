@@ -506,7 +506,7 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_run_multi_func
 
-    def run(self, inputs, runs=0, num_input_sets=0, learning=False):
+    def run(self, inputs, runs=0, num_input_sets=0):
         if isgenerator(inputs):
             list_inputs = list(inputs)
             inputs = {k:[list(v)] for (k,v) in list_inputs[0].items()}
