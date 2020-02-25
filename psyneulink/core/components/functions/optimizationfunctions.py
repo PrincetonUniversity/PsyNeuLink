@@ -1241,6 +1241,7 @@ class GridSearch(OptimizationFunction):
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
         random_state = Parameter(None, stateful=True, loggable=False)
+        select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
 
@@ -1272,7 +1273,6 @@ class GridSearch(OptimizationFunction):
 
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         # self.tolerance = tolerance
-        self.select_randomly_from_optimal_values = select_randomly_from_optimal_values
 
         if seed is None:
             seed = get_global_seed()
@@ -1284,6 +1284,7 @@ class GridSearch(OptimizationFunction):
             search_function=search_function,
             search_termination_function=search_termination_function,
             search_space=search_space,
+            select_randomly_from_optimal_values=select_randomly_from_optimal_values,
             save_samples=True,
             save_values=True,
             random_state=random_state,
@@ -1705,8 +1706,9 @@ class GridSearch(OptimizationFunction):
             value_sample_pairs = zip(all_values, all_samples)
             value_optimal, sample_optimal = next(value_sample_pairs)
 
+            select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
             for value, sample in value_sample_pairs:
-                if self.select_randomly_from_optimal_values and np.allclose(value, value_optimal):
+                if select_randomly and np.allclose(value, value_optimal):
                     optimal_value_count += 1
 
                     # swap with probability = 1/optimal_value_count in order to achieve
