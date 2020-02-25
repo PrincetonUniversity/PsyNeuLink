@@ -80,7 +80,7 @@ class CompositionRunner():
         
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
-        inputs,_,_ = self._composition._adjust_stimulus_dict(inputs)
+        inputs,_ = self._composition._adjust_stimulus_dict(inputs)
         return inputs
 
     def _infer_target_nodes(self, targets: dict):

@@ -6715,7 +6715,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not callable(inputs) \
                 and not hasattr(inputs, '__next__'):
             # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets, _ = self._adjust_stimulus_dict(inputs)
+            inputs, num_inputs_sets = self._adjust_stimulus_dict(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -7586,7 +7586,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return (not self.disable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
 
     def _adjust_stimulus_dict(self, stimuli):
-
 
         # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
