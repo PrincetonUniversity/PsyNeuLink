@@ -178,7 +178,7 @@ class CompositionRunner():
             if minibatch_size == TRAINING_SET:
                 minibatch_size = num_trials
 
-            if patience is not None:
+            if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             minibatched_input = _batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch)
