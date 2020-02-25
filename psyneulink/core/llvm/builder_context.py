@@ -120,10 +120,7 @@ class LLVMBuilderContext:
         return builder
 
     def gen_llvm_function(self, obj, *, tags:frozenset) -> ir.Function:
-        cache = self._cache
-        if obj not in cache:
-            cache[obj] = dict()
-        cache_variants = cache[obj]
+        cache_variants = self._cache.setdefault(obj, dict())
 
         if tags not in cache_variants:
             cache_variants[tags] = obj._gen_llvm_function(tags=tags)
