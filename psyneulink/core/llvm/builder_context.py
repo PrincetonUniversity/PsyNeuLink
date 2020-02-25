@@ -221,6 +221,19 @@ class LLVMBuilderContext:
 
         return ir.LiteralStructType([])
 
+    def get_node_wrapper(self, composition, node):
+        cache = self._cache.setdefault(composition, {})
+        if node not in cache:
+            class node_wrapper():
+                def _gen_llvm_function(s, *, tags:frozenset):
+                    with self as ctx:
+                        return ctx.gen_node_wrapper(composition, node, tags=tags)
+            w = node_wrapper()
+            cache[node] = w
+            return w
+
+        return cache[node]
+
     def get_param_ptr(self, component, builder, params_ptr, param_name):
         idx = self.int32_ty(component._get_param_ids().index(param_name))
         return builder.gep(params_ptr, [self.int32_ty(0), idx],
@@ -269,12 +282,12 @@ class LLVMBuilderContext:
 
         node_tags = tags.union({"node_wrapper"})
         # Call input CIM
-        input_cim_w = composition._get_node_wrapper(composition.input_CIM)
+        input_cim_w = self.get_node_wrapper(composition, composition.input_CIM)
         input_cim_f = self.import_llvm_function(input_cim_w, tags=node_tags)
         builder.call(input_cim_f, [state, params, comp_in, data, data])
 
         # Call parameter CIM
-        param_cim_w = composition._get_node_wrapper(composition.parameter_CIM)
+        param_cim_w = self.get_node_wrapper(composition, composition.parameter_CIM)
         param_cim_f = self.import_llvm_function(param_cim_w, tags=node_tags)
         builder.call(param_cim_f, [state, params, comp_in, data, data])
 
@@ -310,7 +323,7 @@ class LLVMBuilderContext:
                                                            params, data, learning)
             node_tags = tags.union({"node_wrapper"})
             # Call output CIM
-            output_cim_w = composition._get_node_wrapper(composition.output_CIM)
+            output_cim_w = self.get_node_wrapper(composition, composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w, tags=node_tags)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
@@ -359,7 +372,7 @@ class LLVMBuilderContext:
 
             node_tags = tags.union({"node_wrapper"})
             # Call output CIM
-            output_cim_w = composition._get_node_wrapper(composition.output_CIM)
+            output_cim_w = self.get_node_wrapper(composition, composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w, tags=node_tags)
             builder.call(output_cim_f, [state, params, comp_in, data, data])
 
@@ -371,7 +384,7 @@ class LLVMBuilderContext:
         extra_args = []
         # If there is a node that needs learning input we need to export it
         for node in filter(lambda n: hasattr(n, 'learning_enabled') and "learning" in tags, composition.nodes):
-            node_wrap = composition._get_node_wrapper(node)
+            node_wrap = self.get_node_wrapper(composition, node)
             node_f = self.import_llvm_function(node_wrap, tags=node_tags)
             extra_args = [node_f.args[-1].type]
 
@@ -391,14 +404,14 @@ class LLVMBuilderContext:
                 reinit_cond = cond_gen.generate_sched_condition(
                     builder, when, cond, node)
                 with builder.if_then(reinit_cond):
-                    node_w = composition._get_node_wrapper(node)
+                    node_w = self.get_node_wrapper(composition, node)
                     node_reinit_f = self.import_llvm_function(node_w, tags=node_tags.union({"reinitialize"}))
                     builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == BEFORE:
                 assert composition.controller is not None
-                controller_w = composition._get_node_wrapper(composition.controller)
+                controller_w = self.get_node_wrapper(composition, composition.controller)
                 controller_f = self.import_llvm_function(controller_w,
                                                          tags=node_tags)
                 builder.call(controller_f, [state, params, comp_in, data, data])
@@ -453,7 +466,7 @@ class LLVMBuilderContext:
                 run_set_node_ptr = builder.gep(run_set_ptr, [zero, self.int32_ty(idx)])
                 node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
                 with builder.if_then(node_cond):
-                    node_w = composition._get_node_wrapper(node)
+                    node_w = self.get_node_wrapper(composition, node)
                     node_f = self.import_llvm_function(node_w, tags=node_tags)
                     builder.block.name = "invoke_" + node_f.name
                     # Wrappers do proper indexing of all structures
@@ -507,12 +520,12 @@ class LLVMBuilderContext:
             if simulation is False and composition.enable_controller and \
                composition.controller_mode == AFTER:
                 assert composition.controller is not None
-                controller_w = composition._get_node_wrapper(composition.controller)
+                controller_w = self.get_node_wrapper(composition, composition.controller)
                 controller_f = self.import_llvm_function(controller_w, tags=node_tags)
                 builder.call(controller_f, [state, params, comp_in, data, data])
 
             # Call output CIM
-            output_cim_w = composition._get_node_wrapper(composition.output_CIM)
+            output_cim_w = self.get_node_wrapper(composition, composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w, tags=node_tags)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])

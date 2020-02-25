@@ -17,7 +17,7 @@ from collections import defaultdict
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
-from . import helpers, jit_engine
+from . import helpers, jit_engine, builder_context
 from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
@@ -267,7 +267,7 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        wrapper = self._composition._get_node_wrapper(node)
+        wrapper = builder_context.LLVMBuilderContext.get_global().get_node_wrapper(self._composition, node)
         self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper"}))
 
     @property
