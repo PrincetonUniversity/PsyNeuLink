@@ -505,7 +505,7 @@ class AutodiffComposition(Composition):
         self.loss_spec = loss_spec
         self.randomize = randomize
         self.refresh_losses = refresh_losses
-
+        self._built_pathways = False
         self.weight_decay = weight_decay
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
@@ -773,7 +773,13 @@ class AutodiffComposition(Composition):
             if NodeRole.INPUT in self.get_roles_by_node(node) and not NodeRole.TARGET in self.get_roles_by_node(node):
                 ret[node] = values
         return ret
-
+    
+    def learn(self, *args, **kwargs):
+        if self._built_pathways is False:
+            self.infer_backpropagation_learning_pathways()
+            self._built_pathways = True
+        return super().learn(*args, **kwargs)
+        
     @handle_external_context()
     def execute(self,
                 inputs=None,
