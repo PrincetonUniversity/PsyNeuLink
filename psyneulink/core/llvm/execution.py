@@ -269,7 +269,8 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper", *self.__additional_tags}))
+        tags = frozenset({"node_wrapper"}.union(self.__additional_tags))
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=tags)
 
     @property
     def _conditions(self):
@@ -435,7 +436,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            tags=frozenset({*self.__additional_tags})
+            tags=frozenset(self.__additional_tags)
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
                 self._composition, tags=tags)
 
