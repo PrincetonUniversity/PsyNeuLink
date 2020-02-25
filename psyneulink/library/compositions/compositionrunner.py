@@ -131,7 +131,9 @@ class CompositionRunner():
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,
-                     bin_execute=False):
+                     bin_execute=False,
+                     *args,
+                     **kwargs):
         """
         Runs the composition repeatedly with the specified parameters
 
@@ -162,6 +164,8 @@ class CompositionRunner():
         elif epochs is None:
             epochs = inf_yield_none()
 
+        skip_initialization = False
+
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
@@ -177,10 +181,9 @@ class CompositionRunner():
             if patience is not None:
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
-            skip_initialization = False
             minibatched_input = _batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch)
             
-            self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute)
+            self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
             skip_initialization = True
 
         # FIXME: compiled run values differ from pytorch run
