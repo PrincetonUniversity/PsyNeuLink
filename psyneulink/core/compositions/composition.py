@@ -6698,10 +6698,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
         elif callable(inputs):
             num_inputs_sets = 1
-            autodiff_stimuli = {}
         elif hasattr(inputs, '__next__'):
             num_inputs_sets = sys.maxsize
-            autodiff_stimuli = {}
         elif not isinstance(inputs, dict):
             if len(input_nodes) == 1:
                 raise CompositionError(
@@ -6717,7 +6715,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not callable(inputs) \
                 and not hasattr(inputs, '__next__'):
             # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(inputs)
+            inputs, num_inputs_sets, _ = self._adjust_stimulus_dict(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -6798,9 +6796,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_inputs = inputs.__next__()
                 except StopIteration:
                     break
-
+            
             if callable(inputs) or isgenerator(inputs):
-                next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs)
+                next_inputs, num_inputs_sets = self._adjust_stimulus_dict(next_inputs)
                 execution_stimuli = {}
                 for node in next_inputs:
                     if len(next_inputs[node]) == 1:
@@ -6819,12 +6817,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         execution_stimuli[node] = inputs[node][0]
                         continue
                     execution_stimuli[node] = inputs[node][stimulus_index]
-            execution_autodiff_stimuli = {}
-            for node in autodiff_stimuli:
-                if isinstance(autodiff_stimuli[node], list):
-                    execution_autodiff_stimuli[node] = autodiff_stimuli[node][stimulus_index]
-                else:
-                    execution_autodiff_stimuli[node] = autodiff_stimuli[node]
 
             for node in self.nodes:
                 if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
@@ -6836,7 +6828,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # pass along the stimuli for this trial
 
             trial_output = self.execute(inputs=execution_stimuli,
-                                        autodiff_stimuli=execution_autodiff_stimuli,
                                         scheduler=scheduler,
                                         termination_processing=termination_processing,
                                         call_before_time_step=call_before_time_step,
@@ -6959,7 +6950,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def execute(
             self,
             inputs=None,
-            autodiff_stimuli=None,
             scheduler=None,
             termination_processing=None,
             call_before_time_step=None,
@@ -7172,7 +7162,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
                         _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        _comp_ex.execute(inputs, autodiff_stimuli=autodiff_stimuli)
+                        _comp_ex.execute(inputs)
                         return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
                         self.__ptx_initialize(context)
@@ -7597,7 +7587,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _adjust_stimulus_dict(self, stimuli):
 
-        autodiff_stimuli = {}
 
         # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
@@ -7629,7 +7618,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 if isinstance(stim_list, dict):
 
-                    adjusted_stimulus_dict, num_trials, autodiff_stimuli = node._adjust_stimulus_dict(stim_list)
+                    adjusted_stimulus_dict, num_trials = node._adjust_stimulus_dict(stim_list)
                     translated_stimulus_dict = {}
 
                     # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
@@ -7705,7 +7694,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError("The input dictionary for {} contains input specifications of different "
                                     "lengths ({}). The same number of inputs must be provided for each node "
                                     "in a Composition.".format(self.name, nums_input_sets))
-        return adjusted_stimuli, num_trials, autodiff_stimuli
+        return adjusted_stimuli, num_trials
 
     def _adjust_execution_stimuli(self, stimuli):
         adjusted_stimuli = {}
@@ -7920,7 +7909,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         assert "node_wrapper" in tags
         func_tags = tags.difference({"node_wrapper"})
         is_mech = isinstance(node, Mechanism)
-        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             node_function = ctx.import_llvm_function(node, tags=func_tags)
@@ -7938,10 +7926,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
                 cond_ty = cond_gen.get_condition_struct_type().as_pointer()
                 args.append(cond_ty)
-
-                # Append learning param if needed
-                if is_learning_autodiff:
-                    args.append(node_function.args[-2].type)
 
             builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
             llvm_func = builder.function
@@ -8066,9 +8050,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
                 node_data = builder.gep(data_in, [zero, nested_idx])
                 node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-                node_learn = (llvm_func.args[6], node_function.args[-1].type(None)) if is_learning_autodiff else ()
                 builder.call(node_function, [node_context, node_params, node_in,
-                                             node_data, node_cond, *node_learn])
+                                             node_data, node_cond])
                 # Copy output of the nested composition to its output place
                 output_idx = node._get_node_index(node.output_CIM)
                 result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])

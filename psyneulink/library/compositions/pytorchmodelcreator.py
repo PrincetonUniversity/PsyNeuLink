@@ -370,8 +370,6 @@ class PytorchModelCreator(torch.nn.Module):
         return builder.function
 
     def _gen_llvm_training_function_body(self, ctx, builder, state, params, data):
-        # 1) Setup autodiff learning stuff
-        # gets a reference to the autodiff_stimuli_struct from params
         composition = self._composition
 
         optimizer = self._get_compiled_optimizer()

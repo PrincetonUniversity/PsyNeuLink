@@ -777,7 +777,6 @@ class AutodiffComposition(Composition):
     @handle_external_context()
     def execute(self,
                 inputs=None,
-                autodiff_stimuli=None,
                 num_trials=None,
                 minibatch_size=1,
                 do_logging=False,

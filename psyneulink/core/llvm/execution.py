@@ -448,7 +448,7 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_exec_multi_func
 
-    def execute(self, inputs, autodiff_stimuli=None):
+    def execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         if len(self._execution_contexts) > 1:
@@ -458,17 +458,9 @@ class CompExecution(CUDAExecution):
                                                 self._data_struct,
                                                 self._conditions, self._ct_len)
         else:
-            extra_args = ()
-            if autodiff_stimuli is not None:
-                nested_autodiff = [n for n in self._composition.nodes if getattr(n, 'learning_enabled', False)]
-                assert len(nested_autodiff) <= 1
-                if len(nested_autodiff) == 1:
-                    autodiff_stimuli = autodiff_stimuli[nested_autodiff[0]]
-                    # autodiff stimuli is passed in the last arg
-                    extra_args = [self._initialize_autodiff_struct(autodiff_stimuli, -1, nested_autodiff[0])]
             self._bin_exec_func(self._state_struct, self._param_struct,
                                 self._get_input_struct(inputs),
-                                self._data_struct, self._conditions, *extra_args)
+                                self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
@@ -512,35 +504,6 @@ class CompExecution(CUDAExecution):
             self.__bin_run_multi_func = self._bin_run_func.get_multi_run()
 
         return self.__bin_run_multi_func
-
-    # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
-    def _initialize_autodiff_struct(self, autodiff_stimuli, arg_index,
-                                    composition):
-        inputs = autodiff_stimuli.get("inputs", {})
-        targets = autodiff_stimuli.get("targets", {})
-        epochs = autodiff_stimuli.get("epochs", 1)
-
-        num_trials = len(next(iter(inputs.values())))
-
-        input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
-        output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
-
-        autodiff_stimuli_cty = self._bin_exec_func.byref_arg_types[arg_index]
-
-        training_name = autodiff_stimuli_cty._fields_[-1][0]
-        training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
-        training_data_ty = training_p_cty._type_ * num_trials
-        inputs_data = zip(*(([np.atleast_2d(x)] for x in inputs[n]) for n in input_nodes))
-        target_data = zip(*(([np.atleast_2d(x)] for x in targets[n]) for n in output_nodes))
-        training_data_init = pnlvm._tupleize(zip(inputs_data, target_data))
-        training_data = training_data_ty(*training_data_init)
-
-        autodiff_stimuli_init = (epochs, num_trials)
-        autodiff_stimuli_struct = autodiff_stimuli_cty(*autodiff_stimuli_init)
-        setattr(autodiff_stimuli_struct, training_name, training_data)
-
-        return autodiff_stimuli_struct
-
 
     def run(self, inputs, runs=0, num_input_sets=0, learning=False):
         if isgenerator(inputs):
