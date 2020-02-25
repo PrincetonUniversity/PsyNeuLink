@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.4.0+1.gef38ec8 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.4.0+6.gdbe5a82 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.4.0+1
+                  0.7.4.0+6
                 </div>
               
             
@@ -223,7 +223,7 @@
 <dt><a class="reference internal" href="#composition-run"><span class="std std-ref">Running a Composition</span></a></dt>
 <dd><ul class="first last">
 <li><a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Inputs</span></a></li>
-<li><a class="reference internal" href="#composition-input-as-function"><span class="std std-ref">Run with Input Function</span></a></li>
+<li><a class="reference internal" href="#composition-input-as-function"><span class="std std-ref">Run with Input Function, Generator, or Generator Function</span></a></li>
 <li><a class="reference internal" href="#composition-scope-of-execution"><span class="std std-ref">Execution Contexts</span></a></li>
 </ul>
 </dd>
@@ -815,11 +815,13 @@ situations:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="run-with-input-function">
-<span id="composition-input-as-function"></span><h3><em>Run with Input Function</em><a class="headerlink" href="#run-with-input-function" title="Permalink to this headline">¶</a></h3>
-<p>An alternative way to specify inputs is with a function. The function must return a dictionary that satisfies
-the rules above for standard input specification. The only difference is that on each execution, the function returns
-the input values for each INPUT Node for a single trial.</p>
+<div class="section" id="run-with-input-function-generator-or-generator-function">
+<span id="composition-input-as-function"></span><h3><em>Run with Input Function, Generator, or Generator Function</em><a class="headerlink" href="#run-with-input-function-generator-or-generator-function" title="Permalink to this headline">¶</a></h3>
+<p>Inputs can also be specified with a function, generator, or generator function. In the latter case, the Composition
+will instantiate and use the generator returned from the generator function as though it were passed directly by the
+user. The function or generator must return a dictionary that satisfies rules above for standard input specification.
+The only difference is that on each execution, the function or generator must return the input values for each INPUT
+Node for a single trial.</p>
 </div>
 <div class="section" id="execution-contexts">
 <span id="composition-scope-of-execution"></span><h3><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h3>
@@ -2232,7 +2234,7 @@ by checking whether any of its nodes are stateful.</p>
 </li>
 <li><a class="reference internal" href="#running-a-composition">Running a Composition</a><ul>
 <li><a class="reference internal" href="#run-with-input-dictionary"><em>Run with Input Dictionary</em></a></li>
-<li><a class="reference internal" href="#run-with-input-function"><em>Run with Input Function</em></a></li>
+<li><a class="reference internal" href="#run-with-input-function-generator-or-generator-function"><em>Run with Input Function, Generator, or Generator Function</em></a></li>
 <li><a class="reference internal" href="#execution-contexts"><em>Execution Contexts</em></a></li>
 </ul>
 </li>
@@ -2277,7 +2279,7 @@ by checking whether any of its nodes are stateful.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.4.0+1.gef38ec8',
+               VERSION:'0.7.4.0+6.gdbe5a82',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
