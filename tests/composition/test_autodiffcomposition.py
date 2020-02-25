@@ -1095,8 +1095,6 @@ class TestTrainingCorrectness:
         pho = MappingProjection(matrix=who, learnable=False)
 
         mnet = AutodiffComposition(param_init_from_pnl=True,
-                                   patience=patience,
-                                   min_delta=min_delt,
                                    learning_rate=learning_rate)
 
         mnet.add_node(il)
