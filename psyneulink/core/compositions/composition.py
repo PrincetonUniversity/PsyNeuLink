@@ -469,14 +469,12 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
 
 .. _Composition_Input_as_Function:
 
-*Run with Input Function, Generator, or Generator Function*
-===========================================================
+*Run with Input Function*
+=========================
 
-Inputs can also be specified with a function, generator, or generator function. In the latter case, the Composition
-will instantiate and use the generator returned from the generator function as though it were passed directly by the
-user. The function or generator must return a dictionary that satisfies rules above for standard input specification.
-The only difference is that on each execution, the function or generator must return the input values for each INPUT
-Node for a single trial.
+An alternative way to specify inputs is with a function. The function must return a dictionary that satisfies
+the rules above for standard input specification. The only difference is that on each execution, the function returns
+the input values for each INPUT Node for a single trial.
 
 COMMENT:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
@@ -6644,25 +6642,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
-                next_inputs = inputs()
-            elif isgenerator(inputs):
+                # If 'inputs' argument is a function, call the function here with results from last trial
+                execution_stimuli = inputs(self.env, trial_output)
+                if not isinstance(execution_stimuli, dict):
+                    return trial_output
+            elif hasattr(inputs, '__next__'):
                 try:
                     next_inputs = inputs.__next__()
+                    next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs)
+                    execution_stimuli = {}
+                    for node in next_inputs:
+                        if len(next_inputs[node]) == 1:
+                            execution_stimuli[node] = next_inputs[node][0]
+                            continue
+                        execution_stimuli[node] = next_inputs[node][stimulus_index]
                 except StopIteration:
                     break
-
-            if callable(inputs) or isgenerator(inputs):
-                next_inputs, num_inputs_sets, autodiff_stimuli = self._adjust_stimulus_dict(next_inputs)
-                execution_stimuli = {}
-                for node in next_inputs:
-                    if len(next_inputs[node]) == 1:
-                        execution_stimuli[node] = next_inputs[node][0]
-                        continue
-                    else:
-                        input_type = 'Generator' if isgenerator(inputs) else 'Function'
-                        raise CompositionError(f"{input_type}s used for Composition input must return one trial's "
-                                               f"worth of input on each call. Current generator returned "
-                                               f"{len(next_inputs[node])} trials' worth of input on its last call.")
             else:
                 execution_stimuli = {}
                 stimulus_index = trial_num % num_inputs_sets
@@ -6671,6 +6666,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         execution_stimuli[node] = inputs[node][0]
                         continue
                     execution_stimuli[node] = inputs[node][stimulus_index]
+
             execution_autodiff_stimuli = {}
             for node in autodiff_stimuli:
                 if isinstance(autodiff_stimuli[node], list):
