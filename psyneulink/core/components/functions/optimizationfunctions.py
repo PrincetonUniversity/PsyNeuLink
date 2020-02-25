@@ -1376,6 +1376,18 @@ class GridSearch(OptimizationFunction):
 
         return ctx.convert_python_struct_to_llvm_ir(variable)
 
+    def _is_composition_optimize(self):
+        # self.objective_function may be bound method of
+        # an OptimizationControlMechanism
+        return hasattr(self.objective_function, '__self__')
+
+    def _get_param_ids(self):
+        ids = super()._get_param_ids() + ["search_space"]
+        if self._is_composition_optimize():
+            ids.append("objective_function")
+
+        return ids
+
     def _get_search_dim(self, ctx, d):
         if isinstance(d.generator, list):
             # Make sure we only generate float values
@@ -1384,23 +1396,21 @@ class GridSearch(OptimizationFunction):
             return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
         assert False, "Unsupported dimension type: {}".format(d)
 
-    def _get_param_ids(self):
-        return [self.parameters.objective_function.name,
-                self.parameters.search_space.name,
-                "select_randomly"]
-
     def _get_param_struct_type(self, ctx):
-        search_space = [self._get_search_dim(ctx, d) for d in self.search_space]
-        space = pnlvm.ir.LiteralStructType(search_space)
-        select_randomly = ctx.int32_ty
-        try:
-            # self.objective_function may be bound method of
+        param_struct = ctx.get_param_struct_type(super())
+        search_space = (self._get_search_dim(ctx, d) for d in self.search_space)
+        search_space_struct = pnlvm.ir.LiteralStructType(search_space)
+
+        if self._is_composition_optimize():
+            # self.objective_function is a bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-            obj_func_param = ocm._get_evaluate_param_struct_type(ctx)
-        except AttributeError:
-            obj_func_param = ctx.get_param_struct_type(self.objective_function)
-        return pnlvm.ir.LiteralStructType([obj_func_param, space, select_randomly])
+            obj_func_params = ocm._get_evaluate_param_struct_type(ctx)
+            return pnlvm.ir.LiteralStructType([*param_struct,
+                                               search_space_struct,
+                                               obj_func_params])
+
+        return pnlvm.ir.LiteralStructType([*param_struct, search_space_struct])
 
     def _get_search_dim_init(self, context, d):
         if isinstance(d.generator, list):
@@ -1411,44 +1421,49 @@ class GridSearch(OptimizationFunction):
         assert False, "Unsupported dimension type: {}".format(d)
 
     def _get_param_initializer(self, context):
+        param_initializer = super()._get_param_initializer(context)
         grid_init = (self._get_search_dim_init(context, d) for d in self.search_space)
-        select_randomly = 1 if self.select_randomly_from_optimal_values else 0
-        try:
-            # self.objective_function may be bound method of
+
+        if self._is_composition_optimize():
+            # self.objective_function is a bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
             obj_func_param_init = ocm._get_evaluate_param_initializer(context)
-        except AttributeError:
-            obj_func_param_init = self.objective_function._get_param_initializer(context)
-        return (obj_func_param_init, tuple(grid_init), select_randomly)
+            return (*param_initializer, tuple(grid_init), obj_func_param_init)
+
+        return (*param_initializer, tuple(grid_init))
 
     def _get_state_ids(self):
-        return [self.parameters.objective_function.name,
-                self.parameters.random_state.name]
+        ids = super()._get_state_ids()
+        if self._is_composition_optimize():
+            ids.append("objective_function")
+
+        return ids
 
     def _get_state_struct_type(self, ctx):
-        try:
-            # self.objective_function may be bound method of
+        state_struct = ctx.get_state_struct_type(super())
+
+        if self._is_composition_optimize():
+            # self.objective_function is a bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
             obj_func_state = ocm._get_evaluate_state_struct_type(ctx)
-        except AttributeError:
-            obj_func_state = ctx.get_state_struct_type(self.objective_function)
-        # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(
-            self.parameters.random_state.get())
-        return pnlvm.ir.LiteralStructType([obj_func_state, random_state_struct])
+            state_struct = pnlvm.ir.LiteralStructType([*state_struct,
+                                                       obj_func_state])
+
+        return state_struct
 
     def _get_state_initializer(self, context):
-        try:
-            # self.objective_function may be bound method of
+        state_initializer = super()._get_state_initializer(context)
+
+        if self._is_composition_optimize():
+            # self.objective_function is a bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
             obj_func_state_init = ocm._get_evaluate_state_initializer(context)
-        except AttributeError:
-            obj_func_state_init = self.objective_function._get_state_initializer(context)
-        random_state = self.parameters.random_state.get(context).get_state()[1:]
-        return (obj_func_state_init, pnlvm._tupleize(random_state))
+            state_initializer = (*state_initializer, obj_func_state_init)
+
+        return state_initializer
 
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
@@ -1485,9 +1500,12 @@ class GridSearch(OptimizationFunction):
                                           self.parameters.objective_function.name)
         search_space_ptr = ctx.get_param_ptr(self, builder, params,
                                              self.parameters.search_space.name)
-        select_random_ptr = ctx.get_param_ptr(self, builder, params, "select_randomly")
+        select_random_ptr = ctx.get_param_ptr(self, builder, params,
+                                              self.parameters.select_randomly_from_optimal_values.name)
 
-        select_random = builder.trunc(builder.load(select_random_ptr), pnlvm.ir.IntType(1))
+        select_random_val = builder.load(select_random_ptr)
+        select_random = builder.fcmp_ordered("!=", select_random_val,
+                                             select_random_val.type(0))
 
         opt_count_ptr = builder.alloca(ctx.float_ty)
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
