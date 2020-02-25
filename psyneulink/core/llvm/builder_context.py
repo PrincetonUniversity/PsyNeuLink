@@ -20,11 +20,6 @@ import os
 import re
 from typing import Set
 import weakref
-try:
-    import torch
-    torch_available = True
-except ImportError:
-    torch_available = False
 
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
@@ -661,8 +656,6 @@ class LLVMBuilderContext:
             return ir.LiteralStructType([])
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
-        elif torch_available and isinstance(t, torch.Tensor):
-            return self.convert_python_struct_to_llvm_ir(t.numpy())
         assert False, "Don't know how to convert {}".format(type(t))
 
 
