@@ -6742,10 +6742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Simulations are run as part of the controller node wrapper.
             assert not is_simulation
             try:
-                comp_ex_tags = frozenset({})
-                # Add learning tags if the composition is to be ran in learning mode
-                if self._is_learning(context):
-                    comp_ex_tags = comp_ex_tags.union(frozenset({"learning"}))
+                comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
                 if bin_execute is True or bin_execute.startswith('LLVM'):
                     _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
