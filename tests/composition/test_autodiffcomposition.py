@@ -134,7 +134,6 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
         
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
@@ -202,7 +201,6 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
@@ -249,7 +247,6 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
 
@@ -299,7 +296,6 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -360,7 +356,6 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -449,7 +444,6 @@ class TestMiscTrainingFunctionality:
         assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
         assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
-        xor.infer_backpropagation_learning_pathways()
         # call run to train the pytorch parameters
         results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                   "targets": {xor_out:xor_targets},
@@ -507,7 +501,6 @@ class TestTrainingCorrectness:
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-        xor.infer_backpropagation_learning_pathways()
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0], [0, 1], [1, 0], [1, 1]])
 
@@ -643,7 +636,6 @@ class TestTrainingCorrectness:
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
 
-        sem_net.infer_backpropagation_learning_pathways()
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -892,7 +884,6 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        mnet.infer_backpropagation_learning_pathways()
         mnet.learn(
             inputs=input_set,
             minibatch_size=1,
@@ -1108,7 +1099,6 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        mnet.infer_backpropagation_learning_pathways()
         
         mnet.learn(
                 inputs=input_set,
@@ -1927,7 +1917,6 @@ class TestTrainingIdenticalness():
         sem_net.add_projection(sender=h2, projection=map_h2_is, receiver=out_sig_is)
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
-        sem_net.infer_backpropagation_learning_pathways()
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -2116,7 +2105,6 @@ class TestTrainingIdenticalness():
 
         xor_dict.add_projection(sender=xor_in_dict, projection=hid_map_dict, receiver=xor_hid_dict)
         xor_dict.add_projection(sender=xor_hid_dict, projection=out_map_dict, receiver=xor_out_dict)
-        xor_dict.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_dict = np.array(  # the inputs we will provide to the model
@@ -2176,7 +2164,6 @@ class TestTrainingIdenticalness():
 
         xor_func.add_projection(sender=xor_in_func, projection=hid_map_func, receiver=xor_hid_func)
         xor_func.add_projection(sender=xor_hid_func, projection=out_map_func, receiver=xor_out_func)
-        xor_func.infer_backpropagation_learning_pathways()
 
         # SET UP INPUTS AND TARGETS
 
@@ -2238,7 +2225,6 @@ class TestTrainingIdenticalness():
 
         xor_gen.add_projection(sender=xor_in_gen, projection=hid_map_gen, receiver=xor_hid_gen)
         xor_gen.add_projection(sender=xor_hid_gen, projection=out_map_gen, receiver=xor_out_gen)
-        xor_gen.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_gen = np.array(  # the inputs we will provide to the model
@@ -2301,7 +2287,6 @@ class TestTrainingIdenticalness():
 
         xor_gen_func.add_projection(sender=xor_in_gen_func, projection=hid_map_gen_func, receiver=xor_hid_gen_func)
         xor_gen_func.add_projection(sender=xor_hid_gen_func, projection=out_map_gen_func, receiver=xor_out_gen_func)
-        xor_gen_func.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_gen_func = np.array(  # the inputs we will provide to the model
@@ -2792,7 +2777,6 @@ class TestNested:
         sem_net.add_projection(sender=h2, projection=map_h2_has, receiver=out_sig_has)
         sem_net.add_projection(sender=h2, projection=map_h2_can, receiver=out_sig_can)
 
-        sem_net.infer_backpropagation_learning_pathways()
         # INPUTS & OUTPUTS FOR SEMANTIC NET:
 
         nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
@@ -2922,7 +2906,6 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_1 = np.array(  # the inputs we will provide to the model
@@ -2991,7 +2974,6 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
 
         # SET UP INPUTS AND TARGETS
 
@@ -3066,7 +3048,6 @@ class TestBatching:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        xor.infer_backpropagation_learning_pathways()
         # SET UP INPUTS AND TARGETS
 
         xor_inputs_1 = np.array(  # the inputs we will provide to the model
