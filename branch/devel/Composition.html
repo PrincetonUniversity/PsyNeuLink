@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.4.0+6.gdbe5a82 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.4.0+8.g2938a6d documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.4.0+6
+                  0.7.4.0+8
                 </div>
               
             
@@ -222,8 +222,8 @@
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#composition-run"><span class="std std-ref">Running a Composition</span></a></dt>
 <dd><ul class="first last">
-<li><a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Inputs</span></a></li>
-<li><a class="reference internal" href="#composition-input-as-function"><span class="std std-ref">Run with Input Function, Generator, or Generator Function</span></a></li>
+<li><a class="reference internal" href="#composition-run-static-inputs"><span class="std std-ref">Run with Input Dictionary</span></a></li>
+<li><a class="reference internal" href="#composition-run-dynamic-inputs"><span class="std std-ref">Run with Function, Generator, or Generator Function</span></a></li>
 <li><a class="reference internal" href="#composition-scope-of-execution"><span class="std std-ref">Execution Contexts</span></a></li>
 </ul>
 </dd>
@@ -443,7 +443,7 @@ the nested composition just as for any other node.</p>
 <div class="section" id="running-a-composition">
 <span id="composition-run"></span><h2>Running a Composition<a class="headerlink" href="#running-a-composition" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="run-with-input-dictionary">
-<span id="composition-run-inputs"></span><h3><em>Run with Input Dictionary</em><a class="headerlink" href="#run-with-input-dictionary" title="Permalink to this headline">¶</a></h3>
+<span id="composition-run-static-inputs"></span><h3><em>Run with Input Dictionary</em><a class="headerlink" href="#run-with-input-dictionary" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_ports of the INPUT Nodes in the
 <a class="reference internal" href="#composition-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These input values are specified in the <strong>inputs</strong> argument of
 a Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods.</p>
@@ -815,13 +815,100 @@ situations:</p>
 </pre></div>
 </div>
 </div>
-<div class="section" id="run-with-input-function-generator-or-generator-function">
-<span id="composition-input-as-function"></span><h3><em>Run with Input Function, Generator, or Generator Function</em><a class="headerlink" href="#run-with-input-function-generator-or-generator-function" title="Permalink to this headline">¶</a></h3>
-<p>Inputs can also be specified with a function, generator, or generator function. In the latter case, the Composition
-will instantiate and use the generator returned from the generator function as though it were passed directly by the
-user. The function or generator must return a dictionary that satisfies rules above for standard input specification.
-The only difference is that on each execution, the function or generator must return the input values for each INPUT
-Node for a single trial.</p>
+<div class="section" id="run-with-function-generator-or-generator-function">
+<span id="composition-run-dynamic-inputs"></span><h3><em>Run with Function, Generator, or Generator Function</em><a class="headerlink" href="#run-with-function-generator-or-generator-function" title="Permalink to this headline">¶</a></h3>
+<p>Inputs can also be specified with a function, generator, or generator function.</p>
+<p>A function used as input must take as its sole argument the current trial number and return a value that satisfies
+all rules above for standard input specification. The only difference is that on each execution, the function must
+return the input values for each INPUT Node for a single trial.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Default behavior when passing a function as input to a Composition is to execute for only one trial. Remember to
+set the num_trials argument of Composition.run if you intend to cycle through multiple trials.</p>
+</div>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pathway1</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">pathway1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">function_as_input</span><span class="p">(</span><span class="n">trial_num</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">a_inputs</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]]</span>
+<span class="gp">... </span>    <span class="n">this_trials_inputs</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="n">a</span><span class="p">:</span> <span class="n">a_inputs</span><span class="p">[</span><span class="n">trial_num</span><span class="p">]</span>
+<span class="gp">... </span>    <span class="p">}</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">this_trials_inputs</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">function_as_input</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">num_trials</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A generator can also be used as input. On each yield, it should return a value that satisfies all rules above for
+standard input specification. The only difference is that on each execution, the generator must yield the input values
+for each INPUT Node for a single trial.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Default behavior when passing a generator is to execute until the generator is exhausted. If the num_trials
+argument of Composition.run is set, the Composition will execute EITHER until exhaustion, or until num_trials has
+been reached - whichever comes first.</p>
+</div>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pathway1</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">pathway1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">generator_as_input</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="n">a_inputs</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">7.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">9.0</span><span class="p">]]</span>
+<span class="gp">... </span>   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a_inputs</span><span class="p">)):</span>
+<span class="gp">... </span>       <span class="n">this_trials_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">a_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span>
+<span class="gp">... </span>       <span class="k">yield</span> <span class="n">this_trials_inputs</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generator_instance</span> <span class="o">=</span> <span class="n">generator_as_input</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Because the num_trials argument is set to 2, the below call to run will result in only 2 executions of</span>
+<span class="gp">... </span><span class="c1"># comp, even though it would take three executions to exhaust the generator.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">generator_instance</span><span class="p">,</span>
+<span class="gp">... </span>         <span class="n">num_trials</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If a generator function is used, the Composition will instantiate the generator and use that as its input. Thus,
+the returned generator instance of a generator function must follow the same rules as a generator instance passed
+directly to the Composition.</p>
+<p>Complete input specification:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">,</span><span class="n">default_variable</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pathway1</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">pathway1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">generator_function_as_input</span><span class="p">():</span>
+<span class="gp">... </span>   <span class="n">a_inputs</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">]]</span>
+<span class="gp">... </span>   <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">a_inputs</span><span class="p">)):</span>
+<span class="gp">... </span>       <span class="n">this_trials_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">a</span><span class="p">:</span> <span class="n">a_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]}</span>
+<span class="gp">... </span>       <span class="k">yield</span> <span class="n">this_trials_inputs</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">generator_function_as_input</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="execution-contexts">
 <span id="composition-scope-of-execution"></span><h3><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h3>
@@ -2234,7 +2321,7 @@ by checking whether any of its nodes are stateful.</p>
 </li>
 <li><a class="reference internal" href="#running-a-composition">Running a Composition</a><ul>
 <li><a class="reference internal" href="#run-with-input-dictionary"><em>Run with Input Dictionary</em></a></li>
-<li><a class="reference internal" href="#run-with-input-function-generator-or-generator-function"><em>Run with Input Function, Generator, or Generator Function</em></a></li>
+<li><a class="reference internal" href="#run-with-function-generator-or-generator-function"><em>Run with Function, Generator, or Generator Function</em></a></li>
 <li><a class="reference internal" href="#execution-contexts"><em>Execution Contexts</em></a></li>
 </ul>
 </li>
@@ -2279,7 +2366,7 @@ by checking whether any of its nodes are stateful.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.4.0+6.gdbe5a82',
+               VERSION:'0.7.4.0+8.g2938a6d',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
