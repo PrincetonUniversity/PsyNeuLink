@@ -789,18 +789,32 @@ COMMENT
 
 Learning in a Composition
 -------------------------
-
 * `Composition_Learning_Standard`
 * `Composition_Learning_AutodiffComposition`
 * `Composition_Learning_UDF`
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
-which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
-There are three ways of implementing learning in a Composition:  i) using `standard PsyNeuLink Components
-<Composition_Learning_Standard>`; ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a
-specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_; and iii) by using
-`UserDefinedFunctions <UserDefinedFunction>`.  The advantage of using standard PsyNeuLink compoments is that it
+which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect. 
+
+.. _Composition_Learning_Mode:
+
+*Running a Composition in Learning Mode*
+======================================
+A Composition only learns when ran in learning mode, and when its `disable_learning` parameter is False. To run the Composition in learning mode, use the `learn <Composition.learn>` method. 
+See `learn <Composition.learn>` for more details.
+
+*Implementing Learning in a Composition*
+======================================
+There are three ways of implementing learning in a Composition: 
+
+i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
+
+ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_
+
+iii) using `UserDefinedFunctions <UserDefinedFunction>`.  
+
+The advantage of using standard PsyNeuLink compoments is that it
 assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
 operations are, the sequence in which they are carried out, and how they interact with one another.  However,
 this can also make execution inefficient, due to the "overhead" incurred by distributing the calculations over
@@ -976,7 +990,7 @@ The following example implements a simple three-layered network that learns the 
     # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
     >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
     >>>               'targets':[  [0],     [1],     [1],     [0] ]}
-    >>> xor_comp.run(inputs={input:xor_inputs['stimuli'],
+    >>> xor_comp.learn(inputs={input:xor_inputs['stimuli'],
     >>>                      target:xor_inputs['targets']},
     >>>              num_trials=1,
     >>>              animate={'show_learning':True})
@@ -1037,7 +1051,7 @@ from the `example above <Composition_XOR_Example>`:
        :alt: Animation of Composition with learning
        :scale: 50 %
 
-       Animation of XOR Composition in example above when it is executed by calling its `run <Composition.run>`
+       Animation of XOR Composition in example above when it is executed by calling its `learn <Composition.learn>`
        method with the argument ``animate={'show_learning':True}``.
 
 Note that, since the `learning components <Composition_Learning_Components>` are not executed until after the
@@ -1055,14 +1069,14 @@ COMMENT:
 Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
 
-The `AutodiffComposition` can be used to implement a Composition in PsyNeuLink, which is then executed using `PyTorch
+`AutodiffCompositions <AutodiffComposition>` provide the ability to execute a composition using `PyTorch
 <https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
-etc.) as any other Composition, and it is executed using its `run <AutodiffComposition.run>` method.   Note that
-there is no need to use any `learning methods <Composition_Learning_Methods>` — the Composition is translated into
-PyTorch objects and functions, which are called when it is run.  It can be run in training mode (during which
-learning occurs) or test mode (which runs the Composition without learning).
+etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>` 
+— AutodiffCompositions automatically creates backpropagation learning pathways between all input - output node paths.  
+It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode, and
+`run <AutodiffComposition.run>` for test mode.
 
 The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
 the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,
@@ -1579,7 +1593,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         enable_controller=None,
         controller_mode=AFTER,
         controller_condition=Always,
-        enable_learning=True,
+        disable_learning=False,
         name=None,
         prefs=Composition.classPreferences
         context=None)
@@ -1605,9 +1619,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     controller_condition: Condition : default Always
         specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
 
-    enable_learning: bool : default True
-        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
-        executed.
+    disable_learning: bool : default False
+        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in `learning mode <Composition.learn>`.
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -1681,9 +1694,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     execution_ids : set
         stores all execution_ids used by this Composition.
 
-    enable_learning: bool : default True
-        determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when it is
-        executed.
+    disable_learning: bool : default False
+        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in `learning mode <Composition.learn>`.
 
     learning_components : list
         contains the learning-related components in the Composition, all or many of which may have been
@@ -1789,7 +1801,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
-            enable_learning=False,
             retain_old_simulation_data=None,
             prefs=None,
             **param_defaults
@@ -1833,7 +1844,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._scheduler = None
 
         self.disable_learning = False
-        self.enable_learning = False
 
         # status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
@@ -3912,7 +3922,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                **kwargs)
 
 
-        self.enable_learning = True
         return learning_mechanism
 
     def _create_learning_related_mechanisms(self,
@@ -3970,7 +3979,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
                                                                                                          override=True)
-        self.enable_learning = True
         return target_mechanism, comparator_mechanism, learning_mechanism
 
     def _create_learning_related_projections(self, input_source, output_source, target, comparator, learning_mechanism):
@@ -4246,14 +4254,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-                    if not projection.learnable:
+                    if (not hasattr(projection,'learnable')) or (projection.learnable is False):
                         continue
                     prev[efferent_node] = projection
                     prev[projection] = curr_node
                     queue.append(efferent_node)
             return pathways
         
-        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) for p in bfs(n)]
+        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway)
 
@@ -4320,7 +4328,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, feedback=True)
 
-        self.enable_learning = True
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
@@ -6924,8 +6931,70 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bin_execute=False,
             randomize_minibatches=False,
             call_before_minibatch = None,
-            call_after_minibatch = None):
-        
+            call_after_minibatch = None,
+            *args,
+            **kwargs
+            ):
+        """
+            Runs the composition in learning mode - that is, any components with disable_learning False will be executed in learning mode. See `Composition_Learning` for details.
+
+            Arguments
+            ---------
+
+            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
+                a dictionary containing a key-value pair for each node in the composition that receives inputs from
+                the user. There are several equally valid ways that this dict could be structured:
+                1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
+                the shape of which must match the node's default variable. This is identical to the input dict in `the run method <Composition.run>`
+                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same structure as input specification (1) of learn. The `targets` and `epochs` keys
+                should contain values of the same shape as `targets <Composition.learn>` and `epochs` <Composition.learn>    
+
+            targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
+                a dictionary containing a key-value pair for each node in the composition that receives target values to train on from
+                the user. This could be either target mechanisms or output nodes in backpropagation learning pathways.
+
+            num_trials : int (default=None)
+                typically, the composition will infer the number of trials from the length of its input specification.
+                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+                or use default inputs, and select a number of trials with num_trials.
+
+            epochs : int (default=1)
+                specifies the number of training epochs (that is, repetitions of the batched input set) to run with
+
+            minibatch_size : int (default=1)
+                specifies the size of the minibatches to use. The input trials will be batched and ran, after which learning mechanisms with learning mode TRIAL will update weights 
+
+            randomize_minibatch: bool (default=False)
+                specifies whether the order of the input trials should be randomized on each epoch
+
+            patience : int or None (default=None)
+                **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
+                consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
+                the model stops training early. If **patience** is ``None``, the model will train for the number
+                of specified epochs and will not stop training early.
+
+             min_delta : float (default=0)
+                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
+                Used for early stopping of training, in combination with **patience**.
+
+            scheduler : Scheduler
+                the scheduler object that owns the conditions that will instruct the execution of this Composition
+                If not specified, the Composition will use its automatically generated scheduler.
+
+            context
+                context will be set to self.default_execution_id if unspecified
+
+            call_before_minibatch : callable
+                called before each minibatch is executed
+
+            call_after_minibatch : callable
+                called after each minibatch is executed
+                
+            Returns
+            ---------
+
+            the results of the final epoch of training
+        """
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
 
@@ -6944,7 +7013,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
             context=context,
-            bin_execute=bin_execute)
+            bin_execute=bin_execute,
+            *args, **kwargs)
         
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results

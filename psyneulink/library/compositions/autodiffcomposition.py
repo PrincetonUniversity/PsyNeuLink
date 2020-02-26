@@ -79,15 +79,6 @@ arguments that are specific to the AutodiffComposition, as described below.
           corresponding `MappingProjections <MappingProjection>`;  however, their values -- and those of the bias
           parameters -- are sampled from a random distribution;
 
-* **patience** -- allows the model to halt training early. The  model tracks how many consecutive 'bad' epochs of
-  training have failed to significantly reduce the model's loss. When this number exceeds **patience**, the model stops
-  training. By default, **patience** is ``None``, and the model will train for the number of specified epochs and
-  will not stop training early.
-
-* **min_delta** -- specifies the threshold used by **patience** used to determine a significant reduction in model
-  loss. By default it is zero, in which case any reduction in loss counts as a significant reduction. If **min_delta**
-  is large and positive, the model tends to stop earlier because it views fewer epochs as 'good'.
-
 * **learning_rate** -- specifies the learning rate for the current run (default 0.001), which is passed to the
   optimized specified in the **optimizer** argument.
 
@@ -97,10 +88,9 @@ arguments that are specific to the AutodiffComposition, as described below.
 * **optimizer_type** -- specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
   default) or 'adam'.
 
-* **learning_enabled** -- specifies whether the AutodiffComposition should learn (default is True). When True,
-  the AutodiffComposition trains using PyTorch, as normal. When False, the AutodiffComposition run like an ordinary
-  `Composition`, which does not change weights. `learning_enabled <AutodiffComposition.learning_enabled>` is also an
-  attribute, which can be toggled between runs.
+* **disable_learning** -- specifies whether the AutodiffComposition should disable learning (default is False). When False,
+  the AutodiffComposition trains using PyTorch when ran in `learning mode <Composition.learn>`. When True, the AutodiffComposition runs like an ordinary
+  `Composition`, which does not change weights.
 
 * **weight_decay** -- specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults
   to 0.
@@ -113,14 +103,6 @@ arguments that are specific to the AutodiffComposition, as described below.
   For information on writing a custom loss function, see `Extending PyTorch
   <https://pytorch.org/docs/master/notes/extending.html>`_, as well as `Build your own loss function in PyTorch
   <https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235>`_.
-
-* **randomize** -- specifies whether the order of inputs will be randomized in each epoch. All inputs are run in each
-  epoch.  However, if **randomize** is True, then the order in which inputs are within an epoch is random.
-
-* **refresh_losses** -- specifies whether the `losses` attribute is refreshed for each call to `run
-  <AutodiffComposition.run>`. If False, the losses of each run are appended to the `losses
-  <AutodiffComposition.losses>` attribute. If True, the losses of each run overwrite `losses
-  <AutodiffComposition.losses>` instead.
 
 * **force_no_retain_graph** -- False by default.  If True, the AutodiffComposition does not use PyTorch's `retain_graph
   <https://pytorch.org/docs/master/autograd.html?highlight=retain_graph>`_  option when computing the gradient. This
@@ -162,9 +144,7 @@ arguments described above, and the following.
 Execution
 ---------
 
-Most arguments to AutodiffComposition's `run` or `execute` methods are the same as for a `Composition`. When
-`learning_enabled <AutodiffComposition.learning_enabled>` is False, the arguments are the same, since in this
-case the AutodiffComposition executes like a Composition.
+Most arguments to AutodiffComposition's `run` or `execute` methods are the same as for a `Composition`. When not ran in learning mode
 
 .. _AutodiffComposition_Input:
 
@@ -196,11 +176,9 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
     >>> my_inputs = {my_mech_1: [[1, 2, 3]]}
     >>> my_targets = {my_mech_2: [[4, 5]]}
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
-    >>> # Run Composition with learning enabled
-    >>> my_autodiff.learning_enabled=True # this is not strictly necessary, as learning_enabled is True by default
-    >>> my_autodiff.run(inputs = input_dict)
-    >>> # Run Composition with learning disabled
-    >>> my_autodiff.learning_enabled=False
+    >>> # Run Composition in learnng mode
+    >>> my_autodiff.learn(inputs = input_dict)
+    >>> # Run Composition in normal (i.e. non-learning) mode
     >>> my_autodiff.run(inputs = input_dict)
 
 As shown above (and for convenience), an AutodiffComposition with learning disabled can be run with the same input
@@ -216,14 +194,14 @@ or `using a function <Composition_Input_as_Function>`.
 
 .. _AutodiffComposition_Logging:
 
-Logging
-~~~~~~~
+# Logging
+# ~~~~~~~
 
-Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
-is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
-projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
-set the **do_logging** argument of the ``run()`` method to ``True``. Logging with AutodiffComposition is slightly hacked
-together, so the time and context in the log are not meaningful, only the logged value is meaningful.
+# Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
+# is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
+# projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
+# set the **do_logging** argument of the ``run()`` method to ``True``. Logging with AutodiffComposition is slightly hacked
+# together, so the time and context in the log are not meaningful, only the logged value is meaningful.
 
 .. _AutodiffComposition_Nested_Execution:
 
@@ -325,14 +303,10 @@ class AutodiffComposition(Composition):
     """
     AutodiffComposition(             \
         param_init_from_pnl=True,    \
-        patience=None,               \
-        min_delta=0,                 \
         learning_rate=0.001,         \
-        learning_enabled=True,       \
+        disable_learning=False,       \
         optimizer_type=None,         \
         loss_spec=None,              \
-        randomize=False,             \
-        refresh_losses=False,        \
         name="autodiff_composition")
 
     Subclass of `Composition` that trains models using `PyTorch <https://pytorch.org>`_.
@@ -345,22 +319,13 @@ class AutodiffComposition(Composition):
         a Boolean specifying how parameters are initialized. **WARNING: deprecated!** (See
         `Creating an AutodiffComposition <AutodiffComposition_Creation>` for details)
 
-    patience : int or None : default None
-        **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
-        consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
-        the model stops training early. If **patience** is ``None``, the model will train for the number
-        of specified epochs and will not stop training early.
-
-    min_delta : float : default 0
-        the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
-        Used for early stopping of training, in combination with **patience**.
-
     learning_rate : float : default 0.001
         the learning rate, which is passed to the optimizer.
-
-    learning_enabled : boolean : default True
-        specifies whether the AutodiffComposition should learn. When True, the AutodiffComposition trains using PyTorch.
-        When False, the AutodiffComposition executes just like an ordinary Composition
+    
+    disable_learning : bool: default False
+        specifies whether the AutodiffComposition should disable learning (default is False). When False,
+        the AutodiffComposition trains using PyTorch when ran in `learning mode <Composition.learn>`. When True, the AutodiffComposition runs like an ordinary
+        `Composition`, which does not change weights.
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
@@ -373,14 +338,6 @@ class AutodiffComposition(Composition):
         'l1', 'nll', 'poissonnll', and 'kldiv'. Any PyTorch loss function can work here, such as ones from
         https://pytorch.org/docs/stable/nn.html#loss-functions
 
-    randomize: boolean : default False
-        specifies whether the order of inputs will be randomized in each epoch. (In each epoch, all inputs are run, but
-        if **randomize** is True then the order of inputs within an epoch is random.)
-
-    refresh_losses : boolean: default False
-        specifies whether the `losses` attribute is refreshed for each call to `run()`. If False, the losses of each run
-        are appended to the `losses` attribute. If True, the losses of each run overwrite `losses` instead.
-
     Attributes
     ----------
 
@@ -389,23 +346,6 @@ class AutodiffComposition(Composition):
 
     losses : list of floats
         tracks the average loss for each training epoch
-
-    patience : int or None : default None
-        allows the model to stop training early, if training stops reducing loss. The model tracks how many
-        consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
-        the model stops training early. If **patience** is ``None``, the model will train for the number
-        of specified epochs and will not stop training early.
-
-    min_delta : float : default 0
-        the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
-        Used for early stopping of training, in combination with **patience**.
-
-    learning_enabled : boolean : default True
-        specifies whether the AutodiffComposition should learn. When True, the AutodiffComposition trains using PyTorch.
-        When False, the AutodiffComposition executes just like an ordinary Composition. This attribute can be toggled.
-
-    learning_rate : float: default 0.001
-        the learning rate for training. Currently only used to initialize the `optimizer` attribute.
 
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
@@ -441,20 +381,8 @@ class AutodiffComposition(Composition):
                     :default value: None
                     :type:
 
-                min_delta
-                    see `min_delta <AutodiffComposition.min_delta>`
-
-                    :default value: 0
-                    :type: ``int``
-
                 optimizer
                     see `optimizer <AutodiffComposition.optimizer>`
-
-                    :default value: None
-                    :type:
-
-                patience
-                    see `patience <AutodiffComposition.patience>`
 
                     :default value: None
                     :type:
@@ -468,20 +396,17 @@ class AutodiffComposition(Composition):
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
         losses = None
-        patience = None
-        min_delta = 0
+        trial_losses = Parameter(history_max_length=1000)
         pytorch_representation = None
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     def __init__(self,
                  param_init_from_pnl=True,
-                 patience=None,
-                 min_delta=0,
                  learning_rate=None,
                  optimizer_type='sgd',
                  weight_decay=0,
                  loss_spec='mse',
-                 randomize=None,
+                 disable_learning=False,
                  refresh_losses=False,
                  disable_cuda=True,
                  cuda_index=None,
@@ -493,23 +418,19 @@ class AutodiffComposition(Composition):
                                            '`pip install torch` or `pip3 install torch`')
 
         super(AutodiffComposition, self).__init__(name = name,
-                                                  patience = patience,
-                                                  min_delta = min_delta,
                                                   learning_rate = learning_rate,
                                                   optimizer_type = optimizer_type,
                                                   weight_decay = weight_decay,
-                                                  loss_spec = loss_spec,
-                                                  randomize = randomize)
+                                                  loss_spec = loss_spec)
 
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
-        self.randomize = randomize
         self.refresh_losses = refresh_losses
         self._built_pathways = False
         self.weight_decay = weight_decay
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
-
+        self.disable_learning = disable_learning
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
         
@@ -521,12 +442,6 @@ class AutodiffComposition(Composition):
 
         # ordered execution sets for the pytorch model
         self.execution_sets = None
-
-        # patience is the "bad" epochs (with no progress in average loss) the model tolerates in one training session
-        # before ending training
-        self.patience = patience
-
-        self.min_delta = min_delta
 
         if not disable_cuda and torch.cuda.is_available():
             if cuda_index is None:
@@ -649,12 +564,6 @@ class AutodiffComposition(Composition):
         out_size = 0
         for target in targets.values():
             out_size += len(target)
-
-        # if training in random order, generate random order and set up mapping
-        # from random order back to original order
-        if self.randomize:
-            rand_train_order = np.random.permutation(num_inputs)
-            rand_train_order_reverse[rand_train_order] = np.arange(num_inputs)
 
         # set up array to keep track of losses on epoch
         curr_losses = np.zeros(num_inputs)
