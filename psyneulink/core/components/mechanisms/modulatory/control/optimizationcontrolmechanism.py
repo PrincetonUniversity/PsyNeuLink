@@ -1050,7 +1050,8 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.ArrayType(ctx.float_ty,
                                   len(self.control_allocation_search_space))
 
-    def _gen_llvm_net_outcome_function(self, ctx):
+    def _gen_llvm_net_outcome_function(self, ctx, *, tags=frozenset()):
+        assert "net_outcome" in tags
         args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
                 self._get_evaluate_state_struct_type(ctx).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
@@ -1191,7 +1192,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                             [ctx.int32_ty(0), ctx.int32_ty(0),
                                              ctx.int32_ty(0)], "obj_val_ptr")
 
-            net_outcome_f = self._gen_llvm_net_outcome_function(ctx)
+            net_outcome_f = ctx.import_llvm_function(self, tags=frozenset({"net_outcome"}))
             builder.call(net_outcome_f, [params, state, allocation_sample,
                                          objective_val_ptr, arg_out])
 
@@ -1200,6 +1201,9 @@ class OptimizationControlMechanism(ControlMechanism):
         return llvm_func
 
     def _gen_llvm_function(self, *, tags:frozenset):
+        if "net_outcome" in tags:
+            with pnlvm.LLVMBuilderContext.get_global() as ctx:
+                return self._gen_llvm_net_outcome_function(ctx, tags=tags)
         is_comp = not isinstance(self.agent_rep, Function)
         if is_comp:
             ctx = pnlvm.LLVMBuilderContext.get_global()
