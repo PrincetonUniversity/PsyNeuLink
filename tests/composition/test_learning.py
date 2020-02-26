@@ -1204,7 +1204,7 @@ class TestBackProp:
                  [ 0.03080958, 1.02830959],
                  [ 2.00464242, 3.00426575],
              ])),
-            ([results_comp[-1]], [np.array([0.51044657, 0.5483048])]),
+            ([results_comp[-1][0]], [np.array([0.51044657, 0.5483048])]),
         ]
 
         for i in range(len(composition_and_expected_outputs)):
