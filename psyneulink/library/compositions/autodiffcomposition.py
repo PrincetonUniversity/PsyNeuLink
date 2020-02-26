@@ -176,12 +176,11 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 # ~~~~~~~
 
 # Logging in AutodiffCompositions follows the same procedure as logging in a `Composition`. However, there are some small gotchas to be aware of;
-# Since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model, 
+# Since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
 # then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
 # As of present, the ones that are supported are:
 # 1) the `matrix` parameter of Projections
 # 2) the `value` parameter of its inner components
-# 
 
 .. _AutodiffComposition_Nested_Execution:
 
@@ -405,7 +404,7 @@ class AutodiffComposition(Composition):
 
         # keeps track of average loss per epoch
         self.losses = []
-        
+
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
@@ -506,7 +505,7 @@ class AutodiffComposition(Composition):
         if tracked_loss is None:
             self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
             tracked_loss = self.parameters.tracked_loss._get(context)
-            
+
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
@@ -534,7 +533,7 @@ class AutodiffComposition(Composition):
             assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
             component = input_port.all_afferents[0].sender.owner
             outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-        
+
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1, context=context, skip_history=True, skip_log=True)
         return outputs
 
