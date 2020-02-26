@@ -1477,7 +1477,7 @@ class GridSearch(OptimizationFunction):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
             assert ocm.function is self
-            obj_func = ctx.import_llvm_function(ocm._gen_llvm_evaluate_function().name)
+            obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
             value_t = ocm._get_evaluate_output_struct_type(ctx)
             extra_args = [arg_in] + list(builder.function.args[-3:])
