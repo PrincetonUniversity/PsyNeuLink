@@ -7541,6 +7541,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context.remove_flag(ContextFlags.PROCESSING)
 
+        #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
+        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+        if self._is_learning(context) and not isinstance(self, AutodiffComposition):
+            context.add_flag(ContextFlags.LEARNING)
+            for projection in [p for p in self.projections if
+                               hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
+                matrix_parameter_port = projection.parameter_ports[MATRIX]
+                if any([lp for lp in matrix_parameter_port.mod_afferents if lp.learning_enabled == AFTER]):
+                    matrix_parameter_port._update(context=context)
+            context.remove_flag(ContextFlags.LEARNING)
+
         if call_after_pass:
             call_with_pruned_args(call_after_pass, context=context)
 
@@ -7600,15 +7611,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return output_values
 
     def _update_learning_parameters(self, context):
-        # Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
-        if self._is_learning(context):
-            context.add_flag(ContextFlags.LEARNING)
-            for projection in [p for p in self.projections if
-                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
-                matrix_parameter_port = projection.parameter_ports[MATRIX]
-                if any([lp for lp in matrix_parameter_port.mod_afferents if lp.learning_enabled == AFTER]):
-                    matrix_parameter_port._update(context=context)
-            context.remove_flag(ContextFlags.LEARNING)
+        pass
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, values, context=NotImplemented):
