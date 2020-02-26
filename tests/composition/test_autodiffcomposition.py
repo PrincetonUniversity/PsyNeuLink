@@ -177,7 +177,7 @@ class TestMiscTrainingFunctionality:
         'loss', ['l1', 'poissonnll']
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
+                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
                                      ])
     def test_various_loss_specs(self, loss, mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -323,7 +323,7 @@ class TestMiscTrainingFunctionality:
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     @pytest.mark.parametrize("mode", ['Python',
                                     #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #   LLVM test is disabled since parameters are currently not written back
+                                    #   LLVM test is disabled since weights are always copied back
                                      ])
     def test_params_stay_separate(self,mode):
         xor_in = TransferMechanism(name='xor_in',
@@ -388,7 +388,7 @@ class TestMiscTrainingFunctionality:
 
     # test whether the autodiff composition's get_parameters method works as desired
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                     #   LLVM test is disabled since parameters are currently not written back
 
                                      ])
@@ -458,8 +458,10 @@ class TestMiscTrainingFunctionality:
 
         # check that the parameter copies obtained from get_parameters have not changed with the
         # pytorch parameters during training (and are thus at a different memory location)
-        assert not np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-        assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
+        # (only makes sense in Python mode)
+        if mode == 'Python':
+            assert not np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
+            assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
 
 
 @pytest.mark.pytorch
@@ -2414,7 +2416,7 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
                                      ])
     def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
                                             patience, min_delta, mode):
@@ -2480,7 +2482,7 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
                                      ])
     def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
                                             patience, min_delta, mode):
@@ -2625,7 +2627,7 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
                                      ])
     def test_semantic_net_nested(self, eps, opt, mode):
 
