@@ -709,6 +709,7 @@ class AutodiffComposition(Composition):
 
         # backpropagate to compute gradients and perform learning update for parameters
         optimizer.zero_grad()
+        self.parameters.trial_losses._set(curr_loss.detach().numpy(), context)
         curr_loss = curr_loss / num_inputs
         printable = {}
         for component in curr_tensor_outputs.keys():
@@ -734,6 +735,9 @@ class AutodiffComposition(Composition):
                 return ctx.gen_autodiffcomp_learning_exec(self, tags=tags)
             else:
                 return ctx.gen_autodiffcomp_exec(self, tags=tags)
+
+    def _get_total_loss(self, num_trials: int=1, context:Context=None):
+        return sum(self.parameters.trial_losses._get(context)[-num_trials:])/num_trials
 
     def _infer_output_nodes(self, nodes: dict):
         """

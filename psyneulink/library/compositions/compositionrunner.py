@@ -23,26 +23,6 @@ def inf_yield_none():
     while True:
         yield None
 
-def _batch_inputs(inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, randomize: bool = True, call_before_minibatch=None, call_after_minibatch=None):
-    """
-    Chunks input dict into pieces where each chunk is a dict with values of length batch_size (or for the last chunk, the remainder)
-    """
-    #This is a generator for performance reasons, since we don't want to copy any data (especially for very large inputs or epoch counts!)
-    for epoch in range(epochs):
-        indices = list(range(0, num_trials))
-        if randomize:
-            random.shuffle(indices)
-        for i in range(0, num_trials, batch_size):
-            if call_before_minibatch:
-                call_before_minibatch()
-            curr_indices = indices[i:i + batch_size]
-            for idx in curr_indices:
-                chunk = {}
-                for k, v in inputs.items():
-                        chunk[k] = v[idx % len(v)]
-                yield chunk
-            if call_after_minibatch:
-                call_after_minibatch()
 def _recursive_update(d, u):
     """
     Recursively calls update on dictionaries, which prevents deletion of keys
@@ -77,7 +57,7 @@ class CompositionRunner():
         if targets is not None:
             targets = self._infer_target_nodes(targets)
             inputs = _recursive_update(inputs, targets)
-        
+
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
         inputs,_ = self._composition._adjust_stimulus_dict(inputs)
@@ -108,16 +88,43 @@ class CompositionRunner():
                 ret[node] = values
         return ret
 
-    def _get_loss(self):
+    def _calculate_loss(self, num_trials, context):
         """
         Returns a value that is the sum of all the losses from the last iteration
         """
+        from psyneulink.library.compositions import AutodiffComposition
+        if isinstance(self._composition, AutodiffComposition):
+            return self._composition._get_total_loss(num_trials, context)
         total_loss = 0
         for terminal_sequence in self._composition._terminal_backprop_sequences.values():
             comparator = terminal_sequence[COMPARATOR_MECHANISM]
             total_loss += comparator.value[0][0]
 
         return total_loss
+
+    def _batch_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, randomize: bool = True, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+        """
+        Chunks input dict into pieces where each chunk is a dict with values of length batch_size (or for the last chunk, the remainder)
+        """
+        #This is a generator for performance reasons, since we don't want to copy any data (especially for very large inputs or epoch counts!)
+        for epoch in range(epochs):
+            indices = list(range(0, num_trials))
+            if randomize:
+                random.shuffle(indices)
+            for i in range(0, num_trials, batch_size):
+                if call_before_minibatch:
+                    call_before_minibatch()
+                curr_indices = indices[i:i + batch_size]
+                for idx in curr_indices:
+                    chunk = {}
+                    for k, v in inputs.items():
+                        chunk[k] = v[idx % len(v)]
+                    yield chunk
+                if call_after_minibatch:
+                    call_after_minibatch()
+                if early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+                    # end early if patience exceeded
+                    return
 
     def run_learning(self,
                      inputs: dict,
@@ -178,11 +185,12 @@ class CompositionRunner():
             if minibatch_size == TRAINING_SET:
                 minibatch_size = num_trials
 
+            early_stopper = None
             if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
-            minibatched_input = _batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch)
-            
+            minibatched_input = self._batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
             skip_initialization = True
 
