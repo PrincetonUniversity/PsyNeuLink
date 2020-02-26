@@ -795,24 +795,24 @@ Learning in a Composition
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
-which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect. 
+which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
 
 .. _Composition_Learning_Mode:
 
 *Running a Composition in Learning Mode*
 ======================================
-A Composition only learns when ran in learning mode, and when its `disable_learning` parameter is False. To run the Composition in learning mode, use the `learn <Composition.learn>` method. 
+A Composition only learns when ran in learning mode, and when its `disable_learning` parameter is False. To run the Composition in learning mode, use the `learn <Composition.learn>` method.
 See `learn <Composition.learn>` for more details.
 
 *Implementing Learning in a Composition*
 ======================================
-There are three ways of implementing learning in a Composition: 
+There are three ways of implementing learning in a Composition:
 
 i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
 
 ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_
 
-iii) using `UserDefinedFunctions <UserDefinedFunction>`.  
+iii) using `UserDefinedFunctions <UserDefinedFunction>`.
 
 The advantage of using standard PsyNeuLink compoments is that it
 assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
@@ -1073,8 +1073,8 @@ COMMENT
 <https://pytorch.org>`_ (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  The
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
-etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>` 
-— AutodiffCompositions automatically creates backpropagation learning pathways between all input - output node paths.  
+etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>`
+— AutodiffCompositions automatically creates backpropagation learning pathways between all input - output node paths.
 It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode, and
 `run <AutodiffComposition.run>` for test mode.
 
@@ -4260,7 +4260,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     prev[projection] = curr_node
                     queue.append(efferent_node)
             return pathways
-        
+
         pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway)
@@ -6806,7 +6806,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_inputs = inputs.__next__()
                 except StopIteration:
                     break
-            
+
             if callable(inputs) or isgenerator(inputs):
                 next_inputs, num_inputs_sets = self._adjust_stimulus_dict(next_inputs)
                 execution_stimuli = {}
@@ -6947,7 +6947,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
                 the shape of which must match the node's default variable. This is identical to the input dict in `the run method <Composition.run>`
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same structure as input specification (1) of learn. The `targets` and `epochs` keys
-                should contain values of the same shape as `targets <Composition.learn>` and `epochs` <Composition.learn>    
+                should contain values of the same shape as `targets <Composition.learn>` and `epochs` <Composition.learn>
 
             targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each node in the composition that receives target values to train on from
@@ -6962,7 +6962,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and ran, after which learning mechanisms with learning mode TRIAL will update weights 
+                specifies the size of the minibatches to use. The input trials will be batched and ran, after which learning mechanisms with learning mode TRIAL will update weights
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized on each epoch
@@ -6989,7 +6989,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             call_after_minibatch : callable
                 called after each minibatch is executed
-                
+
             Returns
             ---------
 
@@ -7015,10 +7015,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context=context,
             bin_execute=bin_execute,
             *args, **kwargs)
-        
+
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
-        
+
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
             self,
@@ -7756,7 +7756,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         adjusted_stimuli[node].append(stim)
                 nums_input_sets.add(len(stimuli[node]))
-        
+
         num_trials = max(nums_input_sets)
         for node, stim in adjusted_stimuli.items():
             if len(stim) == 1:

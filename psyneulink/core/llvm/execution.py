@@ -317,7 +317,7 @@ class CompExecution(CUDAExecution):
         return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_contexts[0])
 
     def _copy_params_to_pnl(self, context=None, component=None, params=None):
-        # need to special case compositions 
+        # need to special case compositions
         from psyneulink.core.compositions import Composition
         from psyneulink.core.components.projections.pathway import MappingProjection
 
@@ -327,7 +327,7 @@ class CompExecution(CUDAExecution):
         if params is None:
             assert component == self._composition
             params = self._param_struct
-            
+
         if isinstance(component, Composition):
             # first handle all inner projections
             params_projections_list = getattr(params, params._fields_[1][0])
@@ -347,11 +347,11 @@ class CompExecution(CUDAExecution):
                 parameter_ctype = getattr(params, params._fields_[idx][0])
                 value = _convert_ctype_to_python(parameter_ctype)
                 if attribute == 'matrix':
-                    # special case since we have to unflatten matrix 
+                    # special case since we have to unflatten matrix
                     # FIXME: this seems to break something when generalized for all attributes
                     value = np.array(value).reshape(component.matrix.shape)
                     to_set._set(value, context=context)
-                
+
     @property
     def _state_struct(self):
         if len(self._execution_contexts) > 1:

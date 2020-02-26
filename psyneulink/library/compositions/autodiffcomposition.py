@@ -321,7 +321,7 @@ class AutodiffComposition(Composition):
 
     learning_rate : float : default 0.001
         the learning rate, which is passed to the optimizer.
-    
+
     disable_learning : bool: default False
         specifies whether the AutodiffComposition should disable learning (default is False). When False,
         the AutodiffComposition trains using PyTorch when ran in `learning mode <Composition.learn>`. When True, the AutodiffComposition runs like an ordinary
@@ -433,10 +433,10 @@ class AutodiffComposition(Composition):
         self.disable_learning = disable_learning
         # user indication of how to initialize pytorch parameters
         self.param_init_from_pnl = param_init_from_pnl
-        
+
         if param_init_from_pnl is False:
             warnings.warn("WARNING: Autodiffcomposition.param_init_from_pnl is deprecated! Please do not use it!")
-            
+
         # keeps track of average loss per epoch
         self.losses = []
 
@@ -483,7 +483,7 @@ class AutodiffComposition(Composition):
             self.loss = self.loss_spec
         else:
             self.loss = self._get_loss(self.loss_spec)
-        
+
         return self.parameters.pytorch_representation._get(context)
 
     def _make_optimizer(self, optimizer_type, learning_rate, weight_decay, context):
@@ -646,7 +646,7 @@ class AutodiffComposition(Composition):
                 return ctx.gen_autodiffcomp_exec(self, tags=tags)
 
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
-        return sum(self.parameters.trial_losses._get(context)[-num_trials:])/num_trials
+        return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
     def _infer_output_nodes(self, nodes: dict):
         """
@@ -663,16 +663,16 @@ class AutodiffComposition(Composition):
                 comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
                 output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
-                
+
                 if len(output_nodes) != 1:
                     # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
                     raise Exception(f"Unable to infer learning target node from output node {node}!")
-                
+
                 ret[output_nodes[0]] = values
             elif NodeRole.OUTPUT in self.get_roles_by_node(node):
                 ret[node] = values
         return ret
-    
+
     def _infer_input_nodes(self, nodes: dict):
         """
         Maps targets onto target mechanisms (as needed by learning)
@@ -686,13 +686,13 @@ class AutodiffComposition(Composition):
             if NodeRole.INPUT in self.get_roles_by_node(node) and not NodeRole.TARGET in self.get_roles_by_node(node):
                 ret[node] = values
         return ret
-    
+
     def learn(self, *args, **kwargs):
         if self._built_pathways is False:
             self.infer_backpropagation_learning_pathways()
             self._built_pathways = True
         return super().learn(*args, **kwargs)
-        
+
     @handle_external_context()
     def execute(self,
                 inputs=None,
@@ -739,7 +739,7 @@ class AutodiffComposition(Composition):
                                             scheduler)
 
             context.add_flag(ContextFlags.PROCESSING)
-            
+
             self.output_CIM.execute(output[-1], context=context)
             context.remove_flag(ContextFlags.PROCESSING)
 
@@ -843,7 +843,7 @@ class AutodiffComposition(Composition):
         weights = pytorch_representation.get_weights_for_projections()
 
         return weights
-    
+
     def _get_state_struct_type(self, ctx):
         """Gets state struct for compiled autodiff"""
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
