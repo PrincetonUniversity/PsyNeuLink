@@ -6757,9 +6757,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     full_results.extend(results)
 
                 self.parameters.results._set(full_results, context)
+
+                if self._is_learning(context):
+                    # copies back matrix to pnl from param struct (after learning)
+                    _comp_ex._copy_params_to_pnl(context=context)
+
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
                 self.most_recent_context = context
+
                 return full_results[-1]
 
             except Exception as e:

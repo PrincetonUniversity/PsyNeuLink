@@ -316,6 +316,42 @@ class CompExecution(CUDAExecution):
 
         return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_contexts[0])
 
+    def _copy_params_to_pnl(self, context=None, component=None, params=None):
+        # need to special case compositions 
+        from psyneulink.core.compositions import Composition
+        from psyneulink.core.components.projections.pathway import MappingProjection
+
+        if component is None:
+            component = self._composition
+
+        if params is None:
+            assert component == self._composition
+            params = self._param_struct
+            
+        if isinstance(component, Composition):
+            # first handle all inner projections
+            params_projections_list = getattr(params, params._fields_[1][0])
+            for idx, projection in enumerate(component._inner_projections):
+                projection_params = getattr(params_projections_list, params_projections_list._fields_[idx][0])
+                self._copy_params_to_pnl(context=context, component=projection, params=projection_params)
+
+            # now recurse on all nodes
+            params_node_list = getattr(params, params._fields_[0][0])
+            for idx, node in enumerate(component._all_nodes):
+                node_params = getattr(params_node_list, params_node_list._fields_[idx][0])
+                self._copy_params_to_pnl(context=context, component=node, params=node_params)
+        elif isinstance(component, MappingProjection):
+            # we copy all ids back
+            for idx, attribute in enumerate(component._get_param_ids()):
+                to_set = getattr(component.parameters, attribute)
+                parameter_ctype = getattr(params, params._fields_[idx][0])
+                value = _convert_ctype_to_python(parameter_ctype)
+                if attribute == 'matrix':
+                    # special case since we have to unflatten matrix 
+                    # FIXME: this seems to break something when generalized for all attributes
+                    value = np.array(value).reshape(component.matrix.shape)
+                    to_set._set(value, context=context)
+                
     @property
     def _state_struct(self):
         if len(self._execution_contexts) > 1:
