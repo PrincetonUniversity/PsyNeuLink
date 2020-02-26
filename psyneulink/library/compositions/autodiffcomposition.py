@@ -131,7 +131,7 @@ arguments described above, and the following.
 * `pytorch_representation <AutodiffComposition.pytorch_representation>` -- containsa the PyTorch representation
   of the PsyNeuLink model that AutodiffComposition contains.
 
-* `losses <AutodiffComposition.losses>` -- tracks the average loss for each training epoch.
+* `losses <AutodiffComposition.losses>` -- tracks the average loss for each training batch.
 
 * `optimizer <AutodiffComposition.optimizer>` -- contains the PyTorch optimizer function used for learning. It
   is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
@@ -395,8 +395,10 @@ class AutodiffComposition(Composition):
         """
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
-        losses = None
-        trial_losses = Parameter(history_max_length=1000)
+        losses = Parameter([])
+        trial_losses = Parameter([])
+        tracked_loss = Parameter(None, pnl_internal=True)
+        tracked_loss_count = Parameter(0, pnl_internal=True)
         pytorch_representation = None
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
@@ -439,7 +441,7 @@ class AutodiffComposition(Composition):
 
         # keeps track of average loss per epoch
         self.losses = []
-
+        
         # ordered execution sets for the pytorch model
         self.execution_sets = None
 
@@ -467,13 +469,13 @@ class AutodiffComposition(Composition):
                                         context=context,
                                         composition = self,
                                         )
-            self.parameters.pytorch_representation._set(model, context)
+            self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
         old_opt = self.parameters.optimizer._get(context)
         if old_opt is None:
             opt = self._make_optimizer(self.optimizer_type, self.learning_rate, self.weight_decay, context)
-            self.parameters.optimizer._set(opt, context)
+            self.parameters.optimizer._set(opt, context, skip_history=True, skip_log=True)
 
         # Set up loss function
         if self.loss is not None:
@@ -532,109 +534,64 @@ class AutodiffComposition(Composition):
                                            "and KL Divergence. These are specified as 'mse', 'crossentropy', 'l1', "
                                            "'nll', 'poissonnll', and 'kldiv' respectively.".format(loss_spec))
 
-    def _has_required_keys(self, input_dict):
-        required_keys = {"inputs", "targets"}
-        return required_keys.issubset(set(input_dict.keys()))
-
-    # performs forward computation for one input
-    def autodiff_processing(self, inputs, context=None, do_logging=False, scheduler=None):
-        pytorch_representation = self.parameters.pytorch_representation._get(context)
-        # run the model on inputs - switch autograd off for this (we don't need it)
-        with torch.no_grad():
-            tensor_outputs = pytorch_representation.forward(inputs, context=context, do_logging=do_logging, scheduler=scheduler)
-
-        # get outputs back into numpy
-        outputs = []
-        for i in range(len(tensor_outputs)):
-            outputs.append(tensor_outputs[i].detach().cpu().numpy().copy())
-
-        return outputs
-
     # performs learning/training on all input-target pairs it recieves for given number of epochs
-    def autodiff_training(self, inputs, targets, context=None, do_logging=False, scheduler=None):
-
-        # FIX CW 11/1/18: this value of num_inputs assumes all inputs have same length, and that the length of
-        # the input for an origin component equals the number of desired trials. We could clean this up
-        # by perhaps using modular arithmetic on t, or by being more explicit about number of desired trials
-        first_input_value = list(inputs.values())[0]
-        num_inputs = len(first_input_value)
-
-        # get total number of output neurons from the dimensionality of targets on the first trial
-        # (this is for computing average loss across neurons on each trial later)
-        out_size = 0
-        for target in targets.values():
-            out_size += len(target)
-
-        # set up array to keep track of losses on epoch
-        curr_losses = np.zeros(num_inputs)
-
-        # reset temporary list to keep track of most recent outputs
-        outputs = []
-
-        self.parameters.pytorch_representation._get(context).detach_all()
-        # self.parameters.pytorch_representation._get(context).reset_all()
+    def autodiff_training(self, inputs, targets, context=None, scheduler=None):
 
         # compute total loss across output neurons for current trial
-        curr_loss = torch.zeros(1, device=self.device).double()
+        tracked_loss = self.parameters.tracked_loss._get(context)
+        if tracked_loss is None:
+            self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
+            tracked_loss = self.parameters.tracked_loss._get(context)
+            
+        curr_tensor_inputs = {}
+        curr_tensor_targets = {}
+        for component in inputs.keys():
+            input = inputs[component][0]
+            curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
+        for component in targets.keys():
+            target = targets[component][0]
+            curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
-        # iterate over inputs, targets
-        for t in range(num_inputs):
+        # do forward computation on current inputs
+        curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
+            curr_tensor_inputs,
+            context,
+            scheduler=scheduler,
+        )
 
-            input_index = t
-            curr_tensor_inputs = {}
-            curr_tensor_targets = {}
-            for component in inputs.keys():
-                input = inputs[component][input_index]
-                curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
-            for component in targets.keys():
-                target = targets[component][input_index]
-                curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
-
-            # do forward computation on current inputs
-            curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
-                curr_tensor_inputs,
-                context,
-                do_logging,
-                scheduler=scheduler,
-            )
-
-            for component in curr_tensor_outputs.keys():
-                # possibly add custom loss option, which is a loss function that takes many args
-                # (outputs, targets, weights, and more) and returns a scalar
-                new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
-                curr_loss += new_loss
-
-            # save average loss across all output neurons on current trial
-            curr_losses[t] = curr_loss[0].item() / num_inputs
-
-            curr_output_list = []
-            for input_port in self.output_CIM.input_ports:
-                assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
-                component = input_port.all_afferents[0].sender.owner
-                curr_output_list.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
-            outputs.append(curr_output_list)
-
-        optimizer = self.parameters.optimizer._get(context)
-
-        # backpropagate to compute gradients and perform learning update for parameters
-        optimizer.zero_grad()
-        self.parameters.trial_losses._set(curr_loss.detach().numpy(), context)
-        curr_loss = curr_loss / num_inputs
-        printable = {}
         for component in curr_tensor_outputs.keys():
-            printable[component] = curr_tensor_outputs[component].detach().numpy()
-        if self.force_no_retain_graph:
-            curr_loss.backward(retain_graph=False)
-        else:
-            curr_loss.backward(retain_graph=True)
-        optimizer.step()
-        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+            # possibly add custom loss option, which is a loss function that takes many args
+            # (outputs, targets, weights, and more) and returns a scalar
+            new_loss = self.loss(curr_tensor_outputs[component], curr_tensor_targets[component])
+            tracked_loss += new_loss
 
-        # save average loss on the current epoch
-        average_loss = np.mean(curr_losses)
-        self.parameters.losses._get(context).append(average_loss)
-
+        outputs = []
+        for input_port in self.output_CIM.input_ports:
+            assert (len(input_port.all_afferents) == 1)  # CW 12/05/18, this assert may eventually be outdated
+            component = input_port.all_afferents[0].sender.owner
+            outputs.append(curr_tensor_outputs[component].detach().cpu().numpy().copy())
+        
+        self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1, context=context, skip_history=True, skip_log=True)
         return outputs
+
+    def _update_learning_parameters(self, context):
+        """
+        Updates parameters based on trials ran since last update.
+        """
+        optimizer = self.parameters.optimizer._get(context=context)
+        optimizer.zero_grad()
+
+        tracked_loss = self.parameters.tracked_loss._get(context=context) / self.parameters.tracked_loss_count._get(context=context)
+        if self.force_no_retain_graph:
+            tracked_loss.backward(retain_graph=False)
+        else:
+            tracked_loss.backward(retain_graph=True)
+        self.parameters.losses._get(context=context).append(tracked_loss.detach().cpu().numpy()[0])
+        self.parameters.tracked_loss._set(torch.zeros(1, device=self.device).double(), context=context, skip_history=True, skip_log=True)
+        self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
+        optimizer.step()
+        self.parameters.pytorch_representation._get(context=context).detach_all()
+        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
     def _gen_llvm_function(self, *, tags:frozenset):
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
@@ -735,12 +692,11 @@ class AutodiffComposition(Composition):
             output = self.autodiff_training(autodiff_inputs,
                                             autodiff_targets,
                                             context,
-                                            do_logging,
                                             scheduler)
 
             context.add_flag(ContextFlags.PROCESSING)
 
-            self.output_CIM.execute(output[-1], context=context)
+            self.output_CIM.execute(output, context=context)
             context.remove_flag(ContextFlags.PROCESSING)
 
             # note that output[-1] might not be the truly most recent value
@@ -762,70 +718,6 @@ class AutodiffComposition(Composition):
                                                         runtime_params=runtime_params,
                                                         bin_execute=bin_execute,
                                                         )
-
-    # validates properties of the autodiff composition, and arguments to run, when run is called
-    def _validate_params(self, targets, epochs):
-
-        # set up processing graph and dictionary (for checking if recurrence is present later)
-        processing_graph = self.graph_processing
-        topo_dict = {}
-
-        # raise error if composition is empty
-        if len([vert.component for vert in self.graph.vertices]) == 0:
-            raise AutodiffCompositionError("{0} has no mechanisms or projections to execute."
-                                           .format(self.name))
-
-        # iterate over nodes in processing graph
-        for node in processing_graph.vertices:
-
-            # raise error if a node is a composition
-            if isinstance(node.component, Composition):
-                raise AutodiffCompositionError("{0} was added as a node to {1}. Compositions cannot be "
-                                               "added as nodes to Autodiff Compositions."
-                                               .format(node.component, self.name))
-
-            # raise error if a node's mechanism doesn't have a Linear, Logistic, or ReLU function
-            if not isinstance(node.component.function, (Linear, Logistic, ReLU)):
-                raise AutodiffCompositionError("Function {0} of mechanism {1} in {2} is not a valid function "
-                                               "for a Autodiff Composition. Functions of mechanisms in "
-                                               "Autodiff Compositions can only be Linear, Logistic, or ReLU."
-                                               .format(node.component.function, node.component, self.name))
-
-            # raise error if a node has more than one InputPort
-            if len(node.component.input_ports) > 1:
-                raise AutodiffCompositionError("Mechanism {0} of {1} has more than one InputPort. Autodiff "
-                                               "Compositions only allow mechanisms to have one InputPort. The "
-                                               "dimensionality of this port's value will become the dimensionality of "
-                                               "the tensor representing the port's mechanism in the underlying "
-                                               "Pytorch model."
-                                               .format(node.component, self.name))
-
-            # raise error if any parent of current node creates a cycle in the composition (ie. if there's recurrence)
-            topo_dict[node.component] = set()
-            for parent in processing_graph.get_parents_from_component(node.component):
-                topo_dict[node.component].add(parent.component)
-                try:
-                    list(toposort(topo_dict))
-                except ValueError:
-                    raise AutodiffCompositionError("Mechanisms {0} and {1} are part of a recurrent path in {2}. "
-                                                   "Autodiff Compositions currently do not support recurrence."
-                                                   .format(node.component, parent.component, self.name))
-
-        # raise errors if arguments to run are not consistent or we're doing training but there are
-        # no trainable parameters
-        if targets is None:
-            if epochs is not None:
-                raise AutodiffCompositionError("Number of training epochs specified for {0} but no targets given."
-                                               .format(self.name))
-
-        else:
-            if epochs is None:
-                raise AutodiffCompositionError("Targets specified for {0}, but no number of training epochs given."
-                                               .format(self.name))
-
-            if len([vert.component for vert in self.graph.vertices if isinstance(vert.component, MappingProjection)]) == 0:
-                raise AutodiffCompositionError("Targets specified for {0}, but {0} has no trainable parameters."
-                                               .format(self.name))
 
     # gives user weights and biases of the model (from the pytorch representation)
     @handle_external_context(execution_id=NotImplemented)

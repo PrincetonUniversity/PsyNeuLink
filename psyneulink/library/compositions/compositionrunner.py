@@ -122,7 +122,10 @@ class CompositionRunner():
                     yield chunk
                 if call_after_minibatch:
                     call_after_minibatch()
-            if early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+                
+                if not self._is_llvm_mode:
+                    self._composition._update_learning_parameters(context)
+            if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
                 # end early if patience exceeded
                 pass
 
@@ -148,6 +151,11 @@ class CompositionRunner():
         ---------
         Outputs from the final execution
         """
+        if bin_execute is False or bin_execute == 'Python':
+            self._is_llvm_mode = False
+        else:
+            self._is_llvm_mode = True
+
         # Handle function and generator inputs
         if callable(inputs):
             inputs = inputs()
@@ -195,10 +203,11 @@ class CompositionRunner():
             skip_initialization = True
 
         # FIXME: compiled run values differ from pytorch run
-        if bin_execute is not False and bin_execute != 'Python':
-            results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
-        else:
-            results = [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
+        results = self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:] # return results from last epoch
+        # if bin_execute is not False and bin_execute != 'Python':
+        #     results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
+        # else:
+        #     results = [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
 
         return results
 class EarlyStopping(object):
