@@ -10,6 +10,7 @@ import ctypes
 from collections import deque
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.keywords import TARGET_MECHANISM
+from psyneulink.core.globals.log import LogCondition
 debug_env = pnlvm.debug_env
 
 try:
@@ -459,9 +460,8 @@ class PytorchModelCreator(torch.nn.Module):
 
         old_source = context.source
         context.source = ContextFlags.COMMAND_LINE
-        #TODO: Optimize this weight logging
         self.log_weights(context)
-        # self.copy_outputs_to_psyneulink(outputs, context)
+        self.copy_outputs_to_psyneulink(outputs, context)
         context.source = old_source
 
         return outputs
@@ -486,8 +486,9 @@ class PytorchModelCreator(torch.nn.Module):
     @handle_external_context()
     def log_weights(self, context=None):
         for projection, weights in self.projections_to_pytorch_weights.items():
-            projection.parameters.matrix._set(
-                weights.detach().cpu().numpy(), context)
+            if projection.parameters.matrix.log_condition != LogCondition.OFF:
+                projection.parameters.matrix._set(
+                    weights.detach().cpu().numpy(), context)
 
     # Helper method that creates a bin func that returns the derivative of the function into the builder
     # FIXME: Add compiled derivative functions, and move these calls there
