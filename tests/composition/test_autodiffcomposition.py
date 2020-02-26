@@ -2337,6 +2337,7 @@ class TestACLogging:
         xor = AutodiffComposition(param_init_from_pnl=True)
         xor.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
         hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
+        out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
 
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
