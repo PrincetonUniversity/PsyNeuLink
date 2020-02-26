@@ -144,20 +144,9 @@ arguments described above, and the following.
 Execution
 ---------
 
-Most arguments to AutodiffComposition's `run` or `execute` methods are the same as for a `Composition`. When not ran in learning mode
+An AutodiffComposition's `run <Composition.run>`, `execute <Composition.execute>`, and `learn <Composition.learn>` methods are the same as for a `Composition`.
 
-.. _AutodiffComposition_Input:
-
-However, if `learning_enabled <AutodiffComposition.learning_enabled>` is True, the **inputs** argument
-format is different. If `learning_enabled <AutodiffComposition.learning_enabled>` is True, then **inputs**
-argument must be a dictionary with at least two nested dictionaries within it, one for the inputs and the other
-for the targets, as well as an additional entry specifying the number of training epochs to run.  Specifically,
-the outer dictionary must have at least two entries with keys *"inputs"* and  *"targets"*.  The value of the
-*"inputs"* entry must be a standard input dictionary, specifying the inputs for each `ORIGIN` Mechanism.  The value
-of the *"targets"* entry must be a similar dictionary, in this case specifying the target values for the outputs of
-each `TERMINAL` Mechanism in the Composition. In addition, an entry with the key *"epochs"* can be included, which
-must then have as its value an integer specifying the number of epochs of training to run (i.e. how many times all
-inputs and corresponding targets are run); it defaults to 1. The following is an example showing how to create a
+The following is an example showing how to create a
 simple AutodiffComposition, specify its inputs and targets, and run it with learning enabled and disabled.
 
     >>> import psyneulink as pnl
@@ -178,52 +167,28 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
     >>> input_dict = {"inputs": my_inputs, "targets": my_targets, "epochs": 2}
     >>> # Run Composition in learnng mode
     >>> my_autodiff.learn(inputs = input_dict)
-    >>> # Run Composition in normal (i.e. non-learning) mode
-    >>> my_autodiff.run(inputs = input_dict)
-
-As shown above (and for convenience), an AutodiffComposition with learning disabled can be run with the same input
-format used for training.  In that case, the *"input"* entry is used as the inputs for the run, and the *"targets"*
-and *"epochs"* entries (if present) are ignored. However, since an AutodiffComposition with learning disabled is
-treated like any other Composition, it can also be run with the same `input format <Composition_Run_Inputs>` as a standard
-`Composition`; that is, a single dictionary specifying the inputs for each `ORIGIN` Mechanism), such the one defined
-in the exaple above, as follows::
-
-    >>> my_autodiff.run(inputs = my_inputs)
-
-or `using a function <Composition_Input_as_Function>`.
+    >>> # Run Composition in test mode
+    >>> my_autodiff.run(inputs = input_dict['inputs'])
 
 .. _AutodiffComposition_Logging:
 
 # Logging
 # ~~~~~~~
 
-# Logging currently works differently in AutodiffComposition than in Composition. In an AutodiffComposition, no logging
-# is done by default, because logging substantially (roughly by 30%) slows down AutodiffComposition. If you wish for all
-# projection weights and mechanism values to be logged during execution or training of AutodiffComposition, you must
-# set the **do_logging** argument of the ``run()`` method to ``True``. Logging with AutodiffComposition is slightly hacked
-# together, so the time and context in the log are not meaningful, only the logged value is meaningful.
+# Logging in AutodiffCompositions follows the same procedure as logging in a `Composition`. However, there are some small gotchas to be aware of;
+# Since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model, 
+# then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
+# As of present, the ones that are supported are:
+# 1) the `matrix` parameter of Projections
+# 2) the `value` parameter of its inner components
+# 
 
 .. _AutodiffComposition_Nested_Execution:
 
 Nested Execution
 ~~~~~~~~~~~~~~~~
 
-Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.  If learning
-is not enabled, nesting is handled in the same way as any other Composition.  However, if learning is enabled for a
-nested AutodiffComposition, its input format is different (see below);  as a consequence, a nested AutodiffComposition
-with learning enabled must an `ORIGIN` Mchanism of the Composition in which it is nested.
-
-.. note::
-
-    As with all `nested Compositions <Composition_Nested>`, the AutodiffComposition's `_analyze_graph
-    <Composition._analyze_graph>` method must be called (or the AutodiffComposition must be run) before nesting it.
-
-COMMENT:
-FIX:  IS THIS STILL TRUE:
-.. note::
-
-    Using an AutodiffComposition not as an origin mechanism is currently buggy, and might produce unexpected results.
-COMMENT
+Like any other `Composition`, an AutodiffComposition may be `nested inside another <Composition_Nested>`.
 
 The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
 Composition::
@@ -235,11 +200,10 @@ Composition::
     >>> my_outer_composition.add_node(my_autodiff)
     >>> # Specify dict containing inputs and targets for nested Composition
     >>> training_input = {my_autodiff: input_dict}
-    >>> # Run with learning enabled
-    >>> result1 = my_outer_composition.run(inputs=training_input)
+    >>> # Run in learning mode
+    >>> result1 = my_outer_composition.learn(inputs=training_input)
     COMMENT:
     >>> # Run with learning disabled (and standard input format)
-    >>> my_autodiff.learning_enabled = False
     >>> no_training_input = {my_autodiff: my_inputs}
     >>> result2 = parentmy_outer_compositionComposition.run(inputs=no_training_input)
     COMMENT
@@ -456,7 +420,7 @@ class AutodiffComposition(Composition):
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
     def _build_pytorch_representation(self, context=None):
-        if self.scheduler is None:  # if learning_enabled has never been run yet
+        if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.execution_sets is None:
             self.execution_sets = [ x - set(self.get_nodes_by_role(NodeRole.LEARNING)) for x in self.scheduler.run(context=context)]
