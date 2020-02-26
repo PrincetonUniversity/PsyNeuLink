@@ -122,9 +122,9 @@ class CompositionRunner():
                     yield chunk
                 if call_after_minibatch:
                     call_after_minibatch()
-                if early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
-                    # end early if patience exceeded
-                    return
+            if early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+                # end early if patience exceeded
+                pass
 
     def run_learning(self,
                      inputs: dict,
