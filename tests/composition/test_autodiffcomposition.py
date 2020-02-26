@@ -2482,7 +2482,7 @@ class TestNested:
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
                                      ])
     def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
                                             patience, min_delta, mode):
