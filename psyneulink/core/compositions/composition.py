@@ -41,6 +41,9 @@ Contents
 Overview
 --------
 
+.. warning:: As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed! Please see `this link <RefactoredLearningGuide>` for more details!
+
+
 Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.
 
