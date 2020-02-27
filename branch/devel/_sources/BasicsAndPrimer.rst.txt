@@ -724,7 +724,7 @@ a simple three-layered neural network that learns to compute the X-OR operation:
     # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
     xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
                   'targets':[  [0],     [1],     [1],     [0] ]}
-    xor_comp.run(inputs={input:xor_inputs['stimuli'],
+    xor_comp.learn(inputs={input:xor_inputs['stimuli'],
                          target:xor_inputs['targets']})
 
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
@@ -750,7 +750,7 @@ target Mechanism (that receives the input specifying the target responses)::
     target_mech = learning_components[TARGET_MECHANISM]
 
     # Run the model:
-    result = xor_model.run(inputs={input_mech:xor_inputs,
+    result = xor_model.learn(inputs={input_mech:xor_inputs,
                                    target_mech:xor_targets},
                            num_trials=2)
 
