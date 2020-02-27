@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.4.0+10.gba56af8 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.4.0+11.g9c62b17 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.4.0+10
+                  0.7.4.0+11
                 </div>
               
             
@@ -272,6 +272,10 @@
 </div>
 <div class="section" id="overview">
 <span id="composition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed! Please see <a class="reference internal" href="RefactoredLearningGuide.html"><span class="doc">this link</span></a> for more details!</p>
+</div>
 <p>Composition is the base class for objects that combine PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.</p>
 <p>Composition “Nodes” are <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and/or nested <a class="reference internal" href="#"><span class="doc">Compositions</span></a>. <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> connect two Nodes. The Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a> stores the structural relationships
@@ -2435,7 +2439,7 @@ by checking whether any of its nodes are stateful.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.4.0+10.gba56af8',
+               VERSION:'0.7.4.0+11.g9c62b17',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
