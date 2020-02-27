@@ -866,4 +866,4 @@ a more detailed description of PsyNeuLink's organization and capabilities.
 
 .. STUFF TO ADD -------------------------------------------------------------------------------------------------------
 .. XXX NESTED COMPOSITIONS (BEYOND AUTODIFF)
-.. XXX COMPILATION
+.. XXX COMPILATION INCLUDING EXAMPLE WITH timeit TO SHOW IMPROVEMENT!
