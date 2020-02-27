@@ -173,13 +173,22 @@ class ContextFlags(enum.IntFlag):
     """Call by a/the Composition to which the Component belongs."""
 
     PROCESS   = 1 << 15     # 32768
-    NONE      = 1 << 18
+
+    NONE      = 1 << 20
 
     """Call by a/the Composition to which the Component belongs."""
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | PROCESS | NONE
 
+    # runmode flags
+    DEFAULT_MODE = 1 << 18
+    """Default mode"""
+    LEARNING_MODE = 1 << 19
+    """Set during `compositon.learn`"""
 
-    ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
+    RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE
+
+
+    ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
     @classmethod
     @tc.typecheck
@@ -255,6 +264,8 @@ SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.COMPOSITION,
                 ContextFlags.NONE}
 
+RUN_MODE_FLAGS = {ContextFlags.LEARNING_MODE,
+                  ContextFlags.DEFAULT_MODE}
 
 class Context():
     """Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
@@ -327,6 +338,7 @@ class Context():
                  execution_phase=ContextFlags.IDLE,
                  # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
+                 runmode=ContextFlags.DEFAULT_MODE,
                  execution_id=None,
                  string:str='', time=None):
 
@@ -334,6 +346,8 @@ class Context():
         self.composition = composition
         self._execution_phase = execution_phase
         self._source = source
+        self._runmode = runmode
+        
         if flags:
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
@@ -433,6 +447,24 @@ class Context():
                                format(str(flag)))
 
     @property
+    def runmode(self):
+        return self._runmode
+    
+    @runmode.setter
+    def runmode(self, flag):
+        """Check that a flag is one and only one run mode flag"""
+        if flag in RUN_MODE_FLAGS:
+            self._runmode = flag
+        elif not flag:
+            self._runmode = ContextFlags.DEFAULT_MODE
+        elif not flag & ContextFlags.RUN_MODE_MASK:
+            raise ContextError("Attempt to assign a flag ({}) to run mode that is not a run mode flag".
+                               format(str(flag)))
+        else:
+            raise ContextError("Attempt to assign more than one flag ({}) to run mode".
+                               format(str(flag)))
+
+    @property
     def execution_time(self):
         try:
             return self._execution_time
@@ -462,8 +494,10 @@ class Context():
             self.execution_phase = operation(self.execution_phase, ContextFlags.IDLE, *flags)
         elif all([flag in SOURCE_FLAGS for flag in flags]):
             self.source = operation(self.source, ContextFlags.NONE, *flags)
+        elif all([flag in RUN_MODE_FLAGS for flag in flags]):
+            self.runmode = operation(self.runmode, ContextFlags.DEFAULT_MODE, *flags)
         else:
-            raise ContextError(f'Flags must all correspond to one of: execution_phase, source')
+            raise ContextError(f'Flags must all correspond to one of: execution_phase, source, run mode')
 
     def add_flag(self, flag: ContextFlags):
         def add(attr, blank_flag, flag):

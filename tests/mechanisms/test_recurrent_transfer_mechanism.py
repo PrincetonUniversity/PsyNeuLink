@@ -921,7 +921,6 @@ class TestRecurrentTransferMechanismInSystem:
         assert R.learning_rate == 0.1
         assert R.learning_mechanism.learning_rate == 0.1
         # assert R.learning_mechanism.function.learning_rate == 0.1
-
         s.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
         matrix_1 = [[0., 1.1, 1.1, 1.1],
                     [1.1, 0., 1.1, 1.1],

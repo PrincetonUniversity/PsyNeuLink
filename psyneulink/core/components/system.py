@@ -2861,9 +2861,10 @@ class System(System_Base):
         # Execute learning except for simulation runs
         if ContextFlags.SIMULATION not in context.execution_phase and self.learning:
             context.add_flag(ContextFlags.LEARNING)
+            context.add_flag(ContextFlags.LEARNING_MODE)
             self._execute_learning(target=target, context=context)
-
             context.remove_flag(ContextFlags.LEARNING)
+            context.add_flag(ContextFlags.LEARNING_MODE)
 
         # EXECUTE CONTROLLER
         # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
@@ -3029,9 +3030,9 @@ class System(System_Base):
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
-
+                context.add_flag(ContextFlags.LEARNING_MODE)
                 context.execution_phase = ContextFlags.LEARNING
-
+                
                 if isinstance(component, Mechanism):
                     params = None
 
@@ -3070,7 +3071,8 @@ class System(System_Base):
 
                 # # TEST PRINT LEARNING:
                 # print(component._parameter_ports[MATRIX].value)
-
+                context.remove_flag(ContextFlags.LEARNING_MODE)
+        
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
             # Report learning for target_nodes (and the processes to which they belong)
