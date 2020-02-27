@@ -80,7 +80,6 @@ class PathwayComposition(Composition):
     def execute(
         self,
         inputs=None,
-        autodiff_stimuli=None,
         scheduler=None,
         termination_processing=None,
         call_before_time_step=None,

@@ -298,48 +298,16 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, *, tags:frozenset):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        learning_struct_ty = pnlvm.ir.LiteralStructType((
-            self.int32_ty,
-            self.int32_ty,
-            pytorch_model._get_learning_struct_type(self).as_pointer(),
-        ))
-        args=[
-            learning_struct_ty.as_pointer(),
-            self.get_output_struct_type(composition).as_pointer()
-        ]
-        with self._gen_composition_exec_context(composition, tags=tags,
-            extra_args=args) as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond, learning, data_out = builder.function.args
-            data_out.attributes.remove('nonnull')
-
+        with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
+            state, _, comp_in, data, cond, = builder.function.args
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
-                                                           params, data, learning)
+                                                           params, data)
             node_tags = tags.union({"node_wrapper"})
-            # Call output CIM
+            # # Call output CIM
             output_cim_f = self.import_llvm_function(composition.output_CIM,
                                                      tags=node_tags)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
-
-            forward_tags = tags.difference({"learning"})
-            exec_f = self.import_llvm_function(composition, tags=forward_tags)
-
-            runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
-            runs = builder.load(runs_ptr, "runs")
-            with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
-                data_in_ptr = builder.gep(comp_in, [iters])
-                b.call(exec_f, [state, params, data_in_ptr, data, cond])
-
-                # Extract output_CIM result
-                output_cond = builder.icmp_unsigned("!=", data_out, data_out.type(None))
-                with builder.if_then(output_cond):
-                    idx = composition._get_node_index(composition.output_CIM)
-                    result_ptr = b.gep(data, [self.int32_ty(0),
-                                              self.int32_ty(0),
-                                              self.int32_ty(idx)])
-                    result = b.load(result_ptr)
-                    output_ptr = b.gep(data_out, [iters])
-                    b.store(result, output_ptr)
 
             return builder.function
 
@@ -350,18 +318,9 @@ class LLVMBuilderContext:
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-            # Call pytorch internal compiled llvm func
-            input_cim_idx = composition._get_node_index(composition.input_CIM)
-
-            # Extract the input that should be inserted into the model
-            model_input = builder.gep(data, [self.int32_ty(0),
-                                             self.int32_ty(0),
-                                             self.int32_ty(input_cim_idx)])
-            model_output = builder.gep(data, [self.int32_ty(0)])
 
             pytorch_forward_func = self.import_llvm_function(pytorch_model, tags=tags)
-            builder.call(pytorch_forward_func, [state, params,
-                                                model_input, model_output])
+            builder.call(pytorch_forward_func, [state, params, data])
 
             node_tags = tags.union({"node_wrapper"})
             # Call output CIM
