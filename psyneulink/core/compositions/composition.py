@@ -7247,12 +7247,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
 
             # Exec failed for some reason, we can still try node level bin_execute
-            try:
-                # Filter out mechanisms. Nested compositions are not executed in this mode
-                # Filter out controller. Compilation of controllers is not supported yet
-                mechanisms = [n for n in self._all_nodes
-                              if isinstance(n, Mechanism) and (n is not self.controller or not is_simulation)]
+            # Filter out nested compositions. They are not executed in this mode
+            # Filter out controller if running simulation.
+            mechanisms = (n for n in self._all_nodes
+                          if isinstance(n, Mechanism) and
+                             (n is not self.controller or not is_simulation))
 
+            try:
                 _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                 # Compile all mechanism wrappers
                 for m in mechanisms:
