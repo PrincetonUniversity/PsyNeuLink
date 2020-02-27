@@ -1182,9 +1182,9 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
                                  comp_output, num_runs, num_inputs])
 
-            # Extract objective mech value
+            # Extract objective mechanism value
             idx = self.agent_rep._get_node_index(self.objective_mechanism)
-            # Mechanisms' results are store in the first substructure
+            # Mechanisms' results are stored in the first substructure
             objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
                                                        ctx.int32_ty(0),
                                                        ctx.int32_ty(idx)])
