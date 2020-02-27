@@ -466,10 +466,10 @@ class TestTrainingCorrectness:
     @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
         'eps, calls, opt, from_pnl_or_not', [
-            (2000, 'single', 'adam', True),
-            # (6000, 'multiple', 'adam', True),
-            (2000, 'single', 'adam', False),
-            # (6000, 'multiple', 'adam', False)
+            (50, 'single', 'adam', True),
+            # (50, 'multiple', 'adam', True),
+            (50, 'single', 'adam', False),
+            # (50, 'multiple', 'adam', False)
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
@@ -537,8 +537,8 @@ class TestTrainingCorrectness:
     @pytest.mark.benchmark(group="Semantic net")
     @pytest.mark.parametrize(
         'eps, opt, from_pnl_or_not', [
-            (1000, 'adam', True),
-            # (1000, 'adam', False)
+            (500, 'adam', True),
+            # (300, 'adam', False)
         ]
     )
     @pytest.mark.parametrize("mode", ["Python",
@@ -2398,7 +2398,7 @@ class TestNested:
 
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
-            (2000, 4, 10, .00001),
+            (400, 4, 10, .00001),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
@@ -2464,7 +2464,7 @@ class TestNested:
 
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
-            (2000, 4, 10, .00001),
+            (400, 4, 10, .00001),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
