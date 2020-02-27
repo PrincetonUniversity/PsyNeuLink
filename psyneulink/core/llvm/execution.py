@@ -542,16 +542,17 @@ class CompExecution(CUDAExecution):
 
     def run(self, inputs, runs=0, num_input_sets=0):
         if isgenerator(inputs):
-            list_inputs = list(inputs)
-            inputs = {k:[list(v)] for (k,v) in list_inputs[0].items()}
-            for i, inp in enumerate(list_inputs):
-                if i == 0:
-                    continue
-                for k,v in inp.items():
-                    inputs[k].append(v)
-            num_input_sets = len(next(iter(inputs.values())))
-            runs = num_input_sets
-        inputs = self._get_run_input_struct(inputs, num_input_sets)
+            assert len(self._execution_contexts) == 1
+
+            # Extract input for each trial
+            origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
+            run_inputs = (([iv] for m in origins for iv in inp[m]) for inp in inputs)
+            run_inputs = _tupleize(run_inputs)
+            runs = num_input_sets = len(run_inputs)
+            c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
+            inputs = c_input(*run_inputs)
+        else:
+            inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_contexts) > 1:
