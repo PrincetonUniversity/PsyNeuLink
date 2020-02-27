@@ -649,7 +649,6 @@ class AutodiffComposition(Composition):
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
 
-
             autodiff_inputs = self._infer_input_nodes(inputs)
             autodiff_targets = self._infer_output_nodes(inputs)
 
