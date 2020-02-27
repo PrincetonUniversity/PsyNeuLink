@@ -1219,7 +1219,7 @@ class TestFullModels:
 
         middle_weights.set_log_conditions(('mod_matrix', pnl.PROCESSING))
 
-        comp.run(inputs=input_dictionary,
+        comp.learn(inputs=input_dictionary,
                  num_trials=10)
 
         expected_log_val = np.array(
@@ -1336,7 +1336,7 @@ class TestFullModels:
         # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
         middle_weights.log.clear_entries(entries=None, confirm=False)
         middle_weights.set_log_conditions(('mod_matrix', pnl.LEARNING))
-        comp.run(
+        comp.learn(
             num_trials=5,
             inputs=input_dictionary,
         )

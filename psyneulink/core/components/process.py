@@ -2400,6 +2400,7 @@ class Process(Process_Base):
                     target_input_port.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
+        context.add_flag(ContextFlags.LEARNING_MODE)
         context.add_flag(ContextFlags.LEARNING)
         for mechanism in self._learning_mechs:
             mechanism.execute(context=context)
@@ -2453,6 +2454,7 @@ class Process(Process_Base):
                                                       projection.name))
 
         context.remove_flag(ContextFlags.LEARNING)
+        context.remove_flag(ContextFlags.LEARNING_MODE)
 
     def run(self,
             inputs,

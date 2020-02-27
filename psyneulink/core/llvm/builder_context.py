@@ -305,48 +305,16 @@ class LLVMBuilderContext:
     def gen_autodiffcomp_learning_exec(self, composition, *, tags:frozenset):
         composition._build_pytorch_representation(composition.default_execution_id)
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-        learning_struct_ty = pnlvm.ir.LiteralStructType((
-            self.int32_ty,
-            self.int32_ty,
-            pytorch_model._get_learning_struct_type(self).as_pointer(),
-        ))
-        args=[
-            learning_struct_ty.as_pointer(),
-            self.get_output_struct_type(composition).as_pointer()
-        ]
-        with self._gen_composition_exec_context(composition, tags=tags,
-            extra_args=args) as (builder, data, params, cond_gen):
-            state, _, comp_in, _, cond, learning, data_out = builder.function.args
-            data_out.attributes.remove('nonnull')
-
+        with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
+            state, _, comp_in, data, cond, = builder.function.args
             pytorch_model._gen_llvm_training_function_body(self, builder, state,
-                                                           params, data, learning)
+                                                           params, data)
             node_tags = tags.union({"node_wrapper"})
             # Call output CIM
             output_cim_w = self.get_node_wrapper(composition, composition.output_CIM)
             output_cim_f = self.import_llvm_function(output_cim_w, tags=node_tags)
             builder.block.name = "invoke_" + output_cim_f.name
             builder.call(output_cim_f, [state, params, comp_in, data, data])
-
-            forward_tags = tags.difference({"learning"})
-            exec_f = self.import_llvm_function(composition, tags=forward_tags)
-
-            runs_ptr = builder.gep(learning, [self.int32_ty(0), self.int32_ty(1)])
-            runs = builder.load(runs_ptr, "runs")
-            with pnlvm.helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
-                data_in_ptr = builder.gep(comp_in, [iters])
-                b.call(exec_f, [state, params, data_in_ptr, data, cond])
-
-                # Extract output_CIM result
-                output_cond = builder.icmp_unsigned("!=", data_out, data_out.type(None))
-                with builder.if_then(output_cond):
-                    idx = composition._get_node_index(composition.output_CIM)
-                    result_ptr = b.gep(data, [self.int32_ty(0),
-                                              self.int32_ty(0),
-                                              self.int32_ty(idx)])
-                    result = b.load(result_ptr)
-                    output_ptr = b.gep(data_out, [iters])
-                    b.store(result, output_ptr)
 
             return builder.function
 
@@ -357,18 +325,9 @@ class LLVMBuilderContext:
         pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
         with self._gen_composition_exec_context(composition, tags=tags) as (builder, data, params, cond_gen):
             state, _, comp_in, _, cond = builder.function.args
-            # Call pytorch internal compiled llvm func
-            input_cim_idx = composition._get_node_index(composition.input_CIM)
-
-            # Extract the input that should be inserted into the model
-            model_input = builder.gep(data, [self.int32_ty(0),
-                                             self.int32_ty(0),
-                                             self.int32_ty(input_cim_idx)])
-            model_output = builder.gep(data, [self.int32_ty(0)])
 
             pytorch_forward_func = self.import_llvm_function(pytorch_model, tags=tags)
-            builder.call(pytorch_forward_func, [state, params,
-                                                model_input, model_output])
+            builder.call(pytorch_forward_func, [state, params, data])
 
             node_tags = tags.union({"node_wrapper"})
             # Call output CIM
@@ -654,7 +613,6 @@ class LLVMBuilderContext:
     def gen_node_wrapper(self, composition, node, *, tags:frozenset):
         assert "node_wrapper" in tags
         func_tags = tags.difference({"node_wrapper"})
-        is_learning_autodiff = hasattr(node, 'learning_enabled') and "learning" in tags
 
         node_function = self.import_llvm_function(node, tags=func_tags)
         # FIXME: This is a hack
@@ -673,10 +631,6 @@ class LLVMBuilderContext:
             cond_gen = pnlvm.helpers.ConditionGenerator(self, composition)
             cond_ty = cond_gen.get_condition_struct_type().as_pointer()
             args.append(cond_ty)
-
-            # Append learning param if needed
-            if is_learning_autodiff:
-                args.append(node_function.args[-2].type)
 
         builder = self.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
         llvm_func = builder.function
@@ -802,9 +756,8 @@ class LLVMBuilderContext:
             nested_idx = self.int32_ty(composition._get_node_index(node) + 1)
             node_data = builder.gep(data_in, [zero, nested_idx])
             node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-            node_learn = (llvm_func.args[6], node_function.args[-1].type(None)) if is_learning_autodiff else ()
             builder.call(node_function, [node_context, node_params, node_in,
-                                         node_data, node_cond, *node_learn])
+                                         node_data, node_cond])
             # Copy output of the nested composition to its output place
             output_idx = node._get_node_index(node.output_CIM)
             result = builder.gep(node_data, [zero, zero, self.int32_ty(output_idx)])
