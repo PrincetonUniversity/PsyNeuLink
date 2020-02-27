@@ -235,7 +235,7 @@ class CompExecution(CUDAExecution):
         self.__bin_run_multi_func = None
         self.__debug_env = debug_env
         self.__frozen_vals = None
-        self.__additional_tags = frozenset(additional_tags)
+        self.__tags = frozenset(additional_tags)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -269,8 +269,8 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = builder_context.LLVMBuilderContext.get_global().get_node_wrapper(self._composition, node)
-        tags = frozenset(self.__additional_tags.union({"node_wrapper"}))
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=tags)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
+            wrapper, tags=self.__tags.union({"node_wrapper"}))
 
     @property
     def _conditions(self):
@@ -472,9 +472,8 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            tags=frozenset(self.__additional_tags)
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=tags)
+                self._composition, tags=self.__tags)
 
         return self.__bin_exec_func
 
@@ -529,9 +528,8 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            run_tags = frozenset({"run"}.union(self.__additional_tags))
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=run_tags)
+                self._composition, tags=self.__tags.union({"run"}))
 
         return self.__bin_run_func
 
