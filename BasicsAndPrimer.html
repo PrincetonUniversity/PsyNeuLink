@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.7.4.0 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.7.4.0+15.gc2ec8b3 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.4.0
+                  0.7.4.0+15
                 </div>
               
             
@@ -834,7 +834,7 @@ a simple three-layered neural network that learns to compute the X-OR operation:
 <span class="c1"># Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4</span>
 <span class="n">xor_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;stimuli&#39;</span><span class="p">:[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
               <span class="s1">&#39;targets&#39;</span><span class="p">:[</span>  <span class="p">[</span><span class="mi">0</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">]}</span>
-<span class="n">xor_comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="nb">input</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">],</span>
+<span class="n">xor_comp</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="nb">input</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">],</span>
                      <span class="n">target</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]})</span>
 </pre></div>
 </div>
@@ -855,7 +855,7 @@ target Mechanism (that receives the input specifying the target responses):</p>
 <span class="n">target_mech</span> <span class="o">=</span> <span class="n">learning_components</span><span class="p">[</span><span class="n">TARGET_MECHANISM</span><span class="p">]</span>
 
 <span class="c1"># Run the model:</span>
-<span class="n">result</span> <span class="o">=</span> <span class="n">xor_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">input_mech</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">,</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">xor_model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">input_mech</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">,</span>
                                <span class="n">target_mech</span><span class="p">:</span><span class="n">xor_targets</span><span class="p">},</span>
                        <span class="n">num_trials</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
@@ -1043,7 +1043,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.4.0',
+               VERSION:'0.7.4.0+15.gc2ec8b3',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
