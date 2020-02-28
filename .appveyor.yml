@@ -17,11 +17,8 @@ environment:
   PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;C:\Program Files (x86)\Graphviz%GRAPHVIZ_VERSION%\bin;%PATH%'
   matrix:
   - PYTHON: Python36
-    EXTRA_ARGS: -m llvm
 #  - PYTHON: Python37
-#    EXTRA_ARGS: -m llvm
 #  - PYTHON: Python38
-#    EXTRA_ARGS: -m llvm
 
 install:
   - if not exist %GRAPHVIZ_INSTALLER% appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/%GRAPHVIZ_INSTALLER% -o %GRAPHVIZ_INSTALLER%
@@ -41,7 +38,7 @@ cache:
 build: off
 
 test_script:
-  - pytest --junit-xml=tests_out.xml -n auto --strict-markers %EXTRA_ARGS%
+  - pytest --junit-xml=tests_out.xml -n auto
 
 on_finish:
   # Upload tests to appveyor overview
