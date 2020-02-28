@@ -15,7 +15,7 @@ import copy
 import ctypes
 from collections import defaultdict
 import numpy as np
-
+from inspect import isgenerator
 from psyneulink.core import llvm as pnlvm
 from . import helpers, jit_engine
 from .debug import debug_env
@@ -222,7 +222,7 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, execution_ids=[None]):
+    def __init__(self, composition, execution_ids=[None], additional_tags=frozenset()):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self._execution_contexts = [
@@ -235,6 +235,7 @@ class CompExecution(CUDAExecution):
         self.__bin_run_multi_func = None
         self.__debug_env = debug_env
         self.__frozen_vals = None
+        self.__additional_tags = frozenset(additional_tags)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -268,7 +269,8 @@ class CompExecution(CUDAExecution):
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
         wrapper = self._composition._get_node_wrapper(node)
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=frozenset({"node_wrapper"}))
+        tags = frozenset(self.__additional_tags.union({"node_wrapper"}))
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=tags)
 
     @property
     def _conditions(self):
@@ -313,6 +315,42 @@ class CompExecution(CUDAExecution):
             return self.__param_struct
 
         return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_contexts[0])
+
+    def _copy_params_to_pnl(self, context=None, component=None, params=None):
+        # need to special case compositions
+        from psyneulink.core.compositions import Composition
+        from psyneulink.core.components.projections.pathway import MappingProjection
+
+        if component is None:
+            component = self._composition
+
+        if params is None:
+            assert component == self._composition
+            params = self._param_struct
+
+        if isinstance(component, Composition):
+            # first handle all inner projections
+            params_projections_list = getattr(params, params._fields_[1][0])
+            for idx, projection in enumerate(component._inner_projections):
+                projection_params = getattr(params_projections_list, params_projections_list._fields_[idx][0])
+                self._copy_params_to_pnl(context=context, component=projection, params=projection_params)
+
+            # now recurse on all nodes
+            params_node_list = getattr(params, params._fields_[0][0])
+            for idx, node in enumerate(component._all_nodes):
+                node_params = getattr(params_node_list, params_node_list._fields_[idx][0])
+                self._copy_params_to_pnl(context=context, component=node, params=node_params)
+        elif isinstance(component, MappingProjection):
+            # we copy all ids back
+            for idx, attribute in enumerate(component._get_param_ids()):
+                to_set = getattr(component.parameters, attribute)
+                parameter_ctype = getattr(params, params._fields_[idx][0])
+                value = _convert_ctype_to_python(parameter_ctype)
+                if attribute == 'matrix':
+                    # special case since we have to unflatten matrix
+                    # FIXME: this seems to break something when generalized for all attributes
+                    value = np.array(value).reshape(component.matrix.shape)
+                    to_set._set(value, context=context)
 
     @property
     def _state_struct(self):
@@ -434,12 +472,7 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            def is_learning(obj):
-                return getattr(obj, 'learning_enabled', False)
-            tags=frozenset()
-            if is_learning(self._composition) or \
-               any(is_learning(n) for n in self._composition.nodes):
-                tags=frozenset({"learning"})
+            tags=frozenset(self.__additional_tags)
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
                 self._composition, tags=tags)
 
@@ -452,7 +485,7 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_exec_multi_func
 
-    def execute(self, inputs, autodiff_stimuli=None):
+    def execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
         # We need the binary function to be setup for it to work correctly.
         if len(self._execution_contexts) > 1:
@@ -462,37 +495,9 @@ class CompExecution(CUDAExecution):
                                                 self._data_struct,
                                                 self._conditions, self._ct_len)
         else:
-            extra_args = ()
-            if autodiff_stimuli is not None:
-                nested_autodiff = [n for n in self._composition.nodes if getattr(n, 'learning_enabled', False)]
-                assert len(nested_autodiff) <= 1
-                if len(nested_autodiff) == 1:
-                    autodiff_stimuli = autodiff_stimuli[nested_autodiff[0]]
-                    # autodiff stimuli is passed in the last arg
-                    extra_args = [self._initialize_autodiff_struct(autodiff_stimuli, -1, nested_autodiff[0])]
             self._bin_exec_func(self._state_struct, self._param_struct,
                                 self._get_input_struct(inputs),
-                                self._data_struct, self._conditions, *extra_args)
-
-    def execute_learning(self, inputs):
-        # Special case for autodiff, everything is stored in inputs param
-        assert self._composition.learning_enabled
-        runs = len(next(iter(inputs["inputs"].values())))
-        outputs = (self._bin_exec_func.byref_arg_types[-1] * runs)()
-        # Autodiff stimuli is in the second to last argument
-        autodiff_struct = self._initialize_autodiff_struct(inputs, -2,
-                                                           self._composition)
-        r_data = self._get_compilation_param('data_struct', '_get_data_initializer', 3, self._execution_contexts[0])
-
-        c_input = self._bin_exec_func.byref_arg_types[2] * runs
-        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
-        input_data = (([inputs["inputs"][n][i]] for n in origins) for i in range(runs))
-        r_inputs = c_input(*_tupleize(input_data))
-
-        self._bin_exec_func.wrap_call(self._state_struct, self._param_struct,
-                                      r_inputs, r_data, self._conditions,
-                                      autodiff_struct, outputs)
-        return _convert_ctype_to_python(outputs)
+                                self._data_struct, self._conditions)
 
     def cuda_execute(self, inputs):
         # NOTE: Make sure that input struct generation is inlined.
@@ -519,14 +524,14 @@ class CompExecution(CUDAExecution):
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
         run_inputs = ((([iv] for m in origins for iv in inp[m][i]) for i in range(num_input_sets)) for inp in inputs)
-
         return c_input(*_tupleize(run_inputs))
 
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
+            run_tags = frozenset({"run"}.union(self.__additional_tags))
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=frozenset({"run"}))
+                self._composition, tags=run_tags)
 
         return self.__bin_run_func
 
@@ -537,36 +542,17 @@ class CompExecution(CUDAExecution):
 
         return self.__bin_run_multi_func
 
-    # inserts autodiff params into the param struct (this unfortunately needs to be done dynamically, as we don't know autodiff inputs ahead of time)
-    def _initialize_autodiff_struct(self, autodiff_stimuli, arg_index,
-                                    composition):
-        inputs = autodiff_stimuli.get("inputs", {})
-        targets = autodiff_stimuli.get("targets", {})
-        epochs = autodiff_stimuli.get("epochs", 1)
-
-        num_trials = len(next(iter(inputs.values())))
-
-        input_nodes = composition.get_nodes_by_role(NodeRole.INPUT)
-        output_nodes = composition.get_nodes_by_role(NodeRole.OUTPUT)
-
-        autodiff_stimuli_cty = self._bin_exec_func.byref_arg_types[arg_index]
-
-        training_name = autodiff_stimuli_cty._fields_[-1][0]
-        training_p_cty = autodiff_stimuli_cty._fields_[-1][1]
-        training_data_ty = training_p_cty._type_ * num_trials
-        inputs_data = zip(*(([np.atleast_2d(x)] for x in inputs[n]) for n in input_nodes))
-        target_data = zip(*(([np.atleast_2d(x)] for x in targets[n]) for n in output_nodes))
-        training_data_init = pnlvm._tupleize(zip(inputs_data, target_data))
-        training_data = training_data_ty(*training_data_init)
-
-        autodiff_stimuli_init = (epochs, num_trials)
-        autodiff_stimuli_struct = autodiff_stimuli_cty(*autodiff_stimuli_init)
-        setattr(autodiff_stimuli_struct, training_name, training_data)
-
-        return autodiff_stimuli_struct
-
-
-    def run(self, inputs, runs=0, num_input_sets=0, learning=False):
+    def run(self, inputs, runs=0, num_input_sets=0):
+        if isgenerator(inputs):
+            list_inputs = list(inputs)
+            inputs = {k:[list(v)] for (k,v) in list_inputs[0].items()}
+            for i, inp in enumerate(list_inputs):
+                if i == 0:
+                    continue
+                for k,v in inp.items():
+                    inputs[k].append(v)
+            num_input_sets = len(next(iter(inputs.values())))
+            runs = num_input_sets
         inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs

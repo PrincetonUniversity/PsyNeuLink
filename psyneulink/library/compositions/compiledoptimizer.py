@@ -1,5 +1,6 @@
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.pytorchllvmhelper import *
+from psyneulink.core.globals.utilities import NodeRole
 
 __all__ = ['AdamOptimizer', 'SGDOptimizer']
 
@@ -15,8 +16,8 @@ class Optimizer():
 
     # gets the type of the delta_w struct
     def _get_delta_w_struct_type(self, ctx):
-        delta_w = [None] * len(self._composition.nodes)
-        for node in self._composition.nodes:
+        delta_w = [None] * len(set(self._composition.nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)))
+        for node in set(self._composition.nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
             node_idx = self._composition._get_node_index(node)
             afferent_nodes = self._pytorch_model._get_afferent_nodes(node)
             delta_w[node_idx] = [None] * len(afferent_nodes)
@@ -42,7 +43,7 @@ class Optimizer():
 
     def _get_listof_gradient_struct_values(self):
         values = []
-        for node in self._composition.nodes:
+        for node in set(self._composition.nodes) - set(self._composition.get_nodes_by_role(NodeRole.LEARNING)):
             node_idx = self._composition._get_node_index(node)
             afferent_nodes = self._pytorch_model._get_afferent_nodes(node)
             for (afferent_node, matrix) in afferent_nodes:
