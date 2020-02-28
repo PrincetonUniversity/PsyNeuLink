@@ -38,7 +38,7 @@ cache:
 build: off
 
 test_script:
-  - pytest --junit-xml=tests_out.xml -n auto --strict-markers
+  - pytest --junit-xml=tests_out.xml -n auto
 
 on_finish:
   # Upload tests to appveyor overview
