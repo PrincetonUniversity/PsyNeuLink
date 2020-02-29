@@ -317,10 +317,10 @@ class TestReinitialize:
     def test_LCIIntegrator_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=LeakyCompetingIntegrator(),
+            function=LeakyCompetingIntegrator(leak=-1),
         )
 
-        # previous_value + (rate*previous_value + new_value)*time_step_size + noise
+        # previous_value + (new_value - rate*previous_value)*time_step_size + noise
         # initializer=0.0, rate=1.0, time_step_size=0.1, noise=0.0
         # returns 0.0 + (1.0*0.0 + 2.0)*0.1 = 2.0
         I.execute(2.0)

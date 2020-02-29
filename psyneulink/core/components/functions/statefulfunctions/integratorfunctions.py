@@ -2934,11 +2934,12 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         configured in a `RecurrentTransferMechanism`, of which LCAMechanism is subclass).
 
     .. note::
-        **leak** is assigned as (and remains an alias of) the `rate <LeakyCompetingIntegrator.rate>` parameter of the
-        LeakyCompetingIntegrator, in order to conform to the format of a standard `IntegratorFunction`.  Note,
-        however, that in contrast to a standard IntegratorFunction, :math:`rate * previous_value` is subtracted from
-        rather than added to `variable` in order to implement decay;  thus, the rate of accumulation is determined
-        entirely by `variable`.
+        the **leak** argument is assigned as the value of the `rate <LeakyCompetingIntegrator.rate>` parameter, that
+        is aliased by `leak <LeakyCompetingIntegrator.leak>` prameter;  this is in order to remain consistent with the
+        format of a standard `IntegratorFunction`.  Note, however, that in contrast to a standard IntegratorFunction,
+        :math:`rate * previous_value` is subtracted from rather than added to `variable`, in order to implement decay.
+        Thus, the value returned by the function can increase in a given time step only if **leak** is negative or
+        variable <LeakyCompetingIntegrator.variable>` is sufficiently positive.
 
     *Modulatory Parameters:*
 
@@ -3000,20 +3001,19 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     rate : float or 1d array
         scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the decay of
-        the `value <LeakyCompetingIntegrator.value>` on each time step (corrsponding to the ``leak`` term of the
+        the `value <LeakyCompetingIntegrator.value>` on each time step (corresponding to the ``leak`` term of the
         function described in Equation 4 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_
         If it is a float or has a single element, its value is applied to all the elements of `previous_value
         <LeakyCompetingIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
         element of `previous_value <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
         `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
+        .. note::
+          aliased by the `leak <LeakyCompetingIntegrator.leak>` parameter, in order to conform to the structure of a
+          standard `IntegratorFunction`.
 
     leak : float, list or 1d array
-        alias of `rate <LeakyCompetingIntegrator.rate>`
-
-        .. note::
-          leak is implemented as an alias of `rate <LeakyCompetingIntegrator.rate>` in order to conform to the
-          structure of a standard `IntegratorFunction`.
+        alias of `rate <LeakyCompetingIntegrator.rate>`.
 
     noise : float, Function, or 1d array
         random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`.
@@ -3089,7 +3089,14 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
+
+        # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
+        if RATE in kwargs:
+            leak = -kwargs[RATE]
+            warnings.warn(f"'rate' should not be used as a argument for {self.__class__.__name__}; "
+                          f"'leak' will be assigned as -'rate': {leak}.")
 
         super().__init__(
             default_variable=default_variable,

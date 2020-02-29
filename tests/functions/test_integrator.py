@@ -6,6 +6,7 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.globals.keywords import LEAK, RATE
 
 np.random.seed(0)
 SIZE=10
@@ -89,6 +90,7 @@ def DriftIntFun(init, value, iterations, noise, **kwargs):
 
 def LeakyFun(init, value, iterations, noise, **kwargs):
     assert iterations == 3
+
     if np.isscalar(noise):
         if "initializer" not in kwargs:
             return [2.32811721, 2.37936209, 2.34473413, 2.32690665, 2.2895675 , 2.35801869, 2.29385877, 2.43375102, 2.45589355, 2.27718154]
@@ -142,6 +144,7 @@ def test_execute(func, mode, variable, noise, params, benchmark):
             pytest.skip("DriftDiffusionIntegrator doesn't support functional noise")
 
     f = func[0](default_variable=variable, noise=noise, **params)
+
     if mode == "Python":
         ex = f
     elif mode == "LLVM":

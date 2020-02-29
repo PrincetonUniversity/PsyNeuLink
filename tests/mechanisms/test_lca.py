@@ -27,7 +27,7 @@ class TestLCA:
         T = TransferMechanism(function=Linear(slope=1.0))
         L = LCAMechanism(function=Linear(slope=2.0),
                          self_excitation=3.0,
-                         leak=0.5,
+                         leak=-0.5,
                          competition=1.0,  #  competition does not matter because we only have one unit
                          time_step_size=0.1)
         C = Composition()
@@ -83,7 +83,7 @@ class TestLCA:
         L = LCAMechanism(function=Linear(slope=2.0),
                          size=2,
                          self_excitation=3.0,
-                         leak=0.5,
+                         leak=-0.5,
                          competition=1.0,
                          time_step_size=0.1)
 
@@ -140,14 +140,14 @@ class TestLCA:
         #           that causes the LCAMechanism it to execute until it reaches threshold (2nd test).
 
         # loop Mechanism's call to execute
-        lca_until_thresh = LCAMechanism(size=2, threshold=0.7) # Note: , execute_to_threshold=True by default
+        lca_until_thresh = LCAMechanism(size=2, leak=-0.5, threshold=0.7) # Note: , execute_to_threshold=True by default
         response = ProcessingMechanism(size=2)
         comp = Composition()
         comp.add_linear_processing_pathway([lca_until_thresh, response])
         result1 = comp.run(inputs={lca_until_thresh:[1,0]})
 
         # loop Composition's call to Mechanism
-        lca_single_step = LCAMechanism(size=2, threshold=0.7, execute_until_finished=False)
+        lca_single_step = LCAMechanism(size=2, leak=-0.5, threshold=0.7, execute_until_finished=False)
         comp2 = Composition()
         response2 = ProcessingMechanism(size=2)
         comp2.add_linear_processing_pathway([lca_single_step,response2])
@@ -157,9 +157,9 @@ class TestLCA:
 
     def test_LCAMechanism_matrix(self):
         matrix = [[0,-2],[-2,0]]
-        lca1 = LCAMechanism(size=2, competition=2)
+        lca1 = LCAMechanism(size=2, leak=-0.5, competition=2)
         assert np.allclose(lca1.matrix, matrix)
-        lca2 = LCAMechanism(size=2, matrix=matrix)
+        lca2 = LCAMechanism(size=2, leak=-0.5, matrix=matrix)
         assert np.allclose(lca1.matrix, lca2.matrix)
 
     # Note: In the following tests, since the LCAMechanism's threshold is specified
@@ -174,7 +174,7 @@ class TestLCA:
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_LCAMechanism_threshold(self, benchmark, mode):
-        lca = LCAMechanism(size=2, threshold=0.7)
+        lca = LCAMechanism(size=2, leak=-0.5, threshold=0.7)
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0]}, bin_execute=mode)
@@ -182,14 +182,14 @@ class TestLCA:
         benchmark(comp.run, inputs={lca:[1,0]}, bin_execute=mode)
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
-        lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
+        lca = LCAMechanism(size=3, leak=-0.5, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0.5,0]})
         assert np.allclose(result, [[0.52200799, 0.41310248, 0.31228985]])
 
     def test_LCAMechanism_threshold_with_max_vs_avg(self):
-        lca = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_AVG)
+        lca = LCAMechanism(size=3, leak=-0.5, threshold=0.1, threshold_criterion=MAX_VS_AVG)
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0.5,0]})
@@ -205,7 +205,7 @@ class TestLCA:
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_LCAMechanism_threshold_with_convergence(self, benchmark, mode):
-        lca = LCAMechanism(size=3, threshold=0.01, threshold_criterion=CONVERGENCE)
+        lca = LCAMechanism(size=3, leak=-0.5, threshold=0.01, threshold_criterion=CONVERGENCE)
         comp = Composition()
         comp.add_node(lca)
         result = comp.run(inputs={lca:[0,1,2]}, bin_execute=mode)
@@ -226,13 +226,14 @@ class TestLCA:
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and
         #       generic TransferMechanism termination_<*> arguments
 
-        lca_thresh = LCAMechanism(size=2, threshold=0.7) # Note: , execute_to_threshold=True by default
+        lca_thresh = LCAMechanism(size=2, leak=-0.5, threshold=0.7) # Note: , execute_to_threshold=True by default
         response = ProcessingMechanism(size=2)
         comp = Composition()
         comp.add_linear_processing_pathway([lca_thresh, response])
         result1 = comp.run(inputs={lca_thresh:[1,0]}, bin_execute=mode)
 
         lca_termination = LCAMechanism(size=2,
+                                       leak=-0.5,
                                        termination_threshold=0.7,
                                        termination_measure=max,
                                        termination_comparison_op='>=')
@@ -246,13 +247,14 @@ class TestLCA:
         # Note: This tests the equivalence of using LCAMechanism-specific threshold arguments and
         #       generic TransferMechanism termination_<*> arguments
 
-        lca_thresh = LCAMechanism(size=3, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
+        lca_thresh = LCAMechanism(size=3, leak=-0.5, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
         response = ProcessingMechanism(size=3)
         comp = Composition()
         comp.add_linear_processing_pathway([lca_thresh, response])
         result1 = comp.run(inputs={lca_thresh:[1,0.5,0]})
 
         lca_termination = LCAMechanism(size=3,
+                                       leak=-0.5,
                                        termination_threshold=0.1,
                                        termination_measure=max_vs_next,
                                        termination_comparison_op='>=')
@@ -289,7 +291,7 @@ class TestLCAReinitialize:
                          function=Linear,
                          initial_value=0.5,
                          integrator_mode=True,
-                         leak=0.1,
+                         leak=-0.1,
                          competition=0,
                          self_excitation=1.0,
                          time_step_size=1.0,
@@ -346,6 +348,7 @@ class TestClip:
     def test_clip_float(self):
         L = LCAMechanism(clip=[-2.0, 2.0],
                          function=Linear,
+                         leak=-0.5,
                          integrator_mode=False)
         assert np.allclose(L.execute(3.0), 2.0)
         assert np.allclose(L.execute(-3.0), -2.0)
@@ -353,6 +356,7 @@ class TestClip:
     def test_clip_array(self):
         L = LCAMechanism(default_variable=[[0.0, 0.0, 0.0]],
                          clip=[-2.0, 2.0],
+                         leak=-0.5,
                          function=Linear,
                          integrator_mode=False)
         assert np.allclose(L.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
@@ -360,6 +364,7 @@ class TestClip:
     def test_clip_2d_array(self):
         L = LCAMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
                          clip=[-2.0, 2.0],
+                         leak=-0.5,
                          function=Linear,
                          integrator_mode=False)
         assert np.allclose(L.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
