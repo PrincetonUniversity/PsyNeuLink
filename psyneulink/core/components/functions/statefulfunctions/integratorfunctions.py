@@ -3173,7 +3173,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         in_val = builder.load(in_ptr)
 
         ret = builder.fmul(prev_val, rate)
-        ret = builder.fadd(ret, in_val)
+        # ret = builder.fadd(ret, in_val)
+        ret = builder.fsub(in_val, ret)
         ret = builder.fmul(ret, time_step)
 
         sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
