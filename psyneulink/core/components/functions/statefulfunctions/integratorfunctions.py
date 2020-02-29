@@ -3009,7 +3009,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
         .. note::
-          aliased by the `leak <LeakyCompetingIntegrator.leak>` parameter, in order to conform to the structure of a
+          aliased by the `leak <LeakyCompetingIntegrator.leak>` parameter, to be consistent with the structure of a
           standard `IntegratorFunction`.
 
     leak : float, list or 1d array
@@ -3094,9 +3094,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
         if RATE in kwargs:
-            leak = -kwargs[RATE]
-            warnings.warn(f"'rate' should not be used as a argument for {self.__class__.__name__}; "
-                          f"'leak' will be assigned as -'rate': {leak}.")
+            leak = kwargs[RATE]
 
         super().__init__(
             default_variable=default_variable,
