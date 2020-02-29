@@ -1361,7 +1361,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1384,7 +1384,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.

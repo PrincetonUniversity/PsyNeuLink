@@ -2901,7 +2901,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     """
     LeakyCompetingIntegrator(                  \
         default_variable=None,      \
-        rate=1.0,                   \
+        leak=1.0,                   \
         noise=0.0,                  \
         offset=None,                \
         time_step_size=0.1,         \
@@ -2918,14 +2918,14 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     .. math::
 
-        previous\\_value + (rate \\cdot previous\\_value + variable) \\cdot time\\_step\\_size +
+        previous\\_value + (variable - leak \\cdot previous\\_value) \\cdot time\\_step\\_size +
         noise \\sqrt{time\\_step\\_size}
 
-    where `rate <LeakyCompetingIntegrator.rate>` corresponds to :math:`k` (the leak parameter), `variable
-    <LeakyCompetingIntegrator.variable>` corresponds to :math:`\\rho_i` + :math:`\\beta` :math:`\\Sigma f(x_{\\neq i})`
-    (the net input to a unit), and `time_step_size <LeakyCompetingIntegrator.time_step_size>` corresponds to
-    :math:`\\frac{dt}{\\tau}` in Equation 2 of `Usher & McClelland (2001)
-    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+    where `variable <LeakyCompetingIntegrator.variable>` corresponds to
+    :math:`\\rho_i` + :math:`\\beta`:math:`\\Sigma f(x_{\\neq i})` (the net input to a unit),
+    `leak <LeakyCompetingIntegrator.leak>` corresponds to :math:`k`, and `time_step_size
+    <LeakyCompetingIntegrator.time_step_size>` corresponds to :math:`\\frac{dt}{\\tau}`
+    in Equation 4 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
 
     .. note::
         When used as the `function <Mechanism.function>` of an `LCAMechanism`, the value passed to `variable
@@ -2933,8 +2933,12 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         (see `here <RecurrentTransferMechanism_Structure>` for how the external and recurrent inputs can be
         configured in a `RecurrentTransferMechanism`, of which LCAMechanism is subclass).
 
-    .. hint::
-        ``leak`` can be used as an alias for `rate <LeakyCompetingIntegrator.rate>`.
+    .. note::
+        **leak** is assigned as (and remains an alias of) the `rate <LeakyCompetingIntegrator.rate>` parameter of the
+        LeakyCompetingIntegrator, in order to conform to the format of a standard `IntegratorFunction`.  Note,
+        however, that in contrast to a standard IntegratorFunction, :math:`rate * previous_value` is subtracted from
+        rather than added to `variable` in order to implement decay;  thus, the rate of accumulation is determined
+        entirely by `variable`.
 
     *Modulatory Parameters:*
 
@@ -2949,13 +2953,10 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float, list or 1d array : default 1.0
-        specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
-        to the integral on each time step.  If it is a list or array, it must be the same length as `variable
-        <LeakyCompetingIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
-
     leak : float, list or 1d array : default 1.0
-        alias for **rate**.
+        specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
+        to the deacy of the integral on each time step.  If it is a list or array, it must be the same length as
+        `variable <LeakyCompetingIntegrator.variable>` (see `leak <LeakyCompetingIntegrator.leak>` for details).
 
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;
@@ -2998,16 +2999,21 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float or 1d array
-        scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
+        scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the decay of
         the `value <LeakyCompetingIntegrator.value>` on each time step (corrsponding to the ``leak`` term of the
-        function described in Equation 2 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+        function described in Equation 4 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_
         If it is a float or has a single element, its value is applied to all the elements of `previous_value
         <LeakyCompetingIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
         element of `previous_value <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
         `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
+
     leak : float, list or 1d array
-        alias for `rate <LeakyCompetingIntegrator.rate>`.
+        alias of `rate <LeakyCompetingIntegrator.rate>`
+
+        .. note::
+          leak is implemented as an alias of `rate <LeakyCompetingIntegrator.rate>` in order to conform to the
+          structure of a standard `IntegratorFunction`.
 
     noise : float, Function, or 1d array
         random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`.
@@ -3076,7 +3082,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 leak: parameter_spec = 1.0,
                  noise=0.0,
                  offset=None,
                  time_step_size=0.1,
@@ -3087,14 +3093,14 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         super().__init__(
             default_variable=default_variable,
-            rate=rate,
+            rate=leak,
             noise=noise,
             offset=offset,
             time_step_size=time_step_size,
             initializer=initializer,
             params=params,
             owner=owner,
-            prefs=prefs,
+            prefs=prefs
         )
 
         self.has_initializers = True
@@ -3134,7 +3140,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         new_value = variable
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
+        value = previous_value + (-rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
 
         adjusted_value = value + offset
 
