@@ -2396,18 +2396,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_nodes_copy = nodes.copy()
                 for node in output_nodes_copy:
                     if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                            or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                             or isinstance(node, ControlMechanism)
                             or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
                         nodes.remove(node)
 
-            if self.get_nodes_by_role(NodeRole.LEARNING) or self.get_nodes_by_role(NodeRole.AUTOASSOCIATIVE_LEARNING):
+            if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
                 output_nodes = list([items for items in self.scheduler.consideration_queue
                                      if any([item for item in items
-                                               if (not NodeRole.LEARNING in self.nodes_to_roles[item] and
-                                                   not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
+                                               if not NodeRole.LEARNING in self.nodes_to_roles[item]
                                                ])])[-1].copy()
             else:
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
@@ -2426,8 +2424,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler.consideration_queue
                                            if any([item for item in items if
-                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item] and
-                                                    not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item]
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
@@ -2447,7 +2444,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for node in self.nodes:
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
-                                and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                                 and not isinstance(node, ControlMechanism)
                                 and not (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)
                         ):
@@ -5165,8 +5161,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If rcvr is a learning component and not an INPUT node,
             #    break and handle in _assign_learning_components()
             #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-            if ((NodeRole.LEARNING in self.nodes_to_roles[rcvr]
-                 or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr])
+            if (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
                     and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
                 return
 
@@ -5804,8 +5799,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                             # Projection to or from a LearningMechanism
-                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
-                                  or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr]):
+                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
                                 proj_color = learning_color
                                 proj_width = str(default_width)
 
@@ -8169,8 +8163,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        return [node for node in self.nodes if (NodeRole.LEARNING in self.nodes_to_roles[node] or
-                                                NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node])]
+        return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
 
     @property
     def learned_components(self):

@@ -331,12 +331,12 @@ class TestAddProjection:
         B = TransferMechanism(name='composition-pytests-B')
         C = TransferMechanism(name='composition-pytests-C')
         comp.add_linear_processing_pathway([
-            (A,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
-            (B,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
+            (A,pnl.NodeRole.LEARNING),
+            (B,pnl.NodeRole.LEARNING),
             C
         ])
         comp._analyze_graph()
-        autoassociative_learning_nodes = comp.get_nodes_by_role(pnl.NodeRole.AUTOASSOCIATIVE_LEARNING)
+        autoassociative_learning_nodes = comp.get_nodes_by_role(pnl.NodeRole.LEARNING)
         assert A in autoassociative_learning_nodes
         assert B in autoassociative_learning_nodes
 
