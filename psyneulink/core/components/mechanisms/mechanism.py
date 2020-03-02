@@ -2580,7 +2580,7 @@ class Mechanism_Base(Mechanism):
                 builder.store(afferent_val, mod_out_ptr)
 
             port_idx = all_ports.index(port)
-            ports_param = ctx.get_param_ptr(self, builder, mech_params, "ports")
+            ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, "ports")
             p_params = builder.gep(ports_param, [ctx.int32_ty(0),
                                                  ctx.int32_ty(port_idx)])
             ports_state = ctx.get_state_ptr(self, builder, mech_state, "ports")
@@ -2636,11 +2636,13 @@ class Mechanism_Base(Mechanism):
         param_ports = [p for p in self._parameter_ports if p.name in func._get_param_ids()]
 
         def _get_output_ptr(b, i):
-            ptr = ctx.get_param_ptr(func, b, f_params_out, param_ports[i].name)
+            ptr = pnlvm.helpers.get_param_ptr(b, func, f_params_out,
+                                              param_ports[i].name)
             return b, ptr
 
         def _fill_input(b, s_input, i):
-            param_in_ptr = ctx.get_param_ptr(func, b, f_params_in, param_ports[i].name)
+            param_in_ptr = pnlvm.helpers.get_param_ptr(b, func, f_params_in,
+                                                       param_ports[i].name)
             raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(param_in_ptr), raw_ps_input)
             return b
@@ -2700,7 +2702,7 @@ class Mechanism_Base(Mechanism):
 
         is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-        mf_params_ptr = ctx.get_param_ptr(self, builder, params, "function")
+        mf_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
 
         mf_state = ctx.get_state_ptr(self, builder, state, "function")
@@ -2726,7 +2728,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = ctx.get_param_ptr(self, builder, params, "function")
+        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = ctx.get_state_ptr(self, builder, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
@@ -2741,7 +2743,7 @@ class Mechanism_Base(Mechanism):
                                                  "is_finished_flag")
         is_finished_count_ptr = ctx.get_state_ptr(self, builder, state,
                                                  "num_executions_before_finished")
-        is_finished_max_ptr = ctx.get_param_ptr(self, builder, params,
+        is_finished_max_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                 "max_executions_before_finished")
 
         # Reset the flag and counter

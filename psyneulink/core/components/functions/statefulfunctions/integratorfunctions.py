@@ -382,7 +382,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     def _gen_llvm_load_param(self, ctx, builder, params, index, param, *,
                              state=None):
-        param_p = ctx.get_param_ptr(self, builder, params, param)
+        param_p = pnlvm.helpers.get_param_ptr(builder, self, params, param)
         if param == NOISE and isinstance(param_p.type.pointee, pnlvm.ir.LiteralStructType):
             # This is a noise function so call it to get value
             assert state is not None
@@ -4180,7 +4180,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Load parameters
         def _get_param_val(x):
-            ptr = ctx.get_param_ptr(self, builder, params, x)
+            ptr = pnlvm.helpers.get_param_ptr(builder, self, params, x)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
         param_vals = {p: _get_param_val(p) for p in self._get_param_ids()}
 

@@ -1296,7 +1296,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         assert "reinitialize" in tags
 
         # Check if we have reinitializers
-        has_reinitializers_ptr = ctx.get_param_ptr(self, builder, params, "has_initializers")
+        has_reinitializers_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "has_initializers")
         has_initializers = builder.load(has_reinitializers_ptr)
         not_initializers = builder.fcmp_ordered("==", has_initializers,
                                                 has_initializers.type(0))
@@ -1305,7 +1305,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = ctx.get_param_ptr(self, builder, params, "function")
+        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = ctx.get_state_ptr(self, builder, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
@@ -1318,7 +1318,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                 tags=tags)
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
             reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
-            reinit_params = ctx.get_param_ptr(self, builder, params, "integrator_function")
+            reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "integrator_function")
             reinit_state = ctx.get_state_ptr(self, builder, state, "integrator_function")
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
                                     reinit_out])
@@ -1343,7 +1343,7 @@ class RecurrentTransferMechanism(TransferMechanism):
            not self.execute_until_finished:
             return pnlvm.ir.IntType(1)(1)
 
-        threshold_ptr = ctx.get_param_ptr(self, builder, params,
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                           "termination_threshold")
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
@@ -1367,7 +1367,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             warnings.warn("Shape mismatch: Termination measure is not initialized")
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params = ctx.get_param_ptr(self, builder, params, "termination_measure")
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
             func_state = ctx.get_state_ptr(self, builder, state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee)
             # Populate input
@@ -1421,7 +1421,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             recurrent_state = ctx.get_state_ptr(self, builder, state,
                                                 "recurrent_projection")
-            recurrent_params = ctx.get_param_ptr(self, builder, params,
+            recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                  "recurrent_projection")
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 

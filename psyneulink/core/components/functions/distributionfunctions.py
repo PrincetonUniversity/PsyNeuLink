@@ -190,8 +190,8 @@ class NormalDist(DistributionFunction):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
         random_state = ctx.get_state_ptr(self, builder, state, "random_state")
-        mean_ptr = ctx.get_param_ptr(self, builder, params, "mean")
-        std_dev_ptr = ctx.get_param_ptr(self, builder, params, "standard_deviation")
+        mean_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "mean")
+        std_dev_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "standard_deviation")
         ret_val_ptr = builder.alloca(ctx.float_ty)
         norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
@@ -1284,7 +1284,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         def load_scalar_param(name):
-            param_ptr = ctx.get_param_ptr(self, builder, params, name)
+            param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, name)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, param_ptr)
 
         attentional_drift_rate = load_scalar_param(DRIFT_RATE)

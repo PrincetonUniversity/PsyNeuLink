@@ -785,7 +785,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
@@ -807,7 +807,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.import_llvm_function(self.distance_function)
-            distance_params = ctx.get_param_ptr(self, builder, params, "distance_function")
+            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
             distance_state = ctx.get_state_ptr(self, builder, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
@@ -823,7 +823,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     distance_arg_in, distance_arg_out])
 
             selection_f = ctx.import_llvm_function(self.selection_function)
-            selection_params = ctx.get_param_ptr(self, builder, params, "selection_function")
+            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
             selection_state = ctx.get_state_ptr(self, builder, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
@@ -849,7 +849,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)

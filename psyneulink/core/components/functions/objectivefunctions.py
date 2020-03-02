@@ -399,7 +399,7 @@ class Stability(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
+        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -427,7 +427,7 @@ class Stability(ObjectiveFunction):
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = ctx.get_param_ptr(self, builder, params, "metric_fct")
+        metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
         metric_state = ctx.get_state_ptr(self, builder, state, "metric_fct")
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])

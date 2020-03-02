@@ -161,7 +161,7 @@ class PytorchModelCreator(torch.nn.Module):
                 weight_matrix = matrix
                 break
         dim_x,dim_y = weight_matrix.detach().numpy().shape
-        node_weights = ctx.get_param_ptr(projection, builder, projection_params, "matrix")
+        node_weights = pnlvm.helpers.get_param_ptr(builder, projection, projection_params, "matrix")
         node_weights = builder.bitcast(node_weights, pnlvm.ir.types.ArrayType(
                  pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
 

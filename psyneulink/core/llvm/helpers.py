@@ -77,6 +77,12 @@ def uint_min(builder, val, other):
     return builder.select(cond, val, other)
 
 
+def get_param_ptr(builder, component, params_ptr, param_name):
+    idx = ir.IntType(32)(component._get_param_ids().index(param_name))
+    return builder.gep(params_ptr, [ir.IntType(32)(0), idx],
+                       name="ptr_param_{}_{}".format(param_name, component.name))
+
+
 def unwrap_2d_array(builder, element):
     if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
         assert element.type.pointee.count == 1

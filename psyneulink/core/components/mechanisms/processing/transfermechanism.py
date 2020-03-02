@@ -1392,7 +1392,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_mode:
             if_state = ctx.get_state_ptr(self, builder, state,
                                          "integrator_function")
-            if_param_raw = ctx.get_param_ptr(self, builder, params,
+            if_param_raw = pnlvm.helpers.get_param_ptr(builder, self, params,
                                              "integrator_function")
             if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
                                                             if_param_raw, ctx, builder,
@@ -1404,7 +1404,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             mf_in = ip_out
 
         mf_state = ctx.get_state_ptr(self, builder, state, "function")
-        mf_param_ptr = ctx.get_param_ptr(self, builder, params, "function")
+        mf_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
                                                         builder, params, state, arg_in)
 

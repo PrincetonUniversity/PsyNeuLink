@@ -1496,11 +1496,11 @@ class GridSearch(OptimizationFunction):
                                          self.parameters.random_state.name)
         obj_state_ptr = ctx.get_state_ptr(self, builder, state,
                                           self.parameters.objective_function.name)
-        obj_param_ptr = ctx.get_param_ptr(self, builder, params,
+        obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                           self.parameters.objective_function.name)
-        search_space_ptr = ctx.get_param_ptr(self, builder, params,
+        search_space_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                              self.parameters.search_space.name)
-        select_random_ptr = ctx.get_param_ptr(self, builder, params,
+        select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                               self.parameters.select_randomly_from_optimal_values.name)
 
         select_random_val = builder.load(select_random_ptr)
