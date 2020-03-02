@@ -277,8 +277,12 @@ specified (or it is None, the default), as in the following example::
     array([[0.4375, 0.875 ]])
 
 Notice that every call to the ``my_execute`` produces a single step of integration (at the default `rate
-<TransferMechanism.rate>` of 0.5).  A single step is also executed if the Mechanism's `execute_until_finished
-<Component.execute_until_finished>` attribute is set to False, even if **termination_threshold** is specified.
+<TransferMechanism.rate>` of 0.5), by executing its `integrator_function <TransferMechanism.integrator_function>`
+once.  A single step is also executed if the Mechanism's `execute_until_finished <Component.execute_until_finished>`
+attribute is set to False, even if **termination_threshold** is specified. In both cases, the
+`num_executions_before_finished <Component.num_executions_before_finished>` attribute remains equal to 1,
+since the `integrator_function <TransferMechanism.integrator_function>` is executed exactly once per call to the
+`execute method <Component_Execution>` (and no termination condition has been specified).
 
 .. _TransferMechanism_Termination:
 
@@ -286,8 +290,8 @@ Notice that every call to the ``my_execute`` produces a single step of integrati
 ~~~~~~~~~~~~~
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, and **termination_threshold** is specified, then the
-TransferMechanism continues to integrate (using its current input) until its termination condition is met, or the number
-of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The number of
+TransferMechanism continues to execute, integrating its current input, until its termination condition is met, or the
+number of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The numer of
 executions that took place is contained in `num_executions_before_finished <Component.num_executions_before_finished>`.
 
 By default, a TransferMechanism uses a convergence criterion to terminate integration, as in the following example::
@@ -306,7 +310,7 @@ difference between its current `value <Mechanism_Base.value>` and its `previous 
 the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
 conditions.  Thare are two broad types of termination condition.
 
-*Convergence* -- updating terminates based on the difference between the TransferMechanism's current `value
+*Convergence* -- execution terminates based on the difference between the TransferMechanism's current `value
 <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>` (as in the example above).
 This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
 (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
@@ -319,7 +323,7 @@ execution continued until the difference between the Mechanism's current `value 
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
 accepts a single argument that is a 2d array with two entries.
 
-*Boundary termination* -- updating terminates when the TransferMechanism's current `value <Mechanism_Base.value>`
+*Boundary termination* -- execution terminates when the TransferMechanism's current `value <Mechanism_Base.value>`
 meets the condition specified by the **termination_measure**, **termination_comparison_op** and
 **termination_threshold** arguments, without considering its `previous_value <Mechanism_Base.previous_value>`.
 This is implemented by specifying **termination_measure** with a function that accepts a 2d array with a *single

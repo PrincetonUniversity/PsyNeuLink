@@ -29,6 +29,8 @@ Contents
 Overview
 --------
 
+.. warning:: As of PsyNeuLink 0.7.5, the API for using AutodiffCompositions has been slightly changed! Please see `this link <RefactoredLearningGuide>` for more details!
+
 AutodiffComposition is a subclass of `Composition` used to train feedforward neural network models through integration
 with `PyTorch <https://pytorch.org/>`_, a popular machine learning library, which executes considerably more quickly
 than using the `standard implementation of learning <Composition_Learning_Standard>` in a Composition, using its
