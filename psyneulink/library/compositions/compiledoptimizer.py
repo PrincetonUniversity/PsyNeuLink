@@ -77,8 +77,7 @@ class Optimizer():
         builder.store(optim_struct.type.pointee(None), optim_struct)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        with ctx:
-            return self.step(ctx)
+        return self.step(ctx)
 
     # to be implemented by child classes - steps the optimizer
     def step(self, ctx):

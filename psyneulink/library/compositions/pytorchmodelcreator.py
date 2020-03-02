@@ -129,21 +129,21 @@ class PytorchModelCreator(torch.nn.Module):
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         llvm_func = None
-        with ctx:
-            args = [ctx.get_state_struct_type(self._composition).as_pointer(),
-                    ctx.get_param_struct_type(self._composition).as_pointer(),
-                    ctx.get_data_struct_type(self._composition).as_pointer()
-                    ]
-            builder = ctx.create_llvm_function(args, self)
-            llvm_func = builder.function
+        args = [ctx.get_state_struct_type(self._composition).as_pointer(),
+                ctx.get_param_struct_type(self._composition).as_pointer(),
+                ctx.get_data_struct_type(self._composition).as_pointer()
+                ]
+        builder = ctx.create_llvm_function(args, self)
+        llvm_func = builder.function
 
-            state, params, data = llvm_func.args
-            if "learning" in tags:
-                self._gen_llvm_training_function_body(ctx, builder, state, params, data)
-            else:
-                model_input = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
-                self._gen_llvm_forward_function_body(ctx, builder, state, params, model_input, data)
-            builder.ret_void()
+        state, params, data = llvm_func.args
+        if "learning" in tags:
+            self._gen_llvm_training_function_body(ctx, builder, state, params, data)
+        else:
+            model_input = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
+            self._gen_llvm_forward_function_body(ctx, builder, state, params, model_input, data)
+        builder.ret_void()
+
         return llvm_func
 
     # gets a pointer for the weights matrix between node and afferent_node

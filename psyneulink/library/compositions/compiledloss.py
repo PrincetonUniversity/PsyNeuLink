@@ -13,8 +13,7 @@ class Loss():
 
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        with ctx:
-            return self._gen_loss_function(ctx)
+        return self._gen_loss_function(ctx)
 
 
     def gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):

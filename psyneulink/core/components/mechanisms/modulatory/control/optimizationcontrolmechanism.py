@@ -1107,105 +1107,103 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext,
                                              tags=frozenset()):
         assert "evaluate" in tags
-        with ctx:
-            args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                    self._get_evaluate_state_struct_type(ctx).as_pointer(),
-                    self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
-                    self._get_evaluate_output_struct_type(ctx).as_pointer(),
-                    self._get_evaluate_input_struct_type(ctx).as_pointer(),
-                    ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                    ctx.get_state_struct_type(self.agent_rep).as_pointer(),
-                    ctx.get_data_struct_type(self.agent_rep).as_pointer()]
+        args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
+                self._get_evaluate_state_struct_type(ctx).as_pointer(),
+                self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
+                self._get_evaluate_output_struct_type(ctx).as_pointer(),
+                self._get_evaluate_input_struct_type(ctx).as_pointer(),
+                ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                ctx.get_state_struct_type(self.agent_rep).as_pointer(),
+                ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
-            builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
-            llvm_func = builder.function
-            for p in llvm_func.args:
-                p.attributes.add('nonnull')
+        builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
+        llvm_func = builder.function
+        for p in llvm_func.args:
+            p.attributes.add('nonnull')
 
-            params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
+        params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
 
-            sim_f = ctx.import_llvm_function(self.agent_rep,
-                                             tags=frozenset({"run", "simulation"}))
+        sim_f = ctx.import_llvm_function(self.agent_rep,
+                                         tags=frozenset({"run", "simulation"}))
 
-            # Create a simulation copy of composition state
-            comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
-            builder.store(builder.load(base_comp_state), comp_state)
+        # Create a simulation copy of composition state
+        comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
+        builder.store(builder.load(base_comp_state), comp_state)
 
-            # Create a simulation copy of composition data
-            comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
-            builder.store(builder.load(base_comp_data), comp_data)
+        # Create a simulation copy of composition data
+        comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
+        builder.store(builder.load(base_comp_data), comp_data)
 
-            # Apply allocation sample to simulation data
-            assert len(self.output_ports) == len(allocation_sample.type.pointee)
-            idx = self.agent_rep._get_node_index(self)
-            ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                              ctx.int32_ty(idx)])
-            for i, _ in enumerate(self.output_ports):
-                idx = ctx.int32_ty(i)
-                sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
-                sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
-                if sample_ptr.type != sample_dst.type:
-                    assert len(sample_dst.type.pointee) == 1
-                    sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
-                                                          ctx.int32_ty(0)])
-                builder.store(builder.load(sample_ptr), sample_dst)
+        # Apply allocation sample to simulation data
+        assert len(self.output_ports) == len(allocation_sample.type.pointee)
+        idx = self.agent_rep._get_node_index(self)
+        ocm_out = builder.gep(comp_data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                          ctx.int32_ty(idx)])
+        for i, _ in enumerate(self.output_ports):
+            idx = ctx.int32_ty(i)
+            sample_ptr = builder.gep(allocation_sample, [ctx.int32_ty(0), idx])
+            sample_dst = builder.gep(ocm_out, [ctx.int32_ty(0), idx, ctx.int32_ty(0)])
+            if sample_ptr.type != sample_dst.type:
+                assert len(sample_dst.type.pointee) == 1
+                sample_dst = builder.gep(sample_dst, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(0)])
+            builder.store(builder.load(sample_ptr), sample_dst)
 
-            # Construct input
-            num_features = len(arg_in.type.pointee) - 1
-            comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
+        # Construct input
+        num_features = len(arg_in.type.pointee) - 1
+        comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
 
-            for i in range(num_features):
-                src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
-                # Destination is a struct of 2d arrays
-                dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
-                builder.store(builder.load(src), dst)
+        for i in range(num_features):
+            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            # Destination is a struct of 2d arrays
+            dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
+            builder.store(builder.load(src), dst)
 
 
-            # Determine simulation counts
-            num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            num_estimates = builder.load(num_estimates_ptr, "num_estimates")
+        # Determine simulation counts
+        num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        num_estimates = builder.load(num_estimates_ptr, "num_estimates")
 
-            # if num_estimates is 0, run 1 trial
-            param_is_zero = builder.icmp_unsigned("==", num_estimates,
-                                                        ctx.int32_ty(0))
-            num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
-                                      num_estimates, "corrected_estimates")
+        # if num_estimates is 0, run 1 trial
+        param_is_zero = builder.icmp_unsigned("==", num_estimates,
+                                                    ctx.int32_ty(0))
+        num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
+                                  num_estimates, "corrected_estimates")
 
-            num_runs = builder.alloca(ctx.int32_ty, name="num_runs")
-            builder.store(num_sims, num_runs)
+        num_runs = builder.alloca(ctx.int32_ty, name="num_runs")
+        builder.store(num_sims, num_runs)
 
-            # We only provide one input
-            num_inputs = builder.alloca(ctx.int32_ty, name="num_inputs")
-            builder.store(num_inputs.type.pointee(1), num_inputs)
+        # We only provide one input
+        num_inputs = builder.alloca(ctx.int32_ty, name="num_inputs")
+        builder.store(num_inputs.type.pointee(1), num_inputs)
 
-            # Simulations don't store output
-            comp_output = sim_f.args[4].type(None)
-            builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
-                                 comp_output, num_runs, num_inputs])
+        # Simulations don't store output
+        comp_output = sim_f.args[4].type(None)
+        builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
+                             comp_output, num_runs, num_inputs])
 
-            # Extract objective mechanism value
-            idx = self.agent_rep._get_node_index(self.objective_mechanism)
-            # Mechanisms' results are stored in the first substructure
-            objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(0),
-                                                       ctx.int32_ty(idx)])
-            # Objective mech output shape should be 1 single element 2d array
-            objective_val_ptr = builder.gep(objective_os_ptr,
-                                            [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(0)], "obj_val_ptr")
+        # Extract objective mechanism value
+        idx = self.agent_rep._get_node_index(self.objective_mechanism)
+        # Mechanisms' results are stored in the first substructure
+        objective_os_ptr = builder.gep(comp_data, [ctx.int32_ty(0),
+                                                   ctx.int32_ty(0),
+                                                   ctx.int32_ty(idx)])
+        # Objective mech output shape should be 1 single element 2d array
+        objective_val_ptr = builder.gep(objective_os_ptr,
+                                        [ctx.int32_ty(0), ctx.int32_ty(0),
+                                         ctx.int32_ty(0)], "obj_val_ptr")
 
-            net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
-            builder.call(net_outcome_f, [params, state, allocation_sample,
-                                         objective_val_ptr, arg_out])
+        net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
+        builder.call(net_outcome_f, [params, state, allocation_sample,
+                                     objective_val_ptr, arg_out])
 
-            builder.ret_void()
+        builder.ret_void()
 
         return llvm_func
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "net_outcome" in tags:
-            with ctx:
-                return self._gen_llvm_net_outcome_function(ctx=ctx, tags=tags)
+            return self._gen_llvm_net_outcome_function(ctx=ctx, tags=tags)
         if "evaluate" in tags:
             return self._gen_llvm_evaluate_function(ctx=ctx, tags=tags)
 

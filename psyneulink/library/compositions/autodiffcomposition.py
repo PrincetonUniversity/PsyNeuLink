@@ -559,13 +559,12 @@ class AutodiffComposition(Composition):
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        with ctx:
-            if "run" in tags:
-                return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
-            elif "learning" in tags:
-                return pnlvm.codegen.gen_autodiffcomp_learning_exec(ctx, self, tags=tags)
-            else:
-                return pnlvm.codegen.gen_autodiffcomp_exec(ctx, self, tags=tags)
+        if "run" in tags:
+            return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
+        elif "learning" in tags:
+            return pnlvm.codegen.gen_autodiffcomp_learning_exec(ctx, self, tags=tags)
+        else:
+            return pnlvm.codegen.gen_autodiffcomp_exec(ctx, self, tags=tags)
 
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials

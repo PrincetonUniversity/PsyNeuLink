@@ -114,11 +114,12 @@ class LLVMBuilderContext:
         return builder
 
     def gen_llvm_function(self, obj, *, tags:frozenset) -> ir.Function:
-        cache_variants = self._cache.setdefault(obj, dict())
+        obj_cache = self._cache.setdefault(obj, dict())
 
-        if tags not in cache_variants:
-            cache_variants[tags] = obj._gen_llvm_function(ctx=self, tags=tags)
-        return cache_variants[tags]
+        if tags not in obj_cache:
+            with self:
+                obj_cache[tags] = obj._gen_llvm_function(ctx=self, tags=tags)
+        return obj_cache[tags]
 
     def import_llvm_function(self, fun, *, tags:frozenset=frozenset()) -> ir.Function:
         """
@@ -220,8 +221,7 @@ class LLVMBuilderContext:
             class node_wrapper():
                 def _gen_llvm_function(s, *, ctx:pnlvm.LLVMBuilderContext,
                                              tags:frozenset):
-                    with ctx:
-                        return codegen.gen_node_wrapper(ctx, composition, node, tags=tags)
+                    return codegen.gen_node_wrapper(ctx, composition, node, tags=tags)
             w = node_wrapper()
             cache[node] = w
             return w

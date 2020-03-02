@@ -7941,11 +7941,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return node_list.index(node)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        with ctx:
-            if "run" in tags:
-                return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
-            else:
-                return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
+        if "run" in tags:
+            return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
+        else:
+            return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):
