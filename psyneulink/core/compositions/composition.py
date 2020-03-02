@@ -1866,8 +1866,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # Compiled resources
-        self.__generated_node_wrappers = {}
-
         self._compilation_data = self._CompilationData(owner=self)
 
         # If a PreferenceSet was provided, assign to instance
@@ -7252,15 +7250,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
 
             # Exec failed for some reason, we can still try node level bin_execute
-            try:
-                # Filter out mechanisms. Nested compositions are not executed in this mode
-                # Filter out controller. Compilation of controllers is not supported yet
-                mechanisms = [n for n in self._all_nodes
-                              if isinstance(n, Mechanism) and (n is not self.controller or not is_simulation)]
-                # Generate all mechanism wrappers
-                for m in mechanisms:
-                    self._get_node_wrapper(m)
+            # Filter out nested compositions. They are not executed in this mode
+            # Filter out controller if running simulation.
+            mechanisms = (n for n in self._all_nodes
+                          if isinstance(n, Mechanism) and
+                             (n is not self.controller or not is_simulation))
 
+            try:
                 _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                 # Compile all mechanism wrappers
                 for m in mechanisms:
@@ -7473,11 +7469,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Set up compilation
                     if bin_execute:
-                        # Values of node with compiled wrappers are in binary data structure
+                        # Values of Mechanisms are in binary data structure
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if
-                                proj.sender.owner in self.__generated_node_wrappers)
+                                proj.sender.owner in self._all_nodes and
+                                isinstance(proj.sender.owner, Mechanism))
                         for srnode in srcs:
-                            assert srnode in self.nodes or srnode is self.input_CIM
+                            assert srnode in self.nodes or srnode is self.input_CIM, "{} is not a valid source node".format(srnode)
                             data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
                                 # This sets frozen values
@@ -7943,12 +7940,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _gen_llvm_function(self, *, tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            if "run" in tags:
-                return ctx.gen_composition_run(self, tags=tags)
-            else:
-                return ctx.gen_composition_exec(self, tags=tags)
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        if "run" in tags:
+            return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
+        else:
+            return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):
@@ -7964,180 +7960,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __ptx_initialize(self, context=None, additional_tags=frozenset()):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id], additional_tags=additional_tags), context)
-
-    def _get_node_wrapper(self, node):
-        """Return a (memoized) wrapper instance that generates node invocation sequence.
-
-           Since nodes in general don't know about their owning composition this structure ties together composition and its nodes.
-        """
-        if node not in self.__generated_node_wrappers:
-            class node_wrapper():
-                def __init__(self, node, gen_f):
-                    self._node = node
-                    self._gen_f = gen_f
-                def _gen_llvm_function(self, *, tags:frozenset):
-                    return self._gen_f(self._node, tags=tags)
-            wrapper = node_wrapper(node, self._gen_node_wrapper)
-            self.__generated_node_wrappers[node] = wrapper
-            return wrapper
-
-        return self.__generated_node_wrappers[node]
-
-    def _gen_node_wrapper(self, node, *, tags:frozenset):
-        assert "node_wrapper" in tags
-        func_tags = tags.difference({"node_wrapper"})
-        is_mech = isinstance(node, Mechanism)
-
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node, tags=func_tags)
-
-            data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
-            args = [
-                ctx.get_state_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                data_struct_ptr, data_struct_ptr]
-
-            if not is_mech and "reinitialize" not in tags:
-                # Add condition struct of the parent composition
-                # This includes structures of all nested compositions
-                cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-                cond_ty = cond_gen.get_condition_struct_type().as_pointer()
-                args.append(cond_ty)
-
-            builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
-            llvm_func = builder.function
-            llvm_func.attributes.add('alwaysinline')
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-
-            context, params, comp_in, data_in, data_out = llvm_func.args[:5]
-
-            if node is self.input_CIM:
-                # if there are incoming modulatory projections,
-                # the input structure is shared
-                if self.parameter_CIM.afferents:
-                    node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                else:
-                    node_in = comp_in
-                incoming_projections = []
-            elif node is self.parameter_CIM and node.afferents:
-                # if parameter_CIM has afferent projections,
-                # their values are in comp_in[1]
-                node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
-                # And we run no further projection
-                incoming_projections = []
-            elif not is_mech:
-                node_in = builder.alloca(node_function.args[2].type.pointee)
-                incoming_projections = node.input_CIM.afferents + node.parameter_CIM.afferents
-            else:
-                # this path also handles parameter_CIM with no afferent
-                # projections. 'comp_in' does not include any extra values,
-                # and the entire call should be optimized out.
-                node_in = builder.alloca(node_function.args[2].type.pointee)
-                incoming_projections = node.afferents
-
-            if "reinitialize" in tags:
-                incoming_projections = []
-
-            # Execute all incoming projections
-            inner_projections = list(self._inner_projections)
-            for proj in incoming_projections:
-                # Skip autoassociative projections
-                if proj.sender.owner is proj.receiver.owner:
-                    continue
-
-                # Get location of projection input data
-                par_mech = proj.sender.owner
-                if par_mech in self._all_nodes:
-                    par_idx = self._get_node_index(par_mech)
-                else:
-                    comp = par_mech.composition
-                    assert par_mech is comp.output_CIM
-                    par_idx = self.nodes.index(comp)
-
-                output_s = proj.sender
-                assert output_s in par_mech.output_ports
-                output_port_idx = par_mech.output_ports.index(output_s)
-                proj_in = builder.gep(data_in, [ctx.int32_ty(0),
-                                                ctx.int32_ty(0),
-                                                ctx.int32_ty(par_idx),
-                                                ctx.int32_ty(output_port_idx)])
-
-                # Get location of projection output (in mechanism's input structure
-                rec_port = proj.receiver
-                assert rec_port.owner is node or rec_port.owner is node.input_CIM or rec_port.owner is node.parameter_CIM
-                indices = [0]
-                if proj in rec_port.owner.path_afferents:
-                    rec_port_idx = rec_port.owner.input_ports.index(rec_port)
-
-                    assert proj in rec_port.pathway_projections
-                    projection_idx = rec_port.pathway_projections.index(proj)
-
-                    # Adjust for AutoAssociative projections
-                    for i in range(projection_idx):
-                        if isinstance(rec_port.pathway_projections[i], AutoAssociativeProjection):
-                            projection_idx -= 1
-                    if not is_mech and node.parameter_CIM.afferents:
-                        # If there are afferent projections to parameter_CIM
-                        # the input structure is split between input_CIM
-                        # and parameter_CIM
-                        if proj in node.parameter_CIM.afferents:
-                            # modulatory projection
-                            indices.append(1)
-                        else:
-                            # pathway projection
-                            indices.append(0)
-                    indices.extend([rec_port_idx, projection_idx])
-                elif proj in rec_port.owner.mod_afferents:
-                    # Only mechanism ports list mod projections in mod_afferents
-                    assert is_mech
-                    projection_idx = rec_port.owner.mod_afferents.index(proj)
-                    indices.extend([len(rec_port.owner.input_ports), projection_idx])
-                else:
-                    assert False, "Projection neither pathway nor modulatory"
-
-                proj_out = builder.gep(node_in, [ctx.int32_ty(i) for i in indices])
-
-                # Get projection parameters and state
-                proj_idx = inner_projections.index(proj)
-                # Projections are listed second in param and state structure
-                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj, tags=func_tags)
-
-                if proj_out.type != proj_function.args[3].type:
-                    warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
-                    proj_out = builder.bitcast(proj_out, proj_function.args[3].type)
-                builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
-
-            idx = ctx.int32_ty(self._get_node_index(node))
-            zero = ctx.int32_ty(0)
-            node_params = builder.gep(params, [zero, zero, idx])
-            node_context = builder.gep(context, [zero, zero, idx])
-            node_out = builder.gep(data_out, [zero, zero, idx])
-            if is_mech:
-                call_args = [node_params, node_context, node_in, node_out]
-                if len(node_function.args) > 4:
-                    assert node is self.controller
-                    call_args += [params, context, data_in]
-                builder.call(node_function, call_args)
-            elif "reinitialize" not in tags:
-                # FIXME: reinitialization of compositions is not supported
-                # Condition and data structures includes parent first
-                nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
-                node_data = builder.gep(data_in, [zero, nested_idx])
-                node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-                builder.call(node_function, [node_context, node_params, node_in,
-                                             node_data, node_cond])
-                # Copy output of the nested composition to its output place
-                output_idx = node._get_node_index(node.output_CIM)
-                result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
-                builder.store(builder.load(result), node_out)
-
-            builder.ret_void()
-
-        return llvm_func
 
     def enable_logging(self):
         for item in self.nodes + self.projections:

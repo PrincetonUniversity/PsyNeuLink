@@ -17,7 +17,7 @@ from collections import defaultdict
 import numpy as np
 from inspect import isgenerator
 from psyneulink.core import llvm as pnlvm
-from . import helpers, jit_engine
+from . import helpers, jit_engine, builder_context
 from .debug import debug_env
 
 __all__ = ['CompExecution', 'FuncExecution', 'MechExecution']
@@ -235,7 +235,7 @@ class CompExecution(CUDAExecution):
         self.__bin_run_multi_func = None
         self.__debug_env = debug_env
         self.__frozen_vals = None
-        self.__additional_tags = frozenset(additional_tags)
+        self.__tags = frozenset(additional_tags)
 
         # TODO: Consolidate these
         if len(execution_ids) > 1:
@@ -268,9 +268,9 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        wrapper = self._composition._get_node_wrapper(node)
-        tags = frozenset(self.__additional_tags.union({"node_wrapper"}))
-        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(wrapper, tags=tags)
+        wrapper = builder_context.LLVMBuilderContext.get_global().get_node_wrapper(self._composition, node)
+        self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
+            wrapper, tags=self.__tags.union({"node_wrapper"}))
 
     @property
     def _conditions(self):
@@ -472,9 +472,8 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_exec_func(self):
         if self.__bin_exec_func is None:
-            tags=frozenset(self.__additional_tags)
             self.__bin_exec_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=tags)
+                self._composition, tags=self.__tags)
 
         return self.__bin_exec_func
 
@@ -529,9 +528,8 @@ class CompExecution(CUDAExecution):
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
-            run_tags = frozenset({"run"}.union(self.__additional_tags))
             self.__bin_run_func = pnlvm.LLVMBinaryFunction.from_obj(
-                self._composition, tags=run_tags)
+                self._composition, tags=self.__tags.union({"run"}))
 
         return self.__bin_run_func
 
@@ -544,16 +542,17 @@ class CompExecution(CUDAExecution):
 
     def run(self, inputs, runs=0, num_input_sets=0):
         if isgenerator(inputs):
-            list_inputs = list(inputs)
-            inputs = {k:[list(v)] for (k,v) in list_inputs[0].items()}
-            for i, inp in enumerate(list_inputs):
-                if i == 0:
-                    continue
-                for k,v in inp.items():
-                    inputs[k].append(v)
-            num_input_sets = len(next(iter(inputs.values())))
-            runs = num_input_sets
-        inputs = self._get_run_input_struct(inputs, num_input_sets)
+            assert len(self._execution_contexts) == 1
+
+            # Extract input for each trial
+            origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
+            run_inputs = (([iv] for m in origins for iv in inp[m]) for inp in inputs)
+            run_inputs = _tupleize(run_inputs)
+            runs = num_input_sets = len(run_inputs)
+            c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
+            inputs = c_input(*run_inputs)
+        else:
+            inputs = self._get_run_input_struct(inputs, num_input_sets)
 
         ct_vo = self._bin_run_func.byref_arg_types[4] * runs
         if len(self._execution_contexts) > 1:

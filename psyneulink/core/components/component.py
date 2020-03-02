@@ -1170,12 +1170,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "variable",
-                     "value",
+                     "value", "saved_values", "saved_samples", "grid",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "activation_derivative_fct"}
+                     "modulated_mechanisms", "search_space",
+                     "activation_derivative_fct"}
         # mechanism functions are handled separately
         if hasattr(self, 'ports'):
             blacklist.add("function")
@@ -1183,8 +1184,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
                 val = p.get()
-                # Check if the value is string (like integration_method)
-                return not isinstance(val, (str, dict, ComponentsMeta, ContentAddressableList, type(_is_compilation_param), type(max)))
+                # Check if the value type is valid for compilation
+                return not isinstance(val, (str, dict, ComponentsMeta,
+                                            ContentAddressableList, type(max),
+                                            type(_is_compilation_param),
+                                            type(self._get_compilation_params)))
             return False
 
         return filter(_is_compilation_param, self.parameters)
@@ -1228,26 +1232,30 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         assert "reinitialize" in tags
         return builder
 
-    def _gen_llvm_function(self, *, extra_args=[], tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            args = [ctx.get_param_struct_type(self).as_pointer(),
-                    ctx.get_state_struct_type(self).as_pointer(),
-                    ctx.get_input_struct_type(self).as_pointer(),
-                    ctx.get_output_struct_type(self).as_pointer()]
-            builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
-            llvm_func = builder.function
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                    extra_args=[], tags:frozenset):
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer(),
+                ctx.get_output_struct_type(self).as_pointer()]
+        builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
+        llvm_func = builder.function
 
-            llvm_func.attributes.add('alwaysinline')
-            params, state, arg_in, arg_out = llvm_func.args[:len(args)]
-            if len(extra_args) == 0:
-                for p in params, state, arg_in, arg_out:
-                    p.attributes.add('noalias')
+        llvm_func.attributes.add('alwaysinline')
+        params, state, arg_in, arg_out = llvm_func.args[:len(args)]
+        if len(extra_args) == 0:
+            for p in params, state, arg_in, arg_out:
+                p.attributes.add('noalias')
 
-            if "reinitialize" in tags:
-                builder = self._gen_llvm_function_reinitialize(ctx, builder, params, state, arg_in, arg_out, tags=tags)
-            else:
-                builder = self._gen_llvm_function_body(ctx, builder, params, state, arg_in, arg_out, tags=tags)
-            builder.ret_void()
+        if "reinitialize" in tags:
+            builder = self._gen_llvm_function_reinitialize(ctx, builder,
+                                                           params, state,
+                                                           arg_in, arg_out,
+                                                           tags=tags)
+        else:
+            builder = self._gen_llvm_function_body(ctx, builder, params, state,
+                                                   arg_in, arg_out, tags=tags)
+        builder.ret_void()
 
         return llvm_func
 
