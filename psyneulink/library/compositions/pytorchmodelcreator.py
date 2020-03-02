@@ -127,9 +127,9 @@ class PytorchModelCreator(torch.nn.Module):
         return [(vertex.component,weights) for (vertex,weights) in forward_info_weights.items()]
 
     # generates llvm function for self.forward
-    def _gen_llvm_function(self, *, tags:frozenset):
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         llvm_func = None
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+        with ctx:
             args = [ctx.get_state_struct_type(self._composition).as_pointer(),
                     ctx.get_param_struct_type(self._composition).as_pointer(),
                     ctx.get_data_struct_type(self._composition).as_pointer()

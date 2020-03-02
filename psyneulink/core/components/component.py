@@ -1232,8 +1232,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         assert "reinitialize" in tags
         return builder
 
-    def _gen_llvm_function(self, *, extra_args=[], tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                    extra_args=[], tags:frozenset):
+        with ctx:
             args = [ctx.get_param_struct_type(self).as_pointer(),
                     ctx.get_state_struct_type(self).as_pointer(),
                     ctx.get_input_struct_type(self).as_pointer(),

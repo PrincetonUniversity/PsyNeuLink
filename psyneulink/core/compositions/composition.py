@@ -7940,8 +7940,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _gen_llvm_function(self, *, tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        with ctx:
             if "run" in tags:
                 return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
             else:

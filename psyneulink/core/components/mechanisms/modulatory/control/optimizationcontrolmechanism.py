@@ -1050,7 +1050,7 @@ class OptimizationControlMechanism(ControlMechanism):
         return pnlvm.ir.ArrayType(ctx.float_ty,
                                   len(self.control_allocation_search_space))
 
-    def _gen_llvm_net_outcome_function(self, ctx, *, tags=frozenset()):
+    def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
         assert "net_outcome" in tags
         args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
                 self._get_evaluate_state_struct_type(ctx).as_pointer(),
@@ -1104,9 +1104,10 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.ret_void()
         return llvm_func
 
-    def _gen_llvm_evaluate_function(self, *, tags=frozenset()):
+    def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                             tags=frozenset()):
         assert "evaluate" in tags
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+        with ctx:
             args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
                     self._get_evaluate_state_struct_type(ctx).as_pointer(),
                     self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
@@ -1201,23 +1202,22 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return llvm_func
 
-    def _gen_llvm_function(self, *, tags:frozenset):
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "net_outcome" in tags:
-            with pnlvm.LLVMBuilderContext.get_global() as ctx:
-                return self._gen_llvm_net_outcome_function(ctx, tags=tags)
+            with ctx:
+                return self._gen_llvm_net_outcome_function(ctx=ctx, tags=tags)
         if "evaluate" in tags:
-            return self._gen_llvm_evaluate_function(tags=tags)
+            return self._gen_llvm_evaluate_function(ctx=ctx, tags=tags)
 
         is_comp = not isinstance(self.agent_rep, Function)
         if is_comp:
-            ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                           ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(self.agent_rep).as_pointer()]
         else:
             extra_args = []
 
-        f = super()._gen_llvm_function(extra_args=extra_args, tags=tags)
+        f = super()._gen_llvm_function(ctx=ctx, extra_args=extra_args, tags=tags)
         if is_comp:
             for a in f.args[-len(extra_args):]:
                 a.attributes.add('nonnull')

@@ -558,8 +558,8 @@ class AutodiffComposition(Composition):
         self.parameters.pytorch_representation._get(context=context).detach_all()
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
-    def _gen_llvm_function(self, *, tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        with ctx:
             if "run" in tags:
                 return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
             elif "learning" in tags:

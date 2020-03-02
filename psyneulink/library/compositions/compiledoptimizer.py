@@ -76,8 +76,8 @@ class Optimizer():
     def initialize_optimizer_struct(self, ctx, builder, optim_struct):
         builder.store(optim_struct.type.pointee(None), optim_struct)
 
-    def _gen_llvm_function(self, *, tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        with ctx:
             return self.step(ctx)
 
     # to be implemented by child classes - steps the optimizer

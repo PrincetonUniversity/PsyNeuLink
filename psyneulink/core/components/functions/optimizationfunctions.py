@@ -1344,19 +1344,18 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
-    def _gen_llvm_function(self, *, tags):
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         try:
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
-            ctx = pnlvm.LLVMBuilderContext.get_global()
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_state_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
         except AttributeError:
             extra_args = []
 
-        f = super()._gen_llvm_function(extra_args=extra_args, tags=tags)
+        f = super()._gen_llvm_function(ctx=ctx, extra_args=extra_args, tags=tags)
         if len(extra_args) > 0:
             for a in f.args[-len(extra_args):]:
                 a.attributes.add('nonnull')
