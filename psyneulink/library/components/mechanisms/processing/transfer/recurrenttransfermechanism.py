@@ -1130,7 +1130,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # # MODIFIED 10/23/19 OLD:
         # self.aux_components.append(learning_mechanism)
         # MODIFIED 10/23/19 NEW:
-        self.aux_components.append((learning_mechanism, NodeRole.AUTOASSOCIATIVE_LEARNING))
+        self.aux_components.append((learning_mechanism, NodeRole.LEARNING))
         # MODIFIED 10/23/19 END
         # Instantiate Projection from Mechanism's output to LearningMechanism
         mproj = MappingProjection(sender=activity_vector,
