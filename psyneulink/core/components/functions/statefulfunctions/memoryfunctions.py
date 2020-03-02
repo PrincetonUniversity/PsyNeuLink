@@ -758,11 +758,11 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
-        buffer_ptr = ctx.get_state_ptr(self, builder, state, "ring_memory")
+        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -808,7 +808,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             # Determine distances
             distance_f = ctx.import_llvm_function(self.distance_function)
             distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
-            distance_state = ctx.get_state_ptr(self, builder, state, "distance_function")
+            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
@@ -824,7 +824,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
             selection_f = ctx.import_llvm_function(self.selection_function)
             selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
-            selection_state = ctx.get_state_ptr(self, builder, state, "selection_function")
+            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
                                        selection_arg_in, selection_arg_out])

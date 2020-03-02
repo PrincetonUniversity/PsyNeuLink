@@ -2284,7 +2284,7 @@ class Port_Base(Port):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        f_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
         builder.call(state_f, [f_params, f_state, f_input, arg_out])
         return builder
 

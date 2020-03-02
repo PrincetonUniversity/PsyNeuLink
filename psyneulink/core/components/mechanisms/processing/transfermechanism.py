@@ -1390,7 +1390,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         if self.integrator_mode:
-            if_state = ctx.get_state_ptr(self, builder, state,
+            if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                          "integrator_function")
             if_param_raw = pnlvm.helpers.get_param_ptr(builder, self, params,
                                              "integrator_function")
@@ -1403,7 +1403,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         else:
             mf_in = ip_out
 
-        mf_state = ctx.get_state_ptr(self, builder, state, "function")
+        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         mf_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
                                                         builder, params, state, arg_in)
@@ -1424,7 +1424,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     b1.store(val, ptro)
 
         # Update execution counter
-        exec_count_ptr = ctx.get_state_ptr(self, builder, state, "execution_count")
+        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
         exec_count = builder.load(exec_count_ptr)
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)

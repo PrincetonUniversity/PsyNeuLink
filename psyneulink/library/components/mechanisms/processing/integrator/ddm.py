@@ -1127,7 +1127,7 @@ class DDM(ProcessingMechanism):
                                               func_params, THRESHOLD)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
-            random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+            random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
             random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
             builder.call(random_f, [random_state, random_val_ptr])

@@ -189,7 +189,7 @@ class NormalDist(DistributionFunction):
         return self.convert_output_type(result)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
-        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         mean_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "mean")
         std_dev_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "standard_deviation")
         ret_val_ptr = builder.alloca(ctx.float_ty)

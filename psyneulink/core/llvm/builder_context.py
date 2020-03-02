@@ -227,12 +227,6 @@ class LLVMBuilderContext:
 
         return cache[node]
 
-    def get_state_ptr(self, component, builder, state_ptr, stateful_name):
-        idx = self.int32_ty(component._get_state_ids().index(stateful_name))
-        return builder.gep(state_ptr, [self.int32_ty(0), idx],
-                           name="ptr_state_{}_{}".format(stateful_name,
-                                                         component.name))
-
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             if len(t) == 0:

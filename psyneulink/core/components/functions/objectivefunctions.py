@@ -428,7 +428,7 @@ class Stability(ObjectiveFunction):
 
         # Distance Function
         metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
-        metric_state = ctx.get_state_ptr(self, builder, state, "metric_fct")
+        metric_state = pnlvm.helpers.get_state_ptr(builder, self, state, "metric_fct")
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder

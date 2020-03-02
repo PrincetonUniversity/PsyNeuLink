@@ -981,7 +981,7 @@ class Projection_Base(Projection):
 
     # Provide invocation wrapper
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        mf_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
         mf_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
         main_function = ctx.import_llvm_function(self.function)
         builder.call(main_function, [mf_params, mf_state, arg_in, arg_out])

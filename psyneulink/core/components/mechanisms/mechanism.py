@@ -2583,7 +2583,7 @@ class Mechanism_Base(Mechanism):
             ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, "ports")
             p_params = builder.gep(ports_param, [ctx.int32_ty(0),
                                                  ctx.int32_ty(port_idx)])
-            ports_state = ctx.get_state_ptr(self, builder, mech_state, "ports")
+            ports_state = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "ports")
             p_state = builder.gep(ports_state, [ctx.int32_ty(0),
                                                 ctx.int32_ty(port_idx)])
 
@@ -2661,7 +2661,7 @@ class Mechanism_Base(Mechanism):
                 assert port_spec[1] < len(value.type.pointee)
                 return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
             elif port_spec == OWNER_EXECUTION_COUNT:
-                execution_count = ctx.get_state_ptr(self, builder, mech_state, "execution_count")
+                execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
                 return execution_count
             else:
                 #TODO: support more spec options
@@ -2705,13 +2705,13 @@ class Mechanism_Base(Mechanism):
         mf_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_state = ctx.get_state_ptr(self, builder, state, "function")
+        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
 
         ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
 
         # Update execution counter
-        exec_count_ptr = ctx.get_state_ptr(self, builder, state, "execution_count")
+        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
         exec_count = builder.load(exec_count_ptr)
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
@@ -2729,7 +2729,7 @@ class Mechanism_Base(Mechanism):
         assert "reinitialize" in tags
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = ctx.get_state_ptr(self, builder, state, "function")
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
@@ -2739,9 +2739,9 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" not in tags
-        is_finished_flag_ptr = ctx.get_state_ptr(self, builder, state,
+        is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                  "is_finished_flag")
-        is_finished_count_ptr = ctx.get_state_ptr(self, builder, state,
+        is_finished_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                  "num_executions_before_finished")
         is_finished_max_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                 "max_executions_before_finished")

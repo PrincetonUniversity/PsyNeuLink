@@ -1306,7 +1306,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        reinit_state = ctx.get_state_ptr(self, builder, state, "function")
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
@@ -1319,11 +1319,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
             reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
             reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "integrator_function")
-            reinit_state = ctx.get_state_ptr(self, builder, state, "integrator_function")
+            reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "integrator_function")
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
                                     reinit_out])
 
-        prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
         builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
         return builder
 
@@ -1332,7 +1332,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         #       support 'is_finished' yet
         # previous_value is appended before AutoProjection in state struct
         # FIXME: This should use standard "previous_value" param
-        prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
 
         # preserve the old prev value
         prev_val = builder.load(prev_val_ptr)
@@ -1368,7 +1368,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
-            func_state = ctx.get_state_ptr(self, builder, state, "termination_measure")
+            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee)
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
@@ -1419,13 +1419,13 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(ip_trans_input.type.pointee) - 1
             real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            recurrent_state = ctx.get_state_ptr(self, builder, state,
+            recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                 "recurrent_projection")
             recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                  "recurrent_projection")
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
-            prev_val_ptr = ctx.get_state_ptr(self, builder, state, "old_val")
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
             # Extract the correct output port
             recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
                 ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])

@@ -83,6 +83,13 @@ def get_param_ptr(builder, component, params_ptr, param_name):
                        name="ptr_param_{}_{}".format(param_name, component.name))
 
 
+def get_state_ptr(builder, component, state_ptr, stateful_name):
+    idx = ir.IntType(32)(component._get_state_ids().index(stateful_name))
+    return builder.gep(state_ptr, [ir.IntType(32)(0), idx],
+                       name="ptr_state_{}_{}".format(stateful_name,
+                                                     component.name))
+
+
 def unwrap_2d_array(builder, element):
     if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
         assert element.type.pointee.count == 1

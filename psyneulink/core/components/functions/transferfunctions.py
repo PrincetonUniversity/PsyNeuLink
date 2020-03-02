@@ -1986,7 +1986,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
@@ -4119,7 +4119,7 @@ class TransferWithCosts(TransferFunction):
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())
         trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
-        trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
+        trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
         if trans_in.type != trans_f.args[2].type:
             warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))

@@ -1492,9 +1492,9 @@ class GridSearch(OptimizationFunction):
         sample_ptr = builder.alloca(sample_t)
         value_ptr = builder.alloca(value_t)
 
-        random_state = ctx.get_state_ptr(self, builder, state,
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                          self.parameters.random_state.name)
-        obj_state_ptr = ctx.get_state_ptr(self, builder, state,
+        obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                           self.parameters.objective_function.name)
         obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                           self.parameters.objective_function.name)

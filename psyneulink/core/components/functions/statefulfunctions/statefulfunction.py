@@ -568,7 +568,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             if a == "random_state":
                 continue
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
-            dest_ptr = ctx.get_state_ptr(self, builder, state, a)
+            dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
                 warnings.warn("Shape mismatch between stateful param and initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
                 # Take a guess that dest just has an extra dimension

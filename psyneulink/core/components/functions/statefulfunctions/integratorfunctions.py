@@ -386,7 +386,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         if param == NOISE and isinstance(param_p.type.pointee, pnlvm.ir.LiteralStructType):
             # This is a noise function so call it to get value
             assert state is not None
-            state_p = ctx.get_state_ptr(self, builder, state, NOISE)
+            state_p = pnlvm.helpers.get_state_ptr(builder, self, state, NOISE)
             noise_f = ctx.import_llvm_function(self.parameters.noise.get())
             noise_in = builder.alloca(noise_f.args[2].type.pointee)
             noise_out = builder.alloca(noise_f.args[3].type.pointee)
@@ -877,7 +877,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                                           state=state)
 
         # Get the only context member -- previous value
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -1140,7 +1140,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                           state=state)
 
         # Get the only context member -- previous value
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -2506,7 +2506,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
-        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         rand_val_ptr = builder.alloca(ctx.float_ty)
         rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(rand_f, [random_state, rand_val_ptr])
@@ -2517,8 +2517,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             rate = builder.extract_value(rate, 0)
 
         # Get state pointers
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
-        prev_time_ptr = ctx.get_state_ptr(self, builder, state, "previous_time")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
 
         # value = previous_value + rate * variable * time_step_size \
         #       + np.sqrt(time_step_size * noise) * random_state.normal()
@@ -3154,7 +3154,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
         # Get the only context member -- previous value
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -4168,7 +4168,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Get state pointers
         def _get_state_ptr(x):
-            ptr = ctx.get_state_ptr(self, builder, state, x)
+            ptr = pnlvm.helpers.get_state_ptr(builder, self, state, x)
             return pnlvm.helpers.unwrap_2d_array(builder, ptr)
         prev = {s: _get_state_ptr(s) for s in self._get_state_ids()}
 
