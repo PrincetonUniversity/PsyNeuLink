@@ -7,9 +7,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.scheduling.scheduler import Scheduler
 
 debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state"]
 options_combinations = (";".join(("debug_info", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
