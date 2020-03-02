@@ -238,12 +238,6 @@ class LLVMBuilderContext:
                            name="ptr_state_{}_{}".format(stateful_name,
                                                          component.name))
 
-    def unwrap_2d_array(self, builder, element):
-        if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
-            assert element.type.pointee.count == 1
-            return builder.gep(element, [self.int32_ty(0), self.int32_ty(0)])
-        return element
-
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
             if len(t) == 0:

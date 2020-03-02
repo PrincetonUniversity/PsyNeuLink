@@ -372,8 +372,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Get rid of 2d array.
         # When part of a Mechanism, the input and output are 2d arrays.
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        arg_out = ctx.unwrap_2d_array(builder, arg_out)
+        arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
             self._gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state)
@@ -880,7 +880,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -1143,7 +1143,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -3157,7 +3157,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -4164,18 +4164,18 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and state) are 2d arrays.
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
 
         # Get state pointers
         def _get_state_ptr(x):
             ptr = ctx.get_state_ptr(self, builder, state, x)
-            return ctx.unwrap_2d_array(builder, ptr)
+            return pnlvm.helpers.unwrap_2d_array(builder, ptr)
         prev = {s: _get_state_ptr(s) for s in self._get_state_ids()}
 
         # Output locations
         def _get_out_ptr(i):
             ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(i)])
-            return ctx.unwrap_2d_array(builder, ptr)
+            return pnlvm.helpers.unwrap_2d_array(builder, ptr)
         out = {l: _get_out_ptr(i) for i, l in enumerate(('v', 'w', 'time'))}
 
         # Load parameters

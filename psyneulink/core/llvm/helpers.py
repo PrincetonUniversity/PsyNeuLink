@@ -77,6 +77,13 @@ def uint_min(builder, val, other):
     return builder.select(cond, val, other)
 
 
+def unwrap_2d_array(builder, element):
+    if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
+        assert element.type.pointee.count == 1
+        return builder.gep(element, [ir.IntType(32)(0), ir.IntType(32)(0)])
+    return element
+
+
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)
     if isinstance(val.type, ir.ArrayType) and val.type.count == 1:

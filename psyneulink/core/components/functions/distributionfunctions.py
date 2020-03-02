@@ -1296,7 +1296,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         noise_sqr = builder.fmul(noise, noise)
 
         # Arguments used in mechanisms are 2D
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
 
         stimulus_drift_rate = pnlvm.helpers.load_extract_scalar_array_one(builder, arg_in)
         drift_rate = builder.fmul(attentional_drift_rate, stimulus_drift_rate)

@@ -1243,7 +1243,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Allocate the only member of the port input struct
         oport_input = builder.alloca(ctx.get_input_struct_type(port).elements[0])
         # FIXME: workaround controller signals occasionally being 2d
-        dest_ptr = ctx.unwrap_2d_array(builder, oport_input)
+        dest_ptr = pnlvm.helpers.unwrap_2d_array(builder, oport_input)
         dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
         builder.store(builder.load(val_ptr), dest_ptr)
