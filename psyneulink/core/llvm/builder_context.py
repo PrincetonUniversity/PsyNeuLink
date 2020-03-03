@@ -42,6 +42,15 @@ _BUILTIN_PREFIX = "__pnl_builtin_"
 _builtin_intrinsics = frozenset(('pow', 'log', 'exp'))
 
 
+class _node_wrapper():
+    def __init__(self, composition, node):
+        self._comp = composition
+        self._node = node
+
+    def _gen_llvm_function(self, *, ctx, tags:frozenset):
+        return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
+
+
 class LLVMBuilderContext:
     __global_context = None
     __uniq_counter = 0
@@ -216,17 +225,11 @@ class LLVMBuilderContext:
         return ir.LiteralStructType([])
 
     def get_node_wrapper(self, composition, node):
-        cache = self._cache.setdefault(composition, {})
-        if node not in cache:
-            class node_wrapper():
-                def _gen_llvm_function(s, *, ctx:pnlvm.LLVMBuilderContext,
-                                             tags:frozenset):
-                    return codegen.gen_node_wrapper(ctx, composition, node, tags=tags)
-            w = node_wrapper()
-            cache[node] = w
-            return w
-
-        return cache[node]
+        cache = getattr(composition, '_node_wrappers', None)
+        if cache is None:
+            cache = dict()
+            setattr(composition, '_node_wrappers', cache)
+        return cache.setdefault(node, _node_wrapper(composition, node))
 
     def convert_python_struct_to_llvm_ir(self, t):
         if type(t) is list:
