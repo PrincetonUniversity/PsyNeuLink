@@ -8,15 +8,14 @@
 
 # ********************************************* PNL LLVM builtins **************************************************************
 
-import ctypes
-from ctypes import util
 from llvmlite import ir
+
+
+from . import debug
 from . import helpers
 from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
-from psyneulink.core import llvm as pnlvm
 
 
-debug = pnlvm.debug
 debug_env = debug.debug_env
 
 

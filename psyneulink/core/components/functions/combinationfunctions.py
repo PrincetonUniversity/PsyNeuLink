@@ -1314,7 +1314,7 @@ class LinearCombination(
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
         scale_type = scale_ptr.type.pointee
         if isinstance(scale_type, pnlvm.ir.ArrayType):
             if len(scale_type) == 1:
@@ -1322,7 +1322,7 @@ class LinearCombination(
             else:
                 scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
         offset_type = offset_ptr.type.pointee
         if isinstance(offset_type, pnlvm.ir.ArrayType):
             if len(offset_type) == 1:
@@ -1330,10 +1330,10 @@ class LinearCombination(
             else:
                 offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
-        exponent_param_ptr = ctx.get_param_ptr(self, builder, params, EXPONENTS)
+        exponent_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, EXPONENTS)
         exponent_type = exponent_param_ptr.type.pointee
 
-        weights_ptr = ctx.get_param_ptr(self, builder, params, WEIGHTS)
+        weights_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, WEIGHTS)
         weights_type = weights_ptr.type.pointee
 
         scale = ctx.float_ty(1.0) if isinstance(scale_type, pnlvm.ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
@@ -1405,7 +1405,7 @@ class LinearCombination(
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Sometimes we arg_out to 2d array
-        arg_out = ctx.unwrap_2d_array(builder, arg_out)
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
             self.__gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)

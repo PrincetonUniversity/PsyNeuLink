@@ -758,11 +758,11 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
-        buffer_ptr = ctx.get_state_ptr(self, builder, state, "ring_memory")
+        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -785,7 +785,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
@@ -807,8 +807,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.import_llvm_function(self.distance_function)
-            distance_params = ctx.get_param_ptr(self, builder, params, "distance_function")
-            distance_state = ctx.get_state_ptr(self, builder, state, "distance_function")
+            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
+            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
@@ -823,8 +823,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     distance_arg_in, distance_arg_out])
 
             selection_f = ctx.import_llvm_function(self.selection_function)
-            selection_params = ctx.get_param_ptr(self, builder, params, "selection_function")
-            selection_state = ctx.get_state_ptr(self, builder, state, "selection_function")
+            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
+            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
                                        selection_arg_in, selection_arg_out])
@@ -849,7 +849,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
