@@ -2335,7 +2335,14 @@ class TestACLogging:
         out_map = MappingProjection()
 
         xor = AutodiffComposition(param_init_from_pnl=True)
-        xor.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
         hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
 
@@ -2441,7 +2448,13 @@ class TestNested:
             param_init_from_pnl=True,
             learning_rate=learning_rate,
         )
-        xor_autodiff.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
 
@@ -2508,7 +2521,12 @@ class TestNested:
             learning_rate=learning_rate,
         )
 
-        xor_autodiff.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
 
