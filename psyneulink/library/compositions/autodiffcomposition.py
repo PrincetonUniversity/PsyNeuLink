@@ -15,10 +15,7 @@ Contents
 
   * `AutodiffComposition_Overview`
   * `AutodiffComposition_Creation`
-  * `AutodiffComposition_Structure`
   * `AutodiffComposition_Execution`
-      - `Input <AutodiffComposition_Input>`
-      - `Input <AutodiffComposition_Input>`
       - `AutodiffComposition_Logging`
       - `AutodiffComposition_Nested_Execution`
   * `AutodiffComposition_Class_Reference`
@@ -35,9 +32,7 @@ AutodiffComposition is a subclass of `Composition` used to train feedforward neu
 with `PyTorch <https://pytorch.org/>`_, a popular machine learning library, which executes considerably more quickly
 than using the `standard implementation of learning <Composition_Learning_Standard>` in a Composition, using its
 `learning methods <Composition_Learning_Methods>`. An AutodiffComposition is configured and run similarly to a standard
-Composition, with some exceptions that are described below.  An example is provided in the
-`xor_in_psyneulink_and_pytorch.py` script (in the Scripts folder of the PsyNeuLink source code), which also provides
-a comparison of runtimes.
+Composition, with some exceptions that are described below.
 COMMENT:
 FIX: UPDATE runtimes WITH COMPILED VERSION
 COMMENT
@@ -49,97 +44,15 @@ Creating an AutodiffComposition
 
 An AutodiffComposition can be created by calling its constructor, and then adding `Components <Component>` using the
 standard `Composition methods <Composition_Creation>` for doing so.  The constructor also includes an number of
-arguments that are specific to the AutodiffComposition, as described below.
+parameters that are specific to the AutodiffComposition. See the <class reference `AutodiffComposition`> for a list of these parameters.
 
 .. warning:: Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
    been run for the first time. Unlike an ordinary Composition, AutodiffComposition does not support this
    functionality.
 
-.. warning:: When comparing models built in PyTorch to those using AutodiffComposition, the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set to `False`, as AutodiffComposition does not currently support trainable biases.
+.. warning:: When comparing models built in PyTorch to those using AutodiffComposition,
+   the `bias <https://www.pytorch.org/docs/stable/nn.html#torch.nn.Module>` parameter of PyTorch modules should be set to `False`, as AutodiffComposition does not currently support trainable biases.
 
-* **param_init_from_pnl** argument -- determines how parameters are set up for the internal PyTorch representation of
-  the model.  If it is set to True:
-
-    COMMENT:
-    FIX: THIS SHOULD BE ADDRESSED
-    COMMENT
-    * only weight parameters that correspond to the `value <Parameter.value>` of the `matrix <MappingProjection.matrix>`
-      parameter of the `MappingProjections <MappingProjection>` in the Composition are created;  no bias parameters are
-      created, as the bias parameters associated with Mechanisms are not trainable;
-
-    * the weight parameters are initialized to be identical to the `value <Parameter.value>` of `matrix
-      <MappingProjection.matrix>` parameters of the `MappingProjections <MappingProjection>` in the Composition;
-      the tensor of the parameter object corresponding to a particular MappingProjection not only has the same
-      dimensionality as its `matrix <MappingProjection.matrix>`, it also has the exact same values;
-
-    * Pytorch functions representing the `function <Mechanism_Base.function>` of each `Mechanism <Mechanism>` in the
-      Composition incorporate their scalar, untrainable biases.
-
-    If it is set to False:
-
-        * weight parameters have the same dimensionality as the `matrix <MappingProjection.matrix>` parameter of the
-          corresponding `MappingProjections <MappingProjection>`;  however, their values -- and those of the bias
-          parameters -- are sampled from a random distribution;
-
-* **learning_rate** -- specifies the learning rate for the current run (default 0.001), which is passed to the
-  optimized specified in the **optimizer** argument.
-
-* **optimizer** -- specifies the kind of optimizer used in training. The current options are 'sgd' (the default) or
-  'adam'.
-
-* **optimizer_type** -- specifies the kind of optimizer used in training. The current options are 'sgd' (which is the
-  default) or 'adam'.
-
-* **disable_learning** -- specifies whether the AutodiffComposition should disable learning (default is False). When False,
-  the AutodiffComposition trains using PyTorch when ran in `learning mode <Composition.learn>`. When True, the AutodiffComposition runs like an ordinary
-  `Composition`, which does not change weights.
-
-* **weight_decay** -- specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults
-  to 0.
-
-* **loss_spec** -- specifies the loss function for training. It can be a string or a PyTorch loss function. The current
-  options for strings are 'mse' (the default), 'crossentropy', 'l1', 'nll', 'poissonnll', and 'kldiv'. These refer to
-  Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
-  Divergence respectively. The **loss_spec** can also be any PyTorch loss function, including a custom-written one.
-  For a list of PyTorch loss functions, see `Loss function <https://pytorch.org/docs/stable/nn.html#loss-functions>`_.
-  For information on writing a custom loss function, see `Extending PyTorch
-  <https://pytorch.org/docs/master/notes/extending.html>`_, as well as `Build your own loss function in PyTorch
-  <https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235>`_.
-
-* **force_no_retain_graph** -- False by default.  If True, the AutodiffComposition does not use PyTorch's `retain_graph
-  <https://pytorch.org/docs/master/autograd.html?highlight=retain_graph>`_  option when computing the gradient. This
-  can reduce memory usage; however, it breaks recurrent networks, so it should only be used when the network is not
-  recurrent.
-
-.. note::
-    The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
-    see `Trying to backward through a graph a second time <https://discuss.pytorch.org/t/runtimeerror-trying-to-backward-through-the-graph-a-second-time-but-the-buffers-have-already-been-freed-specify-retain-graph-true-when-calling-backward-the-first-time/6795>`_
-    and `Why we need to detach Variable which contains [a] hidden representation
-    <https://discuss.pytorch.org/t/solved-why-we-need-to-detach-variable-which-contains-hidden-representation/1426/4>`_.
-
-.. _AutodiffComposition_Structure:
-
-Structure
----------
-
-An AutodiffComposition has all the attributes of its parent class `Composition`, as well ones corresponding to the
-arguments described above, and the following.
-
-* `target_CIM <AutodiffComposition.target_CIM>` -- analogous to the `input_CIM <Composition.input_CIM>` of
-  a standard `Composition`, but instead of representing the input to the `ORIGIN` Mechanism(s) of the Composition
-  represents the targets used to specify the target `value <Mechanism_Base.value>` of its `TERMINAL` Mechanism(s)
-  (see `below <AutodiffComposition_Input>` for a description of how these are specified).
-
-* `pytorch_representation <AutodiffComposition.pytorch_representation>` -- containsa the PyTorch representation
-  of the PsyNeuLink model that AutodiffComposition contains.
-
-* `losses <AutodiffComposition.losses>` -- tracks the average loss for each training batch.
-
-* `optimizer <AutodiffComposition.optimizer>` -- contains the PyTorch optimizer function used for learning. It
-  is determined at initialization by the **optimizer_type**, **learning_rate**, and **weight_decay** arguments.
-
-* `loss <AutodiffComposition.loss>` -- contains the PyTorch loss function used for learning. It is determined
-  at initialization by the **loss_spec** argument.
 
 .. _AutodiffComposition_Execution:
 
@@ -174,15 +87,16 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 
 .. _AutodiffComposition_Logging:
 
-# Logging
-# ~~~~~~~
+Logging
+~~~~~~~
 
-# Logging in AutodiffCompositions follows the same procedure as logging in a `Composition`. However, there are some small gotchas to be aware of;
-# Since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-# then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
-# As of present, the ones that are supported are:
-# 1) the `matrix` parameter of Projections
-# 2) the `value` parameter of its inner components
+Logging in AutodiffCompositions follows the same procedure as `logging in a Composition <Log>`. However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
+then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
+Currently, the only supported parameters are:
+
+1) the `matrix` parameter of Projections
+
+2) the `value` parameter of its inner components
 
 .. _AutodiffComposition_Nested_Execution:
 
@@ -194,8 +108,6 @@ Like any other `Composition`, an AutodiffComposition may be `nested inside anoth
 The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
 Composition::
 
-    >>> my_autodiff._analyze_graph()  # alternatively, my_autodiff.run( ... )
-    >>>
     >>> # Create outer composition
     >>> my_outer_composition = pnl.Composition()
     >>> my_outer_composition.add_node(my_autodiff)
@@ -251,7 +163,7 @@ logger = logging.getLogger(__name__)
 
 
 __all__ = [
-    'AutodiffComposition', 'AutodiffCompositionError'
+    'AutodiffComposition'
 ]
 
 
@@ -266,31 +178,17 @@ class AutodiffCompositionError(CompositionError):
 
 class AutodiffComposition(Composition):
     """
-    AutodiffComposition(             \
-        param_init_from_pnl=True,    \
-        learning_rate=0.001,         \
-        disable_learning=False,       \
-        optimizer_type=None,         \
-        loss_spec=None,              \
-        name="autodiff_composition")
-
     Subclass of `Composition` that trains models using `PyTorch <https://pytorch.org>`_.
     See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
-    param_init_from_pnl : boolean : default True
-        a Boolean specifying how parameters are initialized. **WARNING: deprecated!** (See
-        `Creating an AutodiffComposition <AutodiffComposition_Creation>` for details)
-
     learning_rate : float : default 0.001
         the learning rate, which is passed to the optimizer.
 
     disable_learning : bool: default False
-        specifies whether the AutodiffComposition should disable learning (default is False). When False,
-        the AutodiffComposition trains using PyTorch when ran in `learning mode <Composition.learn>`. When True, the AutodiffComposition runs like an ordinary
-        `Composition`, which does not change weights.
+        specifies whether the AutodiffComposition should disable learning when ran in `learning mode <Composition_Learning_Mode>`
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
@@ -303,14 +201,8 @@ class AutodiffComposition(Composition):
         'l1', 'nll', 'poissonnll', and 'kldiv'. Any PyTorch loss function can work here, such as ones from
         https://pytorch.org/docs/stable/nn.html#loss-functions
 
-    Attributes
-    ----------
-
-    pytorch_representation : PytorchModelCreator
-        the PyTorch representation of the PsyNeuLink model
-
     losses : list of floats
-        tracks the average loss for each training epoch
+        tracks the average for each weight update (i.e. each minibatch)
 
     optimizer : PyTorch optimizer function
         the optimizer used for training. Depends on the **optimizer_type**, **learning_rate**, and **weight_decay**
@@ -319,45 +211,10 @@ class AutodiffComposition(Composition):
     loss : PyTorch loss function
         the loss function used for training. Depends on the **loss_spec** argument from initialization.
 
-    name : str : default AutodiffComposition-<index>
-        the name of the Composition. Specified in the **name** argument of the constructor for the Projection;
-        if not specified, a default is assigned by `CompositionRegistry` (see :doc:`Registry <LINK>` for conventions
-        used in naming, including for default and duplicate names).
-
-    Returns
-    -------
-    instance of AutodiffComposition : AutodiffComposition
     """
 
     class Parameters(Composition.Parameters):
-        """
-            Attributes
-            ----------
-
-                learning_rate
-                    see `learning_rate <AutodiffComposition.learning_rate>`
-
-                    :default value: 0.001
-                    :type: ``float``
-
-                losses
-                    see `losses <AutodiffComposition.losses>`
-
-                    :default value: None
-                    :type:
-
-                optimizer
-                    see `optimizer <AutodiffComposition.optimizer>`
-
-                    :default value: None
-                    :type:
-
-                pytorch_representation
-                    see `pytorch_representation <AutodiffComposition.pytorch_representation>`
-
-                    :default value: None
-                    :type:
-        """
+        """"""
         optimizer = None
         learning_rate = Parameter(.001, fallback_default=True)
         losses = Parameter([])

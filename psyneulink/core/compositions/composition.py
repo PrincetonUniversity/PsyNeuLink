@@ -6942,7 +6942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
                 the shape of which must match the node's default variable. This is identical to the input dict in `the run method <Composition.run>`
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same structure as input specification (1) of learn. The `targets` and `epochs` keys
-                should contain values of the same shape as `targets <Composition.learn>` and `epochs` <Composition.learn>
+                should contain values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`
 
             targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each node in the composition that receives target values to train on from
@@ -6963,14 +6963,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether the order of the input trials should be randomized on each epoch
 
             patience : int or None (default=None)
-                **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
-                consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
-                the model stops training early. If **patience** is ``None``, the model will train for the number
-                of specified epochs and will not stop training early.
+                used for early stopping of training; If a model has more than `patience` bad consecutive epochs, then `learn` will prematurely return. A bad epoch is determined by the `min_delta` value
 
-             min_delta : float (default=0)
-                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
-                Used for early stopping of training, in combination with **patience**.
+            min_delta : float (default=0)
+                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch; Any reduction less than this value is considered to be a bad epoch.
+                Used for early stopping of training, in combination with `patience`.
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of this Composition
@@ -6988,7 +6985,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Returns
             ---------
 
-            the results of the final epoch of training
+            the results of the final epoch of training : list
         """
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
