@@ -61,7 +61,7 @@ decision_layer = pnl.LCAMechanism(
     size=3,                            # Number of units in input layer
     initial_value=[[0.0, 0.0, 0.0]],    # Initial input values
     time_step_size=dt,                 # Integration step size
-    leak=-1.0,                         # Sets off diagonals to negative values
+    leak=1.0,                         # Sets off diagonals to negative values
     self_excitation=selfdwt,           # Set diagonals to self excitate
     competition=inhwt,                 # Set off diagonals to inhibit
     function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
@@ -81,7 +81,7 @@ response_layer = pnl.LCAMechanism(
     size=2,                                        # Number of units in input layer
     initial_value=[[0.0, 0.0]],                    # Initial input values
     time_step_size=dt,                             # Integration step size
-    leak=-1.0,                                     # Sets off diagonals to negative values
+    leak=1.0,                                     # Sets off diagonals to negative values
     self_excitation=selfrwt,                       # Set diagonals to self excitate
     competition=respinhwt,                         # Set off diagonals to inhibit
     function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias

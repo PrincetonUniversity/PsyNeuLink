@@ -33,10 +33,9 @@ Overview
 
 An LCAMechanism is a subclass of `RecurrentTransferMechanism` that implements a single-layered `leaky competitng
 accumulator (LCA) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_  network. By default, it uses a
-`LeakyCompetingIntegrator` (the `rate <LeakyCompetingIntegrator.rate>` of which is specified by the **leak** argument)
-and a `Logistic` Function to compute the activity of the units, each of which has a  self-excitatory connection
-(specified by the **self_excitation** argument) and mutually inhibitory connections with every other element (specified
-by the **competition** argument).  These are implemented by its `recurrent_projection
+`LeakyCompetingIntegrator` and a `Logistic` Function to compute the activity of the units, each of which has a
+self-excitatory connection (specified by the **self_excitation** argument) and mutually inhibitory connections with
+every other element (specified by the **competition** argument).  These are implemented by its `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>`, the `matrix  <MappingProjection.matrix>` of which consists of
 diagnoal elements assign the value of `self_excitation <LCAMechanism.self_excitation>` off-diagonal elements assigned
 the negative of the value of `competition <LCAMechanism.competition>`.
@@ -81,11 +80,11 @@ arguments are ignored.
 
 The **noise**, **leak**, **initial_value**, and **time_step_size** arguments are used to implement the
 `LeakyCompetingIntegrator` as the LCAMechanism's `integrator_function <TransferMechanism.integrator_function>`.
-The **leak** argument is used to specify the `rate <LeakyCompetingIntegrator.rate>` parameter of the
-`LeakyCompetingIntegrator`.  This function is only used used when `integrator_mode <TransferMechanism_Integrator_Mode>`
-is True (which it is by default).  If `integrator_mode <TransferMechanism.integrator_mode>` is False, the
-`LeakyCompetingIntegrator` function is skipped entirely, and all related arguments (**noise**, **leak**,
-**initial_value**, and **time_step_size**) have no effect.
+The **leak** argument is used to specify the `leak <LeakyCompetingIntegrator.leak>` parameter of the
+`LeakyCompetingIntegrator`. This function is only used used when `integrator_mode
+<TransferMechanism_Integrator_Mode>` is True (which it is by default).  If `integrator_mode
+<TransferMechanism.integrator_mode>` is False, the `LeakyCompetingIntegrator` function is skipped entirely,
+and all related arguments (**noise**, **leak**, **initial_value**, and **time_step_size**) have no effect.
 
 .. _LCAMechanism_Threshold:
 
@@ -199,8 +198,8 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, NOISE,\
-    RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
+    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LEAK, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
+    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -241,7 +240,7 @@ class LCAMechanism(RecurrentTransferMechanism):
     ---------
 
     leak : value : default 0.5
-        specifies the `rate <LeakyCompetingIntegrator.rate>` for the `LeakyCompetingIntegrator` Function
+        specifies the `leak <LeakyCompetingIntegrator.leak>` for the `LeakyCompetingIntegrator` Function
         (see `leak <LCAMechanism.leak>` for additional details).
 
     competition : value : default 1.0
@@ -277,7 +276,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         <LCAMechanism.competition>` attribute sets the magnitude of the negative off-diagonal values.
 
     leak : value
-        determines the `rate <LeakyCompetingIntegrator.rate>` for the `LeakyCompetingIntegrator` Function,
+        determines the `leak <LeakyCompetingIntegrator.leak>` for the `LeakyCompetingIntegrator` Function,
         which scales the contribution of its `previous_value <LeakyCompetingIntegrator.previous_value>` to the
         accumulation of its `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step (see
         `LeakyCompetingIntegrator` for additional details.
@@ -574,7 +573,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                 initializer=initial_value,
                 noise=noise,
                 time_step_size=time_step_size,
-                rate=leak,
+                leak=leak,
                 owner=self)
 
         current_input = self.integrator_function._execute(
@@ -584,7 +583,7 @@ class LCAMechanism(RecurrentTransferMechanism):
             runtime_params={
                 INITIALIZER: initial_value,
                 NOISE: noise,
-                RATE: leak,
+                LEAK: leak,
                 TIME_STEP_SIZE: time_step_size
             },
         )

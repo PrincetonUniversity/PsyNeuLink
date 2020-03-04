@@ -63,7 +63,7 @@ input_layer = pnl.TransferMechanism(
 decision_layer = pnl.LCAMechanism(
     size=2,
     time_step_size=dt,
-    leak=-1.0,
+    leak=1.0,
     self_excitation=w_XiXi,
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
@@ -79,7 +79,7 @@ decision_layer = pnl.LCAMechanism(
 response_layer = pnl.LCAMechanism(
     size=1,
     time_step_size=dt,
-    leak=-1.0,
+    leak=1.0,
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit

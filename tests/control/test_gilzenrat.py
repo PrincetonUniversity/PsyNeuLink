@@ -12,7 +12,7 @@ class TestGilzenratMechanisms:
 
     def test_defaults(self):
         G = LCAMechanism(integrator_mode=True,
-                         leak=-1.0,
+                         leak=1.0,
                          noise=0.0,
                          time_step_size=0.02,
                          function=Linear,
@@ -41,7 +41,7 @@ class TestGilzenratMechanisms:
 
     def test_previous_value_stored(self):
         G = LCAMechanism(integrator_mode=True,
-                         leak=-1.0,
+                         leak=1.0,
                          noise=0.0,
                          time_step_size=0.02,
                          function=Linear(slope=2.0),
