@@ -396,6 +396,10 @@ class AutodiffComposition(Composition):
         self.parameters.tracked_loss_count._set(self.parameters.tracked_loss_count._get(context=context) + 1, context=context, skip_history=True, skip_log=True)
         return outputs
 
+    def clear_losses(self, context=None):
+        self.losses = []
+        self.parameters.losses.set([], context=context)
+
     def _update_learning_parameters(self, context):
         """
         Updates parameters based on trials ran since last update.
