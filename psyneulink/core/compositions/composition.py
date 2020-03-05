@@ -6848,7 +6848,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         )
 
             # ---------------------------------------------------------------------------------
-            # store the result of this execute in case it will be the final result
+            # store the result of this execution in case it will be the final result
 
             # object.results.append(result)
             if isinstance(trial_output, collections.abc.Iterable):
