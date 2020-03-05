@@ -55,7 +55,7 @@ jobs:
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: tests_out.xml
-      if: always()
+      if: job.status != 'canceled'
 
     - name: Build dist
       run: |
