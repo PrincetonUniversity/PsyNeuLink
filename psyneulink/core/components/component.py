@@ -2552,7 +2552,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
-                self._increment_num_executions(context)
+                self._increment_num_executions(context, TimeScale.TIME_STEP)
             self._update_current_execution_time(context=context)
 
         # CALL FUNCTION
