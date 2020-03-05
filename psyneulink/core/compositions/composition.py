@@ -6592,6 +6592,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             new_conds.update(termination_processing)
             termination_processing = new_conds
 
+        for node in self.nodes:
+            node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.RUN, 0)
+
         if initial_values is not None:
             for node in initial_values:
                 if node not in self.nodes:
@@ -7145,10 +7148,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(INITIAL_FRAME, context)
                 context.execution_id = old_eid
 
-        # Reinitialize any nodes that have satisfied 'reinitialize_when'
-        # conditions. This mimics the behavior used for Systems. (only
-        # checking for reinitialization at the beginning of a trial)
+        # Set num_executions.TRIAL to 0 for every node
+        # Reinitialize any nodes that have satisfied 'reinitialize_when' conditions.
         for node in self.nodes:
+            node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
             if node.parameters.has_initializers._get(context):
                 try:
                     if (
@@ -7185,9 +7188,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._assign_values_to_input_CIM(inputs, context=context)
             else:
                 self.input_CIM.execute(context=context)
-                self.input_CIM._increment_num_executions(context, TimeScale.TRIAL)
             self.parameter_CIM.execute(context=context)
-            self.parameter_CIM._increment_num_executions(context, TimeScale.TRIAL)
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, context=context)
@@ -7281,7 +7282,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # FIX: END REMOVE
                     context.add_flag(ContextFlags.PROCESSING)
                     self.controller.execute(context=context)
-                    self.controller._increment_num_executions(context, TimeScale.TRIAL)
 
                 if bin_execute:
                     _comp_ex.execute_node(self.controller)
@@ -7437,8 +7437,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 context=context,
                                 runtime_params=execution_runtime_params,
                             )
-                            node._increment_num_executions(context, TimeScale.TRIAL)
-                            node._increment_num_executions(context, TimeScale.TIME_STEP)
 
                     # Reset runtime_params for node and its function if specified
                         if context.execution_id in node._runtime_params_reset:
@@ -7489,8 +7487,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                     ret = node.execute(context=context)
-                    node._increment_num_executions(context, TimeScale.TIME_STEP)
-                    node._increment_num_executions(context, TimeScale.TRIAL)
 
                     if is_simulating:
                         context.add_flag(ContextFlags.SIMULATION)
@@ -7577,10 +7573,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.add_flag(ContextFlags.CONTROL)
                 if self.controller and not bin_execute:
                     self.controller.execute(context=context)
-                    self.controller._increment_num_executions(context, TimeScale.TIME_STEP)
-                    self.controller._increment_num_executions(context, TimeScale.PASS)
-                    self.controller._increment_num_executions(context, TimeScale.TRIAL)
-                    self.controller._increment_num_executions(context, TimeScale.RUN)
 
                 if bin_execute:
                     _comp_ex.freeze_values()
@@ -7606,7 +7598,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context.add_flag(ContextFlags.PROCESSING)
         self.output_CIM.execute(context=context)
-        self.output_CIM._increment_num_executions(context, TimeScale.TRIAL)
         context.remove_flag(ContextFlags.PROCESSING)
 
         output_values = []
@@ -7833,7 +7824,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             build_CIM_input.append(value)
 
         self.input_CIM.execute(build_CIM_input, context=context)
-        self.input_CIM._increment_num_executions(context, TimeScale.TRIAL)
 
     def _assign_execution_ids(self, context=None):
         """

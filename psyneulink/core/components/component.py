@@ -2552,7 +2552,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
-                self._increment_num_executions(context, TimeScale.TIME_STEP)
+                self._increment_num_executions(context,
+                                               [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
             self._update_current_execution_time(context=context)
 
         # CALL FUNCTION
@@ -2590,11 +2591,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.parameters.execution_count.set(self.execution_count + count, override=True)
         return self.execution_count
 
-    def _increment_num_executions(self, context, time_scale:TimeScale, count=1):
+    def _increment_num_executions(self, context, time_scales:(list, TimeScale), count=1):
         # get relevant Time object:
+        time_scales = list(time_scales)
+        assert [isinstance(i, TimeScale) for i in time_scales], \
+            'non-TimeScale value provided in time_scales argument of _increment_num_executions'
         curr_num_execs = self.parameters.num_executions._get(context)
-        new_val = curr_num_execs._get_time_by_scale(time_scale) + count
-        curr_num_execs._set_time_by_scale(time_scale, new_val)
+        for time_scale in time_scales:
+            new_val = curr_num_execs._get_time_by_scale(time_scale) + count
+            curr_num_execs._set_time_by_scale(time_scale, new_val)
         self.parameters.num_executions.set(curr_num_execs, override=True)
         return curr_num_execs
 
