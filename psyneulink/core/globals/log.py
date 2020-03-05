@@ -1620,9 +1620,15 @@ class Log:
             #         temp_list[0] = adjusted_time[i]
             #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
 
-            time_values.extend([item.time
-                                for item in self.get_logged_entries(contexts=[execution_id])[entry][execution_id]
-                                if all(i is not None for i in item.time)])
+            logged_entries_for_param = self.get_logged_entries(contexts=[execution_id])
+            # make sure param exists in logged entries
+            logged_entries_for_param = logged_entries_for_param.get(entry) if logged_entries_for_param else None
+            # make sure execution id exists in logged entries of param
+            logged_entries_for_param = logged_entries_for_param.get(execution_id) if logged_entries_for_param else None
+            if logged_entries_for_param:
+                time_values.extend([item.time
+                                    for item in logged_entries_for_param
+                                    if all(i is not None for i in item.time)])
 
         # Insure that all time values are assigned, get rid of duplicates, and sort
         if all(all(i is not None for i in t) for t in time_values):
@@ -1632,35 +1638,43 @@ class Log:
 
     def _assemble_entry_data(self, entry, time_values, execution_id=None):
         # Assembles list of entry's (component's) value at each of the time points specified in time_values
+        # If there are multiple entries for a given time point, the last one will be used
         # If data was not recorded for this entry (component) for a given time point, it will be stored as None
 
         # entry = self._dealias_owner_name(entry)
         row = []
         time_col = iter(time_values)
-        for datum in self.logged_entries[entry][execution_id]:
+        data = self.logged_entries[entry][execution_id]
+        time = next(time_col, None)
+        for i in range(len(self.logged_entries[entry][execution_id])):
             # iterate through log entry tuples:
-            # check whether tuple's time value matches the time for which data is currently being recorded
+            # check whether the next tuple's time value matches the time for which data is currently being recorded
+            # if not, check whether the current tuple's time value matches the time for which data is being recorded
             # if so, enter tuple's Component value in the entry's list
             # if not, enter `None` in the entry's list
-
+            datum = data[i]
             if time_values:
-                for i in range(len(time_values)):
-                    time = next(time_col, None)
-                    if time is None:
-                        break
+                if i == len(data)-1 or data[i+1].time != time:
                     if datum.time != time:
                         row.append(None)
-                        continue
-                    value = None if datum.value is None else np.array(datum.value).tolist()
-                    row.append(value)
-                    break
+                    else:
+                        value = None if datum.value is None else np.array(datum.value).tolist()  # else, if is time,
+                        # append value
+                        row.append(value)
+                    time = next(time_col, None)  # increment time value
+                    if time is None:  # if no more times, break
+                        break
             else:
                 if datum.value is None:
                     value = None
                 elif isinstance(datum.value, list):
                     value = datum.value
+                elif np.array(datum.value).shape == ():
+                    # converted value is a scalar, so a call to np.array(datum.value).tolist() would return a scalar
+                    value = [datum.value]
                 else:
-                    value = datum.value.tolist()
+                    value = np.array(datum.value).tolist()
+
                 row.append(value)
         return row
 
