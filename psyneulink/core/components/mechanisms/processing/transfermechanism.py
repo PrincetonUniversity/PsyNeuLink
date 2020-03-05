@@ -263,9 +263,14 @@ without using its `integrator_function <TransferMechanism.integrator_function>`,
 Notice that the result is the full linear transfer of the input (i.e., no integration occured).
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, then it can be configured to conduct a single
-step of integration per execution, or to continue to integrate until its termination condition is met.
-A single step of integration is executed if no `termination_threshold <TransferMechanism.termination_threshold>` is
-specified (or it is None, the default), as in the following example::
+step of integration per execution, or to continue to integrate until its termination condition is met, as specified
+by the **termination_threshold**, **termination_measure**, and **termination_comparison_op** arguments, which are
+assigned to the TransferMechanism's `termination_threshold <TransferMechanism.termination_threshold>`,
+`termination_measure <TransferMechanism.termination_measure>`, and `termination_comparison_op
+<TransferMechanism.termination_comparison_op>` attributes, respectively.
+
+A single step of integration is executed if no **termination_threshold** is specified (i.e., it is None, the default),
+as in the following example::
 
     >>> my_mech = pnl.TransferMechanism(size=2,
     ...                                 integrator_mode=True)
@@ -289,8 +294,8 @@ since the `integrator_function <TransferMechanism.integrator_function>` is execu
 *Termination*
 ~~~~~~~~~~~~~
 
-If `integrator_mode <TransferMechanism.integrator_mode>` is True, and **termination_threshold** is specified, then the
-TransferMechanism continues to execute, integrating its current input, until its termination condition is met, or the
+If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a **termination_threshold** is specified, then the
+TransferMechanism continues to execute, integrating its current input until its termination condition is met, or the
 number of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The numer of
 executions that have taken place since the last time the termination condition was met is contained in
 `num_executions_before_finished <Component.num_executions_before_finished>`; this is set to 0 each time the termination
@@ -310,7 +315,7 @@ In this case, the single call to ``my_mech.execute`` caused the Mechanism to int
 difference between its current `value <Mechanism_Base.value>` and its `previous value
 <Mechanism_Base.previous_value>` is less than the specified **termination_threshold**.  However,
 the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
-conditions.  Thare are two broad types of termination condition:  convergence and boundary terination.
+conditions.  There are two broad types of termination condition:  convergence and boundary terination.
 
 *Convergence* -- execution terminates based on the difference between the TransferMechanism's current `value
 <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>` (as in the example above).
@@ -325,17 +330,16 @@ execution continued until the difference between the Mechanism's current `value 
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
 accepts a single argument that is a 2d array with two entries.
 
-*Boundary termination* -- execution terminates when the TransferMechanism's current `value <Mechanism_Base.value>`
-meets the condition specified by the **termination_measure**, **termination_comparison_op** and
-**termination_threshold** arguments, without considering its `previous_value <Mechanism_Base.previous_value>`. There
-are two types of boundaries:  value or time.
+*Boundary termination* -- There are two types of boundaries:  value or time.
 
     *Value boundary*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
-    a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  After each
-    execution, the function is passed the Mechanism's current `value <Mechanism_Base.value>`, and the scalar returned
-    is compared to **termination_threshold** using the comparison operator specified by **termination_comparison_op**.
-    Execution continues until this returns True, as in the following example::
+    a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
+    entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
+    <Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
+    current `value <Mechanism_Base.value>`, and the scalar returned is compared to **termination_threshold** using
+    the comparison operator specified by **termination_comparison_op**. Execution continues until this returns True,
+    as in the following example::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -352,17 +356,15 @@ are two types of boundaries:  value or time.
     the string ">=", which is a key in the `comparison_operators` dict for the Python ``operator.ge``; any of these
     can be used to specify **termination_comparison_op**).
 
-    The specifications for **termination_threshold**, **termination_measure**, and **termination_comparison_op**
-    are assigned to the TransferMechanism's `termination_threshold <TransferMechanism.termination_threshold>`,
-    `termination_measure <TransferMechanism.termination_measure>`, and `termination_comparison_op
-    <TransferMechanism.termination_comparison_op>` attributes, respectively.
-
     *Time boundary*.  This terminates execution when the Mechanism has executed a number of times specified by the
-    **threshold** argument.  This is implemented by specifying the **termination_measure** using one of the following
+    **threshold** argument. This is implemented by specifying the **termination_measure** using one of the following
     keywords: *EXECUTION_COUNT*, which terminates execution when the Mechanism's `execution_count
     <Component.execution_count>` parameter reaches **threshold**; or *NUM_EXECUTIONS_BEFORE_FINISHED*, which terminates
     execution when the `num_executions_before_finished <Component.num_executions_before_finished>` parameter reaches
-    **threshold**.  The following example mimics the one above, but using a time rather than a value boundary::
+    **threshold** (in both cases, any specification of **termination_comparison_op** is ignored, and
+    `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
+    *GREATER_THAN_OR_EQUAL*). The following example mimics the one above, but using number of executions rather than
+    the Mechanism's current value to determine when to terminate::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -373,8 +375,10 @@ are two types of boundaries:  value or time.
         >>> my_mech.num_executions_before_finished
         2
 
-    Note that, in this case, ``my_mech`` executed only twice.
-
+    Note that, in this case, ``my_mech`` executed only twice.  The difference between using
+    *EXECUTION_COUNT* and *NUM_EXECUTIONS_BEFORE_FINISHED* is that the former continues to increment for the
+    life of the Mechanism until it is explicity reset, whereas the latter is reset to 0 each time the termination
+    condition is met.
 
 .. _TransferMechanism_Reinitialization:
 
