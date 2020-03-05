@@ -1150,7 +1150,7 @@ class Distance(ObjectiveFunction):
         except TypeError:
             v2 = variable[1]
 
-        # Maximum of  Hadamard (elementwise) difference of v1 and v2
+        # Maximum of Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_ABS_DIFF:
             result = np.max(abs(v1 - v2))
 
