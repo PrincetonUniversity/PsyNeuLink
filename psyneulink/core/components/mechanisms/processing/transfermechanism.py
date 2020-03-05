@@ -370,7 +370,7 @@ accepts a single argument that is a 2d array with two entries.
         ...                                 termination_measure=NUM_EXECUTIONS_BEFORE_FINISHED,
         ...                                 termination_threshold=2)
         >>> my_mech.execute([0.5, 1])
-        array([[0.46875, 0.9375 ]])
+        array([[0.375, 0.75 ]])
         >>> my_mech.num_executions_before_finished
         2
 
