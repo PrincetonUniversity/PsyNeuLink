@@ -363,8 +363,7 @@ accepts a single argument that is a 2d array with two entries.
     execution when the `num_executions_before_finished <Component.num_executions_before_finished>` parameter reaches
     **threshold** (in both cases, any specification of **termination_comparison_op** is ignored, and
     `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
-    *GREATER_THAN_OR_EQUAL*). The following example mimics the one above, but using number of executions rather than
-    the Mechanism's current value to determine when to terminate::
+    *GREATER_THAN_OR_EQUAL*). In the following example, ``my_mech`` is configured to execute only twice::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -375,10 +374,9 @@ accepts a single argument that is a 2d array with two entries.
         >>> my_mech.num_executions_before_finished
         2
 
-    Note that, in this case, ``my_mech`` executed only twice.  The difference between using
-    *EXECUTION_COUNT* and *NUM_EXECUTIONS_BEFORE_FINISHED* is that the former continues to increment for the
-    life of the Mechanism until it is explicity reset, whereas the latter is reset to 0 each time the termination
-    condition is met.
+    The difference between using *EXECUTION_COUNT* and *NUM_EXECUTIONS_BEFORE_FINISHED* is that the former continues
+    to increment for the life of the Mechanism until it is explicity reset, whereas the latter is reset to 0 each time
+    the termination condition is met.
 
 .. _TransferMechanism_Reinitialization:
 
