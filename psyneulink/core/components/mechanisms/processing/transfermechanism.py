@@ -520,7 +520,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     all_within_range, append_type_to_name, iscompatible, is_comparison_operator
-from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.condition import Never, TimeScale
 from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
 
 __all__ = [
@@ -659,11 +659,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
         `clip <TransferMechanism.clip>` that it exceeds.
 
-    termination_measure : function : default Distance(metric=MAX_ABS_DIFF)
+    termination_measure : function or TimesScale : default Distance(metric=MAX_ABS_DIFF)
         specifies measure used to determine when execution of TransferMechanism is complete if `execute_until_finished
-        <Component.execute_until_finished>` is True.  Must take at least one argument, and optionally a second,
-        both of which must be arrays, and must return either another array or a scalar;  see `termination_measure
-        <TransferMechanism.termination_measure>` for additional details.
+        <Component.execute_until_finished>` is True.  If it is a function, it must take at least one argument, and
+        optionally a second, both of which must be arrays, and must return either another array or a scalar;  see
+        `termination_measure <TransferMechanism.termination_measure>` for additional details.
 
     termination_threshold : None or float : default None
         specifies value against which `termination_measure_value <TransferMechanism.termination_measure_value>` is
@@ -738,16 +738,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
         "IntegratorFunction Mode" (integrator_mode = True). There are three options:
 
-        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
-                the Mechanism during "Instantaneous Mode" is where the `integrator_function
+        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value
+                cmoputed by the Mechanism during "Instantaneous Mode" is where the `integrator_function
                 <TransferMechanism.integrator_function>` begins accumulating.
 
         (2)     INTEGRATOR_MODE_VALUE - resume accumulation wherever the `integrator_function
                 <TransferMechanism.integrator_function>` left off the last time `integrator_mode
                 <TransferMechanism.integrator_mode>` was True.
 
-        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize method
-                <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
+        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize
+                method <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
                 <TransferMechanism.initial_value>`
 
     noise : float or function
@@ -775,12 +775,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
         the value of `clip <TransferMechanism.clip>` that it exceeds.
 
-    termination_measure : function
+    termination_measure : function or TimeScale
         used to determine when execution of the TransferMechanism is complete (i.e., `is_finished` is True), if
-        `execute_until_finished <Component.execute_until_finished>` is True.  It is passed the `value
-        <Mechanism_Base.value>` and `previous_value <Mechanism_Base.previous_value>` of the TransferMechanism;
-        its result (`termination_measure_value <TransferMechanism.termination_measure_value>`) is compared with
-        `termination_threshold <TransferMechanism.termination_threshold>` using
+        `execute_until_finished <Component.execute_until_finished>` is True.  If it is a `TimeScale`, then execution
+        terminates when the value of the Mechanism's `num_executions <Compnent_Num_Executions>` at that TimeScale is
+        is equal to `termination_threshold <TransferMechanism.termination_threshold>`.  If it is a function, it is
+        passed the `value <Mechanism_Base.value>` and `previous_value <Mechanism_Base.previous_value>` of the
+        TransferMechanism; its result (`termination_measure_value <TransferMechanism.termination_measure_value>`) is
+        compared with `termination_threshold <TransferMechanism.termination_threshold>` using
         `TransferMechanism.termination_comparison_op`, the result of which is used as the value of `is_finished`.
 
         .. note::
@@ -950,9 +952,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return 'may only be True or False.'
 
         def _validate_termination_measure(self, termination_measure):
-            if termination_measure not in termination_keywords and not is_function_type(termination_measure):
-                return f"must be a function or one of the following keywords: " \
-                       f"{[x.upper() for x in termination_keywords]}."
+            if not isinstance(termination_measure, TimeScale) and not is_function_type(termination_measure):
+                return f"must be a function or a TimeScale."
 
         def _parse_termination_measure(self, termination_measure):
             if isinstance(termination_measure, type):
@@ -1568,7 +1569,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         measure = self.termination_measure
 
-        if measure in termination_keywords:
+        if isinstance(measure, TimeScale):
             self._termination_measure_num_items_expected = 0
             self.parameters.termination_comparison_op._set(GREATER_THAN_OR_EQUAL, context)
             return
@@ -1629,12 +1630,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         previous_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==0:
-            if measure == EXECUTION_COUNT:
-                status = self.execution_count
-            elif measure == NUM_EXECUTIONS_BEFORE_FINISHED:
-                status = self.num_executions_before_finished
-            else:
-                assert False, f'Bad measure in {self.name}'
+            status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
 
         elif self._termination_measure_num_items_expected==1:
             # Squeeze to collapse 2d array with single item

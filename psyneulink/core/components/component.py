@@ -2598,8 +2598,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             'non-TimeScale value provided in time_scales argument of _increment_num_executions'
         curr_num_execs = self.parameters.num_executions._get(context)
         for time_scale in time_scales:
-            new_val = curr_num_execs._get_time_by_scale(time_scale) + count
-            curr_num_execs._set_time_by_scale(time_scale, new_val)
+            new_val = curr_num_execs._get_by_time_scale(time_scale) + count
+            curr_num_execs._set_by_time_scale(time_scale, new_val)
         self.parameters.num_executions.set(curr_num_execs, override=True)
         return curr_num_execs
 
