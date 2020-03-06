@@ -301,7 +301,14 @@ executions that have taken place since the last time the termination condition w
 `num_executions_before_finished <Component.num_executions_before_finished>`; this is set to 0 each time the termination
 condition is met.
 
-By default, a TransferMechanism uses a convergence criterion to terminate integration, as in the following example::
+   .. note::
+     A TransferMechanism will continue to execute even after its termination condition is met, carrying out one
+     additional step of integration each time it is executed.  This can be useful in cases where the initial execution
+     of the Mechanism is meant to bring it to some state (e.g., as an initial "settling process"), after which
+     subsequent executions are meant to occur in step with the execution of other Mechanisms in a Composition.
+
+By default, `execute_until_finished <Component.execute_until_finished>` is True, and a convergence criterion is used to
+terminate integration, as in the following example::
 
     >>> my_mech = pnl.TransferMechanism(size=2,
     ...                                 integrator_mode=True,
@@ -332,7 +339,7 @@ accepts a single argument that is a 2d array with two entries.
 
 *Boundary termination* -- There are two types of boundaries:  value or time.
 
-    *Value boundary*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
+    *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
     a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
     entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
@@ -356,27 +363,21 @@ accepts a single argument that is a 2d array with two entries.
     the string ">=", which is a key in the `comparison_operators` dict for the Python ``operator.ge``; any of these
     can be used to specify **termination_comparison_op**).
 
-    *Time boundary*.  This terminates execution when the Mechanism has executed a number of times specified by the
-    **threshold** argument. This is implemented by specifying the **termination_measure** using one of the following
-    keywords: *EXECUTION_COUNT*, which terminates execution when the Mechanism's `execution_count
-    <Component.execution_count>` parameter reaches **threshold**; or *NUM_EXECUTIONS_BEFORE_FINISHED*, which terminates
-    execution when the `num_executions_before_finished <Component.num_executions_before_finished>` parameter reaches
-    **threshold** (in both cases, any specification of **termination_comparison_op** is ignored, and
-    `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
-    *GREATER_THAN_OR_EQUAL*). In the following example, ``my_mech`` is configured to execute only twice::
+    *Termination by time*.  This terminates execution when the Mechanism has executed a number of times specified by the
+    **threshold** argument. This is specified by assigning a `TimeScale` to **termination_measure**;  execution
+    terminates when the number of executions at that TimeScale equals **termination_threshold**  (in this case, any
+    specification of **termination_comparison_op** is ignored, and `termination_comparison_op
+    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).
+    In the following example, ``my_mech`` is configured to execute only twice per trial::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
-        ...                                 termination_measure=NUM_EXECUTIONS_BEFORE_FINISHED,
+        ...                                 termination_measure=TimeScale.TRIAL,
         ...                                 termination_threshold=2)
         >>> my_mech.execute([0.5, 1])
         array([[0.375, 0.75 ]])
         >>> my_mech.num_executions_before_finished
         2
-
-    The difference between using *EXECUTION_COUNT* and *NUM_EXECUTIONS_BEFORE_FINISHED* is that the former continues
-    to increment for the life of the Mechanism until it is explicity reset, whereas the latter is reset to 0 each time
-    the termination condition is met.
 
 .. _TransferMechanism_Reinitialization:
 
