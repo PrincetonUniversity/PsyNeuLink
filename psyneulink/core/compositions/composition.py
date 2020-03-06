@@ -7201,6 +7201,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the scheduler terminates a trial immediately
         next_pass_before = 1
         next_pass_after = 1
+        last_pass = None
+
         if clamp_input:
             soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
@@ -7316,38 +7318,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
-            # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
-            # KDM 1/15/20: Because we can't tell at the end of this
-            # code block whether a PASS has ended or not. The scheduler
-            # only modifies the pass after we receive an execution_set.
-            # So, we only know a PASS has ended in retrospect after the
-            # scheduler has changed the clock to indicate it. So, we
-            # have to run call_after_pass before the next PASS (here) or
-            # after this code block (see the call to call_after_pass
-            # below)
+            # IMPLEMENTATION NOTE KDM 1/15/20:
+            # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
+            # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
+            # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
+            # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
+            curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
+            new_pass = False
+            if curr_pass != last_pass:
+                new_pass = True
+                last_pass = curr_pass
             if call_after_pass:
-                if next_pass_after == \
-                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
-                                                                                          TimeScale.TRIAL):
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.
-                                 format(next_pass_after,
-                                        execution_scheduler.get_clock(
-                                            context).get_total_times_relative(
-                                                TimeScale.PASS, TimeScale.TRIAL)))
+                if next_pass_after == curr_pass:
+                    logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                     call_with_pruned_args(call_after_pass, context=context)
                     next_pass_after += 1
-
             if call_before_pass:
-                if next_pass_before == \
-                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
-                                                                                          TimeScale.TRIAL):
+                if next_pass_before == curr_pass:
                     call_with_pruned_args(call_before_pass, context=context)
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.
-                                 format(next_pass_before,
-                                        execution_scheduler.get_clock(
-                                            context).get_total_times_relative(
-                                                TimeScale.PASS,
-                                                TimeScale.TRIAL)))
+                    logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
                     next_pass_before += 1
 
             if call_before_time_step:
@@ -7378,7 +7367,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # execute each node with EXECUTING in context
             for node in next_execution_set:
 
-                node.parameters.get(num_executions, context)._set_time_by_scale(TimeScale.TIME_STEP, 0)
+                node.parameters.num_executions.get(context)._set_time_by_scale(TimeScale.TIME_STEP, 0)
+                if new_pass:
+                    node.parameters.num_executions.get(context)._set_time_by_scale(TimeScale.PASS, 0)
+
 
                 # Store values of all nodes in this execution_set for use by other nodes in the execution set
                 #    throughout this timestep (e.g., for recurrent Projections)
