@@ -1654,7 +1654,7 @@ class Log:
             # if not, enter `None` in the entry's list
             datum = data[i]
             if time_values:
-                if i == len(data)-1 or data[i+1].time != time:
+                if i == len(data) - 1 or data[i + 1].time != time:
                     if datum.time != time:
                         row.append(None)
                     else:
