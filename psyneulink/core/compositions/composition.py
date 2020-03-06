@@ -6582,6 +6582,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         output value of the final Node executed in the composition : various
         """
+
+        context.source = ContextFlags.COMPOSITION
+
         if scheduler is None:
             scheduler = self.scheduler
 
@@ -7102,8 +7105,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
         execution_scheduler = scheduler or self.scheduler
-
-        context.source = ContextFlags.COMPOSITION
 
         if termination_processing is None:
             termination_processing = self.termination_processing
