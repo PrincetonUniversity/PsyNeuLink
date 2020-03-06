@@ -1279,7 +1279,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
-from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -6593,13 +6593,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             termination_processing = new_conds
 
         for node in self.nodes:
-            node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.RUN, 0)
+            num_execs = node.parameters.num_executions._get(context)
+            if num_execs is None:
+                node.parameters.num_executions._set(Time(), context)
+            else:
+                node.parameters.num_executions._set_by_time_scale(TimeScale.RUN, 0)
 
         if initial_values is not None:
             for node in initial_values:
                 if node not in self.nodes:
-                    raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
-                                           format(node.name, self.name))
+                    raise CompositionError(f"{node.name} (entry in initial_values arg) is not a node in '{self.name}'")
 
         if reinitialize_values is None:
             reinitialize_values = {}
@@ -7367,9 +7370,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # execute each node with EXECUTING in context
             for node in next_execution_set:
 
-                node.parameters.num_executions.get(context)._set_time_by_scale(TimeScale.TIME_STEP, 0)
+                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
                 if new_pass:
-                    node.parameters.num_executions.get(context)._set_time_by_scale(TimeScale.PASS, 0)
+                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
 
 
                 # Store values of all nodes in this execution_set for use by other nodes in the execution set

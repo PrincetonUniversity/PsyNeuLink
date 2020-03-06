@@ -394,8 +394,8 @@ Component_Execution_Termination
 
 .. _Component_Num_Executions:
 
-* **num_executions** -- maintains a record of the number of times a Component has executed in a particular `context
-  <Context>` and at different `TimeScales <TimeScale>` in a `Time` object. The value cannot be changed. Note that this
+* **num_executions** -- maintains a record, in a `Time` object, of the number of times a Component has executed in a
+  particular `context <Context>` and at different `TimeScales <TimeScale>`. The value cannot be changed. Note that this
   is the distinct from the `execution_count <Component_Execution_Count>` and `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>` attributes.
 

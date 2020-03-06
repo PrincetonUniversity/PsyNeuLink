@@ -302,10 +302,11 @@ executions that have taken place since the last time the termination condition w
 condition is met.
 
    .. note::
-     A TransferMechanism will continue to execute even after its termination condition is met, carrying out one
-     additional step of integration each time it is executed.  This can be useful in cases where the initial execution
-     of the Mechanism is meant to bring it to some state (e.g., as an initial "settling process"), after which
-     subsequent executions are meant to occur in step with the execution of other Mechanisms in a Composition.
+     Even after its termination condition is met, a TransferMechanism will continue to execute if it is called again,
+     carrying out one step of integration each time it is called. This can be useful in cases where the initial
+     execution of the Mechanism is meant to bring it to some state (e.g., as an initial "settling process"), after
+     which subsequent executions are meant to occur in step with the execution of other Mechanisms in a Composition
+     (see `example <TransferMechanism_Termination_By_Time>` below).
 
 By default, `execute_until_finished <Component.execute_until_finished>` is True, and a convergence criterion is used to
 terminate integration, as in the following example::
@@ -324,8 +325,8 @@ difference between its current `value <Mechanism_Base.value>` and its `previous 
 the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
 conditions.  There are two broad types of termination condition:  convergence and boundary terination.
 
-*Convergence* -- execution terminates based on the difference between the TransferMechanism's current `value
-<Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>` (as in the example above).
+*Convergence termination* -- execution terminates based on the difference between the TransferMechanism's current
+`value <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>` (as in the example above).
 This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
 (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
 `MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current `value
@@ -337,7 +338,7 @@ execution continued until the difference between the Mechanism's current `value 
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
 accepts a single argument that is a 2d array with two entries.
 
-*Boundary termination* -- There are two types of boundaries:  value or time.
+*Boundary termination* -- Two types of boundaries can be specified:  value or time.
 
     *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
@@ -363,12 +364,14 @@ accepts a single argument that is a 2d array with two entries.
     the string ">=", which is a key in the `comparison_operators` dict for the Python ``operator.ge``; any of these
     can be used to specify **termination_comparison_op**).
 
-    *Termination by time*.  This terminates execution when the Mechanism has executed a number of times specified by the
-    **threshold** argument. This is specified by assigning a `TimeScale` to **termination_measure**;  execution
-    terminates when the number of executions at that TimeScale equals **termination_threshold**  (in this case, any
-    specification of **termination_comparison_op** is ignored, and `termination_comparison_op
-    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).
-    In the following example, ``my_mech`` is configured to execute only twice per trial::
+    .. _TransferMechanism_Termination_By_Time:
+
+    *Termination by time*.  This terminates execution when the Mechanism has executed a number of times at a particular
+    TimeScale (e.g., within a `Run` or a `Trial`) equal to the **threshold** argument. This is specified by assigning a
+    `TimeScale` to **termination_measure**;  execution terminates when the number of executions at that TimeScale
+    equals the **termination_threshold**  (in this case, the **termination_comparison_op** argument is ignored,
+    and `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
+    *GREATER_THAN_OR_EQUAL*).  For example, here ``my_mech`` is configured to execute at least twice per trial::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -378,6 +381,18 @@ accepts a single argument that is a 2d array with two entries.
         array([[0.375, 0.75 ]])
         >>> my_mech.num_executions_before_finished
         2
+
+    As noted above, it will continue to execute if it is called again, but only once per call::
+
+        >>> my_mech.execute([0.5, 1])
+        array([[0.4375, 0.875 ]])
+        >>> my_mech.num_executions_before_finished
+        1
+        >>> my_mech.execute([0.5, 1])
+        array([[0.46875, 0.9375 ]])
+        >>> my_mech.num_executions_before_finished
+        1
+
 
 .. _TransferMechanism_Reinitialization:
 
