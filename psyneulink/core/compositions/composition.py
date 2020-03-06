@@ -6597,7 +6597,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if num_execs is None:
                 node.parameters.num_executions._set(Time(), context)
             else:
-                node.parameters.num_executions._set_by_time_scale(TimeScale.RUN, 0)
+                node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
 
         if initial_values is not None:
             for node in initial_values:
