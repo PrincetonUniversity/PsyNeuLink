@@ -402,7 +402,7 @@ accepts a single argument that is a 2d array with two entries.
     Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented::
 
         >>> stim_input = pnl.ProcessingMechanism(size=2)
-        >>> stim_percept = pnl.TransferMechanism(name='Stimulus', size=2, function=pnl.Logistic)
+        >>> stim_percept = pnl.TransferMechanism(size=2, function=pnl.Logistic)
         >>> decision = pnl.TransferMechanism(name='Decision', size=2,
         ...                                  integrator_mode=True,
         ...                                  execute_until_finished=False,
@@ -414,21 +414,21 @@ accepts a single argument that is a 2d array with two entries.
         ...                              leak=8, competition=8, self_excitation=0, time_step_size=.1,
         ...                              termination_threshold=3,
         ...                              termination_measure = pnl.TimeScale.TRIAL)
-        >>> response = pnl.ProcessingMechanism(size=2)
-
+        >>> response = pnl.ProcessingMechanism(name='Response', size=2)
+        ...
         >>> comp = pnl.Composition()
         >>> comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response]) #doctest: +SKIP
         >>> comp.add_linear_processing_pathway([instruction_input, attention, stim_percept]) #doctest: +SKIP
-        >>> comp.scheduler.add_condition(response, pnl.WhenFinished(decision))#doctest: +SKIP
-
+        >>> comp.scheduler.add_condition(response, pnl.WhenFinished(decision)) #doctest: +SKIP
+        ...
         >>> stim_percept.set_log_conditions([pnl.RESULT])
         >>> attention.set_log_conditions([pnl.RESULT])
         >>> decision.set_log_conditions([pnl.RESULT])
         >>> response.set_log_conditions(['OutputPort-0'])
-
+        ...
         >>> inputs = {stim_input:        [[1, 1], [1, 1]],
         ...           instruction_input: [[1, -1], [-1, 1]]}
-        >>> comp.run(inputs=inputs)
+        >>> comp.run(inputs=inputs) # doctest: +SKIP
 
     This example implements a simple model of attentional selection in perceptual decision making. In the model,
     ``stim_input`` represents the stimulus input, which is passed to ``stim_percept``, which also receives input
@@ -455,7 +455,7 @@ accepts a single argument that is a 2d array with two entries.
     Mechanisms have now had an opportunity to execute). The value of the ``attention`` and ``decision`` Mechanisms
     after each execution are shown below::
 
-        >>> attention.log.print_entries(display=[pnl.TIME, pnl.VALUE])
+        >>> attention.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
         Log for Attention:
         Logged Item:   Time          Value
         'RESULT'       0:0:0:1      [0.64565631 0.19781611]  # Trial 0
@@ -471,7 +471,7 @@ accepts a single argument that is a 2d array with two entries.
         'RESULT'       0:1:1:1      [0.1235536  0.74936691]
         'RESULT'       0:1:2:1      [0.12011584 0.75402671]
 
-        >>> decision.log.print_entries(display=[pnl.TIME, pnl.VALUE])
+        >>> decision.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
         Log for Decision:
         Logged Item:   Time          Value
         'RESULT'       0:0:0:3      [0.33917677 0.2657116 ]  # Trial 0
@@ -483,7 +483,7 @@ accepts a single argument that is a 2d array with two entries.
         'RESULT'       0:1:1:3      [0.56360108 0.6367389 ]
         'RESULT'       0:1:2:3      [0.54679699 0.65839718]
 
-        >>> response.log.print_entries(display=[pnl.TIME, pnl.VALUE])
+        >>> response.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
         Log for Response:
         Logged Item:   Time          Value
         'OutputPort-0' 0:0:4:4      [0.65908142 0.51319226]  # Trial 0
