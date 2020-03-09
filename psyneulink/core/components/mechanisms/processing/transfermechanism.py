@@ -301,6 +301,8 @@ executions that have taken place since the last time the termination condition w
 `num_executions_before_finished <Component.num_executions_before_finished>`; this is set to 0 each time the termination
 condition is met.
 
+   .. _TransferMechanism_Continued_Execution:
+
    .. note::
      Even after its termination condition is met, a TransferMechanism will continue to execute if it is called again,
      carrying out one step of integration each time it is called. This can be useful in cases where the initial
@@ -366,12 +368,12 @@ accepts a single argument that is a 2d array with two entries.
 
     .. _TransferMechanism_Termination_By_Time:
 
-    *Termination by time*.  This terminates execution when the Mechanism has executed a number of times at a particular
-    TimeScale (e.g., within a `Run` or a `Trial`) equal to the **threshold** argument. This is specified by assigning a
-    `TimeScale` to **termination_measure**;  execution terminates when the number of executions at that TimeScale
-    equals the **termination_threshold**  (in this case, the **termination_comparison_op** argument is ignored,
-    and `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
-    *GREATER_THAN_OR_EQUAL*).  For example, here ``my_mech`` is configured to execute at least twice per trial::
+    *Termination by time*.  This terminates execution when the Mechanism has executed at least a number of times equal
+    to the **threshold** at a particular TimeScale (e.g., within a `Run` or a `Trial`). This is specified by assigning
+    a `TimeScale` to **termination_measure**;  execution terminates when the number of executions at that TimeScale
+    equals the **termination_threshold**.  Note that, in this case, the **termination_comparison_op** argument is
+    ignored (the `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
+    *GREATER_THAN_OR_EQUAL*).  For example, ``my_mech`` is configured below to execute at least twice per trial::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -382,7 +384,8 @@ accepts a single argument that is a 2d array with two entries.
         >>> my_mech.num_executions_before_finished
         2
 
-    As noted above, it will continue to execute if it is called again, but only once per call::
+    As noted `above <TransferMechanism_Continued_Execution>`, it will continue to execute if it is called again,
+    but only once per call::
 
         >>> my_mech.execute([0.5, 1])
         array([[0.4375, 0.875 ]])
@@ -393,6 +396,107 @@ accepts a single argument that is a 2d array with two entries.
         >>> my_mech.num_executions_before_finished
         1
 
+    In the following example, this behavior is exploited to allow a recurrent form of TransferMechanism (``attention``)
+    to integrate for a fixed number of steps (e.g., to simulate the time taken to encode an instruction regarding the
+    which feature of the stimulus should be attended) before a stimulus is presented, and then allowing that
+    Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented::
+
+        >>> stim_input = pnl.ProcessingMechanism(size=2)
+        >>> stim_percept = pnl.TransferMechanism(name='Stimulus', size=2, function=Logistic)
+        >>> decision = pnl.TransferMechanism(name='Decision', size=2,
+        ...                                  integrator_mode=True,
+        ...                                  execute_until_finished=False,
+        ...                                  termination_threshold=0.65,
+        ...                                  termination_measure=max,
+        ...                                  termination_comparison_op=GREATER_THAN)
+        >>> instruction_input = pnl.ProcessingMechanism(size=2, function=Linear(slope=10))
+        >>> attention = pnl.LCAMechanism(name='Attention', size=2, function=pnl.Logistic,
+        ...                              leak=8, competition=8, self_excitation=0, time_step_size=.1,
+        ...                              termination_threshold=3,
+        ...                              termination_measure = TimeScale.TRIAL)
+        >>> response = pnl.ProcessingMechanism(size=2)
+
+        >>> comp = pnl.Composition()
+        >>> comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response])
+        >>> comp.add_linear_processing_pathway([instruction_input, attention, stim_percept])
+        >>> comp.scheduler.add_condition(response, WhenFinished(decision))
+
+        >>> stim_percept.set_log_conditions([pnl.RESULT])
+        >>> attention.set_log_conditions([pnl.RESULT])
+        >>> decision.set_log_conditions([pnl.RESULT])
+        >>> response.set_log_conditions(['OutputPort-0'])
+
+        >>> inputs = {stim_input:        [[1, 1], [1, 1]],
+        ...           instruction_input: [[1, -1], [-1, 1]]}
+        >>> comp.run(inputs=inputs)
+
+    This example implements a simple model of attentional selection in perceptual decision making. In the model,
+    ``stim_input`` represents the stimulus input, which is passed to ``stim_percept``, which also receives input
+    from the ``attention`` Mechanism.  ``stim_percpt passes its output to ``decision``, which integrates its input
+    until one of the features of the input (the first or second) reaches the threshold of 0.65, at which point
+    ``response`` executes (specified by the condition ``(reponse, WhenFinished(decision)``).  In addition to the
+    ``stim_input``, the model an instruction on each trial in ``instruction_input`` that specifies which feature of
+    the stimulus (i.e., the first or second element) should be "attended".  This is passed to the ``attention``
+    Mechanism, which uses it to select which feature of ``stim_percept`` should be passed to ``decision``, and thereby
+    determine the response.  Like the ``decision`` Mechanism, the ``attention`` Mechanism integrates its input.
+    However, its **threshold_measure** is specified as ``TimeScale.TRIAL`` and its **threshold** as ``3``, so it
+    carries out 3 steps of integration the first time it is executed in each trial.  Thus, when the input is presented
+    at the beginning of each trial, first ``stim_input`` and ``instruction_input`` execute.  Then ``attention``
+    executes, but ``stim_percept`` does not yet do so, since it receives input from ``attention`` and thus must wait
+    for that to execute first. When ``attention`` executes, it carries out its three steps of integration,
+    (giving it a chance to "encode" the instruction before the stimulus is processed by ``stim_percept``).  Then
+    ``stim_percept``executes, followed by ``decision``.  However, the latter carries out only one step of integration,
+    since its **execute_until_finished** is set to False.  If its output does not meet its termination condition after
+    that one step of integration, then ``response`` does not execute, since it has been assigned a condition that
+    requires ``deciions`` to terminate before it does so. As a result, since ``response`` has not executed, the trial
+    continues (see XXX for a full description of XXX). On the next pass, ``attention`` carries out only one step of
+    integration, since its termination condition has already been met, as does ``decision`` since its termination
+    condition has *not* yet been met.  If it is met, then ``response`` executes and the trial ends (since all
+    Mechanisms have now had an opportunity to execute). The value of the ``attention`` and ``decision`` Mechanisms
+    after each execution are shown below::
+
+        >>> attention.log.print_entries(display=[TIME, VALUE])
+        Log for Attention:
+        Logged Item:   Time          Value
+        'RESULT'       0:0:0:1      [0.64565631 0.19781611]  # Trial 0
+        'RESULT'       0:0:0:1      [0.72347147 0.1422746 ]
+        'RESULT'       0:0:0:1      [0.74621565 0.1258587 ]
+        'RESULT'       0:0:1:1      [0.75306362 0.1208305 ]
+        'RESULT'       0:0:2:1      [0.75516272 0.11926922]
+        'RESULT'       0:0:3:1      [0.75581168 0.11878318]
+        'RESULT'       0:0:4:1      [0.75601306 0.11863188]
+        'RESULT'       0:1:0:1      [0.2955214  0.49852489]  # Trial 1
+        'RESULT'       0:1:0:1      [0.17185129 0.68187518]
+        'RESULT'       0:1:0:1      [0.13470156 0.73399742]
+        'RESULT'       0:1:1:1      [0.1235536  0.74936691]
+        'RESULT'       0:1:2:1      [0.12011584 0.75402671]
+
+        >>> decision.log.print_entries(display=[TIME, VALUE])
+        Log for Decision:
+        Logged Item:   Time          Value
+        'RESULT'       0:0:0:3      [0.33917677 0.2657116 ]  # Trial 0
+        'RESULT'       0:0:1:3      [0.50951133 0.39794126]
+        'RESULT'       0:0:2:3      [0.59490696 0.46386164]
+        'RESULT'       0:0:3:3      [0.63767534 0.49676128]
+        'RESULT'       0:0:4:3      [0.65908142 0.51319226]
+        'RESULT'       0:1:0:3      [0.59635299 0.59443706]  # Trial 1
+        'RESULT'       0:1:1:3      [0.56360108 0.6367389 ]
+        'RESULT'       0:1:2:3      [0.54679699 0.65839718]
+
+        >>> response.log.print_entries(display=[TIME, VALUE])
+        Log for Response:
+        Logged Item:   Time          Value
+        'OutputPort-0' 0:0:4:4      [0.65908142 0.51319226]  # Trial 0
+        'OutputPort-0' 0:1:2:4      [0.54679699 0.65839718]  # Trial 1
+
+    The `Time` signatures are ``run:trial:pass:time_step``.  Note that ``attention`` always executes in `time_step` 1
+    (after ``stim_input`` and ``instruction_input`` which execute in time_step 0).  In trial 0, ``attention``
+    executes three times in pass 0 (to reach its specified threshold), and then again in passes 1, 2 and 3 and 4
+    along with ``decision`` (which executes in time_step 3, after ``stim_percept`` in time_step 2),
+    as the trial continues and ``decision`` executes until reaching its threshold.  Note that ``response`` executed
+    only executed in pass 4, since it depends on the termination of ``decision``.  Note also that in trial 1
+    ``attention`` executes 3 times in pass 0 as it did in trial 0;  however, ``decision`` executes only 3 times
+    since it begins closer to its threshold in that trial.
 
 .. _TransferMechanism_Reinitialization:
 
