@@ -1585,6 +1585,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
 
+        # Update internal clock (i.e. num_executions parameter)
+        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
+        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
+            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+            new_val = builder.load(num_exec_time_ptr)
+            new_val = builder.add(new_val, ctx.int32_ty(1))
+            builder.store(new_val, num_exec_time_ptr)
+
         builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
                                                            state, arg_out)
