@@ -1155,7 +1155,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "execution_count"}
+                     "num_executions_before_finished", "num_executions", "execution_count"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
@@ -1178,6 +1178,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
+            elif isinstance(x, Time):
+                return [0] * 5
             try:
                 return (_convert(i) for i in x)
             except:
@@ -1188,8 +1190,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "variable",
-                     "value", "saved_values", "saved_samples", "grid",
+                     "num_executions_before_finished", "num_executions", "variable",
+                     "value", "saved_values", "saved_samples", "grid", 
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
@@ -1238,6 +1240,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param = np.asfarray(param).flatten().tolist()
                 elif isinstance(param, Component):
                     param = param._get_param_values(context)
+                elif isinstance(param, TimeScale) and p.name == 'termination_measure': #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
+                    param = []
                 elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
                     param = np.asfarray(param[0]).tolist()
             return param
