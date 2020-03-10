@@ -181,6 +181,7 @@ import types
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import get_all_explicit_arguments, parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals
+from psyneulink.core.scheduling.time import Time
 
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
@@ -241,6 +242,10 @@ class PNLJSONEncoder(json.JSONEncoder):
             return o.name
         elif isinstance(o, SampleIterator):
             return f'{o.__class__.__name__}({repr(o.specification)})'
+        # MODIFIED  NEW: [JDC]
+        elif isinstance(o, Time):
+            return f'{o.life}:{o.run}:{o.trial}:{o.pass_}:{o.time_step}'
+        # MODIFIED  END
         elif isinstance(o, numpy.ndarray):
             return list(o)
         elif isinstance(o, numpy.random.RandomState):

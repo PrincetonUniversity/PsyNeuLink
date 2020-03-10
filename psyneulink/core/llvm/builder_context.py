@@ -18,7 +18,7 @@ import os
 import re
 from typing import Set
 import weakref
-
+from psyneulink.core.scheduling.time import Time
 from psyneulink.core import llvm as pnlvm
 from . import codegen
 from .debug import debug_env
@@ -249,6 +249,8 @@ class LLVMBuilderContext:
             return ir.LiteralStructType([])
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
+        elif isinstance(t, Time):
+            return ir.LiteralStructType([self.int32_ty] * 5)
         assert False, "Don't know how to convert {}".format(type(t))
 
 

@@ -1279,7 +1279,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
-from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -6595,11 +6595,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             new_conds.update(termination_processing)
             termination_processing = new_conds
 
+        for node in self.nodes:
+            num_execs = node.parameters.num_executions._get(context)
+            if num_execs is None:
+                node.parameters.num_executions._set(Time(), context)
+            else:
+                node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
+
         if initial_values is not None:
             for node in initial_values:
                 if node not in self.nodes:
-                    raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
-                                           format(node.name, self.name))
+                    raise CompositionError(f"{node.name} (entry in initial_values arg) is not a node in '{self.name}'")
 
         if reinitialize_values is None:
             reinitialize_values = {}
@@ -6851,7 +6857,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         )
 
             # ---------------------------------------------------------------------------------
-            # store the result of this execute in case it will be the final result
+            # store the result of this execution in case it will be the final result
 
             # object.results.append(result)
             if isinstance(trial_output, collections.abc.Iterable):
@@ -7146,10 +7152,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(INITIAL_FRAME, context)
                 context.execution_id = old_eid
 
-        # Reinitialize any nodes that have satisfied 'reinitialize_when'
-        # conditions. This mimics the behavior used for Systems. (only
-        # checking for reinitialization at the beginning of a trial)
+        # Set num_executions.TRIAL to 0 for every node
+        # Reinitialize any nodes that have satisfied 'reinitialize_when' conditions.
         for node in self.nodes:
+            node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
             if node.parameters.has_initializers._get(context):
                 try:
                     if (
@@ -7199,6 +7205,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the scheduler terminates a trial immediately
         next_pass_before = 1
         next_pass_after = 1
+        last_pass = None
+
         if clamp_input:
             soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
@@ -7314,38 +7322,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
-            # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
-            # KDM 1/15/20: Because we can't tell at the end of this
-            # code block whether a PASS has ended or not. The scheduler
-            # only modifies the pass after we receive an execution_set.
-            # So, we only know a PASS has ended in retrospect after the
-            # scheduler has changed the clock to indicate it. So, we
-            # have to run call_after_pass before the next PASS (here) or
-            # after this code block (see the call to call_after_pass
-            # below)
+            # IMPLEMENTATION NOTE KDM 1/15/20:
+            # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
+            # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
+            # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
+            # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
+            curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
+            new_pass = False
+            if curr_pass != last_pass:
+                new_pass = True
+                last_pass = curr_pass
             if call_after_pass:
-                if next_pass_after == \
-                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
-                                                                                          TimeScale.TRIAL):
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.
-                                 format(next_pass_after,
-                                        execution_scheduler.get_clock(
-                                            context).get_total_times_relative(
-                                                TimeScale.PASS, TimeScale.TRIAL)))
+                if next_pass_after == curr_pass:
+                    logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                     call_with_pruned_args(call_after_pass, context=context)
                     next_pass_after += 1
-
             if call_before_pass:
-                if next_pass_before == \
-                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
-                                                                                          TimeScale.TRIAL):
+                if next_pass_before == curr_pass:
                     call_with_pruned_args(call_before_pass, context=context)
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.
-                                 format(next_pass_before,
-                                        execution_scheduler.get_clock(
-                                            context).get_total_times_relative(
-                                                TimeScale.PASS,
-                                                TimeScale.TRIAL)))
+                    logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
                     next_pass_before += 1
 
             if call_before_time_step:
@@ -7375,6 +7370,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
+
+                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
+                if new_pass:
+                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
+
 
                 # Store values of all nodes in this execution_set for use by other nodes in the execution set
                 #    throughout this timestep (e.g., for recurrent Projections)

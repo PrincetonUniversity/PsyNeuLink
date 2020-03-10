@@ -246,6 +246,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
     with _gen_composition_exec_context(ctx, composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond, *learning = builder.function.args
 
+        # Reset internal clocks of each node
+        for idx, node in enumerate(composition._all_nodes):
+            #FIXME: This skips nested nodes
+            from psyneulink import Composition
+            if isinstance(node, Composition):
+                continue
+            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TRIAL.value)])
+            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+
         # Check if there's anything to reinitialize
         for node in composition._all_nodes:
             when = getattr(node, "reinitialize_when", Never())
@@ -317,6 +328,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             builder.store(node_cond, run_set_node_ptr)
 
         for idx, node in enumerate(composition.nodes):
+            # Reset node internal clock
+            #FIXME: This skips nested nodes
+            from psyneulink import Composition
+            if not isinstance(node, Composition):
+                node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+                num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
+                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)]) #HACK: Move pass reset to actual pass count
+                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
             with builder.if_then(node_cond):
@@ -443,6 +465,17 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         # Get the right input stimulus
         input_idx = b.urem(iters, b.load(inputs_ptr))
         data_in_ptr = b.gep(data_in, [input_idx])
+
+        # Reset internal clocks of each node
+        for idx, node in enumerate(composition._all_nodes):
+            #FIXME: This skips nested nodes
+            from psyneulink import Composition
+            if isinstance(node, Composition):
+                continue
+            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
+            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
 
         # Call execution
         exec_tags = tags.difference({"run"})
