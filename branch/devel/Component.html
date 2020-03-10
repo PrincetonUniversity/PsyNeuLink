@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.4.0+59.ga27630d documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.4.0+60.gbee7aa2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.4.0+59
+                  0.7.4.0+60
                 </div>
               
             
@@ -478,9 +478,8 @@ of its <a class="reference internal" href="#psyneulink.core.components.component
 <ul class="simple" id="component-num-executions-before-finished">
 <li><strong>num_executions_before_finished</strong> – contains the number of times the Component has executed prior to finishing
 (and since it last finished);  depending upon the class, these may all be within a single call to the Component’s
-<code class="xref any docutils literal"><span class="pre">execute</span></code> method, or extend over several calls.  Note that this is distinct from the
-<code class="xref any docutils literal"><span class="pre">execution_count</span></code> attribute, that contains the total number of times the Component
-has executed in its “life.”</li>
+<code class="xref any docutils literal"><span class="pre">execute</span></code> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> evalutes
+to True. Note that this is distinct from the <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a> and <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes.</li>
 </ul>
 <ul class="simple" id="component-max-executions-before-finished">
 <li><strong>max_executions_before_finished</strong> – determines the maximum number of executions allowed before finishing
@@ -496,7 +495,13 @@ unlimited.</li>
 <em>excluding</em>  executions carried out during initialization and validation, but including all others whether they are
 of the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, and irresective of the <a class="reference internal" href="Context.html"><span class="doc">context</span></a> in which
 they are occur. The value can be changed “manually” or programmatically by assigning an integer
-value directly to the attribute.  Note that this is the distinct from the <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a> attribute.</li>
+value directly to the attribute.  Note that this is the distinct from the <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a>
+and <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a> attributes.</li>
+</ul>
+<ul class="simple" id="component-num-executions">
+<li><strong>num_executions</strong> – maintains a record, in a <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> object, of the number of times a Component has executed in a
+particular <a class="reference internal" href="Context.html"><span class="doc">context</span></a> and at different <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScales</span></code></a>. The value cannot be changed. Note that this
+is the distinct from the <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a> and <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a> attributes.</li>
 </ul>
 <ul class="simple" id="component-current-execution-time">
 <li><strong>current_execution_time</strong> – maintains the <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> of the last execution of the Component in the context of the
@@ -572,6 +577,12 @@ override any assigned to those parameters in arguments of the constructor.</li>
 <dt id="psyneulink.core.components.component.Component.execution_count">
 <code class="descname">execution_count</code><a class="headerlink" href="#psyneulink.core.components.component.Component.execution_count" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>int</em> – see <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component.num_executions">
+<code class="descname">num_executions</code><a class="headerlink" href="#psyneulink.core.components.component.Component.num_executions" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Time</em> – see <code class="xref any docutils literal"><span class="pre">num_executions</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -886,7 +897,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.4.0+59.ga27630d',
+               VERSION:'0.7.4.0+60.gbee7aa2',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

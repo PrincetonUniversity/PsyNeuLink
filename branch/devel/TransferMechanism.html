@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.7.4.0+59.ga27630d documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.7.4.0+60.gbee7aa2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.4.0+59
+                  0.7.4.0+60
                 </div>
               
             
@@ -413,9 +413,12 @@ without using its <a class="reference internal" href="#psyneulink.core.component
 </div>
 <p>Notice that the result is the full linear transfer of the input (i.e., no integration occured).</p>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is True, then it can be configured to conduct a single
-step of integration per execution, or to continue to integrate until its termination condition is met.
-A single step of integration is executed if no <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a> is
-specified (or it is None, the default), as in the following example:</p>
+step of integration per execution, or to continue to integrate until its termination condition is met, as specified
+by the <strong>termination_threshold</strong>, <strong>termination_measure</strong>, and <strong>termination_comparison_op</strong> arguments, which are
+assigned to the TransferMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> attributes, respectively.</p>
+<p>A single step of integration is executed if no <strong>termination_threshold</strong> is specified (i.e., it is None, the default),
+as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
@@ -435,11 +438,24 @@ since the <a class="reference internal" href="#psyneulink.core.components.mechan
 </div>
 <div class="section" id="termination">
 <span id="transfermechanism-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h3>
-<p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is True, and <strong>termination_threshold</strong> is specified, then the
-TransferMechanism continues to execute, integrating its current input, until its termination condition is met, or the
+<p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> is True, and a <strong>termination_threshold</strong> is specified, then the
+TransferMechanism continues to execute, integrating its current input until its termination condition is met, or the
 number of executions reaches <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.max_executions_before_finished" title="psyneulink.core.components.component.Component.max_executions_before_finished"><code class="xref any py py-attr docutils literal"><span class="pre">max_executions_before_finished</span></code></a>.  The numer of
-executions that took place is contained in <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal"><span class="pre">num_executions_before_finished</span></code></a>.</p>
-<p>By default, a TransferMechanism uses a convergence criterion to terminate integration, as in the following example:</p>
+executions that have taken place since the last time the termination condition was met is contained in
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal"><span class="pre">num_executions_before_finished</span></code></a>; this is set to 0 each time the termination
+condition is met.</p>
+<blockquote>
+<div><div class="admonition note" id="transfermechanism-continued-execution">
+<p class="first admonition-title">Note</p>
+<p class="last">Even after its termination condition is met, a TransferMechanism will continue to execute if it is called again,
+carrying out one step of integration each time it is called. This can be useful in cases where the initial
+execution of the Mechanism is meant to bring it to some state (e.g., as an initial “settling process”), after
+which subsequent executions are meant to occur in step with the execution of other Mechanisms in a Composition
+(see <a class="reference internal" href="#transfermechanism-termination-by-time"><span class="std std-ref">example</span></a> below).</p>
+</div>
+</div></blockquote>
+<p>By default, <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is True, and a convergence criterion is used to
+terminate integration, as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">termination_threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
@@ -452,8 +468,9 @@ executions that took place is contained in <a class="reference internal" href="C
 <p>In this case, the single call to <code class="docutils literal"><span class="pre">my_mech.execute</span></code> caused the Mechanism to integrate for 4 steps, until the
 difference between its current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and its <code class="xref any docutils literal"><span class="pre">previous</span> <span class="pre">value</span></code> is less than the specified <strong>termination_threshold</strong>.  However,
 the <strong>termination_measure</strong> and <strong>termination_comparison_op</strong> arguments can be used to congifure other termination
-conditions.  Thare are two broad types of termination condition.</p>
-<p><em>Convergence</em> – execution terminates based on the difference between the TransferMechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and its <code class="xref any docutils literal"><span class="pre">previous_value</span></code> (as in the example above).
+conditions.  There are two broad types of termination condition:  convergence and boundary terination.</p>
+<p><em>Convergence termination</em> – execution terminates based on the difference between the TransferMechanism’s current
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and its <code class="xref any docutils literal"><span class="pre">previous_value</span></code> (as in the example above).
 This is implemented by specifying <strong>termination_measure</strong> with a function that accepts a 2d array with <em>two items</em>
 (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal"><span class="pre">Distance</span></code></a> Function with
 <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF" title="psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF"><code class="xref any py py-attr docutils literal"><span class="pre">MAX_ABS_DIFF</span></code></a> as its metric).  After each execution, the function is passed the Mechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as well as its <code class="xref any docutils literal"><span class="pre">previous_value</span></code>, and the scalar returned is
@@ -463,14 +480,15 @@ execution continued until the difference between the Mechanism’s current <a cl
 <code class="xref any docutils literal"><span class="pre">previous_value</span></code> was less than or equal to 0.1.  A <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal"><span class="pre">Distance</span></code></a> Function with other
 metrics (e.g., <em>ENERGY</em> or <em>ENTROPY</em>) can be specified as the <strong>termination_measure</strong>, as can any other function that
 accepts a single argument that is a 2d array with two entries.</p>
-<p><em>Boundary termination</em> – execution terminates when the TransferMechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-meets the condition specified by the <strong>termination_measure</strong>, <strong>termination_comparison_op</strong> and
-<strong>termination_threshold</strong> arguments, without considering its <code class="xref any docutils literal"><span class="pre">previous_value</span></code>.
-This is implemented by specifying <strong>termination_measure</strong> with a function that accepts a 2d array with a <em>single
-entry</em> as its argument and returns a scalar.  After each execution, the function is passed the Mechanism’s
-current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and the scalar returned is compared to <strong>termination_threshold</strong> using the
-comparison operator specified by <strong>termination_comparison_op</strong>.  Execution continues until this returns True, as in the
-following example:</p>
+<p><em>Boundary termination</em> – Two types of boundaries can be specified:  value or time.</p>
+<blockquote>
+<div><p><em>Termination by value</em>.  This terminates execution when the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> reaches the
+the value specified by the <strong>threshold</strong> argument.  This implemented by specifying <strong>termination_measure</strong> with
+a function that accepts a 2d array with a <em>single entry</em> as its argument and returns a scalar.  The single
+entry is the TransferMechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (that is, <code class="xref any docutils literal"><span class="pre">previous_value</span></code> is ignored). After each execution, the function is passed the Mechanism’s
+current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and the scalar returned is compared to <strong>termination_threshold</strong> using
+the comparison operator specified by <strong>termination_comparison_op</strong>. Execution continues until this returns True,
+as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">termination_measure</span><span class="o">=</span><span class="nb">max</span><span class="p">,</span>
@@ -482,12 +500,139 @@ following example:</p>
 <span class="go">4</span>
 </pre></div>
 </div>
-<p>Here, <code class="docutils literal"><span class="pre">my_mech</span></code> continued to execute for <code class="docutils literal"><span class="pre">5</span></code> times, until the element of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the greatest value exceeded <code class="docutils literal"><span class="pre">0.9</span></code>.  Note that GREATER_THAN_EQUAL is a keyword for the
-string “&gt;=”, which is a key in the <code class="xref any docutils literal"><span class="pre">comparison_operators</span></code> dict for the Python <code class="docutils literal"><span class="pre">operator.ge</span></code>; any of these can be
-used to specify <strong>termination_comparison_op</strong>).</p>
-<p>The values specified for <strong>termination_threshold</strong>, <strong>termination_measure</strong>, and <strong>termination_comparison_op</strong> are
-assigned to the TransferMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a>,
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> attributes, respectively.</p>
+<p>Here, <code class="docutils literal"><span class="pre">my_mech</span></code> continued to execute for <code class="docutils literal"><span class="pre">5</span></code> times, until the element of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the greatest value exceeded <code class="docutils literal"><span class="pre">0.9</span></code>.  Note that GREATER_THAN_EQUAL is a keyword for
+the string “&gt;=”, which is a key in the <code class="xref any docutils literal"><span class="pre">comparison_operators</span></code> dict for the Python <code class="docutils literal"><span class="pre">operator.ge</span></code>; any of these
+can be used to specify <strong>termination_comparison_op</strong>).</p>
+<p id="transfermechanism-termination-by-time"><em>Termination by time</em>.  This terminates execution when the Mechanism has executed at least a number of times equal
+to the <strong>threshold</strong> at a particular TimeScale (e.g., within a <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> or a <code class="xref any docutils literal"><span class="pre">Trial</span></code>). This is specified by assigning
+a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> to <strong>termination_measure</strong>;  execution terminates when the number of executions at that TimeScale
+equals the <strong>termination_threshold</strong>.  Note that, in this case, the <strong>termination_comparison_op</strong> argument is
+ignored (the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> is automatically set to
+<em>GREATER_THAN_OR_EQUAL</em>).  For example, <code class="docutils literal"><span class="pre">my_mech</span></code> is configured below to execute at least twice per trial:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">termination_measure</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">,</span>
+<span class="gp">... </span>                                <span class="n">termination_threshold</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">array([[0.375, 0.75 ]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>As noted <a class="reference internal" href="#transfermechanism-continued-execution"><span class="std std-ref">above</span></a>, it will continue to execute if it is called again,
+but only once per call:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">array([[0.4375, 0.875 ]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="go">array([[0.46875, 0.9375 ]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">num_executions_before_finished</span>
+<span class="go">1</span>
+</pre></div>
+</div>
+<p>In the following example, this behavior is exploited to allow a recurrent form of TransferMechanism (<code class="docutils literal"><span class="pre">attention</span></code>)
+to integrate for a fixed number of steps (e.g., to simulate the time taken to encode an instruction regarding the
+which feature of the stimulus should be attended) before a stimulus is presented, and then allowing that
+Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stim_input</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stim_percept</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decision</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Decision&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">execute_until_finished</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">termination_threshold</span><span class="o">=</span><span class="mf">0.65</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">termination_measure</span><span class="o">=</span><span class="nb">max</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">termination_comparison_op</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">GREATER_THAN</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">instruction_input</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">LCAMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Attention&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">leak</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">competition</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">self_excitation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">time_step_size</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">termination_threshold</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">termination_measure</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Response&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">stim_input</span><span class="p">,</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">stim_percept</span><span class="p">,</span> <span class="n">decision</span><span class="p">,</span> <span class="n">response</span><span class="p">])</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">instruction_input</span><span class="p">,</span> <span class="n">attention</span><span class="p">,</span> <span class="n">stim_percept</span><span class="p">])</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">WhenFinished</span><span class="p">(</span><span class="n">decision</span><span class="p">))</span> 
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">stim_percept</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decision</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="n">pnl</span><span class="o">.</span><span class="n">RESULT</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">([</span><span class="s1">&#39;OutputPort-0&#39;</span><span class="p">])</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">stim_input</span><span class="p">:</span>        <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+<span class="gp">... </span>          <span class="n">instruction_input</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]]}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span> 
+</pre></div>
+</div>
+<p>This example implements a simple model of attentional selection in perceptual decision making. In the model,
+<code class="docutils literal"><span class="pre">stim_input</span></code> represents the stimulus input, which is passed to <code class="docutils literal"><span class="pre">stim_percept</span></code>, which also receives input
+from the <code class="docutils literal"><span class="pre">attention</span></code> Mechanism.  <code class="docutils literal"><span class="pre">stim_percpt</span> <span class="pre">passes</span> <span class="pre">its</span> <span class="pre">output</span> <span class="pre">to</span> <span class="pre">``decision</span></code>, which integrates its input
+until one of the features of the input (the first or second) reaches the threshold of 0.65, at which point
+<code class="docutils literal"><span class="pre">response</span></code> executes (specified by the condition <code class="docutils literal"><span class="pre">(reponse,</span> <span class="pre">WhenFinished(decision)</span></code>).  In addition to the
+<code class="docutils literal"><span class="pre">stim_input</span></code>, the model an instruction on each trial in <code class="docutils literal"><span class="pre">instruction_input</span></code> that specifies which feature of
+the stimulus (i.e., the first or second element) should be “attended”.  This is passed to the <code class="docutils literal"><span class="pre">attention</span></code>
+Mechanism, which uses it to select which feature of <code class="docutils literal"><span class="pre">stim_percept</span></code> should be passed to <code class="docutils literal"><span class="pre">decision</span></code>, and thereby
+determine the response.  Like the <code class="docutils literal"><span class="pre">decision</span></code> Mechanism, the <code class="docutils literal"><span class="pre">attention</span></code> Mechanism integrates its input.
+However, its <strong>threshold_measure</strong> is specified as <code class="docutils literal"><span class="pre">TimeScale.TRIAL</span></code> and its <strong>threshold</strong> as <code class="docutils literal"><span class="pre">3</span></code>, so it
+carries out 3 steps of integration the first time it is executed in each trial.  Thus, when the input is presented
+at the beginning of each trial, first <code class="docutils literal"><span class="pre">stim_input</span></code> and <code class="docutils literal"><span class="pre">instruction_input</span></code> execute.  Then <code class="docutils literal"><span class="pre">attention</span></code>
+executes, but <code class="docutils literal"><span class="pre">stim_percept</span></code> does not yet do so, since it receives input from <code class="docutils literal"><span class="pre">attention</span></code> and thus must wait
+for that to execute first. When <code class="docutils literal"><span class="pre">attention</span></code> executes, it carries out its three steps of integration,
+(giving it a chance to “encode” the instruction before the stimulus is processed by <code class="docutils literal"><span class="pre">stim_percept</span></code>).  Then
+<code class="docutils literal"><span class="pre">stim_percept``executes,</span> <span class="pre">followed</span> <span class="pre">by</span> <span class="pre">``decision</span></code>.  However, the latter carries out only one step of integration,
+since its <strong>execute_until_finished</strong> is set to False.  If its output does not meet its termination condition after
+that one step of integration, then <code class="docutils literal"><span class="pre">response</span></code> does not execute, since it has been assigned a condition that
+requires <code class="docutils literal"><span class="pre">deciions</span></code> to terminate before it does so. As a result, since <code class="docutils literal"><span class="pre">response</span></code> has not executed, the trial
+continues (see XXX for a full description of XXX). On the next pass, <code class="docutils literal"><span class="pre">attention</span></code> carries out only one step of
+integration, since its termination condition has already been met, as does <code class="docutils literal"><span class="pre">decision</span></code> since its termination
+condition has <em>not</em> yet been met.  If it is met, then <code class="docutils literal"><span class="pre">response</span></code> executes and the trial ends (since all
+Mechanisms have now had an opportunity to execute). The value of the <code class="docutils literal"><span class="pre">attention</span></code> and <code class="docutils literal"><span class="pre">decision</span></code> Mechanisms
+after each execution are shown below:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
+<span class="go">Log for Attention:</span>
+<span class="go">Logged Item:   Time          Value</span>
+<span class="go">&#39;RESULT&#39;       0:0:0:1      [0.64565631 0.19781611]  # Trial 0</span>
+<span class="go">&#39;RESULT&#39;       0:0:0:1      [0.72347147 0.1422746 ]</span>
+<span class="go">&#39;RESULT&#39;       0:0:0:1      [0.74621565 0.1258587 ]</span>
+<span class="go">&#39;RESULT&#39;       0:0:1:1      [0.75306362 0.1208305 ]</span>
+<span class="go">&#39;RESULT&#39;       0:0:2:1      [0.75516272 0.11926922]</span>
+<span class="go">&#39;RESULT&#39;       0:0:3:1      [0.75581168 0.11878318]</span>
+<span class="go">&#39;RESULT&#39;       0:0:4:1      [0.75601306 0.11863188]</span>
+<span class="go">&#39;RESULT&#39;       0:1:0:1      [0.2955214  0.49852489]  # Trial 1</span>
+<span class="go">&#39;RESULT&#39;       0:1:0:1      [0.17185129 0.68187518]</span>
+<span class="go">&#39;RESULT&#39;       0:1:0:1      [0.13470156 0.73399742]</span>
+<span class="go">&#39;RESULT&#39;       0:1:1:1      [0.1235536  0.74936691]</span>
+<span class="go">&#39;RESULT&#39;       0:1:2:1      [0.12011584 0.75402671]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">decision</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
+<span class="go">Log for Decision:</span>
+<span class="go">Logged Item:   Time          Value</span>
+<span class="go">&#39;RESULT&#39;       0:0:0:3      [0.33917677 0.2657116 ]  # Trial 0</span>
+<span class="go">&#39;RESULT&#39;       0:0:1:3      [0.50951133 0.39794126]</span>
+<span class="go">&#39;RESULT&#39;       0:0:2:3      [0.59490696 0.46386164]</span>
+<span class="go">&#39;RESULT&#39;       0:0:3:3      [0.63767534 0.49676128]</span>
+<span class="go">&#39;RESULT&#39;       0:0:4:3      [0.65908142 0.51319226]</span>
+<span class="go">&#39;RESULT&#39;       0:1:0:3      [0.59635299 0.59443706]  # Trial 1</span>
+<span class="go">&#39;RESULT&#39;       0:1:1:3      [0.56360108 0.6367389 ]</span>
+<span class="go">&#39;RESULT&#39;       0:1:2:3      [0.54679699 0.65839718]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">response</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
+<span class="go">Log for Response:</span>
+<span class="go">Logged Item:   Time          Value</span>
+<span class="go">&#39;OutputPort-0&#39; 0:0:4:4      [0.65908142 0.51319226]  # Trial 0</span>
+<span class="go">&#39;OutputPort-0&#39; 0:1:2:4      [0.54679699 0.65839718]  # Trial 1</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> signatures are <code class="docutils literal"><span class="pre">run:trial:pass:time_step</span></code>.  Note that <code class="docutils literal"><span class="pre">attention</span></code> always executes in <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.time_step" title="psyneulink.core.scheduling.time.Time.time_step"><code class="xref any py py-attr docutils literal"><span class="pre">time_step</span></code></a> 1
+(after <code class="docutils literal"><span class="pre">stim_input</span></code> and <code class="docutils literal"><span class="pre">instruction_input</span></code> which execute in time_step 0).  In trial 0, <code class="docutils literal"><span class="pre">attention</span></code>
+executes three times in pass 0 (to reach its specified threshold), and then again in passes 1, 2 and 3 and 4
+along with <code class="docutils literal"><span class="pre">decision</span></code> (which executes in time_step 3, after <code class="docutils literal"><span class="pre">stim_percept</span></code> in time_step 2),
+as the trial continues and <code class="docutils literal"><span class="pre">decision</span></code> executes until reaching its threshold.  Note that <code class="docutils literal"><span class="pre">response</span></code> executed
+only executed in pass 4, since it depends on the termination of <code class="docutils literal"><span class="pre">decision</span></code>.  Note also that in trial 1
+<code class="docutils literal"><span class="pre">attention</span></code> executes 3 times in pass 0 as it did in trial 0;  however, <code class="docutils literal"><span class="pre">decision</span></code> executes only 3 times
+since it begins closer to its threshold in that trial.</p>
+</div></blockquote>
 </div>
 <div class="section" id="reinitialization">
 <span id="transfermechanism-reinitialization"></span><h3><em>Reinitialization</em><a class="headerlink" href="#reinitialization" title="Permalink to this headline">¶</a></h3>
@@ -608,8 +753,9 @@ or its <a class="reference internal" href="#psyneulink.core.components.mechanism
 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum allowable
 value; any element of the result that exceeds the specified minimum or maximum value is set to the value of
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a> that it exceeds.</li>
-<li><strong>termination_measure</strong> (<em>function : default Distance</em><em>(</em><em>metric=MAX_ABS_DIFF</em><em>)</em>) – specifies metric used to determine when execution of TransferMechanism is complete if <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is True.  Must take at least one argument, and optionally a second,
-both of which must be arrays, and must return either another array or a scalar;  see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure</span></code></a> for additional details.</li>
+<li><strong>termination_measure</strong> (<a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>TimesScale : default Distance</em><em>(</em><em>metric=MAX_ABS_DIFF</em><em>)</em>) – specifies measure used to determine when execution of TransferMechanism is complete if <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is True.  If it is a function, it must take at least one argument, and
+optionally a second, both of which must be arrays, and must return either another array or a scalar;  see
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure</span></code></a> for additional details.</li>
 <li><strong>termination_threshold</strong> (<em>None</em><em> or </em><em>float : default None</em>) – specifies value against which <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure_value</span></code></a> is
 compared to determine when execution of TransferMechanism is complete; see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure</span></code></a> for additional details.</li>
 <li><strong>termination_comparison_op</strong> (<em>comparator keyword : default LESS_THAN_OR_EQUAL</em>) – specifies how <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure_value</span></code></a> is compared with
@@ -685,10 +831,11 @@ for additional details).</p>
 when the Mechanism was most recently in “Instantaneous Mode” (integrator_mode = False) and has just switched to
 “IntegratorFunction Mode” (integrator_mode = True). There are three options:</p>
 <ol class="arabic simple">
-<li>INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value computed by
-the Mechanism during “Instantaneous Mode” is where the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> begins accumulating.</li>
+<li>INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value
+cmoputed by the Mechanism during “Instantaneous Mode” is where the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> begins accumulating.</li>
 <li>INTEGRATOR_MODE_VALUE - resume accumulation wherever the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> left off the last time <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> was True.</li>
-<li>REINITIALIZE - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function's</span></code></a> <code class="xref any docutils literal"><span class="pre">reinitialize</span> <span class="pre">method</span></code> so that accumulation Mechanism begins at <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a></li>
+<li>REINITIALIZE - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function's</span></code></a> <code class="xref any docutils literal"><span class="pre">reinitialize</span>
+<span class="pre">method</span></code> so that accumulation Mechanism begins at <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a></li>
 </ol>
 </dd></dl>
 
@@ -723,10 +870,13 @@ the value of <a class="reference internal" href="#psyneulink.core.components.mec
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure">
 <code class="descname">termination_measure</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>function</em> – used to determine when execution of the TransferMechanism is complete (i.e., <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> is True), if
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is True.  It is passed the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and <code class="xref any docutils literal"><span class="pre">previous_value</span></code> of the TransferMechanism;
-its result (<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure_value</span></code></a>) is compared with
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a> using
+<dd><p><em>function or TimeScale</em> – used to determine when execution of the TransferMechanism is complete (i.e., <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> is True), if
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal"><span class="pre">execute_until_finished</span></code></a> is True.  If it is a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a>, then execution
+terminates when the value of the Mechanism’s <code class="xref any docutils literal"><span class="pre">num_executions</span></code> at that TimeScale is
+is equal to <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a>.  If it is a function, it is
+passed the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and <code class="xref any docutils literal"><span class="pre">previous_value</span></code> of the
+TransferMechanism; its result (<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_measure_value"><code class="xref any py py-attr docutils literal"><span class="pre">termination_measure_value</span></code></a>) is
+compared with <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal"><span class="pre">termination_threshold</span></code></a> using
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">TransferMechanism.termination_comparison_op</span></code></a>, the result of which is used as the value of <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -784,7 +934,7 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
 <code class="descname">is_finished</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True when value of Mechanism reaches threhsold or if threshold is None.</p>
 <dl class="docutils">
-<dt>Note:  if threshold is None or not in integartor_mode,</dt>
+<dt>Note:  if threshold is None or Mechanism not in integartor_mode,</dt>
 <dd>implements single update (cycle) per call to _execute method
 (equivalent to setting Component.execute_until_finished = False)</dd>
 </dl>
@@ -874,7 +1024,7 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.4.0+59.ga27630d',
+               VERSION:'0.7.4.0+60.gbee7aa2',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
