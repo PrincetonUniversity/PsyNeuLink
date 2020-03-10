@@ -498,6 +498,7 @@ accepts a single argument that is a 2d array with two entries.
     ``attention`` executes 3 times in pass 0 as it did in trial 0;  however, ``decision`` executes only 3 times
     since it begins closer to its threshold in that trial.
 
+
 .. _TransferMechanism_Reinitialization:
 
 *Reinitialization*
