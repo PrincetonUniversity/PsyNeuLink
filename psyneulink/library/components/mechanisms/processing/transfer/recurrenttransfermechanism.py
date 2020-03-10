@@ -1381,13 +1381,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
-
+        elif isinstance(self.termination_measure, TimeScale):
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
+            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
+            builder.store(ptr_val, cmp_val_ptr)
         else:
             assert False, "Not Supported: {}".format(self.termination_measure)
 
         cmp_val = builder.load(cmp_val_ptr)
         cmp_str = self.parameters.termination_comparison_op.get(None)
-        return builder.fcmp_ordered(cmp_str, builder.load(cmp_val_ptr), threshold)
+        return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         # Allocate space for transfer mechanism.

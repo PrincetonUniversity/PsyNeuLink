@@ -366,9 +366,9 @@ Component_Execution_Termination
 
 * **num_executions_before_finished** -- contains the number of times the Component has executed prior to finishing
   (and since it last finished);  depending upon the class, these may all be within a single call to the Component's
-  `execute <Component.execute>` method, or extend over several calls.  Note that this is distinct from the
-  `execution_count <Comopnent.execution_count>` attribute, that contains the total number of times the Component
-  has executed in its "life."
+  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evalutes
+  to True. Note that this is distinct from the `execution_count <Component_Execution_Count>` and `num_executions
+  <Component_Num_Executions>` attributes.
 
 .. _Component_Max_Executions_Before_Finished:
 
@@ -389,8 +389,15 @@ Component_Execution_Termination
   *excluding*  executions carried out during initialization and validation, but including all others whether they are
   of the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which
   they are occur. The value can be changed "manually" or programmatically by assigning an integer
-  value directly to the attribute.  Note that this is the distinct from the `num_executions_before_finished
-  <Component_Num_Executions_Before_Finished>` attribute.
+  value directly to the attribute.  Note that this is the distinct from the `num_executions <Component_Num_Executions>`
+  and `num_executions_before_finished <Component_Num_Executions_Before_Finished>` attributes.
+
+.. _Component_Num_Executions:
+
+* **num_executions** -- maintains a record, in a `Time` object, of the number of times a Component has executed in a
+  particular `context <Context>` and at different `TimeScales <TimeScale>`. The value cannot be changed. Note that this
+  is the distinct from the `execution_count <Component_Execution_Count>` and `num_executions_before_finished
+  <Component_Num_Executions_Before_Finished>` attributes.
 
 .. _Component_Current_Execution_Time:
 
@@ -457,6 +464,7 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PREFS_ARG, \
     REINITIALIZE_WHEN, SIZE, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
@@ -719,6 +727,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     execution_count : int
         see `execution_count <Component_Execution_Count>`
 
+    num_executions : Time
+        see `num_executions <_Component_Num_Executions>`
+
     current_execution_time : tuple(`Time.RUN`, `Time.TRIAL`, `Time.PASS`, `Time.TIME_STEP`)
         see `current_execution_time <Component_Current_Execution_Time>`
 
@@ -832,6 +843,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     :type: ``int``
                     :read only: True
 
+                num_executions
+                    see `num_executions <_Component_Num_Executions>`
+
+                    :default value:
+                    :type: ``Time``
+                    :read only: True
+
                 has_initializers
                     see `has_initializers <Component.has_initializers>`
 
@@ -861,7 +879,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
         has_initializers = Parameter(False, setter=_has_initializers_setter, pnl_internal=True)
-        # execution_count ios not stateful because it is a global counter;
+        # execution_count is not stateful because it is a global counter;
         #    for context-specific counts should use schedulers which store this info
         execution_count = Parameter(0,
                                     read_only=True,
@@ -871,7 +889,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     pnl_internal=True)
         is_finished_flag = Parameter(True, loggable=False, stateful=True)
         execute_until_finished = True
-        num_executions_before_finished = Parameter(0, read_only=True)
+        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False)
+        num_executions_before_finished = Parameter(0, read_only=True, modulable=False)
         max_executions_before_finished = Parameter(1000, modulable=False)
 
         def _parse_variable(self, variable):
@@ -1136,7 +1155,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "execution_count"}
+                     "num_executions_before_finished", "num_executions", "execution_count"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
@@ -1159,6 +1178,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
+            elif isinstance(x, Time):
+                return [0] * 5
             try:
                 return (_convert(i) for i in x)
             except:
@@ -1169,7 +1190,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "variable",
+                     "num_executions_before_finished", "num_executions", "variable",
                      "value", "saved_values", "saved_samples", "grid",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
@@ -1219,6 +1240,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param = np.asfarray(param).flatten().tolist()
                 elif isinstance(param, Component):
                     param = param._get_param_values(context)
+                elif isinstance(param, TimeScale) and p.name == 'termination_measure': #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
+                    param = []
                 elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
                     param = np.asfarray(param[0]).tolist()
             return param
@@ -2533,6 +2556,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
                 self._increment_execution_count()
+                self._increment_num_executions(context,
+                                               [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
             self._update_current_execution_time(context=context)
 
         # CALL FUNCTION
@@ -2569,6 +2594,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _increment_execution_count(self, count=1):
         self.parameters.execution_count.set(self.execution_count + count, override=True)
         return self.execution_count
+
+    def _increment_num_executions(self, context, time_scales:(list, TimeScale), count=1):
+        # get relevant Time object:
+        time_scales = list(time_scales)
+        assert [isinstance(i, TimeScale) for i in time_scales], \
+            'non-TimeScale value provided in time_scales argument of _increment_num_executions'
+        curr_num_execs = self.parameters.num_executions._get(context)
+        for time_scale in time_scales:
+            new_val = curr_num_execs._get_by_time_scale(time_scale) + count
+            curr_num_execs._set_by_time_scale(time_scale, new_val)
+        self.parameters.num_executions.set(curr_num_execs, override=True)
+        return curr_num_execs
 
     @property
     def current_execution_time(self):

@@ -81,6 +81,7 @@ __all__ = [
     'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE', 'MSE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
     'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
+    'NUM_EXECUTIONS_BEFORE_FINISHED',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
     'ON',  'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
     'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_LABELS_DICT',
@@ -484,9 +485,9 @@ NAME = "name"
 PREFS_ARG = "prefs"
 CONTEXT = "context"
 STANDARD_ARGS = {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}
-EXECUTION_COUNT = 'execution_count'
-EXECUTE_UNTIL_FINISHED = 'execute_until_finished'
-NUM_EXECUTIONS_BEFORE_FINISHED = 'num_executions_before_finished'
+EXECUTION_COUNT = 'execution_count' # Total number of executions of a Component
+EXECUTE_UNTIL_FINISHED = 'execute_until_finished' # Specifies mode of execution
+NUM_EXECUTIONS_BEFORE_FINISHED = 'num_executions_before_finished' # Number of executions since last finished
 MAX_EXECUTIONS_BEFORE_FINISHED = 'max_executions_before_finished'
 
 INITIAL_VALUES = 'initial_values'
