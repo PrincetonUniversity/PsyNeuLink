@@ -3223,8 +3223,11 @@ def _transfer_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3233,8 +3236,11 @@ def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3243,8 +3249,11 @@ def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3253,8 +3262,11 @@ def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3263,8 +3275,11 @@ def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3273,8 +3288,11 @@ def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3283,8 +3301,11 @@ def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3293,8 +3314,11 @@ def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3303,9 +3327,17 @@ def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
+TRANSFER_FCT = 'transfer_fct'
+INTENSITY_COST_FCT = 'intensity_cost_fct'
+ADJUSTMENT_COST_FCT = 'adjustment_cost_fct'
+DURATION_COST_FCT = 'duration_cost_fct'
+COMBINE_COSTS_FCT = 'combine_costs_fct'
 
 class TransferWithCosts(TransferFunction):
     """
@@ -3850,8 +3882,18 @@ class TransferWithCosts(TransferFunction):
             if not fct:
                 self.toggle_cost(fct_name, OFF)
                 return None
-            if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # # MODIFIED 3/10/20 OLD:
+            # if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # MODIFIED 3/10/20 NEW: [JDC]
+            elif isinstance(fct, Function):
                 return fct
+            elif isinstance(fct, (types.FunctionType, types.MethodType)):
+                from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+                return UserDefinedFunction(#default_variable=function_variable,
+                        custom_function=fct,
+                        owner=self,
+                        context=context)
+                # MODIFIED 3/10/20 END
             elif issubclass(fct, Function):
                 return fct()
             else:

@@ -1027,15 +1027,34 @@ class ControlSignal(ModulatorySignal):
         # should probably just have the user instantiate this function with
         # their desired parameter values rather than trying to handle it in the
         # constructor here
-        function = TransferWithCosts(
-            default_variable=self.defaults.variable,
-            transfer_fct=self.defaults.transfer_function,
-            enabled_cost_functions=self.defaults.cost_options,
-            intensity_cost_fct=self.defaults.intensity_cost_function,
-            adjustment_cost_fct=self.defaults.adjustment_cost_function,
-            duration_cost_fct=self.defaults.duration_cost_function,
-            combine_costs_fct=self.defaults.combine_costs_function,
-        )
+        # JDC [3/10/20]:  Wanted API of ControlSignal to have these functions exposed in its constructor.
+
+        # # MODIFIED 3/10/20 OLD:
+        # function = TransferWithCosts(
+        #     default_variable=self.defaults.variable,
+        #     transfer_fct=self.defaults.transfer_function,
+        #     enabled_cost_functions=self.defaults.cost_options,
+        #     intensity_cost_fct=self.defaults.intensity_cost_function,
+        #     adjustment_cost_fct=self.defaults.adjustment_cost_function,
+        #     duration_cost_fct=self.defaults.duration_cost_function,
+        #     combine_costs_fct=self.defaults.combine_costs_function,
+        # )
+
+        # MODIFIED 3/10/20 NEW: [JDC]
+        from psyneulink.core.components.functions.transferfunctions import \
+            TRANSFER_FCT, INTENSITY_COST_FCT, ADJUSTMENT_COST_FCT, DURATION_COST_FCT, COMBINE_COSTS_FCT
+
+        fcts = {
+            TRANSFER_FCT:self.defaults.transfer_function,
+            INTENSITY_COST_FCT:self.defaults.intensity_cost_function,
+            ADJUSTMENT_COST_FCT:self.defaults.adjustment_cost_function,
+            DURATION_COST_FCT:self.defaults.duration_cost_function,
+            COMBINE_COSTS_FCT:self.defaults.combine_costs_function,
+        }
+        function = TransferWithCosts(default_variable=self.defaults.variable,
+                                     enabled_cost_functions=self.defaults.cost_options,
+                                     **fcts)
+        # MODIFIED 3/10/20 END
 
         super()._instantiate_function(function, function_params, context)
 
