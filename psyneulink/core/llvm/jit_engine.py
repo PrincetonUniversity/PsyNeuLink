@@ -145,29 +145,36 @@ class jit_engine:
         self._jit_pass_manager = None
         self._target_machine = None
         self.__mod = None
-        self.__opt_modules = 0
         # Add an extra reference to make sure it's not destroyed before
         # instances of jit_engine
         self.__debug_env = debug_env
 
+        # Track few statistics:
+        self.__optimized_modules = 0
+        self.__linked_modules = 0
+        self.__parsed_modules = 0
+
     def __del__(self):
         if "stat" in self.__debug_env:
-            print("Total JIT modules in '{}': {}".format(type(self).__name__, self.__opt_modules))
+            s = type(self).__name__
+            print("Total optimized modules in '{}': {}".format(s, self.__optimized_modules))
+            print("Total linked modules in '{}': {}".format(s, self.__linked_modules))
+            print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
         self._pass_manager.run(module)
         if "opt" in self.__debug_env:
-            with open(self.__class__.__name__ + '-' + str(self.__opt_modules) + '.opt.ll', 'w') as dump_file:
+            with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
 
         # This prints generated x86 assembly
         if "isa" in self.__debug_env:
-            with open(self.__class__.__name__ + '-' + str(self.__opt_modules) + '.S', 'w') as dump_file:
+            with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
-        self.__opt_modules += 1
+        self.__optimized_modules += 1
 
     def _remove_bin_module(self, module):
         if module is not None:
@@ -181,6 +188,7 @@ class jit_engine:
             self._remove_bin_module(self.__mod)
             # Linking here invalidates 'module'
             self.__mod.link_in(module)
+            self.__linked_modules += 1
 
         if "llvm" in debug_env:
             with open(mod_name + '.linked.ll', 'w') as dump_file:
@@ -214,6 +222,7 @@ class jit_engine:
         mod_bundle = binding.parse_assembly("")
         for m in modules:
             new_mod = _try_parse_module(m)
+            self.__parsed_modules += 1
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
                 mod_bundle.name = m.name  # Set the name of the last module
