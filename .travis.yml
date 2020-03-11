@@ -16,7 +16,7 @@ dist: bionic
 env:
   jobs:
     - PYTHON=3.8.2
-    - PYTHON=3.7.6
+    - PYTHON=3.7.7
     - PYTHON=3.6.8
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
