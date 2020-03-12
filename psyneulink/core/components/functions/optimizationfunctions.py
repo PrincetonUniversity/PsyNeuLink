@@ -1745,7 +1745,7 @@ class GridSearch(OptimizationFunction):
             raise OptimizationFunctionError("Expired grid in {} run from {} "
                                             "(execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
-                       self.owner.paramters.execution_count.get(), self.num_iterations))
+                       self.owner.parameters.execution_count.get(), self.num_iterations))
         return sample
 
     def _grid_complete(self, variable, value, iteration, context=None):

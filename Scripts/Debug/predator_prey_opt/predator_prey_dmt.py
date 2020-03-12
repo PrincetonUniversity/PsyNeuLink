@@ -15,8 +15,8 @@ parser.add_argument("--seed", type=int,
         help='Random seed, seed from os.urandom if unspecified.')
 args = parser.parse_args()
 
-# Set the global seed for PsyNeuLink
 SEED = args.seed
+
 from psyneulink.core.globals.utilities import set_global_seed
 set_global_seed(SEED)
 np.random.seed(SEED+1)
@@ -33,7 +33,7 @@ RENDER = False
 PNL_COMPILE = False
 RUN = True
 SHOW_GRAPH = False
-MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
+MODEL_PATH = '../../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
 OPTIMAL_ACTION = 'OPTIMAL_ACTION'
@@ -394,6 +394,7 @@ def input_generator():
         ddqn_agent.env.render(close=True)  # If visualization is desired
 
 def run_games(cost_rate):
+    print(f"Cost Rate = {cost_rate}")
     ocm.control_signals[0].parameters.intensity_cost_function.get(context).parameters.rate.set(cost_rate, context)
     ocm.control_signals[0].parameters.intensity_cost_function.get(context).parameters.rate.set(cost_rate, context)
     ocm.control_signals[0].parameters.intensity_cost_function.get(context).parameters.rate.set(cost_rate, context)

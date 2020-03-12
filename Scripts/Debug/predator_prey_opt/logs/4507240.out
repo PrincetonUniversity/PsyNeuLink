@@ -1,0 +1,113 @@
+distributed.scheduler - INFO - Clear task state
+distributed.scheduler - INFO -   Scheduler at:  tcp://10.36.18.175:34589
+distributed.worker - INFO -       Start worker at:   tcp://10.36.18.175:39409
+distributed.worker - INFO -          Listening to:   tcp://10.36.18.175:39409
+distributed.worker - INFO - Waiting to connect to:   tcp://10.36.18.175:34589
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -       Start worker at:   tcp://10.36.18.175:43500
+distributed.worker - INFO -                Memory:                   12.88 GB
+distributed.worker - INFO -       Local Directory: /scratch/gpfs/dmturner/4507240/worker-cs_7hjmc
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -          Listening to:   tcp://10.36.18.175:43500
+distributed.worker - INFO - Waiting to connect to:   tcp://10.36.18.175:34589
+distributed.worker - INFO - -------------------------------------------------
+distributed.worker - INFO -               Threads:                          1
+distributed.worker - INFO -                Memory:                   12.88 GB
+distributed.worker - INFO -       Local Directory: /scratch/gpfs/dmturner/4507240/worker-6linpgay
+distributed.worker - INFO - -------------------------------------------------
+distributed.scheduler - INFO - Register worker <Worker 'tcp://10.36.18.175:39409', name: 1, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://10.36.18.175:39409
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://10.36.18.175:34589
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Register worker <Worker 'tcp://10.36.18.175:43500', name: 2, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://10.36.18.175:43500
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://10.36.18.175:34589
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-5756c91a-6315-11ea-866d-d06726d4b33a
+distributed.core - INFO - Starting established connection
+distributed.core - INFO - Event loop was unresponsive in Worker for 6.64s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.core - INFO - Event loop was unresponsive in Worker for 6.63s.  This is often caused by long-running GIL-holding functions or moving large chunks of data. This can cause timeouts and instability.
+distributed.scheduler - INFO - Receive client connection: Client-worker-6941db4a-6315-11ea-9e3c-5480285297a4
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Receive client connection: Client-worker-6941dd3a-6315-11ea-9e3d-5480285297a4
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Remove client Client-5756c91a-6315-11ea-866d-d06726d4b33a
+distributed.scheduler - INFO - Remove client Client-5756c91a-6315-11ea-866d-d06726d4b33a
+distributed.scheduler - INFO - Close client connection: Client-5756c91a-6315-11ea-866d-d06726d4b33a
+distributed.scheduler - INFO - Receive client connection: Client-87e42648-6315-11ea-8896-d06726d4b33a
+distributed.core - INFO - Starting established connection
+distributed.worker - WARNING -  Compute Failed
+Function:  <joblib.parallel.BatchedCalls object at 0x2acd2048
+args:      ()
+kwargs:    {}
+Exception: ValueError('Result with an ID 0 is already created. Reusing IDs is prohibited.')
+
+distributed.scheduler - INFO - Client Client-87e42648-6315-11ea-8896-d06726d4b33a requests to cancel 4 keys
+distributed.scheduler - INFO - Scheduler cancels key Job(task='joblib_test2.py:run_games', args=(-0.8,)-batch-32429a9a94cf42c585d3dcf340545168.  Force=False
+distributed.scheduler - INFO - Remove client Client-87e42648-6315-11ea-8896-d06726d4b33a
+distributed.scheduler - INFO - Remove client Client-87e42648-6315-11ea-8896-d06726d4b33a
+distributed.scheduler - INFO - Close client connection: Client-87e42648-6315-11ea-8896-d06726d4b33a
+distributed.scheduler - INFO - Receive client connection: Client-1571b276-6316-11ea-9dac-d06726d4b33a
+distributed.core - INFO - Starting established connection
+distributed.scheduler - INFO - Send lost future signal to clients
+distributed.scheduler - INFO - Remove worker <Worker 'tcp://10.36.18.175:39409', name: 1, memory: 0, processing: 0>
+distributed.core - INFO - Removing comms to tcp://10.36.18.175:39409
+distributed.scheduler - INFO - Remove worker <Worker 'tcp://10.36.18.175:43500', name: 2, memory: 0, processing: 0>
+distributed.core - INFO - Removing comms to tcp://10.36.18.175:43500
+distributed.scheduler - INFO - Lost all workers
+distributed.scheduler - INFO - Clear task state
+distributed.scheduler - INFO - Clear task state
+distributed.worker - INFO - -------------------------------------------------
+distributed.scheduler - INFO - Register worker <Worker 'tcp://10.36.18.175:39409', name: 1, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://10.36.18.175:39409
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://10.36.18.175:34589
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO - -------------------------------------------------
+distributed.scheduler - INFO - Register worker <Worker 'tcp://10.36.18.175:43500', name: 2, memory: 0, processing: 0>
+distributed.scheduler - INFO - Starting worker compute stream, tcp://10.36.18.175:43500
+distributed.core - INFO - Starting established connection
+distributed.worker - INFO -         Registered to:   tcp://10.36.18.175:34589
+distributed.worker - INFO - -------------------------------------------------
+distributed.core - INFO - Starting established connection
+distributed.worker - WARNING -  Compute Failed
+Function:  <joblib.parallel.BatchedCalls object at 0x2acd4e73
+args:      ()
+kwargs:    {}
+Exception: ValueError('Result with an ID 2 is already created. Reusing IDs is prohibited.')
+
+distributed.worker - WARNING -  Compute Failed
+Function:  <joblib.parallel.BatchedCalls object at 0x2b863b5c
+args:      ()
+kwargs:    {}
+Exception: ValueError('Result with an ID 3 is already created. Reusing IDs is prohibited.')
+
+distributed.worker - WARNING -  Compute Failed
+Function:  <joblib.parallel.BatchedCalls object at 0x2acd2048
+args:      ()
+kwargs:    {}
+Exception: ValueError('Result with an ID 0 is already created. Reusing IDs is prohibited.')
+
+distributed.worker - WARNING -  Compute Failed
+Function:  <joblib.parallel.BatchedCalls object at 0x2b86697b
+args:      ()
+kwargs:    {}
+Exception: ValueError('Result with an ID 1 is already created. Reusing IDs is prohibited.')
+
+distributed.scheduler - INFO - Client Client-1571b276-6316-11ea-9dac-d06726d4b33a requests to cancel 4 keys
+distributed.scheduler - INFO - Scheduler cancels key Job(task='joblib_test2.py:run_games', args=(-0.8,)-batch-bcbeb28dd1e1469cb0d8a94f239e5cc6.  Force=False
+distributed.scheduler - INFO - Scheduler cancels key Job(task='joblib_test2.py:run_games', args=(-0.8,)-batch-e515ec8774204e62869d47c23da680cb.  Force=False
+distributed.scheduler - INFO - Scheduler cancels key Job(task='joblib_test2.py:run_games', args=(-0.8,)-batch-c8e3050a00484c1780f2732de237b74f.  Force=False
+distributed.scheduler - INFO - Scheduler cancels key Job(task='joblib_test2.py:run_games', args=(-0.8,)-batch-231931d8db814fdda74990dabc36da5b.  Force=False
+distributed.scheduler - INFO - Remove client Client-1571b276-6316-11ea-9dac-d06726d4b33a
+distributed.scheduler - INFO - Remove client Client-1571b276-6316-11ea-9dac-d06726d4b33a
+distributed.scheduler - INFO - Close client connection: Client-1571b276-6316-11ea-9dac-d06726d4b33a
+srun: Job step aborted: Waiting up to 47 seconds for job step to finish.
+slurmstepd: error: *** JOB 4507240 ON tiger-i25c1n23 CANCELLED AT 2020-03-10T18:27:33 DUE TO TIME LIMIT ***
+slurmstepd: error: *** STEP 4507240.0 ON tiger-i25c1n23 CANCELLED AT 2020-03-10T18:27:33 DUE TO TIME LIMIT ***
