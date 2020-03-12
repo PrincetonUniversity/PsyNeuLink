@@ -11,7 +11,7 @@
 from llvmlite import ir
 from contextlib import contextmanager
 import ctypes
-
+from ctypes import util
 
 from .debug import debug_env
 
@@ -177,7 +177,7 @@ def printf(builder, fmt, *args, override_debug=False):
     #FIXME: Fix builtin printf and use that instead of this
     try:
         import llvmlite.binding as llvm
-        libc = ctypes.util.find_library("c")
+        libc = util.find_library("c")
         llvm.load_library_permanently(libc)
         # Address will be none if the symbol is not found
         printf_address = llvm.address_of_symbol("printf")
