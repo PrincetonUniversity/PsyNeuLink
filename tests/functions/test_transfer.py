@@ -1,6 +1,7 @@
 import numpy as np
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.transferfunctions as Functions
+import psyneulink.core.components.functions.userdefinedfunction as UDF
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -123,3 +124,10 @@ def test_transfer_with_costs_function():
     assert np.allclose(f.adjustment_cost, 4)
     assert np.allclose(f.duration_cost, 6)
     assert np.allclose(np.float(f.combined_costs), 12.718281828459045)
+
+    # Test with UDF:
+    def cust_fct(param1=2, param2=3, params={kw.MULTIPLICATIVE_PARAM:'param1'}):
+        return param1**param2
+    f = Functions.TransferWithCosts(intensity_cost_fct=cust_fct)
+    assert isinstance(f.intensity_cost_fct, UDF.UserDefinedFunction)
+
