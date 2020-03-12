@@ -59,6 +59,23 @@ class _node_wrapper():
     def _gen_llvm_function(self, *, ctx, tags:frozenset):
         return codegen.gen_node_wrapper(ctx, self._comp, self._node, tags=tags)
 
+def _comp_cached(func):
+    @functools.wraps(func)
+    def wrapper(bctx, obj):
+        try:
+            obj_cache = bctx._cache.setdefault(obj, dict())
+        except TypeError:  # 'super()' references can't be cached
+            obj_cache = None
+        else:
+            if func in obj_cache:
+                return obj_cache[func]
+        val = func(bctx, obj)
+        if obj_cache is not None:
+            obj_cache[func] = val
+        return val
+
+    return wrapper
+
 
 class LLVMBuilderContext:
     __global_context = None
@@ -210,6 +227,7 @@ class LLVMBuilderContext:
         })
         return di_loc
 
+    @_comp_cached
     def get_input_struct_type(self, component):
         self._stats["input_structs_generated"] += 1
         if hasattr(component, '_get_input_struct_type'):
@@ -218,6 +236,7 @@ class LLVMBuilderContext:
         default_var = component.defaults.variable
         return self.convert_python_struct_to_llvm_ir(default_var)
 
+    @_comp_cached
     def get_output_struct_type(self, component):
         self._stats["output_structs_generated"] += 1
         if hasattr(component, '_get_output_struct_type'):
@@ -226,6 +245,7 @@ class LLVMBuilderContext:
         default_val = component.defaults.value
         return self.convert_python_struct_to_llvm_ir(default_val)
 
+    @_comp_cached
     def get_param_struct_type(self, component):
         self._stats["param_structs_generated"] += 1
         if hasattr(component, '_get_param_struct_type'):
@@ -234,6 +254,7 @@ class LLVMBuilderContext:
         params = component._get_param_values()
         return self.convert_python_struct_to_llvm_ir(params)
 
+    @_comp_cached
     def get_state_struct_type(self, component):
         self._stats["state_structs_generated"] += 1
         if hasattr(component, '_get_state_struct_type'):
@@ -242,6 +263,7 @@ class LLVMBuilderContext:
         stateful = component._get_state_values()
         return self.convert_python_struct_to_llvm_ir(stateful)
 
+    @_comp_cached
     def get_data_struct_type(self, component):
         self._stats["data_structs_generated"] += 1
         if hasattr(component, '_get_data_struct_type'):
