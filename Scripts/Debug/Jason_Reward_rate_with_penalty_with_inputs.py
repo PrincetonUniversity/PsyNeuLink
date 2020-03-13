@@ -136,13 +136,28 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
                                                  allocation_samples=signalSearchRange)
 
 
+    reward_rate = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT,
+                                                                        exponents=[[1],[1],[-1]]),
+                                         monitor=[reward,
+                                                  decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                  decision.output_ports[pnl.RESPONSE_TIME]])
 
-    objective_mech = pnl.ObjectiveMechanism(function=object_function,
-                                            monitor=[reward,
-                                                     punish,
-                                                     decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                                                     decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
-                                                     (decision.output_ports[pnl.RESPONSE_TIME])])
+    punish_rate = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT,
+                                                                        exponents=[[1],[1],[-1]]),
+                                         monitor=[punish,
+                                                  decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
+                                                  decision.output_ports[pnl.RESPONSE_TIME]])
+
+    objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT,
+                                                                           weights=[[1],[-1]]),
+                                            monitor=[reward_rate, punish_rate])
+
+    # objective_mech = pnl.ObjectiveMechanism(function=object_function,
+    #                                         monitor=[reward,
+    #                                                  punish,
+    #                                                  decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+    #                                                  decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
+    #                                                  (decision.output_ports[pnl.RESPONSE_TIME])])
 
 
 
@@ -176,6 +191,8 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     model.add_linear_processing_pathway([inp_task, wts_tc, hid_clr])
     model.add_linear_processing_pathway([inp_task, wts_tw, hid_wrd])
     model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])
+
+    model.add_nodes([reward_rate, punish_rate])
 
     controller = pnl.OptimizationControlMechanism(agent_rep=model,
                                                   features=[inp_clr.input_port,
@@ -214,7 +231,7 @@ model, nodes, model_params = get_stroop_model(unit_noise_std, dec_noise_std)
 
 #%%
 
-model.show_graph(output_fmt = 'jupyter',show_controller=True)
+model.show_graph(show_controller=True)
 
 #%% md
 
@@ -258,7 +275,8 @@ for task in stim_dict_list:
         model.run(
             inputs=task,
             num_trials=1,
-            context=execution_id
+            context=execution_id,
+            # bin_execute='LLVMRun'
         )
         execution_id += 1
 
