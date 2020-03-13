@@ -16,6 +16,7 @@ from typing import Set
 from llvmlite import ir
 
 from . import builtins
+from . import codegen
 from .builder_context import *
 from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
 from .debug import debug_env
@@ -112,7 +113,7 @@ class LLVMBinaryFunction:
         except ValueError:
             function = _find_llvm_function(self.name)
             with LLVMBuilderContext.get_global() as ctx:
-                multirun_llvm = ctx.gen_multirun_wrapper(function)
+                multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
 
         return LLVMBinaryFunction.get(multirun_llvm.name)
 

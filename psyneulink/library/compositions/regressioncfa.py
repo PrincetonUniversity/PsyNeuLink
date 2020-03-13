@@ -238,7 +238,6 @@ class RegressionCFA(CompositionFunctionApproximator):
 
                     :default value: `BayesGLM`
                     :type: `Function`
-
         """
         update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
         prediction_vector = None

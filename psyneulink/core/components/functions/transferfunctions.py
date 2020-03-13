@@ -101,7 +101,6 @@ class TransferFunction(Function_Base):
 
                     :default value: None
                     :type:
-
         """
         bounds = None
 
@@ -376,14 +375,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     see `intercept <Linear.intercept>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 slope
                     see `slope <Linear.slope>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -391,8 +389,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: parameter_spec = 1.0,
-                 intercept: parameter_spec = 0.0,
+                 slope: tc.optional(parameter_spec) = None,
+                 intercept: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -409,8 +407,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr = ctx.get_param_ptr(self, builder, params, SLOPE)
-        intercept_ptr = ctx.get_param_ptr(self, builder, params, INTERCEPT)
+        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
+        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -445,8 +443,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-        slope = self.get_current_function_param(SLOPE, context)
-        intercept = self.get_current_function_param(INTERCEPT, context)
+        slope = self._get_current_function_param(SLOPE, context)
+        intercept = self._get_current_function_param(INTERCEPT, context)
 
         # MODIFIED 11/9/17 NEW:
         try:
@@ -492,7 +490,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        return self.get_current_function_param(SLOPE, context)
+        return self._get_current_function_param(SLOPE, context)
 
     def _is_identity(self, context=None):
         return (
@@ -614,26 +612,25 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     see `bias <Exponential.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Exponential.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 rate
                     see `rate <Exponential.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Exponential.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -665,10 +662,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr = ctx.get_param_ptr(self, builder, params, RATE)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -709,10 +706,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-        rate = self.get_current_function_param(RATE, context)
-        bias = self.get_current_function_param(BIAS, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        rate = self._get_current_function_param(RATE, context)
+        bias = self._get_current_function_param(BIAS, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
@@ -739,7 +736,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        return self.get_current_function_param(RATE, context) * input + self.get_current_function_param(BIAS, context)
+        return self._get_current_function_param(RATE, context) * input + self._get_current_function_param(BIAS, context)
 
 
 # **********************************************************************************************************************
@@ -876,32 +873,31 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     see `bias <Logistic.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <Logistic.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Logistic.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Logistic.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 x_0
                     see `x_0 <Logistic.x_0>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
@@ -936,11 +932,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -985,11 +981,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        x_0 = self.get_current_function_param(X_0, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        scale = self.get_current_function_param(SCALE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        x_0 = self._get_current_function_param(X_0, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
@@ -1034,8 +1030,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
                                            repr('input'), input))
 
-        gain = self.get_current_function_param(GAIN, context)
-        scale = self.get_current_function_param(SCALE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         if output is None:
             output = self.function(input, context=context)
@@ -1173,32 +1169,31 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     see `bias <Tanh.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <Tanh.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Tanh.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Tanh.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 x_0
                     see `x_0 <Tanh.x_0>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
@@ -1233,10 +1228,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1281,10 +1276,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        x_0 = self.get_current_function_param(X_0, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        x_0 = self._get_current_function_param(X_0, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
@@ -1313,11 +1308,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        x_0 = self.get_current_function_param(X_0, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        scale = self.get_current_function_param(SCALE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        x_0 = self._get_current_function_param(X_0, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         from math import e
         return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
@@ -1366,7 +1361,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1389,7 +1384,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1416,20 +1411,19 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                     see `bias <ReLU.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <ReLU.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 leak
                     see `leak <ReLU.leak>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1476,9 +1470,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        leak = self.get_current_function_param(LEAK, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        leak = self._get_current_function_param(LEAK, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
@@ -1490,9 +1484,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        leak_ptr = ctx.get_param_ptr(self, builder, params, LEAK)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1527,8 +1521,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        leak = self.get_current_function_param(LEAK, context)
+        gain = self._get_current_function_param(GAIN, context)
+        leak = self._get_current_function_param(LEAK, context)
 
         return gain if input > 0 else gain * leak
 
@@ -1647,26 +1641,25 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     see `bias <Gaussian.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Gaussian.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Gaussian.scale>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 1.0
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1698,10 +1691,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        standard_deviation_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STANDARD_DEVIATION)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1756,10 +1749,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self.get_current_function_param(BIAS, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
+        bias = self._get_current_function_param(BIAS, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         from math import e, pi, sqrt
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
@@ -1787,8 +1780,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Derivative of Guassian of variable :  number or array
 
         """
-        sigma = self.get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self.get_current_function_param(BIAS, context)
+        sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
+        bias = self._get_current_function_param(BIAS, context)
 
         from math import e, pi, sqrt
         adjusted_input = input - bias
@@ -1915,32 +1908,31 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                     see `bias <GaussianDistort.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <GaussianDistort.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 random_state
                     see `random_state <GaussianDistort.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 scale
                     see `scale <GaussianDistort.scale>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 1.0
+                    :type: ``float``
 
                 variance
                     see `variance <GaussianDistort.variance>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1983,10 +1975,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr = ctx.get_param_ptr(self, builder, params, VARIANCE)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1994,7 +1986,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
@@ -2033,11 +2025,11 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-        variance = self.get_current_function_param(VARIANCE, context)
-        bias = self.get_current_function_param(BIAS, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        random_state = self.get_current_function_param('random_state', context)
+        variance = self._get_current_function_param(VARIANCE, context)
+        bias = self._get_current_function_param(BIAS, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        random_state = self._get_current_function_param('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
@@ -2059,10 +2051,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     #     Derivative of Guassian of variable :  number or array
     #
     #     """
-    #     variance = self.get_current_function_param(VARIANCE, context)
-    #     bias = self.get_current_function_param(BIAS, context)
-    #     scale = self.get_current_function_param(SCALE, context)
-    #     offset = self.get_current_function_param(OFFSET, context)
+    #     variance = self._get_current_function_param(VARIANCE, context)
+    #     bias = self._get_current_function_param(BIAS, context)
+    #     scale = self._get_current_function_param(SCALE, context)
+    #     offset = self._get_current_function_param(OFFSET, context)
     #
     #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
     #     f = scale * np.random.normal(input+bias, variance) + offset
@@ -2196,7 +2188,7 @@ class SoftMax(TransferFunction):
                     see `variable <SoftMax.variable>`
 
                     :default value: numpy.array(0.)
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 bounds
@@ -2209,20 +2201,19 @@ class SoftMax(TransferFunction):
                     see `gain <SoftMax.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 output
                     see `output <SoftMax.output>`
 
                     :default value: `ALL`
-                    :type: str
+                    :type: ``str``
 
                 per_item
                     see `per_item <SoftMax.per_item>`
 
                     :default value: True
-                    :type: bool
-
+                    :type: ``bool``
         """
         variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -2269,7 +2260,7 @@ class SoftMax(TransferFunction):
     def _instantiate_function(self, function, function_params=None, context=None):
 
         self.one_hot_function = None
-        output_type = self.get_current_function_param(OUTPUT_TYPE, context)
+        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
         bounds = None
 
         if not output_type is ALL:
@@ -2321,7 +2312,7 @@ class SoftMax(TransferFunction):
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
@@ -2415,9 +2406,9 @@ class SoftMax(TransferFunction):
 
         """
         # Assign the params and return the result
-        output_type = self.get_current_function_param(OUTPUT_TYPE, context)
-        gain = self.get_current_function_param(GAIN, context)
-        per_item = self.get_current_function_param(PER_ITEM, context)
+        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        per_item = self._get_current_function_param(PER_ITEM, context)
         # Compute softmax and assign to sm
 
         if per_item and len(np.shape(variable)) > 1:
@@ -2610,7 +2601,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     :default value: None
                     :type:
-
         """
         matrix = Parameter(None, modulable=True)
         bounds = None
@@ -2938,7 +2928,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
+        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -2975,7 +2965,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-        matrix = self.get_current_function_param(MATRIX, context)
+        matrix = self._get_current_function_param(MATRIX, context)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
 
@@ -3233,8 +3223,11 @@ def _transfer_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3243,8 +3236,11 @@ def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3253,8 +3249,11 @@ def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3263,8 +3262,11 @@ def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3273,8 +3275,11 @@ def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3283,8 +3288,11 @@ def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3293,8 +3301,11 @@ def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3303,8 +3314,11 @@ def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3313,9 +3327,17 @@ def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
+TRANSFER_FCT = 'transfer_fct'
+INTENSITY_COST_FCT = 'intensity_cost_fct'
+ADJUSTMENT_COST_FCT = 'adjustment_cost_fct'
+DURATION_COST_FCT = 'duration_cost_fct'
+COMBINE_COSTS_FCT = 'combine_costs_fct'
 
 class TransferWithCosts(TransferFunction):
     """
@@ -3570,11 +3592,29 @@ class TransferWithCosts(TransferFunction):
             Attributes
             ----------
 
+                variable
+                    see `variable <TransferWithCosts.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: ``numpy.ndarray``
+
+                LinearCombination
+                    see `LinearCombination <TransferWithCosts.LinearCombination>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                SimpleIntegrator
+                    see `SimpleIntegrator <TransferWithCosts.SimpleIntegrator>`
+
+                    :default value: `SimpleIntegrator`
+                    :type: `Function`
+
                 adjustment_cost
                     see `adjustment_cost <TransferWithCosts.adjustment_cost>`
 
                     :default value: None
-                    :type: int
+                    :type:
 
                 adjustment_cost_fct
                     see `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`
@@ -3582,53 +3622,47 @@ class TransferWithCosts(TransferFunction):
                     :default value: `Linear`
                     :type: `Function`
 
-                adjustment_cost_fct_mult_param
-                    see `adjustment_cost_fct_mult_param <TransferWithCosts.adjustment_cost_fct_mult_param>`
-
-                    :default value:  adjustment_cost.multiplicative.param
-                    :type: number
-
                 adjustment_cost_fct_add_param
                     see `adjustment_cost_fct_add_param <TransferWithCosts.adjustment_cost_fct_add_param>`
 
-                    :default value: adjustment_cost.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
 
-                combined_costs
-                    see `cost <TransferWithCosts.combined_costs>`
+                adjustment_cost_fct_mult_param
+                    see `adjustment_cost_fct_mult_param <TransferWithCosts.adjustment_cost_fct_mult_param>`
 
                     :default value: None
                     :type:
 
                 combine_costs_fct
-                    see `combine_costs_fct < TransferWithCosts.combine_costs_fct>`
+                    see `combine_costs_fct <TransferWithCosts.combine_costs_fct>`
 
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                combine_costs_fct_mult_param
-                    see `combine_costs_fct_mult_param <TransferWithCosts.combine_costs_fct_mult_param>`
-
-                    :default value:  combine_costs.multiplicative.param
-                    :type: number
-
                 combine_costs_fct_add_param
                     see `combine_costs_fct_add_param <TransferWithCosts.combine_costs_fct_add_param>`
 
-                    :default value: combine_costs.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
 
-                enabled_cost_functions
-                    see `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`
+                combine_costs_fct_mult_param
+                    see `combine_costs_fct_mult_param <TransferWithCosts.combine_costs_fct_mult_param>`
 
-                    :default value: CostFunctions.INTENSITY
-                    :type: `CostFunctions`
+                    :default value: None
+                    :type:
+
+                combined_costs
+                    see `combined_costs <TransferWithCosts.combined_costs>`
+
+                    :default value: None
+                    :type:
 
                 duration_cost
                     see `duration_cost <TransferWithCosts.duration_cost>`
 
                     :default value: None
-                    :type: int
+                    :type:
 
                 duration_cost_fct
                     see `duration_cost_fct <TransferWithCosts.duration_cost_fct>`
@@ -3636,23 +3670,29 @@ class TransferWithCosts(TransferFunction):
                     :default value: `SimpleIntegrator`
                     :type: `Function`
 
-                duration_cost_fct_mult_param
-                    see `duration_cost_fct_mult_param <TransferWithCosts.duration_cost_fct_mult_param>`
-
-                    :default value:  duration_cost.multiplicative.param
-                    :type: number
-
                 duration_cost_fct_add_param
                     see `duration_cost_fct_add_param <TransferWithCosts.duration_cost_fct_add_param>`
 
-                    :default value: duration_cost.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
+
+                duration_cost_fct_mult_param
+                    see `duration_cost_fct_mult_param <TransferWithCosts.duration_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+
+                enabled_cost_functions
+                    see `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`
+
+                    :default value: CostFunctions.INTENSITY
+                    :type: `CostFunctions`
 
                 intensity
                     see `intensity <TransferWithCosts.intensity>`
 
-                    :default value: 0
-                    :type: number
+                    :default value: numpy.array([0])
+                    :type: ``numpy.ndarray``
 
                 intensity_cost
                     see `intensity_cost <TransferWithCosts.intensity_cost>`
@@ -3666,17 +3706,17 @@ class TransferWithCosts(TransferFunction):
                     :default value: `Exponential`
                     :type: `Function`
 
-                intensity_cost_fct_mult_param
-                    see `intensity_cost_fct_mult_param <TransferWithCosts.intensity_cost_fct_mult_param>`
-
-                    :default value:  intensity_cost.multiplicative.param
-                    :type: number
-
                 intensity_cost_fct_add_param
                     see `intensity_cost_fct_add_param <TransferWithCosts.intensity_cost_fct_add_param>`
 
-                    :default value: intensity_cost.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
+
+                intensity_cost_fct_mult_param
+                    see `intensity_cost_fct_mult_param <TransferWithCosts.intensity_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
 
                 transfer_fct
                     see `transfer_fct <TransferWithCosts.transfer_fct>`
@@ -3684,18 +3724,17 @@ class TransferWithCosts(TransferFunction):
                     :default value: `Linear`
                     :type: `Function`
 
-                transfer_fct_mult_param
-                    serves as `multiplicative_param <Function_Modulatory_Params>` for TransferWithCosts
-
-                    :default value:  transfer.multiplicative.param
-                    :type: number
-
                 transfer_fct_add_param
-                    serves as `additive_param <Function_Modulatory_Params>` for TransferWithCosts
+                    see `transfer_fct_add_param <TransferWithCosts.transfer_fct_add_param>`
 
-                    :default value: transfer.additive.param
-                    :type: number
+                    :default value: None
+                    :type:
 
+                transfer_fct_mult_param
+                    see `transfer_fct_mult_param <TransferWithCosts.transfer_fct_mult_param>`
+
+                    :default value: None
+                    :type:
         """
         variable = Parameter(np.array([0]),
                              history_min_length=1)
@@ -3843,8 +3882,18 @@ class TransferWithCosts(TransferFunction):
             if not fct:
                 self.toggle_cost(fct_name, OFF)
                 return None
-            if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # # MODIFIED 3/10/20 OLD:
+            # if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # MODIFIED 3/10/20 NEW: [JDC]
+            elif isinstance(fct, Function):
                 return fct
+            elif isinstance(fct, (types.FunctionType, types.MethodType)):
+                from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+                return UserDefinedFunction(#default_variable=function_variable,
+                        custom_function=fct,
+                        owner=self,
+                        context=context)
+                # MODIFIED 3/10/20 END
             elif issubclass(fct, Function):
                 return fct()
             else:
@@ -3930,7 +3979,7 @@ class TransferWithCosts(TransferFunction):
         if enabled_cost_functions:
 
             # For each cost function that is enabled:
-            # - get params for the cost functon using get_current_function_param:
+            # - get params for the cost functon using _get_current_function_param:
             #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
             #   - otherwise, get from TransferWithControl modulation parameter (which is also subject to modulation)
 
@@ -3938,9 +3987,9 @@ class TransferWithCosts(TransferFunction):
             if enabled_cost_functions & CostFunctions.INTENSITY:
                 # Assign modulatory param values to intensity_cost_function
                 self.intensity_cost_fct_mult_param = \
-                    self.get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                    self._get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.intensity_cost_fct_add_param = \
-                    self.get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
+                    self._get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute intensity_cost function
                 intensity_cost = self.intensity_cost_fct(intensity, context=context)
                 self.parameters.intensity_cost._set(intensity_cost, context)
@@ -3955,9 +4004,9 @@ class TransferWithCosts(TransferFunction):
                     intensity_change = np.zeros_like(self.parameters_intensity._get(context))
                 # Assign modulatory param values to adjustment_cost_function
                 self.adjustment_cost_fct_mult_param = \
-                    self.get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                    self._get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.adjustment_cost_fct_add_param = \
-                    self.get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
+                    self._get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute adjustment_cost function
                 adjustment_cost = self.adjustment_cost_fct(intensity_change, context=context)
                 self.parameters.adjustment_cost._set(adjustment_cost, context)
@@ -3967,9 +4016,9 @@ class TransferWithCosts(TransferFunction):
             if enabled_cost_functions & CostFunctions.DURATION:
                 # Assign modulatory param values to duration_cost_function
                 self.duration_cost_fct_mult_param = \
-                    self.get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                    self._get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.duration_cost_fct_add_param = \
-                    self.get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, context)
+                    self._get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute duration_cost function
                 duration_cost = self.duration_cost_fct(intensity, context=context)
                 self.parameters.duration_cost._set(duration_cost, context)
@@ -3979,9 +4028,9 @@ class TransferWithCosts(TransferFunction):
 
             # Assign modulatory param values to combine_costs_function
             self.combine_costs_fct_mult_param = \
-                self.get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
+                self._get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
             self.combine_costs_fct_add_param = \
-                self.get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
+                self._get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
             # Execute combine_costs function
             combined_costs = self.combine_costs_fct(enabled_costs,
                                                     context=context)
@@ -4111,8 +4160,8 @@ class TransferWithCosts(TransferFunction):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())
-        trans_p = ctx.get_param_ptr(self, builder, params, transfer_f.name)
-        trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
+        trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
+        trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
         if trans_in.type != trans_f.args[2].type:
             warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))

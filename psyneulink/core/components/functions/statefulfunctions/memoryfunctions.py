@@ -174,18 +174,23 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: None
                     :type:
 
+                initializer
+                    see `initializer <Buffer.initializer>`
+
+                    :default value: numpy.array([], dtype=float64)
+                    :type: ``numpy.ndarray``
+
                 noise
                     see `noise <Buffer.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 rate
                     see `rate <Buffer.rate>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -266,7 +271,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", context)
+            reinitialization_value = self._get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -313,10 +318,10 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-        rate = np.array(self.get_current_function_param(RATE, context)).astype(float)
+        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
@@ -590,7 +595,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `variable <ContentAddressableMemory.variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
 
                 distance_function
                     see `distance_function <ContentAddressableMemory.distance_function>`
@@ -602,49 +607,49 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
 
                 equidistant_keys_select
                     see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
 
                     :default value: `RANDOM`
-                    :type: str
+                    :type: ``str``
 
                 key_size
                     see `key_size <ContentAddressableMemory.key_size>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 max_entries
                     see `max_entries <ContentAddressableMemory.max_entries>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 noise
                     see `noise <ContentAddressableMemory.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 random_state
                     see `random_state <ContentAddressableMemory.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 rate
                     see `rate <ContentAddressableMemory.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 retrieval_prob
                     see `retrieval_prob <ContentAddressableMemory.retrieval_prob>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 selection_function
                     see `selection_function <ContentAddressableMemory.selection_function>`
@@ -656,14 +661,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `storage_prob <ContentAddressableMemory.storage_prob>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 val_size
                     see `val_size <ContentAddressableMemory.val_size>`
 
                     :default value: 1
-                    :type: int
-
+                    :type: ``int``
         """
         variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)
@@ -732,44 +736,33 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         self.stateful_attributes = ["random_state", "previous_value"]
 
     def _get_state_ids(self):
-        # Keep the ids in the same order as the structure generated below
-        return self.stateful_attributes + ["distance_function", "selection_function"]
+        return super()._get_state_ids() + ["ring_memory"]
 
     def _get_state_struct_type(self, ctx):
-        # FIXME: We need explicit override because the ring buffer structure
-        #        is not easily derived from "previous_value" 2d array.
-        distance_state_struct = ctx.get_state_struct_type(self.distance_function)
-        selection_state_struct = ctx.get_state_struct_type(self.selection_function)
-        # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.parameters.random_state.get())
         # Construct a ring buffer
         max_entries = self.parameters.max_entries.get()
         key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
         keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
-        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
+        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1])
         vals_struct = pnlvm.ir.ArrayType(val_type, max_entries)
         ring_buffer_struct = pnlvm.ir.LiteralStructType((
             keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty))
-        return pnlvm.ir.LiteralStructType((random_state_struct,
-                                           ring_buffer_struct,
-                                           distance_state_struct,
-                                           selection_state_struct))
+        generic_struct = ctx.get_state_struct_type(super())
+        return pnlvm.ir.LiteralStructType((*generic_struct,
+                                           ring_buffer_struct))
 
     def _get_state_initializer(self, context):
-        distance_init = self.distance_function._get_state_initializer(context)
-        selection_init = self.selection_function._get_state_initializer(context)
-        random_state = self.parameters.random_state.get(context).get_state()[1:]
         memory = self.get_previous_value(context)
-        my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
-        return (*my_init, distance_init, selection_init)
+        mem_init = pnlvm._tupleize([memory[0], memory[1], 0, 0])
+        return (*super()._get_state_initializer(context), mem_init)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
-        buffer_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
@@ -792,7 +785,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
@@ -801,8 +794,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         max_entries = len(vals_ptr.type.pointee)
         entries = builder.load(count_ptr)
         entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
-        # The call to random function needs to be behind jump to match python
-        # code
+        # The call to random function needs to be after check to match python
         with builder.if_then(retr_rand):
             rand_ptr = builder.alloca(ctx.float_ty)
             builder.call(uniform_f, [rand_struct, rand_ptr])
@@ -815,8 +807,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         with builder.if_then(retr, likely=True):
             # Determine distances
             distance_f = ctx.import_llvm_function(self.distance_function)
-            distance_params = ctx.get_param_ptr(self, builder, params, "distance_function")
-            distance_state = ctx.get_state_ptr(self, builder, state, "distance_function")
+            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
+            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
@@ -831,8 +823,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                     distance_arg_in, distance_arg_out])
 
             selection_f = ctx.import_llvm_function(self.selection_function)
-            selection_params = ctx.get_param_ptr(self, builder, params, "selection_function")
-            selection_state = ctx.get_state_ptr(self, builder, state, "selection_function")
+            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
+            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
                                        selection_arg_in, selection_arg_out])
@@ -857,7 +849,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
@@ -964,7 +956,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         selection_function = self.selection_function
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
-                                for i in range(self.get_current_function_param('max_entries', context))])
+                                for i in range(self._get_current_function_param('max_entries', context))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var, context=context)
             fct_string = 'Function type'
@@ -1043,7 +1035,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", context)
+            reinitialization_value = self._get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -1098,14 +1090,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # if len(variable)==2:
         val = variable[VALS]
 
-        retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
-        storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, context)).astype(float)
+        retrieval_prob = np.array(self._get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
+        storage_prob = np.array(self._get_current_function_param(STORAGE_PROB, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # get random state
-        random_state = self.get_current_function_param('random_state', context)
+        random_state = self._get_current_function_param('random_state', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
@@ -1209,7 +1201,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:
-                random_state = self.get_current_function_param('random_state', context)
+                random_state = self._get_current_function_param('random_state', context)
                 index_of_selected_item = random_state.choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
                 index_of_selected_item = indices_of_selected_items[0]

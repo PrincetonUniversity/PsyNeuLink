@@ -632,20 +632,25 @@ class LCControlMechanism(ControlMechanism):
                     see `base_level_gain <LCControlMechanism.base_level_gain>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 function
-                    see `function <LCControlMechanism.function>`
+                    see `function <LCControlMechanism_Function>`
 
                     :default value: `FitzHughNagumoIntegrator`
                     :type: `Function`
+
+                modulated_mechanisms
+                    see `modulated_mechanisms <LCControlMechanism_Modulated_Mechanisms>`
+
+                    :default value: None
+                    :type:
 
                 scaling_factor_gain
                     see `scaling_factor_gain <LCControlMechanism.scaling_factor_gain>`
 
                     :default value: 3.0
-                    :type: float
-
+                    :type: ``float``
         """
         function = Parameter(FitzHughNagumoIntegrator, stateful=False, loggable=False)
 
@@ -843,10 +848,9 @@ class LCControlMechanism(ControlMechanism):
 
         # Load mechanism parameters
         params, _, _, _ = builder.function.args
-        mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        scaling_factor_ptr = ctx.get_param_ptr(self, builder, mech_params,
+        scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                "scaling_factor_gain")
-        base_factor_ptr = ctx.get_param_ptr(self, builder, mech_params,
+        base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                            "base_level_gain")
         scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)

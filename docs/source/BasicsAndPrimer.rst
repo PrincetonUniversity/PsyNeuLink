@@ -1,17 +1,18 @@
-Basics and Sampler
-==================
+Basics and Primer
+=================
 
-* `BasicsAndSampler_Basics`
-* `BasicsAndSampler_Sampler`
-    * `BasicsAndSampler_Simple_Configurations`
-    * `BasicsAndSampler_Elaborate_Configurations`
-    * `BasicsAndSampler_Dynamics_of_Execution`
-    * `BasicsAndSampler_Control`
-    * `BasicsAndSampler_Logging_and_Animation`
-    * `BasicsAndSampler_Learning`
-    * `BasicsAndSampler_Customization`
+* `BasicsAndPrimer_Basics`
+* `BasicsAndPrimer_Primer`
+    * `BasicsAndPrimer_Simple_Configurations`
+    * `BasicsAndPrimer_Elaborate_Configurations`
+    * `BasicsAndPrimer_Dynamics_of_Execution`
+    * `BasicsAndPrimer_Control`
+    * `BasicsAndPrimer_Parameters`
+    * `BasicsAndPrimer_Monitoring_Values`
+    * `BasicsAndPrimer_Learning`
+    * `BasicsAndPrimer_Customization`
 
-.. _BasicsAndSampler_Basics:
+.. _BasicsAndPrimer_Basics:
 
 Basics
 ------
@@ -48,7 +49,7 @@ drift diffusion decision process); and there are `ModulatoryMechanisms <Modulato
 `LearningMechanisms <LearningMechanism>` that can be used to modify Projections, respectively.  The `function
 <Mechanism_Base.function>` of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich `library
 <Functions>` of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
-assigned any Python function that is consistent with that Mechanism's type (see `BasicsAndSampler_Customization`).
+assigned any Python function that is consistent with that Mechanism's type (see `BasicsAndPrimer_Customization`).
 Since Mechanisms can implement virtually any function, Projections ensure that they can "communicate" with each other
 seamlessly.
 
@@ -58,28 +59,28 @@ commit each part of their model to a form of processing and/or level of analysis
 while providing the opportunity to test and explore how they interact with one another at the level of the entire
 system.  The figure below provides an example of the kinds of elements available in PsyNeuLink, and some that are
 planned for future inclusion.  The `QuickReference` provides a more detailed overview of PsyNeuLink objects and its
-other facilities.  In the sections that follow, the Sampler provides some examples of how these are used to construct
+other facilities.  In the sections that follow, the Primer provides some examples of how these are used to construct
 models in PsyNeuLink.
 
-.. _BasicsAndSampler_GrandView_Figure:
+.. _BasicsAndPrimer_GrandView_Figure:
 
-.. figure:: _static/BasicsAndSampler_GrandView_fig.svg
+.. figure:: _static/BasicsAndPrimer_GrandView_fig.svg
 
     **PsyNeuLink Environment.**  Full-colored items are examples of currently implemented elements; dimmed
     items are examples of elements planned for future implementation.
 
 
-.. _BasicsAndSampler_Sampler:
+.. _BasicsAndPrimer_Primer:
 
-Sampler
--------
+Primer
+------
 
-The examples below are intended to provide a quick illustrations of some of PsyNeuLink's basic and more advanced
+The examples below are intended to provide quick illustrations of some of PsyNeuLink's basic and more advanced
 capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
 `tutorial <>` provides additional introductory material for those who are newer to computational modeling, as well as a
 more detailed and comprehensive introduction to the use of PsyNeuLink.
 
-.. _BasicsAndSampler_Simple_Configurations:
+.. _BasicsAndPrimer_Simple_Configurations:
 
 Simple Configurations
 ~~~~~~~~~~~~~~~~~~~~~
@@ -87,8 +88,8 @@ Simple Configurations
 Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
 applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
 Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list --
-PsyNeuLink provides the necessary Projections that connects each to the next one in the list, making reasonable
-assumptions about their connectivity.  For example, the following example creates a 3-layered 5-2-5 neural network
+PsyNeuLink provides the necessary Projections that connect each to the next one in the list, making reasonable
+assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 neural network
 encoder network, the first layer of which takes an an array of length 5 as its input, and uses a `Linear` function
 (the default for a `ProcessingMechanism`), and the other two of which take 1d arrays of the specified sizes and use a
 `Logistic` function::
@@ -111,9 +112,9 @@ with an appropriately-sized input array, for example::
 The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its `show_graph
 <Composition.show_graph>` method:
 
-.. _BasicsAndSampler_Simple_Pathway_Example_Figure:
+.. _BasicsAndPrimer_Simple_Pathway_Example_Figure:
 
-.. figure:: _static/BasicsAndSampler_SimplePathway_fig.svg
+.. figure:: _static/BasicsAndPrimer_SimplePathway_fig.svg
    :width: 30%
 
    **Composition Graph.**  Representation of the graph of the simple Composition in the example above.  Note that the
@@ -144,9 +145,9 @@ PsyNeuLink picks sensible defaults when necessary Components are not specified. 
 `MappingProjections<MappingProjection>`), and sized them appropriately to connect each pair of Mechanisms. Each
 Projection has a `matrix <Projection.matrix>` parameter that weights the connections between the elements of the output
 of its `sender <Projection.sender>` and those of the input to its `receiver <Projection.receiver>`.  Here, the
-default is to use a `FULL_CONNECTIVIT_MATRIX`, that connects every element of the sender's array to every element of
-the receiver's array weight of 1 (a ). However, it is easy to specify a Projection explicitly, including its matrix,
-simply by inserting them in between the Mechanisms in the pathway::
+default is to use a `FULL_CONNECTIVITY_MATRIX`, that connects every element of the sender's array to every element of
+the receiver's array with a weight of 1. However, it is easy to specify a Projection explicitly, including its
+matrix, simply by inserting them in between the Mechanisms in the pathway::
 
     my_projection = MappingProjection(matrix=(.2 * np.random.rand(2, 5)) - .1))
     my_encoder = Composition()
@@ -173,7 +174,7 @@ been accomplished by explicitly creating the recurrent connection::
     my_encoder.add_projection(recurent_projection)
 
 
-.. _BasicsAndSampler_Elaborate_Configurations:
+.. _BasicsAndPrimer_Elaborate_Configurations:
 
 More Elaborate Configurations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -224,9 +225,9 @@ a more complete version of which can be found in the `PsyNeuLink Library <https:
 .io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.  The figure belows shows the model using the
 Composition's `show_graph <Composition.show_graph>` method.
 
-.. _BasicsAndSampler_Simple_Stroop_Example_Figure:
+.. _BasicsAndPrimer_Simple_Stroop_Example_Figure:
 
-.. figure:: _static/BasicsAndSampler_Stroop_Model.svg
+.. figure:: _static/BasicsAndPrimer_Stroop_Model.svg
    :width: 50%
 
    **Stroop Model.** Representation of the Composition in the example above.
@@ -234,7 +235,7 @@ Composition's `show_graph <Composition.show_graph>` method.
 Running the model is as simple as generating some inputs and then providing them to the `run <Composition.run>`
 method.  Inputs are specified in a dictionary, with one entry for each of the Composition's `INPUT`
 Mechanisms;  each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
-The following defines two stimui to use as the color and word inputs (``red`` and ``green``, and two for use as the
+The following defines two stimuli to use as the color and word inputs (``red`` and ``green``), and two for use as the
 task input (``color`` and ``word``), and then uses them to run the model for a color naming congruent trial, followed
 by a color naming incongruent trial::
 
@@ -259,11 +260,12 @@ significantly longer than for the first, congruent trial;  note also that, on so
 the response in the second trials since, by default, the `function <DDM.function>` used for the decision process has
 a non-zero `noise <DriftDiffusionAnalytical.noise>` term).
 
-.. _BasicsAndSampler_Dynamics_of_Execution:
+.. _BasicsAndPrimer_Dynamics_of_Execution:
 
 Dynamics of Execution
 ~~~~~~~~~~~~~~~~~~~~~
 
+.. XXX
 .. - Execute at multiple times scales:
 ..   • run DDM in integrator mode
 ..   • but notice that it only executes one step of integration
@@ -350,7 +352,7 @@ PsyNeuLink provides a rich set of `pre-defined Conditions <Condition_Pre-Specifi
 examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
 construct virtually any schedule of execution that is logically possible.
 
-.. _BasicsAndSampler_Control:
+.. _BasicsAndPrimer_Control:
 
 Control
 ~~~~~~~
@@ -373,7 +375,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     # Construct the Composition using the control Mechanism as its controller:
     Stroop_model = Composition(name='Stroop Model', controller=control)
 
-    # Print statements show state of
+    # Print statement called by run method (below), that show state of Components after each trial
     np.set_printoptions(precision=2)
     global t
     t = 0
@@ -386,13 +388,13 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
         print(f'\t\t\t\tred   green')
         print(f'\toutput:\t\t{output.value[0]}')
         print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
-        print(f'\tconflict:\t  {control._objective_mechanism.value[0]}')
+        print(f'\tconflict:\t  {control.objective_mechanism.value[0]}')
         t += 1
 
     # Set up run and then execute it
     task.initial_value = [0.5,0.5]         # Assign "neutral" starting point for task units on each trial
     task.reinitialize_when=AtTrialStart()  # Reinitialize task units at beginning of each trial
-    num_trials = 5
+    num_trials = 4
     stimuli = {color_input:[red]*num_trials,
                word_input:[green]*num_trials,
                task_input:[color]*num_trials}
@@ -412,9 +414,9 @@ is then added to the ``Stroop_model`` as its `controller <Composition .controlle
 The result is shown in the figure below, using the **show_controller** option of the Composition's `show_graph
 <Composition.show_graph>` method:
 
-.. _BasicsAndSampler_Stroop_Example_With_Control_Figure:
+.. _BasicsAndPrimer_Stroop_Example_With_Control_Figure:
 
-.. figure:: _static/BasicsAndSampler_Stroop_Model_Control.svg
+.. figure:: _static/BasicsAndPrimer_Stroop_Model_Control.svg
    :width: 50%
 
    **Stroop Model with Controller.** Representation of the Composition with the ``control`` Mechanism added, generated
@@ -437,14 +439,14 @@ the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Compo
 at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
 used to generate an animation of the Composition's execution, as shown below:
 
-.. figure:: _static/BasicsAndSampler_Stroop_Model_movie.gif
+.. figure:: _static/BasicsAndPrimer_Stroop_Model_movie.gif
    :width: 75%
 
    **Animation of Stroop Model with Controller.** Generated by a call to ``Stroop_model.show_graph(show_controller)
    with ``animate={"show_controller":True}`` in call to the `run <Composition.run>`.
 
 
-Running it for several `trials <TimeScale.TRIAL>` produces the following output::
+Running it for four `trials <TimeScale.TRIAL>` produces the following output::
 
     .. _Stroop_model_output:
 
@@ -497,41 +499,153 @@ internal simulations to optimize the amount of control to optimize some criterio
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
 
-.. XXXX
-.. Change names of:
-..   - ``output`` Mechanism above to ``phonology``
-..   - ``color_hidden`` to ``color``
-..   - ``word_hidden`` to ``orthography``
+.. _BasicsAndPrimer_Parameters:
 
+Parameters
+~~~~~~~~~~
+Every Component has a set of parameters that determine how the Component operates, or that contain information about
+the state of its operation.  For example, every Component has a `value <Component_Value>` parameter that stores the
+result of the Component's `function <Component_Function>` after it has executed. (Note here the difference in the
+generic use of the term "value" to designate the quantity assigned to a parameter, and its use as the name of a
+*particular* parameter of a Component.)  Although parameters are attributes of a Component, and can be accessed like
+any other Python attribute (as described below), they are actually instances of a special `Parameters` class that
+supports a number of important features. These include the ability to simultaneously have different values in
+different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
+previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
+These features are supported by methods on the Parameter class, as described below.
 
-.. _BasicsAndSampler_Logging_and_Animation:
+Accessing Parameter Values
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
+by using "dot notation" -- that is, ``<Component>.<parameter>``. For instance, the print statements in the
+``print_after`` function of the example above use ``output.value`` and ``decision.value`` to access the `value
+<Mechanism_Base.value>` parameter of the ``output`` and ``decision`` Mechanisms, respectively (more specifically, they
+access the first element of the output Mechanism's value, ``output.value[0]``, and the first and second elements of the
+decison Mechanism's `value <Mechanism_Base.value>`).  This returns their most recently assigned values. However, as an
+instance of the `Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more
+than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
+different `contexts <Parameter_statefulness>`, either as part of different Compositions or, within the same
+Composition, as part of `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the
+Composition's `controller <Composition_Controller>`.  The value of a parameter in a particular context can be
+accessed by using the `get <Parameter.get>` method for the parameter and providing the context, for example::
 
-Logging and Animation
-~~~~~~~~~~~~~~~~~~~~~
+    >>> output.parameters.value.get('Stroop Model - Conflict Monitoring')[0]
+    [ 0.65  0.35]
 
-The print statements in the example are generated using the **call_after_trial** argument in the Composition's `run
-<Composition.run>` method, that calls the ``print_after`` function defined in Python.  There are other similar "hooks"
-in the `run <Composition.run>` method that can be used to carry out custom operations at various points during
-execution (before and/or after each `run <TimeScale.RUN>`, `run <TimeScale.TRIAL>` or execution of the Components
-in a trial).  PsyNeuLink also has powerful logging capabilities that can be used to track and report any parameter of
-a model.  For example, including the following lines in the script for ``Stroop_model``,  after the ``task`` and
-``control`` Mechanisms are constructed::
+Notice that, here, the name of the Composition in which the Mechanism was executed is used as the context; see
+`Composition_Scope_of_Execution` for additional information about how to specify contexts.  If no context is specified,
+then the `get <Parameter.get>` method returns the most recently assigned value of the parameter, just like dot
+notation.
+
+If a parameter is `stateful <Parameter.stateful>`, then its previous value can also be accessed, using the
+`get_previous <Parameter.get_previous>` method; for example::
+
+    >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring')[0]
+    [ 0.55  0.45]
+
+Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
+(Trial 3).  By default, stateful parameters preserve only one previous value.  However, a parameter can be
+specified to have a longer `history <Parameter.history>`, in which case `get_previous <Parameter.get_previous>` can
+be used to access earlier values.  For example, the following sets output Mechanism's `value <Mechanism_Base.value>`
+parameter to store up to three previous values::
+
+    >>> output.parameters.value.history_max_length = 3
+
+If included in the script above, then the following would return the ``output`` Mechanism's `value
+<Mechanism_Base.value>` from two trials before the last one run::
+
+    >>> output.parameters.value.get_previous('Stroop Model - Conflict Monitoring', 2)[0]
+    [ 0.38 0.62]
+
+Notice that this is the value from Trial 1 in the example above.
+
+Function Parameters
+^^^^^^^^^^^^^^^^^^^
+The `parameters <Component_Parameters>` attribute of a Component contains a list of all of its parameters. It is
+important here to recognize the difference between the parameters of a Component and those of its `function
+<Component_Function>`.  In the examples above, `value <Component_Value>` is a parameter of the ``output`` and
+``decision`` Mechanisms themselves.  However, each of those Mechanisms also has a `function <Mechanism_Base
+.function>`; and, since those are PsyNeuLink `Functions <Function>` which are also Compoments, those too have
+parameters.  For example, the ``output`` Mechanism was assigned the `Logistic` `Function`, which has a `gain
+<Logistic.gain>` and a `bias <Logistic.bias>` parameter (as well as others).  The parameters of a Component's
+`function <Component_Function>` can also be accessed using dot notation, by referencing the function in the
+specification.  For example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistic
+Function can be accessed in either of the following ways::
+
+    >>> output.function.gain
+    1.0
+    >>> output.function.parameters.gain.get()
+    1.0
+
+Modulable Parameters
+^^^^^^^^^^^^^^^^^^^^
+Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
+a `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`).  If the parameter
+of a `Mechanism <Mechanism>` or a `Projection <Projection>` is modulable, it is assigned a `ParameterPort` -- this is a
+Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
+another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
+a Mechanism or its `function <Mechanism_Base.function>`, and similarly for Projections.  These determine the value
+of the parameter that is actually used when the Component is executed, which may be different than the base value
+returned by accessing the parameter directly (as in the examples above); see `ModulatorySignal_Modulation` for a more
+complete description of modulation.  The current *modulated* value of a parameter can be accessed from the `value
+<ParameterPort.value>` of the corresponding ParameterPort.  For instance, the print statement in the example above
+used ``task.parameter_ports[GAIN].value`` to report the modulated value of the `gain <Logistic.gain>` parameter of
+the ``task`` Mechanism's `Logistic` function when the simulation was run.  For convenience, it is also possible to
+access the value of a modulable parameter by adding the prefix ``mod_`` to the name of the parameter;  this returns
+the `value <ParameterPort.value>` of the ParameterPort for the parameter::
+
+    >>> task.parameter_ports[GAIN].value
+    [0.62]
+    >>> task.mod_gain
+    [0.62]
+
+This works for any modulable parameters of the Mechanism or its `function <Mechanism_Base.function>`.  Note that,
+here, neither the ``parameters`` nor the ``function`` atributes of the Mechanism need to be included in the reference.
+Note also that, as explained above, the value returned is different from the base value of the function's gain
+parameter::
+
+    >>> task.function.gain
+    [1.0]
+
+This is because when the Compoistion was run, the ``control`` Mechanism modulated the value of the gain parameter.
+
+.. *Initialization* ???XXX
+
+.. _BasicsAndPrimer_Monitoring_Values:
+
+Displaying and Logging Values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Displaying values* The console output in the example above was generated using the **call_after_trial** argument in
+the Composition's `run <Composition.run>` method, that calls the ``print_after`` function defined in Python.  There
+are other similar "hooks" in the `run <Composition.run>` method that can be used not only to monitor values, but also
+to carry out custom operations at various points during execution (before and/or after each `run <TimeScale.RUN>`,
+`run <TimeScale.TRIAL>` or execution of the Components in a trial).
+
+*Logging values*. PsyNeuLink also has powerful logging capabilities that can be used to track and report any
+parameter of a model.  For example, including the following lines in the script for ``Stroop_model``,  after the
+``task`` and ``control`` Mechanisms are constructed::
 
     task.log.set_log_conditions(VALUE)
     control.log.set_log_conditions(VARIABLE)
     control.log.set_log_conditions(VALUE)
-    ...
-    # After call to Stroop_model.run:
+
+logs the value of the ``control`` and ``task`` Mechanisms each time they are executed.  Information in the log can be
+printed to the console using its `print_entries <Log.print_entries>` method, and specifying the desired information
+in its **display** argument.  For example, calling the following after ``Stroop_model.run`` has been called::
+
     Stroop_model.log.print_entries(display=[TIME, VALUE])
 
-report the value of the ``control`` and ``task`` Mechanims each time they executed for three trials::
+generates the following report of the time at which the ``control`` and ``task`` Mechanisms were executed and their
+value for each execution (only the first two trials worth of the output are reproduced here)::
 
     Log for Stroop Model:
 
     Logged Item:   Time          Value
 
-    'CONTROL'      0:1:0:0      [[0.51]]
-    'CONTROL'      0:2:0:0      [[0.59]]
+    'CONTROL'      0:0:10:0     [[0.51]]
+    'CONTROL'      0:1:10:0     [[0.59]]
+    ...
 
     'TASK'         0:0:0:1      [[0.57 0.56]]
     'TASK'         0:0:1:1      [[0.58 0.55]]
@@ -553,35 +667,39 @@ report the value of the ``control`` and ``task`` Mechanims each time they execut
     'TASK'         0:1:7:1      [[0.78 0.42]]
     'TASK'         0:1:8:1      [[0.8  0.41]]
     'TASK'         0:1:9:1      [[0.81 0.4 ]]
+    ...
 
-The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism,
-since it only executed once per trial, but there are ten entries for the ``task`` Mechanism since it executed ten
-times, as specified in the Conditions described above.  The output of the `Log` can also be reported in various other
-formats, including a `numpy <https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html>`_ array,
-a dictionary of values for each entry, and `CSV <https://en.wikipedia.org/wiki/Comma-separated_values>`_ format.
+The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the ``control`` Mechanism
+per trial, since it is executed only once per trial; but there are ten entries for the ``task`` Mechanism for each
+trial since it executed ten times, as specified in the Conditions described above.
 
-.. _BasicsAndSampler_Learning:
+The output of a `Log` can also be reported in various other formats, including as a `numpy <https://docs.scipy
+.org/doc/numpy/reference/generated/numpy.array.html>`_ array (using its `nparray <Log.nparray>` method, as a
+dictionary of values for each entry (using its `nparray_dictionary <Log.nparray_dictionary>` method), and in `CSV
+<https://en.wikipedia.org/wiki/Comma-separated_values>`_ format (using its `csv <Log.csv>` method.
+
+.. _BasicsAndPrimer_Learning:
 
 Learning
 ~~~~~~~~
 
 Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
 mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
-Python-based environments.  Currently, has builtin intregration with `PyTorch <https://pytorch.org>`_, however
-other envirnoments can be accessed using `UserDefinedFunctions <UserDefinedFunction>`.  Since such environments are
-becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink is designed with
-a complemenatry set of the goals: modularity and exposition, rather than efficiency of computation.  That is, it is
-better suited for "story-boarding" a model that includes learning components, and for illustrating process flow
-during learning, than it is for large scale simulations involving learning.  However, the specification of the
-learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can then be
-integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of specifying
-learning components is described below.
+Python-based environments.  Currently, PsyNeuLink has builtin intregration with `PyTorch <https://pytorch.org>`_,
+however other envirnoments can be accessed using `UserDefinedFunctions <UserDefinedFunction>`.  Since such
+environments are becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink
+is designed with a complementary set of goals: modularity and exposition, rather than efficiency of computation.
+That is, it is better suited for "story-boarding" a model that includes learning components, and for illustrating
+process flow during learning, than it is for large scale simulations involving learning.  However, the specification
+of the learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can
+then be integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of
+specifying learning components is described below.
 
 LearningMechanisms
 ^^^^^^^^^^^^^^^^^^
 
 PsyNeuLink has a native class -- `LearningMechanism` -- that can be used to implement various forms of learning,
-including unsupervised forms (such as `Hebbian`) and supervised forms (such as reinforcment learning and
+including unsupervised forms (such as `Hebbian`) and supervised forms (such as reinforcement learning and
 backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
 `MappingProjection` from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
 LearningMechanisms use `LearningSignals` (a type of `OutputPort`) to send a `LearningProjection` to the
@@ -606,19 +724,19 @@ a simple three-layered neural network that learns to compute the X-OR operation:
     # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
     xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
                   'targets':[  [0],     [1],     [1],     [0] ]}
-    xor_comp.run(inputs={input:xor_inputs['stimuli'],
+    xor_comp.learn(inputs={input:xor_inputs['stimuli'],
                          target:xor_inputs['targets']})
 
 Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
 components created by the call to ``add_backpropagation_pathway``:
 
-.. _BasicsAndSampler_XOR_MODEL_Figure:
+.. _BasicsAndPrimer_XOR_MODEL_Figure:
 
-.. figure:: _static/BasicsAndSampler_XOR_Model_fig.svg
+.. figure:: _static/BasicsAndPrimer_XOR_Model_fig.svg
    :width: 100%
 
-    **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
-    diamonds represent MappingProjections, shown as nodes so that the `LearningProjections` to them can be shown.
+   **XOR Model.**  Items in orange are learning components implemented by the call to ``add_backpropagation_pathway``;
+   diamonds represent MappingProjections, shown as nodes so that the `LearningProjections` to them can be shown.
 
 
 Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
@@ -632,13 +750,13 @@ target Mechanism (that receives the input specifying the target responses)::
     target_mech = learning_components[TARGET_MECHANISM]
 
     # Run the model:
-    result = xor_model.run(inputs={input_mech:xor_inputs,
+    result = xor_model.learn(inputs={input_mech:xor_inputs,
                                    target_mech:xor_targets},
                            num_trials=2)
 
 It can also be run without learning by calling the run method with ``enable_learning=False``.
 
-.. _BasicsAndSampler_Rumelhart_Model:
+.. _BasicsAndPrimer_Rumelhart_Model:
 
 The model shown above implements learning for a simple linear path.  However, virtually any model can be created
 using calls to a Composition's `learning methods <Composition_Learning_Methods>` to build up more complex pathways.
@@ -679,16 +797,16 @@ For example, the following implements a network for learning semantic representa
 
 The figure below shows this network with all of its `learning components <Composition_Learning_Components>`:
 
-.. _BasicsAndSampler_Rumelhart_Network_Figure:
+.. _BasicsAndPrimer_Rumelhart_Network_Figure:
 
-.. figure:: _static/BasicsAndSampler_Rumelhart_Network.svg
+.. figure:: _static/BasicsAndPrimer_Rumelhart_Network.svg
    :width: 75%
 
-    **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
-    ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
-    `LearningProjections` to them can be shown.
+   **Rumelhart Semantic Network.**  Items in orange are learning components implemented by the calls to
+   ``add_backpropagation_pathway``; diamonds represent MappingProjections, shown as nodes so that the
+   `LearningProjections` to them can be shown.
 
-.. ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
+.. XXX ADD REFERENCE TO Rumelhart Semantic Network Model once implemented
 
 Given the number of learning components, training the model above using standard PsyNeuLink components can take a
 considerable amount of time.  However, the same Composition can be implemented using the `AutodiffComposition`, by
@@ -698,17 +816,17 @@ three orders of magnitude) faster (see `Composition_Learning`, as well as `Compo
 for comparisons of the advantages and disadvantages of using a standard `Composition` vs. `AutodiffComposition` for
 learning).
 
-.. _BasicsAndSampler_Customization:
+.. _BasicsAndPrimer_Customization:
 
 Customization
 ~~~~~~~~~~~~~
 
 The Mechanisms in the examples above all use PsyNeuLink `Functions`.  However, as noted earlier, a Mechanism can be
-assigned any Ptyhon function, so long as it is compatible with the Mechanism's type.  More specifically, its
+assigned any Python function, so long as it is compatible with the Mechanism's type.  More specifically, its
 first argument must accept a variable that has the same shape as the Mechanism's variable.  For most Mechanism types
 this can be specified in the **default_variable** argument of their constructors, so in practice this places little
 constraint on the type of functions that can be assigned.  For example, the script below defines a function that
-returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assignes this to a
+returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assigns this to a
 `ProcessingMechanism`::
 
         >>> def my_sinusoidal_fct(input=[[0],[0]],
@@ -735,7 +853,7 @@ As a result, the phase and amplitude of ``my_wave_mech`` can be modulated in by 
                                                      'amplitude', my_wave_mech])
 
 This facility not only makes PsyNeuLink flexible, but can be used to extend it in powerful ways.  For example, as
-mentioned under `BasicsAndSampler_Learning`, functions from other environments that implement complex learning models
+mentioned under `BasicsAndPrimer_Learning`, functions from other environments that implement complex learning models
 can be assigned as the `function <Mechanism_Base.function>` of a Mechanism, and in that way integrated into a
 PsyNeuLink model.
 
@@ -748,4 +866,4 @@ a more detailed description of PsyNeuLink's organization and capabilities.
 
 .. STUFF TO ADD -------------------------------------------------------------------------------------------------------
 .. XXX NESTED COMPOSITIONS (BEYOND AUTODIFF)
-.. XXX COMPILATION
+.. XXX COMPILATION INCLUDING EXAMPLE WITH timeit TO SHOW IMPROVEMENT!

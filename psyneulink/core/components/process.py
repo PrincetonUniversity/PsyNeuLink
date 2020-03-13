@@ -837,12 +837,77 @@ class Process(Process_Base):
                     :default value: None
                     :type:
 
-                input
-                    see `input <Process.input>`
+                clamp_input
+                    see `clamp_input <Process.clamp_input>`
 
                     :default value: None
                     :type:
 
+                default_projection_matrix
+                    see `default_projection_matrix <Process.default_projection_matrix>`
+
+                    :default value: `AUTO_ASSIGN_MATRIX`
+                    :type: ``str``
+
+                initial_values
+                    see `initial_values <Process.initial_values>`
+
+                    :default value: None
+                    :type:
+
+                input
+                    see `input <Process.input>`
+
+                    :default value: []
+                    :type: ``list``
+
+                learning
+                    see `learning <Process.learning>`
+
+                    :default value: None
+                    :type:
+
+                learning_rate
+                    see `learning_rate <Process.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                pathway
+                    see `pathway <Process_Pathway>`
+
+                    :default value: None
+                    :type:
+
+                process_input_ports
+                    see `process_input_ports <Process.process_input_ports>`
+
+                    :default value: []
+                    :type: ``list``
+
+                systems
+                    see `systems <Process.systems>`
+
+                    :default value: []
+                    :type: ``list``
+
+                target
+                    see `target <Process.target>`
+
+                    :default value: None
+                    :type:
+
+                target_input_ports
+                    see `target_input_ports <Process.target_input_ports>`
+
+                    :default value: []
+                    :type: ``list``
+
+                targets
+                    see `targets <Process.targets>`
+
+                    :default value: None
+                    :type:
         """
         variable = None
         input = []
@@ -2335,6 +2400,7 @@ class Process(Process_Base):
                     target_input_port.value *= 0
 
         # THEN, execute ComparatorMechanism and LearningMechanism
+        context.add_flag(ContextFlags.LEARNING_MODE)
         context.add_flag(ContextFlags.LEARNING)
         for mechanism in self._learning_mechs:
             mechanism.execute(context=context)
@@ -2388,6 +2454,7 @@ class Process(Process_Base):
                                                       projection.name))
 
         context.remove_flag(ContextFlags.LEARNING)
+        context.remove_flag(ContextFlags.LEARNING_MODE)
 
     def run(self,
             inputs,
@@ -2673,16 +2740,15 @@ class ProcessInputPort(OutputPort):
                     see `variable <ProcessInputPort.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
                     see `value <ProcessInputPort.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # just grabs input from the process
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')

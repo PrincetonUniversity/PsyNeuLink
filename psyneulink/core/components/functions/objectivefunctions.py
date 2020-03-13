@@ -66,8 +66,7 @@ class ObjectiveFunction(Function_Base):
                     see `normalize <ObjectiveFunction.normalize>`
 
                     :default value: False
-                    :type: bool
-
+                    :type: ``bool``
         """
         normalize = False
         metric = Parameter(None, stateful=False)
@@ -184,13 +183,13 @@ class Stability(ObjectiveFunction):
                     see `matrix <Stability.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 metric
                     see `metric <Stability.metric>`
 
                     :default value: `ENERGY`
-                    :type: str
+                    :type: ``str``
 
                 metric_fct
                     see `metric_fct <Stability.metric_fct>`
@@ -203,7 +202,6 @@ class Stability(ObjectiveFunction):
 
                     :default value: None
                     :type:
-
         """
         matrix = HOLLOW_MATRIX
         metric = Parameter(ENERGY, stateful=False)
@@ -401,7 +399,7 @@ class Stability(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
+        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -429,8 +427,8 @@ class Stability(ObjectiveFunction):
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = ctx.get_param_ptr(self, builder, params, "metric_fct")
-        metric_state = ctx.get_state_ptr(self, builder, state, "metric_fct")
+        metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
+        metric_state = pnlvm.helpers.get_state_ptr(builder, self, state, "metric_fct")
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
@@ -460,7 +458,7 @@ class Stability(ObjectiveFunction):
             variable = np.squeeze(variable)
         # MODIFIED 6/12/19 END
 
-        matrix = self.get_current_function_param(MATRIX, context)
+        matrix = self._get_current_function_param(MATRIX, context)
 
         current = variable
 
@@ -769,15 +767,14 @@ class Distance(ObjectiveFunction):
                     see `variable <Distance.variable>`
 
                     :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 metric
                     see `metric <Distance.metric>`
 
                     :default value: `DIFFERENCE`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
@@ -1143,10 +1140,17 @@ class Distance(ObjectiveFunction):
 
         """
 
-        v1 = variable[0]
-        v2 = variable[1]
+        try:
+            v1 = np.hstack(variable[0])
+        except TypeError:
+            v1 = variable[0]
 
-        # Maximum of  Hadamard (elementwise) difference of v1 and v2
+        try:
+            v2 = np.hstack(variable[1])
+        except TypeError:
+            v2 = variable[1]
+
+        # Maximum of Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_ABS_DIFF:
             result = np.max(abs(v1 - v2))
 

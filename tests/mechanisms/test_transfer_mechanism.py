@@ -13,14 +13,18 @@ from psyneulink.core.components.functions.distributionfunctions import NormalDis
     UniformDist, GammaDist, WaldDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.keywords import INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE, COMBINE
+from psyneulink.core.globals.keywords import \
+    INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE, COMBINE, RESULT, GREATER_THAN
 from psyneulink.core.globals.utilities import UtilitiesError
 from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.time import TimeScale
 
 VECTOR_SIZE=4
 
@@ -189,7 +193,7 @@ class TestTransferMechanismNoise:
         )
         T.reinitialize_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
+        assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -205,10 +209,9 @@ class TestTransferMechanismNoise:
         )
         T.reinitialize_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [-0.10321885179355784, 0.41059850193837233, 0.144043571160878, 1.454273506962975]
-        # expected = [0.7610377251469934, 0.12167501649282841, 0.44386323274542566, 0.33367432737426683]
-        for i in range(len(val[0])):
-            assert val[0][i] == expected[i]
+        expected = [-1.5640434149388383, -3.013204030356897, -1.225036779097983,
+       1.3093711955796925]
+        assert np.allclose(np.asfarray(val[0]), expected)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -290,7 +293,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.41059850193837233, 0.144043571160878, 1.454273506962975, 0.7610377251469934]])
+        assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1550,6 +1553,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
+        assert np.allclose(val, [[3.60569184,  3.6136458], [9.00036006, 14.09938081]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1978,6 +1982,35 @@ class TestOnResumeIntegratorMode:
         # Trial 0: 0.5*0.0 + 0.5*1.0 = 0.5 * 1.0 = 0.5
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
+
+    def test_termination_measures(self):
+        stim_input = ProcessingMechanism(size=2, name='Stim Input')
+        stim_percept = TransferMechanism(name='Stimulus', size=2, function=Logistic)
+        instruction_input = ProcessingMechanism(size=2, function=Linear(slope=10))
+        attention = LCAMechanism(name='Attention', size=2, function=Logistic,
+                                     leak=8, competition=8, self_excitation=0, noise=0, time_step_size=.1,
+                                     termination_threshold=3,
+                                     termination_measure = TimeScale.TRIAL)
+        decision = TransferMechanism(name='Decision', size=2,
+                                         integrator_mode=True,
+                                         execute_until_finished=False,
+                                         termination_threshold=0.65,
+                                         termination_measure=max,
+                                         termination_comparison_op=GREATER_THAN)
+        response = ProcessingMechanism(size=2, name='Response')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response])
+        comp.add_linear_processing_pathway([instruction_input, attention, stim_percept])
+        inputs = {stim_input: [[1, 1], [1, 1]],
+                  instruction_input: [[1, -1], [-1, 1]]}
+        result = comp.run(inputs=inputs)
+
+        assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
+        assert decision.num_executions.time_step == 1
+        assert decision.num_executions.pass_ == 2
+        assert decision.num_executions.trial== 1
+        assert decision.num_executions.run == 2
 
 
 class TestClip:

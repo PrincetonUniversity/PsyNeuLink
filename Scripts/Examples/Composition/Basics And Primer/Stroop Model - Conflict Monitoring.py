@@ -78,24 +78,26 @@ def print_after():
     print(f'\t\t\t\tcolor  word')
     print(f'\ttask:\t\t{task.value[0]}')
     print(f'\ttask gain:\t   {task.parameter_ports[GAIN].value}')
+    # print(f'\ttask gain:\t   {task.function.parameters.gain}')
     print(f'\t\t\t\tred   green')
     print(f'\toutput:\t\t{output.value[0]}')
     print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
-    print(f'\tconflict:\t  {control._objective_mechanism.value[0]}')
+    print(f'\tconflict:\t  {control.objective_mechanism.value[0]}')
     t += 1
 
 task.log.set_log_conditions(VALUE)
 control.log.set_log_conditions(VALUE)
 
 task.initial_value = [0.5,0.5]
-num_trials = 5
+num_trials = 4
 stimuli = {color_input:[red] * num_trials,
            word_input:[green] * num_trials,
            task_input:[color] * num_trials}
-# Stroop_model.run(inputs=stimuli,
-#                  animate={'show_controller':True,
-#                           # 'show_cim':True
-#                           },
-#                  call_after_trial=print_after)
+
+Stroop_model.run(inputs=stimuli,
+                 # animate={'show_controller':True,
+                 #          # 'show_cim':True
+                 #          },
+                 call_after_trial=print_after)
 
 Stroop_model.log.print_entries(display=[TIME, VALUE])

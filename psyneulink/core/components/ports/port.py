@@ -990,12 +990,18 @@ class Port_Base(Port):
                     :default value: `Linear`
                     :type: `Function`
 
+                projections
+                    see `projections <Port_Base.projections>`
+
+                    :default value: None
+                    :type:
+
                 require_projection_in_composition
                     specifies whether the InputPort requires a projection when instantiated in a Composition;
                     if so, but none exists, a warning is issued.
 
                     :default value: True
-                    :type:
+                    :type: ``bool``
                     :read only: True
         """
         function = Parameter(Linear, stateful=False, loggable=False)
@@ -1991,7 +1997,15 @@ class Port_Base(Port):
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
                         return
                 else:
-                    mod_value = type_match(projection_value, type(mod_param_value))
+                    try:
+                        mod_value = type_match(projection_value, type(mod_param_value))
+                    except TypeError:
+                        # if type_match fails, assume that the computation is
+                        # valid further down the line. This was implicitly true
+                        # before adding this catch block by manually setting the
+                        # modulated param value from None to a default
+                        mod_value = projection_value
+
                     if mod_param_name not in mod_proj_values.keys():
                         mod_proj_values[mod_param_name]=[mod_value]
                     else:
@@ -2220,7 +2234,7 @@ class Port_Base(Port):
         state_f = ctx.import_llvm_function(self.function)
 
         # Create a local copy of the function parameters
-        base_params = ctx.get_param_ptr(self, builder, params, self.parameters.function.name)
+        base_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
         f_params = builder.alloca(state_f.args[0].type.pointee)
         builder.store(builder.load(base_params), f_params)
 
@@ -2252,8 +2266,9 @@ class Port_Base(Port):
 
             # Replace base param with the modulation value
             if name is not None:
-                f_mod_param_ptr = ctx.get_param_ptr(self.function,
-                                                    builder, f_params, name)
+                f_mod_param_ptr = pnlvm.helpers.get_param_ptr(builder,
+                                                              self.function,
+                                                              f_params, name)
                 if f_mod_param_ptr.type != f_mod_ptr.type:
                     warnings.warn("Shape mismatch between modulation and modulated parameter: {} vs. {}".format(
                                   afferent.defaults.value,
@@ -2269,7 +2284,7 @@ class Port_Base(Port):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        f_state = ctx.get_state_ptr(self, builder, state, self.parameters.function.name)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
         builder.call(state_f, [f_params, f_state, f_input, arg_out])
         return builder
 

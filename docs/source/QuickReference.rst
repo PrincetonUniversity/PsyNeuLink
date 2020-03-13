@@ -227,7 +227,7 @@ the ones to which it projects)when it is executed using its `run <Composition.ru
 
    **Composition.** Example of a PsyNeuLink Composition that contains various types of `Mechanisms <Mechanism>`
    (shown as ovals, which each type shown in parentheses belown the Mechanism's name) and `Projections <Projections>`
-   between them (shown as arrows);  see `Basics And Sampler <BasicsAndSampler_Elaborate_Configurations>` for a more
+   between them (shown as arrows);  see `Basics And Primer <BasicsAndPrimer_Elaborate_Configurations>` for a more
    complete description of the model implemented by this Composition).
 
 .. _Quick_Reference_Scheduling:

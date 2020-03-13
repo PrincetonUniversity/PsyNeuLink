@@ -146,7 +146,7 @@ class MaskedMappingProjection(MappingProjection):
                     see `variable <MaskedMappingProjection.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 mask
                     see `mask <MaskedMappingProjection.mask>`
@@ -158,8 +158,7 @@ class MaskedMappingProjection(MappingProjection):
                     see `mask_operation <MaskedMappingProjection.mask_operation>`
 
                     :default value: `MULTIPLY`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
         mask = None

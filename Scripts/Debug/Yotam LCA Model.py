@@ -209,7 +209,9 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 #     learning_rate: learning rate for SGD or (however pnl train their networks)
 #     attach_LCA: if True, will attach an LCAMechanism to evaluate network performance
 #     rest: LCA parameters
-def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200, epochs=10, learning_rate=20, attach_LCA=True, competition=0.2, self_excitation=0.2, leak=0.4, threshold=1e-4, exec_limit=10000):
+def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200, epochs=10, learning_rate=20,
+								attach_LCA=True, competition=0.2, self_excitation=0.2, leak=0.4, threshold=1e-4,
+								exec_limit=10000):
 	# Get all tasks from bipartite graph (edges) and strip 'i/o' suffix
 	all_tasks = get_all_tasks(bipartite_graph)
 

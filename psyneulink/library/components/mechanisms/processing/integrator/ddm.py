@@ -688,17 +688,19 @@ class DDM(ProcessingMechanism):
                     see `initializer <DDM.initializer>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 input_format
                     see `input_format <DDM.input_format>`
 
                     :default value: `SCALAR`
-                    :type: str
+                    :type: ``str``
 
                 random_state
-                    :type: np.random.RandomState
+                    see `random_state <DDM.random_state>`
 
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         function = Parameter(
             DriftDiffusionAnalytical(
@@ -1070,8 +1072,8 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function.get_current_function_param(THRESHOLD, context))
-            random_state = self.get_current_mechanism_param("random_state", context)
+            threshold = float(self.function._get_current_function_param(THRESHOLD, context))
+            random_state = self._get_current_mechanism_param("random_state", context)
             if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
@@ -1120,13 +1122,12 @@ class DDM(ProcessingMechanism):
             
             # Load mechanism state and function threshold parameter
             params, state, _, _ = builder.function.args
-            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            threshold_ptr = ctx.get_param_ptr(self.function, builder,
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+            threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
                                               func_params, THRESHOLD)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
-            mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-            random_state = ctx.get_state_ptr(self, builder, mech_state, "random_state")
+            random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
             random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
             builder.call(random_f, [random_state, random_val_ptr])
@@ -1176,14 +1177,14 @@ class DDM(ProcessingMechanism):
                     break
 
         if (
-            abs(single_value) >= self.function.get_current_function_param(THRESHOLD, context)
+            abs(single_value) >= self.function._get_current_function_param(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function.get_current_function_param(THRESHOLD, context)
+                    self.function._get_current_function_param(THRESHOLD, context)
                 )
             )
             return True

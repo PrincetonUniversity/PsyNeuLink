@@ -44,7 +44,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'RESULT': 'OFF',
             'value': 'OFF',
@@ -79,7 +78,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -138,7 +136,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -172,7 +169,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -296,7 +292,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -330,7 +325,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'num_executions_before_finished': 'OFF',
             'noise': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -393,7 +387,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -427,7 +420,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -542,7 +534,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -576,7 +567,6 @@ class TestLog:
             'mod_slope': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'OFF',
             'variable': 'OFF'
@@ -615,7 +605,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -654,7 +643,6 @@ class TestLog:
             'mod_slope': 'EXECUTION',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
-            'previous_value': 'OFF',
             'termination_measure_value': 'OFF',
             'value': 'EXECUTION',
             'variable': 'OFF'
@@ -956,6 +944,42 @@ class TestLog:
         print()
         print()
 
+    @pytest.mark.parametrize(
+            'scheduler_conditions, multi_run', [
+                (False, False),
+                (True, False),
+                (True, True)
+            ]
+    )
+    def test_log_multi_calls_single_timestep(self, scheduler_conditions, multi_run):
+        lca = pnl.LCAMechanism(
+                size=2,
+                leak=0.5,
+                threshold=0.515,
+                reinitialize_when=pnl.AtTrialStart()
+        )
+        lca.set_log_conditions(pnl.VALUE)
+        m0 = pnl.ProcessingMechanism(
+                size=2
+        )
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway([m0, lca])
+        if scheduler_conditions:
+            comp.scheduler.add_condition(lca, pnl.AfterNCalls(m0, 2))
+        comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
+        log_dict = lca.log.nparray_dictionary()['Composition-0']
+        assert log_dict['Run'] == [[0], [0], [0]]
+        assert log_dict['Trial'] == [[0], [1], [2]]
+        assert log_dict['Pass'] == [[1], [1], [1]] if scheduler_conditions else [[0], [0], [0]]
+        assert log_dict['Time_step'] == [[1], [1], [1]]
+        # floats in value, so use np.allclose
+        assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 3])
+        if multi_run:
+            comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
+            log_dict = lca.log.nparray_dictionary()['Composition-0']
+            assert log_dict['Run'] == [[0], [0], [0], [1], [1], [1]]
+            assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 6])
+
 
 class TestClearLog:
 
@@ -1231,7 +1255,7 @@ class TestFullModels:
 
         middle_weights.set_log_conditions(('mod_matrix', pnl.PROCESSING))
 
-        comp.run(inputs=input_dictionary,
+        comp.learn(inputs=input_dictionary,
                  num_trials=10)
 
         expected_log_val = np.array(
@@ -1348,7 +1372,7 @@ class TestFullModels:
         # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
         middle_weights.log.clear_entries(entries=None, confirm=False)
         middle_weights.set_log_conditions(('mod_matrix', pnl.LEARNING))
-        comp.run(
+        comp.learn(
             num_trials=5,
             inputs=input_dictionary,
         )

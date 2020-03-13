@@ -206,7 +206,7 @@ def is_Function(x):
 def is_function_type(x):
     if not x:
         return False
-    elif isinstance(x, (Function, types.FunctionType, types.MethodType)):
+    elif isinstance(x, (Function, types.FunctionType, types.MethodType, types.BuiltinFunctionType, types.BuiltinMethodType)):
         return True
     elif issubclass(x, Function):
         return True
@@ -487,9 +487,20 @@ class Function_Base(Function):
                     see `variable <Function_Base.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <Function_Base.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
+
+                output_type
+                    see `output_type <Function_Base.output_type>`
+
+                    :default value: FunctionOutputType.DEFAULT
+                    :type: `FunctionOutputType`
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -614,9 +625,9 @@ class Function_Base(Function):
             raise FunctionError(f"{param} is not a valid specification for "
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
-    def get_current_function_param(self, param_name, context=None):
+    def _get_current_function_param(self, param_name, context=None):
         if param_name == "variable":
-            raise FunctionError(f"The method 'get_current_function_param' is intended for retrieving "
+            raise FunctionError(f"The method '_get_current_function_param' is intended for retrieving "
                                 f"the current value of a function parameter. 'variable' is not a function parameter. "
                                 f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
@@ -911,8 +922,8 @@ class ArgumentTherapy(Function_Base):
         """
         # Compute the function
         statement = variable
-        propensity = self.get_current_function_param(PROPENSITY, context)
-        pertinacity = self.get_current_function_param(PERTINACITY, context)
+        propensity = self._get_current_function_param(PROPENSITY, context)
+        pertinacity = self._get_current_function_param(PERTINACITY, context)
         whim = np.random.randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:

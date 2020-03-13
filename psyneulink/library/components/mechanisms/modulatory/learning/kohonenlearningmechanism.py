@@ -313,13 +313,6 @@ class KohonenLearningMechanism(LearningMechanism):
 
                     :default value: None
                     :type:
-
-                modulation
-                    see `modulation <KohonenLearningMechanism.modulation>`
-
-                    :default value: ADDITIVE
-                    :type: str
-
         """
         function = Parameter(Hebbian, stateful=False, loggable=False)
 
@@ -423,7 +416,7 @@ class KohonenLearningMechanism(LearningMechanism):
 
         super()._update_output_ports(context, runtime_params)
 
-        if context.composition is not None:
+        if context.composition is not None and ContextFlags.LEARNING_MODE in context.runmode:
             context.add_flag(ContextFlags.LEARNING)
             self.learned_projection.execute(context=context)
             context.remove_flag(ContextFlags.LEARNING)

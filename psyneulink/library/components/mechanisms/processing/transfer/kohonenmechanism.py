@@ -226,7 +226,7 @@ class KohonenMechanism(TransferMechanism):
                     see `enable_learning <KohonenMechanism.enable_learning>`
 
                     :default value: True
-                    :type: bool
+                    :type: ``bool``
 
                 learning_function
                     see `learning_function <KohonenMechanism.learning_function>`
@@ -244,8 +244,14 @@ class KohonenMechanism(TransferMechanism):
                     see `matrix <KohonenMechanism.matrix>`
 
                     :default value: `AUTO_ASSIGN_MATRIX`
-                    :type: str
+                    :type: ``str``
 
+                output_ports
+                    see `output_ports <KohonenMechanism.output_ports>`
+
+                    :default value: [`RESULT`, "{name: INPUT_PATTERN, variable: OWNER_VARIABLE}"]
+                    :type: ``list``
+                    :read only: True
         """
         learning_function = Parameter(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
         learning_rate = Parameter(None, modulable=True)

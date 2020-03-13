@@ -1,4 +1,5 @@
 import ctypes
+import ctypes.util
 import copy
 import numpy as np
 import pytest
@@ -207,7 +208,7 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        ctx.inject_printf(builder, format_str, *ir_values_to_check, override_debug=True)
+        pnlvm.helpers.printf(builder, format_str, *ir_values_to_check, override_debug=True)
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)

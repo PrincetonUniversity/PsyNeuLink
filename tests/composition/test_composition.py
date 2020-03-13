@@ -331,12 +331,12 @@ class TestAddProjection:
         B = TransferMechanism(name='composition-pytests-B')
         C = TransferMechanism(name='composition-pytests-C')
         comp.add_linear_processing_pathway([
-            (A,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
-            (B,pnl.NodeRole.AUTOASSOCIATIVE_LEARNING),
+            (A,pnl.NodeRole.LEARNING),
+            (B,pnl.NodeRole.LEARNING),
             C
         ])
         comp._analyze_graph()
-        autoassociative_learning_nodes = comp.get_nodes_by_role(pnl.NodeRole.AUTOASSOCIATIVE_LEARNING)
+        autoassociative_learning_nodes = comp.get_nodes_by_role(pnl.NodeRole.LEARNING)
         assert A in autoassociative_learning_nodes
         assert B in autoassociative_learning_nodes
 
@@ -3540,6 +3540,33 @@ class TestNestedCompositions:
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
+    
+    @pytest.mark.nested
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                             ])
+    def test_nested_run_differing_num_trials(self, mode):
+        # Test for case where nested composition is ran with inputs of differing but valid sizes
+        outer = pnl.Composition(name="outer")
+
+        inner = pnl.Composition(name="inner")
+        inner_mech_A = pnl.TransferMechanism(name="inner_mech_A", default_variable=[[0,0]])
+        inner_mech_B = pnl.TransferMechanism(name="inner_mech_B", default_variable=[[0,0]])
+        inner.add_nodes([inner_mech_A, inner_mech_B])
+        outer.add_node(inner)
+        input = {
+            inner : {
+                inner_mech_A : [[[0,0]]],
+                inner_mech_B : [[[0,0]],[[0,0]]],
+            }
+        }
+        
+        outer.run(inputs=input, bin_execute=mode)
 
     def test_invalid_projection_deletion_when_nesting_comps(self):
         oa = pnl.TransferMechanism(name='oa')
@@ -4676,7 +4703,26 @@ class TestInputSpecifications:
         assert np.allclose(C.get_output_values(comp), [[0.]])
         assert np.allclose(D.get_output_values(comp), [[4.]])
 
-    def test_generator_as_inputs(self):
+    def test_function_as_input(self):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_function(trial_num):
+            stimuli = list(range(10))
+            return {
+                m1: stimuli[trial_num]
+            }
+
+        c.run(inputs=test_function,
+              num_trials=10)
+        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                                               [np.array([8.])], [np.array([9.])]]
+    def test_generator_as_input(self):
         c = pnl.Composition()
 
         m1 = pnl.TransferMechanism()
@@ -4697,7 +4743,7 @@ class TestInputSpecifications:
                                                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
                                                [np.array([8.])], [np.array([9.])]]
 
-    def test_generator_as_inputs_with_num_trials(self):
+    def test_generator_as_input_with_num_trials(self):
         c = pnl.Composition()
 
         m1 = pnl.TransferMechanism()
@@ -4716,6 +4762,26 @@ class TestInputSpecifications:
         c.run(inputs=t_g,
               num_trials=1)
         assert c.parameters.results.get(c) == [[np.array([0.])]]
+
+    def test_error_on_malformed_generator(self):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_generator():
+            yield {
+                m1: [[1],[2]]
+            }
+
+        t_g = test_generator()
+
+        try:
+            c.run(inputs=t_g)
+        except Exception as e:
+            assert isinstance(e, pnl.CompositionError)
 
     @pytest.mark.parametrize(
             "with_outer_controller,with_inner_controller",

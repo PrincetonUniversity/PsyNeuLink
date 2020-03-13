@@ -24,6 +24,7 @@ import numbers
 
 import abc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
@@ -170,26 +171,25 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     see `initializer <StatefulFunction.initializer>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 noise
                     see `noise <StatefulFunction.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 previous_value
                     see `previous_value <StatefulFunction.previous_value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 rate
                     see `rate <StatefulFunction.rate>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         noise = Parameter(0.0, modulable=True)
         rate = Parameter(1.0, modulable=True)
@@ -302,7 +302,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _validate_initializers(self, default_variable, context=None):
         for initial_value_name in self.initializers:
 
-            initial_value = self.get_current_function_param(initial_value_name, context=context)
+            initial_value = self._get_current_function_param(initial_value_name, context=context)
 
             if isinstance(initial_value, (list, np.ndarray)):
                 if len(initial_value) != 1:
@@ -507,13 +507,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
-                reinitialization_values.append(self.get_current_function_param(initializer_name, context))
+                reinitialization_values.append(self._get_current_function_param(initializer_name, context))
 
         elif len(args) == len(self.initializers):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 if args[i] is None:
-                    reinitialization_values.append(self.get_current_function_param(initializer_name, context))
+                    reinitialization_values.append(self._get_current_function_param(initializer_name, context))
                 else:
                     # Not sure if np.atleast_1d is necessary here:
                     reinitialization_values.append(np.atleast_1d(args[i]))
@@ -565,8 +565,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
         for i, a in enumerate(self.stateful_attributes):
-            source_ptr = ctx.get_param_ptr(self, builder, params, self.initializers[i])
-            dest_ptr = ctx.get_state_ptr(self, builder, state, a)
+            if a == "random_state":
+                continue
+            source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
+            dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
                 warnings.warn("Shape mismatch between stateful param and initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
                 # Take a guess that dest just has an extra dimension

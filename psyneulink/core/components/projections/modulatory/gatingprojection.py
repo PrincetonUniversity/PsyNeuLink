@@ -211,9 +211,9 @@ class GatingProjection(ModulatoryProjection_Base):
             ----------
 
                 function
-                    see `function <Projection_Base.function>`
+                    see `function <GatingProjection.function>`
 
-                    :default value: `Linear`
+                    :default value: `Linear`(output_type=0)
                     :type: `Function`
 
                 gating_signal
@@ -222,7 +222,6 @@ class GatingProjection(ModulatoryProjection_Base):
                     :default value: None
                     :type:
                     :read only: True
-
         """
         function = Parameter(Linear(params={FUNCTION_OUTPUT_TYPE: FunctionOutputType.RAW_NUMBER}), stateful=False, loggable=False)
         gating_signal = Parameter(None, read_only=True, getter=_gating_signal_getter, setter=_gating_signal_setter, pnl_internal=True)

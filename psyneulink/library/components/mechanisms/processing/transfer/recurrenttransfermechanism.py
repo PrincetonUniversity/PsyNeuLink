@@ -550,7 +550,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 combination_function
                     see `combination_function <RecurrentTransferMechanism.combination_function>`
@@ -562,19 +562,25 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
+
+                has_recurrent_input_port
+                    see `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>`
+
+                    :default value: None
+                    :type:
 
                 hetero
                     see `hetero <RecurrentTransferMechanism.hetero>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 integration_rate
                     see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -598,20 +604,19 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `matrix <RecurrentTransferMechanism.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 noise
                     see `noise <RecurrentTransferMechanism.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 smoothing_factor
                     see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
 
                     :default value: 0.5
-                    :type: float
-
+                    :type: ``float``
         """
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)
@@ -808,8 +813,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value._set(None, context)
-
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         param_keys = self._parameter_ports.key_values
@@ -994,12 +997,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             if port.name != AUTO and port.name != HETERO:
                 port._update(context=context, params=runtime_params)
 
-    def _update_previous_value(self, context=None):
-        value = self.parameters.value._get(context)
-        if value is None:
-            value = self.defaults.value
-        self.parameters.previous_value._set(value, context)
-
     @property
     def recurrent_size(self):
         return len(self.defaults.variable[0])
@@ -1133,7 +1130,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # # MODIFIED 10/23/19 OLD:
         # self.aux_components.append(learning_mechanism)
         # MODIFIED 10/23/19 NEW:
-        self.aux_components.append((learning_mechanism, NodeRole.AUTOASSOCIATIVE_LEARNING))
+        self.aux_components.append((learning_mechanism, NodeRole.LEARNING))
         # MODIFIED 10/23/19 END
         # Instantiate Projection from Mechanism's output to LearningMechanism
         mproj = MappingProjection(sender=activity_vector,
@@ -1227,7 +1224,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def reinitialize(self, *args, context=None):
         if self.parameters.integrator_mode.get(context):
             super().reinitialize(*args, context=context)
-        self.parameters.previous_value.set(None, context, override=True)
+        self.parameters.value.clear_history(context)
 
     @property
     def _learning_signal_source(self):
@@ -1263,10 +1260,16 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return pnlvm.ir.LiteralStructType(input_type_list)
 
+    def _get_param_ids(self):
+        return super()._get_param_ids() + ["recurrent_projection"]
+
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
         return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
+
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["old_val", "recurrent_projection"]
 
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
@@ -1292,10 +1295,18 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
 
-        # Reinit main function
+        # Check if we have reinitializers
+        has_reinitializers_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "has_initializers")
+        has_initializers = builder.load(has_reinitializers_ptr)
+        not_initializers = builder.fcmp_ordered("==", has_initializers,
+                                                has_initializers.type(0))
+        with builder.if_then(not_initializers):
+            builder.ret_void()
+
+        # Reinit main function. This is a no-op if it's not a stateful function.
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
-        reinit_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        reinit_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
         reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
@@ -1303,19 +1314,16 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Reinit integrator function
         if self.integrator_mode:
-            mech_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
-            mech_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(2)])
             reinit_f = ctx.import_llvm_function(self.integrator_function,
                                                 tags=tags)
             reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
             reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
-            reinit_params = ctx.get_param_ptr(self, builder, mech_params, "integrator_function")
-            reinit_state = ctx.get_state_ptr(self, builder, mech_state, "integrator_function")
+            reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "integrator_function")
+            reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "integrator_function")
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
                                     reinit_out])
 
-        prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
-            ctx.int32_ty(len(state.type.pointee) - 2)])
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
         builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
         return builder
 
@@ -1324,9 +1332,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         #       support 'is_finished' yet
         # previous_value is appended before AutoProjection in state struct
         # FIXME: This should use standard "previous_value" param
-        rec_state = builder.function.args[1]
-        prev_val_ptr = builder.gep(rec_state, [ctx.int32_ty(0),
-            ctx.int32_ty(len(rec_state.type.pointee) - 2)])
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
 
         # preserve the old prev value
         prev_val = builder.load(prev_val_ptr)
@@ -1337,7 +1343,7 @@ class RecurrentTransferMechanism(TransferMechanism):
            not self.execute_until_finished:
             return pnlvm.ir.IntType(1)(1)
 
-        threshold_ptr = ctx.get_param_ptr(self, builder, params,
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                           "termination_threshold")
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
@@ -1358,10 +1364,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             # FIXME: HACK the distance function is not initialized
             self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
             self.termination_measure.defaults.value = float(0)
+            warnings.warn("Shape mismatch: Termination measure is not initialized")
 
             func = ctx.import_llvm_function(self.termination_measure)
-            func_params = ctx.get_param_ptr(self, builder, params, "termination_measure")
-            func_state = ctx.get_state_ptr(self, builder, state, "termination_measure")
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
+            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
             func_in = builder.alloca(func.args[2].type.pointee)
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
@@ -1374,13 +1381,17 @@ class RecurrentTransferMechanism(TransferMechanism):
             builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
-
+        elif isinstance(self.termination_measure, TimeScale):
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
+            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
+            builder.store(ptr_val, cmp_val_ptr)
         else:
             assert False, "Not Supported: {}".format(self.termination_measure)
 
         cmp_val = builder.load(cmp_val_ptr)
         cmp_str = self.parameters.termination_comparison_op.get(None)
-        return builder.fcmp_ordered(cmp_str, builder.load(cmp_val_ptr), threshold)
+        return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         # Allocate space for transfer mechanism.
@@ -1412,16 +1423,13 @@ class RecurrentTransferMechanism(TransferMechanism):
             last_idx = len(ip_trans_input.type.pointee) - 1
             real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-            # Autoprojection state is appended to the end of state struct
-            recurrent_state = builder.gep(state, [ctx.int32_ty(0),
-                ctx.int32_ty(len(state.type.pointee) - 1)])
-            # Autoprojection params are appended to the end of param struct
-            recurrent_params = builder.gep(params, [ctx.int32_ty(0),
-                ctx.int32_ty(len(params.type.pointee) - 1)])
+            recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                "recurrent_projection")
+            recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                 "recurrent_projection")
             recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
-            prev_val_ptr = builder.gep(state, [ctx.int32_ty(0),
-                ctx.int32_ty(len(state.type.pointee) - 2)])
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
             # Extract the correct output port
             recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
                 ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])

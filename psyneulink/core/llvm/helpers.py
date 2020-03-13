@@ -10,6 +10,10 @@
 
 from llvmlite import ir
 from contextlib import contextmanager
+import ctypes
+
+
+from .debug import debug_env
 
 
 @contextmanager
@@ -71,6 +75,26 @@ def uint_min(builder, val, other):
 
     cond = builder.icmp_unsigned("<=", val, other)
     return builder.select(cond, val, other)
+
+
+def get_param_ptr(builder, component, params_ptr, param_name):
+    idx = ir.IntType(32)(component._get_param_ids().index(param_name))
+    return builder.gep(params_ptr, [ir.IntType(32)(0), idx],
+                       name="ptr_param_{}_{}".format(param_name, component.name))
+
+
+def get_state_ptr(builder, component, state_ptr, stateful_name):
+    idx = ir.IntType(32)(component._get_state_ids().index(stateful_name))
+    return builder.gep(state_ptr, [ir.IntType(32)(0), idx],
+                       name="ptr_state_{}_{}".format(stateful_name,
+                                                     component.name))
+
+
+def unwrap_2d_array(builder, element):
+    if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
+        assert element.type.pointee.count == 1
+        return builder.gep(element, [ir.IntType(32)(0), ir.IntType(32)(0)])
+    return element
 
 
 def load_extract_scalar_array_one(builder, ptr):
@@ -145,6 +169,54 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
         b1.store(all_val, all_ptr)
 
     return builder.load(all_ptr)
+
+
+def printf(builder, fmt, *args, override_debug=False):
+    if "print_values" not in debug_env and not override_debug:
+        return
+    #FIXME: Fix builtin printf and use that instead of this
+    try:
+        import llvmlite.binding as llvm
+        libc = ctypes.util.find_library("c")
+        llvm.load_library_permanently(libc)
+        # Address will be none if the symbol is not found
+        printf_address = llvm.address_of_symbol("printf")
+        # Direct pointer constants don't work
+        printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+        printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
+        ir_module = builder.function.module
+        fmt += "\0"
+
+        int8 = ir.IntType(8)
+        fmt_data = bytearray(fmt.encode("utf8"))
+        fmt_ty = ir.ArrayType(int8, len(fmt_data))
+        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                    name="printf_fmt_" + str(len(ir_module.globals)))
+        global_fmt.linkage = "internal"
+        global_fmt.global_constant = True
+        global_fmt.initializer = fmt_ty(fmt_data)
+
+        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+        builder.call(printf, [fmt_ptr] + list(args))
+    except Exception as e:
+        return
+
+
+def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
+
+    with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
+        printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
+
+    printf(builder, suffix, override_debug=override_debug)
+
+
+def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
+    with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+        row = b1.gep(matrix, [ir.IntType(32)(0), i])
+        printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
+    printf(builder, suffix, override_debug=override_debug)
 
 
 class ConditionGenerator:
