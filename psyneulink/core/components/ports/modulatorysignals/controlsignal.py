@@ -1169,7 +1169,7 @@ class ControlSignal(ModulatorySignal):
             duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
             self.parameters.duration_cost._set(duration_cost, context)
 
-        return max(0.0,
+        return max(np.array(0.0),
                    self.combine_costs_function([intensity_cost,
                                                 adjustment_cost,
                                                 duration_cost],

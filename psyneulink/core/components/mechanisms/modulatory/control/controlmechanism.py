@@ -677,7 +677,7 @@ def validate_monitored_port_spec(owner, spec_list):
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [np.array(c.compute_costs(c.parameters.value._get(context), context=context))
+        costs = [c.compute_costs(c.parameters.value._get(context), context=context)
                  for c in owning_component.control_signals
                  if hasattr(c, 'compute_costs')] # GatingSignals don't have cost fcts
         return costs
