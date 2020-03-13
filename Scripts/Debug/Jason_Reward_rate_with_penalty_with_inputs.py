@@ -148,7 +148,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
                                                   decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
                                                   decision.output_ports[pnl.RESPONSE_TIME]])
 
-    objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT,
+    objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.SUM,
                                                                            weights=[[1],[-1]]),
                                             monitor=[reward_rate, punish_rate])
 
@@ -231,7 +231,7 @@ model, nodes, model_params = get_stroop_model(unit_noise_std, dec_noise_std)
 
 #%%
 
-model.show_graph(show_controller=True)
+# model.show_graph(show_controller=True)
 
 #%% md
 

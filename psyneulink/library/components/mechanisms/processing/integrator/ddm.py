@@ -1053,6 +1053,9 @@ class DDM(ProcessingMechanism):
 
             )
 
+            # TEST_PRINT
+            print(result)
+
             if isinstance(self.function, DriftDiffusionAnalytical):
                 return_value = np.zeros(shape=(10,1))
                 return_value[self.RESPONSE_TIME_INDEX] = result[0]
