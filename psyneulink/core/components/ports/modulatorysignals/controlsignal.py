@@ -1134,10 +1134,10 @@ class ControlSignal(ModulatorySignal):
 
         cost_options = self.parameters.cost_options._get(context)
 
-        try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(context)
-        except TypeError:
-            intensity_change = [0]
+        # try:
+        #     intensity_change = intensity - self.parameters.intensity.get_previous(context)
+        # except TypeError:
+        #     intensity_change = [0]
 
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
