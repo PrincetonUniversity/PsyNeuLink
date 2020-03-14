@@ -127,12 +127,14 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     driftrate_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, inp_clr)],
                                                  variable=1.0,
                                                  intensity_cost_function=pnl.Exponential(rate=1),#pnl.Exponential(rate=0.8),#pnl.Exponential(rate=1),
+                                                 combine_costs_function=pnl.LinearCombination(operation=pnl.SUM),
                                                  allocation_samples=signalSearchRange)
 
 
     threshold_control_signal = pnl.ControlSignal(projections=[(pnl.THRESHOLD, decision)],
                                                  variable=1.0,
                                                  intensity_cost_function=pnl.Linear(slope=0),
+                                                 combine_costs_function=pnl.LinearCombination(operation=pnl.SUM),
                                                  allocation_samples=signalSearchRange)
 
 
@@ -276,7 +278,7 @@ for task in stim_dict_list:
             inputs=task,
             num_trials=1,
             context=execution_id,
-            bin_execute='LLVMRun'
+            # bin_execute='LLVMRun'
         )
         execution_id += 1
 

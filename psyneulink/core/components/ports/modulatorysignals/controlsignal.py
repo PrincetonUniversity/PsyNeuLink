@@ -1154,7 +1154,7 @@ class ControlSignal(ModulatorySignal):
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity)
+            intensity_cost = np.array(self.intensity_cost_function(intensity))
             self.parameters.intensity_cost._set(intensity_cost, context)
 
         if CostFunctions.ADJUSTMENT & cost_options:
@@ -1162,11 +1162,11 @@ class ControlSignal(ModulatorySignal):
                 intensity_change = intensity - self.parameters.intensity.get_previous(context)
             except TypeError:
                 intensity_change = [0]
-            adjustment_cost = self.adjustment_cost_function(intensity_change)
+            adjustment_cost = np.array(self.adjustment_cost_function(intensity_change))
             self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if CostFunctions.DURATION & cost_options:
-            duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
+            duration_cost = np.array(self.duration_cost_function(self.parameters.cost._get(context), context=context))
             self.parameters.duration_cost._set(duration_cost, context)
 
         return max(np.array(0.0),
