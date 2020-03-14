@@ -7880,7 +7880,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # of the nested composition. Filter them out.
         return (p for p in self.projections
                   if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM)
+                     p.receiver.owner is not self.parameter_CIM and
+                     p.sender.owner is not self.output_CIM)
 
     def _get_param_struct_type(self, ctx):
         node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)

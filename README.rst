@@ -1,7 +1,7 @@
 .. image:: https://badge.fury.io/py/psyneulink.svg
     :target: https://badge.fury.io/py/psyneulink
-.. image:: https://travis-ci.org/PrincetonUniversity/PsyNeuLink.svg?branch=master
-    :target: https://travis-ci.org/PrincetonUniversity/PsyNeuLink
+.. image:: https://github.com/PrincetonUniversity/PsyNeuLink/workflows/PsyNeuLink%20CI/badge.svg?branch=master
+    :target: https://github.com/PrincetonUniversity/PsyNeuLink/actions
 .. image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
 
