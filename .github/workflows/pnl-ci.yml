@@ -18,6 +18,28 @@ jobs:
     - uses: actions/checkout@v2
       with:
         fetch-depth: 10
+
+    - name: Linux wheels cache
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'Linux')
+      with:
+        path: ~/.cache/pip/wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels
+
+    - name: MacOS wheels cache
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'macOS')
+      with:
+        path: ~/Library/Caches/pip/wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels
+
+    - name: Windows wheels cache
+      uses: actions/cache@v1
+      if: startsWith(runner.os, 'Windows')
+      with:
+        path: ~\AppData\Local\pip\Cache\wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
@@ -41,7 +63,7 @@ jobs:
     - name: Shared dependencies
       shell: bash
       run: |
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip wheel
         pip install -e .[dev]
         pip install --user git+https://github.com/benureau/leabra.git@master
 
