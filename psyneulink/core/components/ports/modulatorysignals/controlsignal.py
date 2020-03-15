@@ -405,7 +405,8 @@ import typecheck as tc
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.core.components.functions.combinationfunctions import Reduce
+# from psyneulink.core.components.functions.combinationfunctions import Reduce # 3/15/20
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination # 3/15/20
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
@@ -815,7 +816,8 @@ class ControlSignal(ModulatorySignal):
             getter=_duration_cost_function_getter
         )
         combine_costs_function = Parameter(
-            Reduce(operation=SUM),
+            # Reduce(operation=SUM), # 3/15/20
+            LinearCombination(operation=SUM), # 3/15/20
             stateful=False,
             loggable=False,
             getter=_combine_costs_function_getter
@@ -862,7 +864,8 @@ class ControlSignal(ModulatorySignal):
                  intensity_cost_function:(is_function_type)=Exponential,
                  adjustment_cost_function:tc.optional(is_function_type)=Linear,
                  duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_function:tc.optional(is_function_type)=Reduce,
+                 # combine_costs_function:tc.optional(is_function_type)=Reduce, # 3/15/20
+                 combine_costs_function:tc.optional(is_function_type)=LinearCombination, # 3/15/20
                  allocation_samples=Parameters.allocation_samples.default_value,
                  modulation:tc.optional(str)=None,
                  modulates=None,
@@ -1134,27 +1137,14 @@ class ControlSignal(ModulatorySignal):
 
         cost_options = self.parameters.cost_options._get(context)
 
-        try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(context)
-        except TypeError:
-            intensity_change = [0]
-
-        # COMPUTE COST(S)
-        intensity_cost = adjustment_cost = duration_cost = 0
-
-        if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity, context=context)
-            self.parameters.intensity_cost._set(intensity_cost, context)
-
-        if CostFunctions.ADJUSTMENT & cost_options:
-            adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
-            self.parameters.adjustment_cost._set(adjustment_cost, context)
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
-        intensity_cost = adjustment_cost = duration_cost = 0
+        intensity_cost = adjustment_cost = duration_cost = np.atleast_1d(0.0) # 3/15/20
+        # intensity_cost = adjustment_cost = duration_cost = 0 # 3/15/20
 
         if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = np.array(self.intensity_cost_function(intensity))
+            intensity_cost = np.atleast_1d(np.float(self.intensity_cost_function(intensity, context))) # 3/15/20
+            # intensity_cost = np.float(self.intensity_cost_function(intensity, context)) # 3/15/20
             self.parameters.intensity_cost._set(intensity_cost, context)
 
         if CostFunctions.ADJUSTMENT & cost_options:
@@ -1162,15 +1152,22 @@ class ControlSignal(ModulatorySignal):
                 intensity_change = intensity - self.parameters.intensity.get_previous(context)
             except TypeError:
                 intensity_change = [0]
-            adjustment_cost = np.array(self.adjustment_cost_function(intensity_change))
+            adjustment_cost = np.atleast_1d(np.float(self.adjustment_cost_function(intensity_change, context))) # 3/15/20
+            # adjustment_cost = np.float(self.adjustment_cost_function(intensity_change, context)) # 3/15/20
             self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if CostFunctions.DURATION & cost_options:
-            duration_cost = np.array(self.duration_cost_function(self.parameters.cost._get(context), context=context))
+            duration_cost = np.atleast_1d(np.float(self.duration_cost_function(self.parameters.cost._get(context),
+                                                                               context=context))) # 3/15/20
+            # duration_cost = np.float(self.duration_cost_function(self.parameters.cost._get(context), context=context) # 3/15/20
             self.parameters.duration_cost._set(duration_cost, context)
 
-        return max(np.array(0.0),
+        return max(np.atleast_1d(0.0),   # 3/15/20
                    self.combine_costs_function([intensity_cost,
                                                 adjustment_cost,
                                                 duration_cost],
                                                context=context))
+        # return max(0.0,
+        #            self.combine_costs_function([intensity_cost, adjustment_cost, duration_cost], context=context))  # 3/15/20
+
+
