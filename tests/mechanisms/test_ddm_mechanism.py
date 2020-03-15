@@ -219,7 +219,7 @@ class TestInputPorts:
         comp.add_linear_processing_pathway(pathway=[input_mech, ddm])
         result = comp.run(inputs={input_mech:[1,0]})
         assert np.allclose(ddm.output_ports[0].value, [1,0])
-        assert np.allclose(ddm.output_ports[1].value, [1,0])
+        assert np.allclose(ddm.output_ports[1].value, [1,0])
         assert np.allclose(ddm.value,
                            [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
                             [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
