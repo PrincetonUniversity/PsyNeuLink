@@ -113,7 +113,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     signalSearchRange = pnl.SampleSpec(start=0.05, stop=5, step=0.05)
 
     decision = pnl.DDM(name='Decision',
-                       input_format=pnl.ARRAY,
+                       # input_format=pnl.ARRAY,  # 3/15/20
                        function=pnl.DriftDiffusionAnalytical(drift_rate=1,
                                                              threshold =1,
                                                              noise=1,
@@ -192,7 +192,9 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     model.add_linear_processing_pathway([hid_wrd, wts_wrd_ho, output])
     model.add_linear_processing_pathway([inp_task, wts_tc, hid_clr])
     model.add_linear_processing_pathway([inp_task, wts_tw, hid_wrd])
-    model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])
+    # model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])  # 3/15/20
+    # model.add_linear_processing_pathway([output, [[1,-1]], (decision, pnl.NodeRole.OUTPUT)])   # 3/15/20
+    model.add_linear_processing_pathway([output, [[1],[-1]], decision])   # 3/15/20
 
     model.add_nodes([reward_rate, punish_rate])
 
@@ -278,7 +280,7 @@ for task in stim_dict_list:
             inputs=task,
             num_trials=1,
             context=execution_id,
-            # bin_execute='LLVMRun'
+            bin_execute='LLVMRun'
         )
         execution_id += 1
 
