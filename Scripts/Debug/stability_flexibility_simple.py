@@ -174,7 +174,7 @@ stabilityFlexibility.add_model_based_optimizer(meta_controller)
 stabilityFlexibility.enable_model_based_optimizer = True
 
 # stabilityFlexibility.show_graph(show_node_structure=[pnl.FUNCTIONS,
-# 													 pnl.STATE_FUNCTION_PARAMS,
+# 													 pnl.PORT_FUNCTION_PARAMS,
 # 													 pnl.MECH_FUNCTION_PARAMS],
 # 								show_model_based_optimizer=True)
 stabilityFlexibility.show_graph(show_node_structure=pnl.ALL, show_model_based_optimizer=True, show_cim=True)

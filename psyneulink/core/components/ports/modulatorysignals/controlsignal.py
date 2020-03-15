@@ -21,7 +21,7 @@ Contents:
       - `ControlSignal_Modulation`
       - `ControlSignal_Allocation_and_Intensity`
       - `ControlSignal_Costs`
-  * `ControlSignal_Execution`
+  * `ControlSignal_Execution`d
   * `ControlSignal_Examples`
   * `ControlSignal_Class_Reference`
 
@@ -1134,27 +1134,17 @@ class ControlSignal(ModulatorySignal):
 
         cost_options = self.parameters.cost_options._get(context)
 
-        try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(context)
-        except TypeError:
-            intensity_change = [0]
+        # try:
+        #     intensity_change = intensity - self.parameters.intensity.get_previous(context)
+        # except TypeError:
+        #     intensity_change = [0]
 
-        # COMPUTE COST(S)
-        intensity_cost = adjustment_cost = duration_cost = 0
-
-        if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity, context=context)
-            self.parameters.intensity_cost._set(intensity_cost, context)
-
-        if CostFunctions.ADJUSTMENT & cost_options:
-            adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
-            self.parameters.adjustment_cost._set(adjustment_cost, context)
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity)
+            intensity_cost = self.intensity_cost_function(intensity, context)
             self.parameters.intensity_cost._set(intensity_cost, context)
 
         if CostFunctions.ADJUSTMENT & cost_options:
@@ -1162,7 +1152,7 @@ class ControlSignal(ModulatorySignal):
                 intensity_change = intensity - self.parameters.intensity.get_previous(context)
             except TypeError:
                 intensity_change = [0]
-            adjustment_cost = self.adjustment_cost_function(intensity_change)
+            adjustment_cost = self.adjustment_cost_function(intensity_change, context)
             self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if CostFunctions.DURATION & cost_options:
