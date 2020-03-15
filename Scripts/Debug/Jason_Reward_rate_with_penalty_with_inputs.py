@@ -236,6 +236,7 @@ model, nodes, model_params = get_stroop_model(unit_noise_std, dec_noise_std)
 #%%
 
 # model.show_graph(show_controller=True)
+# model.show_graph(show_node_structure=pnl.ALL)
 
 #%% md
 
