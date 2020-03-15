@@ -1,4 +1,5 @@
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.components.functions.transferfunctions import Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -9,15 +10,14 @@ from psyneulink.core.components.ports.modulatorysignals.gatingsignal import Gati
 from psyneulink.core.globals.keywords import SLOPE, RESULT
 
 class TestControlSignals:
-    def test_control_signal_combine_costs_function(self):
+    def test_control_signal_intensity_cost_function(self):
 
-        mech_1 = TransferMechanism()
-
-        slope_ctl = ControlSignal(projections=[(SLOPE, mech_1)])
-        ctl_mech = ControlMechanism(features=[mech_1.input_port], control_signals=[slope_ctl])
+        mech = TransferMechanism()
+        ctl_sig = ControlSignal(projections=[(SLOPE, mech)],
+                                intensity_cost_function=Exponential(rate=1))
+        ctl_mech = ControlMechanism(control_signals=[ctl_sig])
         ctl_mech.execute()
         assert True
-
 
     def test_alias_equivalence_for_modulates_and_projections(self):
         inputs = [1, 9, 4, 3, 2]
