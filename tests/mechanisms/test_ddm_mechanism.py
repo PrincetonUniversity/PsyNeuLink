@@ -9,8 +9,10 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY
@@ -183,6 +185,41 @@ class TestThreshold:
     #     S = System(processes=[P])
     #
     #     sched = Scheduler(system=S)
+
+class TestInputPorts:
+
+    def test_regular_input_mode(self):
+        input_mech = ProcessingMechanism(size=2)
+        ddm = DDM(
+            function=DriftDiffusionAnalytical(),
+            output_ports=[SELECTED_INPUT_ARRAY],
+            name='DDM'
+        )
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[input_mech, [[1],[-1]], ddm])
+        result = comp.run(inputs={input_mech:[1,0]})
+        assert np.allclose(ddm.value,
+                           [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
+                            [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
+                            [2.48491374e-01], [1.48291009e+00]])
+        assert np.allclose(result, [[1.]])
+
+    def test_array_mode(self):
+        input_mech = ProcessingMechanism(size=2)
+        ddm = DDM(
+            input_format=ARRAY,
+            function=DriftDiffusionAnalytical(),
+            output_ports=[SELECTED_INPUT_ARRAY],
+            name='DDM'
+        )
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[input_mech, ddm])
+        result = comp.run(inputs={input_mech:[1,0]})
+        assert np.allclose(ddm.value,
+                           [[1.00000000e+00], [1.19932930e+00], [9.99664650e-01], [3.35350130e-04],
+                            [1.19932930e+00], [2.48491374e-01], [1.48291009e+00], [1.19932930e+00],
+                            [2.48491374e-01], [1.48291009e+00]])
+        assert np.allclose(result, [[1., 0.]])
 
 class TestOutputPorts:
 
