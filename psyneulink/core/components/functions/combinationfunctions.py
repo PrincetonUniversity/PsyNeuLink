@@ -855,6 +855,61 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         return self.convert_output_type(result)
 
+    def _gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
+        scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, index, 1.0)
+        offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, index, -0.0)
+
+        # assume operation does not change dynamically
+        operation = self.parameters.operation.get()
+        if operation is SUM:
+            val = ctx.float_ty(-0.0)
+            comb_op = "fadd"
+        elif operation is PRODUCT:
+            val = ctx.float_ty(1.0)
+            comb_op = "fmul"
+        else:
+            assert False, "Unknown operation: {}".format(operation)
+
+        val_p = builder.alloca(val.type)
+        builder.store(val, val_p)
+
+        pow_f = ctx.get_builtin("pow", [ctx.float_ty])
+
+        vi = builder.gep(vi, [ctx.int32_ty(0), index])
+        with pnlvm.helpers.array_ptr_loop(builder, vi, "reduce") as (b, idx):
+            ptri = b.gep(vi, [ctx.int32_ty(0), idx])
+            in_val = b.load(ptri)
+
+            exponent_index = b.mul(ctx.int32_ty(vo.type.pointee.count),
+                                   b.sub(idx, idx.type(1)))
+            exponent_index = b.add(exponent_index, index)
+            exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS,
+                                                 exponent_index, 1.0)
+            # FIXME: Remove this micro-optimization,
+            #        it should be handled by the compiler
+            if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
+                in_val = b.call(pow_f, [in_val, exponent])
+
+            weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
+                                               idx, 1.0)
+            # Vector of vectors (even 1-element vectors)
+            if isinstance(weight.type, pnlvm.ir.ArrayType):
+                assert len(weight.type) == 1 # FIXME: Add support for matrix weights
+                weight = b.extract_value(weight, [0])
+
+            in_val = b.fmul(in_val, weight)
+
+            val = b.load(val_p)
+            val = getattr(b, comb_op)(val, in_val)
+            b.store(val, val_p)
+
+        val = b.load(val_p)
+        val = builder.fmul(val, scale)
+        val = builder.fadd(val, offset)
+
+        ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(val, ptro)
+
 
 class LinearCombination(
     CombinationFunction):  # ------------------------------------------------------------------------

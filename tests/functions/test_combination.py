@@ -157,15 +157,15 @@ test_varr1 = np.random.rand(1, SIZE)
 test_varr2 = np.random.rand(2, SIZE)
 test_varr3 = np.random.rand(3, SIZE)
 
-#This gives us the correct 3d column array
-test_varc1 = np.random.rand(1, SIZE, 1)
-test_varc2 = np.random.rand(2, SIZE, 1)
-test_varc3 = np.random.rand(3, SIZE, 1)
+#This gives us the correct 2d column array
+test_varc1 = np.random.rand(SIZE, 1)
+test_varc2 = np.random.rand(SIZE, 1)
+test_varc3 = np.random.rand(SIZE, 1)
 
-#This gives us the correct 3d matrix array
-test_varm1 = np.random.rand(1, SIZE, 3)
-test_varm2 = np.random.rand(2, SIZE, 3)
-test_varm3 = np.random.rand(3, SIZE, 3)
+#This gives us the correct 2d matrix array
+test_varm1 = np.random.rand(SIZE, 3)
+test_varm2 = np.random.rand(SIZE, 3)
+test_varm3 = np.random.rand(SIZE, 3)
 
 RAND1_V = np.random.rand(SIZE)
 RAND2_V = np.random.rand(SIZE)
@@ -191,9 +191,9 @@ RAND3_S = np.random.rand()
 @pytest.mark.parametrize("weights", [None, 0.5, np.array([[-1],[1]])], ids=["W_NONE", "W_SCALAR", "W_VECTOR"])
 @pytest.mark.parametrize("scale", [RAND1_S, RAND1_V], ids=["S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [RAND2_S, RAND2_V], ids=["O_SCALAR", "O_VECTOR"])
-@pytest.mark.parametrize("mode", ["Python",])
-#                                        pytest.param("LLVM", marks=pytest.mark.llvm),
-#                                        pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
+@pytest.mark.parametrize("mode", ["Python",
+                                  pytest.param("LLVM", marks=pytest.mark.llvm),
+                                  pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_reduce_function(variable, operation, exponents, weights, scale, offset, mode, benchmark):
     if weights is not None and not np.isscalar(weights) and variable.shape != weights.shape:
         pytest.xfail("variable/weights mismatch")
