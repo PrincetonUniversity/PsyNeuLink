@@ -9,6 +9,16 @@ from psyneulink.core.components.ports.modulatorysignals.gatingsignal import Gati
 from psyneulink.core.globals.keywords import SLOPE, RESULT
 
 class TestControlSignals:
+    def test_control_signal_combine_costs_function(self):
+
+        mech_1 = TransferMechanism()
+
+        slope_ctl = ControlSignal(projections=[(SLOPE, mech_1)])
+        ctl_mech = ControlMechanism(features=[mech_1.input_port], control_signals=[slope_ctl])
+        ctl_mech.execute()
+        assert True
+
+
     def test_alias_equivalence_for_modulates_and_projections(self):
         inputs = [1, 9, 4, 3, 2]
         comp1 = Composition()
