@@ -3547,16 +3547,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     feedback = False
                 sender = pathway[c - 1]
                 receiver = pathway[c + 1]
-                # # MODIFIED 3/15/20 OLD:
-                # if isinstance(sender, (Mechanism, Composition)) \
-                #         and isinstance(receiver, (Mechanism, Composition)):
-                # MODIFIED 3/15/20 NEW: [JDC]
                 if is_spec(sender, NODE) and is_spec(receiver, NODE):
                     if isinstance(sender, tuple):
                         sender = sender[0]
                     if isinstance(receiver, tuple):
                         receiver = receiver[0]
-                # MODIFIED 3/15/20 END
                     try:
                         if isinstance(proj, (np.ndarray, np.matrix, list)):
                             proj = MappingProjection(sender=sender,
