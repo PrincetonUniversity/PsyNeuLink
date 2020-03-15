@@ -94,8 +94,8 @@ class TestReduce:
     @pytest.mark.function
     @pytest.mark.combination_function
     def test_single_array(self):
-        R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-        R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+        R_function = pnl.Reduce(operation=pnl.SUM)
+        R_mechanism = pnl.ProcessingMechanism(function=pnl.Reduce(operation=pnl.SUM),
                                               default_variable=[[1, 2, 3, 4, 5]],
                                               name="R_mechanism")
 
@@ -112,8 +112,8 @@ class TestReduce:
     @pytest.mark.function
     @pytest.mark.combination_function
     def test_column_vector(self):
-        R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-        R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+        R_function = pnl.Reduce(operation=pnl.SUM)
+        R_mechanism = pnl.ProcessingMechanism(function=pnl.Reduce(operation=pnl.SUM),
                                               default_variable=[[1], [2], [3], [4], [5]],
                                               name="R_mechanism")
 
@@ -127,8 +127,8 @@ class TestReduce:
     @pytest.mark.function
     @pytest.mark.combination_function
     def test_matrix(self):
-        R_function = pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM)
-        R_mechanism = pnl.ProcessingMechanism(function=pnl.core.components.functions.combinationfunctions.Reduce(operation=pnl.SUM),
+        R_function = pnl.Reduce(operation=pnl.SUM)
+        R_mechanism = pnl.ProcessingMechanism(function=pnl.Reduce(operation=pnl.SUM),
                                               default_variable=[[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                               name="R_mechanism")
 
@@ -164,7 +164,8 @@ RAND1_S = np.random.rand()
 RAND2_S = np.random.rand()
 RAND3_S = np.random.rand()
 
-@pytest.mark.benchmark
+
+@pytest.mark.benchmark(group="LinearCombinationFunction")
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("variable", [test_var, test_var2], ids=["VAR1D", "VAR2D"])
@@ -180,13 +181,12 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
     if weights is not None and not np.isscalar(weights) and len(variable) != len(weights):
         pytest.skip("variable/weights mismatch")
 
-    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=variable,
-                                                                             operation=operation,
-                                                                             exponents=exponents,
-                                                                             weights=weights,
-                                                                             scale=scale,
-                                                                             offset=offset)
-    benchmark.group = "LinearCombinationFunction"
+    f = pnl.LinearCombination(default_variable=variable,
+                              operation=operation,
+                              exponents=exponents,
+                              weights=weights,
+                              scale=scale,
+                              offset=offset)
     if (bin_execute == 'LLVM'):
         e = pnlvm.execution.FuncExecution(f)
         res = benchmark(e.execute, variable)
@@ -209,9 +209,8 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 
     assert np.allclose(res, expected)
 
-# ------------------------------------
 
-@pytest.mark.benchmark
+@pytest.mark.benchmark(group="LinearCombinationFunction in Mechanism")
 @pytest.mark.function
 @pytest.mark.combination_function
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
@@ -222,9 +221,8 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
                                   pytest.param("LLVM", marks=pytest.mark.llvm),
                                   pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mode):
-    f = pnl.core.components.functions.combinationfunctions.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
+    f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
-    benchmark.group = "CombinationFunction " + pnl.core.components.functions.combinationfunctions.LinearCombination.componentName + "in Mechanism"
 
     if mode == "Python":
         res = benchmark(f.execute, input)
