@@ -201,8 +201,8 @@ m = my_Stroop.run(inputs=CN_trial_initialize_input)
 #   CREATE THRESHOLD FUNCTION
 # first value of DDM's value is DECISION_VARIABLE
 def pass_threshold(mech1, mech2, thresh):
-    results1 = mech1.output_states[0].value
-    results2 = mech2.output_states[0].value
+    results1 = mech1.output_ports[0].value
+    results2 = mech2.output_ports[0].value
     for val in results1:
         if val >= thresh:
             return True
@@ -228,7 +228,7 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
     print('\n\n{}'.format(condition))
     for trial in range(ntrials):
         print('.', end='', flush=True)
-        if not ((trial+1) % 10):
+        if not ((trial + 1) % 10):
             print('  ', end='', flush=True)
         # run system once (with integrator mode off and no noise for hidden units) with only task so asymptotes
         colors_hidden_layer.integrator_mode = False

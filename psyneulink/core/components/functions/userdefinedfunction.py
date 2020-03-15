@@ -11,13 +11,15 @@
 
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import ADDITIVE_PARAM, FunctionError, Function_Base, MULTIPLICATIVE_PARAM
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, CUSTOM_FUNCTION, PARAMETER_STATE_PARAMS, PARAMS, SELF, \
-    USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, VARIABLE, OWNER, EXECUTION_ID
+from psyneulink.core.globals.keywords import \
+    ADDITIVE_PARAM, CONTEXT, CUSTOM_FUNCTION, EXECUTION_ID, MULTIPLICATIVE_PARAM, OWNER, PARAMS, \
+    PARAMETER_PORT_PARAMS, SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
-from psyneulink.core.globals.utilities import call_with_pruned_args, iscompatible
+from psyneulink.core.globals.utilities import iscompatible
 
 __all__ = ['UserDefinedFunction']
 
@@ -33,8 +35,8 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Description:
 
     A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
-    as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a `Component
-    <Component>`.  This is done automatically if a Python function or method is assigned as the `function
+    as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a
+    `Component <Component>`.  This is done automatically if a Python function or method is assigned as the `function
     <Component.function>` attribute of a Component.  A Python function or method can also be wrapped explicitly,
     using the UserDefinedFunction constructor, and assigning the Python function or method to its **custom_function**
     argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated
@@ -55,13 +57,13 @@ class UserDefinedFunction(Function_Base):
     * It may have have **any number of additional arguments** (positional and/or keyword);  these are treated as
       parameters of the UDF, and can be modulated by `ModulatorySignals <ModulatorySignal>` like the parameters of
       ordinary PsyNeuLink `Functions <Function>`.  If the UDF is assigned to (or automatically created for) a
-      `Mechanism` or `Projection <Projection>`, these parameters are each automatically assigned a `ParameterState`
-      so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals <LearningSignal>`,
-      respectively.  If the UDF is assigned to (or automatically created for) an `InputState` or `OutputState`,
-      and any of the parameters are specified as `Function_Modulatory_Params` (see `below <UDF_Modulatory_Params>`),
-      then they can be modulated by `GatingSignals <GatingSignal>`. The function or method wrapped by the UDF is called
-      with these parameters by their name and with their current values (i.e., as determined by any
-      `ModulatorySignals <ModulatorySignal>` assigned to them).
+      `Mechanism <Mechanism>` or `Projection <Projection>`, these parameters are each automatically assigned a
+      `ParameterPort` so that they can be modulated by `ControlSignals <ControlSignal>` or `LearningSignals
+      <LearningSignal>`, respectively.  If the UDF is assigned to (or automatically created for) an `InputPort` or
+      `OutputPort`, and any of the parameters are specified as `Function_Modulatory_Params` (see `below
+      <UDF_Modulatory_Params>`), then they can be modulated by `GatingSignals <GatingSignal>`. The function or method
+      wrapped by the UDF is called with these parameters by their name and with their current values (i.e.,
+      as determined by any `ModulatorySignals <ModulatorySignal>` assigned to them).
     ..
     .. _UDF_Params_Context:
 
@@ -74,16 +76,16 @@ class UserDefinedFunction(Function_Base):
     .. _UDF_Modulatory_Params:
 
     * The parameters of a UDF can be specified as `Function_Modulatory_Params` in a `parameter specification dictionary
-      <ParameterState_Specification>` assigned to the **params** argument of the constructor for either the Python
+      <ParameterPort_Specification>` assigned to the **params** argument of the constructor for either the Python
       function or method, or of an explicitly defined UDF (see `examples below <UDF_Modulatory_Params_Examples>`).
       It can include either or both of the following two entries:
          *MULTIPLICATIVE_PARAM*: <parameter name>\n
          *ADDITIVE_PARAM*: <parameter name>
-      These are used only when the UDF is assigned as the `function <State_Base.function>` of an InputState or
-      OutputState that receives one more more `GatingProjections <GatingProjection>`.
+      These are used only when the UDF is assigned as the `function <Port_Base.function>` of an InputPort or
+      OutputPort that receives one more more `GatingProjections <GatingProjection>`.
 
       COMMENT:
-      # IMPLEMENT INTERFACE FOR OTHER ModulationParam TYPES (i.e., for ability to add new custom ones)
+      # IMPLEMENT INTERFACE FOR OTHER MODULATION TYPES (i.e., for ability to add new custom ones)
       COMMENT
 
     .. tip::
@@ -155,7 +157,7 @@ class UserDefinedFunction(Function_Base):
     to a 2d array).
 
     ``my_sinusoidal_fct`` also has two other arguments, ``phase`` and ``amplitude``.   When it is assigned to
-    ``my_wave_mech``, those parameters are assigned to `ParameterStates <ParameterState>` of ``my_wave_mech``, which
+    ``my_wave_mech``, those parameters are assigned to `ParameterPorts <ParameterPort>` of ``my_wave_mech``, which
     that be used to modify their values by `ControlSignals <ControlSignal>` (see `example below <_
     UDF_Control_Signal_Example>`).
 
@@ -225,22 +227,22 @@ class UserDefinedFunction(Function_Base):
         array([[2.88079708, 2.98201379, 2.99752738]])
 
 
-    .. _UDF_Assign_to_State_Examples:
+    .. _UDF_Assign_to_Port_Examples:
 
-    **Assigning of a custom function to a State**
+    **Assigning of a custom function to a Port**
 
-    A custom function can also be assigned as the `function <State_Base.function>` of an `InputState` or `OutputState`.
-    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputState.function>` of an OutputState
+    A custom function can also be assigned as the `function <Port_Base.function>` of an `InputPort` or `OutputPort`.
+    For example, the following assigns ``my_sinusoidal_fct`` to the `function <OutputPort.function>` of an OutputPort
     of ``my_mech``, rather the Mechanism's `function <Mechanism_Base.function>`::
 
         >>> my_wave_mech = pnl.ProcessingMechanism(size=1,
         ...                                        function=pnl.Linear,
-        ...                                        output_states=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
+        ...                                        output_ports=[{pnl.NAME: 'SINUSOIDAL OUTPUT',
         ...                                                       pnl.VARIABLE: [(pnl.OWNER_VALUE, 0),pnl.EXECUTION_COUNT],
         ...                                                       pnl.FUNCTION: my_sinusoidal_fct}])
 
-    For details on how to specify a function of an OutputState, see `OutputState Customization <OutputState_Customization>`.
-    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputState` from my_wave_mech above, as the
+    For details on how to specify a function of an OutputPort, see `OutputPort Customization <OutputPort_Customization>`.
+    Below is an example plot of the output of the 'SINUSOIDAL OUTPUT' `OutputPort` from my_wave_mech above, as the
     execution count increments, when the input to the mechanism is 0.005 for 1000 runs::
 
 .. figure:: _static/sinusoid_005.png
@@ -249,7 +251,7 @@ class UserDefinedFunction(Function_Base):
 
 .. _UDF_Modulatory_Params_Examples:
 
-    The parameters of a custom function assigned to an InputState or OutputState can also be used for `gating
+    The parameters of a custom function assigned to an InputPort or OutputPort can also be used for `gating
     <GatingMechanism_Specifying_Gating>`.  However, this requires that its `Function_Modulatory_Params` be specified
     (see `above <UDF_Modulatory_Params>`). This can be done by including a **params** argument in the definition of
     the function itself::
@@ -273,7 +275,7 @@ class UserDefinedFunction(Function_Base):
 
 
     The ``phase`` and ``amplitude`` parameters of ``my_sinusoidal_fct`` can now be used as the
-    `Function_Modulatory_Params` for gating any InputState or OutputState to which the function is assigned (see
+    `Function_Modulatory_Params` for gating any InputPort or OutputPort to which the function is assigned (see
     `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
     **Class Definition:**
@@ -294,7 +296,7 @@ class UserDefinedFunction(Function_Base):
         see `above <UDF_Description>` for additional details.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the function.
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
         This can be used to define an `additive_param <UserDefinedFunction.additive_param>` and/or
         `multiplicative_param <UserDefinedFunction.multiplicative_param>` for the UDF, by including one or both
         of the following entries:\n
@@ -355,13 +357,22 @@ class UserDefinedFunction(Function_Base):
     componentName = USER_DEFINED_FUNCTION
     componentType = USER_DEFINED_FUNCTION_TYPE
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_STATE_PARAMS: None,
-        CUSTOM_FUNCTION: None,
-        MULTIPLICATIVE_PARAM: None,
-        ADDITIVE_PARAM: None
-    })
+    class Parameters(Function_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                custom_function
+                    see `custom_function <UserDefinedFunction.custom_function>`
+
+                    :default value: None
+                    :type:
+        """
+        custom_function = Parameter(
+            None,
+            stateful=False,
+            loggable=False,
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -404,7 +415,7 @@ class UserDefinedFunction(Function_Base):
 
                 # Use definition from the function as default;
                 #    this allows UDF to assign a value for this instance (including a MODULATORY spec)
-                #    while assigning an actual value to paramClassDefaults (in _assign_args_to_params_dicts);
+                #    while assigning an actual value to current/defaults
                 if arg.default is _empty:
                     defaults[arg_name] = None
 
@@ -468,19 +479,22 @@ class UserDefinedFunction(Function_Base):
                                 format(self.__class__.__name__, cust_fct_name, default_variable,
                                        cust_fct_name, cust_fct_variable, cust_fct_name, owner_name, cust_fct_name))
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(custom_function=custom_function,
-                                                  params=params,
-                                                  defaults=defaults,
-                                                  **self.cust_fct_params
-                                                  )
+        super().__init__(
+            default_variable=default_variable,
+            custom_function=custom_function,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            **self.cust_fct_params
+        )
 
-        super().__init__(default_variable=default_variable,
-                         function=custom_function,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+    def _handle_illegal_kwargs(self, **kwargs):
+        super()._handle_illegal_kwargs(
+            **{k: kwargs[k] for k in kwargs if k not in self.cust_fct_params}
+        )
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+        pass
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -490,16 +504,7 @@ class UserDefinedFunction(Function_Base):
             p = Parameter(self.cust_fct_params[param_name], modulable=True)
             setattr(self.parameters, param_name, p)
 
-            try:
-                attr_name = '_{0}'.format(p.name)
-                attr_value = getattr(self, attr_name)
-                if attr_value is None:
-                    attr_value = p.default_value
-
-                p._set(attr_value, context, skip_history=True)
-                delattr(self, attr_name)
-            except AttributeError:
-                p._set(p.default_value, context, skip_history=True)
+            p._set(p.default_value, context, skip_history=True)
 
     def _function(self, variable, context=None, **kwargs):
 
@@ -510,8 +515,8 @@ class UserDefinedFunction(Function_Base):
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
-                # Otherwise, get current value from ParameterState (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self.get_current_function_param(param, context)
+                # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
+                self.cust_fct_params[param] = self._get_current_function_param(param, context)
 
         call_params = self.cust_fct_params.copy()
 

@@ -6,6 +6,8 @@ from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.globals.utilities import NodeRole
 
+"""To be deprecated
+"""
 
 __all__ = [
     'PathwayComposition', 'PathwayCompositionError'
@@ -78,8 +80,7 @@ class PathwayComposition(Composition):
     def execute(
         self,
         inputs=None,
-        autodiff_stimuli=None,
-        scheduler_processing=None,
+        scheduler=None,
         termination_processing=None,
         call_before_time_step=None,
         call_before_pass=None,
@@ -96,7 +97,7 @@ class PathwayComposition(Composition):
         if isinstance(inputs, list):
             inputs = {self.get_mechanisms_by_role(NodeRole.ORIGIN).pop(): inputs}
 
-        output = super(PathwayComposition, self).execute(inputs, scheduler_processing=scheduler_processing,
+        output = super(PathwayComposition, self).execute(inputs, scheduler=scheduler,
                                                          termination_processing=termination_processing,
                                                          call_before_time_step=call_before_time_step,
                                                          call_before_pass=call_before_pass,

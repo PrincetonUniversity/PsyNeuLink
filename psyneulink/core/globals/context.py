@@ -70,8 +70,8 @@ COMMENT:
 
         Among other things, this is used to determine the source of call of a constructor (until someone
             proposes/implements a better method!).  This is used in several ways, for example:
-            a) to determine whether an InputState or OutputState is being added as part of the construction process
-              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_states)
+            a) to determine whether an InputPort or OutputPort is being added as part of the construction process
+              (e.g., for LearningMechanism) or by the user from the command line (see Mechanism.add_ports)
 
 COMMENT
 
@@ -88,7 +88,6 @@ import inspect
 import warnings
 
 from collections import defaultdict, namedtuple
-from uuid import UUID
 
 import typecheck as tc
 
@@ -126,15 +125,15 @@ class ContextFlags(enum.IntFlag):
 
     UNSET = 0
 
-    DEFERRED_INIT = 1<<1  # 2
+    DEFERRED_INIT = 1 << 1  # 2
     """Set if flagged for deferred initialization."""
-    INITIALIZING =  1<<2  # 4
+    INITIALIZING  = 1 << 2  # 4
     """Set during initialization of the Component."""
-    VALIDATING =    1<<3  # 8
+    VALIDATING    = 1 << 3  # 8
     """Set during validation of the value of a Component or its attribute."""
-    INITIALIZED =   1<<4  # 16
+    INITIALIZED   = 1 << 4  # 16
     """Set after completion of initialization of the Component."""
-    REINITIALIZED =   1<<4  # 16
+    REINITIALIZED = 1 << 4  # 16
     """Set on stateful Components when they are re-initialized."""
     UNINITIALIZED = 1 << 16
     """Default value set before initialization"""
@@ -142,13 +141,13 @@ class ContextFlags(enum.IntFlag):
     INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED | UNINITIALIZED
 
     # execution_phase flags
-    PROCESSING =    1<<5  # 32
+    PROCESSING    = 1 << 5  # 32
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING =      1<<6 # 64
+    LEARNING      = 1 << 6 # 64
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL =       1<<7 # 128
+    CONTROL       = 1 << 7 # 128
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION =    1<<8  # 256
+    SIMULATION    = 1 << 8  # 256
     """Set during simulation by Composition.controller"""
     IDLE = 1 << 17
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
@@ -158,29 +157,38 @@ class ContextFlags(enum.IntFlag):
     EXECUTION_PHASE_MASK = EXECUTING | IDLE
 
     # source (source-of-call) flags
-    COMMAND_LINE =  1<<9  # 512
+    COMMAND_LINE  = 1 << 9  # 512
     """Direct call by user (either interactively from the command line, or in a script)."""
-    CONSTRUCTOR =   1<<10 # 1024
+    CONSTRUCTOR   = 1 << 10 # 1024
     """Call from Component's constructor method."""
-    INSTANTIATE =   1<<11 # 2048
+    INSTANTIATE   = 1 << 11 # 2048
     """Call by an instantiation method."""
-    COMPONENT =     1<<12 # 4096
+    COMPONENT     = 1 << 12 # 4096
     """Call by Component __init__."""
-    METHOD =        1<<13 # 8192
+    METHOD        = 1 << 13 # 8192
     """Call by method of the Component other than its constructor."""
-    PROPERTY =      1<<14 # 16384
+    PROPERTY      = 1 << 14 # 16384
     """Call by property of the Component."""
-    COMPOSITION =   1<<15 # 32768
+    COMPOSITION   = 1 << 15 # 32768
     """Call by a/the Composition to which the Component belongs."""
 
-    PROCESS =   1<<15     # 32768
-    NONE = 1 << 18
+    PROCESS   = 1 << 15     # 32768
+
+    NONE      = 1 << 20
 
     """Call by a/the Composition to which the Component belongs."""
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | PROCESS | NONE
 
+    # runmode flags
+    DEFAULT_MODE = 1 << 18
+    """Default mode"""
+    LEARNING_MODE = 1 << 19
+    """Set during `compositon.learn`"""
 
-    ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK
+    RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE
+
+
+    ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
     @classmethod
     @tc.typecheck
@@ -256,6 +264,8 @@ SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.COMPOSITION,
                 ContextFlags.NONE}
 
+RUN_MODE_FLAGS = {ContextFlags.LEARNING_MODE,
+                  ContextFlags.DEFAULT_MODE}
 
 class Context():
     """Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
@@ -304,7 +314,7 @@ class Context():
     composition : Composition
       the `Composition <Composition>` in which the `owner <Context.owner>` is currently being executed.
 
-    execution_id : UUID
+    execution_id
       the execution_id assigned to the Component by the Composition in which it is currently being executed.
 
     execution_time : TimeScale
@@ -328,13 +338,16 @@ class Context():
                  execution_phase=ContextFlags.IDLE,
                  # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
-                 execution_id:UUID=None,
+                 runmode=ContextFlags.DEFAULT_MODE,
+                 execution_id=None,
                  string:str='', time=None):
 
         self.owner = owner
         self.composition = composition
         self._execution_phase = execution_phase
         self._source = source
+        self._runmode = runmode
+        
         if flags:
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
@@ -434,6 +447,24 @@ class Context():
                                format(str(flag)))
 
     @property
+    def runmode(self):
+        return self._runmode
+    
+    @runmode.setter
+    def runmode(self, flag):
+        """Check that a flag is one and only one run mode flag"""
+        if flag in RUN_MODE_FLAGS:
+            self._runmode = flag
+        elif not flag:
+            self._runmode = ContextFlags.DEFAULT_MODE
+        elif not flag & ContextFlags.RUN_MODE_MASK:
+            raise ContextError("Attempt to assign a flag ({}) to run mode that is not a run mode flag".
+                               format(str(flag)))
+        else:
+            raise ContextError("Attempt to assign more than one flag ({}) to run mode".
+                               format(str(flag)))
+
+    @property
     def execution_time(self):
         try:
             return self._execution_time
@@ -463,8 +494,10 @@ class Context():
             self.execution_phase = operation(self.execution_phase, ContextFlags.IDLE, *flags)
         elif all([flag in SOURCE_FLAGS for flag in flags]):
             self.source = operation(self.source, ContextFlags.NONE, *flags)
+        elif all([flag in RUN_MODE_FLAGS for flag in flags]):
+            self.runmode = operation(self.runmode, ContextFlags.DEFAULT_MODE, *flags)
         else:
-            raise ContextError(f'Flags must all correspond to one of: execution_phase, source')
+            raise ContextError(f'Flags must all correspond to one of: execution_phase, source, run mode')
 
     def add_flag(self, flag: ContextFlags):
         def add(attr, blank_flag, flag):
@@ -489,7 +522,6 @@ class Context():
             return (attr & ~old) | new
 
         self._change_flags(old, new, operation=replace)
-
 
 @tc.typecheck
 def _get_context(context:tc.any(ContextFlags, Context, str)):
@@ -529,28 +561,28 @@ def _get_time(component, context):
     """
 
     from psyneulink.core.globals.context import time
-    from psyneulink.core.components.shellclasses import Mechanism, Projection, State
+    from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 
     no_time = time(None, None, None, None)
 
     # Get mechanism to which Component being logged belongs
     if isinstance(component, Mechanism):
         ref_mech = component
-    elif isinstance(component, State):
+    elif isinstance(component, Port):
         if isinstance(component.owner, Mechanism):
             ref_mech = component.owner
         elif isinstance(component.owner, Projection):
             ref_mech = component.owner.receiver.owner
         else:
             raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
-                           format(component.__class__.__name__,
-                                  Mechanism.__name__, State.__name__, Projection.__name__))
+                               format(component.__class__.__name__,
+                                      Mechanism.__name__, Port.__name__, Projection.__name__))
     elif isinstance(component, Projection):
         ref_mech = component.receiver.owner
     else:
         raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
-                       format(component.__class__.__name__,
-                              Mechanism.__name__, State.__name__, Projection.__name__))
+                           format(component.__class__.__name__,
+                                  Mechanism.__name__, Port.__name__, Projection.__name__))
 
     # Get System in which it is being (or was last) executed (if any):
 
@@ -559,15 +591,15 @@ def _get_time(component, context):
         # If called from COMMAND_LINE, get context for last time value was assigned:
         system = component.most_recent_context.composition
 
-    if system and hasattr(system, 'scheduler_processing'):
+    if system and hasattr(system, 'scheduler'):
         execution_flags = context.execution_phase
         # # MODIFIED 7/15/19 OLD:
         # try:
         #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-        #         t = system.scheduler_processing.get_clock(context).time
+        #         t = system.scheduler.get_clock(context).time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.CONTROL:
-        #         t = system.scheduler_processing.get_clock(context).time
+        #         t = system.scheduler.get_clock(context).time
         #         t = time(t.run, t.trial, t.pass_, t.time_step)
         #     elif execution_flags == ContextFlags.LEARNING:
         #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
@@ -579,13 +611,13 @@ def _get_time(component, context):
         #             t = None
         #     else:
         #         t = None
-        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler_processing
+        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler
         try:
             if execution_flags & (ContextFlags.PROCESSING | ContextFlags.LEARNING | ContextFlags.IDLE):
-                t = system.scheduler_processing.get_clock(context).time
+                t = system.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags & ContextFlags.CONTROL:
-                t = system.scheduler_processing.get_clock(context).time
+                t = system.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             # elif execution_flags == ContextFlags.LEARNING:
             #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
@@ -699,11 +731,12 @@ def handle_external_context(
                     execution_phase=execution_phase,
                     **context_kwargs
                 )
-                try:
-                    args = list(args)
-                    args[context_arg_index] = context
-                except (TypeError, IndexError):
-                    pass
+                if context_arg_index is not None:
+                    try:
+                        args = list(args)
+                        args[context_arg_index] = context
+                    except IndexError:
+                        pass
 
             try:
                 return func(*args, context=context, **kwargs)

@@ -21,7 +21,7 @@ WORD_OUTPUT_LAYER = pnl.RecurrentTransferMechanism(size = 3,
                                                    # integrator_function= pnl.InteractiveActivation(rate = 0.0015, decay=0.0, offset=-6),
                                                    name='WORD OUTPUT LAYER')
 WORD_OUTPUT_LAYER.set_log_conditions('value')
-WORD_OUTPUT_LAYER.set_log_conditions('InputState-0')
+WORD_OUTPUT_LAYER.set_log_conditions('InputPort-0')
 
 
 

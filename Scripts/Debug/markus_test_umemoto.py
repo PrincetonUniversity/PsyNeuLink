@@ -79,7 +79,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         starting_point=(x_0),
         t0=t0
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -90,10 +90,12 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
+print(Decision.execute([1]))
+
 # Decision.set_log_conditions('DECISION_VARIABLE')
 # Decision.set_log_conditions('value')
 # Decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
-Decision.set_log_conditions('InputState-0')
+Decision.set_log_conditions('InputPort-0')
 # Decision.set_log_conditions('RESPONSE_TIME')
 
 # Decision.loggable_items
@@ -143,8 +145,8 @@ mySystem = pnl.System(processes=[TargetControlProcess,
                                                                            (pnl.SLOPE, Distractor_Rep)
                                                                            ],
                                                                 function=psyneulink.core.components.functions.transferfunctions.Logistic,
-                                                                cost_options=[pnl.ControlSignalCosts.INTENSITY,
-                                                                               pnl.ControlSignalCosts.ADJUSTMENT],
+                                                                cost_options=[pnl.CostFunctions.INTENSITY,
+                                                                               pnl.CostFunctions.ADJUSTMENT],
                                                                 allocation_samples=signalSearchRange
                                                                 )),
                       enable_controller=True,
@@ -199,12 +201,12 @@ def x():
     print("decision input vale:", Decision.input_values)
     print("============== ")
 
-    # print(Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD].value)
-    # print(Decision.output_states[pnl.DECISION_VARIABLE].value)
-    # print(Decision.output_states[pnl.RESPONSE_TIME].value)
+    # print(Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD].value)
+    # print(Decision.output_ports[pnl.DECISION_VARIABLE].value)
+    # print(Decision.output_ports[pnl.RESPONSE_TIME].value)
     # print(Target_Rep.input_values)
-    # print("target rep variable:", Target_Rep.input_states[0].variable)
-    # print("target rep input states:", Target_Rep.input_states)
+    # print("target rep variable:", Target_Rep.input_ports[0].variable)
+    # print("target rep input ports:", Target_Rep.input_ports)
     # print("output target stim", Target_Stim.output_values)
     #
     # print(Target_Rep.path_afferents)
@@ -217,7 +219,7 @@ def x():
     # print("my system controller: ", mySystem.controller.control_signals.values)
     # print("my system controller SLOPE: ", mySystem.controller.control_signals.values)
     #
-    # print("input state bla bla:", Target_Rep.input_states[0].function.exponents)
+    # print("InputPort bla bla:", Target_Rep.input_ports[0].function.exponents)
     # print("============== ")
     # print("my system  stuff: ", mySystem.controller.control_signals.values)
     #
@@ -249,5 +251,5 @@ pprint(a)
 # Distractor_Rep.log.print_entries()
 #
 Decision.log.print_entries()
-mySystem.controller.control_signals.values
+# mySystem.controller.control_signals.values
 

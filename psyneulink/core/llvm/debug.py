@@ -32,7 +32,6 @@ Compilation modifiers:
                   instead of loading them from the param argument
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
- * "force_runs" -- set number of runs to be fixed ('1' if no other value is specified)
  * "no_ref_pass" -- Don't pass arguments to llvm functions by reference
 
 Compiled code dump:
@@ -43,11 +42,12 @@ Compiled code dump:
 """
 
 import os
+from typing import Any, Dict
 
-debug_env = dict()
+debug_env: Dict[str, Any] = dict()
 
 
-def _update():
+def _update() -> None:
     """Update debug_env variable with the latest state of PNL_LLVM_DEBUG env var."""
     global debug_env
     debug_env.clear()

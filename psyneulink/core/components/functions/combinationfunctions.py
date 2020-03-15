@@ -26,7 +26,7 @@ shape as the individual items.
 All CombinationFunctions must have two attributes - **multiplicative_param** and **additive_param** -
 each of which is assigned the name of one of the function's parameters;
 this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-when the CombinationFunction is used as the function of an InputState or OutputState).
+when the CombinationFunction is used as the function of an InputPort or OutputPort).
 
 
 """
@@ -37,17 +37,17 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, FunctionOutputType, ADDITIVE_PARAM, MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.function import Function_Base, FunctionError, FunctionOutputType
 from psyneulink.core.globals.keywords import \
-    ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, DEFAULT_VARIABLE, EXPONENTS, \
-    LINEAR_COMBINATION_FUNCTION, OFFSET, OPERATION, PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, \
-    REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, kwPreferenceSetName
+    ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
+    DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
+    PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
+    PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, is_pref_set, PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.preferences.basepreferenceset import \
+    REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel
 
 __all__ = ['CombinationFunction', 'Concatenate', 'CombineMeans', 'Rearrange', 'Reduce', 'LinearCombination',
            'PredictionErrorDeltaFunction']
@@ -58,7 +58,7 @@ class CombinationFunction(Function_Base):
     All CombinationFunctions must have two attributes - multiplicative_param and additive_param -
         each of which is assigned the name of one of the function's parameters;
         this is for use by ModulatoryProjections (and, in particular, GatingProjections,
-        when the CombinationFunction is used as the function of an InputState or OutputState).
+        when the CombinationFunction is used as the function of an InputPort or OutputPort).
 
     """
     componentType = COMBINATION_FUNCTION_TYPE
@@ -72,49 +72,11 @@ class CombinationFunction(Function_Base):
                     see `variable <CombinationFunction.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # variable = np.array([0, 0])
-        variable = Parameter(np.array([0]), read_only=True)
-
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
-
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
 
 class Concatenate(CombinationFunction):  # ------------------------------------------------------------------------
@@ -151,7 +113,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         (see `offset <Concatenate.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -192,8 +154,6 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     """
     componentName = CONCATENATE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -204,19 +164,16 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                     see `offset <Concatenate.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Concatenate.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -227,16 +184,14 @@ class Concatenate(CombinationFunction):  # -------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -285,7 +240,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -297,8 +252,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             in an array that is one dimension less than `variable <Concatenate.variable>`.
 
         """
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         result = np.hstack(variable) * scale + offset
 
@@ -367,7 +322,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         (see `offset <Rearrange.offset>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -412,35 +367,32 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     """
     componentName = REARRANGE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
-
     class Parameters(CombinationFunction.Parameters):
         """
             Attributes
             ----------
 
                 arrangement
-                    see `arrangement <Rearrange.arrangement>`
+                    see `arrangement <Rearrange_Arrangement>`
+
+                    :default value: None
+                    :type:
 
                 offset
                     see `offset <Rearrange.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Rearrange.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         arrangement = Parameter(None, modulable=False)
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -452,22 +404,15 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(arrangement=arrangement,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
-    def _handle_default_variable(self, default_variable=None, size=None, input_states=None, function=None, params=None):
-        if default_variable is not None:
-            self.parameters.variable._user_specified = True
-        return default_variable
+        super().__init__(
+            default_variable=default_variable,
+            arrangement=arrangement,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that all elements are numeric and that list or array is at least 2d
@@ -534,7 +479,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
         if not self.parameters.variable._user_specified:
             # Reshape variable.default_value to match maximum index specified in arrangement
-            self.parameters.variable.default_value = np.zeros((max(self._indices)+1,1))
+            self.parameters.variable.default_value = np.zeros((max(self._indices) + 1, 1))
 
         super()._instantiate_attributes_before_function(function, context)
 
@@ -561,7 +506,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -573,8 +518,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         """
         variable = np.atleast_2d(variable)
 
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
         arrangement = self.parameters.arrangement.get(context)
 
         if arrangement is None:
@@ -657,7 +602,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         (see `offset <Reduce.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -703,8 +648,6 @@ class Reduce(CombinationFunction):  # ------------------------------------------
     """
     componentName = REDUCE_FUNCTION
 
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -721,34 +664,31 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                     see `offset <Reduce.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <Reduce.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <Reduce.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <Reduce.weights>`
 
                     :default value: None
                     :type:
-
         """
         weights = None
         exponents = None
         operation = SUM
-        scale = Parameter(1.0, modulable=True)
-        offset = Parameter(0.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+        scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
     @tc.typecheck
     def __init__(self,
@@ -764,19 +704,17 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            weights=weights,
+            exponents=exponents,
+            operation=operation,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that list or array is 1d and that all elements are numeric
@@ -787,8 +725,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         """
         variable = super()._validate_variable(variable=variable, context=context)
         if not is_numeric(variable):
-            raise FunctionError("All elements of {} must be scalar values".
-                                format(self.__class__.__name__))
+            if self.owner:
+                err_msg = f"{self.__class__.__name__} function of {repr(self.owner.name)} " \
+                          f"passed variable ({variable}) with non-scalar element."
+            else:
+                err_msg = f"All elements of variable ({variable}) for {self.__class__.__name__} must be scalar values."
+            raise FunctionError(err_msg)
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -846,7 +788,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
            a list or np.array of numeric values.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -859,11 +801,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-        weights = self.get_current_function_param(WEIGHTS, context)
-        exponents = self.get_current_function_param(EXPONENTS, context)
-        operation = self.get_current_function_param(OPERATION, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        weights = self._get_current_function_param(WEIGHTS, context)
+        exponents = self._get_current_function_param(EXPONENTS, context)
+        operation = self._get_current_function_param(OPERATION, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -893,7 +835,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
-                                format(self.get_current_function_param(OPERATION, context)))
+                                format(self._get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -994,7 +936,7 @@ class LinearCombination(
         (see `offset <LinearCombination.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1077,14 +1019,9 @@ class LinearCombination(
     componentName = LINEAR_COMBINATION_FUNCTION
 
     classPreferences = {
-        kwPreferenceSetName: 'LinearCombinationCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'LinearCombinationCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    multiplicative_param = SCALE
-    additive_param = OFFSET
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -1101,26 +1038,25 @@ class LinearCombination(
                     see `offset <LinearCombination.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <LinearCombination.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <LinearCombination.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <LinearCombination.weights>`
 
                     :default value: None
                     :type:
-
         """
         operation = SUM
 
@@ -1143,19 +1079,17 @@ class LinearCombination(
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            weights=weights,
+            exponents=exponents,
+            operation=operation,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         """Insure that all items of list or np.ndarray in variable are of the same length
@@ -1225,9 +1159,6 @@ class LinearCombination(
                 pass
             elif isinstance(scale, np.ndarray):
                 target_set[SCALE] = np.array(scale)
-            else:
-                raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
-                                    format(SCALE, self.name, scale))
             scale_is_a_scalar = isinstance(scale, numbers.Number) or (len(scale) == 1) and isinstance(scale[0],
                                                                                                       numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
@@ -1248,9 +1179,7 @@ class LinearCombination(
                 pass
             elif isinstance(offset, np.ndarray):
                 target_set[OFFSET] = np.array(offset)
-            else:
-                raise FunctionError("{} param of {} ({}) must be a scalar or an np.ndarray".
-                                    format(OFFSET, self.name, offset))
+
             offset_is_a_scalar = isinstance(offset, numbers.Number) or (len(offset) == 1) and isinstance(offset[0],
                                                                                                          numbers.Number)
             if context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING):
@@ -1285,7 +1214,7 @@ class LinearCombination(
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1297,16 +1226,16 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-        weights = self.get_current_function_param(WEIGHTS, context)
-        exponents = self.get_current_function_param(EXPONENTS, context)
+        weights = self._get_current_function_param(WEIGHTS, context)
+        exponents = self._get_current_function_param(EXPONENTS, context)
         # if self.initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
         #         exponents = exponents.reshape(variable.shape)
-        operation = self.get_current_function_param(OPERATION, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        operation = self._get_current_function_param(OPERATION, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1344,7 +1273,7 @@ class LinearCombination(
         if weights is not None:
             variable = variable * weights
 
-        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterState
+        # CW 3/19/18: a total hack, e.g. to make scale=[4.] turn into scale=4. Used b/c the `scale` ParameterPort
         # changes scale's format: e.g. if you write c = pnl.LinearCombination(scale = 4), print(c.scale) returns [4.]
         if isinstance(scale, (list, np.ndarray)):
             if len(scale) == 1 and isinstance(scale[0], numbers.Number):
@@ -1385,7 +1314,7 @@ class LinearCombination(
         return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def __gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
         scale_type = scale_ptr.type.pointee
         if isinstance(scale_type, pnlvm.ir.ArrayType):
             if len(scale_type) == 1:
@@ -1393,7 +1322,7 @@ class LinearCombination(
             else:
                 scale_ptr = builder.gep(scale_ptr, [ctx.int32_ty(0), index])
 
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
         offset_type = offset_ptr.type.pointee
         if isinstance(offset_type, pnlvm.ir.ArrayType):
             if len(offset_type) == 1:
@@ -1401,23 +1330,23 @@ class LinearCombination(
             else:
                 offset_ptr = builder.gep(offset_ptr, [ctx.int32_ty(0), index])
 
-        exponent_param_ptr = ctx.get_param_ptr(self, builder, params, EXPONENTS)
+        exponent_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, EXPONENTS)
         exponent_type = exponent_param_ptr.type.pointee
 
-        weights_ptr = ctx.get_param_ptr(self, builder, params, WEIGHTS)
+        weights_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, WEIGHTS)
         weights_type = weights_ptr.type.pointee
 
         scale = ctx.float_ty(1.0) if isinstance(scale_type, pnlvm.ir.LiteralStructType) and len(scale_type.elements) == 0 else builder.load(scale_ptr)
         offset = ctx.float_ty(-0.0) if isinstance(offset_type, pnlvm.ir.LiteralStructType) and len(offset_type.elements) == 0 else builder.load(offset_ptr)
 
         # assume operation does not change dynamically
-        operation = self.get_current_function_param(OPERATION, context=Context())
+        operation = self.parameters.operation.get()
         if operation is SUM:
             val = ctx.float_ty(-0.0)
         elif operation is PRODUCT:
             val = ctx.float_ty(1.0)
         else:
-            assert False, "Unknown operation: " + operation
+            assert False, "Unknown operation: {}".format(operation)
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
 
@@ -1474,35 +1403,13 @@ class LinearCombination(
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(val, ptro)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Sometimes we arg_out to 2d array
-        arg_out = ctx.unwrap_2d_array(builder, arg_out)
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_out, "linear") as args:
             self.__gen_llvm_combine(ctx=ctx, vi=arg_in, vo=arg_out, params=params, *args)
         return builder
-
-    @property
-    def offset(self):
-        if not hasattr(self, '_offset'):
-            return None
-        else:
-            return self._offset
-
-    @offset.setter
-    def offset(self, val):
-        self._offset = val
-
-    @property
-    def scale(self):
-        if not hasattr(self, '_scale'):
-            return None
-        else:
-            return self._scale
-
-    @scale.setter
-    def scale(self, val):
-        self._scale = val
 
 
 class CombineMeans(CombinationFunction):  # ------------------------------------------------------------------------
@@ -1599,7 +1506,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         (see `offset <CombineMeans.offset>` for details)
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1680,12 +1587,9 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
     componentName = COMBINE_MEANS_FUNCTION
 
     classPreferences = {
-        kwPreferenceSetName: 'CombineMeansCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'CombineMeansCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    multiplicative_param = SCALE
-    additive_param = OFFSET
 
     class Parameters(CombinationFunction.Parameters):
         """
@@ -1702,34 +1606,31 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                     see `offset <CombineMeans.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 operation
                     see `operation <CombineMeans.operation>`
 
                     :default value: `SUM`
-                    :type: str
+                    :type: ``str``
 
                 scale
                     see `scale <CombineMeans.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 weights
                     see `weights <CombineMeans.weights>`
 
                     :default value: None
                     :type:
-
         """
         weights = None
         exponents = None
         operation = SUM
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1745,19 +1646,17 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(weights=weights,
-                                                  exponents=exponents,
-                                                  operation=operation,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            weights=weights,
+            exponents=exponents,
+            operation=operation,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         if self.weights is not None:
             self.weights = np.atleast_2d(self.weights).reshape(-1, 1)
@@ -1861,7 +1760,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
            a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1873,11 +1772,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-        exponents = self.get_current_function_param(EXPONENTS, context)
-        weights = self.get_current_function_param(WEIGHTS, context)
-        operation = self.get_current_function_param(OPERATION, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        scale = self.get_current_function_param(SCALE, context)
+        exponents = self._get_current_function_param(EXPONENTS, context)
+        weights = self._get_current_function_param(WEIGHTS, context)
+        operation = self._get_current_function_param(OPERATION, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1924,7 +1823,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
-                                format(self.get_current_function_param(OPERATION, context)))
+                                format(self._get_current_function_param(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1968,8 +1867,8 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     componentName = PREDICTION_ERROR_DELTA_FUNCTION
 
     classPreferences = {
-        kwPreferenceSetName: 'PredictionErrorDeltaCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'PredictionErrorDeltaCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
 
     class Parameters(CombinationFunction.Parameters):
@@ -1981,21 +1880,16 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                     see `variable <PredictionErrorDeltaFunction.variable>`
 
                     :default value: numpy.array([[1], [1]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 gamma
                     see `gamma <PredictionErrorDeltaFunction.gamma>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
-        variable = np.array([[1], [1]])
+        variable = Parameter(np.array([[1], [1]]), pnl_internal=True, constructor_argument='default_variable')
         gamma = Parameter(1.0, modulable=True)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    multiplicative_param = None
-    additive_param = None
 
     @tc.typecheck
     def __init__(self,
@@ -2004,16 +1898,14 @@ class PredictionErrorDeltaFunction(CombinationFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        #
-        params = self._assign_args_to_param_dicts(gamma=gamma,
-                                                  params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gamma=gamma,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         self.gamma = gamma
 
@@ -2106,7 +1998,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
             have the same length
 
         params : Dict[param keyword, param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that
+            a `parameter dictionary <ParameterPort_Specification>` that
             specifies the parameters for the function. Values specified for
             parameters in the dictionary override any assigned to those
             parameters in arguments of the constructor.
@@ -2117,7 +2009,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self.get_current_function_param(GAMMA, context)
+        gamma = self._get_current_function_param(GAMMA, context)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

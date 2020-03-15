@@ -169,7 +169,7 @@ Bidirectional_Stroop.show()
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
-# ECONTEXT_COMMENT is automatically passed into Conditions, and references the execution context in which they are being run,
+# context is automatically passed into Conditions, and references the execution context in which they are being run,
 # which in this case is simply the Bidirectional_Stroop system
 def pass_threshold(response_layer, thresh, context):
     results1 = response_layer.get_output_values(context)[0][0] #red response
@@ -263,7 +263,7 @@ for cond in range(conditions):
         response_word_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                                        [0.0, 0.0, 0.0]]))
         Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=settle_trials)    # run system to settle for 200 trials with congruent stimuli input
-        Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=20*(run))  # run system to settle for 200 trials with congruent stimuli input
+        Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=20 * (run))  # run system to settle for 200 trials with congruent stimuli input
 
         response_color_weights = pnl.MappingProjection(matrix=np.array([[1.5, 0.0, 0.0],
                                                                         [0.0, 1.5, 0.0]]))
@@ -271,7 +271,7 @@ for cond in range(conditions):
         response_word_weights  = pnl.MappingProjection(matrix=np.array([[2.5, 0.0, 0.0],
                                                                         [0.0, 2.5, 0.0]]))
 
-        Bidirectional_Stroop.run(inputs=Stimulus[cond][1],num_trials=prior120 - (run*20))# termination_processing=terminate_trial) # run system with congruent stimulus input until
+        Bidirectional_Stroop.run(inputs=Stimulus[cond][1], num_trials=prior120 - (run * 20))# termination_processing=terminate_trial) # run system with congruent stimulus input until
         Bidirectional_Stroop.run(inputs=Stimulus[cond][2], termination_processing=terminate_trial) # run system with congruent stimulus input until
                                                                     # threshold in of of the response layer units is reached
 
@@ -330,7 +330,7 @@ for cond in range(conditions):
 
 # Plotting ------------------------------------------------------------------------------------------------------------
 #compute regression for model
-reg = np.dot(response_all,2)+123
+reg = np.dot(response_all, 2) + 123
 plt.figure()
 # plt.plot(response_all[0:9])
 # plt.plot(response_all[9:18])

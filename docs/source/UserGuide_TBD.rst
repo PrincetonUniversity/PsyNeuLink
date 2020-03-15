@@ -43,7 +43,7 @@ Components
 
 
 , as well as two other fundamental types of Components
-(`States <State>` and `Functions <Function>`), that are described in the section below on
+(`Ports <Port>` and `Functions <Function>`), that are described in the section below on
 `Components <User_Guide_Components>`.  The other primary type of object, `Composition`, has two primary types:
 `Processes <Process>` and `Systems <System>` that allow Compositions of different degrees of size and complexity to
 be created.  These are described in the section below on `Compositions <User_Guide_Components>`.  In each case,
@@ -66,7 +66,7 @@ Organization:
                         pathway
                         modulatory
                 two constituent types (i.e. parts of other types)
-                    states (mechanisms and projections)
+                    ports (mechanisms and projections)
                     functions (all PNL objects)
        Compositions:
           configure components into functioning processes and systems

@@ -7,9 +7,9 @@ Component
    *Subclasses:*
    Mechanisms <Mechanism>
    Projections <Projection>
-   States <State>
+   Ports <Port>
    Functions <Functions>
 
 .. automodule:: psyneulink.core.components.component
    :members:
-   :exclude-members: Parameters, ParamsDict, ComponentLog, COMPONENT_BASE_CLASS, LogLevel
+   :exclude-members: Parameters, ComponentLog, COMPONENT_BASE_CLASS, LogLevel

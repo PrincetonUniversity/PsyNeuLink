@@ -9,6 +9,15 @@
 # *******************************************  AutoAssociativeProjection ***********************************************
 
 """
+Contents
+--------
+  * `Masked_MappingProjection_Overview`
+  * `Masked_MappingProjection_Creation`
+  * `Masked_MappingProjection_Structure`
+  * `Masked_MappingProjection_Execution`
+  * `Masked_MappingProjection_Class_Reference`
+
+
 .. _Masked_MappingProjection_Overview:
 
 Overview
@@ -16,7 +25,7 @@ Overview
 
 A MaskedMappingProjection is a subclass of `MappingProjection` that applies a specified mask array
 (either additively, multiplicatively, or exponentially) to the MappingProjection's `matrix <MappingProjection.matrix>`
-each time the MappingProjection is executed.  The mask is assigned a `ParameterState` and can thus be modulated
+each time the MappingProjection is executed.  The mask is assigned a `ParameterPort` and can thus be modulated
 by a `ControlMechanism <ControlMechanism>`.
 
 .. _Masked_MappingProjection_Creation:
@@ -65,11 +74,11 @@ from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -93,33 +102,14 @@ class MaskedMappingProjectionError(Exception):
 class MaskedMappingProjection(MappingProjection):
     """
     MaskedMappingProjection(     \
-        sender=None,             \
-        receiver=None,           \
-        matrix=DEFAULT_MATRIX,   \
         mask=None,               \
-        mask_operation=MULTIPLY  \
-        params=None,             \
-        name=None,               \
-        prefs=None)
+        mask_operation=MULTIPLY)
 
-    Implement MappingProjection the `matrix <MaskedMappingProjection.matrix>` of which can be masked on each execution.
+    Subclass of `MappingProjection`, the `matrix <MaskedMappingProjection.matrix>` of which can be masked on each
+    execution.  See `MappingProjection <MappingProjection_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
-
-    sender : Optional[OutputState or Mechanism]
-        specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
-
-    receiver : Optional[InputState or Mechanism]
-        specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
-
-    matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
-        the matrix used by `function <MaskedMappingProjection.function>` (default: `LinearCombination`) to transform
-        the value of the `sender <MaskedMappingProjection.sender>`.
 
     mask : int, float, list, np.ndarray or np.matrix : default None
         specifies a mask to be applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is
@@ -129,35 +119,9 @@ class MaskedMappingProjection(MappingProjection):
         specifies the manner in which the `mask <MaskedMappingProjection.mask>` is applied to the `matrix
         <MaskedMappingProjection.matrix>` each time the Projection is executed.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default AutoAssociativeProjection-<index>
-        a string used for the name of the AutoAssociativeProjection. When an AutoAssociativeProjection is created by a
-        RecurrentTransferMechanism, its name is assigned "<name of RecurrentTransferMechanism> recurrent projection"
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences]
-        the `PreferenceSet` for the MappingProjection; if it is not specified, a default is assigned using
-        `classPreferences` defined in __init__.py (see `PreferenceSet <LINK>` for details).
 
     Attributes
     ----------
-
-    componentType : MASKED_MAPPING_PROJECTION
-
-    sender : OutputState
-        identifies the source of the Projection's input.
-
-    receiver: InputState
-        identifies the destination of the Projection.
-
-    matrix : 2d np.ndarray
-        matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
-        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`.
 
     mask : int, float, list, np.ndarray or np.matrix : default None
         mask applied to the `matrix <MaskedMappingProjection.matrix>` each time the Projection is executed,
@@ -167,15 +131,6 @@ class MaskedMappingProjection(MappingProjection):
         determines the manner in which the `mask <MaskedMappingProjection.mask>` is applied to the `matrix
         <MaskedMappingProjection.matrix>` when the Projection is executed.
 
-    value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
-
-    name : str
-        a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
-        naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for AutoAssociativeProjection (see :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentType = MASKED_MAPPING_PROJECTION
@@ -191,7 +146,7 @@ class MaskedMappingProjection(MappingProjection):
                     see `variable <MaskedMappingProjection.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 mask
                     see `mask <MaskedMappingProjection.mask>`
@@ -203,8 +158,7 @@ class MaskedMappingProjection(MappingProjection):
                     see `mask_operation <MaskedMappingProjection.mask_operation>`
 
                     :default value: `MULTIPLY`
-                    :type: str
-
+                    :type: ``str``
         """
         variable = np.array([[0]])    # function is always LinearMatrix that requires 1D input
         mask = None
@@ -221,9 +175,6 @@ class MaskedMappingProjection(MappingProjection):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    # necessary?
-    paramClassDefaults = MappingProjection.paramClassDefaults.copy()
-
     @tc.typecheck
     def __init__(self,
                  sender=None,
@@ -237,19 +188,18 @@ class MaskedMappingProjection(MappingProjection):
                  prefs: is_pref_set = None,
                  **kwargs):
 
-        params = self._assign_args_to_param_dicts(mask=mask,
-                                                  mask_operation=mask_operation,
-                                                  function_params={MATRIX: matrix},
-                                                  params=params)
-
-        super().__init__(sender=sender,
-                         receiver=receiver,
-                         matrix=matrix,
-                         function=function,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
+        super().__init__(
+            sender=sender,
+            receiver=receiver,
+            mask=mask,
+            mask_operation=mask_operation,
+            matrix=matrix,
+            function=function,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **mask** argument"""
@@ -263,7 +213,7 @@ class MaskedMappingProjection(MappingProjection):
             if isinstance(mask, (int, float)):
                 return
             mask_shape = np.array(mask).shape
-            matrix = get_matrix(self.user_params[FUNCTION_PARAMS][MATRIX],
+            matrix = get_matrix(self.defaults.matrix,
                                 len(self.sender.defaults.value), len(self.receiver.defaults.value))
             matrix_shape = matrix.shape
             if mask_shape != matrix_shape:
@@ -272,11 +222,11 @@ class MaskedMappingProjection(MappingProjection):
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _update_parameter_states(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, context=None, runtime_params=None):
 
         # Update parameters first, to be sure mask that has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
-        super()._update_parameter_states(context=context, runtime_params=runtime_params)
+        super()._update_parameter_ports(context=context, runtime_params=runtime_params)
 
         mask = self.parameters.mask._get(context)
         mask_operation = self.parameters.mask_operation._get(context)

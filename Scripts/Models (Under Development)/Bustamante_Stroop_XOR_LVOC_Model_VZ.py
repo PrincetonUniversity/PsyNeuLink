@@ -68,7 +68,7 @@ def objective_function(v):
         reward = reward_upper
     else:
         reward = reward_lower
-    reward -= (.44*v[3])
+    reward -= (.44 * v[3])
 
     # TEST PRINT:
     print(v, reward)
@@ -95,20 +95,20 @@ task_decision = pnl.DDM(
                 noise=0.4,
                 t0=.4
         ),
-        output_states=[
-            pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-            pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD,
-            pnl.DDM_OUTPUT.RESPONSE_TIME
+        output_ports=[
+            pnl.PROBABILITY_UPPER_THRESHOLD,
+            pnl.PROBABILITY_LOWER_THRESHOLD,
+            pnl.RESPONSE_TIME
         ]
 )
 
 # print("Task decision loggable: ", task_decision.loggable_items)
-task_decision.set_log_conditions('InputState-0')  
-# task_decision.set_log_conditions('func_drift_rate')     
-# task_decision.set_log_conditions('mod_drift_rate')      
-task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')     
-task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')     
-color_task.set_log_conditions('value')      
+task_decision.set_log_conditions('InputPort-0')
+# task_decision.set_log_conditions('func_drift_rate')
+# task_decision.set_log_conditions('mod_drift_rate')
+task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')
+task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
+color_task.set_log_conditions('value')
 word_task.set_log_conditions('value')
 
 control_signal_range = (0,1)
@@ -126,16 +126,16 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_state, word_stim.input_state],
+    features=[color_stim.input_port, word_stim.input_port],
     # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
 
     # computes value of processing, reward received
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
-        monitor=[task_decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                 task_decision.output_states[pnl.PROBABILITY_LOWER_THRESHOLD],
+        monitor=[task_decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                 task_decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
                  reward,
-                 task_decision.output_states[pnl.RESPONSE_TIME]],
+                 task_decision.output_ports[pnl.RESPONSE_TIME]],
         function=objective_function
     ),
     # posterior weight distribution
@@ -153,7 +153,7 @@ lvoc = pnl.OptimizationControlMechanism(
             step_size=2, #1
             # Note: Falk used 10 in the denom below, but indexed sample numbers from 1;
             #       but sample_num passed to _follow_gradient is indexed from 0, so use 11 below
-            annealing_function=lambda x, y: x / np.sqrt(11+y),
+            annealing_function=lambda x, y: x / np.sqrt(11 + y),
             max_iterations=100
             # save_samples=True,
             # save_values=True,
@@ -165,7 +165,7 @@ lvoc = pnl.OptimizationControlMechanism(
             modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
             # function=pnl.ReLU,
             # function=pnl.Logistic,
-            cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+            cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
             intensity_cost_function=pnl.Exponential(rate=0.25, bias=-1), # 0.25, -3
             # adjustment_cost_function=pnl.Exponential(rate=.25, bias=-1), # 0.25, -3
             # adjustment_cost_function=lambda x: np.exp(.25 * np.abs(x) - 1),
@@ -181,7 +181,7 @@ lvoc = pnl.OptimizationControlMechanism(
 lvoc.set_log_conditions('value')
 # lvoc.set_log_conditions('features')
 # print("LVOC loggable: ", lvoc.loggable_items)
-# lvoc.set_log_conditions('variable')     
+# lvoc.set_log_conditions('variable')
 # lvoc.agent_rep.set_log_conditions('regression_weights')
 
 # lvoc.reportOutputPref=True
@@ -235,7 +235,7 @@ for i in range(num_subj):
           )
 
     print('\n')
-    print('Subject: ', i+1)
+    print('Subject: ', i + 1)
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
@@ -247,7 +247,7 @@ for i in range(num_subj):
 # ------------------------------------------------------------------------------------------------------------------
 
 # print('\n\n\nLVOC Log\n')
-print(lvoc.log.csv()) 
+print(lvoc.log.csv())
 
 # print('\n\n\nTask Decision Log\n')
 print(task_decision.log.csv())
@@ -260,7 +260,7 @@ print(task_decision.log.csv())
 
 
 file_lvoc = open("lvoc_5_29.csv", 'w')
-file_lvoc.write(lvoc.log.csv()) 
+file_lvoc.write(lvoc.log.csv())
 file_lvoc.close()
 
 file_task = open("task_5_29.csv", 'w')

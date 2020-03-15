@@ -1,18 +1,19 @@
 import ctypes
+import ctypes.util
 import copy
-import functools
 import numpy as np
 import pytest
+import sys
 
 from psyneulink.core import llvm as pnlvm
 from llvmlite import ir
 
 
-DIM_X=1000
-TST_MIN=1.0
-TST_MAX=3.0
+DIM_X = 1000
+TST_MIN = 1.0
+TST_MAX = 3.0
 
-vector = np.random.rand(DIM_X)
+VECTOR = np.random.rand(DIM_X)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -20,7 +21,7 @@ vector = np.random.rand(DIM_X)
 def test_helper_fclamp(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        local_vec = copy.deepcopy(vector)
+        local_vec = copy.deepcopy(VECTOR)
         double_ptr_ty = ctx.float_ty.as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty,
                                                   double_ptr_ty))
@@ -44,7 +45,7 @@ def test_helper_fclamp(mode):
 
         builder.ret_void()
 
-    ref = np.clip(vector, TST_MIN, TST_MAX)
+    ref = np.clip(VECTOR, TST_MIN, TST_MAX)
     bounds = np.asfarray([TST_MIN, TST_MAX])
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
@@ -65,7 +66,7 @@ def test_helper_fclamp(mode):
 def test_helper_fclamp_const(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        local_vec = copy.deepcopy(vector)
+        local_vec = copy.deepcopy(VECTOR)
         double_ptr_ty = ctx.float_ty.as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty))
 
@@ -85,7 +86,7 @@ def test_helper_fclamp_const(mode):
 
         builder.ret_void()
 
-    ref = np.clip(vector, TST_MIN, TST_MAX)
+    ref = np.clip(VECTOR, TST_MIN, TST_MAX)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
         ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
@@ -128,7 +129,7 @@ def test_helper_is_close(mode):
 
         builder.ret_void()
         
-    vec1 = copy.deepcopy(vector)
+    vec1 = copy.deepcopy(VECTOR)
     tmp = np.random.rand(DIM_X)
     tmp[0::2] = vec1[0::2]
     vec2 = np.asfarray(tmp)
@@ -171,8 +172,8 @@ def test_helper_all_close(mode):
         builder.store(res, out)
         builder.ret_void()
 
-    vec1 = copy.deepcopy(vector)
-    vec2 = copy.deepcopy(vector)
+    vec1 = copy.deepcopy(VECTOR)
+    vec2 = copy.deepcopy(VECTOR)
 
     ref = np.allclose(vec1, vec2)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
@@ -189,3 +190,33 @@ def test_helper_all_close(mode):
         res = res[0]
 
     assert np.array_equal(res, ref)
+
+@pytest.mark.llvm
+@pytest.mark.parametrize("ir_argtype,format_spec,values_to_check", [
+    (pnlvm.ir.IntType(32), "%u", range(0, 100)),
+    (pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
+    (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 10)]),
+    ])
+@pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
+def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
+    format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
+    with pnlvm.LLVMBuilderContext() as ctx:
+        func_ty = ir.FunctionType(ir.VoidType(), [])
+        ir_values_to_check = [ir_argtype(i) for i in values_to_check]
+        custom_name = ctx.get_unique_name("test_printf")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        pnlvm.helpers.printf(builder, format_str, *ir_values_to_check, override_debug=True)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+
+
+    # Printf is buffered in libc.
+    bin_f()
+    libc = ctypes.util.find_library("c")
+    libc = ctypes.CDLL(libc)
+    libc.fflush(0)
+    assert capfd.readouterr().out == format_str % tuple(values_to_check)

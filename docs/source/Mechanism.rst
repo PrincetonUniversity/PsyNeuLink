@@ -6,9 +6,9 @@ Mechanisms
 
    *Subclasses:*
    Processing Mechanisms <ProcessingMechanism>
-   Adaptive Mechanisms <AdaptiveMechanism>
+   Modulatory Mechanisms <ModulatoryMechanism>
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:
-   :exclude-members: MechanismTuple, MechanismList, MonitoredOutputStatesOption, random, Parameters
+   :exclude-members: MechanismTuple, MechanismList, MonitoredOutputPortsOption, random, Parameters
 

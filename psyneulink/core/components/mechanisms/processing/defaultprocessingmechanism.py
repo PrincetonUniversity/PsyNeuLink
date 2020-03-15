@@ -20,7 +20,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import SystemDefaultInputValue
 from psyneulink.core.globals.keywords import DEFAULT_PROCESSING_MECHANISM, FUNCTION, FUNCTION_PARAMS, INTERCEPT, SLOPE
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 # **************************************** DefaultProcessingMechanism ******************************************************
@@ -38,11 +38,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
 
     Class attributes:
         + componentType (str): System Default Mechanism
-        + paramClassDefaults (dict):
-            # + kwInputStateValue: [0]
-            # + kwOutputStateValue: [1]
-            + FUNCTION: Linear
-            + FUNCTION_PARAMS:{SLOPE:1, INTERCEPT:0}
     """
 
     componentName = DEFAULT_PROCESSING_MECHANISM
@@ -50,20 +45,14 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
     onlyFunctionOnInit = True
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # Any preferences specified below will override those specified in SubtypeDefaultPreferences
+    # Any preferences specified below will override those specified in SUBTYPE_DEFAULT_PREFERENCES
     # Note: only need to specify setting;  level will be assigned to SUBTYPE automatically
     # classPreferences = {
-    #     kwPreferenceSetName: 'DefaultProcessingMechanismClassPreferences',
-    #     kp<pref>: <setting>...}
+    #     PREFERENCE_SET_NAME: 'DefaultProcessingMechanismClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(Mechanism_Base.Parameters):
         variable = np.array([SystemDefaultInputValue])
-
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        FUNCTION: Linear,
-        FUNCTION_PARAMS: {SLOPE: 1, INTERCEPT: 0}
-    })
 
     @tc.typecheck
     def __init__(self,
@@ -83,8 +72,6 @@ class DefaultProcessingMechanism_Base(Mechanism_Base):
         :param name: (str)
         :param prefs: (PreferenceSet)
         """
-
-        params = self._assign_args_to_param_dicts(params=params)
 
         super(DefaultProcessingMechanism_Base, self).__init__(default_variable=default_variable,
                                                               size=size,

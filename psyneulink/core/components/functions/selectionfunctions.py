@@ -29,17 +29,13 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import \
-    Function, Function_Base, MULTIPLICATIVE_PARAM, FunctionError, ADDITIVE_PARAM
+from psyneulink.core.components.functions.function import Function, Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    SELECTION_FUNCTION_TYPE, ONE_HOT_FUNCTION, PARAMETER_STATE_PARAMS, \
-    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, \
-    MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, PROB, PROB_INDICATOR, kwPreferenceSetName
+    MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
+    MODE, ONE_HOT_FUNCTION, PARAMETER_PORT_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import \
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 from psyneulink.core.globals.utilities import get_global_seed
 
 
@@ -66,43 +62,6 @@ class SelectionFunction(Function_Base):
     """
     componentType = SELECTION_FUNCTION_TYPE
 
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
-
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
-
 
 class OneHot(SelectionFunction):
     """
@@ -120,26 +79,27 @@ class OneHot(SelectionFunction):
     .. _OneHot:
 
     `function <Selection.function>` returns an array the same length as the first item in `variable <OneHot.variable>`,
-    with all of its values zeroed except one as specified by `mode <OneHot.mode>`:
+    with all of its values zeroed except one identified in first item `variable <OneHot.variable>` as specified by
+    `mode <OneHot.mode>`:
 
-        * *MAX_VAL*: element with the maximum signed value in first item of `variable <OneHot.variable>`;
-        ..
-        * *MAX_ABS_VAL*: element with the maximum absolute value;
-        ..
+        * *MAX_VAL*: signed value of the element with the maximum signed value;
+
+        * *MAX_ABS_VAL*: absolute value of the element with the maximum absolute value;
+
         * *MAX_INDICATOR*: 1 in place of the element with the maximum signed value;
-        ..
+
         * *MAX_ABS_INDICATOR*: 1 in place of the element with the maximum absolute value;
-        ..
-        * *MIN_VAL*: element with the minimum signed value in first item of `variable <OneHot.variable>`;
-        ..
-        * *MIN_ABS_VAL*: element with the minimum absolute value;
-        ..
+
+        * *MIN_VAL*: signed value of the element with the minimum signed value;
+
+        * *MIN_ABS_VAL*: absolute value of element with the minimum absolute value;
+
         * *MIN_INDICATOR*: 1 in place of the element with the minimum signed value;
-        ..
+
         * *MIN_ABS_INDICATOR*: 1 in place of the element with the minimum absolute value;
-        ..
-        * *PROB*: probabilistically chosen element based on probabilities passed in second item of variable;
-        ..
+
+        * *PROB*: value of probabilistically chosen element based on probabilities passed in second item of variable;
+
         * *PROB_INDICATOR*: same as *PROB* but chosen item is assigned a value of 1.
 
 
@@ -156,7 +116,7 @@ class OneHot(SelectionFunction):
         (see `mode <OneHot.mode>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -200,18 +160,11 @@ class OneHot(SelectionFunction):
     componentName = ONE_HOT_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
 
     classPreferences = {
-        kwPreferenceSetName: 'OneHotClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'OneHotClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_STATE_PARAMS: None
-    })
 
     class Parameters(SelectionFunction.Parameters):
         """
@@ -222,17 +175,16 @@ class OneHot(SelectionFunction):
                     see `mode <OneHot.mode>`
 
                     :default value: `MAX_VAL`
-                    :type: str
+                    :type: ``str``
 
                 random_state
                     see `random_state <OneHot.random_state>`
 
                     :default value: None
-                    :type:
-
+                    :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
-        random_state = Parameter(None, stateful=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -259,26 +211,23 @@ class OneHot(SelectionFunction):
         if seed is None:
             seed = get_global_seed()
 
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mode=mode,
-                                                  random_state=random_state,
-                                                  params=params)
 
         reset_default_variable_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:
             default_variable = [[0], [0]]
             reset_default_variable_flexibility = True
 
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            mode=mode,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         if reset_default_variable_flexibility:
             self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -307,14 +256,14 @@ class OneHot(SelectionFunction):
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
-    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out, *, tags:frozenset):
         idx_ptr = builder.alloca(ctx.int32_ty)
         builder.store(ctx.int32_ty(0), idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
-            rng_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+            rng_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             dice_ptr = builder.alloca(ctx.float_ty)
-            mt_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
+            mt_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
             builder.call(rng_f, [mt_state_ptr, dice_ptr])
             dice = builder.load(dice_ptr)
             sum_ptr = builder.alloca(ctx.float_ty)
@@ -419,7 +368,7 @@ class OneHot(SelectionFunction):
            probabilities (i.e., elements between 0 and 1) of equal length to the 1st item.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -434,11 +383,11 @@ class OneHot(SelectionFunction):
 
         if self.mode is MAX_VAL:
             max_value = np.max(variable)
-            result = np.where(variable == max_value, max_value, 0)
+            result = np.where(variable == max_value, variable, 0)
 
         elif self.mode is MAX_ABS_VAL:
             max_value = np.max(np.absolute(variable))
-            result = np.where(variable == max_value, max_value, 0)
+            result = np.where(np.absolute(variable)==max_value, np.absolute(variable), 0)
 
         elif self.mode is MAX_INDICATOR:
             max_value = np.max(variable)
@@ -446,7 +395,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MAX_ABS_INDICATOR:
             max_value = np.max(np.absolute(variable))
-            result = np.where(variable == max_value, 1, 0)
+            result = np.where(np.absolute(variable) == max_value, 1, 0)
 
         if self.mode is MIN_VAL:
             min_value = np.min(variable)
@@ -454,7 +403,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MIN_ABS_VAL:
             min_value = np.min(np.absolute(variable))
-            result = np.where(variable == min_value, min_value, 0)
+            result = np.where(np.absolute(variable) == min_value, np.absolute(variable), 0)
 
         elif self.mode is MIN_INDICATOR:
             min_value = np.min(variable)
@@ -462,7 +411,7 @@ class OneHot(SelectionFunction):
 
         elif self.mode is MIN_ABS_INDICATOR:
             min_value = np.min(np.absolute(variable))
-            result = np.where(variable == min_value, 1, 0)
+            result = np.where(np.absolute(variable) == min_value, 1, 0)
 
         elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing
@@ -472,7 +421,7 @@ class OneHot(SelectionFunction):
             if not prob_dist.any():
                 return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
-            random_state = self.get_current_function_param("random_state", context)
+            random_state = self._get_current_function_param("random_state", context)
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)

@@ -80,7 +80,7 @@ T0 = 0.2 # T0
 inputLayer = pnl.TransferMechanism(#default_variable=[[0.0, 0.0]],
                                    size=2,
                                    function=pnl.Linear(slope=1, intercept=0),
-                                   output_states = [pnl.RESULT],
+                                   output_ports = [pnl.RESULT],
                                    name='Input')
 inputLayer.set_log_conditions([pnl.RESULT])
 
@@ -94,7 +94,7 @@ activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
                                             integrator_mode = True,
                                             integrator_function=pnl.AdaptiveIntegrator(rate=(tau)),
                                             initial_value=np.array([[0.0, 0.0]]),
-                                            output_states = [pnl.RESULT],
+                                            output_ports = [pnl.RESULT],
                                             name = 'Activity')
 
 activation.set_log_conditions([pnl.RESULT, "mod_gain"])
@@ -103,7 +103,7 @@ activation.set_log_conditions([pnl.RESULT, "mod_gain"])
 stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                      size = 2,
                                      function = pnl.Linear(slope=1, intercept=0),
-                                     output_states = [pnl.RESULT],
+                                     output_ports = [pnl.RESULT],
                                      name = "Stimulus Info")
 
 stimulusInfo.set_log_conditions([pnl.RESULT])
@@ -111,15 +111,15 @@ stimulusInfo.set_log_conditions([pnl.RESULT])
 controlledElement = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                           size = 2,
                                           function=pnl.Linear(slope=1, intercept= 0),
-                                          input_states=pnl.InputState(combine=pnl.PRODUCT),
-                                          output_states = [pnl.RESULT],
+                                          input_ports=pnl.InputPort(combine=pnl.PRODUCT),
+                                          output_ports = [pnl.RESULT],
                                           name = 'Stimulus Info * Activity')
 
 controlledElement.set_log_conditions([pnl.RESULT])
 
 ddmCombination = pnl.TransferMechanism(size = 1,
                                        function = pnl.Linear(slope=1, intercept=0),
-                                       output_states = [pnl.RESULT],
+                                       output_ports = [pnl.RESULT],
                                        name = "DDM Integrator")
 ddmCombination.set_log_conditions([pnl.RESULT])
 
@@ -128,7 +128,7 @@ decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate = DRIFT
                                                                  threshold = THRESHOLD,
                                                                  noise = NOISE,
                                                                  t0 = T0),
-                                                                 output_states = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
+                                                                 output_ports = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                                                   pnl.PROBABILITY_UPPER_THRESHOLD, pnl.PROBABILITY_LOWER_THRESHOLD],
                                                                  name='DDM')
 
@@ -169,10 +169,6 @@ signal = pnl.ControlSignal(modulates=[(pnl.GAIN, activation)],
                            intensity_cost_function=pnl.Linear(slope=0.),
                            allocation_samples=search_range)
 
-
-
-
-
 objective_mech = pnl.ObjectiveMechanism(monitor=[inputLayer, stimulusInfo,
                                                  (pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker),
                                                  (pnl.PROBABILITY_LOWER_THRESHOLD, decisionMaker)],
@@ -180,22 +176,22 @@ objective_mech = pnl.ObjectiveMechanism(monitor=[inputLayer, stimulusInfo,
                                         )
 
 meta_controller = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-                                                   features=[inputLayer.input_state, stimulusInfo.input_state],
+                                                   features=[inputLayer.input_port, stimulusInfo.input_port],
                                                    feature_function=pnl.Buffer(history=3),
                                                    objective_mechanism=objective_mech,
                                                    function=pnl.GridSearch(),
                                                    control_signals=[signal])
 
 inputs = {inputLayer: INPUT, stimulusInfo: stimulusInput}
-stabilityFlexibility.add_model_based_optimizer(meta_controller)
+stabilityFlexibility.add_controller(meta_controller)
 stabilityFlexibility.enable_model_based_optimizer = True
 
 print("Beginning of Run")
 
-for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_states)):
-    stabilityFlexibility.model_based_optimizer.input_states[i].function.reinitialize()
+for i in range(1, len(stabilityFlexibility.controller.input_ports)):
+    stabilityFlexibility.controller.input_ports[i].function.reinitialize()
 
-stabilityFlexibility.show_graph(show_model_based_optimizer=True)
+# stabilityFlexibility.show_graph(show_controller=True)
 
 # stabilityFlexibility.run(inputs)
 # print(stabilityFlexibility.results)

@@ -6,7 +6,7 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, LEARNING, LEARNING_PROJECTION
-from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
 
 
@@ -201,9 +201,9 @@ class TestStroop:
         )
 
         def show_target():
-            print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.format([np.ndarray.tolist(item.parameters.value.get(s)) for item in colors.input_states], s.targets))
-            print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.format([np.ndarray.tolist(item.parameters.value.get(s)) for item in words.input_states], s.targets))
-            print('Response: \n', response.output_state.parameters.value.get(s))
+            print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.format([np.ndarray.tolist(item.parameters.value.get(s)) for item in colors.input_ports], s.targets))
+            print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.format([np.ndarray.tolist(item.parameters.value.get(s)) for item in words.input_ports], s.targets))
+            print('Response: \n', response.output_port.parameters.value.get(s))
             print('Hidden-Output:')
             print(HO_Weights.get_mod_matrix(s))
             print('Color-Hidden:')
@@ -239,15 +239,15 @@ class TestStroop:
         objective_hidden = s.mechanisms[7]
         from pprint import pprint
         pprint(CH_Weights.__dict__)
-        print(CH_Weights._parameter_states["matrix"].value)
+        print(CH_Weights._parameter_ports["matrix"].value)
         print(CH_Weights.get_mod_matrix(s))
         expected_output = [
-            (colors.output_states[0].parameters.value.get(s), np.array([1., 1.])),
-            (words.output_states[0].parameters.value.get(s), np.array([-2., -2.])),
-            (hidden.output_states[0].parameters.value.get(s), np.array([0.13227553, 0.01990677])),
-            (response.output_states[0].parameters.value.get(s), np.array([0.51044657, 0.5483048])),
-            (objective_response.output_states[0].parameters.value.get(s), np.array([0.48955343, 0.4516952])),
-            (objective_response.output_states[MSE].parameters.value.get(s), np.array(0.22184555903789838)),
+            (colors.output_ports[0].parameters.value.get(s), np.array([1., 1.])),
+            (words.output_ports[0].parameters.value.get(s), np.array([-2., -2.])),
+            (hidden.output_ports[0].parameters.value.get(s), np.array([0.13227553, 0.01990677])),
+            (response.output_ports[0].parameters.value.get(s), np.array([0.51044657, 0.5483048])),
+            (objective_response.output_ports[0].parameters.value.get(s), np.array([0.48955343, 0.4516952])),
+            (objective_response.output_ports[MSE].parameters.value.get(s), np.array(0.22184555903789838)),
             (CH_Weights.get_mod_matrix(s), np.array([
                 [ 0.02512045, 1.02167245],
                 [ 2.02512045, 3.02167245],
@@ -273,4 +273,4 @@ class TestStroop:
         # KDM 10/16/18: Comparator Mechanism for Hidden is not executed by the system, because it's not associated with
         # an output mechanism. So it actually should be None instead of previously [0, 0] which was likely
         # a side effect with of conflation of different execution contexts
-        assert objective_hidden.output_states[0].parameters.value.get(s) is None
+        assert objective_hidden.output_ports[0].parameters.value.get(s) is None

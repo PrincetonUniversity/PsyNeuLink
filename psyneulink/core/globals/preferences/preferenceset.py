@@ -15,12 +15,12 @@ from collections import namedtuple
 from enum import Enum, IntEnum
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import kwDefaultPreferenceSetOwner, kwPreferenceSetName
+from psyneulink.core.globals.keywords import DEFAULT_PREFERENCE_SET_OWNER, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import iscompatible, kwCompatibilityType
 
 __all__ = [
     'PreferenceEntry', 'PreferenceLevel', 'PreferenceSet', 'PreferenceSetError', 'PreferenceSetRegistry',
-    'PreferenceSetVerbosity',
+    'PreferenceSetVerbosity'
 ]
 
 PreferenceSetRegistry = {}
@@ -37,7 +37,7 @@ class PreferenceLevel(IntEnum):
     TYPE        = 3
     CATEGORY    = 4
     SYSTEM      = 5
-
+    COMPOSITION = 6
 
 class PreferenceSetError(Exception):
      def __init__(self, error_value):
@@ -55,7 +55,7 @@ class PreferenceSet(object):
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Component hierarchy is assigned a PreferenceLevel:
             - System:  reserved for the Component class
-            - Category: primary function subclasses (e.g., Process, Mechanism, State, Projection, Function)
+            - Category: primary function subclasses (e.g., Process, Mechanism, Port, Projection, Function)
             - Type: Category subclasses (e.g., MappingProjection and ControlProjection subclasses of Projection, Function subclasses)
             - Instance: an instance of an object of any class
         Each class level in a hierarchy should be assigned a PreferenceSet object as a class attribute,
@@ -202,7 +202,7 @@ class PreferenceSet(object):
                     raise PreferenceSetError("owner argument must be included in call to {1}() "
                                              "and must be an object in the {2} class hierarchy".
                                          format(owner, self.__class__.__name__, self.baseClass.__name__))
-                self.owner =  owner
+                self.owner = owner
 
         # Make sure subclass implements a defaultPreferencesDict class attribute
         try:
@@ -221,7 +221,7 @@ class PreferenceSet(object):
         # ****** FIX: 9/10/16: MOVE TO REGISTRY **********
 
         # FIX: MAKE SURE DEFAULT NAMING SCHEME WORKS WITH CLASSES - 5/30/16
-        # FIX: INTEGRATE WITH NAME FROM kwPreferenceSetName ENTRY IN DICT BELOW - 5/30/16
+        # FIX: INTEGRATE WITH NAME FROM PREFERENCE_SET_NAME ENTRY IN DICT BELOW - 5/30/16
 
         if not name:
             # Assign name of preference set class as base of name
@@ -307,7 +307,7 @@ class PreferenceSet(object):
                     else:
                         prefs.update(class_prefs)
                 for pref_key in default_prefs_dict:
-                    if pref_key is kwPreferenceSetName:
+                    if pref_key is PREFERENCE_SET_NAME:
                         continue
                     try:
                         # Get pref from prefs arg;                                             # Condition 4
@@ -404,7 +404,7 @@ class PreferenceSet(object):
         else:
             print("Attempt to assign PreferenceSet {0} of {1} an invalid PreferenceLevel ({2});"
                   " level will remain set to {3}".format(self.name, self.owner.name, setting,
-                                                         self._level.__class__.__name__+'.'+self._level.name))
+                                                         self._level.__class__.__name__ + '.' + self._level.name))
 
 # FIX: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 # @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -578,8 +578,8 @@ class PreferenceSet(object):
         :param reference_setting:
         :return:
         """
-        # from Globals.Preferences.ComponentPreferenceSet import kpLogPref
-        # if pref_ivar_name is kpLogPref:
+        # from Globals.Preferences.BasePreferenceSet import LOG_PREF
+        # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
         setting_OK = iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
@@ -609,7 +609,7 @@ class PreferenceSet(object):
         # Note:
         # * this prevents use of LogEntry attributes not recognized by, or having different values from
         #     the LogEntry class in the owner object's module
-        if (not pref_set.owner.name is kwDefaultPreferenceSetOwner and
+        if (not pref_set.owner.name is DEFAULT_PREFERENCE_SET_OWNER and
                 not candidate_log_class.__module__ is pref_set.owner.__module__):
             raise PreferenceSetError("Attempt to assign logPref setting for {0} using value ({1}) from LogEntry"
                                      " in {2} which is different than the one defined in Globals.Log"
@@ -636,12 +636,13 @@ class PreferenceSet(object):
                                          format(candidate_log_class.__name__,
                                                 candidate_log_class.__module__,
                                                 log_entry_attribute,
-                                                LogEntry.__module__+"."+LogEntry.__name__,))
+                                                LogEntry.__module__ + "." + LogEntry.__name__,))
             else:
                 if OK:
                     continue
                 # Skip validation of value of these, as they may differ for different LogEntry classes
-                elif (log_entry_attribute is 'ALL' or log_entry_attribute is 'DEFAULTS'):
+                elif (log_entry_attribute == 'ALL' or
+                      log_entry_attribute == 'DEFAULTS'):
                     continue
                 else:
                     # Value of attribute from candidate's LogEntry does not match the value in Globals.Log.LogEntry
@@ -649,7 +650,7 @@ class PreferenceSet(object):
                                              format(log_entry_attribute,
                                                     candidate_log_class.__name__,
                                                     candidate_log_entry_value,
-                                                    LogEntry.__module__+"."+LogEntry.__name__,
+                                                    LogEntry.__module__ + "." + LogEntry.__name__,
                                                     global_log_entry_value))
 
     def get_pref_setting_for_level(self, pref_ivar_name, requested_level=None):
@@ -681,10 +682,10 @@ class PreferenceSet(object):
                 # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                 if (not hasattr(next_level, 'classPreferences') or
                         not isinstance(next_level.classPreferences, PreferenceSet)):
-                    from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                    next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
-                                                                         prefs=next_level.classPreferences,
-                                                                         level=next_level.classPreferenceLevel)
+                    from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+                    next_level.classPreferences = BasePreferenceSet(owner=next_level,
+                                                                    prefs=next_level.classPreferences,
+                                                                    level=next_level.classPreferenceLevel)
                 return_val = next_level.classPreferences.get_pref_setting_for_level(pref_ivar_name, requested_level)
                 return return_val[0],return_val[1]
             # Otherwise, return value for current level
@@ -733,20 +734,20 @@ class PreferenceSet(object):
 #                         from Utilities import get_modulationOperation_name
                         err_msg = ("{0} not found at {1}; replaced with value ({2}) from next lower level ({3})".
                                    format(pref_ivar_name,
-                                          requested_level.__class__.__name__+'.'+requested_level.name,
+                                          requested_level.__class__.__name__ + '.' + requested_level.name,
                                           # get_modulationOperation_name(pref_value),
                                           pref_value,
-                                          pref_entry.level.__class__.__name__+'.'+pref_entry.level.name))
+                                          pref_entry.level.__class__.__name__ + '.' + pref_entry.level.name))
                         return pref_value, err_msg
                 else:
                     # If classPreferences for level have not yet been assigned as PreferenceSet, assign them
                     next_level = self.owner.__bases__[0]
                     if (not hasattr(next_level, 'classPreferences') or
                             not isinstance(next_level.classPreferences, PreferenceSet)):
-                        from psyneulink.core.globals.preferences.componentpreferenceset import ComponentPreferenceSet
-                        next_level.classPreferences = ComponentPreferenceSet(owner=next_level,
-                                                                             prefs=next_level.classPreferences,
-                                                                             level=next_level.classPreferenceLevel)
+                        from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+                        next_level.classPreferences = BasePreferenceSet(owner=next_level,
+                                                                        prefs=next_level.classPreferences,
+                                                                        level=next_level.classPreferenceLevel)
                     return_val = self.owner.__bases__[0].classPreferences.get_pref_setting_for_level(pref_ivar_name,
                                                                                                requested_level)
                     return return_val[0], return_val[1]
@@ -809,7 +810,7 @@ class PreferenceSet(object):
                 pref_info_table = pref_info_table +("- {0} {1} {2} {3}\n".format(pref_name[1:].ljust(35,'.'),
                                                                            base_value_str.strip('"\'').ljust(35,'.'),
                                                                            current_value_str.strip('"\'').ljust(35,'.'),
-                                                                           level.__class__.__name__+'.'+level.name))
+                                                                           level.__class__.__name__ + '.' + level.name))
 
 
         # Header info
@@ -833,3 +834,17 @@ class PreferenceSet(object):
     #             IMPLEMENT USING **{kwCompatibilityType in call to iscompatible)
     #                       BUT WILL NEED TO IMPLEMENT SUPPORT FOR *LIST* OF TYPES FOR kwCompatibilityType
 
+
+def _assign_prefs(object, prefs, prefs_class:PreferenceSet):
+
+        if isinstance(prefs, PreferenceSet):
+            object.prefs = prefs
+            # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
+        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
+        else:
+            object.prefs = prefs_class(owner=object, prefs=prefs)
+        try:
+            # assign log conditions from preferences
+            object.parameters.value.log_condition = object.prefs._log_pref.setting
+        except AttributeError:
+            pass

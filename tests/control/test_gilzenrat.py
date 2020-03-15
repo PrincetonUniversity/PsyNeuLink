@@ -12,7 +12,7 @@ class TestGilzenratMechanisms:
 
     def test_defaults(self):
         G = LCAMechanism(integrator_mode=True,
-                         leak=-1.0,
+                         leak=1.0,
                          noise=0.0,
                          time_step_size=0.02,
                          function=Linear,
@@ -41,7 +41,7 @@ class TestGilzenratMechanisms:
 
     def test_previous_value_stored(self):
         G = LCAMechanism(integrator_mode=True,
-                         leak=-1.0,
+                         leak=1.0,
                          noise=0.0,
                          time_step_size=0.02,
                          function=Linear(slope=2.0),
@@ -51,14 +51,14 @@ class TestGilzenratMechanisms:
 
         P = Process(pathway=[G])
         S = System(processes=[P])
-        G.output_state.value = [0.0]
+        G.output_port.value = [0.0]
 
         # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise
         # f(X) = 2.0*X + 0
 
         # - - - - - starting values - - - - -
-        # variable = G.output_state.value + stimulus = 0.0 + 1.0 = 1.0
+        # variable = G.output_port.value + stimulus = 0.0 + 1.0 = 1.0
         # previous_value = initial_value = 1.0
         # single_run = S.execute([[1.0]])
         # np.testing.assert_allclose(single_run, np.array([[2.0]]))
@@ -211,7 +211,7 @@ class TestGilzenratMechanisms:
 #                                               noise=NormalDist(mean=0.0, standard_deviation=standard_deviation).function,
 #                                               name='RESPONSE')
 #
-#         # Implement response layer with input_state for ObjectiveMechanism that has a single value
+#         # Implement response layer with input_port for ObjectiveMechanism that has a single value
 #         # and a MappingProjection to it that zeros the contribution of the decision unit in the decision layer
 #         LC = LCControlMechanism(
 #             time_step_size_FitzHughNagumo=time_step_size,  # integrating step size

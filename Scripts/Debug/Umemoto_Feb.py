@@ -42,7 +42,7 @@ Target_Rep = pnl.TransferMechanism(name='Target Representation')
 
 Target_Rep.set_log_conditions('value')#, log_condition=pnl.PROCESSING) # Log Target_Rep
 Target_Rep.set_log_conditions('mod_slope')#, log_condition=pnl.PROCESSING)
-Target_Rep.set_log_conditions('InputState-0')#, log_condition=pnl.PROCESSING)
+Target_Rep.set_log_conditions('InputPort-0')#, log_condition=pnl.PROCESSING)
 
 Distractor_Rep = pnl.TransferMechanism(name='Distractor Representation')
 
@@ -62,7 +62,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         starting_point=(x_0),
         t0=t0
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -73,7 +73,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
-Decision.set_log_conditions('InputState-0')#, log_condition=pnl.PROCESSING)
+Decision.set_log_conditions('InputPort-0')#, log_condition=pnl.PROCESSING)
 
 # Outcome Mechanisms:
 Reward = pnl.TransferMechanism(name='Reward')
@@ -105,7 +105,7 @@ Umemoto_comp.add_node(Decision,
 Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)],
                                               function=pnl.Linear,
                                               variable=1.0,
-                                              cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                              cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
                                               intensity_cost_function=pnl.Exponential(scale=1, rate=1),
                                               adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
                                               allocation_samples=signalSearchRange)
@@ -113,16 +113,16 @@ Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)
 Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distractor_Rep)],
                                                   function=pnl.Linear,
                                                   variable=1.0,
-                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                                  cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
                                                   intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                   adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
                                                   allocation_samples=signalSearchRange)
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=Umemoto_comp,
-                                                                                  features=[Target_Stim.input_state, Distractor_Stim.input_state, Reward.input_state],
+                                                                                  features=[Target_Stim.input_port, Distractor_Stim.input_port, Reward.input_port],
                                                                                   feature_function=pnl.AdaptiveIntegrator(rate=1.0),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
-                                                                                                                                                 (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
+                                                                                                                                                 (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
                                                                                                                              ),
                                                                                   function=pnl.GridSearch(),
                                                                                   control_signals=[Target_Rep_Control_Signal, Distractor_Rep_Control_Signal]

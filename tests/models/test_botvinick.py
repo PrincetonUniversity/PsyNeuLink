@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.llvm as pnlvm
 
 # This script implements Figure 1 of Botvinick, M. M., Braver, T. S., Barch, D. M., Carter, C. S., & Cohen, J. D. (2001).
 # Conflict monitoring and cognitive control. Psychological Review, 108, 624–652.
@@ -31,7 +30,7 @@ import psyneulink.core.components.functions.transferfunctions
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_botvinick_model(benchmark, mode, reps):
-    benchmark.group = "Botvinick (scale " + str(reps/100) + ")"
+    benchmark.group = "Botvinick (scale " + str(reps / 100) + ")"
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
     # Linear input layer
@@ -78,7 +77,7 @@ def test_botvinick_model(benchmark, mode, reps):
                                                     hetero=-2.0,
                                                     integrator_mode=True,
                                                     integration_rate=0.01,
-                                                    output_states = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                    output_ports = [pnl.RESULT,
                                                                      {pnl.NAME: 'DECISION_ENERGY',
                                                                       pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                                                       pnl.FUNCTION: psyneulink.core.components.Stability(

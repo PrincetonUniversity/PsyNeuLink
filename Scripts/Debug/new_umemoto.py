@@ -58,7 +58,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         starting_point=(x_0),
         t0=t0
     ),name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -69,7 +69,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
-Decision.set_log_conditions('InputState-0')
+Decision.set_log_conditions('InputPort-0')
 
 # Outcome Mechanisms:
 Reward = pnl.TransferMechanism(name='Reward')
@@ -99,7 +99,7 @@ Umemoto_comp.add_node(Decision, required_roles=pnl.NodeRole.TERMINAL)
 Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)],
                                               function=pnl.Linear,
                                               variable=1.0,
-                                              cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                              cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
                                               intensity_cost_function=pnl.Exponential(scale=1, rate=1),
                                               adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
                                               allocation_samples=signalSearchRange)
@@ -107,7 +107,7 @@ Target_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep)
 Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distractor_Rep)],
                                                   function=pnl.Linear,
                                                   variable=1.0,
-                                                  cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+                                                  cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
                                                   intensity_cost_function=pnl.Exponential(rate=0.8046),
                                                   adjustment_cost_function=pnl.Exponential(scale=1, rate=1, offset=-1),
                                                   allocation_samples=signalSearchRange)
@@ -116,7 +116,7 @@ Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanis
                                                                                   features={pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Distractor_Stim, Reward]},
                                                                                   feature_function=pnl.AdaptiveIntegrator(rate=1.0),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
-                                                                                                                                                 (Decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
+                                                                                                                                                 (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
                                                                                                                              ),
                                                                                   function=pnl.GridSearch(),
                                                                                   control_signals=[Target_Rep_Control_Signal, Distractor_Rep_Control_Signal]

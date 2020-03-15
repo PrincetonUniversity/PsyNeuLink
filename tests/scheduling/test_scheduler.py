@@ -1,7 +1,6 @@
 import logging
 import numpy as np
 import pytest
-import uuid
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
@@ -23,6 +22,19 @@ logger = logging.getLogger(__name__)
 
 
 class TestScheduler:
+    @classmethod
+    def setup_class(self):
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
 
     def test_copy(self):
         pass
@@ -35,21 +47,21 @@ class TestScheduler:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp.add_node(A)
 
-        comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
 
-        eid2 = uuid.uuid4()
-        eid3 = uuid.uuid4()
-        comp.scheduler_processing._init_counts(execution_id=eid2)
+        eid = 'eid'
+        eid1 = 'eid1'
+        comp.scheduler._init_counts(execution_id=eid)
 
-        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+        assert comp.scheduler.clocks[eid].time.trial == 0
 
-        comp.scheduler_processing.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
 
-        assert comp.scheduler_processing.clocks[eid2].time.trial == 0
+        assert comp.scheduler.clocks[eid].time.trial == 0
 
-        comp.scheduler_processing._init_counts(execution_id=eid3, base_execution_id=comp.scheduler_processing.default_execution_id)
+        comp.scheduler._init_counts(execution_id=eid1, base_execution_id=comp.scheduler.default_execution_id)
 
-        assert comp.scheduler_processing.clocks[eid3].time.trial == 2
+        assert comp.scheduler.clocks[eid1].time.trial == 2
 
     def test_two_compositions_one_scheduler(self):
         comp1 = Composition()
@@ -67,7 +79,7 @@ class TestScheduler:
         termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
         comp1.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds
         )
         output = sched.execution_list[comp1.default_execution_id]
@@ -80,7 +92,7 @@ class TestScheduler:
 
         comp2.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds
         )
         output = sched.execution_list[comp2.default_execution_id]
@@ -103,10 +115,10 @@ class TestScheduler:
         termination_conds = {}
         termination_conds[TimeScale.RUN] = AfterNTrials(6)
         termination_conds[TimeScale.TRIAL] = AfterNPasses(1)
-        eid = uuid.uuid4()
+        eid = 'eid'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds,
             context=eid,
         )
@@ -120,7 +132,7 @@ class TestScheduler:
 
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds,
             context=eid,
         )
@@ -132,14 +144,14 @@ class TestScheduler:
         # pprint.pprint(output)
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
-        eid2 = uuid.uuid4()
+        eid = 'eid1'
         comp.run(
             inputs={A: [[0], [1], [2], [3], [4], [5]]},
-            scheduler_processing=sched,
+            scheduler=sched,
             termination_processing=termination_conds,
-            context=eid2,
+            context=eid,
         )
-        output = sched.execution_list[eid2]
+        output = sched.execution_list[eid]
 
         expected_output = [
             A, A, A, A, A, set()
@@ -156,13 +168,13 @@ class TestScheduler:
 
         def change_termination_processing():
             if S.termination_processing is None:
-                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
                 S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
             elif isinstance(S.termination_processing[TimeScale.TRIAL], AllHaveRun):
-                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
                 S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
             else:
-                S.scheduler_processing.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
+                S.scheduler.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
                 S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
 
         change_termination_processing()
@@ -180,11 +192,24 @@ class TestScheduler:
                             [np.array([[2.]]), np.array([[1.]])],
                             [np.array([[10.]]), np.array([[10.]])],
                             [np.array([[2.]]), np.array([[1.]])]]
-        assert np.allclose(expected_results, S.results)
-
+        assert np.allclose(expected_results, np.asfarray(S.results))
 
 
 class TestLinear:
+
+    @classmethod
+    def setup_class(self):
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
 
     def test_no_termination_conds(self):
         comp = Composition()
@@ -370,7 +395,7 @@ class TestLinear:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 3)
         comp.run(
                 inputs={A: [[0], [1], [2], [3], [4], [5]]},
-                scheduler_processing=sched,
+                scheduler=sched,
                 termination_processing=termination_conds
         )
         output = sched.execution_list[comp.default_execution_id]
@@ -443,9 +468,10 @@ class TestLinear:
 
         output = []
         i = 0
+        A.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A._is_finished = True
+                A.is_finished_flag = True
             output.append(step)
             i += 1
 
@@ -455,7 +481,7 @@ class TestLinear:
     def test_9b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
         for m in [A, B]:
             comp.add_node(m)
@@ -477,7 +503,7 @@ class TestLinear:
     def test_10(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = True
+        A.is_finished_flag = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -500,7 +526,7 @@ class TestLinear:
     def test_10b(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -523,7 +549,7 @@ class TestLinear:
     def test_10c(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = True
+        A.is_finished_flag = True
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -546,7 +572,7 @@ class TestLinear:
     def test_10d(self):
         comp = Composition()
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
-        A._is_finished = False
+        A.is_finished_flag = False
         B = TransferMechanism(function=Linear(intercept=4.0), name='scheduler-pytests-B')
 
         for m in [A, B]:
@@ -665,6 +691,20 @@ class TestLinear:
 
 
 class TestBranching:
+    @classmethod
+    def setup_class(self):
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
+
     #   triangle:         A
     #                    / \
     #                   B   C
@@ -780,9 +820,10 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
         i = 0
+        A.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 3:
-                A._is_finished = True
+                A.is_finished_flag = True
             output.append(step)
             i += 1
 
@@ -812,9 +853,10 @@ class TestBranching:
         termination_conds[TimeScale.TRIAL] = AfterNCalls(C, 1)
         output = []
         i = 0
+        A.is_finished_flag = False
         for step in sched.run(termination_conds=termination_conds):
             if i == 10:
-                A._is_finished = True
+                A.is_finished_flag = True
             output.append(step)
             i += 1
 
@@ -1065,6 +1107,20 @@ class TestBranching:
 
 
 class TestTermination:
+
+    @classmethod
+    def setup_class(self):
+        self.orig_is_finished_flag = TransferMechanism.is_finished_flag
+        self.orig_is_finished = TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = True
+        TransferMechanism.is_finished = lambda self, context: self.is_finished_flag
+
+    @classmethod
+    def teardown_class(self):
+        del TransferMechanism.is_finished_flag
+        del TransferMechanism.is_finished
+        TransferMechanism.is_finished_flag = self.orig_is_finished_flag
+        TransferMechanism.is_finished = self.orig_is_finished
 
     def test_termination_conditions_reset(self):
         comp = Composition()

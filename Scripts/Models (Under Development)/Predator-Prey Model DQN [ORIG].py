@@ -108,21 +108,21 @@ action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]], function
 # ************************************** BASIC COMPOSITION *************************************************************
 
 agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-# agent_comp.add_linear_processing_pathway([player_percept, action_mech.input_states[0]])
-# agent_comp.add_linear_processing_pathway([predator_percept, action_mech.input_states[1]])
-# agent_comp.add_linear_processing_pathway([prey_percept, action_mech.input_states[2]])
+# agent_comp.add_linear_processing_pathway([player_percept, action_mech.input_ports[0]])
+# agent_comp.add_linear_processing_pathway([predator_percept, action_mech.input_ports[1]])
+# agent_comp.add_linear_processing_pathway([prey_percept, action_mech.input_ports[2]])
 
 # agent_comp.add_nodes([player_percept, predator_percept, prey_percept, action_mech])
-# agent_comp.add_projection(sender=player_percept, receiver=action_mech.input_states[0])
-# agent_comp.add_projection(sender=predator_percept, receiver=action_mech.input_states[1])
-# agent_comp.add_projection(sender=prey_percept, receiver=action_mech.input_states[2])
+# agent_comp.add_projection(sender=player_percept, receiver=action_mech.input_ports[0])
+# agent_comp.add_projection(sender=predator_percept, receiver=action_mech.input_ports[1])
+# agent_comp.add_projection(sender=prey_percept, receiver=action_mech.input_ports[2])
 
 agent_comp.add_nodes([player_percept, predator_percept, prey_percept])
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
-a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
-b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
-c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+a = MappingProjection(sender=player_percept, receiver=action_mech.input_ports[0])
+b = MappingProjection(sender=predator_percept, receiver=action_mech.input_ports[1])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_ports[2])
 agent_comp.add_projection(a)
 agent_comp.add_projection(b)
 agent_comp.add_projection(c)
@@ -144,8 +144,8 @@ def objective_function(variable):
     prey_veridical = variable[2]
     actual_action = variable[3]
     optimal_action = ddqn_veridical_action(player_veridical, predator_veridical, prey_veridical)
-    d = difference([optimal_action, actual_action])/4
-    return 1-d
+    d = difference([optimal_action, actual_action]) / 4
+    return 1 - d
 
 ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_percept, predator_percept, prey_percept]},
                                    agent_rep=agent_comp, # Use Composition itself (i.e., fully "model-based" evaluation)
@@ -219,7 +219,7 @@ def main():
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
                                          )
-            action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
             observation, reward, done, _ = ddqn_agent.env.step(action)
@@ -238,9 +238,9 @@ def main():
 
             # print('Variance Params:')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].parameters.value.get(context),
-            #              predator_percept.parameter_states[VARIANCE].parameters.value.get(context),
-            #              prey_percept.parameter_states[VARIANCE].parameters.value.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].parameters.value.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].parameters.value.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].parameters.value.get(context)))
 
             print('OCM ControlSignals:')
             print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
@@ -254,23 +254,23 @@ def main():
                          ocm.control_signals[1].parameters.cost.get(context),
                          ocm.control_signals[2].parameters.cost.get(context)))
 
-            # print('Control Projection Senders\' Values (<percept>.parameter_states[VARIANCE].mod_afferents[0].sender.value):')
+            # print('Control Projection Senders\' Values (<percept>.parameter_ports[VARIANCE].mod_afferents[0].sender.value):')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
-            #              predator_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
-            #              prey_percept.parameter_states[VARIANCE].mod_afferents[0].sender.parameters.value.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].mod_afferents[0].sender.parameters.value.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].mod_afferents[0].sender.parameters.value.get(context)))
             #
-            # print('Control Projection Variables (<percept>.parameter_states[VARIANCE].mod_afferents[0].variable)):')
+            # print('Control Projection Variables (<percept>.parameter_ports[VARIANCE].mod_afferents[0].variable)):')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(context),
-            #              predator_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(context),
-            #              prey_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.variable.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.variable.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.variable.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.variable.get(context)))
             #
-            # print('Control Projection Values (<percept>.parameter_states[VARIANCE].mod_afferents[0].value):')
+            # print('Control Projection Values (<percept>.parameter_ports[VARIANCE].mod_afferents[0].value):')
             # print('\tPlayer:\t\t{}\n\tPredator\t{}\n\tPrey:\t\t{}'.
-            #       format(player_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(context),
-            #              predator_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(context),
-            #              prey_percept.parameter_states[VARIANCE].mod_afferents[0].parameters.value.get(context)))
+            #       format(player_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.value.get(context),
+            #              predator_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.value.get(context),
+            #              prey_percept.parameter_ports[VARIANCE].mod_afferents[0].parameters.value.get(context)))
 
             print('SIMULATION (PREP FOR NEXT TRIAL):')
             for sample, value in zip(ocm.saved_samples, ocm.saved_values):

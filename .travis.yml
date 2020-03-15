@@ -1,94 +1,98 @@
-language: python
-
-python:
-    - 3.6
-    - 3.7
-
 branches:
   only:
     - master
     - devel
     - /devel-.*/
     - /travis.*/
+    - /ci-.*/
 
+language: shell
 
-install:
-  # Downgrade numpy early if needed.
-  - pip install -U 'numpy<1.16'
-  - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then pip install coveralls; fi
-  - pip install git+https://github.com/benureau/leabra.git@master
-  # Travis bundles pytest 4.3.1 in Linux Xenial, new pytest-xdist
-  # requires pytest>=4.4.0, and the dependencies are broken
-  - pip install -U pytest
-  - pip install -e .[dev]
-
-os: linux
-
-dist: xenial
+os:
+  - linux
+  - osx
+dist: bionic
 
 env:
+  jobs:
+    - PYTHON=3.8.2
+    - PYTHON=3.7.7
+    - PYTHON=3.6.8
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
+    - PIP_PROGRESS_BAR="off"
+    - COVERALLS_PARALLEL=true
 
-# Cache installed python packages
+# Cache downloaded(built) python packages
+# and homebrew downloads
 cache:
-  pip
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/Library/Caches/Homebrew
+    - $HOME/Library/Caches/pip
 
 addons:
   apt:
     packages:
       - graphviz
 
-matrix:
-  include:
-  - os: osx
-    python: 3.6
-    language: minimal
-    env: PYTHON=3.6.8
-    # Cache installed python virtual env and homebrew downloads
-    cache:
-        directories:
-          - $HOME/Library/Caches/Homebrew
-          - $HOME/Library/Caches/pip
-
-  - os: osx
-    python: 3.7
-    language: minimal
-    env: PYTHON=3.7.4
-    # Cache installed python virtual env and homebrew downloads
-    cache:
-        directories:
-          - $HOME/Library/Caches/Homebrew
-          - $HOME/Library/Caches/pip
-
-before_install: |
-  if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-    FILE=python-$PYTHON-macosx10.9.pkg
-    if [ ! -f $HOME/Library/Caches/$FILE ]; then
-      curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
-    fi
-    sudo installer -pkg $HOME/Library/Caches/$FILE -target /
-    python3 --version
-
-    echo "Deploying new python venv"
-    python3 -m pip --version
-    python3 -m pip  install virtualenv
-    python3 -m venv $HOME/venv
-    source $HOME/venv/bin/activate
-
-    python --version
+before_install:
+  - |
+    # Homebrew doesn't provide older python versions.
+    # Install it manually from python.org
+    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+      # homebrew plugin is not working correctly
+      # https://travis-ci.community/t/xcode-8-3-homebrew-outdated-error/3798
+      HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
  
-    HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
-  fi
-  if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then
-        export PYTEST_COV="--cov=psyneulink"
-  else
-        export PYTEST_COV=""
-  fi
+      FILE=python-$PYTHON-macosx10.9.pkg
+      if [ ! -f $HOME/Library/Caches/$FILE ]; then
+        curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
+      fi
+      sudo installer -pkg $HOME/Library/Caches/$FILE -target /
+      python3 --version
+      python3 -m pip --version
+
+      # Deploy new virtualenv to match travis setup
+      echo "Deploying new python venv"
+      python3 -m venv $HOME/venv
+    fi
+  - |
+    # Install venv on Linux using Ubuntu distributed python
+    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
+      # distutils and lib2to3 are only needed for python3.8
+      # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
+      sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv python3-distutils python3-lib2to3
+      python${PYTHON%.*} -m venv $HOME/venv
+      # Provide fake xdg-open
+      echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
+      chmod +x $HOME/venv/bin/xdg-open
+    fi
+
+  # The rest of the setup is common for all environments
+  - source $HOME/venv/bin/activate
+
+  - python --version
+  - pip install -U pip
+  - pip --version
+  - |
+    # Install undeclared dependencies
+    if [ "x$EXTRA_PIP" != "x" ]; then
+      pip install $EXTRA_PIP
+    fi
+
+install:
+  - pip install coveralls
+  - pip install git+https://github.com/benureau/leabra.git@master
+  - pip install -e .[dev]
 
 
 script:
-  - python -m pytest -n auto --strict-markers -p no:logging $PYTEST_COV
+  - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
+  - pytest -n auto -p no:logging $COV_ARGS
 
 after_script:
-  - if [ "x$COVERALLS_REPO_TOKEN" != "x" ]; then coveralls; fi
+  - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi
+
+notifications:
+  webhooks: https://coveralls.io/webhook

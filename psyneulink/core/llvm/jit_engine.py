@@ -10,7 +10,7 @@
 
 from llvmlite import binding
 
-from .builder_context import _find_llvm_function, _gen_cuda_kernel_wrapper_module, _float_ty
+from .builder_context import LLVMBuilderContext, _find_llvm_function, _gen_cuda_kernel_wrapper_module
 from .builtins import _generate_cpu_builtins_module
 from .debug import debug_env
 
@@ -66,9 +66,9 @@ def _cpu_jit_constructor():
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.loop_vectorize = True
-    __pass_manager_builder.slp_vectorize = True
-    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+    __pass_manager_builder.loop_vectorize = False
+    __pass_manager_builder.slp_vectorize = False
+    __pass_manager_builder.opt_level = 0  # No optimizations
 
     __cpu_features = binding.get_host_cpu_features().flatten()
     __cpu_name = binding.get_host_cpu_name()
@@ -77,14 +77,14 @@ def _cpu_jit_constructor():
     __cpu_target = binding.Target.from_default_triple()
     # FIXME: reloc='static' is needed to avoid crashes on win64
     # see: https://github.com/numba/llvmlite/issues/457
-    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=3, reloc='static')
+    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=0, reloc='static')
 
     __cpu_pass_manager = binding.ModulePassManager()
     __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
     __pass_manager_builder.populate(__cpu_pass_manager)
 
     # And an execution engine with a builtins backing module
-    builtins_module = _generate_cpu_builtins_module(_float_ty)
+    builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.float_ty)
     if "llvm" in debug_env:
         with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
             dump_file.write(str(builtins_module))
@@ -145,29 +145,36 @@ class jit_engine:
         self._jit_pass_manager = None
         self._target_machine = None
         self.__mod = None
-        self.__opt_modules = 0
         # Add an extra reference to make sure it's not destroyed before
         # instances of jit_engine
         self.__debug_env = debug_env
 
+        # Track few statistics:
+        self.__optimized_modules = 0
+        self.__linked_modules = 0
+        self.__parsed_modules = 0
+
     def __del__(self):
         if "stat" in self.__debug_env:
-            print("Total JIT modules in '{}': {}".format(type(self).__name__, self.__opt_modules))
+            s = type(self).__name__
+            print("Total optimized modules in '{}': {}".format(s, self.__optimized_modules))
+            print("Total linked modules in '{}': {}".format(s, self.__linked_modules))
+            print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
         self._pass_manager.run(module)
         if "opt" in self.__debug_env:
-            with open(self.__class__.__name__ + '-' + str(self.__opt_modules) + '.opt.ll', 'w') as dump_file:
+            with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
 
         # This prints generated x86 assembly
         if "isa" in self.__debug_env:
-            with open(self.__class__.__name__ + '-' + str(self.__opt_modules) + '.S', 'w') as dump_file:
+            with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
         self._engine.add_module(module)
         self._engine.finalize_object()
-        self.__opt_modules += 1
+        self.__optimized_modules += 1
 
     def _remove_bin_module(self, module):
         if module is not None:
@@ -181,6 +188,7 @@ class jit_engine:
             self._remove_bin_module(self.__mod)
             # Linking here invalidates 'module'
             self.__mod.link_in(module)
+            self.__linked_modules += 1
 
         if "llvm" in debug_env:
             with open(mod_name + '.linked.ll', 'w') as dump_file:
@@ -214,6 +222,7 @@ class jit_engine:
         mod_bundle = binding.parse_assembly("")
         for m in modules:
             new_mod = _try_parse_module(m)
+            self.__parsed_modules += 1
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
                 mod_bundle.name = m.name  # Set the name of the last module
@@ -252,7 +261,7 @@ class ptx_jit_engine(jit_engine):
             self._target_machine = tm
 
             # -dc option tells the compiler that the code will be used for linking
-            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(_float_ty)), target='cubin', options=['-dc'])
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(LLVMBuilderContext.float_ty)), target='cubin', options=['-dc'])
 
         def set_object_cache(cache):
             pass
@@ -263,7 +272,7 @@ class ptx_jit_engine(jit_engine):
                 ptx = self._target_machine.emit_assembly(module)
                 mod = pycuda.compiler.DynamicModule()
                 mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
-                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, "pnl.ptx")
+                mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
                 ptx_mod = mod.link()
 
             except Exception as e:

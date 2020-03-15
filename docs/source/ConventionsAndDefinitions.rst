@@ -52,7 +52,7 @@ Components are objects that perform a specific function. Every Component has a:
 * `variable <Component.variable>` - the input to the Component's `function <Component.function>`;
 
 * *parameter(s)* - determine how a Component's `function <Component.function>` operates
-  (listed in its `user_params <Component.user_params>` dictionary);
+  (listed in its `Parameters <Component.Parameters>` class);
 
 * `value <Component.value>` - represents the result of the Component's `function <Component.function>`;
 
@@ -63,25 +63,21 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
 * `Mechanisms <Mechanism>` - takes one or more inputs received from its afferent `Projections <Projection>`,
   uses its `function <Mechanism.function>` to combine and/or transform these in some way, and makes the output
   available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
-  ProcessingMechanisms and AdaptiveMechanisms:
+  ProcessingMechanisms and ModulatoryMechanisms:
 
   + `ProcessingMechanism`
       Aggregates the inputs it receives from its afferent Projections, transforms them in some way,
       and provides the result as output to its efferent Projections.
 
-  + `AdaptiveMechanism`
+  + `ModulatoryMechanism`
       Uses the input it receives from other Mechanisms to modify the parameters of one or more other
-      PsyNeuLink Components.  There are three primary types:
+      PsyNeuLink Components.  There are two primary types:
+
+      + `ControlMechanism`
+          Modifies the input(s), parameter(s), and/or output(s) of other Mechanisms.
 
       + `LearningMechanism`
           Modifies the matrix of a `MappingProjection`.
-
-      + `ControlMechanism`
-          Modifies one or more parameters of other Mechanisms.
-
-      + `GatingMechanism`
-          Modifies the value of one or more `InputStates <InputState>` and/or `OutputStates <OutputStates>`
-          of other Mechanisms.
 
 
 * `Projections <Projection>`.
@@ -95,53 +91,49 @@ Two types of Components are the basic building blocks of PsyNeuLink models, Mech
        ProcessingMechanism as the input to another.
 
    + `ModulatoryProjection`
-       Used in conjunction with AdaptiveMechanisms to regulate the function of other Components.
-       Takes the output of an `AdaptiveMechanism` and uses it to modify the input, output or parameter of
-       another Component.  There are three types of ModulatoryProjections, corresponding to the three
-       types of AdaptiveMechanisms:
+       Used in conjunction with `ModulatoryMechanisms <ModulatoryMechanism>` to regulate the function of other
+       Components. Takes the output of a ModulatoryMechanism and uses it to modify the input, output or parameter
+       of another Component.  There are two types of ModulatoryProjections, corresponding to the two
+       types of ModulatoryMechanisms:
+
+       + `ControlProjection`
+            Takes a ControlSignal from a `ControlMechanism` and uses it to modify the input, parameter or output
+            of a ProcessingMechanism.
 
        + `LearningProjection`
             Takes a LearningSignal from a `LearningMechanism` and uses it to modify the matrix of a
             MappingProjection.
 
-       + `ControlProjection`
-            Takes a ControlSignal from a `ControlMechanism` and uses it to modify the parameter of a
-            ProcessingMechanism.
 
-       + `GatingProjection`
-            Takes a GatingSignal from a `GatingMechanism` and uses it to modulate the input or output of a
-            ProcessingMechanism
-
-
-* `States <State>`
-   A State is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
-   of its function, or its output(s).   There are three types of States, one for each type of representation,
+* `Ports <Port>`
+   A Port is an object that belongs to a Mechanism, and that it is used to represent it input(s), parameter(s)
+   of its function, or its output(s).   There are three types of Ports, one for each type of representation,
    each of which can receive and/or send a combination of PathwayProjections and/or ModulatoryProjections
    (see `ModulatorySignal_Anatomy_Figure`):
 
-   + `InputState`
+   + `InputPort`
        Represents a set of inputs to the Mechanism.
        Receives one or more afferent PathwayProjections to a Mechanism, combines them using its
-       `function <State.function>`, and assigns the result (its `value <State.value>`)as an item of the Mechanism's
-       `variable <Mechanism.variable>`.  It can also receive one or more modulatory
-       `GatingProjections <GatingProjection>`, that modify the parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       `function <Port.function>`, and assigns the result (its `value <Port.value>`)as an item of the Mechanism's
+       `variable <Mechanism.variable>`.    It can also receive one or more `modulatory projections
+       <ModulatoryProjection>` (`ControlProjection` or `GatingProjection`), that modify the parameter(s) of the Port's
+       function, and thereby the Port's `value <Port.value>`.
 
-   + `ParameterState`
+   + `ParameterPort`
        Represents a parameter of the Mechanism's `function <Mechanism.function>`.  Takes the assigned value of the
-       parameter as the `variable <State.variable>` for the State's `function <State.function>`, and assigns the result
+       parameter as the `variable <Port.variable>` for the Port's `function <Port.function>`, and assigns the result
        as the value of the parameter of the Mechanism's `function <Mechanism.function>` that is used when the Mechanism
        executes.  It can also receive one or more modulatory `ControlProjections <ControlProjection>`,
-       that modify the parameter(s) of the State's function, and thereby the value of the parameter of the Mechanism's
+       that modify the parameter(s) of the Port's function, and thereby the value of the parameter of the Mechanism's
        `function <Mechanism.function>`.
 
-   + `OutputState`
+   + `OutputPort`
        Represents an output of the Mechanism.
-       Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <State.variable>` for the State's
-       `function <State.function>`, assigns the result as the State's `value <OutputState.value>`, and provides that
-       to one or more efferent PathwayProjections.  It can also receive one or more modulatory
-       `GatingProjections <GatingProjection>`, that modify the parameter(s) of the State's function, and thereby the
-       State's `value <State.value>`.
+       Takes an item of the Mechanism's `value <Mechanism.value>` as the `variable <Port.variable>` for the Port's
+       `function <Port.function>`, assigns the result as the Port's `value <OutputPort.value>`, and provides that
+       to one or more efferent PathwayProjections.  It can also receive one or more `modulatory projections
+       <ModulatoryProjection>` (`ControlProjection` or `GatingProjection`), that modify the parameter(s) of the Port's
+       function, and thereby the Port's `value <Port.value>`.
 
 * `Functions <Function>` - the most fundamental unit of computation in PsyNeuLink.  Every `Component` has a Function
   object, that wraps an executable function together with a definition of its parameters, and modularizes it so that

@@ -67,17 +67,17 @@ reward = pnl.TransferMechanism(name='Reward', size=2)
 task_decision = pnl.DDM(
     name='Task Decision',
     # function=pnl.NavarroAndFuss,
-    output_states=[
-        pnl.DDM_OUTPUT.PROBABILITY_UPPER_THRESHOLD,
-        pnl.DDM_OUTPUT.PROBABILITY_LOWER_THRESHOLD
+    output_ports=[
+        pnl.PROBABILITY_UPPER_THRESHOLD,
+        pnl.PROBABILITY_LOWER_THRESHOLD
     ]
 )
 
-task_decision.set_log_conditions('func_drift_rate')     
-task_decision.set_log_conditions('mod_drift_rate')      
-task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')     
-task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')     
-color_task.set_log_conditions('value')      
+task_decision.set_log_conditions('func_drift_rate')
+task_decision.set_log_conditions('mod_drift_rate')
+task_decision.set_log_conditions('PROBABILITY_LOWER_THRESHOLD')
+task_decision.set_log_conditions('PROBABILITY_UPPER_THRESHOLD')
+color_task.set_log_conditions('value')
 word_task.set_log_conditions('value')
 
 
@@ -94,14 +94,14 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_state, word_stim.input_state],
+    features=[color_stim.input_port, word_stim.input_port],
     # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
-        monitor=[task_decision.output_states[pnl.PROBABILITY_UPPER_THRESHOLD],
-                 task_decision.output_states[pnl.PROBABILITY_LOWER_THRESHOLD],
+        monitor=[task_decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                 task_decision.output_ports[pnl.PROBABILITY_LOWER_THRESHOLD],
                  reward],
-        # monitored_output_states=[task_decision, reward],
+        # monitored_output_ports=[task_decision, reward],
         function=objective_function
     ),
     agent_rep=pnl.RegressionCFA(
@@ -119,7 +119,7 @@ lvoc = pnl.OptimizationControlMechanism(
         modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
         # function=pnl.ReLU,
         function=pnl.Logistic,
-        cost_options=[pnl.ControlSignalCosts.INTENSITY, pnl.ControlSignalCosts.ADJUSTMENT],
+        cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
         intensity_cost_function=pnl.Exponential(rate=0.25, bias=-3),
         adjustment_cost_function=pnl.Exponential(rate=0.25, bias=-3),
         # allocation_samples=[i / 2 for i in list(range(0, 50, 1))]
@@ -129,7 +129,7 @@ lvoc = pnl.OptimizationControlMechanism(
 # print(lvoc.loggable_items)
 lvoc.set_log_conditions('value')
 # print(lvoc.loggable_items)
-# lvoc.set_log_conditions('variable')     
+# lvoc.set_log_conditions('variable')
 # lvoc.agent_rep.set_log_conditions('regression_weights')
 
 lvoc.reportOutputPref=True
@@ -162,8 +162,8 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     # start_time = time.time()
 
     def print_weights():
-        print("OUTCOME = ", lvoc.objective_mechanism.output_states[pnl.OUTCOME].value)
-        print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
+        print("OUTCOME = ", lvoc.objective_mechanism.output_ports[pnl.OUTCOME].value)
+        print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i))
         print("LVOC VALUE = ", lvoc.value)
     # duration = timeit.timeit(c.run(inputs=input_dict, context=i), number=1) #number=2
     c.run(inputs=input_dict,
@@ -171,8 +171,8 @@ for i in range(3): # testing for three subjects, 200 trials per subject
           call_after_trial=print_weights) #number=2, num_trials
     # duration = time.time() - start_time
     # print('PREDICTION WEIGHTS T2', lvoc.agent_rep.parameters.regression_weights.get(i))
-    # print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i)) 
-    # print("OUTCOME = ", lvoc.objective_mechanism.output_states[pnl.OUTCOME].value)
+    # print("WEIGHTS = ", lvoc.agent_rep.parameters.regression_weights.get(i))
+    # print("OUTCOME = ", lvoc.objective_mechanism.output_ports[pnl.OUTCOME].value)
     # print('LVOC Log\n')
     # print(lvoc.log.csv)
     # print('Task Decision Log\n')
@@ -183,7 +183,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     # print(word_task.log.csv())
 
     print('\n')
-    print('Subject: ', i+1)
+    print('Subject: ', i + 1)
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
@@ -195,7 +195,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
 # ------------------------------------------------------------------------------------------------------------------
 
 print('\n\n\nLVOC Log\n')
-print(lvoc.log.csv()) 
+print(lvoc.log.csv())
 # print(lvoc.log.nparray())
 # # print(lvoc.log.print_entries())
 
@@ -210,7 +210,7 @@ print(lvoc.log.csv())
 # print(word_task.log.nparray())
 
 # file_lvoc = open("LVOC_200_LOG.csv", 'w')
-# file_lvoc.write(lvoc.log.csv()) 
+# file_lvoc.write(lvoc.log.csv())
 # file_lvoc.close()
 
 # file_task = open("LVOC_200_TASK.csv", 'w')

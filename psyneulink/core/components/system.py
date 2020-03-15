@@ -62,47 +62,47 @@ class, and listed in its `processes <System.processes>` attribute.
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
 existing `ControlMechanism`, a constructor for one, or a class of ControlMechanism in which case a default
 instance of that class will be created.  If an existing ControlMechanism or the constructor for one is used, then
-the `OutputStates it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
-<ControlMechanism_Control_Signals>` can be specified using its `objective_mechanism
+the `OutputPorts it monitors <ControlMechanism_ObjectiveMechanism>` and the `parameters it controls
+<ControlMechanism_ControlSignals>` can be specified using its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and `control_signals <ControlMechanism.control_signals>`
 attributes, respectively.  In addition, these can be specified in the **monitor_for_control** and **control_signal**
 arguments of the `System`, as described below.
 
-* **monitor_for_control** argument -- used to specify OutputStates of Mechanisms in the System that should be
+* **monitor_for_control** argument -- used to specify OutputPorts of Mechanisms in the System that should be
   monitored by the `ObjectiveMechanism` associated with the System's `controller <System.controller>` (see
   `ControlMechanism_ObjectiveMechanism`);  these are used in addition to any specified for the ControlMechanism or
   its ObjectiveMechanism.  These can be specified in the **monitor_for_control** argument of the `System` using
-  any of the ways used to specify the *monitored_output_states* for an ObjectiveMechanism (see
+  any of the ways used to specify the *monitored_output_ports* for an ObjectiveMechanism (see
   `ObjectiveMechanism_Monitor`).  In addition, the **monitor_for_control** argument supports two
   other forms of specification:
 
-  * **string** -- must be the `name <OutputState.name>` of an `OutputState` of a `Mechanism <Mechanism>` in the System
-    (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputState can
-    ordinarily be used (e.g., in an `InputState tuple specification <InputState_Tuple_Specification>`). Any OutputState
+  * **string** -- must be the `name <OutputPort.name>` of an `OutputPort` of a `Mechanism <Mechanism>` in the System
+    (see third example under `System_Control_Examples`).  This can be used anywhere a reference to an OutputPort can
+    ordinarily be used (e.g., in an `InputPort tuple specification <InputPort_Tuple_Specification>`). Any OutputPort
     with a name matching the string will be monitored, including ones with the same name that belong to different
-    Mechanisms within the System. If an OutputState of a particular Mechanism is desired, and it shares its name with
-    other Mechanisms in the System, then it must be referenced explicitly (see `InputState specification
-    <InputState_Specification>`, and examples under `System_Control_Examples`).
+    Mechanisms within the System. If an OutputPort of a particular Mechanism is desired, and it shares its name with
+    other Mechanisms in the System, then it must be referenced explicitly (see `InputPort specification
+    <InputPort_Specification>`, and examples under `System_Control_Examples`).
 
-  * **MonitoredOutputStatesOption** -- must be a value of `MonitoredOutputStatesOption`, and must appear alone or as a
+  * **MonitoredOutputPortsOption** -- must be a value of `MonitoredOutputPortsOption`, and must appear alone or as a
     single item in the list specifying the **monitor_for_control** argument;  any other specification(s) included in
-    the list will take precedence.  The MonitoredOutputStatesOption applies to all of the Mechanisms in the System
+    the list will take precedence.  The MonitoredOutputPortsOption applies to all of the Mechanisms in the System
     except its `controller <System.controller>` and `LearningMechanisms <LearningMechanism>`. The
-    *PRIMARY_OUTPUT_STATES* value specifies that the `primary OutputState <OutputState_Primary>` of every Mechanism be
-    monitored, whereas *ALL_OUTPUT_STATES* specifies that *every* OutputState of every Mechanism be monitored.
+    *PRIMARY_OUTPUT_PORTS* value specifies that the `primary OutputPort <OutputPort_Primary>` of every Mechanism be
+    monitored, whereas *ALL_OUTPUT_PORTS* specifies that *every* OutputPort of every Mechanism be monitored.
 
-  The default for the **monitor_for_control** argument is *MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES*.
-  The OutputStates specified in the **monitor_for_control** argument are added to any already specified for the
+  The default for the **monitor_for_control** argument is *MonitoredOutputPortsOption.PRIMARY_OUTPUT_PORTS*.
+  The OutputPorts specified in the **monitor_for_control** argument are added to any already specified for the
   ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`, and the full set is listed in
-  the ControlMechanism's `monitored_output_states <EVCControlMechanism.monitored_output_states>` attribute, and its
-  ObjectiveMechanism's `monitored_output_states <ObjectiveMechanism.monitored_output_states>` attribute).
+  the ControlMechanism's `monitored_output_ports <EVCControlMechanism.monitored_output_ports>` attribute, and its
+  ObjectiveMechanism's `monitored_output_ports <ObjectiveMechanism.monitored_output_ports>` attribute).
 ..
 * **control_signals** argument -- used to specify the parameters of Components in the System to be controlled. These
-  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_Control_Signals>` in the
+  can be specified in any of the ways used to `specify ControlSignals <ControlMechanism_ControlSignals>` in the
   *control_signals* argument of a ControlMechanism. These are added to any `ControlSignals <ControlSignal>` that have
   already been specified for the `controller <System.controller>` (listed in its `control_signals
   <ControlMechanism.control_signals>` attribute), and any parameters that have directly been `specified for
-  control <ParameterState_Specification>` within the System (see `System_Control` below for additional details).
+  control <ParameterPort_Specification>` within the System (see `System_Control` below for additional details).
 
 .. _System_Structure:
 
@@ -196,9 +196,9 @@ COMMENT
 ~~~~~~~~~~~
 
 Every System has two `Schedulers <Scheduler>`, one that handles the ordering of execution of its Components for
-`processing <System_Execution_Processing>` (assigned to its `scheduler_processing` attribute), and one that
+`processing <System_Execution_Processing>` (assigned to its `scheduler` attribute), and one that
 does the same for `learning <System_Execution_Learning>` (assigned to its `scheduler_learning` attribute).
-The `scheduler_processing` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
+The `scheduler` can be assigned in the **scheduler** argument of the System's constructor;  if it is not
 specified, a default `Scheduler` is created automatically.   The `scheduler_learning` is always assigned automatically.
 The System's Schedulers base the ordering of execution of its Components based on the order in which they are listed
 in the `pathway <Process.pathway>`\\s of the `Processes <Process>` used to construct the System, constrained by any
@@ -219,15 +219,15 @@ executed after all of the other Components in the System have been executed, inc
 `System Execution <System_Execution>`). When a ControlMechanism is assigned to or created by a System, it inherits
 specifications made for the System as follows:
 
-  * the OutputStates specified to be monitored in the System's **monitor_for_control** argument are added to those
+  * the OutputPorts specified to be monitored in the System's **monitor_for_control** argument are added to those
     that may have already been specified for the ControlMechanism's `objective_mechanism
-    <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_states
-    <EVCControlMechanism.monitored_output_states>` attribute, and its ObjectiveMechanism's `monitored_output_states
-    <ObjectiveMechanism.monitored_output_states>` attribute); see `System_Control_Specification` for additional details of how
-    to specify OutputStates to be monitored.
+    <ControlMechanism.objective_mechanism>` (the full set is listed in the ControlMechanism's `monitored_output_ports
+    <EVCControlMechanism.monitored_output_ports>` attribute, and its ObjectiveMechanism's `monitored_output_ports
+    <ObjectiveMechanism.monitored_output_ports>` attribute); see `System_Control_Specification` for additional details of how
+    to specify OutputPorts to be monitored.
 
   * a `ControlSignal` and `ControlProjection` is assigned to the ControlMechanism for every parameter that has been
-    `specified for control <ParameterState_Specification>` in the System;  these are added to any that the
+    `specified for control <ParameterPort_Specification>` in the System;  these are added to any that the
     ControlMechanism may already have (listed in its `control_signals <ControlMechanism.control_signals>` attribute).
 
 See `System_Control_Specification` above, `ControlMechanism <ControlMechanism>` and `ModulatorySignal_Modulation`
@@ -336,9 +336,9 @@ other Mechanisms in the System have executed.  Although a System may have more t
 can be assigned as its `controller <System.controller>`;  all other ControlMechanisms are executed during the
 `processing `System_Execution_Processing` phase of the `TRIAL` like any other Mechanism.  The `controller
 <System.controller>` uses its `objective_mechanism <ControlMechanism.objective_mechanism>` to monitor and evaluate
-the `OutputState(s) <OutputState>` of Mechanisms in the System; based on the information it receives from that
+the `OutputPort(s) <OutputPort>` of Mechanisms in the System; based on the information it receives from that
 `ObjectiveMechanism`, it modulates the value of the parameters of Components in the System that have been `specified
-for control <ControlMechanism_Control_Signals>`, which then take effect in the next `TRIAL` (see `System_Control` for
+for control <ControlMechanism_ControlSignals>`, which then take effect in the next `TRIAL` (see `System_Control` for
 additional information about control). The control Components of a System can be displayed using the System's
 `show_graph`method with its **show_control** argument assigned `True`.
 
@@ -368,21 +368,21 @@ that include two `Mechanisms <Mechanism>` (not shown)::
     my_system = System(processes=[TaskExecutionProcess, RewardProcess],
                        controller=EVCControlMechanism(objective_mechanism=
                                                    ObjectiveMechanism(
-                                                       monitored_output_states=[
+                                                       monitored_output_ports=[
                                                            Reward,
-                                                           Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
-                                                           (Decision.output_states[RESPONSE_TIME], -1, 1)]))
+                                                           Decision.output_ports[PROBABILITY_UPPER_THRESHOLD],
+                                                           (Decision.output_ports[RESPONSE_TIME], -1, 1)]))
                                                        function=LinearCombination(operation=PRODUCT))
 
 A constructor is used to specify the EVCControlMechanism that includes a constructor specifying its `objective_mechanism
-<ControlMechanism.objective_mechanism>`;  the **monitored_output_states** argument of the ObjectiveMechanism's constructor
-is used to specify that it should monitor the `primary OutputState <OutputState_Primary>` of the Reward Mechanism
+<ControlMechanism.objective_mechanism>`;  the **monitored_output_ports** argument of the ObjectiveMechanism's constructor
+is used to specify that it should monitor the `primary OutputPort <OutputPort_Primary>` of the Reward Mechanism
 and the *PROBABILITY_UPPER_THRESHOLD* and *RESPONSE_TIME* and, specifying how it should combine them (see the `example
 <ControlMechanism_Examples>` under ControlMechanism for an explanation). Note that the **function** argument for the
 ObjectiveMechanism's constructor is also specified;  this is because an ObjectiveMechanism uses *SUM* as the default
 for the `operation <LinearCombination.operation>` of its `LinearCombination` function, whereas as the EVCControlMechanism
 requires *PRODUCT* -- in this case, to properly use the weight and exponents specified for the RESPONSE_TIME
-OutputState of Decision (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
+OutputPort of Decision (see `note <EVCControlMechanism_Objective_Mechanism_Function_Note>` in EVCControlMechanism for
 a more complete explanation).  Note that both the EVCControlMechanism and/or the ObjectiveMechanism could have been
 constructed separately, and then referenced in the **controller** argument of ``my_system`` and **objective_mechanism**
 argument of the EVCControlMechanism, respectively.
@@ -392,11 +392,11 @@ The same configuration can be specified in a more concise, though less "transpar
     my_system = System(processes=[TaskExecutionProcess, RewardProcess],
                        controller=EVCControlMechanism(objective_mechanism=[
                                                              Reward,
-                                                             Decision.output_states[PROBABILITY_UPPER_THRESHOLD],
-                                                             (Decision.output_states[RESPONSE_TIME], -1, 1)])))
+                                                             Decision.output_ports[PROBABILITY_UPPER_THRESHOLD],
+                                                             (Decision.output_ports[RESPONSE_TIME], -1, 1)])))
 
 Here, the constructor for the ObjectiveMechanism is elided, and the **objective_mechanism** argument for the
-EVCControlMechanism is specified as a list of OutputStates (see `ControlMechanism_ObjectiveMechanism`).
+EVCControlMechanism is specified as a list of OutputPorts (see `ControlMechanism_ObjectiveMechanism`).
 
 The specification can be made even simpler, but with some additional considerations that must be kept in mind,
 as follows::
@@ -408,12 +408,12 @@ as follows::
                                             RESPONSE_TIME, 1, -1)],
 
 Here, the *controller** for ``my_system`` is specified as the EVCControlMechanism, which will created a default
-EVCControlMechanism. The OutputStates to be monitored are specified in the **monitor_for_control** argument for
+EVCControlMechanism. The OutputPorts to be monitored are specified in the **monitor_for_control** argument for
 ``my_system``.  Note that here they can be referenced simply by name; when ``my_system`` is created, it will search
-all of its Mechanisms for OutputStates with those names, and assign them to the `monitored_output_states
+all of its Mechanisms for OutputPorts with those names, and assign them to the `monitored_output_ports
 <ObjectiveMechanism>` attribute of the EVCControlMechanism's `objective_mechanism
 <EVCControlMechanism.objective_mechanism>` (see `System_Control_Specification` for a more detailed explanation of how
-OutputStates are assigned to be monitored by a System's `controller <System.controller>`).  While this form of the
+OutputPorts are assigned to be monitored by a System's `controller <System.controller>`).  While this form of the
 specification is much simpler, it less flexible (i.e., it can't be used to customize the ObjectiveMechanism used by
 the EVCControlMechanism or its `function <ObjectiveMechanism.function>`.
 
@@ -434,10 +434,8 @@ import warnings
 
 from PIL import Image
 from collections.abc import Iterable
-from collections import OrderedDict, namedtuple
+from collections import OrderedDict
 from os import path, remove
-from shutil import rmtree
-
 
 import numpy as np
 import typecheck as tc
@@ -445,24 +443,23 @@ import typecheck as tc
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.mechanisms.adaptive.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.adaptive.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism, LearningTiming
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism, MonitoredOutputPortTuple
+from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary import _assign_error_signal_projections, _get_learning_mechanisms
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism, LearningTiming
 from psyneulink.core.components.mechanisms.mechanism import MechanismList
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_STATE_EXPONENT, DEFAULT_MONITORED_STATE_MATRIX, DEFAULT_MONITORED_STATE_WEIGHT, ObjectiveMechanism
-from psyneulink.core.components.process import Process, ProcessInputState, ProcessList, ProcessTuple
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import DEFAULT_MONITORED_PORT_EXPONENT, DEFAULT_MONITORED_PORT_MATRIX, DEFAULT_MONITORED_PORT_WEIGHT, ObjectiveMechanism
+from psyneulink.core.components.process import Process, ProcessInputPort, ProcessList, ProcessTuple
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, System_Base
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.parameterstate import ParameterState
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, EXECUTING, FUNCTION, FUNCTIONS, \
-    INITIALIZE_CYCLE, INITIALIZING, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
-    OBJECTIVE_MECHANISM, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, SYSTEM, SYSTEM_INIT, \
-    TARGET, TERMINAL, VALUES, \
-    kwSeparator, kwSystemComponentCategory
+    ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, FUNCTION, FUNCTIONS, \
+    INITIALIZE_CYCLE, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
+    OBJECTIVE_MECHANISM, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, TARGET, TERMINAL, VALUES, \
+    SYSTEM_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import Log
 from psyneulink.core.globals.parameters import Defaults, Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -471,18 +468,18 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import AutoNumber, ContentAddressableList, append_type_to_name, call_with_pruned_args, convert_to_np_array, iscompatible
 from psyneulink.core.scheduling.condition import AtPass, AtTimeStep, Never
 from psyneulink.core.scheduling.scheduler import Always, Condition, Scheduler
-from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
     'CONTROL_MECHANISM', 'CONTROL_PROJECTION_RECEIVERS', 'defaultInstanceCount', 'DURATION',
     'EXECUTION_SET', 'INITIAL_FRAME', 'INPUT_ARRAY',
-    'kwSystemInputState',
-    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputStateTuple', 'MOVIE_NAME',
-    'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_STATE_NAMES', 'OUTPUT_VALUE_ARRAY',
+    'kwSystemInputPort',
+    'LEARNING_MECHANISMS', 'LEARNING_PROJECTION_RECEIVERS', 'MECHANISMS', 'MonitoredOutputPortTuple', 'MOVIE_NAME',
+    'NUM_PHASES_PER_TRIAL', 'NUM_TRIALS', 'ORIGIN_MECHANISMS', 'OUTPUT_PORT_NAMES', 'OUTPUT_VALUE_ARRAY',
     'PROCESSES', 'RECURRENT_INIT_ARRAY', 'RECURRENT_MECHANISMS',
     'SAVE_IMAGES', 'SCHEDULER',
-    'System', 'sys', 'SYSTEM_TARGET_INPUT_STATE', 'SystemError', 'SystemInputState', 'SystemRegistry',
+    'System', 'sys', 'SYSTEM_TARGET_INPUT_PORT', 'SystemError', 'SystemInputPort', 'SystemRegistry',
     'SystemWarning', 'TARGET_MECHANISMS', 'TERMINAL_MECHANISMS', 'UNIT', 'osf'
 ]
 
@@ -500,7 +497,7 @@ INPUT_ARRAY = 'input_array'
 RECURRENT_MECHANISMS = 'recurrent_mechanisms'
 RECURRENT_INIT_ARRAY = 'recurrent_init_array'
 TERMINAL_MECHANISMS = 'terminal_mechanisms'
-OUTPUT_STATE_NAMES = 'output_state_names'
+OUTPUT_PORT_NAMES = 'output_port_names'
 OUTPUT_VALUE_ARRAY = 'output_value_array'
 NUM_PHASES_PER_TRIAL = 'num_phases'
 TARGET_MECHANISMS = 'target_nodes'
@@ -512,26 +509,25 @@ ORIGIN_MECHANISMS = 'ORIGIN_MECHANISMS'
 
 SystemRegistry = {}
 
-kwSystemInputState = 'SystemInputState'
+kwSystemInputPort = 'SystemInputPort'
 
-class MonitoredOutputStatesOption(AutoNumber):
-    """Specifies OutputStates to be monitored by a `ControlMechanism <ControlMechanism>`
+class MonitoredOutputPortsOption(AutoNumber):
+    """Specifies OutputPorts to be monitored by a `ControlMechanism <ControlMechanism>`
     (see `ObjectiveMechanism_Monitor` for a more complete description of their meanings.
     """
-    ONLY_SPECIFIED_OUTPUT_STATES = ()
-    """Only monitor explicitly specified Outputstates."""
-    PRIMARY_OUTPUT_STATES = ()
-    """Monitor only the `primary OutputState <OutputState_Primary>` of a Mechanism."""
-    ALL_OUTPUT_STATES = ()
-    """Monitor all OutputStates <Mechanism_Base.output_states>` of a Mechanism."""
+    ONLY_SPECIFIED_OUTPUT_PORTS = ()
+    """Only monitor explicitly specified OutputPorts."""
+    PRIMARY_OUTPUT_PORTS = ()
+    """Monitor only the `primary OutputPort <OutputPort_Primary>` of a Mechanism."""
+    ALL_OUTPUT_PORTS = ()
+    """Monitor all OutputPorts <Mechanism_Base.output_ports>` of a Mechanism."""
     NUM_MONITOR_STATES_OPTIONS = ()
 
-# Indices for items in tuple format used for specifying monitored_output_states using weights and exponents
-OUTPUT_STATE_INDEX = 0
+# Indices for items in tuple format used for specifying monitored_output_ports using weights and exponents
+OUTPUT_PORT_INDEX = 0
 WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 MATRIX_INDEX = 3
-MonitoredOutputStateTuple = namedtuple("MonitoredOutputStateTuple", "output_state weight exponent matrix")
 
 # show_graph options
 SHOW_CONTROL = 'show_control'
@@ -632,8 +628,7 @@ class System(System_Base):
         + classPreference (PreferenceSet): ProcessPreferenceSet, instantiated in __init__()
         + classPreferenceLevel (PreferenceLevel): PreferenceLevel.CATEGORY
         + class_defaults.variable = inputValueSystemDefault                     # Used as default input value to Process)
-        + paramClassDefaults = {PROCESSES: [Mechanism_Base.default_mechanism],
-                                CONTROLLER: None}
+
        Class methods
        -------------
         - _validate_variable(variable, context):  insures that variable is 3D np.array (one 2D for each Process)
@@ -642,7 +637,7 @@ class System(System_Base):
         - _instantiate_graph(input, context):  instantiates Processes in self.process and constructs execution_list
         - _instantiate_controller(): instantiates ControlMechanism in **controller** argument or assigned to attribute
         - identify_origin_and_terminal_mechanisms():  assign self.origin_mechanisms and self.terminalMechanisms
-        - _assign_output_states():  assign OutputStates of System (currently = terminalMechanisms)
+        - _assign_output_ports():  assign OutputPorts of System (currently = terminalMechanisms)
         - execute(input, context):  executes Mechanisms in order specified by execution_list
         - defaults.variable(value):  setter for defaults.variable;  does some kind of error checking??
 
@@ -675,8 +670,8 @@ class System(System_Base):
             Used to construct :py:data:`execution_graph <System.execution_graph>` and execute the System
 
     controller : ControlMechanism : default SystemDefaultControlMechanism
-        the `ControlMechanism <ControlMechanism>` used to monitor the `value <OutputState.value>` of the `OutputState(s)
-        <OutputState>` and/or `Mechanisms <Mechanism>` specified in the **monitor_for_control** argument,
+        the `ControlMechanism <ControlMechanism>` used to monitor the `value <OutputPort.value>` of the `OutputPort(s)
+        <OutputPort>` and/or `Mechanisms <Mechanism>` specified in the **monitor_for_control** argument,
         and that controls the parameters specified in the **control_signals** argument of the System's constructor.
 
     enable_controller :  bool : default :keyword:`False`
@@ -695,7 +690,7 @@ class System(System_Base):
         `learning_rate <LearningMechanism.learning_rate>` was set).
 
     targets : 2d nparray
-        used as template for the values of the System's `target_input_states`, and to represent the targets specified in
+        used as template for the values of the System's `target_input_ports`, and to represent the targets specified in
         the **targets** argument of System's `execute <System.execute>` and `run <System.run>` methods.
 
     graph : OrderedDict
@@ -788,11 +783,11 @@ class System(System_Base):
             based on _target_mechs)
         COMMENT
 
-    target_input_states : List[SystemInputState]
+    target_input_ports : List[SystemInputPort]
         one item for each `TARGET` Mechanism in the System (listed in its `target_nodes
         <System.target_mechansims>` attribute).  Used to represent the values specified in the **targets**
         argument of the System's `execute <System.execute>` and `run <System.run>` methods, and to provide
-        thoese values to the TARGET `InputState` of each `TARGET` Mechanism during `execution
+        thoese values to the TARGET `InputPort` of each `TARGET` Mechanism during `execution
         <System_Execution_Learning>`.
 
 
@@ -822,12 +817,12 @@ class System(System_Base):
         Length must equal the number of `INITIALIZE_CYCLE` Mechanisms listed in the System's
         `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute.
 
-    results : List[OutputState.value]
+    results : List[OutputPort.value]
         list of return values from the sequence of executions.  Each item is a 2d array containing the `output_values
         <Mechanism.output_values>` of each `TERMINAL` Mechanism of the System for a given execution.
         Excludes simulated runs.
 
-    simulation_results : List[OutputState.value]
+    simulation_results : List[OutputPort.value]
         list of return values from the sequence of executions in simulation run(s) of the System; requires
         recordSimulationPref to be `True`.  Each item is a 2d array containing the `output_values
         <Mechanism.output_values>` of each `TERMINAL` Mechanism in the System for a given execution in the simulation.
@@ -844,7 +839,7 @@ class System(System_Base):
 
     """
 
-    componentCategory = kwSystemComponentCategory
+    componentCategory = SYSTEM_COMPONENT_CATEGORY
     className = componentCategory
     suffix = " " + className
     componentType = "System"
@@ -852,13 +847,13 @@ class System(System_Base):
     registry = SystemRegistry
 
     classPreferenceLevel = PreferenceLevel.CATEGORY
-    # These will override those specified in CategoryDefaultPreferences
+    # These will override those specified in CATEGORY_DEFAULT_PREFERENCES
     # classPreferences = {
-    #     kwPreferenceSetName: 'SystemCustomClassPreferences',
-    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    #     PREFERENCE_SET_NAME: 'SystemCustomClassPreferences',
+    #     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
     # classPreferences = {
     #     kwReportSimulationPref: 'SystemCustomClassPreferences',
-    #     kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+    #     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
     # Use inputValueSystemDefault as default input to process
     class Parameters(System_Base.Parameters):
@@ -872,21 +867,51 @@ class System(System_Base):
                     :default value: None
                     :type:
 
-        """
-        variable = None
+                enable_controller
+                    see `enable_controller <System.enable_controller>`
 
-    paramClassDefaults = Component.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        'outputStates': {},
-        '_phaseSpecMax': 0,
-        'stimulusInputStates': [],
-        'inputs': [],
-        'current_input': None,
-        'target_input_states': [],
-        'targets': None,
-        'current_targets': None,
-        'learning': False
-    })
+                    :default value: None
+                    :type:
+
+                initial_values
+                    see `initial_values <System.initial_values>`
+
+                    :default value: None
+                    :type:
+
+                learning_rate
+                    see `learning_rate <System.learning_rate>`
+
+                    :default value: None
+                    :type:
+
+                monitor_for_control
+                    see `monitor_for_control <System.monitor_for_control>`
+
+                    :default value: None
+                    :type:
+
+                processes
+                    see `processes <System.processes>`
+
+                    :default value: None
+                    :type:
+
+                targets
+                    see `targets <System.targets>`
+
+                    :default value: None
+                    :type:
+        """
+        variable = Parameter(None, pnl_internal=True, constructor_argument='default_variable')
+
+        processes = None
+        initial_values = None
+        enable_controller = None
+        monitor_for_control = None
+        learning_rate = None
+        targets = None
+
 
     # FIX 5/23/17: ADD control_signals ARGUMENT HERE (AND DOCUMENT IT ABOVE)
     @tc.typecheck
@@ -916,7 +941,7 @@ class System(System_Base):
         processes = processes or []
         if not isinstance(processes, list):
             processes = [processes]
-        monitor_for_control = monitor_for_control or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        monitor_for_control = monitor_for_control or [MonitoredOutputPortsOption.PRIMARY_OUTPUT_PORTS]
         self.control_signals_arg = control_signals or []
         if not isinstance(self.control_signals_arg, list):
             self.control_signals_arg = [self.control_signals_arg]
@@ -933,20 +958,16 @@ class System(System_Base):
 
         self.projections = []
 
-        # fAssign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(processes=processes,
-                                                  initial_values=initial_values,
-                                                  # controller=controller,
-                                                  enable_controller=enable_controller,
-                                                  monitor_for_control=monitor_for_control,
-                                                  # control_signals=control_signals,
-                                                  learning_rate=learning_rate,
-                                                  targets=targets,
-                                                  params=params)
+        self.inputs = []
+        self.stimulusInputPorts = []
+        self.target_input_ports = []
 
-        self.scheduler_processing = scheduler
+        self.scheduler = scheduler
         self.scheduler_learning = None
         self.termination_learning = None
+
+        self._phaseSpecMax = 0
+        self.learning = False
 
         register_category(entry=self,
                           base_class=System,
@@ -962,22 +983,28 @@ class System(System_Base):
 
         self.default_execution_id = self.name
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=params,
-                         name=self.name,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            processes=processes,
+            initial_values=initial_values,
+            enable_controller=enable_controller,
+            monitor_for_control=monitor_for_control,
+            learning_rate=learning_rate,
+            targets=targets,
+            param_defaults=params,
+            name=self.name,
+            prefs=prefs,
+        )
 
-        self.initialization_status = ContextFlags.INITIALIZED
         self.reinitialize_mechanisms_when = reinitialize_mechanisms_when
 
         # Assign controller
         self._instantiate_controller(control_mech_spec=controller, context=context)
 
         # Assign processing scheduler (learning_scheduler is assigned in _instantiate_learning_graph)
-        if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
+        if self.scheduler is None:
+            self.scheduler = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         # IMPLEMENT CORRECT REPORTING HERE
         # if self.prefs.reportOutputPref:
@@ -1001,11 +1028,11 @@ class System(System_Base):
 
     def _validate_variable(self, variable, context=None):
         """Convert variable to 2D np.array: \
-        one 1D value for each input state
+        one 1D value for each InputPort
         """
         super(System, self)._validate_variable(variable, context)
 
-        # Force System variable specification to be a 2D array (to accommodate multiple input states of 1st mech(s)):
+        # Force System variable specification to be a 2D array (to accommodate multiple input ports of 1st mech(s)):
         if variable is None:
             return
 
@@ -1052,10 +1079,10 @@ class System(System_Base):
             since generally there is no need, as all of the mechanisms in PROCESSES have already been validated
         """
 
-        if self.paramsCurrent[FUNCTION] != self.execute:
+        if self.function != self.execute:
             print("System object ({0}) should not have a specification ({1}) for a {2} param;  it will be ignored").\
-                format(self.name, self.paramsCurrent[FUNCTION], FUNCTION)
-            self.paramsCurrent[FUNCTION] = self.execute
+                format(self.name, self.function, FUNCTION)
+            self.function = self.execute
 
     def _instantiate_value(self, context=None):
         # If validation pref is set, execute the System
@@ -1063,7 +1090,7 @@ class System(System_Base):
             super()._instantiate_value(context=context)
         # Otherwise, just set System output info to the corresponding info for the last mechanism(s) in self.processes
         else:
-            value = self.processes[-1].output_state.value
+            value = self.processes[-1].output_port.value
             try:
                 # Could be mutable, so assign copy
                 self.defaults.value = value.copy()
@@ -1076,7 +1103,7 @@ class System(System_Base):
 # FIX: AUGMENT LinearMatrix TO USE FULL_CONNECTIVITY_MATRIX IF len(sender) != len(receiver)
         """Instantiate processes of System
 
-        Use self.processes (populated by self.paramsCurrent[PROCESSES] in Function._assign_args_to_param_dicts
+        Use self.processes
         If self.processes is empty, instantiate default process by calling process()
         Iterate through self.processes, instantiating each (including the input to each input projection)
         If input is specified, check that it's length equals the number of processes
@@ -1131,8 +1158,8 @@ class System(System_Base):
             if input is None:
                 process = processes_spec[i].process
                 process_input = []
-                for process_input_state in process.process_input_states:
-                    process_input.extend(process_input_state.value)
+                for process_input_port in process.process_input_ports:
+                    process_input.extend(process_input_port.value)
                 processes_spec[i] = ProcessTuple(process, process_input)
             # Input was provided on command line, so assign that to input item of tuple
             else:
@@ -1219,7 +1246,7 @@ class System(System_Base):
 
             process._all_mechanisms = MechanismList(process, components_list=process._mechs)
             for proj in process.projections:
-                if not isinstance(proj.sender, ProcessInputState):
+                if not isinstance(proj.sender, ProcessInputPort):
                     proj._activate_for_compositions(self)
 
         # Call all ControlMechanisms to allow them to implement specification of ALL
@@ -1228,7 +1255,7 @@ class System(System_Base):
             pass
 
         # # Instantiate processList using process_tuples, and point self.processes to it
-        # # Note: this also points self.params[PROCESSES] to self.processes
+        # # Note: this also points self.processes to self.processes
         self.process_tuples = processes_spec
         self._processList = ProcessList(self, self.process_tuples)
         self.processes = self._processList.processes
@@ -1270,7 +1297,7 @@ class System(System_Base):
         Validate initial_values
 
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import LearningMechanism
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 
         def is_monitoring_mech(mech):
             if ((isinstance(mech, ObjectiveMechanism) and mech._role) or
@@ -1304,8 +1331,8 @@ class System(System_Base):
                 elif (sender_mech is self.controller or
                           (isinstance(sender_mech, ObjectiveMechanism) and sender_mech.for_controller)):
                     sender_mech._add_system(self, CONTROL)
-                    obj_mech_rcvrs = [[projection.receiver.owner for projection in output_state.efferents]
-                             for output_state in sender_mech.output_states]
+                    obj_mech_rcvrs = [[projection.receiver.owner for projection in output_port.efferents]
+                             for output_port in sender_mech.output_ports]
                     if len(obj_mech_rcvrs) > 1:
                         warnings.warning("{0} projects to multiple {1}s {2}. If an {3} projects to the controller"
                                          "of a {4}, its projection to any other {1}s is not currently supported; "
@@ -1325,8 +1352,8 @@ class System(System_Base):
             # PRUNE ANY NON-SYSTEM COMPONENTS ---------------------------------------------------------------------
 
             # Delete any projections to mechanism from processes or mechanisms in processes not in current system
-            for input_state in sender_mech.input_states:
-                for projection in input_state.all_afferents:
+            for input_port in sender_mech.input_ports:
+                for projection in input_port.all_afferents:
                     sender = projection.sender.owner
                     system_processes = self.processes
                     if isinstance(sender, Process_Base):
@@ -1336,8 +1363,8 @@ class System(System_Base):
                         del projection
 
             # If sender_mech has no projections left, raise exception
-            if not any(any(projection for projection in input_state.all_afferents)
-                       for input_state in sender_mech.input_states):
+            if not any(any(projection for projection in input_port.all_afferents)
+                       for input_port in sender_mech.input_ports):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
@@ -1366,8 +1393,8 @@ class System(System_Base):
                                         and projection.receiver.owner._role in (LEARNING, CONTROL))
                                 # or are to itself!
                                 or projection.receiver.owner is sender_mech
-                            for projection in output_state.efferents)
-                        for output_state in sender_mech.output_states)):
+                            for projection in output_port.efferents)
+                        for output_port in sender_mech.output_ports)):
                 try:
                     if sender_mech.systems[self] is ORIGIN:
                         sender_mech._add_system(self, SINGLETON)
@@ -1388,16 +1415,16 @@ class System(System_Base):
                                 and projection.receiver.owner._role is CONTROL
                                 and (self.controller is None or (self.controller is not None
                                 and not projection.receiver.owner is self.controller.objective_mechanism)))
-                                    for projection in output_state.efferents)
-                        for output_state in sender_mech.output_states):
+                                    for projection in output_port.efferents)
+                        for output_port in sender_mech.output_ports):
                     pass
 
                 # If sender_mech projects to an LearningMechanism that executes in the execution phase,
                 #    let it pass, as that is a legitimate dependent that should be included in the execution_list
                 elif any(
                         (projection.receiver.owner.learning_timing is LearningTiming.EXECUTION_PHASE
-                         for projection in output_state.efferents)
-                        for output_state in sender_mech.output_states):
+                         for projection in output_port.efferents)
+                        for output_port in sender_mech.output_ports):
                     pass
                 # Otherwise, don't track any of the TERMINAL Mechanism's projections
                 else:
@@ -1405,12 +1432,12 @@ class System(System_Base):
 
             # FIND DEPENDENTS AND ADD TO GRAPH ---------------------------------------------------------------------
 
-            if not sender_mech.output_states:
+            if not sender_mech.output_ports:
                 return
 
-            for output_state in sender_mech.output_states:
+            for output_port in sender_mech.output_ports:
 
-                for projection in output_state.efferents:
+                for projection in output_port.efferents:
                     receiver = projection.receiver.owner
                     # receiver_tuple = self._all_mechanisms._get_tuple_for_mech(receiver)
 
@@ -1521,7 +1548,7 @@ class System(System_Base):
             first_mech = process.first_mechanism
 
             # Treat as ORIGIN if ALL projections to the first mechanism in the process are from:
-            #    - the process itself (ProcessInputState)
+            #    - the process itself (ProcessInputPort)
             #    - another mechanism in the in process (i.e., feedback projections from *within* the process)
             #    - mechanisms from other process for which it is an origin
             # Notes:
@@ -1532,18 +1559,20 @@ class System(System_Base):
             try:
                 if all(
                         all(
-                                # All projections must be from a process (i.e., ProcessInputState) to which it belongs
+                                # All projections must be from a process (i.e., ProcessInputPort) to which it belongs
                                 projection.sender.owner in first_mech.processes or
                                 # or from mechanisms within its own process (e.g., [a, b, a])
                                 projection.sender.owner in list(process.mechanisms) or
                                 # or from Mechanisms in other processes for which it is also an ORIGIN ([a,b,a],[a,c,a])
-                                all(ORIGIN in first_mech.processes[proc]
+                                not isinstance(projection.sender.owner, Mechanism)
+                                or all(
+                                    ORIGIN in first_mech.processes[proc]
                                     for proc in projection.sender.owner.processes
-                                    if isinstance(projection.sender.owner,Mechanism))
-                            # For all the projections to each InputState
-                            for projection in input_state.path_afferents)
-                        # For all input_states for the first_mech
-                        for input_state in first_mech.input_states):
+                                )
+                            # For all the projections to each InputPort
+                            for projection in input_port.path_afferents)
+                        # For all input_ports for the first_mech
+                        for input_port in first_mech.input_ports):
                     # Assign its set value as empty, marking it as a "leaf" in the graph
                     object_item = first_mech
                     self.graph[object_item] = set()
@@ -1638,20 +1667,20 @@ class System(System_Base):
         self.execution_list = self._toposort_with_ordered_mechs(self.execution_graph)
 
         # Construct self.defaults.variable from inputs to ORIGIN mechanisms
-        self.defaults.variable = []
+        new_variable = []
         for mech in self.origin_mechanisms:
             orig_mech_input = []
-            for input_state in mech.input_states:
-                orig_mech_input.append(input_state.value)
-            self.defaults.variable.append(orig_mech_input)
-        self.defaults.variable = convert_to_np_array(self.defaults.variable, 2)
+            for input_port in mech.input_ports:
+                orig_mech_input.append(input_port.value)
+            new_variable.append(orig_mech_input)
+        self.defaults.variable = convert_to_np_array(new_variable, 2)
         # should add Utility to allow conversion to 3D array
-        # An example: when input state values are vectors, then self.defaults.variable is a 3D array because
-        # an origin mechanism could have multiple input states if there is a recurrent input state. However,
-        # if input state values are all non-vector objects, such as strings, then self.defaults.variable
+        # An example: when InputPort values are vectors, then self.defaults.variable is a 3D array because
+        # an origin mechanism could have multiple input ports if there is a recurrent InputPort. However,
+        # if InputPort values are all non-vector objects, such as strings, then self.defaults.variable
         # would be a 2D array. so we should convert that to a 3D array
 
-        # Instantiate StimulusInputStates
+        # Instantiate StimulusInputPorts
         self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
@@ -1669,52 +1698,52 @@ class System(System_Base):
 
     def _instantiate_stimulus_inputs(self, context=None):
 
-# FIX: ZERO VALUE OF ALL ProcessInputStates BEFORE EXECUTING
-# FIX: RENAME SystemInputState -> SystemInputState
+# FIX: ZERO VALUE OF ALL ProcessInputPorts BEFORE EXECUTING
+# FIX: RENAME SystemInputPort -> SystemInputPort
 
-        # Create SystemInputState for each ORIGIN mechanism in origin_mechanisms and
-        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
+        # Create SystemInputPort for each ORIGIN mechanism in origin_mechanisms and
+        #    assign MappingProjection from the SystemInputPort to the ORIGIN mechanism
         for i, origin_mech in zip(range(len(self.origin_mechanisms)), self.origin_mechanisms):
 
-            # Skip if ORIGIN mechanism already has a projection from a SystemInputState in current system
+            # Skip if ORIGIN mechanism already has a projection from a SystemInputPort in current system
             # (this avoids duplication from multiple passes through _instantiate_graph)
-            if any(self is projection.sender.owner for projection in origin_mech.input_state.path_afferents):
+            if any(self is projection.sender.owner for projection in origin_mech.input_port.path_afferents):
                 continue
-            # added a for loop to iterate over origin_mech.input_states to allow for multiple input states in an
+            # added a for loop to iterate over origin_mech.input_ports to allow for multiple input ports in an
             # origin mechanism (useful only if origin mechanism is a KWTAMechanism) Check, for each ORIGIN mechanism,
             # that the length of the corresponding item of self.defaults.variable matches the length of the
-            #  ORIGIN inputState's defaults.variable attribute
-            for j in range(len(origin_mech.input_states)):
-                if origin_mech.input_states[j].internal_only:
+            #  ORIGIN inputPort's defaults.variable attribute
+            for j in range(len(origin_mech.input_ports)):
+                if origin_mech.input_ports[j].internal_only:
                     continue
-                if len(self.defaults.variable[i][j]) != origin_mech.input_states[j].socket_width:
+                if len(self.defaults.variable[i][j]) != origin_mech.input_ports[j].socket_width:
                     raise SystemError("Length of input {} ({}) does not match the length of the input ({}) for the "
                                       "corresponding ORIGIN Mechanism ()".
                                       format(i,
                                              len(self.defaults.variable[i][j]),
-                                             origin_mech.input_states[j].socket_width,
+                                             origin_mech.input_ports[j].socket_width,
                                              origin_mech.name))
-                stimulus_input_state = SystemInputState(owner=self,
-                                                        variable=origin_mech.input_states[j].socket_template,
+                stimulus_input_port = SystemInputPort(owner=self,
+                                                        variable=origin_mech.input_ports[j].socket_template,
                                                         prefs=self.prefs,
-                                                        name="System Input State to Mechansism {}, Input State {}".
+                                                        name="System Input Port to Mechansism {}, Input Port {}".
                                                         format(origin_mech.name,j),
                                                         context=context)
-                self.stimulusInputStates.append(stimulus_input_state)
-                self.inputs.append(stimulus_input_state.value)
+                self.stimulusInputPorts.append(stimulus_input_port)
+                self.inputs.append(stimulus_input_port.value)
 
-                # Add MappingProjection from stimulus_input_state to ORIGIN mechainsm's inputState
+                # Add MappingProjection from stimulus_input_port to ORIGIN mechainsm's inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-                proj = MappingProjection(sender=stimulus_input_state,
-                                  receiver=origin_mech.input_states[j],
-                                  name=self.name+' Input Projection to '+origin_mech.name+' Input State '+str(j))
+                proj = MappingProjection(sender=stimulus_input_port,
+                                  receiver=origin_mech.input_ports[j],
+                                  name=self.name + ' Input Projection to ' + origin_mech.name + ' Input Port ' + str(j))
                 proj._activate_for_compositions(self)
 
 
     def _instantiate_learning_graph(self, context=None):
         """Build graph of LearningMechanism and LearningProjections
         """
-        from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import \
+        from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
             LearningMechanism
 
         self.learningGraph = OrderedDict()
@@ -1748,16 +1777,16 @@ class System(System_Base):
             #    - all of the Mechanisms that project to it already have an ObjectiveMechanism,
             # Then:
             #    - do not include the ObjectiveMechanism in the graph;
-            #    - be sure that its outputState projects to the ERROR_SIGNAL inputState of a LearningMechanism
+            #    - be sure that its outputPort projects to the ERROR_SIGNAL inputPort of a LearningMechanism
             #        (labelled "learning_mech" here -- raise an exception if it does not;
-            #    - determine whether learning_mech's ERROR_SIGNAL inputState receives any other projections
+            #    - determine whether learning_mech's ERROR_SIGNAL inputPort receives any other projections
             #        from another ObjectiveMechanism or LearningMechanism (labelled "error_signal_projection" here)
             #        -- if it does, be sure that it is from the same system and if so return;
             #           (note:  this shouldn't be true, but the test is here for completeness and sanity-checking)
-            #    - if learning_mech's ERROR_SIGNAL inputState does not receive any projections from
+            #    - if learning_mech's ERROR_SIGNAL inputPort does not receive any projections from
             #        another objectiveMechanism and/or LearningMechanism in the system, then:
             #        - find the sender to the ObjectiveMechanism (labelled "error_source" here)
-            #        - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputState of
+            #        - find the 1st projection from error_source that projects to the ACTIVATION_INPUT inputPort of
             #            a LearningMechanism (labelled "error_signal" here)
             #        - instantiate a MappingProjection from error_signal to learning_mech
             #            projected
@@ -1777,7 +1806,7 @@ class System(System_Base):
 
                 # Get the LearningMechanism to which the obj_mech projects
                 try:
-                    learning_mech = obj_mech.output_state.efferents[0].receiver.owner
+                    learning_mech = obj_mech.output_port.efferents[0].receiver.owner
                     if not isinstance(learning_mech, LearningMechanism):
                         raise AttributeError
                 except AttributeError:
@@ -1785,7 +1814,7 @@ class System(System_Base):
                                       format(obj_mech.name, process.name))
 
                 # Make sure sample_mech is referenced by learning_mech as is output_source
-                sample_mech = obj_mech.input_states[SAMPLE].path_afferents[0].sender.owner
+                sample_mech = obj_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
                 if sample_mech != learning_mech.output_source:
                     raise SystemError("PROGRAM ERROR: learning_mecch ({}) does not properly reference sample_mech ({})"
                                       "in {} of {}".format(learning_mech.name,sample_mech.name,process.name,self.name))
@@ -1797,7 +1826,7 @@ class System(System_Base):
                     # If is the last item in a learning sequence,
                     #    doesn't matter if it is a TERMINAL Mechanism;  needs to remain as a Target for the System
                     if not any(proj.has_learning_projection and self in proj.receiver.owner.systems
-                               for proj in sample_mech.output_state.efferents):
+                               for proj in sample_mech.output_port.efferents):
                         pass
                     # If sample_mech is:
                     #    - NOT for a TERMINAL Mechanism of the current System
@@ -1822,35 +1851,35 @@ class System(System_Base):
                                  not receiver_mech is obj_mech)
                                 # receivers of senders to obj_mech
                                 for receiver_mech in [proj.receiver.owner for proj in
-                                                      mech.output_state.efferents])
+                                                      mech.output_port.efferents])
                             # senders to obj_mech
                             for mech in [proj.sender.owner
-                                         for proj in obj_mech.input_states[SAMPLE].path_afferents]):
+                                         for proj in obj_mech.input_ports[SAMPLE].path_afferents]):
 
                         # Get the other ObjectiveMechanism to which the error_source projects (in addition to obj_mech)
                         other_obj_mech = next((projection.receiver.owner for projection in
-                                               sample_mech.output_state.efferents if
+                                               sample_mech.output_port.efferents if
                                                isinstance(projection.receiver.owner, ObjectiveMechanism)), None)
                         if not other_obj_mech is obj_mech:
                             sender_mech = other_obj_mech
                             sender_mech._add_process(process, TARGET)
                             obj_mech_replaced = TERMINAL
                             # Move error_signal Projections from old obj_mech to new one (now sender_mech)
-                            for error_signal_proj in obj_mech.output_states[OUTCOME].efferents:
+                            for error_signal_proj in obj_mech.output_ports[OUTCOME].efferents:
                                 # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION WHEN THAT HAS BEEN IMPLEMENTED
                                 proj = MappingProjection(sender=sender_mech, receiver=error_signal_proj.receiver)
                                 proj._activate_for_compositions(self)
                                 _assign_error_signal_projections(sample_mech, self, scope=process, objective_mech=obj_mech)
-                                # sender_mech.output_states[OUTCOME].efferents.append(error_signal_proj)
+                                # sender_mech.output_ports[OUTCOME].efferents.append(error_signal_proj)
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
                     elif (not all(all(projection.sender.owner.processes[proc] is TERMINAL
                                      for proc in projection.sender.owner.processes)
-                                 for projection in obj_mech.input_states[SAMPLE].path_afferents)
+                                 for projection in obj_mech.input_ports[SAMPLE].path_afferents)
                           # and it is not for the last Mechanism in a learning sequence
                           and any(proj.has_learning_projection and self in proj.receiver.owner.systems
-                                  for proj in sample_mech.output_state.efferents)
+                                  for proj in sample_mech.output_port.efferents)
                     ):
                         _assign_error_signal_projections(processing_mech=sample_mech,
                                                          system=self,
@@ -1865,7 +1894,7 @@ class System(System_Base):
             # - IDENTIFY ALL OF THE OUTGOING PROJECTIONS FROM THE MECHANISMS ABOVE THAT ARE:
             #     - BEING LEARNED
             #     - PROJECT TO A MECHANISM IN THE CURRENT SYSTEM
-            # - ASSIGN MAPPING PROJECTION TO NEW ERROR_SIGNAL INPUT_STATE FOR sender_mech
+            # - ASSIGN MAPPING PROJECTION TO NEW ERROR_SIGNAL INPUT_PORT FOR sender_mech
 
             # sender_mech is a LearningMechanism:
             else:
@@ -1878,16 +1907,16 @@ class System(System_Base):
                         _assign_error_signal_projections(processing_mech, self)
 
             # If sender_mech has no Projections left, raise exception
-            if not any(any(projection for projection in input_state.path_afferents)
-                       for input_state in sender_mech.input_states):
+            if not any(any(projection for projection in input_port.path_afferents)
+                       for input_port in sender_mech.input_ports):
                 raise SystemError("{} only receives Projections from other Processes or Mechanisms not"
                                   " in the current System ({})".format(sender_mech.name, self.name))
 
             # For all of the sender_mech's ERROR_SIGNALs and LEARNING_SIGNALs
-            for output_state in sender_mech.output_states:
+            for output_port in sender_mech.output_ports:
 
                 # Add them to the learning_graph
-                for projection in output_state.efferents:
+                for projection in output_port.efferents:
                     receiver = projection.receiver.owner
 
                     if obj_mech_replaced == INTERNAL:
@@ -1987,7 +2016,7 @@ class System(System_Base):
         self.learning_mechanisms = MechanismList(self, self._learning_mechs)
         self.target_mechanisms = MechanismList(self, self._target_mechs)
 
-        # Instantiate TargetInputStates
+        # Instantiate TargetInputPorts
         self._instantiate_target_inputs(context=context)
 
         # Assign scheduler for _execute_learning:
@@ -2016,46 +2045,46 @@ class System(System_Base):
                                   format(self.name))
                 return
             # target arg was not specified in System's constructor,
-            #    so use the value of the TARGET InputState for the TARGET Mechanism(s) as the default
-            self.targets = [target.input_states[TARGET].value for target in self.target_mechanisms]
+            #    so use the value of the TARGET InputPort for the TARGET Mechanism(s) as the default
+            self.targets = [target.input_ports[TARGET].value for target in self.target_mechanisms]
             if self.verbosePref:
                 warnings.warn("Learning has been specified for {} but its \'targets\' argument was not specified;"
                               "default will be used ({})".format(self.name, self.targets))
 
-        # Create SystemInputState for each TARGET mechanism in target_mechanisms and
-        #    assign MappingProjection from the SystemInputState to the ORIGIN mechanism
+        # Create SystemInputPort for each TARGET mechanism in target_mechanisms and
+        #    assign MappingProjection from the SystemInputPort to the ORIGIN mechanism
 
         if isinstance(self.targets, dict):
             for target_mech in self.target_mechanisms:
 
-                # Skip if TARGET input state already has a projection from a SystemInputState in current system
-                if any(self is projection.sender.owner for projection in target_mech.input_states[TARGET].path_afferents):
+                # Skip if TARGET InputPort already has a projection from a SystemInputPort in current system
+                if any(self is projection.sender.owner for projection in target_mech.input_ports[TARGET].path_afferents):
                     continue
 
-                sample_mechanism = target_mech.input_states[SAMPLE].path_afferents[0].sender.owner
-                TARGET_input_state = target_mech.input_states[TARGET]
+                sample_mechanism = target_mech.input_ports[SAMPLE].path_afferents[0].sender.owner
+                TARGET_input_port = target_mech.input_ports[TARGET]
 
-                if len(self.targets[sample_mechanism]) != len(TARGET_input_state.value):
+                if len(self.targets[sample_mechanism]) != len(TARGET_input_port.value):
                             raise SystemError("Length {} of target ({}, {}) does not match the length ({}) of the target "
                                               "expected for its TARGET Mechanism {}".
                                                format(len(self.targets[sample_mechanism]),
                                                       sample_mechanism.name,
                                                       self.targets[sample_mechanism],
-                                                      len(TARGET_input_state.value),
+                                                      len(TARGET_input_port.value),
                                                       target_mech.name))
 
-                system_target_input_state = SystemInputState(owner=self,
-                                                        variable=TARGET_input_state.defaults.variable,
+                system_target_input_port = SystemInputPort(owner=self,
+                                                        variable=TARGET_input_port.defaults.variable,
                                                         prefs=self.prefs,
                                                         name="System Target for {}".format(target_mech.name),
                                                         context=context)
-                self.target_input_states.append(system_target_input_state)
+                self.target_input_ports.append(system_target_input_port)
 
-                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                # Add MappingProjection from system_target_input_port to TARGET mechanism's target inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-                proj = MappingProjection(sender=system_target_input_state,
-                        receiver=TARGET_input_state,
-                        name=self.name+' Input Projection to '+TARGET_input_state.name)
+                proj = MappingProjection(sender=system_target_input_port,
+                                         receiver=TARGET_input_port,
+                                         name=self.name + ' Input Projection to ' + TARGET_input_port.name)
                 proj._activate_for_compositions(self)
 
         elif isinstance(self.targets, list):
@@ -2076,52 +2105,52 @@ class System(System_Base):
 
 
 
-            # Create SystemInputState for each TARGET mechanism in target_nodes and
-            #    assign MappingProjection from the SystemInputState
+            # Create SystemInputPort for each TARGET mechanism in target_nodes and
+            #    assign MappingProjection from the SystemInputPort
             #    to the TARGET mechanism's TARGET inputSate
-            #    (i.e., from the SystemInputState to the ComparatorMechanism)
+            #    (i.e., from the SystemInputPort to the ComparatorMechanism)
             for i, target_mech in zip(range(len(self.target_mechanisms)), self.target_mechanisms):
 
-                # Create ProcessInputState for each target and assign to targetMechanism's target inputState
-                target_mech_TARGET_input_state = target_mech.input_states[TARGET]
+                # Create ProcessInputPort for each target and assign to targetMechanism's target inputPort
+                target_mech_TARGET_input_port = target_mech.input_ports[TARGET]
 
                 # Check, for each TARGET mechanism, that the length of the corresponding item of targets matches the length
-                #    of the TARGET (ComparatorMechanism) target inputState's defaults.variable attribute
-                if len(self.targets[i]) != len(target_mech_TARGET_input_state.value):
+                #    of the TARGET (ComparatorMechanism) target inputPort's defaults.variable attribute
+                if len(self.targets[i]) != len(target_mech_TARGET_input_port.value):
                     raise SystemError("Length of target ({}: {}) does not match the length ({}) of the target "
                                       "expected for its TARGET Mechanism {}".
                                       format(len(self.targets[i]),
                                              self.targets[i],
-                                             len(target_mech_TARGET_input_state.value),
+                                             len(target_mech_TARGET_input_port.value),
                                              target_mech.name))
 
-                system_target_input_state = SystemInputState(
+                system_target_input_port = SystemInputPort(
                     owner=self,
-                    variable=target_mech_TARGET_input_state.value,
+                    variable=target_mech_TARGET_input_port.value,
                     prefs=self.prefs,
                     name="System Target {}".format(i),
                     context=context)
-                self.target_input_states.append(system_target_input_state)
+                self.target_input_ports.append(system_target_input_port)
 
-                # Add MappingProjection from system_target_input_state to TARGET mechanism's target inputState
+                # Add MappingProjection from system_target_input_port to TARGET mechanism's target inputPort
                 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-                proj = MappingProjection(sender=system_target_input_state,
-                                  receiver=target_mech_TARGET_input_state,
-                                  name=self.name + ' Input Projection to ' + target_mech_TARGET_input_state.name)
+                proj = MappingProjection(sender=system_target_input_port,
+                                  receiver=target_mech_TARGET_input_port,
+                                  name=self.name + ' Input Projection to ' + target_mech_TARGET_input_port.name)
                 proj._activate_for_compositions(self)
 
-    def _assign_output_states(self):
-        """Assign OutputStates for System (the values of which will comprise System.value)
+    def _assign_output_ports(self):
+        """Assign OutputPorts for System (the values of which will comprise System.value)
 
         Assign the outputs of terminal Mechanisms in the graph to the System's output_values
 
         Note:
-        * Current implementation simply assigns TERMINAL Mechanisms as OutputStates
+        * Current implementation simply assigns TERMINAL Mechanisms as OutputPorts
         * This method is included so that sublcasses and/or future versions can override it to make custom assignments
 
         """
         for mech in self.terminal_mechanisms.mechanisms:
-            self.output_states[mech.name] = mech.output_states
+            self.output_ports[mech.name] = mech.output_ports
 
     def _instantiate_controller(self, control_mech_spec, context=None):
 
@@ -2142,11 +2171,11 @@ class System(System_Base):
         # A ControlMechanism class or subclass is being used to specify the controller
         elif inspect.isclass(control_mech_spec) and issubclass(control_mech_spec, ControlMechanism):
             # Instantiate controller from class specification using:
-            #   monitored_output_states for System to specify its objective_mechanism (as list of OutputStates to be monitored)
+            #   monitored_output_ports for System to specify its objective_mechanism (as list of OutputPorts to be monitored)
             #   ControlSignals for System returned by _get_system_control_signals()
             controller = control_mech_spec(
                     system=self,
-                    objective_mechanism=self._get_monitored_output_states_for_system(context=context),
+                    objective_mechanism=self._get_monitored_output_ports_for_system(context=context),
                     control_signals=self._get_control_signals_for_system(self.control_signals_arg, context=context))
             controller._activate_projections_for_compositions(self)
 
@@ -2167,72 +2196,72 @@ class System(System_Base):
         self.execution_graph[self.controller.objective_mechanism] = set(self.execution_list[:-1])
 
         # Check whether controller has input, and if not then disable
-        has_input_states = isinstance(self.controller.input_states, ContentAddressableList)
+        has_input_ports = isinstance(self.controller.input_ports, ContentAddressableList)
 
-        if not has_input_states:
+        if not has_input_ports:
             # If controller was enabled (and verbose is set), warn that it has been disabled
             if self.enable_controller and self.prefs.verbosePref:
-                print("{} for {} has no input_states, so controller will be disabled".
+                print("{} for {} has no input_ports, so controller will be disabled".
                       format(self.controller.name, self.name))
             self.enable_controller = False
 
         self.simulation_results = []
 
-    def _get_monitored_output_states_for_system(self, controller=None, context=None):
+    def _get_monitored_output_ports_for_system(self, controller=None, context=None):
         """
-        Parse a list of OutputState specifications for System, controller, Mechanisms and/or their OutputStates:
-            - if specification in output_state is None:
-                 do NOT monitor this state (this overrides any other specifications)
-            - if an OutputState is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
+        Parse a list of OutputPort specifications for System, controller, Mechanisms and/or their OutputPorts:
+            - if specification in output_port is None:
+                 do NOT monitor this port (this overrides any other specifications)
+            - if an OutputPort is specified in *any* MONITOR_FOR_CONTROL, monitor it (this overrides any other specs)
             - if a Mechanism is terminal and/or specified in the System or `controller <Systsem.controller>`:
-                if MonitoredOutputStatesOptions is PRIMARY_OUTPUT_STATES:  monitor only its primary (first) OutputState
-                if MonitoredOutputStatesOptions is ALL_OUTPUT_STATES:  monitor all of its OutputStates
-            Note: precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
+                if MonitoredOutputPortsOptions is PRIMARY_OUTPUT_PORTS:  monitor only its primary (first) OutputPort
+                if MonitoredOutputPortsOptions is ALL_OUTPUT_PORTS:  monitor all of its OutputPorts
+            Note: precedence is given to MonitoredOutputPortsOptions specification in Mechanism > controller > System
 
         Notes:
-        * MonitoredOutputStatesOption is an AutoNumbered Enum declared in ControlMechanism
-            - it specifies options for assigning OutputStates of TERMINAL Mechanisms in the System
-                to controller.monitored_output_states;  the options are:
-                + PRIMARY_OUTPUT_STATES: assign only the `primary OutputState <OutputState_Primary>` for each
+        * MonitoredOutputPortsOption is an AutoNumbered Enum declared in ControlMechanism
+            - it specifies options for assigning OutputPorts of TERMINAL Mechanisms in the System
+                to controller.monitored_output_ports;  the options are:
+                + PRIMARY_OUTPUT_PORTS: assign only the `primary OutputPort <OutputPort_Primary>` for each
                   TERMINAL Mechanism
-                + ALL_OUTPUT_STATES: assign all of the outputStates of each terminal Mechanism
-            - precedence is given to MonitoredOutputStatesOptions specification in Mechanism > controller > System
-        * controller.monitored_output_states is a list, each item of which is an OutputState from which a Projection
-            will be instantiated to a corresponding InputState of the ControlMechanism
-        * controller.input_states is the usual ordered dict of states,
-            each of which receives a Projection from a corresponding OutputState in controller.monitored_output_states
+                + ALL_OUTPUT_PORTS: assign all of the outputPorts of each terminal Mechanism
+            - precedence is given to MonitoredOutputPortsOptions specification in Mechanism > controller > System
+        * controller.monitored_output_ports is a list, each item of which is an OutputPort from which a Projection
+            will be instantiated to a corresponding InputPort of the ControlMechanism
+        * controller.input_ports is the usual ordered dict of ports,
+            each of which receives a Projection from a corresponding OutputPort in controller.monitored_output_ports
 
-        Returns list of MonitoredOutputStateTuples: (OutputState, weight, exponent, matrix)
+        Returns list of MonitoredOutputPortTuples: (OutputPort, weight, exponent, matrix)
 
         """
         # PARSE SPECS
 
-        # Get OutputStates already being -- or specified to be -- monitored by controller
+        # Get OutputPorts already being -- or specified to be -- monitored by controller
         if controller is not None and not inspect.isclass(controller):
             try:
-                # Get from monitored_output_states attribute if controller is already implemented
-                monitored_output_states = controller.monitored_output_states.copy() or []
-                # Convert them to MonitoredOutputStateTuple specifications (for treatment below)
-                monitored_output_state_specs = []
-                for monitored_output_state, input_state in zip(monitored_output_states,
-                                                               controller.objective_mechanism.input_states):
-                    projection = input_state.path_afferents[0]
-                    if not projection.sender is monitored_output_state:
+                # Get from monitored_output_ports attribute if controller is already implemented
+                monitored_output_ports = controller.monitored_output_ports.copy() or []
+                # Convert them to MonitoredOutputPortTuple specifications (for treatment below)
+                monitored_output_port_specs = []
+                for monitored_output_port, input_port in zip(monitored_output_ports,
+                                                               controller.objective_mechanism.input_ports):
+                    projection = input_port.path_afferents[0]
+                    if not projection.sender is monitored_output_port:
                         raise SystemError("PROGRAM ERROR: Problem identifying projection ({}) for "
-                                          "monitored_output_state ({}) specified for {} ({}) assigned to {}".
+                                          "monitored_output_port ({}) specified for {} ({}) assigned to {}".
                                           format(projection.name,
-                                                 monitored_output_state.name,
+                                                 monitored_output_port.name,
                                                  ControlMechanism.__name__,
                                                  controller.name,
                                                  self.name))
-                    monitored_output_state_specs.append(MonitoredOutputStateTuple(monitored_output_state,
+                    monitored_output_port_specs.append(MonitoredOutputPortTuple(monitored_output_port,
                                                                                   projection.weight,
                                                                                   projection.exponent,
                                                                                   projection.matrix))
 
-                controller_specs = monitored_output_state_specs
+                controller_specs = monitored_output_port_specs
             except AttributeError:
-                # If controller has no monitored_output_states attribute, it has not yet been fully instantiated
+                # If controller has no monitored_output_ports attribute, it has not yet been fully instantiated
                 #    (i.e., the call to this method is part of its instantiation by a System)
                 #    so, get specification from the **object_mechanism** argument
                 if isinstance(controller.objective_mechanism, list):
@@ -2240,18 +2269,18 @@ class System(System_Base):
                     controller_specs = controller.objective_mechanism.copy() or []
                 elif isinstance(controller.objective_mechanism, ObjectiveMechanism):
                     # **objective_mechanism** argument was specified as an ObjectiveMechanism, which has presumably
-                    # already been instantiated, so use its monitored_output_states attribute
-                    controller_specs = controller.objective_mechanism.monitored_output_states
+                    # already been instantiated, so use its monitored_output_ports attribute
+                    controller_specs = controller.objective_mechanism.monitored_output_ports
         else:
             controller_specs = []
 
-        # Get system's MONITOR_FOR_CONTROL specifications (specified in paramClassDefaults, so must be there)
+        # Get system's MONITOR_FOR_CONTROL specifications
         system_specs = self.monitor_for_control.copy()
 
-        # If controller_specs has a MonitoredOutputStatesOption specification, remove any such spec from system specs
+        # If controller_specs has a MonitoredOutputPortsOption specification, remove any such spec from system specs
         if controller_specs:
-            if (any(isinstance(item, MonitoredOutputStatesOption) for item in controller_specs)):
-                option_item = next((item for item in system_specs if isinstance(item,MonitoredOutputStatesOption)),None)
+            if (any(isinstance(item, MonitoredOutputPortsOption) for item in controller_specs)):
+                option_item = next((item for item in system_specs if isinstance(item,MonitoredOutputPortsOption)),None)
                 if option_item is not None:
                     del system_specs[option_item]
             for item in controller_specs:
@@ -2259,50 +2288,50 @@ class System(System_Base):
                     del system_specs[system_specs.index(item)]
 
         # Combine controller and system specs
-        # If there are none, assign PRIMARY_OUTPUT_STATES as default
-        all_specs = controller_specs + system_specs or [MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES]
+        # If there are none, assign PRIMARY_OUTPUT_PORTS as default
+        all_specs = controller_specs + system_specs or [MonitoredOutputPortsOption.PRIMARY_OUTPUT_PORTS]
 
-        # Convert references to Mechanisms and/or OutputStates in all_specs to MonitoredOutputStateTuples;
+        # Convert references to Mechanisms and/or OutputPorts in all_specs to MonitoredOutputPortTuples;
         # Each spec to be converted should be one of the following:
-        #    - a MonitoredOutputStatesOption (parsed below);
-        #    - a MonitoredOutputStatesTuple (returned by _get_monitored_states_for_system when
+        #    - a MonitoredOutputPortsOption (parsed below);
+        #    - a MonitoredOutputPortsTuple (returned by _get_monitored_ports_for_system when
         #          specs were initially processed by the System to parse its *monitor_for_control* argument;
-        #    - a specification for an existing Mechanism or OutputStates from the *monitor_for_control* arg of System.
+        #    - a specification for an existing Mechanism or OutputPorts from the *monitor_for_control* arg of System.
         all_specs_extracted_from_tuples=[]
         all_specs_parsed=[]
         for i, spec in enumerate(all_specs):
 
-            # Leave MonitoredOutputStatesOption and MonitoredOutputStatesTuple spec in place;
+            # Leave MonitoredOutputPortsOption and MonitoredOutputPortsTuple spec in place;
             #    these are parsed later on
-            if isinstance(spec, MonitoredOutputStatesOption):
+            if isinstance(spec, MonitoredOutputPortsOption):
                 all_specs_extracted_from_tuples.append(spec)
                 all_specs_parsed.append(spec)
                 continue
-            if isinstance(spec, MonitoredOutputStateTuple):
-                all_specs_extracted_from_tuples.append(spec.output_state)
+            if isinstance(spec, MonitoredOutputPortTuple):
+                all_specs_extracted_from_tuples.append(spec.output_port)
                 all_specs_parsed.append(spec)
                 continue
 
-            # spec is from *monitor_for_control* arg, so convert/parse into MonitoredOutputStateTuple(s)
+            # spec is from *monitor_for_control* arg, so convert/parse into MonitoredOutputPortTuple(s)
             # Note:  assign parsed spec(s) to a list, as there may be more than one (that will be added to all_specs)
-            monitored_output_state_tuples = []
+            monitored_output_port_tuples = []
 
-            weight=DEFAULT_MONITORED_STATE_WEIGHT
-            exponent=DEFAULT_MONITORED_STATE_EXPONENT
-            matrix=DEFAULT_MONITORED_STATE_MATRIX
+            weight=DEFAULT_MONITORED_PORT_WEIGHT
+            exponent=DEFAULT_MONITORED_PORT_EXPONENT
+            matrix=DEFAULT_MONITORED_PORT_MATRIX
 
             # spec is a tuple
-            # - put OutputState(s) in spec
+            # - put OutputPort(s) in spec
             # - assign any weight, exponent, and/or matrix specified
             if isinstance(spec, tuple):
-                # 2-item tuple (<OutputState(s) name(s)>, <Mechanism>)
+                # 2-item tuple (<OutputPort(s) name(s)>, <Mechanism>)
                 if len(spec) == 2:
-                    # FIX: DO ERROR CHECK ON THE FOLLOWING / ALLOW LIST OF STATES
-                    spec = spec[1].output_states[spec[0]]
-                # 3-item tuple (<OutputState(s) spec>, weight, exponent)
+                    # FIX: DO ERROR CHECK ON THE FOLLOWING / ALLOW LIST OF PORTS
+                    spec = spec[1].output_ports[spec[0]]
+                # 3-item tuple (<OutputPort(s) spec>, weight, exponent)
                 elif len(spec) == 3:
                     spec, weight, exponent = spec
-                # 4-item tuple (<OutputState(s) spec>, weight, exponent, matrix)
+                # 4-item tuple (<OutputPort(s) spec>, weight, exponent, matrix)
                 elif len(spec) == 4:
                     spec, weight, exponent, matrix = spec
 
@@ -2310,32 +2339,34 @@ class System(System_Base):
                 spec_list = [spec]
 
             for spec in spec_list:
-                # spec is an OutputState or Mechanism
-                if isinstance(spec, (OutputState, Mechanism)):
-                    # spec is an OutputState, so use it
-                    if isinstance(spec, OutputState):
-                        output_states = [spec]
-                    # spec is Mechanism, so use the State's owner, and get the relevant OutputState(s)
+                # spec is an OutputPort or Mechanism
+                if isinstance(spec, (OutputPort, Mechanism)):
+                    # spec is an OutputPort, so use it
+                    if isinstance(spec, OutputPort):
+                        output_ports = [spec]
+                    # spec is Mechanism, so use the Port's owner, and get the relevant OutputPort(s)
                     elif isinstance(spec, Mechanism):
-                        if (MONITOR_FOR_CONTROL in spec.params
-                            and spec.params[MONITOR_FOR_CONTROL] is MonitoredOutputStatesOption.ALL_OUTPUT_STATES):
-                            output_states = spec.output_states
+                        if (
+                            hasattr(spec, MONITOR_FOR_CONTROL)
+                            and spec.monitor_for_control is MonitoredOutputPortsOption.ALL_OUTPUT_PORTS
+                        ):
+                            output_ports = spec.output_ports
                         else:
-                            output_states = [spec.output_state]
-                    for output_state in output_states:
-                        monitored_output_state_tuples.extend(
-                                [MonitoredOutputStateTuple(output_state=output_state,
+                            output_ports = [spec.output_port]
+                    for output_port in output_ports:
+                        monitored_output_port_tuples.extend(
+                                [MonitoredOutputPortTuple(output_port=output_port,
                                                            weight=weight,
                                                            exponent=exponent,
                                                            matrix=matrix)])
                 # spec is a string
                 elif isinstance(spec, str):
-                    # Search System for Mechanisms with OutputStates with the string as their name
+                    # Search System for Mechanisms with OutputPorts with the string as their name
                     for mech in self.mechanisms:
-                        for output_state in mech.output_states:
-                            if output_state.name == spec:
-                                monitored_output_state_tuples.extend(
-                                        [MonitoredOutputStateTuple(output_state=output_state,
+                        for output_port in mech.output_ports:
+                            if output_port.name == spec:
+                                monitored_output_port_tuples.extend(
+                                        [MonitoredOutputPortTuple(output_port=output_port,
                                                                    weight=weight,
                                                                    exponent=exponent,
                                                                    matrix=matrix)])
@@ -2343,51 +2374,51 @@ class System(System_Base):
                 else:
                     raise SystemError("Specification of item in \'{}\' arg in constructor for {} ({}) "
                                       "is not a recognized specification for an {}".
-                                      format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
+                                      format(MONITOR_FOR_CONTROL, self.name, spec, OutputPort.__name__))
 
-                all_specs_parsed.extend(monitored_output_state_tuples)
-                all_specs_extracted_from_tuples.extend([item.output_state for item in monitored_output_state_tuples])
+                all_specs_parsed.extend(monitored_output_port_tuples)
+                all_specs_extracted_from_tuples.extend([item.output_port for item in monitored_output_port_tuples])
 
         all_specs = all_specs_parsed
 
         try:
-            all (isinstance(item, (OutputState, MonitoredOutputStatesOption))
+            all (isinstance(item, (OutputPort, MonitoredOutputPortsOption))
                  for item in all_specs_extracted_from_tuples)
         except:
             raise SystemError("PROGRAM ERROR: Fail to parse items of \'{}\' arg ({}) in constructor for {}".
-                              format(MONITOR_FOR_CONTROL, self.name, spec, OutputState.__name__))
+                              format(MONITOR_FOR_CONTROL, self.name, spec, OutputPort.__name__))
 
-        # Get MonitoredOutputStatesOptions if specified for controller or System, and make sure there is only one:
+        # Get MonitoredOutputPortsOptions if specified for controller or System, and make sure there is only one:
         option_specs = [item for item in all_specs_extracted_from_tuples
-                        if isinstance(item, MonitoredOutputStatesOption)]
+                        if isinstance(item, MonitoredOutputPortsOption)]
         if not option_specs:
             ctlr_or_sys_option_spec = None
         elif len(option_specs) == 1:
             ctlr_or_sys_option_spec = option_specs[0]
         else:
-            raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified "
-                              "for OutputStates to be monitored in {}: {}".
+            raise SystemError("PROGRAM ERROR: More than one MonitoredOutputPortsOption specified "
+                              "for OutputPorts to be monitored in {}: {}".
                            format(self.name, option_specs))
 
-        # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputState in the System
-        # Assign OutputStates to monitored_output_states
-        monitored_output_states = []
+        # Get MONITOR_FOR_CONTROL specifications for each Mechanism and OutputPort in the System
+        # Assign OutputPorts to monitored_output_ports
+        monitored_output_ports = []
 
         # Notes:
-        # * Use all_specs to accumulate specs from all mechanisms and their outputStates
+        # * Use all_specs to accumulate specs from all mechanisms and their outputPorts
         #     (for use in generating exponents and weights below)
         # * Use local_specs to combine *only current* Mechanism's specs with those from controller and system specs;
-        #     this allows the specs for each Mechanism and its OutputStates to be evaluated independently of any others
+        #     this allows the specs for each Mechanism and its OutputPorts to be evaluated independently of any others
         controller_and_system_specs = all_specs_extracted_from_tuples.copy()
 
         for mech in self.mechanisms:
 
             # For each Mechanism:
             # - add its specifications to all_specs (for use below in generating exponents and weights)
-            # - extract references to Mechanisms and outputStates from any tuples, and add specs to local_specs
-            # - assign MonitoredOutputStatesOptions (if any) to option_spec, (overrides one from controller or system)
+            # - extract references to Mechanisms and outputPorts from any tuples, and add specs to local_specs
+            # - assign MonitoredOutputPortsOptions (if any) to option_spec, (overrides one from controller or system)
             # - use local_specs (which now has this Mechanism's specs with those from controller and system specs)
-            #     to assign outputStates to monitored_output_states
+            #     to assign outputPorts to monitored_output_ports
 
             local_specs = controller_and_system_specs.copy()
             option_spec = ctlr_or_sys_option_spec
@@ -2396,20 +2427,20 @@ class System(System_Base):
 
             # Get MONITOR_FOR_CONTROL specification from Mechanism
             try:
-                mech_specs = mech.paramsCurrent[MONITOR_FOR_CONTROL]
+                mech_specs = mech.monitor_for_control
 
                 if mech_specs is NotImplemented:
                     raise AttributeError
 
-                # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputState(s) should NOT be monitored
+                # Setting MONITOR_FOR_CONTROL to None specifies Mechanism's OutputPort(s) should NOT be monitored
                 if mech_specs is None:
                     raise ValueError
 
-            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputState(s) specs
+            # Mechanism's MONITOR_FOR_CONTROL is absent or NotImplemented, so proceed to parse OutputPort(s) specs
             except (KeyError, AttributeError):
                 pass
 
-            # Mechanism's MONITOR_FOR_CONTROL is set to None, so do NOT monitor any of its outputStates
+            # Mechanism's MONITOR_FOR_CONTROL is set to None, so do NOT monitor any of its outputPorts
             except ValueError:
                 continue
 
@@ -2422,145 +2453,145 @@ class System(System_Base):
                 # Extract refs from tuples and add to local_specs
                 for item in mech_specs:
                     if isinstance(item, tuple):
-                        local_specs.append(item[OUTPUT_STATE_INDEX])
+                        local_specs.append(item[OUTPUT_PORT_INDEX])
                         continue
                     local_specs.append(item)
 
-                # Get MonitoredOutputStatesOptions if specified for Mechanism, and make sure there is only one:
+                # Get MonitoredOutputPortsOptions if specified for Mechanism, and make sure there is only one:
                 #    if there is one, use it in place of any specified for controller or system
-                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputStatesOption)]
+                option_specs = [item for item in mech_specs if isinstance(item, MonitoredOutputPortsOption)]
                 if not option_specs:
                     option_spec = ctlr_or_sys_option_spec
                 elif option_specs and len(option_specs) == 1:
                     option_spec = option_specs[0]
                 else:
-                    raise SystemError("PROGRAM ERROR: More than one MonitoredOutputStatesOption specified in {}: {}".
+                    raise SystemError("PROGRAM ERROR: More than one MonitoredOutputPortsOption specified in {}: {}".
                                    format(mech.name, option_specs))
 
-            # PARSE OutputState'S SPECS
+            # PARSE OutputPort'S SPECS
 
-            for output_state in mech.output_states:
+            for output_port in mech.output_ports:
 
-                # Get MONITOR_FOR_CONTROL specification from OutputState
+                # Get MONITOR_FOR_CONTROL specification from OutputPort
                 try:
-                    output_state_specs = output_state.paramsCurrent[MONITOR_FOR_CONTROL]
-                    if output_state_specs is NotImplemented:
+                    output_port_specs = output_port.monitor_for_control
+                    if output_port_specs is NotImplemented:
                         raise AttributeError
 
-                    # Setting MONITOR_FOR_CONTROL to None specifies OutputState should NOT be monitored
-                    if output_state_specs is None:
+                    # Setting MONITOR_FOR_CONTROL to None specifies OutputPort should NOT be monitored
+                    if output_port_specs is None:
                         raise ValueError
 
-                # OutputState's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
+                # OutputPort's MONITOR_FOR_CONTROL is absent or NotImplemented, so ignore
                 except (KeyError, AttributeError):
                     pass
 
-                # OutputState's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
+                # OutputPort's MONITOR_FOR_CONTROL is set to None, so do NOT monitor it
                 except ValueError:
                     continue
 
-                # Parse specs in OutputState's MONITOR_FOR_CONTROL
+                # Parse specs in OutputPort's MONITOR_FOR_CONTROL
                 else:
 
-                    # Note: no need to look for MonitoredOutputStatesOption as it has no meaning
-                    #       as a specification for an OutputState
+                    # Note: no need to look for MonitoredOutputPortsOption as it has no meaning
+                    #       as a specification for an OutputPort
 
-                    # Add OutputState specs to all_specs and local_specs
-                    all_specs.extend(output_state_specs)
+                    # Add OutputPort specs to all_specs and local_specs
+                    all_specs.extend(output_port_specs)
 
                     # Extract refs from tuples and add to local_specs
-                    for item in output_state_specs:
+                    for item in output_port_specs:
                         if isinstance(item, tuple):
-                            local_specs.append(item[OUTPUT_STATE_INDEX])
+                            local_specs.append(item[OUTPUT_PORT_INDEX])
                             continue
                         local_specs.append(item)
 
-            # Ignore MonitoredOutputStatesOption if any outputStates are explicitly specified for the Mechanism
-            for output_state in mech.output_states:
-                if (output_state in local_specs or output_state.name in local_specs):
+            # Ignore MonitoredOutputPortsOption if any outputPorts are explicitly specified for the Mechanism
+            for output_port in mech.output_ports:
+                if (output_port in local_specs or output_port.name in local_specs):
                     option_spec = None
 
 
-            # ASSIGN SPECIFIED OUTPUT STATES FOR MECHANISM TO monitored_output_states
+            # ASSIGN SPECIFIED OUTPUTPORTS FOR MECHANISM TO monitored_output_ports
 
-            for output_state in mech.output_states:
+            for output_port in mech.output_ports:
 
-                # If OutputState is named or referenced anywhere, include it
-                if (output_state in local_specs or output_state.name in local_specs):
-                    monitored_output_states.append(output_state)
+                # If OutputPort is named or referenced anywhere, include it
+                if (output_port in local_specs or output_port.name in local_specs):
+                    monitored_output_ports.append(output_port)
                     continue
 
-    # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputStatesOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
+    # FIX: NEED TO DEAL WITH SITUATION IN WHICH MonitoredOutputPortsOptions IS SPECIFIED, BUT MECHANISM IS NEITHER IN
     # THE LIST NOR IS IT A TERMINAL MECHANISM
 
                 # If:
                 #   Mechanism is named or referenced in any specification
-                #   or a MonitoredOutputStatesOptions value is in local_specs (i.e., was specified for a Mechanism)
+                #   or a MonitoredOutputPortsOptions value is in local_specs (i.e., was specified for a Mechanism)
                 #   or it is a terminal Mechanism
                 elif (mech.name in local_specs or mech in local_specs or
-                              any(isinstance(spec, MonitoredOutputStatesOption) for spec in local_specs) or
+                              any(isinstance(spec, MonitoredOutputPortsOption) for spec in local_specs) or
                               mech in self.terminal_mechanisms.mechanisms):
                     #
                     if (not (mech.name in local_specs or mech in local_specs) and
                             not mech in self.terminal_mechanisms.mechanisms):
                         continue
 
-                    # If MonitoredOutputStatesOption is PRIMARY_OUTPUT_STATES and OutputState is primary, include it
-                    if option_spec is MonitoredOutputStatesOption.PRIMARY_OUTPUT_STATES:
-                        if output_state is mech.output_state:
-                            monitored_output_states.append(output_state)
+                    # If MonitoredOutputPortsOption is PRIMARY_OUTPUT_PORTS and OutputPort is primary, include it
+                    if option_spec is MonitoredOutputPortsOption.PRIMARY_OUTPUT_PORTS:
+                        if output_port is mech.output_port:
+                            monitored_output_ports.append(output_port)
                             continue
-                    # If MonitoredOutputStatesOption is ALL_OUTPUT_STATES, include it
-                    elif option_spec is MonitoredOutputStatesOption.ALL_OUTPUT_STATES:
-                        monitored_output_states.append(output_state)
+                    # If MonitoredOutputPortsOption is ALL_OUTPUT_PORTS, include it
+                    elif option_spec is MonitoredOutputPortsOption.ALL_OUTPUT_PORTS:
+                        monitored_output_ports.append(output_port)
                     elif mech.name in local_specs or mech in local_specs:
-                        if output_state is mech.output_state:
-                            monitored_output_states.append(output_state)
+                        if output_port is mech.output_port:
+                            monitored_output_ports.append(output_port)
                             continue
                     elif option_spec is None:
                         continue
                     else:
                         raise SystemError("PROGRAM ERROR: unrecognized specification of MONITOR_FOR_CONTROL for "
                                        "{0} of {1}".
-                                       format(output_state.name, mech.name))
+                                       format(output_port.name, mech.name))
 
 
         # ASSIGN EXPONENTS, WEIGHTS and MATRICES
 
         # Get and assign specification of weights, exponents and matrices
-        #    for Mechanisms or OutputStates specified in tuples
-        output_state_tuples = [MonitoredOutputStateTuple(output_state=item, weight=None, exponent=None, matrix=None)
-                               for item in monitored_output_states]
+        #    for Mechanisms or OutputPorts specified in tuples
+        output_port_tuples = [MonitoredOutputPortTuple(output_port=item, weight=None, exponent=None, matrix=None)
+                               for item in monitored_output_ports]
         for spec in all_specs:
-            if isinstance(spec, MonitoredOutputStateTuple):
-                object_spec = spec.output_state
-                # For each OutputState in monitored_output_states
-                for i, output_state_tuple in enumerate(output_state_tuples):
-                    output_state = output_state_tuple.output_state
-                    # If either that OutputState or its owner is the object specified in the tuple
-                    if (output_state is object_spec
-                        or output_state.name is object_spec
-                        or output_state.owner is object_spec):
-                        # Assign the weight, exponent and matrix specified in the spec to the output_state_tuple
-                        # (can't just assign spec, as its output_state entry may be an unparsed string rather than
-                        #  an actual OutputState)
-                        output_state_tuples[i] = MonitoredOutputStateTuple(output_state=output_state,
+            if isinstance(spec, MonitoredOutputPortTuple):
+                object_spec = spec.output_port
+                # For each OutputPort in monitored_output_ports
+                for i, output_port_tuple in enumerate(output_port_tuples):
+                    output_port = output_port_tuple.output_port
+                    # If either that OutputPort or its owner is the object specified in the tuple
+                    if (output_port is object_spec
+                        or output_port.name is object_spec
+                        or output_port.owner is object_spec):
+                        # Assign the weight, exponent and matrix specified in the spec to the output_port_tuple
+                        # (can't just assign spec, as its output_port entry may be an unparsed string rather than
+                        #  an actual OutputPort)
+                        output_port_tuples[i] = MonitoredOutputPortTuple(output_port=output_port,
                                                                            weight=spec.weight,
                                                                            exponent=spec.exponent,
                                                                            matrix=spec.matrix)
-        return output_state_tuples
+        return output_port_tuples
 
-    def _validate_monitored_states_in_system(self, monitored_states, context=None):
-        for spec in monitored_states:
-            # if not any((spec is mech.name or spec in mech.output_states.names)
-            if not any((spec in {mech, mech.name} or spec in mech.output_states or spec in mech.output_states.names)
+    def _validate_monitored_ports_in_system(self, monitored_ports, context=None):
+        for spec in monitored_ports:
+            # if not any((spec is mech.name or spec in mech.output_ports.names)
+            if not any((spec in {mech, mech.name} or spec in mech.output_ports or spec in mech.output_ports.names)
                        for mech in self.mechanisms):
-                if isinstance(spec, OutputState):
-                    spec_str = "{} {} of {}".format(spec.name, OutputState.__name__, spec.owner.name)
+                if isinstance(spec, OutputPort):
+                    spec_str = "{} {} of {}".format(spec.name, OutputPort.__name__, spec.owner.name)
                 else:
                     spec_str = spec
                 raise SystemError("Specification of {} arg for {} appears to be a list of "
-                                            "Mechanisms and/or OutputStates to be monitored, but one "
+                                            "Mechanisms and/or OutputPorts to be monitored, but one "
                                             "of them ({}) is in a different System".
                                             format(OBJECTIVE_MECHANISM, self.name, spec_str))
 
@@ -2569,7 +2600,7 @@ class System(System_Base):
 
         Generate list from:
            ControlSignal specifications passed in from the **control_signals** argument.
-           ParameterStates of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
+           ParameterPorts of the System's Mechanisms that have been assigned ControlProjections with deferred_init();
                Note: this includes any for which a ControlSignal rather than a ControlProjection
                      was used to specify control for a parameter (e.g., in a 2-item tuple specification for the
                      parameter); the initialization of the ControlProjection and, if specified, the ControlSignal
@@ -2577,11 +2608,14 @@ class System(System_Base):
         """
         control_signal_specs = control_signals or []
         for mech in self.mechanisms:
-            for parameter_state in mech._parameter_states:
-                for projection in parameter_state.mod_afferents:
+            for parameter_port in mech._parameter_ports:
+                for projection in parameter_port.mod_afferents:
                     # If Projection was deferred for init, instantiate its ControlSignal and then initialize it
                     if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                        proj_control_signal_specs = projection.control_signal_params or {}
+                        try:
+                            proj_control_signal_specs = projection._init_args['control_signal_params'] or {}
+                        except (KeyError, TypeError):
+                            proj_control_signal_specs = {}
                         proj_control_signal_specs.update({PROJECTIONS: [projection]})
                         control_signal_specs.append(proj_control_signal_specs)
         return control_signal_specs
@@ -2590,7 +2624,7 @@ class System(System_Base):
         if control_signals:
             for control_signal in control_signals:
                 for control_projection in control_signal.efferents:
-                    if not any(control_projection.receiver in mech.parameter_states for mech in self.mechanisms):
+                    if not any(control_projection.receiver in mech.parameter_ports for mech in self.mechanisms):
                         raise SystemError("A parameter controlled by a ControlSignal of a controller "
                                           "being assigned to {} is not in that System".format(self.name))
 
@@ -2598,9 +2632,9 @@ class System(System_Base):
 
         condition_set = {}
         for item in self.execution_list:
-            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler_processing.conditions:
+            if hasattr(item, CONDITION) and item.condition and not item in self.scheduler.conditions:
                 condition_set[item] = item.condition
-        self.scheduler_processing.add_condition_set(condition_set)
+        self.scheduler.add_condition_set(condition_set)
 
         # FIX: DEAL WITH LEARNING PROJECTIONS HERE (ADD CONDITIONS ATTRIBUTE?)
         condition_set = {}
@@ -2687,12 +2721,12 @@ class System(System_Base):
         Returns
         -------
         output values of System : 3d ndarray
-            Each item is a 2d array that contains arrays for each OutputState.value of each `TERMINAL` Mechanism
+            Each item is a 2d array that contains arrays for each OutputPort.value of each `TERMINAL` Mechanism
 
         """
 
-        if self.scheduler_processing is None:
-            self.scheduler_processing = Scheduler(system=self, default_execution_id=self.default_execution_id)
+        if self.scheduler is None:
+            self.scheduler = Scheduler(system=self, default_execution_id=self.default_execution_id)
 
         if self.scheduler_learning is None:
             self.scheduler_learning = Scheduler(graph=self.learning_execution_graph, default_execution_id=self.default_execution_id)
@@ -2724,7 +2758,7 @@ class System(System_Base):
             self._report_process_output = any(process.reportOutputPref for process in self.processes)
 
         # FIX: MOVE TO RUN??
-        # ASSIGN INPUTS TO SystemInputStates
+        # ASSIGN INPUTS TO SystemInputPorts
         #    that will be used as the input to the MappingProjection to each ORIGIN mechanism
         num_origin_mechs = len(list(self.origin_mechanisms))
 
@@ -2754,27 +2788,27 @@ class System(System_Base):
                                       "its number of origin Mechanisms ({2})".
                                       format(num_inputs, self.name,  num_origin_mechs ))
 
-            # Get SystemInputState that projects to each ORIGIN Mechanism and assign input to it
+            # Get SystemInputPort that projects to each ORIGIN Mechanism and assign input to it
             for origin_mech in self.origin_mechanisms:
-                # For each inputState of the ORIGIN mechanism
+                # For each inputPort of the ORIGIN mechanism
 
-                for j in range(len(origin_mech.external_input_states)):
-                   # Get the input from each Projection to that InputState (from the corresponding SystemInputState)
-                    system_input_state = next((projection.sender
-                                               for projection in origin_mech.input_states[j].path_afferents
-                                               if isinstance(projection.sender, SystemInputState)), None)
+                for j in range(len(origin_mech.external_input_ports)):
+                   # Get the input from each Projection to that InputPort (from the corresponding SystemInputPort)
+                    system_input_port = next((projection.sender
+                                               for projection in origin_mech.input_ports[j].path_afferents
+                                               if isinstance(projection.sender, SystemInputPort)), None)
 
-                    if system_input_state:
+                    if system_input_port:
                         if isinstance(input, dict):
-                            system_input_state.parameters.value._set(input[origin_mech][j], context)
+                            system_input_port.parameters.value._set(input[origin_mech][j], context)
 
                         else:
-                            system_input_state.parameters.value._set(input[j], context)
+                            system_input_port.parameters.value._set(input[j], context)
                     else:
-                        logger.warning("Failed to find expected SystemInputState "
-                                       "for {} at input state number ({}), ({})".
-                              format(origin_mech.name, j+1, origin_mech.input_states[j]))
-                        # raise SystemError("Failed to find expected SystemInputState for {}".format(origin_mech.name))
+                        logger.warning("Failed to find expected SystemInputPort "
+                                       "for {} at InputPort number ({}), ({})".
+                              format(origin_mech.name, j + 1, origin_mech.input_ports[j]))
+                        # raise SystemError("Failed to find expected SystemInputPort for {}".format(origin_mech.name))
 
         self.input = input
 
@@ -2817,7 +2851,7 @@ class System(System_Base):
         )
         context.remove_flag(ContextFlags.PROCESSING)
 
-        outcome = self.terminal_mechanisms.get_output_state_values(context)
+        outcome = self.terminal_mechanisms.get_output_port_values(context)
 
         if self.recordSimulationPref and ContextFlags.SIMULATION in context.execution_phase:
             self.simulation_results.append(outcome)
@@ -2827,9 +2861,10 @@ class System(System_Base):
         # Execute learning except for simulation runs
         if ContextFlags.SIMULATION not in context.execution_phase and self.learning:
             context.add_flag(ContextFlags.LEARNING)
+            context.add_flag(ContextFlags.LEARNING_MODE)
             self._execute_learning(target=target, context=context)
-
             context.remove_flag(ContextFlags.LEARNING)
+            context.add_flag(ContextFlags.LEARNING_MODE)
 
         # EXECUTE CONTROLLER
         # FIX: 1) RETRY APPENDING TO EXECUTE LIST AND COMPARING TO THIS VERSION
@@ -2870,12 +2905,12 @@ class System(System_Base):
         # Only update Mechanism on time_step(s) determined by its phaseSpec (specified in Mechanism's Process entry)
         # FIX: NEED TO IMPLEMENT FRACTIONAL UPDATES (IN Mechanism.update())
         # FIX:    FOR phaseSpec VALUES THAT HAVE A DECIMAL COMPONENT
-        if self.scheduler_processing is None:
+        if self.scheduler is None:
             raise SystemError('System.py:_execute_processing - {0}\'s scheduler is None, '
                               'must be initialized before execution'.format(self.name))
         logger.debug('{0}.scheduler processing termination conditions: {1}'.format(self, termination_processing))
 
-        for next_execution_set in self.scheduler_processing.run(context=context, termination_conds=termination_processing):
+        for next_execution_set in self.scheduler.run(context=context, termination_conds=termination_processing):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
@@ -2893,7 +2928,7 @@ class System(System_Base):
                 execution_runtime_params = {}
                 if mechanism in runtime_params:
                     for param in runtime_params[mechanism]:
-                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler_processing, context=context):
+                        if runtime_params[mechanism][param][1].is_satisfied(scheduler=self.scheduler, context=context):
                             execution_runtime_params[param] = runtime_params[mechanism][param][0]
 
                 # FIX: DO THIS LOCALLY IN LearningMechanism?? IF SO, NEEDS TO BE ABLE TO GET EXECUTION_ID
@@ -2966,17 +3001,17 @@ class System(System_Base):
         if isinstance(target, dict):
             for i in range(len(self.target_mechanisms)):
 
-                terminal_mechanism = self.target_mechanisms[i].input_states[SAMPLE].path_afferents[0].sender.owner
+                terminal_mechanism = self.target_mechanisms[i].input_ports[SAMPLE].path_afferents[0].sender.owner
                 target_value = target[terminal_mechanism]
                 if callable(target_value):
                     val = call_with_pruned_args(target_value, context=context, composition=self)
-                    self.target_input_states[i].parameters.value._set(val, context)
+                    self.target_input_ports[i].parameters.value._set(val, context)
                 else:
-                    self.target_input_states[i].parameters.value._set(target_value, context)
+                    self.target_input_ports[i].parameters.value._set(target_value, context)
 
         elif isinstance(target, (list, np.ndarray)):
             for i in range(len(self.target_mechanisms)):
-                self.target_input_states[i].parameters.value._set(target[i], context)
+                self.target_input_ports[i].parameters.value._set(target[i], context)
 
         # THEN, execute all components involved in learning
         if self.scheduler_learning is None:
@@ -2995,9 +3030,9 @@ class System(System_Base):
 
             for component in next_execution_set:
                 logger.debug('\tRunning component {0}'.format(component))
-
+                context.add_flag(ContextFlags.LEARNING_MODE)
                 context.execution_phase = ContextFlags.LEARNING
-
+                
                 if isinstance(component, Mechanism):
                     params = None
 
@@ -3022,7 +3057,7 @@ class System(System_Base):
 
                 elif isinstance(component, MappingProjection):
                     processes = list(component.sender.owner.processes.keys())
-                    component._parameter_states[MATRIX]._update(context=context)
+                    component._parameter_ports[MATRIX]._update(context=context)
 
                 if not self._animate is False:
                     if (self._animate_unit is COMPONENT and
@@ -3035,8 +3070,9 @@ class System(System_Base):
                 # print ("EXECUTING LEARNING UPDATES: ", component.name)
 
                 # # TEST PRINT LEARNING:
-                # print(component._parameter_states[MATRIX].value)
-
+                # print(component._parameter_ports[MATRIX].value)
+                context.remove_flag(ContextFlags.LEARNING_MODE)
+        
         # FINALLY report outputs
         if self._report_system_output and self._report_process_output:
             # Report learning for target_nodes (and the processes to which they belong)
@@ -3052,7 +3088,7 @@ class System(System_Base):
                       # format(append_type_to_name(target_mech),
                       format(target_mech.name,
                              re.sub(r'[\[,\],\n]','',str([float("{:0.3}".format(float(i)))
-                                                         for i in target_mech.output_state.parameters.value._get(context)])),
+                                                         for i in target_mech.output_port.parameters.value._get(context)])),
                              ))
                              # process_names))
 
@@ -3295,7 +3331,7 @@ class System(System_Base):
                                     format='GIF',
                                     save_all=True,
                                     append_images=self._animation[1:],
-                                    duration=self._image_duration*1000,
+                                    duration=self._image_duration * 1000,
                                     loop=0)
             print('\nSaved movie for {}: {}'.format(self.name, self._movie_filename))
             if self._show_animation:
@@ -3316,7 +3352,7 @@ class System(System_Base):
         # replace this with updated Clock
         if False:
             print("\n\'{}\'{} executing with: **** (Time: {}) ".
-                  format(self.name, system_string, self.scheduler_processing.clock.simple_time))
+                  format(self.name, system_string, self.scheduler.clock.simple_time))
             processes = list(process.name for process in self.processes)
             print("- processes: {}".format(processes))
             print("self.input = ", self.input)
@@ -3328,9 +3364,9 @@ class System(System_Base):
 
         else:
             try:
-                time = self.scheduler_processing.get_clock(context).simple_time
+                time = self.scheduler.get_clock(context).simple_time
             except KeyError:
-                time = self.scheduler_processing.clock.simple_time
+                time = self.scheduler.clock.simple_time
 
             print("\n\'{}\'{} executing ********** (Time: {}) ".
                   format(self.name, system_string, time))
@@ -3344,16 +3380,16 @@ class System(System_Base):
         else:
             system_string = ' system'
 
-        # Print output value of primary (first) outputState of each terminal Mechanism in System
-        # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputStates)
-        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler_processing.get_clock(context).simple_time))
+        # Print output value of primary (first) outputPort of each terminal Mechanism in System
+        # IMPLEMENTATION NOTE:  add options for what to print (primary, all or monitored outputPorts)
+        print("\n\'{}\'{} completed ***********(Time: {})".format(self.name, system_string, self.scheduler.get_clock(context).simple_time))
         if self.learning:
             from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import MSE
             for mech in self.target_mechanisms:
-                if not MSE in mech.output_states:
+                if not MSE in mech.output_ports:
                     continue
                 print("\n- MSE: {:0.3}".
-                      format(float(mech.output_states[MSE].parameters.value._get(context))))
+                      format(float(mech.output_ports[MSE].parameters.value._get(context))))
 
 
     # TBI:
@@ -3432,7 +3468,7 @@ class System(System_Base):
 
 
         # Sort by phaseSpec and, within each phase, by mechanism name
-#        sorted_execution_list.sort(key=lambda object_item: object_item.phase)
+        # sorted_execution_list.sort(key=lambda object_item: object_item.phase)
 
 
         # Add controller to execution list for printing if enabled
@@ -3458,9 +3494,9 @@ class System(System_Base):
 
             TERMINAL_MECHANISMS: list of `TERMINAL` Mechanisms;
 
-            OUTPUT_STATE_NAMES: list of `OutputState` names corresponding to 1D arrays in output_value_array;
+            OUTPUT_PORT_NAMES: list of `OutputPort` names corresponding to 1D arrays in output_value_array;
 
-            OUTPUT_VALUE_ARRAY: 3D ndarray of 2D arrays of output.value arrays of OutputStates for all `TERMINAL`
+            OUTPUT_VALUE_ARRAY: 3D ndarray of 2D arrays of output.value arrays of OutputPorts for all `TERMINAL`
             Mechanisms;
 
             NUM_PHASES_PER_TRIAL: number of phases required to execute all Mechanisms in the system;
@@ -3474,7 +3510,7 @@ class System(System_Base):
 
             CONTROL_MECHANISM: `ControlMechanism <ControlMechanism>` of the System;
 
-            CONTROL_PROJECTION_RECEIVERS: list of `ParameterStates <ParameterState>` that receive learning projections.
+            CONTROL_PROJECTION_RECEIVERS: list of `ParameterPorts <ParameterPort>` that receive learning projections.
 
         Returns
         -------
@@ -3492,12 +3528,12 @@ class System(System_Base):
             recurrent_init_array.append(mech.value)
         recurrent_init_array = np.array(recurrent_init_array)
 
-        output_state_names = []
+        output_port_names = []
         output_value_array = []
         for mech in list(self.terminal_mechanisms.mechanisms):
             output_value_array.append(mech.output_values)
-            for name in mech.output_states:
-                output_state_names.append(name)
+            for name in mech.output_ports:
+                output_port_names.append(name)
         output_value_array = np.array(output_value_array)
 
         from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
@@ -3505,18 +3541,18 @@ class System(System_Base):
         learning_projections = []
         controlled_parameters = []
         for mech in list(self.mechanisms):
-            for parameter_state in mech._parameter_states:
+            for parameter_port in mech._parameter_ports:
                 try:
-                    for projection in parameter_state.mod_afferents:
+                    for projection in parameter_port.mod_afferents:
                         if isinstance(projection, ControlProjection):
-                            controlled_parameters.append(parameter_state)
+                            controlled_parameters.append(parameter_port)
                 except AttributeError:
                     pass
-            for output_state in mech.output_states:
+            for output_port in mech.output_ports:
                 try:
-                    for projection in output_state.efferents:
-                        for parameter_state in projection.paramaterStates:
-                            for sender in parameter_state.mod_afferents:
+                    for projection in output_port.efferents:
+                        for parameter_port in projection.paramaterStates:
+                            for sender in parameter_port.mod_afferents:
                                 if isinstance(sender, LearningProjection):
                                     learning_projections.append(projection)
                 except AttributeError:
@@ -3530,7 +3566,7 @@ class System(System_Base):
             RECURRENT_MECHANISMS: self.recurrent_init_mechanisms,
             RECURRENT_INIT_ARRAY: recurrent_init_array,
             TERMINAL_MECHANISMS: self.terminal_mechanisms.mechanisms,
-            OUTPUT_STATE_NAMES: output_state_names,
+            OUTPUT_PORT_NAMES: output_port_names,
             OUTPUT_VALUE_ARRAY: output_value_array,
             NUM_PHASES_PER_TRIAL: self.numPhases,
             LEARNING_MECHANISMS: self.learning_mechanisms,
@@ -3596,11 +3632,11 @@ class System(System_Base):
 
     @property
     def termination_processing(self):
-        return self.scheduler_processing.termination_conds
+        return self.scheduler.termination_conds
 
     @termination_processing.setter
     def termination_processing(self, termination_conds):
-        self.scheduler_processing.termination_conds = termination_conds
+        self.scheduler.termination_conds = termination_conds
 
 
     @property
@@ -3700,7 +3736,7 @@ class System(System_Base):
 
     def _get_label(self, item, show_dimensions=None, show_roles=None):
 
-        # For Mechanisms, show length of each InputState and OutputState
+        # For Mechanisms, show length of each InputPort and OutputPort
         if isinstance(item, Mechanism):
             if show_roles:
                 try:
@@ -3716,10 +3752,10 @@ class System(System_Base):
                 name = item.name
 
             if show_dimensions in {ALL, MECHANISMS}:
-                input_str = "in ({})".format(",".join(str(input_state.socket_width)
-                                                      for input_state in item.input_states))
-                output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_state.value)))
-                                                        for output_state in item.output_states))
+                input_str = "in ({})".format(",".join(str(input_port.socket_width)
+                                                      for input_port in item.input_ports))
+                output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_port.value)))
+                                                        for output_port in item.output_ports))
                 return "{}\n{}\n{}".format(output_str, name, input_str)
             else:
                 return name
@@ -3740,7 +3776,7 @@ class System(System_Base):
             else:
                 return item.name
 
-        elif isinstance(item, (System, SystemInputState)):
+        elif isinstance(item, (System, SystemInputPort)):
             if "SYSTEM" in item.name.upper():
                 return item.name + ' Target Input'
             else:
@@ -3792,8 +3828,8 @@ class System(System_Base):
         Displays a graph showing the structure of the System (based on the `System's graph <System.graph>`).
         By default, only the primary processing Components are shown, and Mechanisms are displayed as simple nodes.
         However, the **show_mechanism_structure** argument can be used to display more detailed information about
-        each Mechanism, including its States and, optionally, the `function <Component.function>` and `value
-        <Component.value>` of the Mechanism and each of its States (using the **show_functions** and **show_values**
+        each Mechanism, including its Ports and, optionally, the `function <Component.function>` and `value
+        <Component.value>` of the Mechanism and each of its Ports (using the **show_functions** and **show_values**
         arguments, respectively).  The **show_dimension** argument can be used to display the dimensions of each
         Mechanism and Projection.  The **show_processes** argument arranges Mechanisms and Projections into the
         Processes to which they belong. The **show_learning** and **show_control** arguments can be used to
@@ -3801,7 +3837,7 @@ class System(System_Base):
         System's `controller <System_Control>`.
 
         `Mechanisms <Mechanism>` are always displayed as nodes.  If **show_mechanism_structure** is `True`,
-        Mechanism nodes are subdivided into sections for its States with information about each determined by the
+        Mechanism nodes are subdivided into sections for its Ports with information about each determined by the
         **show_values** and **show_functions** specifications.  Otherwise, Mechanism nodes are simple ovals.
         `ORIGIN` and  `TERMINAL` Mechanisms of the System are displayed with thicker borders in a colors specified
         for each. `Projections <Projection>` are displayed as labelled arrows, unless **show_learning** is specified,
@@ -3839,14 +3875,14 @@ class System(System_Base):
         show_graph method::
 
             import psyneulink as pnl
-            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_states=[pnl.RESULTS, pnl.OUTPUT_MEAN])
+            mech_1 = pnl.TransferMechanism(name='Mech 1', size=3, output_ports=[pnl.RESULT, pnl.MEAN])
             mech_2 = pnl.TransferMechanism(name='Mech 2', size=5)
             mech_3 = pnl.TransferMechanism(name='Mech 3', size=2, function=pnl.Logistic(gain=pnl.CONTROL))
             my_process_A = pnl.Process(pathway=[mech_1, mech_3], learning=pnl.ENABLED)
             my_process_B = pnl.Process(pathway=[mech_2, mech_3])
             my_system = pnl.System(processes=[my_process_A, my_process_B],
                                    controller=pnl.ControlMechanism(name='my_system Controller'),
-                                   monitor_for_control=[(pnl.OUTPUT_MEAN, mech_1)],
+                                   monitor_for_control=[(pnl.MEAN, mech_1)],
                                    enable_controller=True)
 
         .. _System_show_graph_figure:
@@ -3880,28 +3916,28 @@ class System(System_Base):
             Processes;  these represent intersections of Processes within the System.
 
         show_mechanism_structure : bool, VALUES, FUNCTIONS or ALL : default False
-            specifies whether or not to show a detailed representation of each `Mechanism` in the graph, including its
-            `States`;  can have the following settings:
+            specifies whether or not to show a detailed representation of each `Mechanism <Mechanism>` in the graph,
+            including its `Ports`;  can have the following settings:
 
-            * `True` -- shows States of Mechanism, but not information about the `value
-              <Component.value>` or `function <Component.function>` of the Mechanism or its States.
+            * `True` -- shows Ports of Mechanism, but not information about the `value
+              <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
 
             * *VALUES* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States.
+              <Port_Base.value>` of each of its Ports.
 
             * *LABELS* -- shows the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <State_Base.value>` of each of its States, using any labels for the values of InputStates and
-              OutputStates specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
+              <Port_Base.value>` of each of its Ports, using any labels for the values of InputPorts and
+              OutputPorts specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
               `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
 
             * *FUNCTIONS* -- shows the `function <Mechanism_Base.function>` of the Mechanism and the `function
-              <State_Base.function>` of its InputStates and OutputStates.
+              <Port_Base.function>` of its InputPorts and OutputPorts.
 
             * *ROLES* -- shows the `role <System_Mechanisms>` of the Mechanism in the System in square brackets
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows both `value <Component.value>` and `function <Component.function>` of the Mechanism and
-              its States (using labels for the values, if specified;  see above).
+              its Ports (using labels for the values, if specified;  see above).
 
             Any combination of the settings above can also be specified in a list that is assigned to
             show_mechanism_structure
@@ -3909,7 +3945,7 @@ class System(System_Base):
         COMMENT:
             and, optionally, the `function <Component.function>` and `value <Component.value>` of each (these
             can be specified using the **show_functions** and **show_values** arguments.  If this option is
-            specified, Projections are connected to and from the State that is the `sender <Projection_Base.sender>`
+            specified, Projections are connected to and from the Port that is the `sender <Projection_Base.sender>`
             or `receiver <Projection_Base.receiver>` of each.
         COMMENT
 
@@ -3919,12 +3955,12 @@ class System(System_Base):
 
         COMMENT:
         show_functions : bool : default False
-            specifies whether or not to show `function <Component.function>` of Mechanisms and their States in the
+            specifies whether or not to show `function <Component.function>` of Mechanisms and their Ports in the
             graph (enclosed by parentheses);  this requires **show_mechanism_structure** to be specified as `True`
             to take effect.
 
         show_values : bool : default False
-            specifies whether or not to show `value <Component.value>` of Mechanisms and their States in the graph
+            specifies whether or not to show `value <Component.value>` of Mechanisms and their Ports in the graph
             (prefixed by "=");  this requires **show_mechanism_structure** to be specified as `True` to take effect.
         COMMENT
 
@@ -3957,11 +3993,11 @@ class System(System_Base):
             specifies whether or not to show dimensions of Mechanisms (and/or MappingProjections when show_learning
             is `True`);  can have the following settings:
 
-            * *MECHANISMS* -- shows `Mechanism` input and output dimensions.  Input dimensions are shown in parentheses
-              below the name of the Mechanism; each number represents the dimension of the `variable
-              <InputState.variable>` for each `InputState` of the Mechanism; Output dimensions are shown above
-              the name of the Mechanism; each number represents the dimension for `value <OutputState.value>` of each
-              of `OutputState` of the Mechanism.
+            * *MECHANISMS* -- shows `Mechanism <Mechanism>` input and output dimensions.  Input dimensions are shown
+              in parentheses below the name of the Mechanism; each number represents the dimension of the `variable
+              <InputPort.variable>` for each `InputPort` of the Mechanism; Output dimensions are shown above
+              the name of the Mechanism; each number represents the dimension for `value <OutputPort.value>` of each
+              of `OutputPort` of the Mechanism.
 
             * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
               shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
@@ -4021,7 +4057,7 @@ class System(System_Base):
 
         """
 
-        # if active_item and self.scheduler_processing.clock.time.trial >= self._animate_num_trials:
+        # if active_item and self.scheduler.clock.time.trial >= self._animate_num_trials:
         #     return
 
         # IMPLEMENTATION NOTE:
@@ -4117,13 +4153,13 @@ class System(System_Base):
                         penwidth=rcvr_penwidth)
 
             # handle auto-recurrent projections
-            for input_state in rcvr.input_states:
-                for proj in input_state.path_afferents:
+            for input_port in rcvr.input_ports:
+                for proj in input_port.path_afferents:
                     if proj.sender.owner is not rcvr:
                         continue
                     if show_mechanism_structure:
-                        sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputState.__name__, proj.sender.name)
-                        proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                        sndr_proj_label = '{}:{}-{}'.format(rcvr_label, OutputPort.__name__, proj.sender.name)
+                        proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputPort.__name__, proj.receiver.name)
                     else:
                         sndr_proj_label = proc_mech_rcvr_label = rcvr_label
                     if show_projection_labels:
@@ -4191,16 +4227,16 @@ class System(System_Base):
                     sndr_label = self._get_label(sndr, show_dimensions, show_roles)
 
                     # find edge name
-                    for output_state in sndr.output_states:
-                        projs = output_state.efferents
+                    for output_port in sndr.output_ports:
+                        projs = output_port.efferents
                         for proj in projs:
                             if proj.receiver.owner == rcvr:
                                 if show_mechanism_structure:
                                     sndr_proj_label = '{}:{}-{}'.\
-                                        format(sndr_label, OutputState.__name__, proj.sender.name)
+                                        format(sndr_label, OutputPort.__name__, proj.sender.name)
                                     proc_mech_rcvr_label = '{}:{}-{}'.\
                                         format(rcvr_label, proj.receiver.__class__.__name__, proj.receiver.name)
-                                        # format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                        # format(rcvr_label, InputPort.__name__, proj.receiver.name)
                                 else:
                                     sndr_proj_label = sndr_label
                                     proc_mech_rcvr_label = rcvr_label
@@ -4285,8 +4321,8 @@ class System(System_Base):
                                 sg.node(proc_mech_label, shape=projection_shape)
                                 # G.edge(sndr_label, proc_mech_label, arrowhead='none')
                                 # G.edge(proc_mech_label, rcvr_label)
-                                sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputState.__name__, proj.sender.name)
-                                proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputState.__name__, proj.receiver.name)
+                                sndr_proj_label = '{}:{}-{}'.format(sndr_label, OutputPort.__name__, proj.sender.name)
+                                proc_mech_rcvr_label = '{}:{}-{}'.format(rcvr_label, InputPort.__name__, proj.receiver.name)
                                 G.edge(sndr_proj_label, proc_mech_label, arrowhead='none')
                                 G.edge(proc_mech_label, proc_mech_rcvr_label)
                             else:
@@ -4337,12 +4373,12 @@ class System(System_Base):
                         and rcvr._role is LEARNING
                         and show_learning is ALL):
                     # Projections to ObjectiveMechanism
-                    for input_state in rcvr.input_states:
-                        for proj in input_state.path_afferents:
+                    for input_port in rcvr.input_ports:
+                        for proj in input_port.path_afferents:
 
                             smpl_or_trgt_src = proj.sender.owner
 
-                            # Skip any Projections from ProcesInputStates
+                            # Skip any Projections from ProcesInputPorts
                             if isinstance(smpl_or_trgt_src, Process):
                                 continue
 
@@ -4385,7 +4421,7 @@ class System(System_Base):
                             sndr_label = self._get_label(smpl_or_trgt_src, show_dimensions, show_roles)
                             rcvr_label = self._get_label(proj.receiver.owner, show_dimensions, show_roles)
                             if show_mechanism_structure:
-                                proc_mech_rcvr_label = rcvr_label +':'+ InputState.__name__ +'-'+ proj.receiver.name
+                                proc_mech_rcvr_label = rcvr_label +':' + InputPort.__name__ + '-' + proj.receiver.name
                             else:
                                 proc_mech_rcvr_label = rcvr_label
 
@@ -4395,8 +4431,8 @@ class System(System_Base):
 
             # Implement edges for Projections to LearningMechanism
             #    from other LearningMechanisms or ObjectiveMechanism, and from ProcessingMechanisms if 'ALL' is set
-            for input_state in rcvr.input_states:
-                for proj in input_state.path_afferents:
+            for input_port in rcvr.input_ports:
+                for proj in input_port.path_afferents:
 
                     if proj.receiver.owner in active_items:
                         if active_color is BOLD:
@@ -4427,8 +4463,8 @@ class System(System_Base):
                         else:
                             edge_label = ''
                         if show_mechanism_structure:
-                            G.edge(sndr_label + ':' + OutputState.__name__ + '-' + proj.sender.name,
-                                   rcvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                            G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + proj.sender.name,
+                                   rcvr_label + ':' + InputPort.__name__ + '-' + proj.receiver.name,
                                    label=edge_label, color=learning_proj_color, penwidth=learning_proj_width)
                         else:
                             G.edge(sndr_label, rcvr_label, label=edge_label,
@@ -4449,7 +4485,7 @@ class System(System_Base):
             # If Projection has a LearningProjection from a LearningMechanism
             #    that executes in the execution_phase, include it here
             if proj_learning_in_execution_phase:
-                learning_mech = proj.parameter_states[MATRIX].mod_afferents[0].sender.owner
+                learning_mech = proj.parameter_ports[MATRIX].mod_afferents[0].sender.owner
                 learning_rcvrs = [learning_mech, proj]
                 learning_graph={proj:{learning_mech}}
                 for lr in learning_rcvrs:
@@ -4503,16 +4539,16 @@ class System(System_Base):
             else:
                 learning_proj_color = learning_color
                 learning_proj_width = str(default_width)
-            sndrs = proj._parameter_states['matrix'].mod_afferents # GET ALL LearningProjections to proj
+            sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
             for sndr in sndrs:
                 sndr_label = self._get_label(sndr.sender.owner, show_dimensions, show_roles)
                 rcvr_label = self._get_label(proj, show_dimensions, show_roles)
                 if show_projection_labels:
-                    edge_label = proj._parameter_states['matrix'].mod_afferents[0].name
+                    edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
                 else:
                     edge_label = ''
                 if show_mechanism_structure:
-                    G.edge(sndr_label + ':' + OutputState.__name__ + '-' + 'LearningSignal',
+                    G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
                            rcvr_label,
                            label=edge_label,
                            color=learning_proj_color, penwidth=learning_proj_width)
@@ -4542,7 +4578,7 @@ class System(System_Base):
                 return
 
             # get projection from ObjectiveMechanism to ControlMechanism
-            objmech_ctlr_proj = controller.input_state.path_afferents[0]
+            objmech_ctlr_proj = controller.input_port.path_afferents[0]
             if controller in active_items:
                 if active_color is BOLD:
                     objmech_ctlr_proj_color = control_color
@@ -4596,8 +4632,8 @@ class System(System_Base):
             else:
                 edge_label = ''
             if show_mechanism_structure:
-                obj_to_ctrl_label = objmech_label + ':' + OutputState.__name__ + '-' + objmech_ctlr_proj.sender.name
-                ctlr_from_obj_label = ctlr_label + ':' + InputState.__name__ + '-' + objmech_ctlr_proj.receiver.name
+                obj_to_ctrl_label = objmech_label + ':' + OutputPort.__name__ + '-' + objmech_ctlr_proj.sender.name
+                ctlr_from_obj_label = ctlr_label + ':' + InputPort.__name__ + '-' + objmech_ctlr_proj.receiver.name
             else:
                 obj_to_ctrl_label = objmech_label
                 ctlr_from_obj_label = ctlr_label
@@ -4635,9 +4671,9 @@ class System(System_Base):
                     else:
                         edge_label = ''
                     if show_mechanism_structure:
-                        ctl_sndr_label = ctlr_label + ':' + OutputState.__name__ + '-' + control_signal.name
+                        ctl_sndr_label = ctlr_label + ':' + OutputPort.__name__ + '-' + control_signal.name
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + ParameterState.__name__ + '-' + ctl_proj.receiver.name
+                            proc_mech_label + ':' + ParameterPort.__name__ + '-' + ctl_proj.receiver.name
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
@@ -4649,8 +4685,8 @@ class System(System_Base):
                            )
 
             # incoming edges (from monitored mechs to objective mechanism)
-            for input_state in objmech.input_states:
-                for projection in input_state.path_afferents:
+            for input_port in objmech.input_ports:
+                for projection in input_port.path_afferents:
                     if objmech in active_items:
                         if active_color is BOLD:
                             proj_color = control_color
@@ -4663,8 +4699,8 @@ class System(System_Base):
                         proj_width = str(default_width)
                     if show_mechanism_structure:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles) +\
-                                          ':' + OutputState.__name__ + '-' + projection.sender.name
-                        objmech_proj_label = objmech_label + ':' + InputState.__name__ + '-' + input_state.name
+                                          ':' + OutputPort.__name__ + '-' + projection.sender.name
+                        objmech_proj_label = objmech_label + ':' + InputPort.__name__ + '-' + input_port.name
                     else:
                         sndr_proj_label = self._get_label(projection.sender.owner, show_dimensions, show_roles)
                         objmech_proj_label = self._get_label(objmech, show_dimensions, show_roles)
@@ -4694,7 +4730,7 @@ class System(System_Base):
                         # IMPLEMENTATION NOTE:
                         #     THIS IS HERE FOR FUTURE COMPATIBILITY WITH FULL IMPLEMENTATION OF PredictionMechanisms
                         if show_mechanism_structure and False:
-                            proj = mech.output_state.efferents[0]
+                            proj = mech.output_port.efferents[0]
                             if proj in active_items:
                                 if active_color is BOLD:
                                     pred_proj_color = prediction_mechanism_color
@@ -4710,8 +4746,8 @@ class System(System_Base):
                                     color=pred_mech_color,
                                     penwidth=pred_mech_width)
 
-                            G.edge(mech.name + ':' + OutputState.__name__ + '-' + mech.output_state.name,
-                                   recvr_label + ':' + InputState.__name__ + '-' + proj.receiver.name,
+                            G.edge(mech.name + ':' + OutputPort.__name__ + '-' + mech.output_port.name,
+                                   recvr_label + ':' + InputPort.__name__ + '-' + proj.receiver.name,
                                    label=' prediction assignment',
                                    color=pred_proj_color, penwidth=pred_proj_width)
                         else:
@@ -4757,7 +4793,8 @@ class System(System_Base):
                                 'show_values':any(key in show_mechanism_structure for key in {VALUES, ALL}),
                                 'use_labels':any(key in show_mechanism_structure for key in {LABELS, ALL}),
                                 'show_headers':show_headers,
-                                'output_fmt':'struct'}
+                                'output_fmt':'struct',
+                                'context':context}
         else:
             mech_struct_args = {'composition':self,
                                 'show_roles':show_mechanism_structure in {ROLES, ALL},
@@ -4765,7 +4802,8 @@ class System(System_Base):
                                 'show_values':show_mechanism_structure in {VALUES, LABELS, ALL},
                                 'use_labels':show_mechanism_structure in {LABELS, ALL},
                                 'show_headers':show_headers,
-                                'output_fmt':'struct'}
+                                'output_fmt':'struct',
+                                'context':context}
 
         default_node_color = 'black'
         mechanism_shape = 'oval'
@@ -4827,7 +4865,7 @@ class System(System_Base):
             process_intersections = {}
             subgraphs = {}  # Entries: Process:sg
             for process in self.processes:
-                subgraph_name = 'cluster_'+process.name
+                subgraph_name = 'cluster_' + process.name
                 subgraph_label = process.name
                 with G.subgraph(name=subgraph_name) as sg:
                     subgraphs[process.name]=sg
@@ -4877,7 +4915,7 @@ class System(System_Base):
 
             # Create a process for each unique intersection and assign rcvrs to that
             for intersection_name, mech_list in process_intersections.items():
-                with G.subgraph(name='cluster_'+intersection_name) as sg:
+                with G.subgraph(name='cluster_' + intersection_name) as sg:
                     sg.attr(label=intersection_name)
                     # get list of processes in the intersection (to pass to _assign_processing_components)
                     processes = [p for p in self.processes if p.name in intersection_name]
@@ -4931,8 +4969,8 @@ class System(System_Base):
                     time_string = ''
                     phase_string = ''
                 elif execution_phase & (ContextFlags.PROCESSING | ContextFlags.IDLE):
-                    # time_string = repr(self.scheduler_processing.clock.simple_time)
-                    time = self.scheduler_processing.get_clock(context).time
+                    # time_string = repr(self.scheduler.clock.simple_time)
+                    time = self.scheduler.get_clock(context).time
                     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}".\
                         format(time.run, time.trial, time.pass_, time.time_step)
                     phase_string = 'Processing Phase - '
@@ -4955,7 +4993,7 @@ class System(System_Base):
                     index = '-'
                 else:
                     index = repr(self._component_execution_count)
-                image_filename = repr(self.scheduler_processing.get_clock(context).simple_time.trial) + '-' + index + '-'
+                image_filename = repr(self.scheduler.get_clock(context).simple_time.trial) + '-' + index + '-'
                 image_file = self._animate_directory + '/' + image_filename + '.gif'
                 G.render(filename = image_filename,
                          directory=self._animate_directory,
@@ -4976,10 +5014,10 @@ class System(System_Base):
             return G
 
 
-SYSTEM_TARGET_INPUT_STATE = 'SystemInputState'
+SYSTEM_TARGET_INPUT_PORT = 'SystemInputPort'
 
-from psyneulink.core.components.states.outputstate import OutputState
-class SystemInputState(OutputState):
+from psyneulink.core.components.ports.outputport import OutputPort
+class SystemInputPort(OutputPort):
     """Represents inputs and targets specified in a call to the System's `execute <Process.execute>` and `run
     <Process.run>` methods.
 
@@ -4988,45 +5026,44 @@ class SystemInputState(OutputState):
         `targets <System.targets>`) and provides it to a `MappingProjection` that projects to a `TARGET`
         Mechanism of the System.
 
-        .. Declared as a subclass of OutputState so that it is recognized as a legitimate sender to a Projection
+        .. Declared as a subclass of OutputPort so that it is recognized as a legitimate sender to a Projection
            in Projection_Base._instantiate_sender()
 
            value is used to represent the item of the targets arg to system.execute or system.run
     COMMENT
 
-    A SystemInputState is created for each `InputState` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
-    *TARGET* `InputState <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
+    A SystemInputPort is created for each `InputPort` of each `ORIGIN` Mechanism in `origin_mechanisms`, and for the
+    *TARGET* `InputPort <ComparatorMechanism_Structure>` of each `ComparatorMechanism <ComparatorMechanism>` listed
     in `target_nodes <System.target_nodes>`.  A `MappingProjection` is created that projects to each
-    of these InputStates from the corresponding SystemInputState.  When the System's `execute <System.execute>` or
+    of these InputPorts from the corresponding SystemInputPort.  When the System's `execute <System.execute>` or
     `run <System.run>` method is called, each item of its **inputs** and **targets** arguments is assigned as
-    the `value <SystemInputState.value>` of a SystemInputState, which is then conveyed to the
-    corresponding InputState of the `origin_mechanisms <System.origin_mechanisms>` and `terminal_mechanisms
+    the `value <SystemInputPort.value>` of a SystemInputPort, which is then conveyed to the
+    corresponding InputPort of the `origin_mechanisms <System.origin_mechanisms>` and `terminal_mechanisms
     <System.terminal_mechanisms>`.  See `System_Mechanisms` and `System_Execution` for additional details.
 
     """
-    class Parameters(OutputState.Parameters):
+    class Parameters(OutputPort.Parameters):
         """
             Attributes
             ----------
 
                 variable
-                    see `variable <SystemInputState.variable>`
+                    see `variable <SystemInputPort.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 value
-                    see `value <SystemInputState.value>`
+                    see `value <SystemInputPort.value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
-
         """
         # just grabs input from the process
-        variable = Parameter(np.array([0]), read_only=True)
-        value = Parameter(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        value = Parameter(np.array([0]), read_only=True, pnl_internal=True)
 
     def __init__(self, owner=None, variable=None, name=None, prefs=None, context=None):
         """Pass variable to MappingProjection from Process to first Mechanism in Pathway
@@ -5034,7 +5071,7 @@ class SystemInputState(OutputState):
         :param variable:
         """
         if not name:
-            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_STATE
+            self.name = owner.name + "_" + SYSTEM_TARGET_INPUT_PORT
         else:
             self.name = owner.name + "_" + name
         self.initialization_status = ContextFlags.INITIALIZING
@@ -5047,9 +5084,3 @@ class SystemInputState(OutputState):
         self.defaults = Defaults(owner=self, variable=variable, value=variable)
 
         self.parameters.value._set(variable, context)
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            self.efferents,
-        ))

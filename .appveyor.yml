@@ -1,5 +1,6 @@
 version: '{build}'
 clone_depth: 25
+skip_branch_with_pr: true
 
 branches:
   only:
@@ -8,7 +9,7 @@ branches:
     - appveyor
     - /devel.*/
     - /.*-avy/
-    - /.*-ci/
+    - /ci-.*/
 
 environment:
   PYTHONWARNINGS: ignore::DeprecationWarning
@@ -17,28 +18,17 @@ environment:
   PATH: '%APPDATA%\Python\%PYTHON%\Scripts;C:\%PYTHON%%ARCH%\Scripts;C:\%PYTHON%\Scripts;C:\Program Files (x86)\Graphviz%GRAPHVIZ_VERSION%\bin;%PATH%'
   matrix:
   - PYTHON: Python36
-    EXTRA_ARGS: -m llvm
-  - PYTHON: Python37
-    EXTRA_ARGS: -m llvm
-  - PYTHON: Python36
-    ARCH: -x64
-  - PYTHON: Python37
-    ARCH: -x64
+#  - PYTHON: Python37
+#  - PYTHON: Python38
 
 install:
   - if not exist %GRAPHVIZ_INSTALLER% appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/%GRAPHVIZ_INSTALLER% -o %GRAPHVIZ_INSTALLER%
   - msiexec.exe /i %GRAPHVIZ_INSTALLER% /passive
   - pip --version
-  - pip install --user -U pip
-  - pip --version
-  # certifi upgrade is needed by pytest-profiling (it does not set the dependencies right)
-  # numpy 1.16 gets pulled by leabra below and pnl downgrades it to <1.16 later
-  - pip install --user -U certifi "numpy<1.16"
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
-  # pytorch does not distribute windows packages over pypi.
-  # Install it directly, or remove from requirements if not available (win32).
-  - if "%ARCH%" == "" (findstr /V torch < dev_requirements.txt > tmp_req && move /Y tmp_req dev_requirements.txt) else (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
+  # pytorch does not distribute windows packages over pypi. Install it directly.
+  - if not "%ARCH%" == "" (pip install --user torch -f https://download.pytorch.org/whl/cpu/torch_stable.html)
 
   - pip install --user -e .[dev]
 
@@ -49,7 +39,7 @@ cache:
 build: off
 
 test_script:
-  - pytest --junit-xml=tests_out.xml -n auto --strict-markers %EXTRA_ARGS%
+  - pytest --junit-xml=tests_out.xml -n auto
 
 on_finish:
   # Upload tests to appveyor overview

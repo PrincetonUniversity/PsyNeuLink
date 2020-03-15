@@ -9,7 +9,19 @@
 # *******************************************  AutoAssociativeProjection ***********************************************
 
 """
-.. _Auto_Associative_Overview:
+
+Contents
+--------
+
+  * `AutoAssociative_Overview`
+  * `AutoAssociative_Creation`
+  * `AutoAssociative_Structure`
+      - `AutoAssociative_Configurable_Attributes`
+  * `AutoAssociative_Execution`
+  * `AutoAssociative_Class_Reference`
+
+
+.. _AutoAssociative_Overview:
 
 Overview
 --------
@@ -21,7 +33,13 @@ is that an AutoAssociativeProjection uses the `auto <RecurrentTransferMechanism.
 this allows for a `ControlMechanism <ControlMechanism>` to control the `auto <RecurrentTransferMechanism.auto>` and
 `hetero <RecurrentTransferMechanism.hetero>` parameters and thereby control the matrix.
 
-.. _Auto_Associative_Creation:
+AutoAssociativeProjection represents connections between nodes in a single-layer recurrent network. It multiplies
+the output of the `RecurrentTransferMechanism` by a matrix, then presents the product as input to the
+`RecurrentTransferMechanism`.
+
+
+
+.. _AutoAssociative_Creation:
 
 Creating an AutoAssociativeProjection
 -------------------------------------
@@ -30,9 +48,9 @@ An AutoAssociativeProjection is created automatically by a RecurrentTransferMech
 stored as the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` parameter of the
 RecurrentTransferMechanism. It is not recommended to create an AutoAssociativeProjection on its own, because during
 execution an AutoAssociativeProjection references parameters owned by its RecurrentTransferMechanism (see
-`Execution <Auto_Associative_Execution>` below).
+`Execution <AutoAssociative_Execution>` below).
 
-.. _Auto_Associative_Structure:
+.. _AutoAssociative_Structure:
 
 Auto Associative Structure
 --------------------------
@@ -40,7 +58,7 @@ Auto Associative Structure
 In structure, the AutoAssociativeProjection is almost identical to a MappingProjection: the only additional attributes
 are `auto <AutoAssociativeProjection.auto>` and `hetero <AutoAssociativeProjection.hetero>`.
 
-.. _Auto_Associative_Configurable_Attributes:
+.. _AutoAssociative_Configurable_Attributes:
 
 *Configurable Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,21 +68,21 @@ determined by the format of the output of the RecurrentTransferMechanism, the `f
 on. The only configurable parameter is the matrix, configured through the **matrix**, **auto**, and/or **hetero**
 arguments for a RecurrentTransferMechanism:
 
-.. _Auto_Associative_Matrix:
+.. _AutoAssociative_Matrix:
 
 * **matrix** - multiplied by the input to the AutoAssociativeProjection in order to produce the output. Specification of
   the **matrix**, **auto**, and/or **hetero** arguments determines the values of the matrix; **auto** determines the
   diagonal entries (representing the strength of the connection from each node to itself) and **hetero** determines
   the off-diagonal entries (representing connections between nodes).
 
-.. _Auto_Associative_Execution:
+.. _AutoAssociative_Execution:
 
 Execution
 ---------
 
 An AutoAssociativeProjection uses its `matrix <AutoAssociativeProjection.matrix>` parameter to transform the value of
 its `sender <AutoAssociativeProjection.sender>`, and provide the result as input for its
-`receiver <AutoAssociativeProjection.receiver>`, the primary input state of the RecurrentTransferMechanism.
+`receiver <AutoAssociativeProjection.receiver>`, the primary InputPort of the RecurrentTransferMechanism.
 
 .. note::
      During execution the AutoAssociativeProjection updates its `matrix <AutoAssociativeProjection.matrix> parameter
@@ -75,7 +93,7 @@ its `sender <AutoAssociativeProjection.sender>`, and provide the result as input
      <RecurrentTransferMechanism.auto>` and `hetero <RecurrentTransferMechanism.hetero>` parameters on the
      RecurrentTransferMechanism is that this allows them to be modified by a `ControlMechanism <ControlMechanism>`.
 
-.. _Auto_Associative_Class_Reference:
+.. _AutoAssociative_Class_Reference:
 
 Class Reference
 ---------------
@@ -91,11 +109,11 @@ from psyneulink.core.components.functions.transferfunctions import LinearMatrix,
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -140,18 +158,12 @@ def _hetero_setter(value, owning_component=None, context=None):
 
 class AutoAssociativeProjection(MappingProjection):
     """
-    AutoAssociativeProjection(                              \
-        owner=None,                                         \
-        sender=None,                                        \
-        receiver=None,                                      \
-        matrix=DEFAULT_MATRIX,                              \
-        params=None,                                        \
-        name=None,                                          \
-        prefs=None)
+    AutoAssociativeProjection(
+        )
 
-    Implements a MappingProjection that is self-recurrent on a `RecurrentTransferMechanism`; an AutoAssociativeProjection
-    represents connections between nodes in a single-layer recurrent network. It multiplies the output of the
-    `RecurrentTransferMechanism` by a matrix, then presents the product as input to the `RecurrentTransferMechanism`.
+    Subclass of `MappingProjection` that is self-recurrent on a `RecurrentTransferMechanism`.
+    See `MappingProjection <MappingProjection_Class_Reference>` and `Projection <Projection_Class_Reference>`
+    for additional arguments and attributes.
 
     COMMENT:
         JDC [IN GENERAL WE HAVE TRIED TO DISCOURAGE SUCH DEPENDENCIES;  BETTER TO HAVE IT ACCEPT ARGUMENTS THAT
@@ -166,79 +178,39 @@ class AutoAssociativeProjection(MappingProjection):
     Arguments
     ---------
 
-    owner : Optional[Mechanism]
-        simply specifies both the sender and receiver of the AutoAssociativeProjection. Setting owner=myMechanism is
-        identical to setting sender=myMechanism and receiver=myMechanism.
+    sender : OutputPort or Mechanism : default None
+        specifies the source of the Projection's input; must be (or belong to) the same Mechanism as **receiver**,
+        and the length of its `value <OutputPort.value>` must match that of the `variable <InputPort.variable>` of
+        the **receiver**.
 
-    sender : Optional[OutputState or Mechanism]
-        specifies the source of the Projection's input. If a Mechanism is specified, its
-        `primary OutputState <OutputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
-
-    receiver : Optional[InputState or Mechanism]
-        specifies the destination of the Projection's output.  If a Mechanism is specified, its
-        `primary InputState <InputState_Primary>` will be used. If it is not specified, it will be assigned in
-        the context in which the Projection is used.
+    receiver: InputPort or Mechanism : default None
+        specifies the destination of the Projection's output; must be (or belong to) the same Mechanism as **sender**,
+        and the length of its `variable <InputPort.variable>` must match the `value <OutputPort.value>` of **sender**.
 
     matrix : list, np.ndarray, np.matrix, function or keyword : default DEFAULT_MATRIX
-        the matrix used by `function <AutoAssociativeProjection.function>` (default: `LinearCombination`) to transform
-        the value of the `sender <AutoAssociativeProjection.sender>`.
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Projection, its function, and/or a custom function and its parameters. By default, it contains an entry for
-        the Projection's default assignment (`LinearCombination`).  Values specified for parameters in the dictionary
-        override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default AutoAssociativeProjection-<index>
-        a string used for the name of the AutoAssociativeProjection. When an AutoAssociativeProjection is created by a
-        RecurrentTransferMechanism, its name is assigned "<name of RecurrentTransferMechanism> recurrent projection"
-        (see `Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Projection_Base.classPreferences]
-        the `PreferenceSet` for the MappingProjection; if it is not specified, a default is assigned using
-        `classPreferences` defined in __init__.py (see `PreferenceSet <LINK>` for details).
+        specifies the matrix used by `function <Projection_Base.function>` (default: `LinearCombination`) to
+        transform the `value <Projection_Base.value>` of the `sender <MappingProjection.sender>` into a value
+        provided to the `variable <InputPort.variable>` of the `receiver <MappingProjection.receiver>` `InputPort`;
+        must be a square matrix (i.e., have the same number of rows and columns).
 
     Attributes
     ----------
 
-    componentType : AUTO_ASSOCIATIVE_PROJECTION
+    sender : OutputPort
+        the `OutputPort` of the `Mechanism <Mechanism>` that is the source of the Projection's input; in the case of
+        an AutoAssociativeProjection, it is an OutputPort of the same Mechanism to which the `receiver
+        <AutoAssociativeProjection.receiver>` belongs.
 
-    sender : OutputState
-        identifies the source of the Projection's input.
-
-    receiver: InputState
-        identifies the destination of the Projection.
-
-    learning_mechanism : LearningMechanism
-        source of error signal for that determine changes to the `matrix <AutoAssociativeProjection.matrix>` when
-        `learning <LearningProjection>` is used.
+    receiver: InputPort
+        the `InputPort` of the `Mechanism <Mechanism>` that is the destination of the Projection's output; in the case
+        of an AutoAssociativeProjection, it is an InputPort of the same Mechanism to which the `sender
+        <AutoAssociativeProjection.sender>` belongs.
 
     matrix : 2d np.ndarray
-        matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
-        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`.
+        square matrix used by `function <AutoAssociativeProjection.function>` to transform input from the `sender
+        <MappingProjection.sender>` to the value provided to the `receiver <AutoAssociativeProjection.receiver>`;
+        in the case of an AutoAssociativeProjection.
 
-    auto : number or 1d np.ndarray
-        diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if auto
-        is a single number, it means the diagonal is uniform.
-
-    hetero : number or 2d np.ndarray
-        off-diagonal terms of the `matrix <AutoAssociativeProjection.matrix>` used by the AutoAssociativeProjection: if
-        hetero is a single number, it means the off-diagonal terms are all the same.
-
-    has_learning_projection : bool : None
-        identifies the `LearningProjection` assigned to the AutoAssociativeProjection's `MATRIX` `ParameterState
-        <ParameterState>`.
-
-    value : np.ndarray
-        Output of AutoAssociativeProjection, transmitted to `variable <InputState.variable>` of `receiver`.
-
-    name : str
-        a string used for the name of the AutoAssociativeProjection (see `Registry <LINK>` for conventions used in
-        naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Projection_Base.classPreferences
-        the `PreferenceSet` for AutoAssociativeProjection (see :doc:`PreferenceSet <LINK>` for details).
     """
 
     componentType = AUTO_ASSOCIATIVE_PROJECTION
@@ -254,14 +226,14 @@ class AutoAssociativeProjection(MappingProjection):
                     see `variable <AutoAssociativeProjection.variable>`
 
                     :default value: numpy.array([[0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 auto
                     see `auto <AutoAssociativeProjection.auto>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 function
                     see `function <AutoAssociativeProjection.function>`
@@ -273,27 +245,23 @@ class AutoAssociativeProjection(MappingProjection):
                     see `hetero <AutoAssociativeProjection.hetero>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 matrix
                     see `matrix <AutoAssociativeProjection.matrix>`
 
                     :default value: `AUTO_ASSIGN_MATRIX`
-                    :type: str
-
+                    :type: ``str``
         """
-        variable = Parameter(np.array([[0]]), read_only=True)
+        variable = Parameter(np.array([[0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         # function is always LinearMatrix that requires 1D input
-        function = LinearMatrix
+        function = Parameter(LinearMatrix, stateful=False, loggable=False)
 
         auto = Parameter(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
         hetero = Parameter(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
-        matrix = Parameter(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
+        matrix = Parameter(DEFAULT_MATRIX, function_parameter=True, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
-
-    # necessary?
-    paramClassDefaults = MappingProjection.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -316,8 +284,6 @@ class AutoAssociativeProjection(MappingProjection):
             if receiver is None:
                 receiver = owner
 
-        params = self._assign_args_to_param_dicts(function_params={MATRIX: matrix}, params=params)
-
         super().__init__(sender=sender,
                          receiver=receiver,
                          matrix=matrix,
@@ -332,62 +298,62 @@ class AutoAssociativeProjection(MappingProjection):
 
     # def _update_auto_and_hetero(self, owner_mech=None, runtime_params=None, time_scale=TimeScale.TRIAL, context=None):
     #     if owner_mech is None:
-    #         if isinstance(self.sender, OutputState):
+    #         if isinstance(self.sender, OutputPort):
     #             owner_mech = self.sender.owner
     #         elif isinstance(self.sender, Mechanism):
     #             owner_mech = self.sender
     #         else:
-    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently"
+    #             raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently"
     #                                        " the sender is {}".
     #                                        format(self.__class__.__name__, self.name, self.sender))
-    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
-    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #     if AUTO in owner_mech._parameter_ports and HETERO in owner_mech._parameter_ports:
+    #         owner_mech._parameter_ports[AUTO].update(context=context, params=runtime_params, time_scale=time_scale)
+    #         owner_mech._parameter_ports[HETERO].update(context=context, params=runtime_params, time_scale=time_scale)
     #
 
     # END OF COMMENTED OUT BY KAM 1/9/2018
 
     # NOTE 7/25/17 CW: Originally, this override was written because if the user set the 'auto' parameter on the
-        # recurrent mechanism, the parameter state wouldn't update until after the mechanism executed: since the system
+        # recurrent mechanism, the ParameterPort wouldn't update until after the mechanism executed: since the system
         # first runs the projection, then runs the mechanism, the projection initially uses the 'old' value. However,
         # this is commented out because this may in fact be the desired behavior.
         # Two possible solutions: allow control to be done on projections, or build a more general way to allow
         # projections to read parameters from mechanisms.
-    # def _update_parameter_states(self, runtime_params=None, context=None):
-    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter states as well! The owner mechanism
-    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter states during
-    #     its _update_parameter_states function (so that the ParameterState is not redundantly updated).
+    # def _update_parameter_ports(self, runtime_params=None, context=None):
+    #     """Update this projection's owner mechanism's `auto` and `hetero` parameter ports as well! The owner mechanism
+    #     should be a RecurrentTransferMechanism, which DOES NOT update its own `auto` and `hetero` parameter ports during
+    #     its _update_parameter_ports function (so that the ParameterPort is not redundantly updated).
     #     Thus, if you want to have an AutoAssociativeProjection on a mechanism that's not a RecurrentTransferMechanism,
     #     your mechanism must similarly exclude `auto` and `hetero` from updating.
     #     """
-    #     super()._update_parameter_states(runtime_params, context)
+    #     super()._update_parameter_ports(runtime_params, context)
     #
-    #     if isinstance(self.sender, OutputState):
+    #     if isinstance(self.sender, OutputPort):
     #         owner_mech = self.sender.owner
     #     elif isinstance(self.sender, Mechanism):
     #         owner_mech = self.sender
     #     else:
-    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the"
+    #         raise AutoAssociativeError("The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently the"
     #                                    " sender is {}".
     #                                    format(self.__class__.__name__, self.name, self.sender))
     #
-    #     if AUTO in owner_mech._parameter_states and HETERO in owner_mech._parameter_states:
-    #         owner_mech._parameter_states[AUTO].update(context=context, params=runtime_params)
-    #         owner_mech._parameter_states[HETERO].update(context=context, params=runtime_params)
+    #     if AUTO in owner_mech._parameter_ports and HETERO in owner_mech._parameter_ports:
+    #         owner_mech._parameter_ports[AUTO].update(context=context, params=runtime_params)
+    #         owner_mech._parameter_ports[HETERO].update(context=context, params=runtime_params)
     #     else:
-    #         raise AutoAssociativeError("Auto or Hetero ParameterState not found in {0} \"{1}\"; here are names of the "
-    #                                    "current ParameterStates for {1}: {2}".format(owner_mech.__class__.__name__,
-    #                                    owner_mech.name, owner_mech._parameter_states.key_values))
+    #         raise AutoAssociativeError("Auto or Hetero ParameterPort not found in {0} \"{1}\"; here are names of the "
+    #                                    "current ParameterPorts for {1}: {2}".format(owner_mech.__class__.__name__,
+    #                                    owner_mech.name, owner_mech._parameter_ports.key_values))
 
     @property
     def owner_mech(self):
-        if isinstance(self.sender, OutputState):
+        if isinstance(self.sender, OutputPort):
             return self.sender.owner
         elif isinstance(self.sender, Mechanism):
             return self.sender
         else:
             raise AutoAssociativeError(
-                "The sender of the {} \'{}\' must be a Mechanism or OutputState: currently the sender is {}".format(
+                "The sender of the {} \'{}\' must be a Mechanism or OutputPort: currently the sender is {}".format(
                     self.__class__.__name__, self.name, self.sender
                 )
             )

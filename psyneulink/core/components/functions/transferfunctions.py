@@ -20,6 +20,7 @@
 * `GaussianDistort`
 * `SoftMax`
 * `LinearMatrix`
+* `TransferWithCosts`
 
 Overview
 --------
@@ -37,41 +38,44 @@ All TransferFunctions have the following attributes:
   parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
   TransferFunction's function (see `Function_Modulatory_Params`).
 
-
 """
 
+import itertools
 import numbers
+from enum import Enum, IntEnum
 
 import numpy as np
 import typecheck as tc
+import types
+import warnings
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, function_keywords, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
-from psyneulink.core.components.component import function_type
+    Function, Function_Base, FunctionError, function_keywords, is_function_type
+from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
-    ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, GAUSSIAN_DISTORT_FUNCTION, GAIN, \
-    FULL_CONNECTIVITY_MATRIX, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
+    FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
     LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, OFFSET, \
-    PARAMETER_STATE_PARAMS, PER_ITEM, PROB, OUTPUT_TYPE, PROB_INDICATOR, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, \
-    STANDARD_DEVIATION, SCALE, SLOPE, SOFTMAX_FUNCTION, TRANSFER_FUNCTION_TYPE,\
-    VARIANCE, VARIABLE, X_0, kwPreferenceSetName
-from psyneulink.core.globals.parameters import Parameter
+    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
+    OFF, OFFSET, ON, PARAMETER_PORT_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
+    TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
+from psyneulink.core.globals.parameters import \
+    Parameter, ParameterError, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags
-from psyneulink.core.globals.preferences.componentpreferenceset import \
-    kpReportOutputPref, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import \
+    REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
-__all__ = ['TransferFunction', 'Identity', 'Linear', 'LinearMatrix', 'Exponential', 'Logistic', 'Tanh', 'ReLU',
-           'Gaussian', 'GaussianDistort', 'SoftMax', 'get_matrix']
-
+__all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity', 'Linear', 'LinearMatrix',
+           'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
+]
 
 class TransferFunction(Function_Base):
-    """Function that transforms variable but maintains its shape
+    """Function that transforms variable but maintains its shape.
 
     All TransferFunctions MUST have the following attributes:
 
@@ -79,9 +83,10 @@ class TransferFunction(Function_Base):
     `None`;  if it has at least one bound, the attribute is set to a tuple specifying the lower and upper bounds,
     respectively, with `None` as the entry for no bound.
 
-    `multiplicative_param` and `additive_param` -- each of these is assigned the name of one of the function's
-    parameters and used by `ModulatoryProjections <ModulatoryProjection>` to modulate the output of the
-    TransferFunction's function (see `Function_Modulatory_Params`).
+    `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` -- each
+    of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
+    <ModulatoryProjection>` to modulate the output of the TransferFunction's `function <TransferFunction.function>`
+    (see  `Function_Modulatory_Params`).
 
     """
     componentType = TRANSFER_FUNCTION_TYPE
@@ -96,52 +101,11 @@ class TransferFunction(Function_Base):
 
                     :default value: None
                     :type:
-
         """
         bounds = None
 
-    # IMPLEMENTATION NOTE: THESE SHOULD SHOULD BE REPLACED WITH ABC WHEN IMPLEMENTED
-    def __init__(self, default_variable,
-                 params=None,
-                 owner=None,
-                 prefs=None,
-                 context=None):
 
-        if not hasattr(self, BOUNDS):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, BOUNDS))
-
-        if not hasattr(self, MULTIPLICATIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement a {} attribute".
-                                format(self.__class__.__name__, MULTIPLICATIVE_PARAM))
-
-        if not hasattr(self, ADDITIVE_PARAM):
-            raise FunctionError("PROGRAM ERROR: {} must implement an {} attribute".
-                                format(self.__class__.__name__, ADDITIVE_PARAM))
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
-
-    @property
-    def multiplicative(self):
-        return getattr(self, self.multiplicative_param)
-
-    @multiplicative.setter
-    def multiplicative(self, val):
-        setattr(self, self.multiplicative_param, val)
-
-    @property
-    def additive(self):
-        return getattr(self, self.additive_param)
-
-    @additive.setter
-    def additive(self, val):
-        setattr(self, self.additive_param, val)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Pretend we have one huge array to work on
         # TODO: should this be invoked in parts?
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
@@ -164,6 +128,10 @@ class TransferFunction(Function_Base):
         return builder
 
 
+# **********************************************************************************************************************
+#                                                 Identity
+# **********************************************************************************************************************
+
 class Identity(TransferFunction):  # -----------------------------------------------------------------------------------
     """
     Identity(                  \
@@ -185,7 +153,7 @@ class Identity(TransferFunction):  # -------------------------------------------
         specifies a template for the value to be returned.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -220,15 +188,12 @@ class Identity(TransferFunction):  # -------------------------------------------
     componentName = IDENTITY_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
+
 
     classPreferences = {
-        kwPreferenceSetName: 'LinearClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'IdentityClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -236,9 +201,6 @@ class Identity(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(params=params)
-
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -264,7 +226,7 @@ class Identity(TransferFunction):  # -------------------------------------------
            a single value or array to be returned.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -279,12 +241,12 @@ class Identity(TransferFunction):  # -------------------------------------------
 
         return variable
 
-    def _get_input_struct_type(self,ctx):
+    def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
         #       does not udpate its defaults shape
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
         if isinstance(self.owner, CompositionInterfaceMechanism):
-            variable = [state.defaults.value for state in self.owner.input_states]
+            variable = [port.defaults.value for port in self.owner.input_ports]
             # Python list does not care about ndarrays of different lengths
             # we do care, so convert to tuple to create struct
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
@@ -301,11 +263,15 @@ class Identity(TransferFunction):  # -------------------------------------------
         #       workaround.
         return ctx.get_input_struct_type(self)
 
-    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:frozenset):
         val = builder.load(arg_in)
         builder.store(val, arg_out)
         return builder
 
+
+# **********************************************************************************************************************
+#                                                    Linear
+# **********************************************************************************************************************
 
 class Linear(TransferFunction):  # -------------------------------------------------------------------------------------
     """
@@ -345,7 +311,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         specifies a value to add to each element of `variable <Linear.variable>` after applying `slope <Linear.slope>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -392,13 +358,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
     componentName = LINEAR_FUNCTION
 
     bounds = None
-    multiplicative_param = SLOPE
-    additive_param = INTERCEPT
 
     classPreferences = {
-        kwPreferenceSetName: 'LinearClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+        PREFERENCE_SET_NAME: 'LinearClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     }
+
+    _model_spec_class_name_is_generic = True
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -409,48 +375,40 @@ class Linear(TransferFunction):  # ---------------------------------------------
                     see `intercept <Linear.intercept>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 slope
                     see `slope <Linear.slope>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         slope = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         intercept = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        PARAMETER_STATE_PARAMS: None
-    })
-
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: parameter_spec = 1.0,
-                 intercept: parameter_spec = 0.0,
+                 slope: tc.optional(parameter_spec) = None,
+                 intercept: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(slope=slope,
-                                                  intercept=intercept,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            slope=slope,
+            intercept=intercept,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr = ctx.get_param_ptr(self, builder, params, SLOPE)
-        intercept_ptr = ctx.get_param_ptr(self, builder, params, INTERCEPT)
+        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
+        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -475,7 +433,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -485,8 +443,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-        slope = self.get_current_function_param(SLOPE, context)
-        intercept = self.get_current_function_param(INTERCEPT, context)
+        slope = self._get_current_function_param(SLOPE, context)
+        intercept = self._get_current_function_param(INTERCEPT, context)
 
         # MODIFIED 11/9/17 NEW:
         try:
@@ -502,7 +460,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
                 else:
                     raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
-            # type that even np does not recognize -- typically a custom output state variable with items of different
+            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
             # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
             elif isinstance(variable, list):
                 result = []
@@ -532,7 +490,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        return self.get_current_function_param(SLOPE, context)
+        return self._get_current_function_param(SLOPE, context)
 
     def _is_identity(self, context=None):
         return (
@@ -540,6 +498,10 @@ class Linear(TransferFunction):  # ---------------------------------------------
             and self.parameters.intercept._get(context) == 0
         )
 
+
+# **********************************************************************************************************************
+#                                                    Exponential
+# **********************************************************************************************************************
 
 class Exponential(TransferFunction):  # --------------------------------------------------------------------------------
     """
@@ -589,7 +551,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         after multiplying by `scale <Exponentinal.scale>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -640,10 +602,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
     componentName = EXPONENTIAL_FUNCTION
 
     bounds = (0, None)
-    multiplicative_param = RATE
-    additive_param = BIAS
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -654,26 +612,25 @@ class Exponential(TransferFunction):  # ----------------------------------------
                     see `bias <Exponential.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Exponential.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 rate
                     see `rate <Exponential.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Exponential.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -690,27 +647,25 @@ class Exponential(TransferFunction):  # ----------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            rate=rate,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr = ctx.get_param_ptr(self, builder, params, RATE)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -741,7 +696,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
            a single value or array to be exponentiated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -751,10 +706,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-        rate = self.get_current_function_param(RATE, context)
-        bias = self.get_current_function_param(BIAS, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        rate = self._get_current_function_param(RATE, context)
+        bias = self._get_current_function_param(BIAS, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
@@ -781,8 +736,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        return self.get_current_function_param(RATE, context) * input + self.get_current_function_param(BIAS, context)
+        return self._get_current_function_param(RATE, context) * input + self._get_current_function_param(BIAS, context)
 
+
+# **********************************************************************************************************************
+#                                                   Logistic
+# **********************************************************************************************************************
 
 class Logistic(TransferFunction):  # ------------------------------------------------------------------------------------
     """
@@ -844,7 +803,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         specifies value by which each element is multiplied after applying the logistic transformation.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -901,10 +860,9 @@ class Logistic(TransferFunction):  # -------------------------------------------
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     bounds = (0, 1)
-    multiplicative_param = GAIN
-    additive_param = BIAS
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
+
+    _model_spec_class_name_is_generic = True
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -915,32 +873,31 @@ class Logistic(TransferFunction):  # -------------------------------------------
                     see `bias <Logistic.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <Logistic.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Logistic.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Logistic.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 x_0
                     see `x_0 <Logistic.x_0>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
@@ -959,29 +916,27 @@ class Logistic(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  x_0=x_0,
-                                                  bias=bias,
-                                                  offset=offset,
-                                                  scale=scale,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            x_0=x_0,
+            bias=bias,
+            offset=offset,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1016,7 +971,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1026,11 +981,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        x_0 = self.get_current_function_param(X_0, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        scale = self.get_current_function_param(SCALE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        x_0 = self._get_current_function_param(X_0, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
@@ -1072,17 +1027,21 @@ class Logistic(TransferFunction):  # -------------------------------------------
             if not valid:
                 raise FunctionError("Value of {} arg passed to {} ({}) "
                                     "does not match the value expected for specified {} ({})".
-                                    format(repr('output'), self.__class__.__name__+'.'+'derivative', output,
+                                    format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
                                            repr('input'), input))
 
-        gain = self.get_current_function_param(GAIN, context)
-        scale = self.get_current_function_param(SCALE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         if output is None:
             output = self.function(input, context=context)
 
         return gain * scale * output * (1 - output)
 
+
+# **********************************************************************************************************************
+#                                                    Tanh
+# **********************************************************************************************************************
 
 class Tanh(TransferFunction):  # ------------------------------------------------------------------------------------
     """
@@ -1143,7 +1102,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         specifies value by which to multiply each element after applying Tanh transform.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1196,14 +1155,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         <LINK>` for details).
     """
 
-    componentName = LOGISTIC_FUNCTION
+    componentName = TANH_FUNCTION
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
     bounds = (0, 1)
-    multiplicative_param = GAIN
-    additive_param = BIAS
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1214,32 +1169,31 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                     see `bias <Tanh.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <Tanh.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Tanh.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Tanh.scale>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 x_0
                     see `x_0 <Tanh.x_0>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         x_0 = Parameter(0.0, modulable=True)
@@ -1258,28 +1212,26 @@ class Tanh(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  x_0=x_0,
-                                                  bias=bias,
-                                                  offset=offset,
-                                                  scale=scale,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            x_0=x_0,
+            bias=bias,
+            offset=offset,
+            scale=scale,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1314,7 +1266,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1324,16 +1276,16 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        x_0 = self.get_current_function_param(X_0, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        x_0 = self._get_current_function_param(X_0, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         from math import e
-        exponent = -2*(gain * (variable + bias - x_0) + offset)
+        exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
@@ -1356,15 +1308,19 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        x_0 = self.get_current_function_param(X_0, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        scale = self.get_current_function_param(SCALE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        x_0 = self._get_current_function_param(X_0, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         from math import e
-        return gain*scale / ((1 + e**(-2*(gain*(input+bias-x_0)+offset))) / (2 * e**(-gain*(input+bias-x_0)+offset)))**2
+        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
 
+
+# **********************************************************************************************************************
+#                                                    ReLU
+# **********************************************************************************************************************
 
 class ReLU(TransferFunction):  # ------------------------------------------------------------------------------------
     """
@@ -1405,9 +1361,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
     owner : Component
@@ -1428,7 +1384,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1445,8 +1401,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     parameter_keywords.update({GAIN, BIAS, LEAK})
 
     bounds = (None,None)
-    multiplicative_param = GAIN
-    additive_param = BIAS
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1457,25 +1411,23 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                     see `bias <ReLU.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 gain
                     see `gain <ReLU.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 leak
                     see `leak <ReLU.leak>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -1486,17 +1438,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  bias=bias,
-                                                  leak=leak,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            bias=bias,
+            leak=leak,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -1511,7 +1461,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         variable : number or array : default class_defaults.variable
            a single value or array to be transformed.
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1520,13 +1470,13 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-        gain = self.get_current_function_param(GAIN, context)
-        bias = self.get_current_function_param(BIAS, context)
-        leak = self.get_current_function_param(LEAK, context)
+        gain = self._get_current_function_param(GAIN, context)
+        bias = self._get_current_function_param(BIAS, context)
+        leak = self._get_current_function_param(LEAK, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
-        result = np.maximum(x, leak*x)
+        result = np.maximum(x, leak * x)
 
         return self.convert_output_type(result)
 
@@ -1534,9 +1484,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        leak_ptr = ctx.get_param_ptr(self, builder, params, LEAK)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1571,12 +1521,15 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self.get_current_function_param(GAIN, context)
-        leak = self.get_current_function_param(LEAK, context)
+        gain = self._get_current_function_param(GAIN, context)
+        leak = self._get_current_function_param(LEAK, context)
 
-        if (input > 0): return gain
-        else: return gain*leak
+        return gain if input > 0 else gain * leak
 
+
+# **********************************************************************************************************************
+#                                                    Gaussian
+# **********************************************************************************************************************
 
 class Gaussian(TransferFunction):  # -----------------------------------------------------------------------------------
     """
@@ -1630,7 +1583,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         value by which to multiply each element after applying Gaussian transform.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1678,10 +1631,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-    multiplicative_param = STANDARD_DEVIATION
-    additive_param = BIAS
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1692,30 +1641,29 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                     see `bias <Gaussian.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <Gaussian.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <Gaussian.scale>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 1.0
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <Gaussian.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
 
     @tc.typecheck
@@ -1728,27 +1676,25 @@ class Gaussian(TransferFunction):  # -------------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(standard_deviation=standard_deviation,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            standard_deviation=standard_deviation,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        standard_deviation_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STANDARD_DEVIATION)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1792,7 +1738,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1803,13 +1749,13 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self.get_current_function_param(BIAS, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
+        bias = self._get_current_function_param(BIAS, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
 
         from math import e, pi, sqrt
-        gaussian = e**(-(variable-bias)**2/(2*standard_deviation**2)) / sqrt(2*pi*standard_deviation)
+        gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
@@ -1834,15 +1780,19 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Derivative of Guassian of variable :  number or array
 
         """
-        sigma = self.get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self.get_current_function_param(BIAS, context)
+        sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
+        bias = self._get_current_function_param(BIAS, context)
 
         from math import e, pi, sqrt
-        adjusted_input = input-bias
-        result = (-adjusted_input * e**(-(adjusted_input**2/(2*sigma**2)))) / sqrt(2*pi*sigma**3)
+        adjusted_input = input - bias
+        result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
         return self.convert_output_type(result)
 
+
+# **********************************************************************************************************************
+#                                               GaussianDistort
+# **********************************************************************************************************************
 
 class GaussianDistort(TransferFunction):  #-----------------------------------------------------------------------------
     """
@@ -1898,7 +1848,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         specifies value to add to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -1948,10 +1898,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
 
     bounds = (None,None)
-    multiplicative_param = VARIANCE
-    additive_param = BIAS
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -1962,38 +1908,37 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                     see `bias <GaussianDistort.bias>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 offset
                     see `offset <GaussianDistort.offset>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 random_state
                     see `random_state <GaussianDistort.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 scale
                     see `scale <GaussianDistort.scale>`
 
-                    :default value: 0.0
-                    :type: float
+                    :default value: 1.0
+                    :type: ``float``
 
                 variance
                     see `variance <GaussianDistort.variance>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         variance = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        scale = Parameter(0.0, modulable=True)
+        scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, modulable=False)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -2006,35 +1951,34 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts (kwConstants must == arg names)
+
         if seed is None:
             seed = get_global_seed()
 
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["random_state"]
 
-        params = self._assign_args_to_param_dicts(variance=variance,
-                                                  bias=bias,
-                                                  scale=scale,
-                                                  offset=offset,
-                                                  random_state=random_state,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            variance=variance,
+            bias=bias,
+            scale=scale,
+            offset=offset,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr = ctx.get_param_ptr(self, builder, params, VARIANCE)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -2042,8 +1986,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
-        normal_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_normal")
+        rand_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
         rval = builder.load(rvalp)
@@ -2070,7 +2014,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
            a single value or array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2081,14 +2025,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-        variance = self.get_current_function_param(VARIANCE, context)
-        bias = self.get_current_function_param(BIAS, context)
-        scale = self.get_current_function_param(SCALE, context)
-        offset = self.get_current_function_param(OFFSET, context)
-        random_state = self.get_current_function_param('random_state', context)
+        variance = self._get_current_function_param(VARIANCE, context)
+        bias = self._get_current_function_param(BIAS, context)
+        scale = self._get_current_function_param(SCALE, context)
+        offset = self._get_current_function_param(OFFSET, context)
+        random_state = self._get_current_function_param('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        result = scale * random_state.normal(variable+bias, variance) + offset
+        result = scale * random_state.normal(variable + bias, variance) + offset
 
         return self.convert_output_type(result)
 
@@ -2107,10 +2051,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     #     Derivative of Guassian of variable :  number or array
     #
     #     """
-    #     variance = self.get_current_function_param(VARIANCE, context)
-    #     bias = self.get_current_function_param(BIAS, context)
-    #     scale = self.get_current_function_param(SCALE, context)
-    #     offset = self.get_current_function_param(OFFSET, context)
+    #     variance = self._get_current_function_param(VARIANCE, context)
+    #     bias = self._get_current_function_param(BIAS, context)
+    #     scale = self._get_current_function_param(SCALE, context)
+    #     offset = self._get_current_function_param(OFFSET, context)
     #
     #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
     #     f = scale * np.random.normal(input+bias, variance) + offset
@@ -2120,6 +2064,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     #
     #     return self.convert_output_type(df*f)
 
+
+# **********************************************************************************************************************
+#                                                   SoftMax
+# **********************************************************************************************************************
 
 class SoftMax(TransferFunction):
     """
@@ -2175,7 +2123,7 @@ class SoftMax(TransferFunction):
         False), or applied to each item in the variable separately (per_item = True).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2230,8 +2178,6 @@ class SoftMax(TransferFunction):
     componentName = SOFTMAX_FUNCTION
 
     bounds = (0, 1)
-    multiplicative_param = GAIN
-    additive_param = None
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2242,7 +2188,7 @@ class SoftMax(TransferFunction):
                     see `variable <SoftMax.variable>`
 
                     :default value: numpy.array(0.)
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 bounds
@@ -2255,26 +2201,25 @@ class SoftMax(TransferFunction):
                     see `gain <SoftMax.gain>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 output
                     see `output <SoftMax.output>`
 
                     :default value: `ALL`
-                    :type: str
+                    :type: ``str``
 
                 per_item
                     see `per_item <SoftMax.per_item>`
 
                     :default value: True
-                    :type: bool
-
+                    :type: ``bool``
         """
-        variable = Parameter(np.array(0.0), read_only=True)
+        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
-        per_item = True
+        per_item = Parameter(True, pnl_internal=True)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -2282,8 +2227,6 @@ class SoftMax(TransferFunction):
                 return None
             else:
                 return 'not one of {0}'.format(options)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -2295,17 +2238,15 @@ class SoftMax(TransferFunction):
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(gain=gain,
-                                                  per_item=per_item,
-                                                  output=output,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            gain=gain,
+            per_item=per_item,
+            output=output,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         if variable is None:
@@ -2319,7 +2260,7 @@ class SoftMax(TransferFunction):
     def _instantiate_function(self, function, function_params=None, context=None):
 
         self.one_hot_function = None
-        output_type = self.get_current_function_param(OUTPUT_TYPE, context)
+        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
         bounds = None
 
         if not output_type is ALL:
@@ -2350,7 +2291,7 @@ class SoftMax(TransferFunction):
         builder.store(new_index, max_ind_ptr)
 
     def __gen_llvm_exp_div(self, builder, index, ctx, vi, vo, gain, exp_sum):
-        assert self.get_current_function_param(OUTPUT_TYPE, Context()) == ALL
+        assert self.output == ALL
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
@@ -2371,7 +2312,7 @@ class SoftMax(TransferFunction):
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
@@ -2380,7 +2321,7 @@ class SoftMax(TransferFunction):
                                         max_ind_ptr=max_ind_ptr,
                                         exp_sum_ptr=exp_sum_ptr)
 
-        output_type = self.get_current_function_param(OUTPUT_TYPE, Context())
+        output_type = self.output
         exp_sum = builder.load(exp_sum_ptr)
         index = builder.load(max_ind_ptr)
         ptro = builder.gep(arg_out, [ctx.int32_ty(0), index])
@@ -2409,8 +2350,8 @@ class SoftMax(TransferFunction):
 
         return builder
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
-        if self.get_current_function_param(PER_ITEM, Context()):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+        if self.parameters.per_item.get():
             assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
             assert isinstance(arg_out.type.pointee.element, pnlvm.ir.ArrayType)
             for i in range(arg_in.type.pointee.count):
@@ -2454,7 +2395,7 @@ class SoftMax(TransferFunction):
            an array to be transformed.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -2465,9 +2406,9 @@ class SoftMax(TransferFunction):
 
         """
         # Assign the params and return the result
-        output_type = self.get_current_function_param(OUTPUT_TYPE, context)
-        gain = self.get_current_function_param(GAIN, context)
-        per_item = self.get_current_function_param(PER_ITEM, context)
+        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
+        gain = self._get_current_function_param(GAIN, context)
+        per_item = self._get_current_function_param(PER_ITEM, context)
         # Compute softmax and assign to sm
 
         if per_item and len(np.shape(variable)) > 1:
@@ -2489,7 +2430,7 @@ class SoftMax(TransferFunction):
         derivative of values returned by SoftMax :  1d or 2d array (depending on *OUTPUT_TYPE* of SoftMax)
         """
 
-        output_type = self.params[OUTPUT_TYPE]
+        output_type = self.output_type
         size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
 
@@ -2523,6 +2464,10 @@ class SoftMax(TransferFunction):
 
         return derivative
 
+
+# **********************************************************************************************************************
+#                                                 LinearMatrix
+# **********************************************************************************************************************
 
 class LinearMatrix(TransferFunction):  # -------------------------------------------------------------------------------
     """
@@ -2580,14 +2525,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
-        When LinearMatrix is the `function <Projection.function>` of a projection:
+        When LinearMatrix is the `function <Projection_Base.function>` of a projection:
 
             - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
               and `receiver <Projection_Base.receiver>`
 
             - a matrix keyword specification generates a matrix based on the sender and receiver shapes
 
-        When LinearMatrix is instantiated on its own, or as the function of `Mechanism` or `State`:
+        When LinearMatrix is instantiated on its own, or as the function of a `Mechanism <Mechanism>` or `Port`:
 
             - the matrix specification must be compatible with the function's own `variable <LinearMatrix.variable>`
 
@@ -2599,7 +2544,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     bounds : None
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -2643,12 +2588,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     componentName = LINEAR_MATRIX_FUNCTION
 
     bounds = None
-    multiplicative_param = None
-    additive_param = None
 
     DEFAULT_FILLER_VALUE = 0
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2660,7 +2601,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
                     :default value: None
                     :type:
-
         """
         matrix = Parameter(None, modulable=True)
         bounds = None
@@ -2670,7 +2610,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     #         return True
     #     if m in MATRIX_KEYWORD_VALUES:
     #         return True
-    #     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+    #     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
     #         return True
     #     return False
 
@@ -2682,20 +2622,18 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  owner=None,
                  prefs: is_pref_set = None):
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  params=params)
-
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
         # super(LinearMatrix, self).__init__(default_variable=default_variable,
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
-        self.matrix = self.instantiate_matrix(self.paramsCurrent[MATRIX])
+        self.matrix = self.instantiate_matrix(self.matrix)
 
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D array
@@ -2735,8 +2673,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         # proxy for checking whether the owner is a projection
         if hasattr(self.owner, "receiver"):
             sender = self.defaults.variable
-            # Note: this assumes variable is a 1D array, as enforced by _validate_variable
-            sender_len = sender.size
+            sender_len = np.size(np.atleast_2d(self.defaults.variable), 1)
 
             # FIX: RELABEL sender -> input AND receiver -> output
             # FIX: THIS NEEDS TO BE CLEANED UP:
@@ -2870,7 +2807,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     # - assume it uses random.rand()
                     # - call with two args as place markers for cols and rows
                     # -  validate that it returns an array or np.matrix
-                    elif isinstance(param_value, function_type):
+                    elif isinstance(param_value, types.FunctionType):
                         test = param_value(1, 1)
                         if not isinstance(test, (np.ndarray, np.matrix)):
                             raise FunctionError("A function is specified for the matrix of the {} function of {}: {}) "
@@ -2890,8 +2827,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                    self.owner_name,
                                                    MATRIX_KEYWORD_NAMES))
                 else:
-                    message += "Unrecognized param ({}) specified for the {} function of {}\n". \
-                        format(param_name, self.componentName, self.owner_name)
                     continue
             if message:
                 raise FunctionError(message)
@@ -2933,6 +2868,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                                                MATRIX_KEYWORD_NAMES))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        # replicates setting of receiver in _validate_params
+        if isinstance(self.owner, Projection):
+            self.receiver = self.defaults.variable
+
         if self.matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
             self.matrix = np.identity(variable_length)
@@ -2979,12 +2918,17 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         else:
             return np.array(specification)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
-        # Restrict to 1d arrays
-        assert self.defaults.variable.ndim == 1
-        assert self.defaults.value.ndim == 1
 
-        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
+        # Restrict to 1d arrays
+        if self.defaults.variable.ndim != 1:
+            warnings.warn("Unexpected data shape: {} got 2D input: {}".format(self, self.defaults.variable))
+            arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if self.defaults.value.ndim != 1:
+            warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -2993,7 +2937,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_out.type.pointee.count)
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 
@@ -3010,7 +2954,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             array to be transformed;  length must equal the number of rows of `matrix <LinearMatrix.matrix>`.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -3021,7 +2965,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-        matrix = self.get_current_function_param(MATRIX, context)
+        matrix = self._get_current_function_param(MATRIX, context)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
 
@@ -3077,7 +3021,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 # def is_matrix_spec(m):
 #     if m is None:
 #         return True
-#     if isinstance(m, (list, np.ndarray, np.matrix, function_type)):
+#     if isinstance(m, (list, np.ndarray, np.matrix, types.FunctionType)):
 #         return True
 #     if m in MATRIX_KEYWORD_VALUES:
 #         return True
@@ -3136,19 +3080,19 @@ def get_matrix(specification, rows=1, cols=1, context=None):
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return 1-np.identity(rows)
+        return 1 - np.identity(rows)
 
     if specification == INVERSE_HOLLOW_MATRIX:
         if rows != cols:
             raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
                                 format(rows, cols, specification))
-        return (1-np.identity(rows)) * -1
+        return (1 - np.identity(rows)) * -1
 
     if specification == RANDOM_CONNECTIVITY_MATRIX:
         return np.random.rand(rows, cols)
 
     # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, function_type):
+    if isinstance(specification, types.FunctionType):
         return specification(rows, cols)
 
     # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
@@ -3163,3 +3107,1070 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Specification not recognized
     return None
+
+# **********************************************************************************************************************
+#                                             TransferWithCosts
+# **********************************************************************************************************************
+
+# Keywords for TransferWithCosts arguments, cost functions and their parameters ----------------------------------------
+
+# Make accessible externally
+__all__.extend(['ENABLED_COST_FUNCTIONS',
+                'INTENSITY_COST',
+                'INTENSITY_COST_FUNCTION',
+                'INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM',
+                'INTENSITY_COST_FCT_ADDITIVE_PARAM',
+                'ADJUSTMENT_COST',
+                'ADJUSTMENT_COST_FUNCTION',
+                'ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM',
+                'ADJUSTMENT_COST_FCT_ADDITIVE_PARAM',
+                'DURATION_COST',
+                'DURATION_COST_FUNCTION',
+                'DURATION_COST_FCT_MULTIPLICATIVE_PARAM',
+                'DURATION_COST_FCT_ADDITIVE_PARAM',
+                'COMBINED_COSTS',
+                'COMBINE_COSTS_FUNCTION',
+                'COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM',
+                'COMBINE_COSTS_FCT_ADDITIVE_PARAM',
+                'costFunctionNames', 'CostFunctions'
+                ])
+
+ENABLED_COST_FUNCTIONS = 'enabled_cost_functions'
+
+# These are assigned to TransferWithCosts Function to make them accesible for modulation
+INTENSITY_COST = 'intensity_cost'
+INTENSITY_COST_FUNCTION = 'intensity_cost_fct'
+INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM = 'intensity_cost_fct_mult_param'
+INTENSITY_COST_FCT_ADDITIVE_PARAM = 'intensity_cost_fct_add_param'
+
+ADJUSTMENT_COST = 'adjustment_cost'
+ADJUSTMENT_COST_FUNCTION = 'adjustment_cost_fct'
+ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM = 'adjustment_cost_fct_mult_param'
+ADJUSTMENT_COST_FCT_ADDITIVE_PARAM = 'adjustment_cost_fct_add_param'
+
+DURATION_COST = 'duration_cost'
+DURATION_COST_FUNCTION = 'duration_cost_fct'
+DURATION_COST_FCT_MULTIPLICATIVE_PARAM = 'duration_cost_fct_mult_param'
+DURATION_COST_FCT_ADDITIVE_PARAM = 'duration_cost_fct_add_param'
+
+COMBINED_COSTS = 'combined_costs'
+COMBINE_COSTS_FUNCTION = 'combine_costs_fct'
+COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM = 'combine_costs_fct_mult_param'
+COMBINE_COSTS_FCT_ADDITIVE_PARAM = 'combine_costs_fct_add_param'
+
+costFunctionNames = [INTENSITY_COST_FUNCTION,
+                     ADJUSTMENT_COST_FUNCTION,
+                     DURATION_COST_FUNCTION,
+                     COMBINE_COSTS_FUNCTION]
+
+
+class CostFunctions(IntEnum):
+    """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
+
+    These can be used alone or in combination with one another, by enabling or disabling each using the
+    `TransferWithCosts` Function's `enable_costs <TransferWithCosts.enable_costs>`,
+    `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
+    `assign_costs <TransferWithCosts.assign_costs>` methods.
+
+    Attributes
+    ----------
+
+    NONE
+        `cost <TransferWithCosts.cost>` is not computed.
+
+    INTENSITY
+        `duration_cost_fct` is used to calculate a contribution to the `cost <TransferWithCosts.cost>`
+        based its current `intensity <TransferWithCosts.intensity>` value.
+
+    ADJUSTMENT
+        `adjustment_cost_fct` is used to calculate a contribution to the `cost <TransferWithCosts.cost>`
+        based on the change in its `intensity <TransferWithCosts.intensity>` from its last value.
+
+    DURATION
+        `duration_cost_fct` is used to calculate a contribitution to the `cost <TransferWithCosts.cost>`
+        based on its integral (i.e., it accumulated value over multiple executions).
+
+    ALL
+        all of the cost functions are used to calculate `cost <TransferWithCosts.cost>`.
+
+    DEFAULTS
+        assign default set of cost functions as `INTENSITY`).
+
+    """
+    NONE          = 0
+    INTENSITY     = 1 << 1
+    ADJUSTMENT    = 1 << 2
+    DURATION      = 1 << 3
+    ALL           = INTENSITY | ADJUSTMENT | DURATION
+    DEFAULTS      = INTENSITY
+
+# Getters and setters for transfer and cost function multiplicative and additive parameters ----------------------------
+
+def _transfer_fct_mult_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.transfer_fct.get().parameters.multiplicative_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _transfer_fct_mult_param_setter(value, owning_component=None, context=None):
+    owning_component.parameters.transfer_fct.get().parameters.multiplicative_param._set(value, context)
+    return value
+
+def _transfer_fct_add_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.transfer_fct.get().parameters.additive_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.intensity_cost_fct.get().parameters.additive_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.duration_cost_fct.get().parameters.additive_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
+    try:
+        return owning_component.parameters.combine_costs_fct.get().parameters.additive_param.get(context)
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
+
+TRANSFER_FCT = 'transfer_fct'
+INTENSITY_COST_FCT = 'intensity_cost_fct'
+ADJUSTMENT_COST_FCT = 'adjustment_cost_fct'
+DURATION_COST_FCT = 'duration_cost_fct'
+COMBINE_COSTS_FCT = 'combine_costs_fct'
+
+class TransferWithCosts(TransferFunction):
+    """
+    TransferWithCosts(                      \
+        default_variable=None,              \
+        size=None,                          \
+        transfer_fct=Line                   \
+        enabled_cost_functions=None,        \
+        intensity_fct=Exponential           \
+        adjustment_fct=Linear               \
+        duration_fct=SimpleIntegrator       \
+        combine_costs_fct=LinearCombination \
+        params=None,                        \
+        owner=None,                         \
+        prefs=None                          \
+        )
+
+    .. _TransferWithCosts:
+
+    returns value of `variable <TransferWithCosts.variable>` transformed by `transfer_fct
+    <TransferWithCosts.transfer_fct>`, after calling any cost functions that are enabled and assigning
+    the result(s) to the corresponding parameter(s), as described below.
+
+    .. _TransferWithCosts_Cost_Functions:
+
+    **Cost Functions**
+
+    The TransferWithCosts function has three individual cost functions that it can execute when its `function
+    <TransferWithCosts.function>` is executed, which assign their results to the attributes indicated below:
+
+    * `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` -> `intensity_cost <TransferWithCosts.intensity_cost>`;
+    * `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>` -> `adjustment_cost <TransferWithCosts.adjustment_cost>`;
+    * `duration_cost_fct <TransferWithCosts.duration_cost_fct>` -> `duration_cost <TransferWithCosts.duration_cost>`;
+
+    Which functions are called is determined by the settings in `enabled_cost_functions
+    <TransferWithCosts.enabled_cost_functions>`, that can be initialized in the constructor using the
+    **enabled_cost_functions** argument, and later modified using the `enable_costs <TransferWithCosts.enable_costs>`,
+    `disable_costs <TransferWithCosts.disable_costs>`, `toggle_cost <TransferWithCosts.toggle_cost>` and
+    `assign_costs <TransferWithCosts.assign_costs>` methods.  The value of any cost for which its function has
+    *never* been enabled is None;  otherwise, it is the value assigned when it was last enabled and executed
+    (see `duration_cost_fct <TransferWithCosts.duration_cost_fct>` for additional details concerning that function).
+
+    If any cost functions are enabled, then the `combine_costs_fct <TransferWithCosts.combine_costs_fct>` function
+    is executed, which sums the results of those that are enabled (Hadamard style, if the costs are arrays), and
+    stores the result in the `combined_costs <TransferWithCosts.combined_costs>` attribute.  Its value is None if no
+    cost functions have ever been enabled;  otherwise it is the value assigned the last time one or more cost functions
+    were enabled.
+
+    .. _TransferWithCosts_Modulation_of_Cost_Params:
+
+    **Modulation of Cost Function Parameters**
+
+    The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
+    `cost function <TransferWithCosts_Cost_Functions>` is assigned as a parameter of the TransferWithCost `Function`.
+    This makes them accessible for `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a
+    `Port` (e.g., as the default `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism
+    <Mechanism>`.  They can be referred to in the **modulation** argument of a `ModulatorySignal`\\'s constructor
+    (see `ModulatorySignal_Types`) using the following keywords:
+
+        *INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM*
+        *INTENSITY_COST_FCT_ADDITIVE_PARAM*
+        *ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM*
+        *ADJUSTMENT_COST_FCT_ADDITIVE_PARAM*
+        *DURATION_COST_FCT_MULTIPLICATIVE_PARAM*
+        *DURATION_COST_FCT_ADDITIVE_PARAM*
+        *COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM*
+        *COMBINE_COSTS_FCT_ADDITIVE_PARAM*
+    |
+    See `example <ControlSignal_Example_Modulate_Costs>` of how these keywords can be used to
+    modulate the parameters of the cost functions of a TransferMechanism assigned to a ControlSignal.
+
+    Arguments
+    ---------
+
+    variable : list or 1d array of numbers: Default class_defaults.variable
+        specifies shape and default value of the array for variable used by `transfer_fct
+        <TransferWithCosts.transfer_fct>`
+        on which costs are calculated.
+
+    size : int : None
+        specifies length of the array for `variable <TransferWithCosts.variable>` used by `function
+        <TransferWithCosts.function>` and on which costs are calculated;  can be used in place of
+        default_value, in which case zeros are assigned as the value(s). An error is generated if both are
+        specified but size != len(default_value).
+
+    transfer_fct : TransferFunction : Linear
+        specifies the primary function, used to generate the value it returns.
+
+    enabled_cost_functions : CostFunctions or List[CostFunctions] : None
+        specifies the costs to execute when `function <TransferWithCosts.function>` is called, and
+        include in the computation of `combined_costs <TransferWithCosts.combined_costs>`.
+
+    intensity_cost_fct : Optional[`TransferFunction`] : default `Exponential`
+        specifies the function used to compute the `intensity_cost <TransferWithCosts.intensity_cost>`.
+
+    adjustment_cost_fct : Optional[`TransferFunction`] : default `Linear`
+        specifies the function used to compute the `adjustment_cost <TransferWithCosts.adjustment_cost>`.
+
+    duration_cost_fct : `IntegratorFunction` : default `IntegratorFunction`
+        specifies the function used to compute the `duration_cost <TransferWithCosts.duration_cost>`.
+
+    combine_costs_fct : function : default `LinearCombination`
+        specifies the function used to compute `combined_costs <TransferWithCosts.combined_costs>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+
+    Attributes
+    ----------
+
+    variable : 1d array
+        value used by `function <TransferWithCosts.function>`, and on which `intensity <TransferWithCosts.intensity>`
+        and associated costs are calculated.
+
+    size : int
+        length of array for `variable <TransferWithCosts.variable>`.
+
+    intensity : 1 array
+        the result of the transfer_fct <TransferWithCosts.transfer_fct>`, and the value returned by
+        `function <TransferWithCosts.function>`.
+
+    function : TransferFunction
+        primary function, specified by **transfer_fct** argument of constructor, and also stored in
+        `transfer_fct <TransferWithCosts.transfer_fct>`.
+
+    transfer_fct : TransferMechanism
+        the TransferWithCosts Function's primary function, used to generate the value it returns;
+        same as `function <TransferWithCosts.function>`.
+
+    enabled_cost_functions : CostFunctions or None
+        boolean combination of currently enabled CostFunctions;  determines which `cost functions
+        <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts.function>` is called, and
+        are included in the computation of `combined_costs <TransferWithCosts.combined_costs>` (see
+        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
+
+    intensity_cost : float or None
+        cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `intensity
+        <TransferWithCosts.intensity>`.  Value is None if `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`
+        has not been enabled (see `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
+
+    intensity_cost_fct : TransferFunction
+        calculates `intensity_cost` from the current value of `intensity <TransferWithCosts.intensity>`.
+        It can be any `TransferFunction`, or any other function that takes and returns a scalar value.
+        The default is `Exponential`.
+
+    intensity_cost_fct_mult_param : value
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `intensity_cost_fct
+        <TransferWithCosts.intensity_cost_fct>`.
+
+    intensity_cost_fct_add_param : value
+        references value of the `additive_param <Function_Modulatory_Params>` of `intensity_cost_fct
+        <TransferWithCosts.intensity_cost_fct>`.
+
+    adjustment_cost : float or None
+        cost of change in `intensity <TransferWithCosts.intensity>` from the last time `function
+        <TransferWithCosts.function>` was executed.  Value is None if `adjustment_cost_fct
+        <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `Cost Functions
+        <TransferWithCosts_Cost_Functions>` for additional details).
+
+    adjustment_cost_fct : TransferFunction
+        calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `intensity
+        <TransferWithCosts.intensity>` from its value the last time `function <TransferWithCosts.function>` was
+        executed. It can be any `TransferFunction`, or any other function that takes and returns a scalar value.
+
+    adjustment_cost_fct_mult_param : value
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `adjustment_cost_fct
+        <TransferWithCosts.adjustment_cost_fct>`.
+
+    adjustment_cost_fct_add_param : value
+        references value of the `additive_param <Function_Modulatory_Params>` of `adjustment_cost_fct
+        <TransferWithCosts.adjustment_cost_fct>`.
+
+    duration_cost : float or None
+        integral of `intensity <intensity <TransferWithCosts.intensity>`,  computed by `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>`.  Value is None if `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>` has not been enabled; othewise, the integral of
+        `intensity <intensity <TransferWithCosts.intensity>` is only for those executions of `function
+        <TransferWithCosts.function>` in which `function <TransferWithCosts.duration_cost_fct>` was enabled.
+
+    duration_cost_fct : IntegratorFunction
+        calculates an integral of `intensity <TransferWithCosts.intensity>`.  It can be any `IntegratorFunction`,
+        or any other function that takes a list or array of two values and returns a scalar value.
+
+    duration_cost_fct_mult_param : value
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>`.
+
+    duration_cost_fct_add_param : value
+        references value of the `additive_param <Function_Modulatory_Params>` of `duration_cost_fct
+        <TransferWithCosts.duration_cost_fct>`.
+
+    combined_costs : float or None
+        combined result of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled;
+        computed by `combined_costs_fct <TransferWithCosts.combined_costs_fct>` for current `intensity
+        <TransferWithCosts.intensity>`.  Value is None if no costs have been enabled (see
+        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
+
+    combine_costs_fct : function
+        combines the results of all `cost functions <TransferWithCostss_Cost_Functions>` that are enabled, and assigns
+        the result to `cost <TransferWithCosts.cost>`. It can be any function that takes an array and returns a scalar
+        value.
+
+    combined_costs_fct_mult_param : value
+        references value of the `multiplicative_param <Function_Modulatory_Params>` of `combined_costs_fct
+        <TransferWithCosts.combined_costs_fct>`.
+
+    combined_costs_fct_add_param : value
+        references value of the `additive_param <Function_Modulatory_Params>` of `combined_costs_fct
+        <TransferWithCosts.combined_costs_fct>`.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    name : str
+        name of the Function.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        determines the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+    """
+
+    from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+    from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
+
+    componentName = TRANSFER_WITH_COSTS_FUNCTION
+
+    bounds = None
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'TransferWithCostssClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                variable
+                    see `variable <TransferWithCosts.variable>`
+
+                    :default value: numpy.array([0])
+                    :type: ``numpy.ndarray``
+
+                LinearCombination
+                    see `LinearCombination <TransferWithCosts.LinearCombination>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                SimpleIntegrator
+                    see `SimpleIntegrator <TransferWithCosts.SimpleIntegrator>`
+
+                    :default value: `SimpleIntegrator`
+                    :type: `Function`
+
+                adjustment_cost
+                    see `adjustment_cost <TransferWithCosts.adjustment_cost>`
+
+                    :default value: None
+                    :type:
+
+                adjustment_cost_fct
+                    see `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                adjustment_cost_fct_add_param
+                    see `adjustment_cost_fct_add_param <TransferWithCosts.adjustment_cost_fct_add_param>`
+
+                    :default value: None
+                    :type:
+
+                adjustment_cost_fct_mult_param
+                    see `adjustment_cost_fct_mult_param <TransferWithCosts.adjustment_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+
+                combine_costs_fct
+                    see `combine_costs_fct <TransferWithCosts.combine_costs_fct>`
+
+                    :default value: `LinearCombination`
+                    :type: `Function`
+
+                combine_costs_fct_add_param
+                    see `combine_costs_fct_add_param <TransferWithCosts.combine_costs_fct_add_param>`
+
+                    :default value: None
+                    :type:
+
+                combine_costs_fct_mult_param
+                    see `combine_costs_fct_mult_param <TransferWithCosts.combine_costs_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+
+                combined_costs
+                    see `combined_costs <TransferWithCosts.combined_costs>`
+
+                    :default value: None
+                    :type:
+
+                duration_cost
+                    see `duration_cost <TransferWithCosts.duration_cost>`
+
+                    :default value: None
+                    :type:
+
+                duration_cost_fct
+                    see `duration_cost_fct <TransferWithCosts.duration_cost_fct>`
+
+                    :default value: `SimpleIntegrator`
+                    :type: `Function`
+
+                duration_cost_fct_add_param
+                    see `duration_cost_fct_add_param <TransferWithCosts.duration_cost_fct_add_param>`
+
+                    :default value: None
+                    :type:
+
+                duration_cost_fct_mult_param
+                    see `duration_cost_fct_mult_param <TransferWithCosts.duration_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+
+                enabled_cost_functions
+                    see `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`
+
+                    :default value: CostFunctions.INTENSITY
+                    :type: `CostFunctions`
+
+                intensity
+                    see `intensity <TransferWithCosts.intensity>`
+
+                    :default value: numpy.array([0])
+                    :type: ``numpy.ndarray``
+
+                intensity_cost
+                    see `intensity_cost <TransferWithCosts.intensity_cost>`
+
+                    :default value: None
+                    :type:
+
+                intensity_cost_fct
+                    see `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>`
+
+                    :default value: `Exponential`
+                    :type: `Function`
+
+                intensity_cost_fct_add_param
+                    see `intensity_cost_fct_add_param <TransferWithCosts.intensity_cost_fct_add_param>`
+
+                    :default value: None
+                    :type:
+
+                intensity_cost_fct_mult_param
+                    see `intensity_cost_fct_mult_param <TransferWithCosts.intensity_cost_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+
+                transfer_fct
+                    see `transfer_fct <TransferWithCosts.transfer_fct>`
+
+                    :default value: `Linear`
+                    :type: `Function`
+
+                transfer_fct_add_param
+                    see `transfer_fct_add_param <TransferWithCosts.transfer_fct_add_param>`
+
+                    :default value: None
+                    :type:
+
+                transfer_fct_mult_param
+                    see `transfer_fct_mult_param <TransferWithCosts.transfer_fct_mult_param>`
+
+                    :default value: None
+                    :type:
+        """
+        variable = Parameter(np.array([0]),
+                             history_min_length=1)
+
+        intensity = Parameter(np.zeros_like(variable.default_value),
+                              history_min_length=1)
+
+        # Create primary functions' modulation params for TransferWithCosts
+        transfer_fct = Parameter(Linear, stateful=False)
+        _validate_transfer_fct = get_validator_by_function(is_function_type)
+        transfer_fct_mult_param = Parameter(modulable=True, aliases=MULTIPLICATIVE_PARAM,
+                                            modulation_combination_function=PRODUCT,
+                                            getter=_transfer_fct_mult_param_getter,
+                                            setter=_transfer_fct_mult_param_setter)
+        transfer_fct_add_param = Parameter(modulable=True, aliases=ADDITIVE_PARAM,
+                                           modulation_combination_function=SUM,
+                                           getter=_transfer_fct_add_param_getter,
+                                           setter=_transfer_fct_add_param_setter)
+
+        enabled_cost_functions = Parameter(
+            CostFunctions.DEFAULTS,
+            valid_types=(CostFunctions, list)
+        )
+
+        # Create versions of cost functions' modulation params for TransferWithCosts
+
+        intensity_cost = None
+        intensity_cost_fct = Parameter(Exponential, stateful=False)
+        _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
+        intensity_cost_fct_mult_param = Parameter(modulable=True,
+                                                  modulation_combination_function=PRODUCT,
+                                                  aliases=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
+                                                  getter=_intensity_cost_fct_mult_param_getter,
+                                                  setter=_intensity_cost_fct_mult_param_setter)
+        intensity_cost_fct_add_param = Parameter(modulable=True,
+                                                 modulation_combination_function=SUM,
+                                                 aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
+                                                 getter=_intensity_cost_fct_add_param_getter,
+                                                 setter=_intensity_cost_fct_add_param_setter)
+
+        adjustment_cost = None
+        adjustment_cost_fct = Parameter(Linear, stateful=False)
+        _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
+        adjustment_cost_fct_mult_param = Parameter(modulable=True,
+                                                   modulation_combination_function=PRODUCT,
+                                                   aliases=ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
+                                                   getter=_adjustment_cost_fct_mult_param_getter,
+                                                   setter=_adjustment_cost_fct_mult_param_setter)
+        adjustment_cost_fct_add_param = Parameter(modulable=True,
+                                                  modulation_combination_function=SUM,
+                                                  aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
+                                                  getter=_adjustment_cost_fct_add_param_getter,
+                                                  setter=_adjustment_cost_fct_add_param_setter)
+
+        duration_cost = None
+        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
+        duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
+        _validate_duration_cost_fct = get_validator_by_function(is_function_type)
+        duration_cost_fct_mult_param = Parameter(modulable=True,
+                                                 modulation_combination_function=PRODUCT,
+                                                 aliases=DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
+                                                 getter=_duration_cost_fct_mult_param_getter,
+                                                 setter=_duration_cost_fct_mult_param_setter)
+        duration_cost_fct_add_param = Parameter(modulable=True,
+                                                modulation_combination_function=SUM,
+                                                aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
+                                                getter=_duration_cost_fct_add_param_getter,
+                                                setter=_duration_cost_fct_add_param_setter)
+
+        combined_costs = None
+        from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+        combine_costs_fct = Parameter(LinearCombination, stateful=False)
+        _validate_combine_costs_fct = get_validator_by_function(is_function_type)
+        combine_costs_fct_mult_param=Parameter(modulable=True,
+                                               modulation_combination_function=PRODUCT,
+                                               aliases=COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM,
+                                               getter=_combine_costs_fct_mult_param_getter,
+                                               setter=_combine_costs_fct_mult_param_setter)
+        combine_costs_fct_add_param=Parameter(modulable=True,
+                                              modulation_combination_function=SUM,
+                                              aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
+                                              getter=_combine_costs_fct_add_param_getter,
+                                              setter=_combine_costs_fct_add_param_setter)
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 size=None,
+                 transfer_fct:(is_function_type)=Linear,
+                 enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
+                 intensity_cost_fct:(is_function_type)=Exponential,
+                 adjustment_cost_fct:tc.optional(is_function_type)=Linear,
+                 duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
+                 combine_costs_fct:tc.optional(is_function_type)=LinearCombination,
+                 params=None,
+                 owner=None,
+                 prefs: is_pref_set = None):
+
+        # if size:
+        #     if default_variable is None:
+        #         default_variable = np.zeros(size)
+        #     elif size != len(default_variable):
+        #         raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
+        #                             f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
+
+        super().__init__(
+            default_variable=default_variable,
+            transfer_fct=transfer_fct,
+            enabled_cost_functions=enabled_cost_functions,
+            intensity_cost_fct=intensity_cost_fct,
+            adjustment_cost_fct=adjustment_cost_fct,
+            duration_cost_fct=duration_cost_fct,
+            combine_costs_fct=combine_costs_fct,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=ContextFlags.CONSTRUCTOR
+        )
+
+        # # MODIFIED 6/12/19 NEW: [JDC]
+        # self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        # # MODIFIED 6/12/19 END
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        """Instantiate `cost functions <TransferWithCosts_Cost_Functions>` specified in `enabled_cost_functions
+        <TransferWithCostss.enabled_cost_functions>`.
+        """
+        super()._instantiate_attributes_before_function(function=function, context=None)
+        self._instantiate_cost_functions(context=context)
+
+    def _instantiate_cost_functions(self, context):
+        """Instantiate cost functions and the multiplicative and additive modulatory parameters for them.
+
+        Parse specification of cost functions to enable
+        Instantiate cost functions specified in construtor arguments, and enable ones in enabled_cost_functions
+        Assign default value for multipicative and additive parameters for each, from the values of those parameters
+            on the respective cost functions just instantiated.
+        Initialize intensity_cost
+        """
+
+        if self.enabled_cost_functions:
+            self.assign_costs(self.enabled_cost_functions)
+
+        def instantiate_fct(fct_name, fct):
+            if not fct:
+                self.toggle_cost(fct_name, OFF)
+                return None
+            # # MODIFIED 3/10/20 OLD:
+            # if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # MODIFIED 3/10/20 NEW: [JDC]
+            elif isinstance(fct, Function):
+                return fct
+            elif isinstance(fct, (types.FunctionType, types.MethodType)):
+                from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+                return UserDefinedFunction(#default_variable=function_variable,
+                        custom_function=fct,
+                        owner=self,
+                        context=context)
+                # MODIFIED 3/10/20 END
+            elif issubclass(fct, Function):
+                return fct()
+            else:
+                raise FunctionError(f"{fct} is not a valid cost function for {fct_name}.")
+
+        self.intensity_cost_fct = instantiate_fct(INTENSITY_COST_FUNCTION, self.intensity_cost_fct)
+        # Initialize default_value for TransferWithCosts' modulation params from intensity_cost_fct's values
+        self.parameters.intensity_cost_fct_mult_param.default_value = \
+            self.parameters.intensity_cost_fct_mult_param.get()
+        self.parameters.intensity_cost_fct_add_param.default_value = \
+            self.parameters.intensity_cost_fct_add_param.get()
+
+        self.adjustment_cost_fct = instantiate_fct(ADJUSTMENT_COST_FUNCTION, self.adjustment_cost_fct)
+        # Initialize default_value for TransferWithCosts' modulation params from adjustment_cost_fct's values
+        self.parameters.adjustment_cost_fct_mult_param.default_value = \
+            self.parameters.adjustment_cost_fct_mult_param.get()
+        self.parameters.adjustment_cost_fct_add_param.default_value = \
+            self.parameters.adjustment_cost_fct_add_param.get()
+
+        self.duration_cost_fct = instantiate_fct(DURATION_COST_FUNCTION, self.duration_cost_fct)
+        # Initialize default_value for TransferWithCosts' modulation params from duration_cost_fct's values
+        self.parameters.duration_cost_fct_mult_param.default_value = \
+            self.parameters.duration_cost_fct_add_param.get()
+        self.parameters.duration_cost_fct_add_param.default_value = \
+            self.parameters.duration_cost_fct_add_param.get()
+
+        self.combine_costs_fct = instantiate_fct(COMBINE_COSTS_FUNCTION, self.combine_costs_fct)
+        # Initialize default_value for TransferWithCosts' modulation params from combined_costs_fct's values
+        self.parameters.combine_costs_fct_mult_param.default_value = \
+            self.parameters.combine_costs_fct_mult_param.get()
+        self.parameters.combine_costs_fct_add_param.default_value = \
+            self.parameters.combine_costs_fct_add_param.get()
+
+        # Initialize intensity attributes
+        if self.enabled_cost_functions:
+            # Default cost params
+            if self.owner:
+                if self.owner.context.initialization_status != ContextFlags.DEFERRED_INIT:
+                    self.intensity_cost = self.intensity_cost_fct(self.owner.defaults.variable)
+                else:
+                    self.intensity_cost = self.intensity_cost_fct(self.owner.class_defaults.variable)
+            else:
+                self.intensity_cost = self.intensity_cost_fct(self.defaults.variable)
+                self.defaults.intensity_cost = self.intensity_cost
+
+    def _function(self,
+                 variable=None,
+                 params=None,
+                 context=None):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           a single value or array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the function.
+            Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+            of the constructor.
+
+        Returns
+        -------
+
+        transformation of variable using `transfer_fct <TransferWithCostss.transfer_fct>` : number or array
+
+        """
+
+        self._check_args(variable=variable, params=params, context=context)
+
+        # FIRST, DEAL WITH CURRENT INTENSITY
+
+        # Compute current intensity
+        intensity = self.parameters.transfer_fct._get(context)(variable, context=context)
+
+        # THEN, DEAL WITH COSTS
+        # Note: only compute costs that are enabled;  others are left as None, or with their value when last enabled.
+
+        # Get costs for each cost function that is enabled in enabled_cost_functions
+        enabled_cost_functions = self.parameters.enabled_cost_functions._get(context)
+        enabled_costs = [] # Used to aggregate costs that are enabled and submit to combine_costs_fct
+        if enabled_cost_functions:
+
+            # For each cost function that is enabled:
+            # - get params for the cost functon using _get_current_function_param:
+            #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
+            #   - otherwise, get from TransferWithControl modulation parameter (which is also subject to modulation)
+
+            # Compute intensity_cost
+            if enabled_cost_functions & CostFunctions.INTENSITY:
+                # Assign modulatory param values to intensity_cost_function
+                self.intensity_cost_fct_mult_param = \
+                    self._get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                self.intensity_cost_fct_add_param = \
+                    self._get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
+                # Execute intensity_cost function
+                intensity_cost = self.intensity_cost_fct(intensity, context=context)
+                self.parameters.intensity_cost._set(intensity_cost, context)
+                enabled_costs.append(intensity_cost)
+
+            # Compute adjustment_cost
+            if enabled_cost_functions & CostFunctions.ADJUSTMENT:
+                # Compute intensity change
+                try:
+                    intensity_change = np.abs(intensity - self.parameters.intensity._get(context))
+                except TypeError:
+                    intensity_change = np.zeros_like(self.parameters_intensity._get(context))
+                # Assign modulatory param values to adjustment_cost_function
+                self.adjustment_cost_fct_mult_param = \
+                    self._get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                self.adjustment_cost_fct_add_param = \
+                    self._get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
+                # Execute adjustment_cost function
+                adjustment_cost = self.adjustment_cost_fct(intensity_change, context=context)
+                self.parameters.adjustment_cost._set(adjustment_cost, context)
+                enabled_costs.append(adjustment_cost)
+
+            # Compute duration_cost
+            if enabled_cost_functions & CostFunctions.DURATION:
+                # Assign modulatory param values to duration_cost_function
+                self.duration_cost_fct_mult_param = \
+                    self._get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                self.duration_cost_fct_add_param = \
+                    self._get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, context)
+                # Execute duration_cost function
+                duration_cost = self.duration_cost_fct(intensity, context=context)
+                self.parameters.duration_cost._set(duration_cost, context)
+                enabled_costs.append(duration_cost)
+
+            # Alwasy execute combined_costs_fct if *any* costs are enabled
+
+            # Assign modulatory param values to combine_costs_function
+            self.combine_costs_fct_mult_param = \
+                self._get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
+            self.combine_costs_fct_add_param = \
+                self._get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
+            # Execute combine_costs function
+            combined_costs = self.combine_costs_fct(enabled_costs,
+                                                    context=context)
+            self.parameters.combined_costs._set(combined_costs, context)
+
+        # Store current intensity
+        self.parameters.intensity._set(intensity, context)
+
+        return intensity
+
+    def _is_identity(self, context=None):
+        return (self.parameters.transfer_fct.get()._is_identity(context) and
+                self.parameters.enabled_cost_functions.get(context) == CostFunctions.NONE)
+
+    @tc.typecheck
+    def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+        """Assigns specified functions; all others are disabled.
+
+        Arguments
+        ---------
+        cost_functions: CostFunctions or List[CostFunctions]
+            `cost function <TransferWithCosts_Cost_Functions>` or list of ones to be used;  all other will be disabled.
+        Returns
+        -------
+        enabled_cost_functions :  boolean combination of CostFunctions
+            current value of `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`.
+
+        """
+        if isinstance(cost_functions, CostFunctions):
+            cost_functions = [cost_functions]
+        self.parameters.enabled_cost_functions.set(CostFunctions.NONE, execution_context)
+        return self.enable_costs(cost_functions, execution_context)
+
+    @tc.typecheck
+    def enable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+        """Enable specified `cost functions <TransferWithCosts_Cost_Functions>`;
+        settings for all other cost functions are left intact.
+
+        Arguments
+        ---------
+        cost_functions: CostFunctions or List[CostFunctions]
+            `cost function <TransferWithCosts_Cost_Functions>` or list of ones to be enabled,
+            in addition to any that are already enabled.
+        Returns
+        -------
+        enabled_cost_functions :  boolean combination of CostFunctions
+            current value of `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`.
+        """
+        if isinstance(cost_functions, CostFunctions):
+            cost_functions = [cost_functions]
+        enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
+        for cost_function in cost_functions:
+            enabled_cost_functions |= cost_function
+
+        self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
+        return enabled_cost_functions
+
+    @tc.typecheck
+    def disable_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):
+        """Disable specified `cost functions <TransferWithCosts_Cost_Functions>`;
+        settings for all other cost functions are left intact.
+
+        Arguments
+        ---------
+        cost_functions: CostFunction or List[CostFunctions]
+            `cost function <TransferWithCosts_Cost_Functions>` or list of ones to be disabled.
+        Returns
+        -------
+        enabled_cost_functions :  boolean combination of CostFunctions
+            current value of `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`.
+        """
+        if isinstance(cost_functions, CostFunctions):
+            cost_functions = [cost_functions]
+        enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
+        for cost_function in cost_functions:
+            enabled_cost_functions &= ~cost_function
+
+        self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
+        return enabled_cost_functions
+
+    def toggle_cost(self, cost_function_name:tc.any(str, CostFunctions),
+                             assignment:bool=ON,
+                             execution_context=None):
+        """Enable/disable a `cost functions <TransferWithCosts_Cost_Functions>`.
+
+        Arguments
+        ---------
+        cost_function_name : str or CostFunction
+            Must be the name of a `cost function <TransferWithCosts_Cost_Functions>` or a value of CostFunction enum.
+
+        Returns
+        -------
+        enabled_cost_functions :  boolean combination of CostFunctions
+            current value of `enabled_cost_functions <TransferWithCosts.enabled_cost_functions>`.
+
+        """
+        if cost_function_name in {INTENSITY_COST_FUNCTION, CostFunctions.INTENSITY}:
+            cost_function = CostFunctions.INTENSITY
+            cost_function_name = INTENSITY_COST_FUNCTION
+        elif cost_function_name in {ADJUSTMENT_COST_FUNCTION, CostFunctions.ADJUSTMENT}:
+            cost_function = CostFunctions.ADJUSTMENT
+            cost_function_name = ADJUSTMENT_COST_FUNCTION
+        elif cost_function_name in {DURATION_COST_FUNCTION, CostFunctions.DURATION}:
+            cost_function = CostFunctions.DURATION
+            cost_function_name = DURATION_COST_FUNCTION
+        elif cost_function_name == COMBINE_COSTS_FUNCTION:
+            raise FunctionError("{} cannot be disabled".format(COMBINE_COSTS_FUNCTION))
+        else:
+            raise FunctionError("toggle_cost: unrecognized cost function: {}".format(cost_function_name))
+
+        enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
+        if assignment:
+            if not cost_function_name in self.parameters.names():
+                raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
+                                         format(cost_function_name))
+            if not enabled_cost_functions:
+                enabled_cost_functions = cost_function
+            else:
+                enabled_cost_functions |= cost_function
+        else:
+            enabled_cost_functions &= ~cost_function
+
+        self.parameters.enabled_cost_functions.set(enabled_cost_functions, execution_context)
+        return enabled_cost_functions
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        # Run transfer function first
+        transfer_f = self.parameters.transfer_fct
+        trans_f = ctx.import_llvm_function(transfer_f.get())
+        trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
+        trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
+        trans_in = arg_in
+        if trans_in.type != trans_f.args[2].type:
+            warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
+            trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        trans_out = arg_out
+        if trans_out.type != trans_f.args[3].type:
+            warnings.warn("Unexpected data shape: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
+            trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
+
+        # TODO: Implement cost calculations
+        return builder

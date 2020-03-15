@@ -47,10 +47,10 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 
 #log hidden layer activation
 colors_hidden_layer.set_log_conditions('value')
-colors_hidden_layer.set_log_conditions('RESULTS')
+colors_hidden_layer.set_log_conditions('RESULT')
 
 words_hidden_layer.set_log_conditions('value')
-words_hidden_layer.set_log_conditions('RESULTS')
+words_hidden_layer.set_log_conditions('RESULT')
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
@@ -270,8 +270,8 @@ WR_trial_initialize_input = {
 #   CREATE THRESHOLD FUNCTION
 # first value of DDM's value is DECISION_VARIABLE
 def pass_threshold(mech1, mech2, thresh):
-    results1 = mech1.output_states[0].value
-    results2 = mech2.output_states[0].value
+    results1 = mech1.output_ports[0].value
+    results2 = mech2.output_ports[0].value
     for val in results1:
         if val >= thresh:
             return True

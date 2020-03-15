@@ -32,7 +32,7 @@ decision_layer = pnl.LCAMechanism(size=2,
                                   )
 decision_process = pnl.Process(pathway=[input_layer, decision_layer])
 optimization_system = pnl.System(processes=[decision_process],
-                                 monitor_for_control=[decision_layer.output_states[pnl.RESULT]])
+                                 monitor_for_control=[decision_layer.output_ports[pnl.RESULT]])
 # ADD COMPARATOR MECHANISM FOR ACCURACY DETERMINATION
 
 

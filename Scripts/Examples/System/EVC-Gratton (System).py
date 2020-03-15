@@ -6,14 +6,14 @@ import psyneulink as pnl
 import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.transferfunctions
 
-mechanism_prefs = pnl.ComponentPreferenceSet(
+mechanism_prefs = pnl.BasePreferenceSet(
     prefs={
         pnl.VERBOSE_PREF: pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
         # pnl.REPORT_OUTPUT_PREF: pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
     }
 )
 
-process_prefs = pnl.ComponentPreferenceSet(
+process_prefs = pnl.BasePreferenceSet(
     reportOutput_pref=pnl.PreferenceEntry(False, pnl.PreferenceLevel.INSTANCE),
     verbose_pref=pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
 )
@@ -72,7 +72,7 @@ Decision = pnl.DDM(
     ),
     prefs=mechanism_prefs,
     name='Decision',
-    output_states=[
+    output_ports=[
         pnl.DECISION_VARIABLE,
         pnl.RESPONSE_TIME,
         pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -169,7 +169,7 @@ for mech in mySystem.controller.prediction_mechanisms.mechanisms:
     if 'Reward' in mech.name:
         print(mech.name)
         mech.function.rate = 0.8
-        # mySystem.controller.prediction_mechanisms[mech].parameterStates['rate'].base_value = 1.0
+        # mySystem.controller.prediction_mechanisms[mech].parameterPorts['rate'].base_value = 1.0
 
 print('new rate of integration mechanisms before System execution:')
 # for mech in mySystem.controller.prediction_mechanisms.keys():

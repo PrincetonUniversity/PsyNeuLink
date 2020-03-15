@@ -24,13 +24,14 @@ import numbers
 
 import abc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, iscompatible
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
 __all__ = ['StatefulFunction']
@@ -82,7 +83,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         <StatefulFunction.noise>` for details).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -170,49 +171,45 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     see `initializer <StatefulFunction.initializer>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 noise
                     see `noise <StatefulFunction.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 previous_value
                     see `previous_value <StatefulFunction.previous_value>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
 
                 rate
                     see `rate <StatefulFunction.rate>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         noise = Parameter(0.0, modulable=True)
         rate = Parameter(1.0, modulable=True)
-        previous_value = np.array([0])
-        initializer = np.array([0])
+        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        initializer = Parameter(np.array([0]), pnl_internal=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
 
     @handle_external_context()
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise: parameter_spec = 0.0,
+                 rate=1.0,
+                 noise=0.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None,
-                 context=None):
+                 context=None,
+                 **kwargs
+                 ):
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initializer"]
@@ -230,23 +227,17 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             else:
                 initializer = self.class_defaults.variable
 
-        previous_value = self._initialize_previous_value(initializer, context)
-
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  previous_value=previous_value,
-                                                  noise=noise,
-                                                  params=params)
-
-        # does not actually get set in _assign_args_to_param_dicts but we need it as an instance_default
-        params[INITIALIZER] = initializer
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         context=context)
+        super().__init__(
+            default_variable=default_variable,
+            rate=rate,
+            initializer=initializer,
+            noise=noise,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+            context=context,
+            **kwargs
+        )
 
         self.has_initializers = True
 
@@ -296,11 +287,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 # self.defaults.variable,
                             )
                         )
-                        # OLD:
-                        # self.paramClassDefaults[RATE] = np.zeros_like(np.array(rate))
-
-                        # KAM changed 5/15 b/c paramClassDefaults were being updated and *requiring* future integrator functions
-                        # to have a rate parameter of type ndarray/list
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -316,7 +302,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _validate_initializers(self, default_variable, context=None):
         for initial_value_name in self.initializers:
 
-            initial_value = self.get_current_function_param(initial_value_name, context=context)
+            initial_value = self._get_current_function_param(initial_value_name, context=context)
 
             if isinstance(initial_value, (list, np.ndarray)):
                 if len(initial_value) != 1:
@@ -447,6 +433,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         return param
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
@@ -455,10 +448,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
-        for i in range(len(self.stateful_attributes)):
-            attr_name = self.stateful_attributes[i]
-            initializer_value = getattr(self, self.initializers[i]).copy()
-            setattr(self, attr_name, initializer_value)
+        for i, attr_name in enumerate(self.stateful_attributes):
+            # FIXME: HACK: Do not reinitialize random_state
+            if attr_name != "random_state":
+                initializer_value = getattr(self, self.initializers[i]).copy()
+                setattr(self, attr_name, initializer_value)
 
         self.has_initializers = True
 
@@ -513,13 +507,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
-                reinitialization_values.append(self.get_current_function_param(initializer_name, context))
+                reinitialization_values.append(self._get_current_function_param(initializer_name, context))
 
         elif len(args) == len(self.initializers):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 if args[i] is None:
-                    reinitialization_values.append(self.get_current_function_param(initializer_name, context))
+                    reinitialization_values.append(self._get_current_function_param(initializer_name, context))
                 else:
                     # Not sure if np.atleast_1d is necessary here:
                     reinitialization_values.append(np.atleast_1d(args[i]))
@@ -557,23 +551,34 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         # rebuilding value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
         value = []
-        for i in range(len(self.stateful_attributes)):
-            setattr(self, self.stateful_attributes[i], reinitialization_values[i])
-            getattr(self.parameters, self.stateful_attributes[i]).set(reinitialization_values[i],
-                                                                      context,
-                                                                      override=True)
-            value.append(getattr(self, self.stateful_attributes[i]))
+        for i, attr in enumerate(self.stateful_attributes):
+            # FIXME: HACK: Do not reinitialize random_state
+            if attr != "random_state":
+                setattr(self, attr, reinitialization_values[i])
+                getattr(self.parameters, attr).set(reinitialization_values[i],
+                                                   context, override=True)
+                value.append(getattr(self, self.stateful_attributes[i]))
 
         self.parameters.value.set(value, context, override=True)
         return value
 
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reinitialize" in tags
+        for i, a in enumerate(self.stateful_attributes):
+            if a == "random_state":
+                continue
+            source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
+            dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
+            if source_ptr.type != dest_ptr.type:
+                warnings.warn("Shape mismatch between stateful param and initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
+                # Take a guess that dest just has an extra dimension
+                assert len(dest_ptr.type.pointee) == 1
+                dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(0)])
+            builder.store(builder.load(source_ptr), dest_ptr)
+
+        return builder
+
     @abc.abstractmethod
     def _function(self, *args, **kwargs):
         raise FunctionError("StatefulFunction is not meant to be called explicitly")
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self.noise] if isinstance(self.noise, DistributionFunction) else []
-        ))

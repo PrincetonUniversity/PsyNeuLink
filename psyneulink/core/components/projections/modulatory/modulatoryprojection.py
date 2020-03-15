@@ -9,41 +9,54 @@
 # ******************************************  ModulatoryProjection *****************************************************
 
 """
+
+Contents
+--------
+
+  * `ModulatoryProjection_Overview`
+  * `ModulatoryProjection_Creation`
+  * `ModulatoryProjection_Structure`
+  * `ModulatoryProjection_Execution`
+  * `ModulatoryProjection_Class_Reference`
+
+
 .. _ModulatoryProjection_Overview:
 
 Overview
 --------
 
 A ModulatoryProjection is a subclass of `Projection <Projection>` that takes the value of a
-`ModulatorySignal <ModulatorySignal>` belonging to an `AdaptiveMechanism <AdaptiveMechanism>`, and uses that to
-modulate the function of the `State <State>` to which it projects.  There are three types of ModulatoryProjections,
-that modulate different types of Components and their States:
+`ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`, and uses that to
+modulate the function of the `Port <Port>` to which it projects.  There are three types of ModulatoryProjections,
+that modulate different types of Components and their Ports:
 
 * `LearningProjection`
     takes the `value <LearningSignal.value>` of a `LearningSignal` belonging to a `LearningMechanism`,
-    and conveys it to the *MATRIX* `ParameterState` of a `MappingProjection`, for use by its
-    `function <ParameterState.function>` in modulating the value of the MappingProjection's
+    and conveys it to the *MATRIX* `ParameterPort` of a `MappingProjection`, for use by its
+    `function <ParameterPort.function>` in modulating the value of the MappingProjection's
     `matrix <MappingProjection.matrix>` parameter.
 ..
 * `ControlProjection`
-    takes the `value of a <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
-    and conveys it to the `ParameterState` for the parameter of a `Mechanism <Mechanism>` or its
+    takes the `value <ControlSignal.value>` of a `ControlSignal` belonging to a `ControlMechanism`,
+    and conveys it to the `ParameterPort` for the parameter of a `Mechanism <Mechanism>` or its
     `function <Mechanism_Base.function>`, for use in modulating the value of the parameter.
 ..
 * `GatingProjection`
     takes the `value <GatingSignal.value>` of a `GatingSignal` belonging to a `GatingMechanism`, and conveys it
-    to the `InputState` or `OutputState` of a `ProcessingMechanism <ProcessingMechanism>` for use by the State's
-    `function <State_Base.function>` in modulating its `value <State_Base.value>`.
+    to the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` for use by the Port's
+    `function <Port_Base.function>` in modulating its `value <Port_Base.value>`.
 
-.. _Projection_Creation:
+See `ModulatoryMechanism <ModulatoryMechanism_Naming>` for conventions used for the names of Modulatory components.
+
+.. _ModulatoryProjection_Creation:
 
 Creating a ModulatoryProjection
 -------------------------------
 
 A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
-More commonly, however, ModulatoryProjections are either specified in the context of the States to or from
-which they project (`State_Projections` in State, and `Projection_Specification>`), or are `created automatically
+More commonly, however, ModulatoryProjections are either specified in the context of the Ports to or from
+which they project (`Port_Projections` in Port, and `Projection_Specification`), or are `created automatically
 <Projection_Automatic_Creation>`, the details of which are described in the documentation for each type of
 ModulatoryProjection.
 
@@ -54,24 +67,24 @@ Structure
 
 A ModulatoryProjection has the same basic structure as a `Projection <Projection>`, augmented by type-specific
 attributes and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a
-`State <State>` are listed in the State's `mod_afferents` attribute.
+`Port <Port>` are listed in the Port's `mod_afferents` attribute.
 
 .. _ModulatoryProjection_Execution:
 
 Execution
 ---------
 
-A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `State <State>` to
-which it projects — its `receiver <Projection_Base.receiver>` — is updated;  that occurs when the State's owner
+A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the `Port <Port>` to
+which it projects — its `receiver <Projection_Base.receiver>` — is updated;  that occurs when the Port's owner
 Mechanism is executed.  When a ModulatoryProjection executes, it conveys both the `value <ModulatorySignal.value>` of
 the `ModulatorySignal <ModulatorySignal>` from which it projects, and the ModulatorySignal's `modulation
-<ModulatorySignal.modulation>` attribute, to the State that receives the Projection.  The State assigns the value to
-the parameter of the State's `function <State_Base.function>` specified by the `modulation` attribute, and then calls
-the `function <State_Base.function>` to determine the `value <State_Base.value>` of the State.
+<ModulatorySignal.modulation>` attribute, to the Port that receives the Projection.  The Port assigns the value to
+the parameter of the Port's `function <Port_Base.function>` specified by the `modulation` attribute, and then calls
+the `function <Port_Base.function>` to determine the `value <Port_Base.value>` of the Port.
 
 .. note::
-   The change made to the parameter of the State's Function in response to the execution of a ModulatoryProjection
-   are not applied until the State is updated which, in turn, does not occur until the Mechanism to which the State
+   The change made to the parameter of the Port's Function in response to the execution of a ModulatoryProjection
+   are not applied until the Port is updated which, in turn, does not occur until the Mechanism to which the Port
    belongs is next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
 .. _ModulatoryProjection_Class_Reference:
@@ -82,7 +95,7 @@ Class Reference
 """
 
 from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME, kwAssign
+from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME
 from psyneulink.core.globals.log import ContextFlags, LogEntry
 
 
@@ -99,90 +112,15 @@ class ModulatoryProjectionError(Exception):
 
 
 class ModulatoryProjection_Base(Projection_Base):
-    """
-    ModulatoryProjection_Base(     \
-        receiver,                  \
-        sender=None,               \
-        weight=None,               \
-        exponent=None,             \
-        params=None,               \
-        name=None,                 \
-        prefs=None)
-
-    Subclass of `Projection <Projection>` that modulates the value of a `State <State>`.
+    """Subclass of `Projection <Projection>` that modulates the value of a `Port <Port>`.
+    See `Projection <Projection_Class_Reference>` and subclasses for arguments and additonal attributes.
 
     .. note::
-       ModulatoryProjection is an abstract class and should NEVER be instantiated by a call to its constructor.
+       ModulatoryProjection is an abstract class and should **never** be instantiated by a call to its constructor.
        It should be instantiated using the constructor for a `subclass <ModulatoryProjection_Subtypes>`.
-
-    Arguments
-    ---------
-
-    receiver : Optional[State or Mechanism]
-        specifies the State to which the ModulatoryProjection projects.
-
-    sender : Optional[OutputState or Mechanism] : default None
-        specifies the Component from which the ModulatoryProjection projects.
-
-    weight : number : default None
-       specifies the value by which to multiply the ModulatoryProjection's `value <ModulatoryProjection.value>`
-       before combining it with others (see `weight <ModulatoryProjection.weight>` for additional details).
-
-    exponent : number : default None
-       specifies the value by which to exponentiate the ModulatoryProjection's `value <ModulatoryProjection.value>`
-       before combining it with others (see `exponent <ModulatoryProjection.exponent>` for additional details).
-
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
-        ModulatoryProjection, its `function <ModulatoryProject.function>`, and/or a custom function and its parameters.
-        By default, it contains an entry for the ModulatoryProjection's default `function <ModulatoryProject.function>`
-        and parameter assignments.  Values specified for parameters in the dictionary override any assigned to those
-        parameters in arguments of the constructor.
-
-    name : str : default see ModulatoryProjection `name <ModulatoryProjection.name>`
-        specifies the name of the ModulatoryProjection; see ModulatoryProjection `name <ModulatoryProjection.name>`
-        for details.
-
-    prefs : PreferenceSet or specification dict : default Projection.classPreferences
-        specifies the `PreferenceSet` for the ModulatoryProjection; see `prefs <ModulatoryProjection.prefs>` for
-        details.
-
-    context : str : default None
-        optional reference to a subclass
 
     Attributes
     ----------
-
-    receiver : MATRIX ParameterState of a MappingProjection
-        the State to which the ModulatoryProjection projects, the `function <State_Base.function>` of which is
-        modulated by it.
-
-    sender : LEARNING_SIGNAL OutputState of a LearningMechanism
-        the `ModulatorySignal <ModulatorySignal>` from which the ModulatoryProjection projects.
-
-    variable : 2d np.array
-        value received from the `ModulatorySignal <ModulatorySignal>` that is the ModulatoryProjection's
-        `sender <ModulatoryProjection.sender`.
-
-    function : Function : default Linear
-        assigns the value received from the ModulatoryProjection's `sender <ModualatoryProjection.sender>` to
-        its `value <ModulatoryProjection.value>`.
-
-    value : 2d np.array
-        value used to modulate the `function <State_Base.function>` of the State that is its `receiver
-        <ModulatoryProjection.receiver>`.
-
-    weight : number
-       multiplies the `value <ModulatoryProjection.value>` of the ModulatoryProjection after applying `exponent
-       <ModulatoryProjection.exponent>`, and before combining it with any others that project to the same `State` to
-       determine that State's `variable <State.variable>` is modified (see description in `Projection
-       <Projection_Weight_and_Exponent>` for details).
-
-    exponent : number
-        exponentiates the `value <ModulatoryProjection.value>` of the ModulatoryProjection, before applying `weight
-        <ModulatoryProjection.weight>`, and before combining it with any others that project to the same `State` to
-        determine that State's `variable <State.variable>` is modified (see description in `Projection
-        <Projection_Weight_and_Exponent>` for details).
 
     name : str
         the name of the ModulatoryProjection. If the ModulatoryProjection's `initialization has been deferred
@@ -192,30 +130,25 @@ class ModulatoryProjection_Base(Projection_Base):
         ModulatoryProjection with the same base name (see `Naming`). If the name is not specified in the **name**
         argument of its constructor, a default name is assigned using the following format:
         '<ModualatorySignal type> for <receiver owner Mechanism's name>[<receiver's name>]'
-        (for example, ``'GatingSignal for my_mech[InputState-0]'``).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the ModulatoryProjection; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        (for example, ``'GatingSignal for my_mech[InputPort-0]'``).
 
     """
     componentCategory = MODULATORY_PROJECTION
 
-    def _assign_default_projection_name(self, state=None, sender_name=None, receiver_name=None):
+    def _assign_default_projection_name(self, port=None, sender_name=None, receiver_name=None):
 
         template = "{} for {}[{}]"
 
-        if self.initialization_status &  (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
+        if self.initialization_status & (ContextFlags.INITIALIZED | ContextFlags.INITIALIZING):
             # If the name is not a default name for the class, return
             if not self.className + '-' in self.name:
                 return self.name
             self.name = template.format(self.className, self.receiver.owner.name, self.receiver.name)
 
         elif self.initialization_status == ContextFlags.DEFERRED_INIT:
-            projection_name = template.format(self.className, state.owner.name, state.name)
-            # self.init_args[NAME] = self.init_args[NAME] or projection_name
-            self.name = self.init_args[NAME] or projection_name
+            projection_name = template.format(self.className, port.owner.name, port.name)
+            # self._init_args[NAME] = self._init_args[NAME] or projection_name
+            self.name = self._init_args[NAME] or projection_name
 
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".

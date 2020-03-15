@@ -88,9 +88,9 @@ What PsyNeuLink is **NOT**
 
 The longterm goal of PsyNeuLink is to provide an environment that integrates comptutational modeling of brain function
 and behavior at all levels of analysis.  While it is designed to be fully general, and can in principle be used to
-implement models at any level, it is still under development, and current efficiency consideration make it more
+implement models at any level, it is still under development, and current efficiency considerations make it more
 suitable for some of forms of modeling than others. In its present form, it is well suited to the creation of
-simple to moderately complex models, and for the integration of disparate models into a single envinroment, while in
+simple to moderately complex models, and for the integration of disparate models into a single environment, while in
 it is presently less well suited to efforts involving massively large computations, such as:
 
  - extensive model fitting
@@ -112,11 +112,12 @@ constructed in other packages (including some of the ones listed above) into a s
 characteristics that are often (at least in the initial stages of development) in tension with efficiency (think:
 interpreted vs. compiled).
 
-That said, priorities for ongoing development of PsyNeuLink are:  i) acceleration, using just-in-time
-compilation methods and parallelization; ii) enhancement of the API to facilitate wrapping modules from
-other packages for integration into the PsyNeuLink environment (examples currently exist for Pytorch and Emergent); iii)
-integration of tools for parameter estimation, model comparison and data fitting; and iv) a graphic interface for the
-construction of models and realtime display of their execution.
+That said, priorities for ongoing development of PsyNeuLink are:
+    i) acceleration, using just-in-time compilation methods and parallelization;
+    ii) enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
+        environment (examples currently exist for Pytorch and Emergent);
+    iii) integration of tools for parameter estimation, model comparison and data fitting; and
+    iv) a graphic interface for the construction of models and realtime display of their execution.
 
 .. _Overview:
 
@@ -124,7 +125,7 @@ Environment Overview
 --------------------
 
 PsyNeuLink is written in Python, and conforms to the syntax, coding standards and modular organization shared by
-most Python packages.  `BasicsAndSampler` provides an orientation to PsyNeuLinks Components, some examples of what
+most Python packages.  `BasicsAndPrimer` provides an orientation to PsyNeuLink's Components, some examples of what
 PsyNeuLink models look like, and some of its capabilities. `QuickReference` provides an overview of how PsyNeuLink is
 organized and some of its basic principles of operation.  The `Tutorial <Tutorial>` provides an interactive guide to the
 construction of models using PsyNeuLink.  `Core` contains the fundamental objects used to build PsyNeuLink models, and
@@ -152,7 +153,7 @@ switch to your preferred python3 environment, then run
 
 Dependencies that are automatically installed (except those noted as optional) include:
 
-   * numpy (version 1.16)
+   * numpy (version < 1.16)
    * matplotlib
    * toposort (version 1.4)
    * typecheck-decorator (version 1.2)
@@ -232,11 +233,16 @@ Contributors
 *(in alphabetical order)*
 
 * **Allie Burton**, Princeton Neuroscience Institute, Princeton University
+* **Laura Bustamante**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
+* **Samyak Gupta**, Department of Computer Science, Rutgers University
+* **Abigail Hoskin**, Department of Psychology, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University
+* **Qihong Lu**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
+* **Lena Rosendahl**, Department of Mechanical and Aerospace Engineering, Princeton University
 * **Dillon Smith**, Princeton Neuroscience Institute, Princeton University
 * **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
 * **David Turner**, Princeton Neuroscience Institute, Princeton University
@@ -265,7 +271,7 @@ Table of Contents
    :titlesonly:
 
    self
-   BasicsAndSampler
+   BasicsAndPrimer
    QuickReference
    Core
    Library

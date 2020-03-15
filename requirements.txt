@@ -1,5 +1,11 @@
-toposort==1.4
-numpy<1.16
-pillow
-typecheck-decorator==1.2
+autograd
+dill
+elfi
+graphviz
 llvmlite
+matplotlib
+numpy
+pillow
+toposort==1.4
+torch; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
+typecheck-decorator==1.2

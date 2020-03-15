@@ -84,21 +84,21 @@ to access its `entries <Log.entries>`:
 
 Although every Component is assigned its own Log, that records the `value <Component.value>` of that Component,
 the Logs for `Mechanisms <Mechanism>` and `MappingProjections <MappingProjection>` also  provide access to and control
-the Logs of their `States <State>`.  Specifically the Logs of these Components contain the following information:
+the Logs of their `Ports <Port>`.  Specifically the Logs of these Components contain the following information:
 
 * **Mechanisms**
 
   * *value* -- the `value <Mechanism_Base.value>` of the Mechanism.
 
-  * *InputStates* -- the `value <InputState.value>` of any `InputState` (listed in the Mechanism's `input_states
-    <Mechanism_Base.input_states>` attribute).
+  * *InputPorts* -- the `value <InputPort.value>` of any `InputPort` (listed in the Mechanism's `input_ports
+    <Mechanism_Base.input_ports>` attribute).
 
-  * *ParameterStates* -- the `value <ParameterState.value>` of `ParameterState` (listed in the Mechanism's
-    `parameter_states <Mechanism_Base.parameter_states>` attribute);  this includes all of the `user configurable
+  * *ParameterPorts* -- the `value <ParameterPort.value>` of `ParameterPort` (listed in the Mechanism's
+    `parameter_ports <Mechanism_Base.parameter_ports>` attribute);  this includes all of the `user configurable
     <Component_User_Params>` parameters of the Mechanism and its `function <Mechanism_Base.function>`.
 
-  * *OutputStates* -- the `value <OutputState.value>` of any `OutputState` (listed in the Mechanism's `output_states
-    <Mechanism_Base.output_states>` attribute).
+  * *OutputPorts* -- the `value <OutputPort.value>` of any `OutputPort` (listed in the Mechanism's `output_ports
+    <Mechanism_Base.output_ports>` attribute).
 ..
 * **Projections**
 
@@ -162,7 +162,7 @@ Examples
 --------
 
 The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
-another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputState` of the first and the
+another, and logs the `noise <TransferMechanism.noise>` and *RESULT* `OutputPort` of the first and the
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
@@ -177,14 +177,14 @@ another, and logs the `noise <TransferMechanism.noise>` and *RESULTS* `OutputSta
     COMMENT
     # Show the loggable items (and current condition assignments) for each Mechanism and the Projection between them:
     >> my_mech_A.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULT': 'OFF', 'integration_rate': 'OFF', 'intercept': 'OFF', 'noise': 'OFF'}
     >> my_mech_B.loggable_items
-    {'InputState-0': 'OFF', 'slope': 'OFF', 'RESULTS': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
+    {'InputPort-0': 'OFF', 'slope': 'OFF', 'RESULT': 'OFF', 'intercept': 'OFF', 'noise': 'OFF', 'integration_rate': 'OFF'}
     >> proj_A_to_B.loggable_items
     {'value': 'OFF', 'matrix': 'OFF'}
 
-    # Assign the noise parameter and RESULTS OutputState of my_mech_A, and the matrix of the Projection, to be logged
-    >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULTS])
+    # Assign the noise parameter and RESULT OutputPort of my_mech_A, and the matrix of the Projection, to be logged
+    >>> my_mech_A.set_log_conditions([pnl.NOISE, pnl.RESULT])
     >>> proj_A_to_B.set_log_conditions(pnl.MATRIX)
 
 Note that since no `condition <Log_Conditions>` was specified, the default (LogCondition.EXECUTION) is used.
@@ -204,7 +204,7 @@ Executing the Process generates entries in the Logs, that can then be displayed 
     COMMENT
     # List the items of each Mechanism and the Projection that were actually logged:
     >> my_mech_A.logged_items
-    {'RESULTS': 'EXECUTION', 'noise': 'EXECUTION'}
+    {'RESULT': 'EXECUTION', 'noise': 'EXECUTION'}
     >> my_mech_B.logged_items
     {}
     >> proj_A_to_B.logged_items
@@ -224,8 +224,8 @@ method of a Log::
 
     Logged Item:   Time       Context                                                                   Value
 
-    'RESULTS'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
-    'RESULTS'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULT'      0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
+    'RESULT'      0:1:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.  0.]
 
 
     'noise'        0:0:0     " EXECUTING  System System-0| Mechanism: mech_A [in processes: ['Pro..."   [ 0.]
@@ -238,8 +238,8 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     COMMENT:
     FIX: THESE EXAMPLES CAN'T BE EXECUTED AS THEY RETURN FORMATS ON JENKINS THAT DON'T MATCH THOSE ON LOCAL MACHINE(S)
     COMMENT
-    >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULTS], owner_name=False, quotes=None))
-    'Run', 'Trial', 'Time_step', 'noise', 'RESULTS'
+    >> print(my_mech_A.log.csv(entries=[pnl.NOISE, pnl.RESULT], owner_name=False, quotes=None))
+    'Run', 'Trial', 'Time_step', 'noise', 'RESULT'
     0, 0, 0, 0.0, 0.0 0.0
     0, 1, 0, 0.0, 0.0 0.0
     COMMENT:
@@ -256,7 +256,7 @@ for ``my_mech_A`` and  ``proj_A_to_B``, using different formatting options::
     <BLANKLINE>
     COMMENT
 
-Note that since the `name <Projection.name>` attribute of the Projection was not assigned, its default name is
+Note that since the `name <Projection_Base.name>` attribute of the Projection was not assigned, its default name is
 reported.
 
 The following shows the Log of ``proj_A_to_B`` in numpy array format, with and without header information::
@@ -320,17 +320,17 @@ An attribute is logged if:
 
 # * it is one `automatically included <LINK>` in logging;
 
-* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterState_Specification>`
+* it is included in the *LOG_ENTRIES* entry of a `parameter specification dictionary <ParameterPort_Specification>`
   assigned to the **params** argument of the constructor for the Component;
 
 * the LogCondition(s) specified in a Component's logpref match the current `ContextFlags` in its context attribute
 
 Entry values are added by the setter method for the attribute being logged.
 
-The following entries are automatically included in the `loggable_items` of a `Mechanism` object:
+The following entries are automatically included in the `loggable_items` of a `Mechanism <Mechanism>` object:
     - the `value <Mechanism_Base.value>` of the Mechanism;
-    - the value attribute of every State for which the Mechanism is an owner
-    - value of every projection that sends to those States]
+    - the value attribute of every Port for which the Mechanism is an owner
+    - value of every projection that sends to those Ports]
     - the system variables defined in SystemLogEntries (see declaration above)
     - any variables listed in the params[LOG_ENTRIES] of a Mechanism
 
@@ -414,9 +414,9 @@ class LogCondition(enum.IntFlag):
     # INITIALIZATION = ContextFlags.INITIALIZING
     INITIALIZATION = ContextFlags.INITIALIZING
     """Set during execution of the Component's constructor."""
-    VALIDATION =  ContextFlags.VALIDATING
+    VALIDATION = ContextFlags.VALIDATING
     """Set during validation of the value of a Component or its attribute."""
-    EXECUTION =  ContextFlags.EXECUTING
+    EXECUTION = ContextFlags.EXECUTING
     """Set during all `phases of execution <System_Execution>` of the Component."""
     PROCESSING = ContextFlags.PROCESSING
     """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
@@ -426,9 +426,9 @@ class LogCondition(enum.IntFlag):
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
-    TRIAL = ContextFlags.SIMULATION<<1
+    TRIAL = ContextFlags.SIMULATION << 1
     """Set at the end of a `TRIAL`."""
-    RUN = ContextFlags.SIMULATION<<2
+    RUN = ContextFlags.SIMULATION << 2
     """Set at the end of a `RUN`."""
     ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
@@ -604,8 +604,8 @@ class Log:
             - the context of the assignment is above the ContextFlags specified in the logPref setting of the owner object
         Entry values are added by the setter method for the attribute being logged
         The following entries are automatically included in self.entries for a Mechanism object:
-            - the value attribute of every State for which the Mechanism is an owner
-            [TBI: - value of every projection that sends to those States]
+            - the value attribute of every Port for which the Mechanism is an owner
+            [TBI: - value of every projection that sends to those Ports]
             - the system variables defined in SystemLogEntries (see declaration above)
             - any variables listed in the params[LOG_ENTRIES] of a Mechanism
         The ContextFlags class (see declaration above) defines five levels of logging:
@@ -690,7 +690,7 @@ class Log:
 
         Each item of the entries list should be a string designating a Component to be logged;
         Initialize self.entries dict, each entry of which has a:
-            - key corresponding to a State of the Component to which the Log belongs
+            - key corresponding to a Port of the Component to which the Log belongs
             - value that is a list of sequentially logged LogEntry items
         """
 
@@ -706,23 +706,23 @@ class Log:
         return self.owner._loggable_parameters
 
     @property
-    def input_state_items(self):
+    def input_port_items(self):
         try:
-            return self.owner.input_states.names
+            return self.owner.input_ports.names
         except AttributeError:
             return []
 
     @property
-    def output_state_items(self):
+    def output_port_items(self):
         try:
-            return self.owner.output_states.names
+            return self.owner.output_ports.names
         except AttributeError:
             return []
 
     @property
-    def parameter_state_items(self):
+    def parameter_port_items(self):
         try:
-            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_states.names]
+            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_ports.names]
         except AttributeError:
             return []
 
@@ -735,14 +735,14 @@ class Log:
 
     @property
     def all_items(self):
-        return sorted(self.parameter_items + self.input_state_items + self.output_state_items + self.parameter_state_items + self.function_items)
+        return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_port_items + self.function_items)
 
     def _get_parameter_from_item_string(self, string):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
         # no duplicates/changing
         if string.startswith(MODULATED_PARAMETER_PREFIX):
             try:
-                return self.owner.parameter_states[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
+                return self.owner.parameter_ports[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
             except (AttributeError, TypeError):
                 pass
 
@@ -752,12 +752,12 @@ class Log:
             pass
 
         try:
-            return self.owner.input_states[string].parameters.value
+            return self.owner.input_ports[string].parameters.value
         except (AttributeError, TypeError):
             pass
 
         try:
-            return self.owner.output_states[string].parameters.value
+            return self.owner.output_ports[string].parameters.value
         except (AttributeError, TypeError):
             pass
 
@@ -904,7 +904,7 @@ class Log:
         The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to log_values is made while a
         System to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
         of its `run <System.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
-        the System's `scheduler_processing` or `scheduler_learning`, whichever is currently executing
+        the System's `scheduler` or `scheduler_learning`, whichever is currently executing
         (see `System_Scheduler`).
 
         Arguments
@@ -1136,7 +1136,7 @@ class Log:
             # header = header + value_spacer + VALUE.capitalize()
 
         print("\nLog for {0}:".format(self.owner.name))
-        print('\n'+header+'\n')
+        print('\n' + header + '\n')
 
         # Sort for consistency of reporting
         # entry_names_sorted = sorted(self.logged_entries.keys())
@@ -1169,13 +1169,13 @@ class Log:
                         if options.CONTEXT & option_flags:
                             context = repr(context)
                             if len(context) > context_width:
-                                context = context[:context_width-3] + "..."
+                                context = context[:context_width - 3] + "..."
                             data_str = data_str + context.ljust(context_width, spacer)
 
                         if options.VALUE & option_flags:
                             value = str(value).replace('\n',',')
                             if len(value) > value_width:
-                                value = value[:value_width-3].rstrip() + "..."
+                                value = value[:value_width - 3].rstrip() + "..."
                             format_str = "{{:2.{0}}}".format(value_width)
                             data_str = data_str + value_spacer + format_str.format(value).ljust(value_width)
 
@@ -1278,7 +1278,7 @@ class Log:
 
         npa.append([self.data_header] if header else [])
 
-        for eid in sorted(contexts):
+        for eid in sorted(contexts, key=lambda k: str(k)):
             time_values = self._parse_entries_for_time_values(entries, execution_id=eid)
             npa[0].append(eid)
 
@@ -1597,7 +1597,7 @@ class Log:
             time_step_increments.append(chain)
         for i in range(1, len(time_values)):
             update_tuple = list(time_values[i])
-            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1]*0.01
+            update_tuple[2] = update_tuple[2] + time_step_increments[i - 1] * 0.01
             mod_time_values[i] = tuple(update_tuple)
         return mod_time_values
 
@@ -1620,9 +1620,15 @@ class Log:
             #         temp_list[0] = adjusted_time[i]
             #         self.logged_entries[entry][i] = LogEntry(temp_list[0], temp_list[1], temp_list[2])
 
-            time_values.extend([item.time
-                                for item in self.get_logged_entries(contexts=[execution_id])[entry][execution_id]
-                                if all(i is not None for i in item.time)])
+            logged_entries_for_param = self.get_logged_entries(contexts=[execution_id])
+            # make sure param exists in logged entries
+            logged_entries_for_param = logged_entries_for_param.get(entry) if logged_entries_for_param else None
+            # make sure execution id exists in logged entries of param
+            logged_entries_for_param = logged_entries_for_param.get(execution_id) if logged_entries_for_param else None
+            if logged_entries_for_param:
+                time_values.extend([item.time
+                                    for item in logged_entries_for_param
+                                    if all(i is not None for i in item.time)])
 
         # Insure that all time values are assigned, get rid of duplicates, and sort
         if all(all(i is not None for i in t) for t in time_values):
@@ -1632,35 +1638,43 @@ class Log:
 
     def _assemble_entry_data(self, entry, time_values, execution_id=None):
         # Assembles list of entry's (component's) value at each of the time points specified in time_values
+        # If there are multiple entries for a given time point, the last one will be used
         # If data was not recorded for this entry (component) for a given time point, it will be stored as None
 
         # entry = self._dealias_owner_name(entry)
         row = []
         time_col = iter(time_values)
-        for datum in self.logged_entries[entry][execution_id]:
+        data = self.logged_entries[entry][execution_id]
+        time = next(time_col, None)
+        for i in range(len(self.logged_entries[entry][execution_id])):
             # iterate through log entry tuples:
-            # check whether tuple's time value matches the time for which data is currently being recorded
+            # check whether the next tuple's time value matches the time for which data is currently being recorded
+            # if not, check whether the current tuple's time value matches the time for which data is being recorded
             # if so, enter tuple's Component value in the entry's list
             # if not, enter `None` in the entry's list
-
+            datum = data[i]
             if time_values:
-                for i in range(len(time_values)):
-                    time = next(time_col, None)
-                    if time is None:
-                        break
+                if i == len(data) - 1 or data[i + 1].time != time:
                     if datum.time != time:
                         row.append(None)
-                        continue
-                    value = None if datum.value is None else np.array(datum.value).tolist()
-                    row.append(value)
-                    break
+                    else:
+                        value = None if datum.value is None else np.array(datum.value).tolist()  # else, if is time,
+                        # append value
+                        row.append(value)
+                    time = next(time_col, None)  # increment time value
+                    if time is None:  # if no more times, break
+                        break
             else:
                 if datum.value is None:
                     value = None
                 elif isinstance(datum.value, list):
                     value = datum.value
+                elif np.array(datum.value).shape == ():
+                    # converted value is a scalar, so a call to np.array(datum.value).tolist() would return a scalar
+                    value = [datum.value]
                 else:
-                    value = datum.value.tolist()
+                    value = np.array(datum.value).tolist()
+
                 row.append(value)
         return row
 
@@ -1688,7 +1702,7 @@ class Log:
     def loggable_components(self):
         """Return a list of owner's Components that are loggable
 
-        The loggable items of a Component are the Components (typically States) specified in the _logagble_items
+        The loggable items of a Component are the Components (typically Ports) specified in the _logagble_items
         property of its class, and its own `value <Component.value>` attribute.
         """
         from psyneulink.core.components.component import Component
@@ -1758,9 +1772,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
     for mech in composition.mechanisms:
         for component in mech.log.loggable_components:
             if component.logPref & curr_condition:
-                # value = LogEntry((composition.scheduler_processing.clock.time.run,
-                #                   composition.scheduler_processing.clock.time.trial,
-                #                   composition.scheduler_processing.clock.time.time_step),
+                # value = LogEntry((composition.scheduler.clock.time.run,
+                #                   composition.scheduler.clock.time.trial,
+                #                   composition.scheduler.clock.time.time_step),
                 #                  # context,
                 #                  curr_condition,
                 #                  component.value)
@@ -1770,9 +1784,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
                 if component.logPref & curr_condition:
-                    # value = LogEntry((composition.scheduler_processing.clock.time.run,
-                    #                   composition.scheduler_processing.clock.time.trial,
-                    #                   composition.scheduler_processing.clock.time.time_step),
+                    # value = LogEntry((composition.scheduler.clock.time.run,
+                    #                   composition.scheduler.clock.time.trial,
+                    #                   composition.scheduler.clock.time.time_step),
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
@@ -1782,9 +1796,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
     # for proj in composition.projections:
     #     for component in proj.log.loggable_components:
     #         if component.logPref & curr_condition:
-    #             value = LogEntry((composition.scheduler_processing.clock.time.run,
-    #                               composition.scheduler_processing.clock.time.trial,
-    #                               composition.scheduler_processing.clock.time.time_step),
+    #             value = LogEntry((composition.scheduler.clock.time.run,
+    #                               composition.scheduler.clock.time.trial,
+    #                               composition.scheduler.clock.time.time_step),
     #                              context,
     #                              component.value)
     #             component.log._log_value(value, context)

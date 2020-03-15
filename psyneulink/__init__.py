@@ -74,7 +74,7 @@ for handler in _logging.root.handlers:
 primary_registries = [
     CompositionRegistry, ControlMechanismRegistry, DeferredInitRegistry,
     FunctionRegistry, GatingMechanismRegistry, MechanismRegistry,
-    PreferenceSetRegistry, ProcessRegistry, ProjectionRegistry, StateRegistry,
+    PreferenceSetRegistry, ProcessRegistry, ProjectionRegistry, PortRegistry,
     SystemRegistry
 ]
 

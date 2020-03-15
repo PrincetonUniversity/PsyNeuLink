@@ -90,7 +90,7 @@ Execution
 ---------
 All units are set to zero at the beginning of the simulation. Each simulation run starts with a settling
 period of 500 time steps. Then the stimulus is presented for 1000 time steps and is presented by setting the input
-units to 1.0 for a given trial. Conflict is computed on the `output_state` of the *RESPONSE LAYER*. The figure plots
+units to 1.0 for a given trial. Conflict is computed on the `output_port` of the *RESPONSE LAYER*. The figure plots
 conflict over one trial for each of the three conditions.
 The `log` function is used to record the output values of *RESPONSE LAYER*. These values are used to produce
 the plot of the Figure.

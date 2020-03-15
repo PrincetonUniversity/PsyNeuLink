@@ -1,15 +1,8 @@
-ModulatoryMechanisms
-====================
-
-**Core class**:
-
-* `ModulatoryMechanism`
-
-**Subtypes**:
-
-.. _ModulatoryMechanism_Subtypes:
+Modulatory Mechanisms
+=====================
 
 .. toctree::
    :maxdepth: 1
 
-[None]
+   ControlMechanisms
+   LearningMechanisms

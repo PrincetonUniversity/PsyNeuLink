@@ -11,8 +11,9 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = True
-SHOW_GRAPH = False
+RUN = False
+SHOW_GRAPH = True
+ANIMATE = True
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step
@@ -88,7 +89,7 @@ def new_episode():
     initial_observation = ddqn_agent.env.reset()
     new_episode_flag = True
 
-    # Initialize both states to verdical state based on first observation
+    # Initialize both ports to verdical state based on first observation
     perceptual_state = veridical_state = ddqn_agent.buffer.next(initial_observation, is_new_episode=True)
 
 def get_optimal_action(observation):
@@ -143,7 +144,7 @@ def get_action(variable=[[0,0],[0,0],[0,0]]):
 #    note: unitization is done in main loop, to allow compilation of LinearCombination function in ObjectiveMech) (TBI)
 action_mech = ProcessingMechanism(default_variable=[[0,0],[0,0],[0,0]],
                                   function=get_action, name='ACTION',
-                                  output_states='agent action')
+                                  output_ports='agent action')
 
 # ************************************** BASIC COMPOSITION *************************************************************
 
@@ -156,9 +157,9 @@ agent_comp.add_nodes([player_percept, predator_percept, prey_percept, trial_type
 
 agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 
-a = MappingProjection(sender=player_percept, receiver=action_mech.input_states[0])
-b = MappingProjection(sender=predator_percept, receiver=action_mech.input_states[1])
-c = MappingProjection(sender=prey_percept, receiver=action_mech.input_states[2])
+a = MappingProjection(sender=player_percept, receiver=action_mech.input_ports[0])
+b = MappingProjection(sender=predator_percept, receiver=action_mech.input_ports[1])
+c = MappingProjection(sender=prey_percept, receiver=action_mech.input_ports[2])
 agent_comp.add_projections([a,b,c])
 
 
@@ -192,7 +193,7 @@ ocm = OptimizationControlMechanism(name='EVC',
 
 # VERSION WITH ocm AS REGULAR NODE:
 # agent_comp.add_node(ocm)
-# agent_comp.scheduler_processing.add_condition((ocm,CONTROLLER_CONDITION))
+# agent_comp.scheduler.add_condition((ocm,CONTROLLER_CONDITION))
 
 # VERSION WITH ocm AS controller:
 agent_comp.add_controller(ocm)
@@ -209,7 +210,8 @@ if SHOW_GRAPH:
     #                       show_node_structure=ALL,
     #                       show_headers=True,
     #                       )
-
+if ANIMATE:
+    ANIMATE = {'show_controller':True, 'show_cim':True}
 
 # *********************************************************************************************************************
 # ******************************************   RUN SIMULATION  ********************************************************
@@ -269,10 +271,9 @@ def main():
                                                  reward_input_mech:[reward]},
                                          context=context,
                                          bin_execute=BIN_EXECUTE,
-                                         animate={'show_controller':True,
-                                                  'show_cim':True}
+                                         animate=ANIMATE
                                          )
-            agent_action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            agent_action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
 
             def print_controller():
 

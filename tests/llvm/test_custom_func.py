@@ -42,7 +42,7 @@ def test_fixed_dimensions__pnl_builtin_vxm(mode):
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
 
         # get builtin IR
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
 
         # Create square vector matrix multiply
         function = ir.Function(ctx.module, func_ty, name=custom_name)

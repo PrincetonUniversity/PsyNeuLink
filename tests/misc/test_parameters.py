@@ -2,13 +2,12 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-from psyneulink.core.globals.utilities import unproxy_weakproxy
 
 # (ancestor, child, should_override)
 ancestor_child_data = [
     (pnl.Component, pnl.TransferMechanism, False),
-    (pnl.Component, pnl.OutputState, False),
-    (pnl.Component, pnl.InputState, True),
+    (pnl.Component, pnl.OutputPort, False),
+    (pnl.Component, pnl.InputPort, True),
     (pnl.Component, pnl.SimpleIntegrator, False),
     (pnl.Function_Base, pnl.SimpleIntegrator, True),
     (pnl.TransferMechanism, pnl.RecurrentTransferMechanism, True)
@@ -18,7 +17,7 @@ ancestor_child_data = [
 param_alias_data = [
     (pnl.Linear, 'slope', 'multiplicative_param'),
     (pnl.Linear, 'intercept', 'additive_param'),
-    (pnl.ControlMechanism, 'value', 'modulatory_allocation'),
+    (pnl.ControlMechanism, 'value', 'control_allocation'),
 ]
 
 
@@ -74,11 +73,11 @@ def test_parameter_values_overriding(ancestor, child, should_override, reset_var
 @pytest.mark.parametrize('obj, param_name, alias_name', param_alias_data)
 def test_aliases(obj, param_name, alias_name):
     obj = obj()
-    assert unproxy_weakproxy(obj.parameters._owner) is obj
-    assert unproxy_weakproxy(getattr(obj.parameters, alias_name)._owner._owner) is obj
+    assert obj.parameters._owner is obj
+    assert getattr(obj.parameters, alias_name)._owner._owner is obj
     assert getattr(obj.defaults, param_name) == getattr(obj.defaults, alias_name)
     # if hasattr(getattr(obj.parameters, alias_name), 'source'):
-    assert unproxy_weakproxy(getattr(obj.parameters, alias_name).source) is getattr(obj.parameters, param_name)
+    assert getattr(obj.parameters, alias_name).source is getattr(obj.parameters, param_name)
 
 
 @pytest.mark.parametrize('obj, param_name, alias_name', param_alias_data)
@@ -122,6 +121,34 @@ def test_history():
     assert t.parameters.value.get_previous() == 10
 
 
+@pytest.mark.parametrize(
+    'index, range_start, range_end, expected',
+    [
+        (1, None, None, 4),
+        (6, None, None, None),
+        (None, 2, None, [3, 4]),
+        (None, 2, 0, [3, 4]),
+        (1, 2, 0, [3, 4]),
+        (None, 5, 2, [0, 1, 2]),
+        (None, 10, 2, [0, 1, 2])
+    ]
+)
+def test_get_previous(index, range_start, range_end, expected):
+    t = pnl.TransferMechanism()
+    t.parameters.value.history_max_length = 10
+
+    for i in range(1, 6):
+        t.execute(i)
+
+    previous = t.parameters.value.get_previous(
+        index=index,
+        range_start=range_start,
+        range_end=range_end,
+    )
+
+    assert previous == expected
+
+
 def test_delta():
     t = pnl.TransferMechanism()
 
@@ -133,7 +160,7 @@ def test_delta():
 
 def test_delta_fail():
     t = pnl.TransferMechanism()
-    t.parameters.value.set(None)
+    t.parameters.value.set(None, override=True)
 
     t.execute(10)
     with pytest.raises(TypeError) as error:

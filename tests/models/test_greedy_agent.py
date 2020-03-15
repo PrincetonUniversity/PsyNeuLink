@@ -1,17 +1,16 @@
 import pytest
 import numpy as np
-import psyneulink as pnl
 
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.mechanisms.adaptive.control import OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
 from psyneulink.core.components.functions.transferfunctions import GaussianDistort
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.inputstate import SHADOW_INPUTS
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 
@@ -108,7 +107,11 @@ def test_simplified_greedy_agent_random(benchmark, mode):
     run_results = agent_comp.run(inputs={player:[[619,177]],
                                          prey:[[419,69]]},
                                  bin_execute=mode)
-    assert np.allclose(run_results, [[-200.61352420749841, -109.9811418701135]])
+    # KDM 12/4/19: modified results due to global seed offset of
+    # GaussianDistort assignment.
+    # to produce old numbers, run get_global_seed once before creating
+    # each Mechanism with GaussianDistort above
+    assert np.allclose(run_results, [[-199.5484223217141, -107.79361870517444]])
     benchmark(agent_comp.run, **{'inputs':{
         player:[[619,177]],
         prey:[[419,69]],
@@ -117,12 +120,12 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
 @pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+     pytest.param('LLVM', marks=[pytest.mark.llvm]),
+     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
@@ -197,7 +200,11 @@ def test_predator_prey(benchmark, mode, samples):
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
 
     if len(samples) == 2:
-        assert np.allclose(run_results[0], [[-19.06547277,   5.47274121]])
+        # KDM 12/4/19: modified results due to global seed offset of
+        # GaussianDistort assignment.
+        # to produce old numbers, run get_global_seed once before creating
+        # each Mechanism with GaussianDistort above
+        assert np.allclose(run_results[0], [[-10.06333025,   2.4845505 ]])
         if mode == 'Python':
             assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
                                                     [-0.03479106, -0.47666293],

@@ -61,7 +61,7 @@ decision_layer = pnl.LCAMechanism(
     size=3,                            # Number of units in input layer
     initial_value=[[0.0, 0.0, 0.0]],    # Initial input values
     time_step_size=dt,                 # Integration step size
-    leak=-1.0,                         # Sets off diagonals to negative values
+    leak=1.0,                         # Sets off diagonals to negative values
     self_excitation=selfdwt,           # Set diagonals to self excitate
     competition=inhwt,                 # Set off diagonals to inhibit
     function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
@@ -73,15 +73,15 @@ decision_layer = pnl.LCAMechanism(
 # decision_layer.set_log_conditions('RESULT')  # Log RESULT of the decision layer
 decision_layer.set_log_conditions('value')  # Log value of the decision layer
 
-for output_state in decision_layer.output_states:
-    output_state.value *= 0.0                                       # Set initial output values for decision layer to 0
+for output_port in decision_layer.output_ports:
+    output_port.value *= 0.0                                       # Set initial output values for decision layer to 0
 
 # Create Response Layer  --- [ Target1, Target2 ]
 response_layer = pnl.LCAMechanism(
     size=2,                                        # Number of units in input layer
     initial_value=[[0.0, 0.0]],                    # Initial input values
     time_step_size=dt,                             # Integration step size
-    leak=-1.0,                                     # Sets off diagonals to negative values
+    leak=1.0,                                     # Sets off diagonals to negative values
     self_excitation=selfrwt,                       # Set diagonals to self excitate
     competition=respinhwt,                         # Set off diagonals to inhibit
     function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias
@@ -91,8 +91,8 @@ response_layer = pnl.LCAMechanism(
 )
 
 response_layer.set_log_conditions('RESULT')     # Log RESULT of the response layer
-for output_state in response_layer.output_states:
-    output_state.value *= 0.0                   # Set initial output values for response layer to 0
+for output_port in response_layer.output_ports:
+    output_port.value *= 0.0                   # Set initial output values for response layer to 0
 
 # Connect mechanisms --------------------------------------------------------------------------------------------------
 # Weight matrix from Input Layer --> Decision Layer
@@ -147,7 +147,7 @@ LC = pnl.LCControlMechanism(
     initial_w_FitzHughNagumo=initial_w,          # Initialize w
     objective_mechanism=pnl.ObjectiveMechanism(
         function=psyneulink.core.components.functions.transferfunctions.Linear,
-        monitored_output_states=[(
+        monitored_output_ports=[(
             decision_layer,  # Project output of T1 and T2 but not distractor from decision layer to LC
             np.array([[lcwt], [lcwt], [0.0]])
         )],
@@ -162,8 +162,8 @@ LC.set_log_conditions('value')
 
 # Set initial gain to G + k*initial_w, when the System runs the very first time,
 # since the decison layer executes before the LC and hence needs one initial gain value to start with.
-for output_state in LC.output_states:
-    output_state.value *= G + k * initial_w
+for output_port in LC.output_ports:
+    output_port.value *= G + k * initial_w
 
 LC_process = pnl.Process(pathway=[LC])
 

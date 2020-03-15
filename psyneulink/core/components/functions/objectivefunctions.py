@@ -1,4 +1,4 @@
-#
+ #
 # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
@@ -24,9 +24,10 @@ import itertools
 
 import numpy as np
 import typecheck as tc
+import types
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type, DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
 from psyneulink.core.components.functions.transferfunctions import get_matrix
 from psyneulink.core.globals.context import ContextFlags
@@ -36,8 +37,8 @@ from psyneulink.core.globals.keywords import \
     ENERGY, ENTROPY, EUCLIDEAN, HOLLOW_MATRIX, MATRIX, MAX_ABS_DIFF, METRIC, \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_distance_metric
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import is_distance_metric, safe_len
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -45,7 +46,7 @@ __all__ = ['ObjectiveFunction', 'Stability', 'Distance', 'Energy', 'Entropy']
 
 
 class ObjectiveFunction(Function_Base):
-    """Abstract class of `Function` used for evaluating states.
+    """Abstract class of `Function` used for evaluating ports.
     """
 
     componentType = OBJECTIVE_FUNCTION_TYPE
@@ -65,8 +66,7 @@ class ObjectiveFunction(Function_Base):
                     see `normalize <ObjectiveFunction.normalize>`
 
                     :default value: False
-                    :type: bool
-
+                    :type: ``bool``
         """
         normalize = False
         metric = Parameter(None, stateful=False)
@@ -121,7 +121,7 @@ class Stability(ObjectiveFunction):
         specifies whether to normalize the stability value by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -161,7 +161,7 @@ class Stability(ObjectiveFunction):
         if `True`, result of stability calculation is normalized by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -174,8 +174,6 @@ class Stability(ObjectiveFunction):
 
     componentName = STABILITY_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(ObjectiveFunction.Parameters):
         """
             Attributes
@@ -185,24 +183,30 @@ class Stability(ObjectiveFunction):
                     see `matrix <Stability.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 metric
                     see `metric <Stability.metric>`
 
                     :default value: `ENERGY`
-                    :type: str
+                    :type: ``str``
+
+                metric_fct
+                    see `metric_fct <Stability.metric_fct>`
+
+                    :default value: None
+                    :type:
 
                 transfer_fct
                     see `transfer_fct <Stability.transfer_fct>`
 
                     :default value: None
                     :type:
-
         """
         matrix = HOLLOW_MATRIX
         metric = Parameter(ENERGY, stateful=False)
-        transfer_fct = None
+        metric_fct = Parameter(None, stateful=False, loggable=False)
+        transfer_fct = Parameter(None, stateful=False, loggable=False)
         normalize = False
 
     @tc.typecheck
@@ -212,7 +216,7 @@ class Stability(ObjectiveFunction):
                  matrix=HOLLOW_MATRIX,
                  # metric:is_distance_metric=ENERGY,
                  metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
-                 transfer_fct: tc.optional(tc.any(function_type, method_type)) = None,
+                 transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
                  normalize: bool = False,
                  params=None,
                  owner=None,
@@ -225,18 +229,16 @@ class Stability(ObjectiveFunction):
                 raise FunctionError(f"Both {repr(DEFAULT_VARIABLE)} ({default_variable}) and {repr(SIZE)} ({size}) "
                                     f"are specified for {self.name} but are {SIZE}!=len({DEFAULT_VARIABLE}).")
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  metric=metric,
-                                                  transfer_fct=transfer_fct,
-                                                  normalize=normalize,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            matrix=matrix,
+            metric=metric,
+            transfer_fct=transfer_fct,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
         # MODIFIED 6/12/19 NEW: [JDC]
         self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
@@ -254,40 +256,38 @@ class Stability(ObjectiveFunction):
 
         `matrix <Stability.matrix>` argument must be one of the following
             - 2d list, np.ndarray or np.matrix
-            - ParameterState for one of the above
-            - MappingProjection with a parameterStates[MATRIX] for one of the above
+            - ParameterPort for one of the above
+            - MappingProjection with a parameterPorts[MATRIX] for one of the above
 
         Parse matrix specification to insure it resolves to a square matrix
-        (but leave in the form in which it was specified so that, if it is a ParameterState or MappingProjection,
+        (but leave in the form in which it was specified so that, if it is a ParameterPort or MappingProjection,
          its current value can be accessed at runtime (i.e., it can be used as a "pointer")
         """
 
         # Validate matrix specification
-        if MATRIX in target_set:
+        # (str can be automatically transformed to variable shape)
+        if MATRIX in target_set and not isinstance(target_set[MATRIX], str):
 
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            from psyneulink.core.components.states.parameterstate import ParameterState
+            from psyneulink.core.components.ports.parameterport import ParameterPort
 
             matrix = target_set[MATRIX]
 
-            if isinstance(matrix, str):
-                matrix = get_matrix(matrix)
-
             if isinstance(matrix, MappingProjection):
                 try:
-                    matrix = matrix._parameter_states[MATRIX].value
-                    param_type_string = "MappingProjection's ParameterState"
+                    matrix = matrix._parameter_ports[MATRIX].value
+                    param_type_string = "MappingProjection's ParameterPort"
                 except KeyError:
                     raise FunctionError("The MappingProjection specified for the {} arg of {} ({}) must have a {} "
-                                        "ParameterState that has been assigned a 2d array or matrix".
+                                        "ParameterPort that has been assigned a 2d array or matrix".
                                         format(MATRIX, self.name, matrix.shape, MATRIX))
 
-            elif isinstance(matrix, ParameterState):
+            elif isinstance(matrix, ParameterPort):
                 try:
                     matrix = matrix.value
-                    param_type_string = "ParameterState"
+                    param_type_string = "ParameterPort"
                 except KeyError:
-                    raise FunctionError("The value of the {} parameterState specified for the {} arg of {} ({}) "
+                    raise FunctionError("The value of the {} parameterPort specified for the {} arg of {} ({}) "
                                         "must be a 2d array or matrix".
                                         format(MATRIX, MATRIX, self.name, matrix.shape))
 
@@ -301,7 +301,14 @@ class Stability(ObjectiveFunction):
                                     format(param_type_string, MATRIX, self.name, matrix))
             rows = matrix.shape[0]
             cols = matrix.shape[1]
-            size = len(self.defaults.variable)
+
+            # this mirrors the transformation in _function
+            # it is a hack, and a general solution should be found
+            squeezed = np.array(self.defaults.variable)
+            if squeezed.ndim > 1:
+                squeezed = np.squeeze(squeezed)
+
+            size = safe_len(squeezed)
 
             if rows != size:
                 raise FunctionError("The value of the {} specified for the {} arg of {} is the wrong size;"
@@ -327,17 +334,22 @@ class Stability(ObjectiveFunction):
         :param function:
 
         """
-
-        size = len(self.defaults.variable)
-
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.states.parameterstate import ParameterState
+        from psyneulink.core.components.ports.parameterport import ParameterPort
+
+        # this mirrors the transformation in _function
+        # it is a hack, and a general solution should be found
+        squeezed = np.array(self.defaults.variable)
+        if squeezed.ndim > 1:
+            squeezed = np.squeeze(squeezed)
+
+        size = safe_len(squeezed)
 
         matrix = self.parameters.matrix._get(context)
 
         if isinstance(matrix, MappingProjection):
-            matrix = matrix._parameter_states[MATRIX]
-        elif isinstance(matrix, ParameterState):
+            matrix = matrix._parameter_ports[MATRIX]
+        elif isinstance(matrix, ParameterPort):
             pass
         else:
             matrix = get_matrix(matrix, size, size)
@@ -350,39 +362,44 @@ class Stability(ObjectiveFunction):
                             self.defaults.variable]
 
         if self.metric is ENTROPY:
-            self._metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
-            self._metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
+            self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
+        else:
+            assert False, "Unknown metric"
+        #FIXME: This is a hack to make sure metric-fct param is set
+        self.parameters.metric_fct.set(self.metric_fct)
 
-    def _get_param_struct_type(self, ctx):
-        my_params = ctx.get_param_struct_type(super())
-        metric_params = ctx.get_param_struct_type(self._metric_fct)
-        transfer_params = ctx.get_param_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
-        return pnlvm.ir.LiteralStructType([my_params, metric_params, transfer_params])
+    def _update_default_variable(self, new_default_variable, context):
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.ports.parameterport import ParameterPort
 
-    def _get_param_initializer(self, context):
-        my_params = super()._get_param_initializer(context)
-        metric_params = self._metric_fct._get_param_initializer(context)
-        transfer_params = self.transfer_fct._get_param_initializer(context) if self.transfer_fct is not None else tuple()
-        return (my_params, metric_params, transfer_params)
+        # this mirrors the transformation in _function
+        # it is a hack, and a general solution should be found
+        squeezed = np.array(new_default_variable)
+        if squeezed.ndim > 1:
+            squeezed = np.squeeze(squeezed)
 
-    def _get_state_struct_type(self, ctx):
-        my_state = ctx.get_state_struct_type(super())
-        metric_state = ctx.get_state_struct_type(self._metric_fct)
-        transfer_state = ctx.get_state_struct_type(self.transfer_fct) if self.transfer_fct is not None else pnlvm.ir.LiteralStructType([])
-        return pnlvm.ir.LiteralStructType([my_state, metric_state, transfer_state])
+        size = safe_len(squeezed)
+        matrix = self.parameters.matrix._get(context)
 
-    def _get_state_initializer(self, context):
-        my_state = super()._get_state_initializer(context)
-        metric_state = self._metric_fct._get_state_initializer(context)
-        transfer_state = self.transfer_fct._get_state_initializer(context) if self.transfer_fct is not None else tuple()
-        return (my_state, metric_state, transfer_state)
+        if isinstance(matrix, MappingProjection):
+            matrix = matrix._parameter_ports[MATRIX]
+        elif isinstance(matrix, ParameterPort):
+            pass
+        else:
+            matrix = get_matrix(self.defaults.matrix, size, size)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
+        self.parameters.matrix._set(matrix, context)
+
+        self._hollow_matrix = get_matrix(HOLLOW_MATRIX, size, size)
+
+        super()._update_default_variable(new_default_variable, context)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Dot product
         dot_out = builder.alloca(arg_in.type.pointee)
-        my_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        matrix = ctx.get_param_ptr(self, builder, my_params, MATRIX)
+        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -391,27 +408,27 @@ class Stability(ObjectiveFunction):
 
         input_length = ctx.int32_ty(arg_in.type.pointee.count)
         output_length = ctx.int32_ty(arg_in.type.pointee.count)
-        builtin = ctx.get_llvm_function("__pnl_builtin_vxm")
+        builtin = ctx.import_llvm_function("__pnl_builtin_vxm")
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
 
         # Prepare metric function
-        metric_fun = ctx.get_llvm_function(self._metric_fct)
+        metric_fun = ctx.import_llvm_function(self.metric_fct)
         metric_in = builder.alloca(metric_fun.args[2].type.pointee)
 
         # Transfer Function if configured
-        trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
         if self.transfer_fct is not None:
             #FIXME: implement this
             assert False, "Support for transfer functions is not implemented"
         else:
+            trans_out = builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
             builder.store(builder.load(dot_out), trans_out)
 
         # Copy original variable
         builder.store(builder.load(arg_in), builder.gep(metric_in, [ctx.int32_ty(0), ctx.int32_ty(0)]))
 
         # Distance Function
-        metric_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        metric_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        metric_params = pnlvm.helpers.get_param_ptr(builder, self, params, "metric_fct")
+        metric_state = pnlvm.helpers.get_state_ptr(builder, self, state, "metric_fct")
         metric_out = arg_out
         builder.call(metric_fun, [metric_params, metric_state, metric_in, metric_out])
         return builder
@@ -441,7 +458,7 @@ class Stability(ObjectiveFunction):
             variable = np.squeeze(variable)
         # MODIFIED 6/12/19 END
 
-        matrix = self.get_current_function_param(MATRIX, context)
+        matrix = self._get_current_function_param(MATRIX, context)
 
         current = variable
 
@@ -449,17 +466,9 @@ class Stability(ObjectiveFunction):
         if self.transfer_fct is not None:
             transformed = self.transfer_fct(transformed)
 
-        result = self._metric_fct(variable=[current, transformed], context=context)
+        result = self.metric_fct(variable=[current, transformed], context=context)
 
         return self.convert_output_type(result)
-
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            [self._metric_fct] if self._metric_fct is not None else [],
-            [self.transfer_fct] if self.transfer_fct is not None else [],
-        ))
 
 
 class Energy(Stability):
@@ -502,7 +511,7 @@ class Energy(Stability):
         specifies whether to normalize the energy value by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -538,7 +547,7 @@ class Energy(Stability):
         if `True`, result of energy calculation is normalized by the length of `variable <Energy.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -559,8 +568,9 @@ class Energy(Stability):
                  owner=None,
                  prefs=None):
 
-        super().__init__(default_variable=default_variable,
-                         size=size,
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
                          metric=ENERGY,
                          matrix=matrix,
                          # transfer_fct=transfer_fct,
@@ -610,7 +620,7 @@ class Entropy(Stability):
         specifies whether to normalize the entropy value by the length of `variable <Stability.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -646,7 +656,7 @@ class Entropy(Stability):
         if `True`, result of entropy calculation is normalized by the length of `variable <Entropy.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -665,8 +675,9 @@ class Entropy(Stability):
                  owner=None,
                  prefs=None):
 
-        super().__init__(default_variable=default_variable,
-                         # matrix=matrix,
+        super().__init__(
+            default_variable=default_variable,
+            # matrix=matrix,
                          metric=ENTROPY,
                          transfer_fct=transfer_fct,
                          normalize=normalize,
@@ -707,7 +718,7 @@ class Distance(ObjectiveFunction):
         specifies whether to normalize the distance by the length of `variable <Distance.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -734,7 +745,7 @@ class Distance(ObjectiveFunction):
         determines whether the distance is normalized by the length of `variable <Distance.variable>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -756,20 +767,17 @@ class Distance(ObjectiveFunction):
                     see `variable <Distance.variable>`
 
                     :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 metric
                     see `metric <Distance.metric>`
 
                     :default value: `DIFFERENCE`
-                    :type: str
-
+                    :type: ``str``
         """
-        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         metric = Parameter(DIFFERENCE, stateful=False)
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -779,16 +787,14 @@ class Distance(ObjectiveFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(metric=metric,
-                                                  normalize=normalize,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            metric=metric,
+            normalize=normalize,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
         """Validate that variable had two items of equal length
@@ -962,7 +968,7 @@ class Distance(ObjectiveFunction):
         acc_y2_val = builder.fadd(acc_y2_val, y2)
         builder.store(acc_y2_val, acc_y2)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out):
+    def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
         # FIXME python version also ignores other vectors
@@ -1134,10 +1140,17 @@ class Distance(ObjectiveFunction):
 
         """
 
-        v1 = variable[0]
-        v2 = variable[1]
+        try:
+            v1 = np.hstack(variable[0])
+        except TypeError:
+            v1 = variable[0]
 
-        # Maximum of  Hadamard (elementwise) difference of v1 and v2
+        try:
+            v2 = np.hstack(variable[1])
+        except TypeError:
+            v2 = variable[1]
+
+        # Maximum of Hadamard (elementwise) difference of v1 and v2
         if self.metric is MAX_ABS_DIFF:
             result = np.max(abs(v1 - v2))
 
@@ -1147,7 +1160,7 @@ class Distance(ObjectiveFunction):
 
         # Similarity (used specifically for testing Compilation of Predator-Prey Model)
         elif self.metric is NORMED_L0_SIMILARITY:
-            result = 1-np.sum(np.abs(v1 - v2))/4
+            result = 1 - np.sum(np.abs(v1 - v2)) / 4
 
         # Euclidean distance between v1 and v2
         elif self.metric is EUCLIDEAN:
@@ -1181,7 +1194,7 @@ class Distance(ObjectiveFunction):
             result = -np.sum(v1 * v2) / 2
 
         else:
-            assert False, '{} not recognized in {}'.format(repr(METRIC), self.__class__.__name__)
+            assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
         if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric is ENERGY:

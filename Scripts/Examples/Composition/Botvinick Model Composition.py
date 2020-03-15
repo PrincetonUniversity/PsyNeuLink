@@ -44,7 +44,7 @@ response_layer = pnl.RecurrentTransferMechanism(size=2,
                                                 hetero=-2.0,
                                                 integrator_mode=True,
                                                 integration_rate=0.01,
-                                                output_states = [pnl.RECURRENT_OUTPUT.RESULT,
+                                                output_ports = [pnl.RESULT,
                                                                  {pnl.NAME: 'DECISION_ENERGY',
                                                                   pnl.VARIABLE: (pnl.OWNER_VALUE,0),
                                                                   pnl.FUNCTION: pnl.Stability(
@@ -139,10 +139,14 @@ def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neut
     return trialdict
 
 # Define initialization trials separately
-CN_trial_initialize_input = trial_dict(0, 0, 0, 0, 0, 0, 1, 0)  #red_color, green color, red_word, green word, CN, WR
-CN_incongruent_trial_input = trial_dict(1, 0, 0, 0, 1, 0, 1, 0) #red_color, green color, red_word, green word, CN, WR
-CN_congruent_trial_input = trial_dict(1, 0, 0, 1, 0, 0, 1, 0)   #red_color, green color, red_word, green word, CN, WR
-CN_control_trial_input = trial_dict(1, 0, 0, 0, 0, 1, 1, 0)     #red_color, green color, red_word, green word, CN, WR
+CN_trial_initialize_input = trial_dict(0, 0, 0, 0, 0, 0, 1, 0)
+  #red_color, green color, red_word, green word, CN, WR
+CN_incongruent_trial_input = trial_dict(1, 0, 0, 0, 1, 0, 1, 0)
+ #red_color, green color, red_word, green word, CN, WR
+CN_congruent_trial_input = trial_dict(1, 0, 0, 1, 0, 0, 1, 0)
+   #red_color, green color, red_word, green word, CN, WR
+CN_control_trial_input = trial_dict(1, 0, 0, 0, 0, 1, 1, 0)
+     #red_color, green color, red_word, green word, CN, WR
 
 Stimulus = [[CN_trial_initialize_input, CN_congruent_trial_input],
             [CN_trial_initialize_input, CN_incongruent_trial_input],
@@ -172,3 +176,37 @@ def run(bin_execute):
         comp.results = []
 
     return results
+pnlv_graphics_spec = {
+    "components": {
+        "nodes": {
+            "COLORS_HIDDEN": {
+                "x": 399,
+                "y": 145
+            },
+            "WORDS_INPUT": {
+                "x": 887,
+                "y": 398
+            },
+            "TASK_INPUT": {
+                "x": 670,
+                "y": 435
+            },
+            "WORDS_HIDDEN": {
+                "x": 877,
+                "y": 141
+            },
+            "RESPONSE": {
+                "x": 674,
+                "y": 50
+            },
+            "COLORS_INPUT": {
+                "x": 412,
+                "y": 403
+            },
+            "TASK_LAYER": {
+                "x": 674,
+                "y": 278
+            }
+        }
+    }
+}

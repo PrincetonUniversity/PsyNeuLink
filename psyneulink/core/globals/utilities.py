@@ -39,6 +39,7 @@ CONTENTS
 * `is_unit_interval`
 * `is_same_function_spec`
 * `is_component`
+* `is_comparison_operator`
 
 *ENUM*
 ~~~~~~
@@ -95,30 +96,34 @@ import copy
 import inspect
 import logging
 import numbers
+import psyneulink
+import re
 import time
 import warnings
 import weakref
+import types
 
 from enum import Enum, EnumMeta, IntEnum
 
 import collections
 import numpy as np
 
-from psyneulink.core.globals.keywords import DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
+from psyneulink.core.globals.keywords import \
+    comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'NodeRole', 'get_class_attributes', 'flatten_list',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_component',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
+    'get_modulationOperation_name', 'get_value_from_array', 'is_comparison_operator', 'is_component',
     'is_distance_metric', 'is_matrix',
     'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
-    'make_readonly_property', 'merge_param_dicts', 'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY',
-    'MODULATION_OVERRIDE', 'multi_getattr', 'np_array_less_than_2d',
-    'object_has_single_value', 'optional_parameter_spec',
-    'normpdf',
-    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_len', 'scalar_distance', 'sinusoid',
+    'make_readonly_property', 'merge_param_dicts',
+    'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
+    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf', 'parse_valid_identifier', 'parse_string_to_psyneulink_object_string',
+    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
+    'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
 ]
@@ -138,7 +143,6 @@ MODULATION_OVERRIDE = 'Modulation.OVERRIDE'
 MODULATION_MULTIPLY = 'Modulation.MULTIPLY'
 MODULATION_ADD = 'Modulation.ADD'
 
-
 class Modulation(Enum):
     MULTIPLY = lambda runtime, default : runtime * default
     ADD = lambda runtime, default : runtime + default
@@ -154,12 +158,12 @@ def is_modulation_operation(val):
     return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
-        x = operation(1,2)
-        if x is 1:
+        x = operation(1, 2)
+        if x == 1:
             return MODULATION_OVERRIDE
-        elif x is 2:
+        elif x == 2:
             return MODULATION_MULTIPLY
-        elif x is 3:
+        elif x == 3:
             return MODULATION_ADD
         else:
             return False
@@ -233,7 +237,6 @@ def parameter_spec(param, numeric_only=None):
     # if isinstance(param, property):
     #     param = ??
     # if is_numeric(param):
-    from psyneulink.core.components.functions.function import function_type
     from psyneulink.core.components.shellclasses import Projection
     from psyneulink.core.components.component import parameter_keywords
     from psyneulink.core.globals.keywords import MODULATORY_SPEC_KEYWORDS
@@ -248,7 +251,7 @@ def parameter_spec(param, numeric_only=None):
                            list,
                            tuple,
                            dict,
-                           function_type,
+                           types.FunctionType,
                            Projection))
         or param in MODULATORY_SPEC_KEYWORDS
         or param in parameter_keywords):
@@ -553,8 +556,8 @@ def iscompatible(candidate, reference=None, **kargs):
 # MATHEMATICAL  ********************************************************************************************************
 
 def normpdf(x, mu=0, sigma=1):
-    u = float((x-mu) / abs(sigma))
-    y = np.exp(-u*u/2) / (np.sqrt(2*np.pi) * abs(sigma))
+    u = float((x - mu) / abs(sigma))
+    y = np.exp(-u * u / 2) / (np.sqrt(2 * np.pi) * abs(sigma))
     return y
 
 def sinusoid(x, amplitude=1, frequency=1, phase=0):
@@ -564,9 +567,9 @@ def scalar_distance(measure, value, scale=1, offset=0):
     if measure is GAUSSIAN:
         return normpdf(value, offset, scale)
     if measure is LINEAR:
-        return scale*value+offset
+        return scale * value + offset
     if measure is EXPONENTIAL:
-        return np.exp(scale*value+offset)
+        return np.exp(scale * value + offset)
     if measure is SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
 
@@ -574,7 +577,7 @@ from itertools import chain, combinations
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
     s = list(iterable)
-    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+    return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
 import typecheck as tc
 @tc.typecheck
@@ -596,7 +599,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     if  max_spec > max_levels:
         raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
                              "exceeds max for items specified ({})".
-                             format(min_spec, max_spec+1, repr('levels'), max_levels+1))
+                             format(min_spec, max_spec + 1, repr('levels'), max_levels + 1))
 
     pp = []
     for s in ps:
@@ -607,11 +610,11 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
             pp.append(np.array(s[0]))
         else:
             i = 0
-            tp = np.tensordot(s[i],s[i+1],axes=0)
-            i+=2
+            tp = np.tensordot(s[i],s[i + 1],axes=0)
+            i += 2
             while i < order:
                 tp = np.tensordot(tp, s[i], axes=0)
-                i+=1
+                i += 1
             if flat is True:
                 pp.extend(tp.reshape(-1))
             else:
@@ -735,7 +738,7 @@ def multi_getattr(obj, attr, default = None):
 
 
 # based off the answer here https://stackoverflow.com/a/15774013/3131666
-def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
+def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
     """
         Arguments
         ---------
@@ -750,72 +753,84 @@ def get_deepcopy_with_shared(shared_keys=None, shared_types=None):
         -------
             a __deepcopy__ function
     """
-    try:
-        shared_types = tuple(shared_types)
-    except TypeError:
-        shared_types = ()
-
-    if shared_keys is None:
-        shared_keys = []
+    shared_types = tuple(shared_types)
+    shared_keys = frozenset(shared_keys)
 
     def __deepcopy__(self, memo):
         cls = self.__class__
         result = cls.__new__(cls)
         memo[id(self)] = result
 
-        for k in shared_keys:
-            if k in self.__dict__:
-                setattr(result, k, self.__dict__[k])
-
         for k, v in self.__dict__.items():
-            if isinstance(self.__dict__[k], shared_types):
-                res_val = self.__dict__[k]
-                setattr(result, k, res_val)
-            elif k not in shared_keys:
+            if k in shared_keys or isinstance(v, shared_types):
+                res_val = v
+            else:
                 res_val = copy.deepcopy(v, memo)
-                setattr(result, k, res_val)
+            setattr(result, k, res_val)
         return result
 
     return __deepcopy__
 
 
-def copy_dict_or_list_with_shared(obj, shared_types=None):
+def copy_iterable_with_shared(obj, shared_types=None, memo=None):
     try:
         shared_types = tuple(shared_types)
     except TypeError:
-        shared_types = ()
+        shared_types = (shared_types, )
 
     dict_types = (dict, collections.UserDict)
     list_types = (list, collections.UserList, collections.deque)
+    tuple_types = (tuple, )
+    all_types_using_recursion = dict_types + list_types + tuple_types
 
     if isinstance(obj, dict_types):
         result = obj.__class__()
         for (k, v) in obj.items():
             # key can never be unhashable dict or list
-            new_k = k if isinstance(k, shared_types) else copy.deepcopy(k)
+            new_k = k if isinstance(k, shared_types) else copy.deepcopy(k, memo)
 
-            if isinstance(v, dict_types + list_types):
-                new_v = copy_dict_or_list_with_shared(v, shared_types)
+            if isinstance(v, all_types_using_recursion):
+                new_v = copy_iterable_with_shared(v, shared_types)
             elif isinstance(v, shared_types):
                 new_v = v
             else:
-                new_v = copy.deepcopy(v)
+                new_v = copy.deepcopy(v, memo)
 
             try:
                 result[new_k] = new_v
             except UtilitiesError:
                 # handle ReadOnlyOrderedDict
                 result.__additem__(new_k, new_v)
-    elif isinstance(obj, list_types):
-        result = obj.__class__()
+
+    elif isinstance(obj, list_types + tuple_types):
+        is_tuple = isinstance(obj, tuple_types)
+        if is_tuple:
+            result = list()
+
+        # If this is a deque, make sure we copy the maxlen parameter as well
+        elif isinstance(obj, collections.deque):
+            # FIXME: Should have a better method for supporting properties like this in general
+            # We could do something like result = copy(obj); result.clear() but that would be
+            # wasteful copying I guess.
+            result = obj.__class__(maxlen=obj.maxlen)
+        else:
+            result = obj.__class__()
+
         for item in obj:
-            if isinstance(item, dict_types + list_types):
-                new_item = copy_dict_or_list_with_shared(item, shared_types)
+            if isinstance(item, all_types_using_recursion):
+                new_item = copy_iterable_with_shared(item, shared_types)
             elif isinstance(item, shared_types):
                 new_item = item
             else:
-                new_item = copy.deepcopy(item)
+                new_item = copy.deepcopy(item, memo)
             result.append(new_item)
+
+        if is_tuple:
+            try:
+                result = obj.__class__(result)
+            except TypeError:
+                # handle namedtuple
+                result = obj.__class__(*result)
     else:
         raise TypeError
 
@@ -899,24 +914,24 @@ def convert_to_np_array(value, dimension):
     if value is None:
         return None
 
-    if dimension is 1:
+    if dimension == 1:
         # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Which is due to a custom output state variable that includes an owner value, owner param, and owner input
-        # state variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
+        # Which is due to a custom OutputPort variable that includes an owner value, owner param, and owner input
+        # port variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
 
         try:
             value = np.atleast_1d(value)
 
         # KAM 6/28/18: added exception for cases when even np does not recognize the shape/dtype
         # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Due to a custom OutputState variable (variable = [owner value[0], owner param, owner InputState variable])
+        # Due to a custom OutputPort variable (variable = [owner value[0], owner param, owner InputPort variable])
         # FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array but in this
         # case (as far as I know) we cannot convert to np -- should we warn other methods that this value is "not np"?
         except ValueError:
             return value
 
-    elif dimension is 2:
+    elif dimension == 2:
         from numpy import ndarray
         # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
         value = np.array(value)
@@ -1013,7 +1028,7 @@ def append_type_to_name(object, type=None):
     if any(token in name for token in [type.lower(), type.upper(), type.capitalize()]):
         string = name
     else:
-        string = "\'" + name +  "\'" + ' ' + type.lower()
+        string = "\'" + name + "\'" + ' ' + type.lower()
         # string = name + ' ' + type.lower()
     return string
 #endregion
@@ -1055,18 +1070,18 @@ class ContentAddressableList(UserList):
     entries.
 
     The key with which it is created is also assigned as a property of the class, that returns a list
-    with the keyed attribute of its entries.  For example, the `output_states <Mechanism_Base.output_states>` attribute
-    of a `Mechanism` is a ContentAddressableList of the Mechanism's `OutputStates <OutputState>`, keyed by their
-    names.  Therefore, ``my_mech.output_states.names`` returns the names of all of the Mechanism's OutputStates::
+    with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
+    of a `Mechanism <Mechanism>` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by
+    their names.  Therefore, ``my_mech.output_ports.names`` returns the names of all of the Mechanism's OutputPorts::
 
         >>> import psyneulink as pnl
-        >>> print(pnl.DDM().output_states.names)
+        >>> print(pnl.DDM().output_ports.names)
         ['DECISION_VARIABLE', 'RESPONSE_TIME']
 
     The keyed attribute can also be used to access an item of the list.  For examples::
 
-        >>> print(pnl.DDM().output_states['DECISION_VARIABLE'])
-        (OutputState DECISION_VARIABLE)
+        >>> print(pnl.DDM().output_ports['DECISION_VARIABLE'])
+        (OutputPort DECISION_VARIABLE)
 
     Supports:
       * getting and setting entries in the list using keys (string), in addition to numeric indices.
@@ -1086,11 +1101,11 @@ class ContentAddressableList(UserList):
         and the convenience of access and assignment by name (e.g., akin to a dict).
         Lists are used (instead of a dict or OrderedDict) since:
             - ordering is in many instances convenient, and in some critical (e.g., for consistent mapping from
-                collections of states to other variables, such as lists of their values);
+                collections of ports to other variables, such as lists of their values);
             - they are most commonly accessed either exhaustively (e.g., in looping through them during execution),
                 or by key (e.g., to get the first, "primary" one), which makes the efficiencies of a dict for
                 accessing by key/name less critical;
-            - the number of states in a collection for a given Mechanism is likely to be small so that, even when
+            - the number of ports in a collection for a given Mechanism is likely to be small so that, even when
                 accessed by key/name, the inefficiencies of searching a list are likely to be inconsequential.
 
     Arguments
@@ -1223,7 +1238,7 @@ class ContentAddressableList(UserList):
             return self.data.index(key)
         else:
             raise UtilitiesError("{} is not a legal key for {} (must be "
-                                 "number, string or State)".format(key,
+                                 "number, string or Port)".format(key,
                                                                    self.key))
 
     def __delitem__(self, key):
@@ -1286,6 +1301,17 @@ class ContentAddressableList(UserList):
         """
         return [getattr(item, self.key) for item in self.data]
 
+    def get_key_values(self, context=None):
+        """Return list of `values <Component.value>` of the keyed
+        parameter of components in the list.
+        Returns
+        -------
+        key_values :  list
+            list of the values of the `keyed <Component.name>`
+            parameter of components in the list  for **context**
+        """
+        return [getattr(item.parameters, self.key).get(context) for item in self.data]
+
     @property
     def values(self):
         """Return list of values of components in the list.
@@ -1295,6 +1321,16 @@ class ContentAddressableList(UserList):
             list of the values of the `value <Component.value>` attributes of components in the list.
         """
         return [getattr(item, VALUE) for item in self.data]
+
+    def get_values(self, context=None):
+        """Return list of values of components in the list.
+        Returns
+        -------
+        values :  list
+            list of the values of the `value <Component.value>`
+            parameter of components in the list  for **context**
+        """
+        return [item.parameters.value.get(context) for item in self.data]
 
     @property
     def values_as_lists(self):
@@ -1371,6 +1407,17 @@ def is_instance_or_subclass(candidate, spec):
     True if **candidate** is a subclass of **spec** or an instance thereof, False otherwise
     """
     return isinstance(candidate, spec) or (inspect.isclass(candidate) and issubclass(candidate, spec))
+
+def is_comparison_operator(o):
+    """
+    Returns
+    -------
+
+    True if **o** is an entry in comparison_operators dictionary (in keywords)
+    """
+    if o in comparison_operators.values():
+        return True
+    return False
 
 
 def make_readonly_property(val, name=None):
@@ -1450,9 +1497,14 @@ def insert_list(list1, position, list2):
     """Insert list2 into list1 at position"""
     return list1[:position] + list2 + list1[position:]
 
+
 def convert_to_list(l):
-    if isinstance(l, list):
+    if l is None:
+        return None
+    elif isinstance(l, list):
         return l
+    elif isinstance(l, ContentAddressableList):
+        return list(l)
     elif isinstance(l, set):
         return list(l)
     else:
@@ -1461,11 +1513,14 @@ def convert_to_list(l):
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
-_seed = int(time.monotonic())
+
+_seed = np.int32((time.time() * 1000) % 2**31)
 def get_global_seed(offset=1):
     global _seed
     _seed += offset
+    _seed %= 2**31
     return _seed - offset
+
 
 def set_global_seed(new_seed):
     global _seed
@@ -1482,6 +1537,23 @@ def safe_len(arr, fallback=1):
         return len(arr)
     except TypeError:
         return fallback
+
+
+def safe_equals(x, y):
+    """
+        An == comparison that handles numpy's new behavior of returning
+        an array of booleans instead of a single boolean for ==
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter('error')
+        try:
+            val = x == y
+            if isinstance(val, bool):
+                return val
+            else:
+                raise ValueError
+        except (ValueError, DeprecationWarning, FutureWarning):
+            return np.array_equal(x, y)
 
 
 import typecheck as tc
@@ -1662,4 +1734,78 @@ def unproxy_weakproxy(proxy):
             >>> a() is b
             True
     """
-    return proxy.__repr__.__self__
+    try:
+        return proxy.__repr__.__self__
+    except AttributeError:
+        # handles the case where proxy references a class
+        return proxy.__mro__[0]
+
+
+def parse_valid_identifier(orig_identifier):
+    """
+        Returns
+        -------
+            A version of **orig_identifier** with characters replaced
+            so that it is a valid python identifier
+    """
+    change_invalid_beginning = re.sub(r'^([^a-zA-Z_])', r'_\1', orig_identifier)
+    return re.sub(r'[^a-zA-Z0-9_]', '_', change_invalid_beginning)
+
+
+def parse_string_to_psyneulink_object_string(string):
+    """
+        Returns
+        -------
+            a string corresponding to **string** that is an attribute
+            of psyneulink if it exists, otherwise None
+
+            The output of this function will cause
+            getattr(psyneulink, <output>) to return a psyneulink object
+    """
+    try:
+        eval(f'psyneulink.{string}')
+        return string
+    except (AttributeError, SyntaxError, TypeError):
+        pass
+
+    # handle potential psyneulink keyword
+    try:
+        # insert space between camel case words
+        keyword = re.sub('([a-z])([A-Z])', r'\1 \2', string)
+        keyword = keyword.upper().replace(' ', '_')
+        eval(f'psyneulink.{keyword}')
+        return keyword
+    except (AttributeError, SyntaxError, TypeError):
+        pass
+
+    return None
+
+
+def get_all_explicit_arguments(cls_, func_str):
+    """
+        Returns
+        -------
+            all explicitly specified (named) arguments for the function
+            **cls_**.**funct_str** including any arguments specified in
+            functions of the same name on parent classes, if \\*args or
+            \\*\\*kwargs are specified
+    """
+    all_arguments = set()
+
+    for cls_ in cls_.__mro__:
+        func = getattr(cls_, func_str)
+        has_args_or_kwargs = False
+
+        for arg_name, arg in inspect.signature(func).parameters.items():
+            if (
+                arg.kind is inspect.Parameter.VAR_POSITIONAL
+                or arg.kind is inspect.Parameter.VAR_KEYWORD
+            ):
+                has_args_or_kwargs = True
+            else:
+                all_arguments.add(arg_name)
+
+        if not has_args_or_kwargs:
+            break
+
+    return all_arguments

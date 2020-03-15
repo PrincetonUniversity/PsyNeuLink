@@ -23,7 +23,6 @@ Functions that store and can return a record of their input.
 """
 
 from collections import deque, OrderedDict
-from random import choice
 
 import numpy as np
 import typecheck as tc
@@ -32,17 +31,17 @@ import warnings
 from psyneulink.core import llvm as pnlvm
 
 from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, is_function_type, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, EPSILON
+    Function_Base, FunctionError, is_function_type, EPSILON
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
-    BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
-    MIN_INDICATOR, NOISE, OVERWRITE, RATE, RANDOM, OLDEST, NEWEST
+    ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
+    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory']
 
@@ -107,7 +106,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         specifies a starting value for the deque;  if none is specified, the deque is initialized with an empty list.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -175,31 +174,29 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: None
                     :type:
 
+                initializer
+                    see `initializer <Buffer.initializer>`
+
+                    :default value: numpy.array([], dtype=float64)
+                    :type: ``numpy.ndarray``
+
                 noise
                     see `noise <Buffer.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 rate
                     see `rate <Buffer.rate>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
+        initializer = Parameter(np.array([]), pnl_internal=True)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None
-    })
-
-    multiplicative_param = RATE
-    # no additive_param?
 
     @tc.typecheck
     def __init__(self,
@@ -218,7 +215,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
                  # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
                  history: tc.optional(int) = None,
-                 initializer=[],
+                 initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
@@ -226,20 +223,16 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if default_variable is None:
             default_variable = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(rate=rate,
-                                                  initializer=initializer,
-                                                  noise=noise,
-                                                  history=history,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
+            rate=rate,
             initializer=initializer,
+            noise=noise,
+            history=history,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         self.has_initializers = True
 
@@ -252,8 +245,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-
-        self.has_initializers = True
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, *args, context=None):
@@ -273,7 +271,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", context)
+            reinitialization_value = self._get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -310,7 +308,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
            a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -320,24 +318,21 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         updated value of deque : deque
 
         """
-        rate = np.array(self.get_current_function_param(RATE, context)).astype(float)
+        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
         if self.is_initializing:
             return variable
 
-        previous_value = np.array(self.get_previous_value(context))
+        previous_value = self.get_previous_value(context)
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
-            if any(np.atleast_1d(rate) != 1.0):
-                previous_value = previous_value * rate
-            if any(np.atleast_1d(noise) != 0.0):
-                previous_value = previous_value + noise
+            previous_value = previous_value * rate + noise
 
         previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
 
@@ -488,7 +483,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         (see `max_entries <ContentAddressableMemory.max_entries for additional details>`).
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -600,70 +595,81 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     see `variable <ContentAddressableMemory.variable>`
 
                     :default value: [[0], [0]]
-                    :type: list
+                    :type: ``list``
 
-                key_size
-                    see `key_size <ContentAddressableMemory.key_size>`
+                distance_function
+                    see `distance_function <ContentAddressableMemory.distance_function>`
 
-                    :default value: 1
-                    :type: int
-
-                val_size
-                    see `val_size <ContentAddressableMemory.val_size>`
-
-                    :default value: 1
-                    :type: int
+                    :default value: `Distance`(metric=cosine)
+                    :type: `Function`
 
                 duplicate_keys
                     see `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
 
                     :default value: False
-                    :type: bool or string
+                    :type: ``bool``
 
                 equidistant_keys_select
                     see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
 
-                    :default value: False
-                    :type: bool
+                    :default value: `RANDOM`
+                    :type: ``str``
+
+                key_size
+                    see `key_size <ContentAddressableMemory.key_size>`
+
+                    :default value: 1
+                    :type: ``int``
 
                 max_entries
                     see `max_entries <ContentAddressableMemory.max_entries>`
 
                     :default value: 1000
-                    :type: int
+                    :type: ``int``
 
                 noise
                     see `noise <ContentAddressableMemory.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 random_state
                     see `random_state <ContentAddressableMemory.random_state>`
 
                     :default value: None
-                    :type:
+                    :type: ``numpy.random.RandomState``
 
                 rate
                     see `rate <ContentAddressableMemory.rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 retrieval_prob
                     see `retrieval_prob <ContentAddressableMemory.retrieval_prob>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
+
+                selection_function
+                    see `selection_function <ContentAddressableMemory.selection_function>`
+
+                    :default value: `OneHot`(mode=MIN_INDICATOR)
+                    :type: `Function`
 
                 storage_prob
                     see `storage_prob <ContentAddressableMemory.storage_prob>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
+                val_size
+                    see `val_size <ContentAddressableMemory.val_size>`
+
+                    :default value: 1
+                    :type: ``int``
         """
-        variable = Parameter([[0],[0]])
+        variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         key_size = Parameter(1, stateful=True)
@@ -673,18 +679,11 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, modulable=False, stateful=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({
-        NOISE: None,
-        RATE: None,
-        RETRIEVAL_PROB: 1.0,
-        STORAGE_PROB: 1.0
-    })
+        distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
+        selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
-    multiplicative_param = RETRIEVAL_PROB
-    # no additive_param?
 
     @tc.typecheck
     def __init__(self,
@@ -707,102 +706,67 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if initializer is None:
             initializer = []
 
-        # It is necessary to create custom instances. Otherwise python would
-        # share the same default instance for all ContentAddressableMemory objects.
-        distance_function = distance_function or Distance(metric=COSINE)
-        selection_function = selection_function or OneHot(mode=MIN_INDICATOR)
-
-        self.distance_function = distance_function
-        self.selection_function = selection_function
-
         if seed is None:
             seed = get_global_seed()
-        random_state = np.random.RandomState(np.asarray([seed]))
+        random_state = np.random.RandomState([seed])
 
         self._memory = []
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(retrieval_prob=retrieval_prob,
-                                                  storage_prob=storage_prob,
-                                                  initializer=initializer,
-                                                  duplicate_keys=duplicate_keys,
-                                                  equidistant_keys_select=equidistant_keys_select,
-                                                  rate=rate,
-                                                  noise=noise,
-                                                  max_entries=max_entries,
-                                                  random_state=random_state,
-                                                  params=params)
-
         super().__init__(
             default_variable=default_variable,
+            retrieval_prob=retrieval_prob,
+            storage_prob=storage_prob,
             initializer=initializer,
+            duplicate_keys=duplicate_keys,
+            equidistant_keys_select=equidistant_keys_select,
+            rate=rate,
+            noise=noise,
+            max_entries=max_entries,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
-            )
+        )
 
         if self.previous_value.size != 0:
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
             self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
 
         self.has_initializers = True
-        self.stateful_attributes = ["previous_value", "random_state"]
+        self.stateful_attributes = ["random_state", "previous_value"]
+
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["ring_memory"]
 
     def _get_state_struct_type(self, ctx):
-        distance_state = ctx.get_state_struct_type(self.distance_function)
-        selection_state = ctx.get_state_struct_type(self.selection_function)
-        # Get random state
-        random_state_struct = ctx.convert_python_struct_to_llvm_ir(self.get_current_function_param("random_state", Context()))
         # Construct a ring buffer
-        keys_struct = pnlvm.ir.ArrayType(
-            ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0]),
-            self.get_current_function_param("max_entries", Context()))
-        vals_struct = pnlvm.ir.ArrayType(
-            ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1]),
-            self.get_current_function_param("max_entries", Context()))
-        ring_buffer_struct = pnlvm.ir.LiteralStructType([
-            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty])
-        my_state = pnlvm.ir.LiteralStructType([random_state_struct, ring_buffer_struct])
-        return pnlvm.ir.LiteralStructType([distance_state, selection_state, my_state])
-
-    def _get_param_struct_type(self, ctx):
-        distance_params = ctx.get_param_struct_type(self.distance_function)
-        selection_params = ctx.get_param_struct_type(self.selection_function)
-
-        my_param_struct = self._get_param_values()
-        my_params = ctx.convert_python_struct_to_llvm_ir(my_param_struct)
-        elements = [e for e in my_params.elements]
-        elements.append(distance_params)
-        elements.append(selection_params)
-        return pnlvm.ir.LiteralStructType(elements)
-
-    def _get_param_initializer(self, context):
-        distance_init = self.distance_function._get_param_initializer(context)
-        selection_init = self.selection_function._get_param_initializer(context)
-        my_init = super()._get_param_initializer(context)
-        return (*my_init, distance_init, selection_init)
+        max_entries = self.parameters.max_entries.get()
+        key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
+        keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
+        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1])
+        vals_struct = pnlvm.ir.ArrayType(val_type, max_entries)
+        ring_buffer_struct = pnlvm.ir.LiteralStructType((
+            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty))
+        generic_struct = ctx.get_state_struct_type(super())
+        return pnlvm.ir.LiteralStructType((*generic_struct,
+                                           ring_buffer_struct))
 
     def _get_state_initializer(self, context):
-        distance_init = self.distance_function._get_state_initializer(context)
-        selection_init = self.selection_function._get_state_initializer(context)
-        random_state = self.get_current_function_param("random_state", context).get_state()[1:]
         memory = self.get_previous_value(context)
-        my_init = pnlvm._tupleize([random_state, [memory[0], memory[1], 0, 0]])
-        return (distance_init, selection_init, my_init)
+        mem_init = pnlvm._tupleize([memory[0], memory[1], 0, 0])
+        return (*super()._get_state_initializer(context), mem_init)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out):
-        my_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = builder.gep(my_state, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        uniform_f = ctx.get_llvm_function("__pnl_builtin_mt_rand_double")
+        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
-        buffer_ptr = builder.gep(my_state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
         keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
         count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
         wr_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(3)])
-        max_entries = len(vals_ptr.type.pointee)
 
         # Input
         var_key_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -821,16 +785,16 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr = ctx.get_param_ptr(self, builder, params, RETRIEVAL_PROB)
+        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
         retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
 
+        max_entries = len(vals_ptr.type.pointee)
         entries = builder.load(count_ptr)
         entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
-        # The call to random function needs to be behind jump to match python
-        # code
+        # The call to random function needs to be after check to match python
         with builder.if_then(retr_rand):
             rand_ptr = builder.alloca(ctx.float_ty)
             builder.call(uniform_f, [rand_struct, rand_ptr])
@@ -838,14 +802,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             passed = builder.fcmp_ordered('<', rand, retr_prob)
             builder.store(passed, retr_ptr)
 
-        param_count = len(list(self._get_compilation_params()))
         # Retrieve
         retr = builder.load(retr_ptr)
         with builder.if_then(retr, likely=True):
             # Determine distances
-            distance_f = ctx.get_llvm_function(self.distance_function)
-            distance_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count)])
-            distance_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            distance_f = ctx.import_llvm_function(self.distance_function)
+            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
+            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
             distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
             builder.store(builder.load(var_key_ptr),
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
@@ -859,9 +822,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                 b.call(distance_f, [distance_params, distance_state,
                                     distance_arg_in, distance_arg_out])
 
-            selection_f = ctx.get_llvm_function(self.selection_function)
-            selection_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(param_count + 1)])
-            selection_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+            selection_f = ctx.import_llvm_function(self.selection_function)
+            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
+            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
             selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
             builder.call(selection_f, [selection_params, selection_state,
                                        selection_arg_in, selection_arg_out])
@@ -886,7 +849,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
         builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr = ctx.get_param_ptr(self, builder, params, STORAGE_PROB)
+        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
 
         # Prob can be [x] if we are part of a mechanism
         store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
@@ -993,7 +956,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         selection_function = self.selection_function
         test_var = np.asfarray([distance_result if i==0
                                 else np.zeros_like(distance_result)
-                                for i in range(self.get_current_function_param('max_entries', context))])
+                                for i in range(self._get_current_function_param('max_entries', context))])
         if isinstance(selection_function, type):
             selection_function = selection_function(default_variable=test_var, context=context)
             fct_string = 'Function type'
@@ -1033,9 +996,16 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
                                   f"that entry has been skipped")
-            return self._memory
+            return np.asarray(self._memory)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        self.parameters.previous_value._set(
+            self._initialize_previous_value(
+                self.parameters.initializer._get(context),
+                context
+            ),
+            context
+        )
 
         self.has_initializers = True
 
@@ -1065,7 +1035,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
-            reinitialization_value = self.get_current_function_param("initializer", context)
+            reinitialization_value = self._get_current_function_param("initializer", context)
 
         elif len(args) == 1:
             reinitialization_value = args[0]
@@ -1106,7 +1076,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
            with key, is added to `memory <ContentAddressableMemory.memory>`.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1120,14 +1090,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # if len(variable)==2:
         val = variable[VALS]
 
-        retrieval_prob = np.array(self.get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
-        storage_prob = np.array(self.get_current_function_param(STORAGE_PROB, context)).astype(float)
+        retrieval_prob = np.array(self._get_current_function_param(RETRIEVAL_PROB, context)).astype(float)
+        storage_prob = np.array(self._get_current_function_param(STORAGE_PROB, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self.get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # get random state
-        random_state = self.get_current_function_param('random_state', context)
+        random_state = self._get_current_function_param('random_state', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # and return current value (variable[1]) for validation.
@@ -1143,8 +1113,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
             memory = self.get_memory(key, context)
         else:
-            # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
-            #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_STATE
+            # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
+            #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
         # Store variable to dict:
@@ -1197,7 +1167,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             if no retrieval occurs, returns appropriately shaped zero-valued array.
 
         """
-        # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OUTPUTSTATE FROM LAST TRIAL)?
+        # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
 
         self._validate_key(query_key, context)
@@ -1226,12 +1196,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             if (not self.duplicate_keys
                     and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
                             for other in indices_of_selected_items[1:])):
-                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of ' \
-                                  f'{self.owner.name} even though {repr("duplicate_keys")} is False')
+                warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of '
+                              f'{self.owner.name} even though {repr("duplicate_keys")} is False')
                 return [[0]* self.parameters.key_size._get(context),
                         [0]* self.parameters.val_size._get(context)]
             if self.equidistant_keys_select == RANDOM:
-                index_of_selected_item = choice(indices_of_selected_items)
+                random_state = self._get_current_function_param('random_state', context)
+                index_of_selected_item = random_state.choice(indices_of_selected_items)
             elif self.equidistant_keys_select == OLDEST:
                 index_of_selected_item = indices_of_selected_items[0]
             elif self.equidistant_keys_select == NEWEST:

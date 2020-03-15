@@ -9,7 +9,17 @@
 
 """
 
-.. _Leabra_Mechanism_Overview:
+Contents
+--------
+
+  * `LeabraMechanism_Overview`
+  * `LeabraMechanism_Creation`
+  * `LeabraMechanism_Structure`
+  * `LeabraMechanism_Execution`
+  * `LeabraMechanism_Class_Reference`
+
+
+.. _LeabraMechanism_Overview:
 
 Overview
 --------
@@ -23,7 +33,7 @@ info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorad
     to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
     the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.
 
-.. _Leabra_Mechanism_Creation:
+.. _LeabraMechanism_Creation:
 
 Creating a LeabraMechanism
 --------------------------
@@ -32,12 +42,12 @@ A LeabraMechanism can be created in two ways. Users can specify the size of the 
 of the output layer (**output_size**), number of hidden layers (**hidden_layers**), and sizes of the hidden layers
 (**hidden_sizes**). In this case, the LeabraMechanism will initialize the connections as uniform random values between
 0.55 and 0.95. Alternatively, users can provide a leabra Network object from the leabra package as an argument
-(**leabra_net**), in which case the **leabra_net** will be used as the network wrapped by the LeabraMechanism.
+(**network**), in which case the **network** will be used as the network wrapped by the LeabraMechanism.
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
 In the former method of creating a LeabraMechanism, the **training_flag** argument specifies whether the network should
 be learning (updating its weights) or not.
 
-.. _Leabra_Mechanism_Structure:
+.. _LeabraMechanism_Structure:
 
 Structure
 ---------
@@ -50,39 +60,39 @@ changed after creation of the LeabraMechanism, causing it to start/stop learning
     If the training_flag is True, the network will learn using the Leabra learning algorithm. Other algorithms may be
     added later.
 
-The LeabraMechanism has two InputStates: the *MAIN_INPUT* `InputState` and the *LEARNING_TARGET* InputState. The
-*MAIN_INPUT* InputState is the input to the leabra network, while the *LEARNING_TARGET* InputState is the learning
-target for the LeabraMechanism. The input to the *MAIN_INPUT* InputState should have length equal to
-`input_size <LeabraMechanism.input_size>` and the input to the *LEARNING_TARGET* InputState should have length equal to
+The LeabraMechanism has two InputPorts: the *MAIN_INPUT* `InputPort` and the *LEARNING_TARGET* InputPort. The
+*MAIN_INPUT* InputPort is the input to the leabra network, while the *LEARNING_TARGET* InputPort is the learning
+target for the LeabraMechanism. The input to the *MAIN_INPUT* InputPort should have length equal to
+`input_size <LeabraMechanism.input_size>` and the input to the *LEARNING_TARGET* InputPort should have length equal to
 `output_size <LeabraMechanism.output_size>`.
 
 .. note::
-    Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input states) cannot be
+    Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
     used as `ORIGIN Mechanisms <System_Mechanisms>` for a `System`. If you desire to use a LeabraMechanism as an ORIGIN
-    Mechanism, you can work around this bug by creating two `TransferMechanisms <Transfer_Overview>` as ORIGIN
-    Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of the
+    Mechanism, you can work around this bug by creating two `TransferMechanisms <TransferMechanism_Overview>` as ORIGIN
+    Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
     LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
-    *LEARNING_TARGET* InputState of L (L.input_states[1])::
+    *LEARNING_TARGET* InputPort of L (L.input_ports[1])::
         L = LeabraMechanism(input_size=input_size, output_size=output_size)
         T1 = TransferMechanism(name='T1', size=input_size, function=Linear)
         T2 = TransferMechanism(name='T2', size=output_size, function=Linear)
         p1 = Process(pathway=[T1, L])
-        proj = MappingProjection(sender=T2, receiver=L.input_states[1])
+        proj = MappingProjection(sender=T2, receiver=L.input_ports[1])
         p2 = Process(pathway=[T2, proj, L])
         s = System(processes=[p1, p2])
         s.run(inputs={T1: input_data, T2: training_data})
 
-.. _Leabra_Mechanism_Execution:
+.. _LeabraMechanism_Execution:
 
 Execution
 ---------
 
 The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
-leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputState`. For details
+leabra Network's output (after one "trial", default 200 cycles in PsyNeuLink) to its primary `OutputPort`. For details
 on Leabra, see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_ and the
 `leabra Python package on Github <https://github.com/benureau/leabra>`_.
 
-.. _Leabra_Mechanism_Reference:
+.. _LeabraMechanism_Reference:
 
 Class Reference
 ---------------
@@ -102,25 +112,23 @@ except ImportError:
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates, standard_output_states
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION, INPUT_STATES, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_STATES, kwPreferenceSetName
+from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
-    'build_leabra_network', 'convert_to_2d_input', 'input_state_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
-    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_state_name', 'run_leabra_network', 'train_leabra_network',
+    'build_leabra_network', 'convert_to_2d_input', 'input_port_names', 'LeabraError', 'LeabraFunction', 'LeabraMechanism',
+    'LEARNING_TARGET', 'MAIN_INPUT', 'MAIN_OUTPUT', 'output_port_name', 'run_leabra_network', 'train_leabra_network',
 ]
 
-# Used to name input_states and output_states:
+# Used to name input_ports and output_ports:
 MAIN_INPUT = 'main_input'
 LEARNING_TARGET = 'learning_target'
 MAIN_OUTPUT = 'main_output'
-input_state_names = [MAIN_INPUT, LEARNING_TARGET]
-output_state_name = [MAIN_OUTPUT]
+input_port_names = [MAIN_INPUT, LEARNING_TARGET]
+output_port_name = [MAIN_OUTPUT]
 
 
 class LeabraError(Exception):
@@ -156,16 +164,12 @@ class LeabraFunction(Function_Base):
         specifies the leabra network to be used.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
     owner : Component
         `component <Component>` to which to assign the Function.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the LeabraMechanism; see `prefs <LeabraMechanism.prefs>` for details.
-
 
     Attributes
     ----------
@@ -189,15 +193,10 @@ class LeabraFunction(Function_Base):
     componentType = LEABRA_FUNCTION_TYPE
     componentName = LEABRA_FUNCTION
 
-    multiplicative_param = NotImplemented
-    additive_param = NotImplemented  # very hacky
-
     classPreferences = {
-        kwPreferenceSetName: 'LeabraFunctionClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        PREFERENCE_SET_NAME: 'LeabraFunctionClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     class Parameters(Function_Base.Parameters):
         """
@@ -208,7 +207,7 @@ class LeabraFunction(Function_Base):
                     see `variable <LeabraFunction.variable>`
 
                     :default value: numpy.array([[0], [0]])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 network
@@ -216,9 +215,8 @@ class LeabraFunction(Function_Base):
 
                     :default value: None
                     :type:
-
         """
-        variable = Parameter(np.array([[0], [0]]), read_only=True)
+        variable = Parameter(np.array([[0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         network = None
 
     def __init__(self,
@@ -235,20 +233,18 @@ class LeabraFunction(Function_Base):
         if network is None:
             raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(network=network,
-                                                  params=params)
-
         if default_variable is None:
-            input_size = len(self.network.layers[0].units)
-            output_size = len(self.network.layers[-1].units)
+            input_size = len(network.layers[0].units)
+            output_size = len(network.layers[-1].units)
             default_variable = [np.zeros(input_size), np.zeros(output_size)]
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            default_variable=default_variable,
+            network=network,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_variable(self, variable, context=None):
         if not isinstance(variable, (list, np.ndarray, numbers.Number)):
@@ -328,7 +324,9 @@ def _training_flag_setter(value, self=None, owning_component=None, context=None)
         try:
             set_training(owning_component.parameters.network._get(context), value)
         except AttributeError:
-            return None
+            # do not return None here, or training_flag will always be
+            # set to None
+            pass
 
     return value
 
@@ -336,7 +334,7 @@ def _training_flag_setter(value, self=None, owning_component=None, context=None)
 class LeabraMechanism(ProcessingMechanism_Base):
     """
     LeabraMechanism(                \
-    leabra_net=None,                \
+    network=None,                   \
     input_size=1,                   \
     output_size=1,                  \
     hidden_layers=0,                \
@@ -347,12 +345,13 @@ class LeabraMechanism(ProcessingMechanism_Base):
     prefs=None)
 
     Subclass of `ProcessingMechanism` that is a wrapper for a Leabra network in PsyNeuLink.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
-    leabra_net : Optional[leabra.Network]
-        a network object from the leabra package. If specified, the LeabraMechanism's network becomes **leabra_net**,
+    network : Optional[leabra.Network]
+        a network object from the leabra package. If specified, the LeabraMechanism's network becomes **network**,
         and the other arguments that specify the network are ignored (**input_size**, **output_size**,
         **hidden_layers**, **hidden_sizes**).
 
@@ -375,9 +374,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
         a boolean specifying whether the leabra network should be learning. If True, the leabra network will adjust
         its weights using the "leabra" algorithm, based on the training pattern (which is read from its second output
         state). The `training_flag` attribute can be changed after initialization, causing the leabra network to
-        start/stop learning. If None, `training_flag` will default to False if **leabra_net** argument is not provided.
-        If **leabra_net** argument is provided and `training_flag` is None, then the existing learning rules of the
-        **leabra_net** will be preserved.
+        start/stop learning. If None, `training_flag` will default to False if **network** argument is not provided.
+        If **network** argument is provided and `training_flag` is None, then the existing learning rules of the
+        **network** will be preserved.
 
     quarter_size : int : default 50
         an integer specifying how many times the Leabra network cycles each time it is run. Lower values of
@@ -385,35 +384,11 @@ class LeabraMechanism(ProcessingMechanism_Base):
         Lower values of quarter_size also effectively reduce the magnitude of learning weight changes during
         a given trial.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default KWTA-<index>
-        a string used for the name of the mechanism.
-        If is not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
-
-    context : str : default componentType+INITIALIZING
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Attributes
     ----------
 
-    variable : value
-        the input to this Mechanism's `function <LeabraMechanism.function>`.
-
     function : LeabraFunction
         the function that wraps and executes the leabra mechanism
-
-    value : 2d np.array [array(float64)]
-        result of executing `function <LeabraMechanism.function>`.
 
     input_size : int : default 1
         an integer specifying how many units are in (the size of) the first layer (input) of the leabra network.
@@ -443,33 +418,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
         the leabra.Network object which is executed by the LeabraMechanism. For more info about leabra Networks,
         please see the `leabra package <https://github.com/benureau/leabra>` on Github.
 
-    output_states : *ContentAddressableList[OutputState]* : default [`RESULT <TRANSFER_MECHANISM_RESULT>`]
-        list of Mechanism's `OutputStates <OutputStates>`.  By default there is a single OutputState,
-        `RESULT <TRANSFER_MECHANISM_RESULT>`, that contains the result of a call to the Mechanism's
-        `function <LeabraMechanism.function>`;  additional `standard <TransferMechanism_Standard_OutputStates>`
-        and/or custom OutputStates may be included, based on the specifications made in the **output_states** argument
-        of the Mechanism's constructor.
-
-    output_values : List[array(float64)]
-        each item is the `value <OutputState.value>` of the corresponding OutputState in `output_states
-        <LeabraMechanism.output_states>`.  The default is a single item containing the result of the
-        TransferMechanism's `function <LeabraMechanism.function>`;  additional
-        ones may be included, based on the specifications made in the
-        **output_states** argument of the Mechanism's constructor (see `TransferMechanism Standard OutputStates
-        <TransferMechanism_Standard_OutputStates>`).
-
-    name : str : default LeabraMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Projection;
-        if not specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict : Mechanism.classPreferences
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
-
     Returns
     -------
     instance of LeabraMechanism : LeabraMechanism
@@ -480,19 +428,13 @@ class LeabraMechanism(ProcessingMechanism_Base):
     is_self_learner = True  # CW 11/27/17: a flag; "True" if the mechanism self-learns. Declared in ProcessingMechanism
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'TransferCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)
+        PREFERENCE_SET_NAME: 'TransferCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)
     }
 
     # LeabraMechanism parameter and control signal assignments):
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({FUNCTION: LeabraFunction,
-                               INPUT_STATES: input_state_names,
-                               OUTPUT_STATES: output_state_name})
-
-    standard_output_states = standard_output_states.copy()
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
@@ -503,7 +445,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                     see `hidden_layers <LeabraMechanism.hidden_layers>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 hidden_sizes
                     see `hidden_sizes <LeabraMechanism.hidden_sizes>`
@@ -515,7 +457,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
                     see `input_size <LeabraMechanism.input_size>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 network
                     see `network <LeabraMechanism.network>`
@@ -527,20 +469,19 @@ class LeabraMechanism(ProcessingMechanism_Base):
                     see `output_size <LeabraMechanism.output_size>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 quarter_size
                     see `quarter_size <LeabraMechanism.quarter_size>`
 
                     :default value: 50
-                    :type: int
+                    :type: ``int``
 
                 training_flag
                     see `training_flag <LeabraMechanism.training_flag>`
 
                     :default value: None
                     :type:
-
         """
         input_size = 1
         output_size = 1
@@ -552,7 +493,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         training_flag = Parameter(None, setter=_training_flag_setter)
 
     def __init__(self,
-                 leabra_net=None,
+                 network=None,
                  input_size=1,
                  output_size=1,
                  hidden_layers=0,
@@ -566,43 +507,35 @@ class LeabraMechanism(ProcessingMechanism_Base):
             raise LeabraError('leabra python module is not installed. Please install it from '
                               'https://github.com/benureau/leabra')
 
-        if leabra_net is not None:
-            leabra_network = leabra_net
-            input_size = len(leabra_network.layers[0].units)
-            output_size = len(leabra_network.layers[-1].units)
-            hidden_layers = len(leabra_network.layers) - 2
-            hidden_sizes = list(map(lambda x: len(x.units), leabra_network.layers))[1:-2]
-            quarter_size = leabra_network.spec.quarter_size
-            training_flag = infer_training_flag_from_network(leabra_network)
+        if network is not None:
+            input_size = len(network.layers[0].units)
+            output_size = len(network.layers[-1].units)
+            hidden_layers = len(network.layers) - 2
+            hidden_sizes = list(map(lambda x: len(x.units), network.layers))[1:-2]
+            quarter_size = network.spec.quarter_size
+            training_flag = infer_training_flag_from_network(network)
         else:
             if hidden_sizes is None:
                 hidden_sizes = input_size
             if training_flag is None:
                 training_flag = False
-            leabra_network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
+            network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
                                                   training_flag, quarter_size)
 
-        function = LeabraFunction(network=leabra_network)
-
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
-                                                               indices=PRIMARY)
-
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  input_size=input_size,
-                                                  output_size=output_size,
-                                                  hidden_layers=hidden_layers,
-                                                  hidden_sizes=hidden_sizes,
-                                                  training_flag=training_flag,
-                                                  quarter_size=quarter_size,
-                                                  params=params)
-
-        super().__init__(size=[input_size, output_size],
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         )
+        super().__init__(
+            function=LeabraFunction(network=network),
+            size=[input_size, output_size],
+            network=network,
+            input_size=input_size,
+            output_size=output_size,
+            hidden_layers=hidden_layers,
+            hidden_sizes=hidden_sizes,
+            quarter_size=quarter_size,
+            training_flag=training_flag,
+            params=params,
+            name=name,
+            prefs=prefs,
+        )
 
     def _execute(
         self,

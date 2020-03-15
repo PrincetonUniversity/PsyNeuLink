@@ -28,20 +28,23 @@ from enum import IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import \
-    Function_Base, FunctionError, MULTIPLICATIVE_PARAM, ADDITIVE_PARAM
+from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.globals.keywords import \
-    DIST_FUNCTION_TYPE, NORMAL_DIST_FUNCTION, STANDARD_DEVIATION, DIST_MEAN, EXPONENTIAL_DIST_FUNCTION, \
-    BETA, UNIFORM_DIST_FUNCTION, LOW, HIGH, GAMMA_DIST_FUNCTION, SCALE, DIST_SHAPE, WALD_DIST_FUNCTION, NOISE, \
-    DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
+    ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
+    EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
+    SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import parameter_spec
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
 
-__all__ = ['DistributionFunction', 'NormalDist', 'UniformDist', 'UniformToNormalDist', 'ExponentialDist',
-           'GammaDist', 'WaldDist', 'DriftDiffusionAnalytical']
+__all__ = [
+    'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
+    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
+    'THRESHOLD_VARIABILITY', 'UniformDist', 'UniformToNormalDist', 'WaldDist',
+]
 
 
 class DistributionFunction(Function_Base):
@@ -78,7 +81,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution. Must be > 0.0
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -101,7 +104,7 @@ class NormalDist(DistributionFunction):
         Standard deviation of the normal distribution; if it is 0.0, returns `mean <NormalDist.mean>`.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -118,8 +121,6 @@ class NormalDist(DistributionFunction):
 
     componentName = NORMAL_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -129,17 +130,17 @@ class NormalDist(DistributionFunction):
                     see `mean <NormalDist.mean>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <NormalDist.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, stateful=True)
 
     @tc.typecheck
     def __init__(self,
@@ -148,17 +149,23 @@ class NormalDist(DistributionFunction):
                  standard_deviation=1.0,
                  params=None,
                  owner=None,
+                 seed=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_deviation=standard_deviation,
-                                                  params=params)
 
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
+        super().__init__(
+            default_variable=default_variable,
+            mean=mean,
+            standard_deviation=standard_deviation,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -173,12 +180,31 @@ class NormalDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-        mean = self.get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
+        random_state = self._get_current_function_param("random_state", context)
 
-        result = np.random.normal(mean, standard_deviation)
+        result = random_state.normal(mean, standard_deviation)
 
         return self.convert_output_type(result)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        mean_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "mean")
+        std_dev_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "standard_deviation")
+        ret_val_ptr = builder.alloca(ctx.float_ty)
+        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        builder.call(norm_rand_f, [random_state, ret_val_ptr])
+
+        ret_val = builder.load(ret_val_ptr)
+        mean = builder.load(mean_ptr)
+        std_dev = builder.load(std_dev_ptr)
+
+        ret_val = builder.fmul(ret_val, std_dev)
+        ret_val = builder.fadd(ret_val, mean)
+
+        builder.store(ret_val, arg_out)
+        return builder
 
 
 class UniformToNormalDist(DistributionFunction):
@@ -224,7 +250,7 @@ class UniformToNormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -247,7 +273,7 @@ class UniformToNormalDist(DistributionFunction):
         Standard deviation of the normal distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -273,27 +299,24 @@ class UniformToNormalDist(DistributionFunction):
                     see `variable <UniformToNormalDist.variable>`
 
                     :default value: numpy.array([0])
-                    :type: numpy.ndarray
+                    :type: ``numpy.ndarray``
                     :read only: True
 
                 mean
                     see `mean <UniformToNormalDist.mean>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 standard_deviation
                     see `standard_deviation <UniformToNormalDist.standard_deviation>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
-        variable = Parameter(np.array([0]), read_only=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
 
     @tc.typecheck
     def __init__(self,
@@ -303,17 +326,14 @@ class UniformToNormalDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(mean=mean,
-                                                  standard_deviation=standard_deviation,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            mean=mean,
+            standard_deviation=standard_deviation,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -326,8 +346,8 @@ class UniformToNormalDist(DistributionFunction):
         except:
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
 
-        mean = self.get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self.get_current_function_param(STANDARD_DEVIATION, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
+        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
 
         sample = np.random.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
@@ -360,7 +380,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -380,7 +400,7 @@ class ExponentialDist(DistributionFunction):
         The scale parameter of the exponential distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -396,8 +416,6 @@ class ExponentialDist(DistributionFunction):
     """
     componentName = EXPONENTIAL_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -407,8 +425,7 @@ class ExponentialDist(DistributionFunction):
                     see `beta <ExponentialDist.beta>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
 
@@ -419,16 +436,13 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(beta=beta,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            beta=beta,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -436,7 +450,7 @@ class ExponentialDist(DistributionFunction):
                  params=None,
                  ):
 
-        beta = self.get_current_function_param(BETA, context)
+        beta = self._get_current_function_param(BETA, context)
         result = np.random.exponential(beta)
 
         return self.convert_output_type(result)
@@ -466,7 +480,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -489,7 +503,7 @@ class UniformDist(DistributionFunction):
         Upper bound of the uniform distribution
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -505,8 +519,6 @@ class UniformDist(DistributionFunction):
     """
     componentName = UNIFORM_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -516,14 +528,13 @@ class UniformDist(DistributionFunction):
                     see `high <UniformDist.high>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 low
                     see `low <UniformDist.low>`
 
                     :default value: 0.0
-                    :type: float
-
+                    :type: ``float``
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
@@ -536,17 +547,14 @@ class UniformDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(low=low,
-                                                  high=high,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            low=low,
+            high=high,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -554,8 +562,8 @@ class UniformDist(DistributionFunction):
                  params=None,
                  ):
 
-        low = self.get_current_function_param(LOW, context)
-        high = self.get_current_function_param(HIGH, context)
+        low = self._get_current_function_param(LOW, context)
+        high = self._get_current_function_param(HIGH, context)
         result = np.random.uniform(low, high)
 
         return self.convert_output_type(result)
@@ -591,7 +599,7 @@ class GammaDist(DistributionFunction):
         The shape of the gamma distribution. Should be greater than zero.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -614,7 +622,7 @@ class GammaDist(DistributionFunction):
         The shape of the gamma distribution. Should be greater than zero.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -631,8 +639,6 @@ class GammaDist(DistributionFunction):
 
     componentName = GAMMA_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -642,14 +648,13 @@ class GammaDist(DistributionFunction):
                     see `dist_shape <GammaDist.dist_shape>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <GammaDist.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -662,17 +667,14 @@ class GammaDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  dist_shape=dist_shape,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            dist_shape=dist_shape,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -680,8 +682,8 @@ class GammaDist(DistributionFunction):
                  params=None,
                  ):
 
-        scale = self.get_current_function_param(SCALE, context)
-        dist_shape = self.get_current_function_param(DIST_SHAPE, context)
+        scale = self._get_current_function_param(SCALE, context)
+        dist_shape = self._get_current_function_param(DIST_SHAPE, context)
 
         result = np.random.gamma(dist_shape, scale)
 
@@ -718,7 +720,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Dict[param keyword: param value] : default None
-         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -740,7 +742,7 @@ class WaldDist(DistributionFunction):
          Mean of the Wald distribution. Should be greater than or equal to zero.
 
      params : Dict[param keyword: param value] : default None
-         a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
          function.  Values specified for parameters in the dictionary override any assigned to those parameters in
          arguments of the constructor.
 
@@ -756,8 +758,6 @@ class WaldDist(DistributionFunction):
 
     componentName = WALD_DIST_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -767,14 +767,13 @@ class WaldDist(DistributionFunction):
                     see `mean <WaldDist.mean>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
 
                 scale
                     see `scale <WaldDist.scale>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -787,17 +786,14 @@ class WaldDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(scale=scale,
-                                                  mean=mean,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
+        super().__init__(
+            default_variable=default_variable,
+            scale=scale,
+            mean=mean,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     def _function(self,
                  variable=None,
@@ -805,8 +801,8 @@ class WaldDist(DistributionFunction):
                  params=None,
                  ):
 
-        scale = self.get_current_function_param(SCALE, context)
-        mean = self.get_current_function_param(DIST_MEAN, context)
+        scale = self._get_current_function_param(SCALE, context)
+        mean = self._get_current_function_param(DIST_MEAN, context)
 
         result = np.random.wald(mean, scale)
 
@@ -816,7 +812,6 @@ class WaldDist(DistributionFunction):
 # Note:  For any of these that correspond to args, value must match the name of the corresponding arg in __init__()
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
-THRESHOLD = 'threshold'
 THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_POINT = 'starting_point'
 STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
@@ -888,7 +883,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
@@ -950,8 +945,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     componentName = DRIFT_DIFFUSION_ANALYTICAL_FUNCTION
 
-    paramClassDefaults = Function_Base.paramClassDefaults.copy()
-
     class Parameters(DistributionFunction.Parameters):
         """
             Attributes
@@ -961,39 +954,45 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     see `bias <DriftDiffusionAnalytical.bias>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
                     :read only: True
 
                 drift_rate
                     see `drift_rate <DriftDiffusionAnalytical.drift_rate>`
 
                     :default value: 1.0
-                    :type: float
+                    :type: ``float``
+
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <DriftDiffusionAnalytical.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
+                    :read only: True
 
                 noise
                     see `noise <DriftDiffusionAnalytical.noise>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 starting_point
                     see `starting_point <DriftDiffusionAnalytical.starting_point>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 t0
                     see `t0 <DriftDiffusionAnalytical.t0>`
 
                     :default value: 0.2
-                    :type: float
+                    :type: ``float``
 
                 threshold
                     see `threshold <DriftDiffusionAnalytical.threshold>`
 
                     :default value: 1.0
-                    :type: float
-
+                    :type: ``float``
         """
         drift_rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -1001,6 +1000,15 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         noise = Parameter(0.5, modulable=True)
         t0 = .200
         bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
+        # this is read only because conversion is disabled for this function
+        # this occurs in other places as well
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
 
     @tc.typecheck
     def __init__(self,
@@ -1017,29 +1025,17 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(drift_rate=drift_rate,
-                                                  starting_point=starting_point,
-                                                  threshold=threshold,
-                                                  noise=noise,
-                                                  t0=t0,
-                                                  params=params)
-
-        super().__init__(default_variable=default_variable,
-                         params=params,
-                         owner=owner,
-                         prefs=prefs,
-                         )
-
-    @property
-    def output_type(self):
-        return self._output_type
-
-    @output_type.setter
-    def output_type(self, value):
-        # disabled because it happens during normal execution, may be confusing
-        # warnings.warn('output_type conversion disabled for {0}'.format(self.__class__.__name__))
-        self._output_type = None
+        super().__init__(
+            default_variable=default_variable,
+            drift_rate=drift_rate,
+            starting_point=starting_point,
+            threshold=threshold,
+            noise=noise,
+            t0=t0,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
 
     @property
     def shenhav_et_al_compat_mode(self):
@@ -1098,7 +1094,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             ignored.
 
         params : Dict[param keyword: param value] : default None
-            a `parameter dictionary <ParameterState_Specification>` that specifies the parameters for the
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
             function.  Values specified for parameters in the dictionary override any assigned to those parameters in
             arguments of the constructor.
 
@@ -1109,13 +1105,13 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         """
 
-        attentional_drift_rate = float(self.get_current_function_param(DRIFT_RATE, context))
+        attentional_drift_rate = float(self._get_current_function_param(DRIFT_RATE, context))
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
-        threshold = float(self.get_current_function_param(THRESHOLD, context))
-        starting_point = float(self.get_current_function_param(STARTING_POINT, context))
-        noise = float(self.get_current_function_param(NOISE, context))
-        t0 = float(self.get_current_function_param(NON_DECISION_TIME, context))
+        threshold = self._get_current_function_param(THRESHOLD, context)
+        starting_point = float(self._get_current_function_param(STARTING_POINT, context))
+        noise = float(self._get_current_function_param(NOISE, context))
+        t0 = float(self._get_current_function_param(NON_DECISION_TIME, context))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
@@ -1245,7 +1241,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             Z = 0.0001
 
         def coth(x):
-            return 1/np.tanh(x)
+            return 1 / np.tanh(x)
 
         def csch(x):
             return 1 / np.sinh(x)
@@ -1254,31 +1250,28 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         # Lets ignore any divide by zeros we get or NaN errors. This will allow the NaN's to propogate.
         with np.errstate(divide='ignore', invalid='ignore'):
-            moments["mean_rt_plus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (X + Z) * coth(X + Z))
+            moments["mean_rt_plus"] = noise**2 / (drift_rate**2) * (2 * Z * coth(2 * Z) - (X + Z) * coth(X + Z))
 
-            moments["mean_rt_minus"] = noise**2. / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
+            moments["mean_rt_minus"] = noise**2 / (drift_rate**2) * (2 * Z * coth(2 * Z) - (-X + Z) * coth(-X + Z))
 
-            moments["var_rt_plus"] = noise**4. / (drift_rate**4) * \
-                              (4 * Z**2. * (csch(2 * Z))**2 + 2 * Z * coth(2 * Z) - (Z + X)**2. *
-                               (csch(Z + X))**2 - (Z + X) * coth(Z + X))
+            moments["var_rt_plus"] = noise**4 / (drift_rate**4) * \
+                              ((2 * Z)**2 * (csch(2 * Z))**2 + (2 * Z) * coth(2 * Z) -
+                               (Z + X)**2 * (csch(Z + X))**2 - (Z + X) * coth(Z + X))
 
-            moments["var_rt_minus"] = noise**4. / (drift_rate**4) * \
-                               (4 * Z**2. * (csch(2 * Z)) ** 2 + 2 * Z*coth(2 * Z) - (Z - X)**2. *
-                                (csch(Z - X))**2 - (Z - X) * coth(Z - X))
+            moments["var_rt_minus"] = noise**4 / (drift_rate**4) * \
+                              ((2 * Z)**2 * (csch(2 * Z))**2 + (2 * Z) * coth(2 * Z) -
+                               (Z - X)**2 * (csch(Z - X))**2 - (Z - X) * coth(Z - X))
 
-            moments["skew_rt_plus"] = noise**6. / (drift_rate** 6) * \
-                               (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) * (csch(2 * Z))**2 +
-                                6 * Z * coth(2 * Z) - 3 * (Z + X)**2. * (csch(Z + X))**2 -
-                                2 * (Z + X)**3. * coth(Z + X) * (csch(Z + X))**2 - 3 * (Z + X) * coth(Z + X))
+            moments["skew_rt_plus"] = noise**6 / (drift_rate**6) * \
+                               (3 * (2 * Z)**2 * (csch(2 * Z))**2 + 2 * (2 * Z)**3 * coth(2 * Z) * (csch(2 * Z))**2 + 3 * (2 * Z) * coth(2 * Z) -
+                                3 * (Z + X)**2 * (csch(Z + X))**2 - 2 * (Z + X)**3 * coth(Z + X) * (csch(Z + X))**2 - 3 * (Z + X) * coth(Z + X))
 
-            moments["skew_rt_minus"] = noise**6. / (drift_rate**6) * \
-                                (12 * Z**2. * (csch(2 * Z))**2 + 16 * Z**3. * coth(2 * Z) *
-                                 (csch(2 * Z))**2 + 6 * Z * coth(2 * Z) - 3 * (Z - X)**2. *
-                                 (csch(Z - X))**2 - 2 * (Z - X)**3. * coth(Z - X) *
-                                 (csch(Z - X))**2 - 3 * (Z - X)*coth(Z - X))
+            moments["skew_rt_minus"] = noise**6 / (drift_rate**6) * \
+                               (3 * (2 * Z)**2 * (csch(2 * Z))**2 + 2 * (2 * Z)**3 * coth(2 * Z) * (csch(2 * Z))**2 + 3 * (2 * Z) * coth(2 * Z) -
+                                3 * (Z - X)**2 * (csch(Z - X))**2 - 2 * (Z - X)**3 * coth(Z - X) * (csch(Z - X))**2 - 3 * (Z - X) * coth(Z - X))
 
             # divide third central moment by var_rt**1.5 to get skewness
-            moments['skew_rt_plus'] /=  moments['var_rt_plus']**1.5
+            moments['skew_rt_plus'] /= moments['var_rt_plus']**1.5
             moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
 
             # Add the non-decision time to the mean RTs
@@ -1287,6 +1280,280 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
 
         return moments
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+
+        def load_scalar_param(name):
+            param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, name)
+            return pnlvm.helpers.load_extract_scalar_array_one(builder, param_ptr)
+
+        attentional_drift_rate = load_scalar_param(DRIFT_RATE)
+        threshold = load_scalar_param(THRESHOLD)
+        starting_point = load_scalar_param(STARTING_POINT)
+        noise = load_scalar_param(NOISE)
+        t0 = load_scalar_param(NON_DECISION_TIME)
+
+        noise_sqr = builder.fmul(noise, noise)
+
+        # Arguments used in mechanisms are 2D
+        arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
+
+        stimulus_drift_rate = pnlvm.helpers.load_extract_scalar_array_one(builder, arg_in)
+        drift_rate = builder.fmul(attentional_drift_rate, stimulus_drift_rate)
+
+        threshold_2 = builder.fmul(threshold, threshold.type(2))
+        bias = builder.fadd(starting_point, threshold)
+        bias = builder.fdiv(bias, threshold_2)
+
+        bias = pnlvm.helpers.fclamp(builder, bias, 1e-8, 1 - 1e-8)
+
+        def _get_arg_out_ptr(idx):
+            ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+            if isinstance(ptr.type.pointee, pnlvm.ir.ArrayType):
+                assert len(ptr.type.pointee) == 1
+                ptr = builder.gep(ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            return ptr
+
+        rt_ptr = _get_arg_out_ptr(0)
+        er_ptr = _get_arg_out_ptr(1)
+
+        abs_f = ctx.get_builtin("fabs", [bias.type])
+        abs_drift_rate = builder.call(abs_f, [drift_rate])
+        small_drift_rate = builder.fcmp_ordered("<", abs_drift_rate,
+                                                abs_drift_rate.type(1e-8))
+
+        with builder.if_else(small_drift_rate) as (then, otherwise):
+            with then:
+                bias_abs = builder.fmul(bias, bias.type(2))
+                bias_abs = builder.fmul(bias_abs, threshold)
+                bias_abs = builder.fsub(bias_abs, threshold)
+
+                bias_abs_sqr = builder.fmul(bias_abs, bias_abs)
+                threshold_sqr = builder.fmul(threshold, threshold)
+                rt = builder.fsub(threshold_sqr, bias_abs_sqr)
+                rt = builder.fdiv(rt, noise_sqr)
+                rt = builder.fadd(t0, rt)
+                builder.store(rt, rt_ptr)
+
+                er = builder.fsub(threshold, bias_abs)
+                er = builder.fdiv(er, threshold_2)
+                builder.store(er, er_ptr)
+            with otherwise:
+                drift_rate_normed = builder.call(abs_f, [drift_rate])
+                ztilde = builder.fdiv(threshold, drift_rate_normed)
+                atilde = builder.fdiv(drift_rate_normed, noise)
+                atilde = builder.fmul(atilde, atilde)
+
+                is_neg_drift = builder.fcmp_ordered("<", drift_rate,
+                                                    drift_rate.type(0))
+                bias_rev = builder.fsub(bias.type(1), bias)
+                bias_adj = builder.select(is_neg_drift, bias_rev, bias)
+
+                noise_tmp = builder.fdiv(noise_sqr, noise_sqr.type(2))
+
+                log_f = ctx.get_builtin("log", [bias_adj.type])
+                bias_tmp = builder.fsub(bias_adj.type(1), bias_adj)
+                bias_tmp = builder.fdiv(bias_adj, bias_tmp)
+                bias_log = builder.call(log_f, [bias_tmp])
+                y0tilde = builder.fmul(noise_tmp, bias_log)
+
+                assert not self.shenhav_et_al_compat_mode
+                threshold_neg = pnlvm.helpers.fneg(builder, threshold)
+                new_y0tilde = builder.select(is_neg_drift, threshold_neg,
+                                                           threshold)
+                abs_y0tilde = builder.call(abs_f, [y0tilde])
+                abs_y0tilde_above_threshold = \
+                    builder.fcmp_ordered(">", abs_y0tilde, threshold)
+                y0tilde = builder.select(abs_y0tilde_above_threshold,
+                                         new_y0tilde, y0tilde)
+
+                x0tilde = builder.fdiv(y0tilde, drift_rate_normed)
+
+                exp_f = ctx.get_builtin("exp", [bias_adj.type])
+                # Precompute the same values as Python above
+                neg2_x0tilde_atilde = builder.fmul(x0tilde.type(-2), x0tilde)
+                neg2_x0tilde_atilde = builder.fmul(neg2_x0tilde_atilde, atilde)
+                exp_neg2_x0tilde_atilde = builder.call(exp_f, [neg2_x0tilde_atilde])
+
+                n2_ztilde_atilde = builder.fmul(ztilde.type(2), ztilde)
+                n2_ztilde_atilde = builder.fmul(n2_ztilde_atilde, atilde)
+                exp_2_ztilde_atilde = builder.call(exp_f, [n2_ztilde_atilde])
+
+                neg2_ztilde_atilde = builder.fmul(ztilde.type(-2), ztilde)
+                neg2_ztilde_atilde = builder.fmul(neg2_ztilde_atilde, atilde)
+                exp_neg2_ztilde_atilde = builder.call(exp_f, [neg2_ztilde_atilde])
+                # The final computation er
+                er_tmp1 = builder.fadd(exp_2_ztilde_atilde.type(1),
+                                       exp_2_ztilde_atilde)
+                er_tmp1 = builder.fdiv(er_tmp1.type(1), er_tmp1)
+                er_tmp2 = builder.fsub(exp_neg2_x0tilde_atilde.type(1),
+                                       exp_neg2_x0tilde_atilde)
+                er_tmp3 = builder.fsub(exp_2_ztilde_atilde,
+                                       exp_neg2_ztilde_atilde)
+                er_tmp = builder.fdiv(er_tmp2, er_tmp3)
+                er = builder.fsub(er_tmp1, er_tmp)
+                comp_er = builder.fsub(er.type(1), er)
+                er = builder.select(is_neg_drift, comp_er, er)
+                builder.store(er, er_ptr)
+
+                # The final computation rt
+                rt_tmp0 = builder.fmul(ztilde, atilde)
+                rt_tmp0 = pnlvm.helpers.tanh(ctx, builder, rt_tmp0)
+                rt_tmp0 = builder.fmul(ztilde, rt_tmp0)
+
+                rt_tmp1a = builder.fmul(ztilde.type(2), ztilde)
+                rt_tmp1b = builder.fsub(exp_neg2_x0tilde_atilde.type(1),
+                                       exp_neg2_x0tilde_atilde)
+                rt_tmp1 = builder.fmul(rt_tmp1a, rt_tmp1b)
+
+                rt_tmp2 = builder.fsub(exp_2_ztilde_atilde,
+                                       exp_neg2_ztilde_atilde)
+
+                rt = builder.fdiv(rt_tmp1, rt_tmp2)
+                rt = builder.fsub(rt, x0tilde)
+                rt = builder.fadd(rt_tmp0, rt)
+                rt = builder.fadd(rt, t0)
+                builder.store(rt, rt_ptr)
+
+        # Calculate moments
+        mean_rt_plus_ptr = _get_arg_out_ptr(2)
+        var_rt_plus_ptr = _get_arg_out_ptr(3)
+        skew_rt_plus_ptr = _get_arg_out_ptr(4)
+        mean_rt_minus_ptr = _get_arg_out_ptr(5)
+        var_rt_minus_ptr = _get_arg_out_ptr(6)
+        skew_rt_minus_ptr = _get_arg_out_ptr(7)
+
+        # Transform starting point to be centered at 0
+        starting_point = bias
+        starting_point = builder.fsub(starting_point, starting_point.type(0.5))
+        starting_point = builder.fmul(starting_point, starting_point.type(2))
+        starting_point = builder.fmul(starting_point, threshold)
+
+        abs_drift_rate = builder.call(abs_f, [drift_rate])
+        drift_rate_limit = abs_drift_rate.type(0.01)
+        small_drift = builder.fcmp_ordered("<", abs_drift_rate, drift_rate_limit)
+        drift_rate = builder.select(small_drift, drift_rate_limit, drift_rate)
+
+        X = builder.fmul(drift_rate, starting_point)
+        X = builder.fdiv(X, noise_sqr)
+        X = pnlvm.helpers.fclamp(builder, X, X.type(-100), X.type(100))
+
+        Z = builder.fmul(drift_rate, threshold)
+        Z = builder.fdiv(Z, noise_sqr)
+        Z = pnlvm.helpers.fclamp(builder, Z, Z.type(-100), Z.type(100))
+
+        abs_Z = builder.call(abs_f, [Z])
+        tiny_Z = builder.fcmp_ordered("<", Z, Z.type(0.0001))
+        Z = builder.select(tiny_Z, Z.type(0.0001), Z)
+
+        # Mean helpers
+        drift_rate_sqr = builder.fmul(drift_rate, drift_rate)
+        Z2 = builder.fmul(Z, Z.type(2))
+        coth_Z2 = pnlvm.helpers.coth(ctx, builder, Z2)
+        Z2_coth_Z2 = builder.fmul(Z2, coth_Z2)
+        ZpX = builder.fadd(Z, X)
+        coth_ZpX = pnlvm.helpers.coth(ctx, builder, ZpX)
+        ZpX_coth_ZpX = builder.fmul(ZpX, coth_ZpX)
+        ZmX = builder.fsub(Z, X)
+        coth_ZmX = pnlvm.helpers.coth(ctx, builder, ZmX)
+        ZmX_coth_ZmX = builder.fmul(ZmX, coth_ZmX)
+
+        # Mean plus
+        mrtp_tmp = builder.fsub(Z2_coth_Z2, ZpX_coth_ZpX)
+        m_rt_p = builder.fdiv(noise_sqr, drift_rate_sqr)
+        m_rt_p = builder.fmul(m_rt_p, mrtp_tmp)
+        m_rt_p = builder.fadd(m_rt_p, t0)
+        builder.store(m_rt_p, mean_rt_plus_ptr)
+
+        # Mean minus
+        mrtm_tmp = builder.fsub(Z2_coth_Z2, ZmX_coth_ZmX)
+        m_rt_m = builder.fdiv(noise_sqr, drift_rate_sqr)
+        m_rt_m = builder.fmul(m_rt_m, mrtm_tmp)
+        m_rt_m = builder.fadd(m_rt_m, t0)
+        builder.store(m_rt_m, mean_rt_minus_ptr)
+
+        # Variance helpers
+        noise_q = builder.fmul(noise_sqr, noise_sqr)
+        drift_rate_q = builder.fmul(drift_rate_sqr, drift_rate_sqr)
+        noise_q_drift_q = builder.fdiv(noise_q, drift_rate_q)
+
+        Z2_sqr = builder.fmul(Z2, Z2)
+        csch_Z2 = pnlvm.helpers.csch(ctx, builder, Z2)
+        csch_Z2_sqr = builder.fmul(csch_Z2, csch_Z2)
+        Z2_sqr_csch_Z2_sqr = builder.fmul(Z2_sqr, csch_Z2_sqr)
+
+        ZpX_sqr = builder.fmul(ZpX, ZpX)
+        csch_ZpX = pnlvm.helpers.csch(ctx, builder, ZpX)
+        csch_ZpX_sqr = builder.fmul(csch_ZpX, csch_ZpX)
+        ZpX_sqr_csch_ZpX_sqr = builder.fmul(ZpX_sqr, csch_ZpX_sqr)
+
+        ZmX_sqr = builder.fmul(ZmX, ZmX)
+        csch_ZmX = pnlvm.helpers.csch(ctx, builder, ZmX)
+        csch_ZmX_sqr = builder.fmul(csch_ZmX, csch_ZmX)
+        ZmX_sqr_csch_ZmX_sqr = builder.fmul(ZmX_sqr, csch_ZmX_sqr)
+
+        # Variance plus
+        v_rt_p = builder.fadd(Z2_sqr_csch_Z2_sqr, Z2_coth_Z2)
+        v_rt_p = builder.fsub(v_rt_p, ZpX_sqr_csch_ZpX_sqr)
+        v_rt_p = builder.fsub(v_rt_p, ZpX_coth_ZpX)
+        v_rt_p = builder.fmul(noise_q_drift_q, v_rt_p)
+        builder.store(v_rt_p, var_rt_plus_ptr)
+
+        pow_f = ctx.get_builtin("pow", [v_rt_p.type, v_rt_p.type])
+        v_rt_p_1_5 = builder.call(pow_f, [v_rt_p, v_rt_p.type(1.5)])
+
+        # Variance minus
+        v_rt_m = builder.fadd(Z2_sqr_csch_Z2_sqr, Z2_coth_Z2)
+        v_rt_m = builder.fsub(v_rt_m, ZmX_sqr_csch_ZmX_sqr)
+        v_rt_m = builder.fsub(v_rt_m, ZmX_coth_ZmX)
+        v_rt_m = builder.fmul(noise_q_drift_q, v_rt_m)
+        builder.store(v_rt_m, var_rt_minus_ptr)
+
+        pow_f = ctx.get_builtin("pow", [v_rt_m.type, v_rt_m.type])
+        v_rt_m_1_5 = builder.call(pow_f, [v_rt_m, v_rt_m.type(1.5)])
+
+        # Skew helpers
+        noise_6 = builder.fmul(noise_q, noise_sqr)
+        drift_rate_6 = builder.fmul(drift_rate_q, drift_rate_sqr)
+
+        srt_tmp0 = builder.fdiv(noise_6, drift_rate_6)
+        srt_tmp1a = builder.fmul(Z2_sqr_csch_Z2_sqr.type(3),
+                                  Z2_sqr_csch_Z2_sqr)
+        srt_tmp2a = builder.fmul(Z2_coth_Z2, Z2_sqr_csch_Z2_sqr)
+        srt_tmp2a = builder.fmul(srt_tmp2a.type(2), srt_tmp2a)
+        srt_tmp3a = builder.fmul(Z2_coth_Z2.type(3), Z2_coth_Z2)
+        s_rt = builder.fadd(srt_tmp1a, srt_tmp2a)
+        s_rt = builder.fadd(s_rt, srt_tmp3a)
+
+        # Skew plus
+        srtp_tmp1b = builder.fmul(ZpX_sqr_csch_ZpX_sqr.type(3),
+                                  ZpX_sqr_csch_ZpX_sqr)
+        srtp_tmp2b = builder.fmul(ZpX_coth_ZpX, ZpX_sqr_csch_ZpX_sqr)
+        srtp_tmp2b = builder.fmul(srtp_tmp2b.type(2), srtp_tmp2b)
+        srtp_tmp3b = builder.fmul(ZpX_coth_ZpX.type(3), ZpX_coth_ZpX)
+
+        s_rt_p = builder.fsub(s_rt, srtp_tmp1b)
+        s_rt_p = builder.fsub(s_rt_p, srtp_tmp2b)
+        s_rt_p = builder.fsub(s_rt_p, srtp_tmp3b)
+        s_rt_p = builder.fmul(srt_tmp0, s_rt_p)
+        s_rt_p = builder.fdiv(s_rt_p, v_rt_p_1_5)
+        builder.store(s_rt_p, skew_rt_plus_ptr)
+
+        # Skew minus
+        srtm_tmp1b = builder.fmul(ZmX_sqr_csch_ZmX_sqr.type(3),
+                                  ZmX_sqr_csch_ZmX_sqr)
+        srtm_tmp2b = builder.fmul(ZmX_coth_ZmX, ZmX_sqr_csch_ZmX_sqr)
+        srtm_tmp2b = builder.fmul(srtm_tmp2b.type(2), srtm_tmp2b)
+        srtm_tmp3b = builder.fmul(ZmX_coth_ZmX.type(3), ZmX_coth_ZmX)
+
+        s_rt_m = builder.fsub(s_rt, srtm_tmp1b)
+        s_rt_m = builder.fsub(s_rt_m, srtm_tmp2b)
+        s_rt_m = builder.fsub(s_rt_m, srtm_tmp3b)
+        s_rt_m = builder.fmul(srt_tmp0, s_rt_m)
+        s_rt_m = builder.fdiv(s_rt_m, v_rt_m_1_5)
+        builder.store(s_rt_m, skew_rt_minus_ptr)
+
+        return builder
 
     def derivative(self, output=None, input=None, context=None):
         """
@@ -1328,9 +1595,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             <DriftDiffusionAnalytical.drift_rate>`.
 
         """
-        Z = output or self.get_current_function_param(THRESHOLD, context)
-        A = input or self.get_current_function_param(DRIFT_RATE, context)
-        c = self.get_current_function_param(NOISE, context)
+        Z = output or self._get_current_function_param(THRESHOLD, context)
+        A = input or self._get_current_function_param(DRIFT_RATE, context)
+        c = self._get_current_function_param(NOISE, context)
         c_sq = c ** 2
         E = np.exp(-2 * Z * A / c_sq)
         D_iti = 0

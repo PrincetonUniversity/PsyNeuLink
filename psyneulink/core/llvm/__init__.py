@@ -11,10 +11,12 @@
 import ctypes
 import functools
 import numpy as np
+from typing import Set
 
 from llvmlite import ir
 
 from . import builtins
+from . import codegen
 from .builder_context import *
 from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
 from .debug import debug_env
@@ -25,7 +27,7 @@ from .jit_engine import *
 __all__ = ['LLVMBuilderContext']
 
 
-_compiled_modules = set()
+_compiled_modules: Set[ir.Module] = set()
 _binary_generation = 0
 
 
@@ -49,62 +51,36 @@ def _llvm_build(target_generation=_binary_generation + 1):
 
 
 class LLVMBinaryFunction:
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
 
         self.__c_func = None
-        self.__c_func_type = None
-        self.__byref_arg_types = None
-
         self.__cuda_kernel = None
 
-    def _init_host_func_type(self):
         # Function signature
         f = _find_llvm_function(self.name, _compiled_modules)
 
+        # Create ctype function instance
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
-        params = []
-        self.__byref_arg_types = []
-        for a in f.args:
-            param_type = _convert_llvm_ir_to_ctype(a.type)
-            if type(a.type) is ir.PointerType:
-                # remember pointee type for easier initialization
-                byref_type = _convert_llvm_ir_to_ctype(a.type.pointee)
-            else:
-                byref_type = None
-
-            self.__byref_arg_types.append(byref_type)
-            params.append(param_type)
+        params = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
 
-    def __call__(self, *args, **kwargs):
-        return self.c_func(*args, **kwargs)
-
-    def wrap_call(self, *pargs):
-        #print(pargs)
-        cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
-        args = zip(cpargs, self.byref_arg_types)
-        cargs = (ctypes.cast(p, ctypes.POINTER(t)) for p, t in args)
-        self(*tuple(cargs))
-
-    @property
-    def byref_arg_types(self):
-        if self.__byref_arg_types is None:
-            self._init_host_func_type()
-        return self.__byref_arg_types
-
-    @property
-    def _c_func_type(self):
-        if self.__c_func_type is None:
-            self._init_host_func_type()
-        return self.__c_func_type
+        self.byref_arg_types = [p._type_ for p in params]
 
     @property
     def c_func(self):
         if self.__c_func is None:
             ptr = _cpu_engine._engine.get_function_address(self.name)
-            self.__c_func = self._c_func_type(ptr)
+            self.__c_func = self.__c_func_type(ptr)
         return self.__c_func
+
+    def __call__(self, *args, **kwargs):
+        return self.c_func(*args, **kwargs)
+
+    def wrap_call(self, *pargs):
+        cpargs = (ctypes.byref(p) if p is not None else None for p in pargs)
+        args = zip(cpargs, self.c_func.argtypes)
+        self(*(ctypes.cast(p, t) for p, t in args))
 
     @property
     def _cuda_kernel(self):
@@ -120,13 +96,14 @@ class LLVMBinaryFunction:
         self.cuda_call(*wrap_args)
 
     @staticmethod
-    def from_obj(obj):
-        name = LLVMBuilderContext.get_global().gen_llvm_function(obj).name
+    @functools.lru_cache(maxsize=32)
+    def from_obj(obj, *, tags:frozenset=frozenset()):
+        name = LLVMBuilderContext.get_global().gen_llvm_function(obj, tags=tags).name
         return LLVMBinaryFunction.get(name)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
-    def get(name):
+    def get(name: str):
         _llvm_build(LLVMBuilderContext._llvm_generation)
         return LLVMBinaryFunction(name)
 
@@ -136,7 +113,7 @@ class LLVMBinaryFunction:
         except ValueError:
             function = _find_llvm_function(self.name)
             with LLVMBuilderContext.get_global() as ctx:
-                multirun_llvm = ctx.gen_multirun_wrapper(function)
+                multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
 
         return LLVMBinaryFunction.get(multirun_llvm.name)
 
@@ -163,6 +140,8 @@ def init_builtins():
         builtins.setup_vec_scalar_mult(ctx)
         builtins.setup_mat_scalar_mult(ctx)
         builtins.setup_mat_scalar_add(ctx)
+
+
 def cleanup():
     _cpu_engine.clean_module()
     if ptx_enabled:
@@ -171,7 +150,9 @@ def cleanup():
     _modules.clear()
     _compiled_modules.clear()
     _all_modules.clear()
+
     LLVMBinaryFunction.get.cache_clear()
+    LLVMBinaryFunction.from_obj.cache_clear()
     init_builtins()
 
 

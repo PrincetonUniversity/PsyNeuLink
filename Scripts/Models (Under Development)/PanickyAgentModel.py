@@ -55,8 +55,8 @@ def choose_closer_agent_function(variable):
     dist_to_prey = dist([player_coord, prey_coord])
     denom = dist_to_predator + dist_to_prey
     if denom != 0:
-        normalized_dist_to_predator = dist_to_predator/denom
-        normalized_dist_to_prey = dist_to_prey/denom
+        normalized_dist_to_predator = dist_to_predator / denom
+        normalized_dist_to_prey = dist_to_prey / denom
         if normalized_dist_to_predator < normalized_dist_to_prey:
             return [PREDATOR]
         else:
@@ -93,7 +93,7 @@ greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=
 
 # ControlMechanism
 Panicky_control_mech = ControlMechanism(objective_mechanism=ObjectiveMechanism(function=choose_closer_agent_function,
-                                                                               monitored_output_states=[player_obs,
+                                                                               monitored_output_ports=[player_obs,
                                                                                                         predator_obs,
                                                                                                         prey_obs]),
                                         function = control_allocation_function,
@@ -139,7 +139,7 @@ def main():
                 # values:[observation[player_value_idx],observation[prey_value_idx],observation[predator_value_idx]],
                 # reward:[reward],
             })
-            action= np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            action= np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             observation, reward, done, _ = env.step(action)
             steps +=1
             if done:

@@ -6,15 +6,27 @@
 # See the License for the specific language governing permissions and limitations under the License.
 
 # NOTES:
-#  * COULD NOT IMPLEMENT integrator_function in paramClassDefaults (see notes below)
-#  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERNCE integrator_function,
+#  * NOW THAT NOISE AND INTEGRATION_RATE ARE PROPRETIES THAT DIRECTLY REFERERENCE integrator_function,
 #      SHOULD THEY NOW BE VALIDATED ONLY THERE (AND NOT IN TransferMechanism)??
 #  * ARE THOSE THE ONLY TWO integrator PARAMS THAT SHOULD BE PROPERTIES??
 
 # ****************************************  RecurrentTransferMechanism *************************************************
 
 """
-.. _Recurrent_Transfer_Overview:
+
+Contents
+--------
+
+  * `RecurrentTransferMechanism_Overview`
+  * `RecurrentTransferMechanism_Creation`
+      - `RecurrentTransferMechanism_Learning`
+  * `RecurrentTransferMechanism_Structure`
+  * `RecurrentTransferMechanism_Execution`
+      - `RecurrentTransferMechanism_Execution_Learning`
+  * `RecurrentTransferMechanism_Class_Reference`
+
+
+.. _RecurrentTransferMechanism_Overview:
 
 Overview
 --------
@@ -22,11 +34,11 @@ Overview
 A RecurrentTransferMechanism is a subclass of `TransferMechanism` that implements a single-layered recurrent
 network, in which each element is connected to every other element (instantiated in a recurrent
 `AutoAssociativeProjection` referenced by the Mechanism's `matrix <RecurrentTransferMechanism.matrix>` parameter).
-Like a TransferMechanism, it can integrate its input prior to executing its `function
-<RecurrentTransferMechanism.function>`. It can also report the energy and, if appropriate, the entropy of its output,
-and can be configured to implement autoassociative (e.g., Hebbian) learning.
+Like a TransferMechanism, it can integrate its input prior to executing its `function <Mechanism_Base.function>`. It
+can also report the energy and, if appropriate, the entropy of its output, and can be configured to implement
+autoassociative (e.g., Hebbian) learning.
 
-.. _Recurrent_Transfer_Creation:
+.. _RecurrentTransferMechanism_Creation:
 
 Creating a RecurrentTransferMechanism
 -------------------------------------
@@ -67,7 +79,7 @@ If the **auto** and **hetero** arguments are used to create the `recurrent_proje
 
 In all other respects, a RecurrentTransferMechanism is specified in the same way as a standard `TransferMechanism`.
 
-.. _Recurrent_Transfer_Learning:
+.. _RecurrentTransferMechanism_Learning:
 
 *Configuring Learning*
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -100,7 +112,7 @@ as MechanismRegistry is empty!
 10/9/17 MANTEL: mechanism() factory method is removed
 COMMENT
 
-.. _Recurrent_Transfer_Structure:
+.. _RecurrentTransferMechanism_Structure:
 
 Structure
 ---------
@@ -108,64 +120,60 @@ Structure
 The distinguishing feature of a RecurrentTransferMechanism is its `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>` attribute: a self-projecting `AutoAssociativeProjection`.
 By default, `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` projects from the Mechanism's
-`primary OutputState <OutputState_Primary>` back to its `primary InputState <InputState_Primary>`.  This can be
+`primary OutputPort <OutputPort_Primary>` back to its `primary InputPort <InputPort_Primary>`.  This can be
 parameterized using its `matrix <RecurrentTransferMechanism.matrix>`, `auto <RecurrentTransferMechanism.auto>`,
 and `hetero <RecurrentTransferMechanism.hetero>` attributes, and is stored in its `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_state
-<RecurrentTransferMechanism.has_recurrent_input_state>` attribute, the `recurrent_projection
-<RecurrentTransferMechanism.recurrent_projection>` can also be made to project to a separate *RECURRENT* InputState
-rather, than the primary one (named *EXTERNAL*).  In this case, the InputStates' results will be combined using the
+<RecurrentTransferMechanism.recurrent_projection>` attribute.  Using the `has_recurrent_input_port
+<RecurrentTransferMechanism.has_recurrent_input_port>` attribute, the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` can also be made to project to a separate *RECURRENT* InputPort
+rather, than the primary one (named *EXTERNAL*).  In this case, the InputPorts' results will be combined using the
 `combination_function <RecurrentTransferMechanism.combination_function>` *before* being passed to the
-RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+RecurrentTransferMechanism's `function <Mechanism_Base.function>`.
 
-A RecurrentTransferMechanism also has two additional `OutputStates <OutputState>`:  an *ENERGY* OutputState and, if its
-`function <RecurrentTransferMechanism.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY*
-OutputState.  Each of these report the respective values of the vector in it its *RESULTS* (`primary
-<OutputState_Primary>`) OutputState.
+A RecurrentTransferMechanism also has two additional `OutputPorts <OutputPort>`:  an *ENERGY* OutputPort and, if its
+`function <Mechanism_Base.function>` is bounded between 0 and 1 (e.g., a `Logistic` function), an *ENTROPY* OutputPort.
+Each of these report the respective values of the vector in it its *RESULT* (`primary <OutputPort_Primary>`) OutputPort.
 
-Finally, if it has been `specified for learning <Recurrent_Transfer_Learning>`, the RecurrentTransferMechanism is
-associated with an `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
+Finally, if it has been `specified for learning <RecurrentTransferMechanism_Learning>`, the RecurrentTransferMechanism
+is associated with an `AutoAssociativeLearningMechanism` that is used to train its `AutoAssociativeProjection`.
 The `learning_enabled <RecurrentTransferMechanism.learning_enabled>` attribute indicates whether learning
 is enabled or disabled for the Mechanism.  If learning was not configured when the Mechanism was created, then it cannot
-be enabled until the Mechanism is `configured for learning <Recurrent_Transfer_Learning>`.
+be enabled until the Mechanism is `configured for learning <RecurrentTransferMechanism_Learning>`.
 
 In all other respects the Mechanism is identical to a standard  `TransferMechanism`.
 
-.. _Recurrent_Transfer_Execution:
+.. _RecurrentTransferMechanism_Execution:
 
 Execution
 ---------
 
 When a RecurrentTransferMechanism executes, its variable, as is the case with all mechanisms, is determined by the
 projections the mechanism receives. This means that a RecurrentTransferMechanism's variable is determined in part by
-the value of its own `primary OutputState <OutputState_Primary>` on the previous execution, and the `matrix` of the
+the value of its own `primary OutputPort <OutputPort_Primary>` on the previous execution, and the `matrix` of the
 `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
-Like a `TransferMechanism`, the function used to update each element can be specified in the **function** argument
-of its constructor.  It then transforms its input (including from the `recurrent_projection
+Like any `TransferMechanism`, the function used to update each element can be specified in the **function** argument
+of its constructor.  This transforms its input (including from the `recurrent_projection
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
-`Transfer_Execution`), and returns the results in its OutputStates.
+`TransferMechanism_Execution`), and returns the results in its OutputPorts.  Also like a TransferMechanism,
+a RecurrentTransferMechanism can be configured to integrate its input, by setting its `integration_mode
+<TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Integration`), and to do so for a
+single step of integration or until it reaches some termination condition each time it is executed (see
+`TransferMechanism_Termination`). Finally, it can be reinitialized using its `reinitialize
+<TransferMechanism.reinitialize>` method (see `TransferMechanism_Reinitialization`).
 
-Also like a `TransferMechanism`, the function used to integrate its input before passing it to `function
-RecurrentTransferMechanism.function` (when `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is `True`)
-can be specified in the **integrator_function** argument of its constructor.
+.. _RecurrentTransferMechanism_Execution_Learning:
 
-If a `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>` is specified, then on each execution
-the `convergence_function <RecurrentTransferMechanism.convergence_function>` is evaluated, and execution in the current
-`trial` continues until the result returned is less than or equal to the `convergence_criterion
-<RecurrentTransferMechanism.convergence_criterion>` or the number of executions reaches `max_passes
-<RecurrentTransferMechanism.max_passes>` (if it is specified).
+*Learning*
+~~~~~~~~~~
 
-If it has been `configured for learning <Recurrent_Transfer_Learning>` and is executed as part of a `System`,
-then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed when the `learning_condition
-<RecurrentTransferMechanism.learning_condition>` is satisfied,  during the `execution phase <System_Execution>` of
-the System's execution.  Note that this is distinct from the behavior of supervised learning algorithms (such as
-`Reinforcement` and `BackPropagation`), that are executed during the `learning phase <System_Execution>` of a
-System's execution.  By default, the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes,
-and updates the `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` immediately after the
-RecurrentTransferMechanism executes.
+If the RecurrentTransferMechanism has been `configured for learning <RecurrentTransferMechanism_Learning>` and is
+executed as part of a `Composition`, then its `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
+is executed when the `learning_condition <RecurrentTransferMechanism.learning_condition>` is satisfied.  By default,
+the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` executes, and updates the `recurrent_projection
+<RecurrentTransferMechanism.recurrent_projection>` immediately after the RecurrentTransferMechanism executes.
 
-.. _Recurrent_Transfer_Class_Reference:
+.. _RecurrentTransferMechanism_Class_Reference:
 
 Class Reference
 ---------------
@@ -176,50 +184,51 @@ import itertools
 import numbers
 import numpy as np
 import typecheck as tc
+import types
 import warnings
 
 from collections.abc import Iterable
-from types import MethodType
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import function_type, method_type
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.functions.objectivefunctions import Distance, Stability
+from psyneulink.core.components.functions.objectivefunctions import Stability
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.mechanisms.adaptive.learning.learningmechanism import ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
+    ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.outputstate import PRIMARY, StandardOutputStates
-from psyneulink.core.components.states.parameterstate import ParameterState
-from psyneulink.core.components.states.state import _instantiate_state
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_STATE, MATRIX, MAX_ABS_DIFF, NAME, OUTPUT_MEAN, OUTPUT_MEDIAN, OUTPUT_STD_DEV, OUTPUT_VARIANCE, PARAMS_CURRENT, RECURRENT_TRANSFER_MECHANISM, RESULT
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import _instantiate_port
+from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.keywords import \
+    AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
+from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec, NodeRole
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
-from psyneulink.library.components.mechanisms.adaptive.learning.autoassociativelearningmechanism import AutoAssociativeLearningMechanism
-from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import \
+    AutoAssociativeProjection, get_auto_matrix, get_hetero_matrix
 
 __all__ = [
     'CONVERGENCE', 'EXTERNAL', 'EXTERNAL_INDEX',
-    'RECURRENT', 'RECURRENT_INDEX', 'RECURRENT_OUTPUT', 'RecurrentTransferError', 'RecurrentTransferMechanism',
-    'UPDATE'
+    'RECURRENT', 'RECURRENT_INDEX', 'RecurrentTransferError', 'RecurrentTransferMechanism', 'UPDATE'
 ]
 
 EXTERNAL = 'EXTERNAL'
 RECURRENT = 'RECURRENT'
-# Used to index items of InputState.variable corresponding to recurrent and external inputs
+# Used to index items of InputPort.variable corresponding to recurrent and external inputs
 EXTERNAL_INDEX = 0
 RECURRENT_INDEX = -1
 
@@ -228,6 +237,9 @@ COMBINATION_FUNCTION = 'combination_function'
 # Used to specify learning_condition
 UPDATE = 'UPDATE'
 CONVERGENCE = 'CONVERGENCE'
+ENERGY_OUTPUT_PORT_NAME='ENERGY'
+ENTROPY_OUTPUT_PORT_NAME='ENTROPY'
+
 
 
 class RecurrentTransferError(Exception):
@@ -236,53 +248,6 @@ class RecurrentTransferError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-# This is a convenience class that provides list of standard_output_state names in IDE
-class RECURRENT_OUTPUT():
-    """
-        .. _RecurrentTransferMechanism_Standard_OutputStates:
-
-        `Standard OutputStates <OutputState_Standard>` for
-        `RecurrentTransferMechanism`
-
-        .. TRANSFER_RESULT:
-
-        *RESULT* : 1d np.array
-            the result of the `function <RecurrentTransferMechanism.function>`
-            of the Mechanism
-
-        .. TRANSFER_MEAN:
-
-        *OUTPUT_MEAN* : float
-            the mean of the result
-
-        *OUTPUT_VARIANCE* : float
-            the variance of the result
-
-        .. ENERGY:
-
-        *ENERGY* : float
-            the energy of the result, which is calculated using the `Stability
-            Function <Function.Stability.function>` with the ``ENERGY`` metric
-
-        .. ENTROPY:
-
-        *ENTROPY* : float
-            The entropy of the result, which is calculated using the `Stability
-            Function <Function.Stability.function>` with the ENTROPY metric
-            (Note: this is only present if the Mechanism's `function` is bounded
-            between 0 and 1 (e.g. the `Logistic` Function)).
-        """
-    RESULT=RESULT
-    MEAN=OUTPUT_MEAN
-    MEDIAN=OUTPUT_MEDIAN
-    STANDARD_DEVIATION=OUTPUT_STD_DEV
-    VARIANCE=OUTPUT_VARIANCE
-    ENERGY=ENERGY
-    ENTROPY=ENTROPY
-    # THIS WOULD HAVE BEEN NICE, BUT IDE DOESN'T EXECUTE IT, SO NAMES DON'T SHOW UP
-    # for item in [item[NAME] for item in DDM_standard_output_states]:
-    #     setattr(DDM_OUTPUT.__class__, item, item)
 
 
 def _recurrent_transfer_mechanism_matrix_getter(owning_component=None, context=None):
@@ -312,7 +277,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
     # if hasattr(owning_component, "recurrent_projection"):
-    #     owning_component.recurrent_projection.parameter_states["matrix"].function.parameters.previous_value._set(value, base_execution_id)
+    #     owning_component.recurrent_projection.parameter_ports["matrix"].function.parameters.previous_value._set(value, base_execution_id)
 
     try:
         value = get_matrix(value, owning_component.recurrent_size, owning_component.recurrent_size)
@@ -336,67 +301,52 @@ def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=N
 # IMPLEMENTATION NOTE:  IMPLEMENTS OFFSET PARAM BUT IT IS NOT CURRENTLY BEING USED
 class RecurrentTransferMechanism(TransferMechanism):
     """
-    RecurrentTransferMechanism(                         \
-    default_variable=None,                              \
-    size=None,                                          \
-    function=Linear,                                    \
-    matrix=HOLLOW_MATRIX,                               \
-    auto=None,                                          \
-    hetero=None,                                        \
-    has_recurrent_input_state=False                     \
-    combination_function=LinearCombination,             \
-    integrator_mode=False,                              \
-    integrator_function=AdaptiveIntegrator,             \
-    initial_value=None,                                 \
-    integration_rate=0.5,                               \
-    noise=0.0,                                          \
-    clip=[float:min, float:max],                        \
-    convergence_function=Distance(metric=MAX_ABS_DIFF), \
-    convergence_criterion=None,                         \
-    max_passes=None,                                    \
-    enable_learning=False,                              \
-    learning_rate=None,                                 \
-    learning_function=Hebbian,                          \
-    learning_condition=UPDATE,                          \
-    params=None,                                        \
-    name=None,                                          \
-    prefs=None)
+    RecurrentTransferMechanism(                             \
+        matrix=HOLLOW_MATRIX,                               \
+        auto=None,                                          \
+        hetero=None,                                        \
+        has_recurrent_input_port=False                      \
+        combination_function=LinearCombination,             \
+        integrator_mode=False,                              \
+        integrator_function=AdaptiveIntegrator,             \
+        enable_learning=False,                              \
+        learning_rate=None,                                 \
+        learning_function=Hebbian,                          \
+        learning_condition=UPDATE)
 
     Subclass of `TransferMechanism` that implements a single-layer auto-recurrent network.
-
-    COMMENT:
-        Description
-        -----------
-            RecurrentTransferMechanism is a Subtype of the TransferMechanism Subtype of the ProcessingMechanisms Type
-            of the Mechanism Category of the Component class.
-            It implements a TransferMechanism with a recurrent projection (default matrix: HOLLOW_MATRIX).
-            In all other respects, it is identical to a TransferMechanism.
-    COMMENT
+    See `TransferMechanism <TransferMechanism_Class_Reference>` for additional arguments and attributes.
 
     Arguments
     ---------
 
-    default_variable : number, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the input to the Mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method;
-        also serves as a template to specify the length of `variable <RecurrentTransferMechanism.variable>` for
-        `function <RecurrentTransferMechanism.function>`, and the `primary OutputState <OutputState_Primary>`
-        of the Mechanism.
+    COMMENT:
+    ??OLD OR NEWER THAN BELOW?
+    matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default FULL_CONNECTIVITY_MATRIX
+        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection
+        <RecurrentTransferMechanism_Structure>`, or a AutoAssociativeProjection to use. If **auto** or **hetero**
+        arguments are specified, the **matrix** argument will be ignored in favor of those arguments.
 
-    size : int, list or np.ndarray of ints
-        specifies variable as array(s) of zeros if **variable** is not passed as an argument;
-        if **variable** is specified, it takes precedence over the specification of **size**.
-        As an example, the following mechanisms are equivalent::
-            T1 = TransferMechanism(size = [3, 2])
-            T2 = TransferMechanism(default_variable = [[0, 0, 0], [0, 0]])
+    auto : number, 1D array, or None : default None
+        specifies matrix as a diagonal matrix with diagonal entries equal to **auto**, if **auto** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **hetero**, if either is specified. **auto** can be specified as a 1D array with length equal
+        to the size of the mechanism, if a non-uniform diagonal is desired. Can be modified by control.
 
-    function : TransferFunction : default Linear
-        specifies the function used to transform the input;  can be `Linear`, `Logistic`, `Exponential`,
-        or a custom function.
+    hetero : number, 2D array, or None : default None
+        specifies matrix as a hollow matrix with all non-diagonal entries equal to **hetero**, if **hetero** is not None;
+        If **auto** and **hetero** are both specified, then matrix is the sum of the two matrices from **auto** and
+        **hetero**. For example, setting **auto** to 1 and **hetero** to -1 would set matrix to have a diagonal of
+        1 and all non-diagonal entries -1. if the **matrix** argument is specified, it will be overwritten by
+        **auto** and/or **hetero**, if either is specified. **hetero** can be specified as a 2D array with dimensions
+        equal to the matrix dimensions, if a non-uniform diagonal is desired. Can be modified by control.
+    COMMENT
 
     matrix : list, np.ndarray, np.matrix, matrix keyword, or AutoAssociativeProjection : default HOLLOW_MATRIX
-        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection <Recurrent_Transfer_Structure>`,
-        or an AutoAssociativeProjection to use.
+        specifies the matrix to use for creating a `recurrent AutoAssociativeProjection
+        <RecurrentTransferMechanism_Structure>`, or an AutoAssociativeProjection to use.
 
         - If **auto** and **matrix** are both specified, the diagonal terms are determined by auto and the off-diagonal
           terms are determined by matrix.
@@ -467,70 +417,22 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         Can be modified by control.
 
-    has_recurrent_input_state : boolean : default False
+    has_recurrent_input_port : boolean : default False
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-        points to a separate input state. By default, if False, the recurrent_projection points to its `primary
-        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
-        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
-        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+        points to a separate InputPort. By default, if False, the recurrent_projection points to its `primary
+        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate InputPort, and
+        the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
+        being passed to the RecurrentTransferMechanism's `function <Mechanism_Base.function>`.
 
     combination_function : function : default LinearCombination
-        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputStates <Recurrent_Transfer_Structure>`;
-        must accept a 2d array with one or two items of the same length, and generate a result that is the same size
-        as each of these;  default simply adds the two items.
-
-    integrator_mode : bool : False
-        specifies whether or not the RecurrentTransferMechanism should be executed using its `integrator_function
-        <RecurrentTransferMechanism>` to integrate its `variable <RecurrentTransferMechanism.variable>` (
-        when set to `True`), or simply report the asymptotic value of the output of its `function
-        <RecurrentTransferMechanism.function>` (when set to `False`).
-
-    integrator_function : IntegratorFunction : default AdaptiveIntegrator
-        specifies `IntegratorFunction` to use in `integration_mode <RecurrentTransferMechanism.integration_mode>`.
-
-    initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
-        specifies the starting value for time-averaged input if `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is `True`).
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
-
-    integration_rate : float : default 0.5
-        the rate used for integrating `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
-
-             result = (integration_rate * variable) +
-             (1-integration_rate * input to mechanism's function on the previous time step)
-
-    noise : float or function : default 0.0
-        a value added to the result of the `function <RecurrentTransferMechanism.function>` or to the result of
-        `integrator_function <RecurrentTransferMechanism.integrator_function>`, depending on whether `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is `True` or `False`. See
-        `noise <RecurrentTransferMechanism.noise>` for additional details.
-
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>` the item in
-        index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the maximum
-        allowable value; any element of the result that exceeds the specified minimum or maximum value is set to the
-        value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
-
-    convergence_function : function : default Distance(metric=MAX_ABS_DIFF)
-        specifies the function that calculates `delta <RecurrentTransferMechanism.delta>`, and determines when
-        `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
-
-    convergence_criterion : float : default 0.01
-        specifies the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
-        <RecurrentTransferMechanism.is_converged>` is `True`.
-
-    max_passes : int : default 1000
-        specifies maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
-        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
+        specifies function used to combine the *RECURRENT* and *INTERNAL* `InputPorts
+        <RecurrentTransferMechanism_Structure>`; must accept a 2d array with one or two items of the same length,
+        and generate a result that is the same size as each of these;  default simply adds the two items.
 
     enable_learning : boolean : default False
-        specifies whether the Mechanism should be configured for learning;  if it is not (the default), then learning
-        cannot be enabled until it is configured for learning by calling the Mechanism's `configure_learning
-        <RecurrentTransferMechanism.configure_learning>` method.
+        specifies whether the Mechanism should be configured for `learning <RecurrentTransferMechanism_Learning>;
+        if it is not (the default), then learning cannot be enabled until it is configured for learning by calling
+        the Mechanism's `configure_learning <RecurrentTransferMechanism.configure_learning>` method.
 
     learning_rate : scalar, or list, 1d or 2d np.array, or np.matrix of numeric values: default False
         specifies the learning rate used by its `learning function <RecurrentTransferMechanism.learning_function>`.
@@ -540,8 +442,8 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     learning_function : function : default Hebbian
         specifies the function for the LearningMechanism if `learning has been specified
-        <Recurrent_Transfer_Learning>` for the RecurrentTransferMechanism.  It can be any function so long as it
-        takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
+        <RecurrentTransferMechanism_Learning>` for the RecurrentTransferMechanism.  It can be any function so long as
+        it takes a list or 1d array of numeric values as its `variable <Function_Base.variable>` and returns a sqaure
         matrix of numeric values with the same dimensions as the length of the input.
 
     learning_condition : Condition, UPDATE, CONVERGENCE : default UPDATE
@@ -552,194 +454,37 @@ class RecurrentTransferMechanism(TransferMechanism):
          every execution of the RecurrentTransferMechanism;  this is equivalent to assigning no `Condition`
        ..
        * *CONVERGENCE:* `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` is executed whenever the
-         the `convergence_criterion` is satisfied;  this is equivalent to a WhenFinished(``rec_mech``) `Condition`
+         the `termination_threshold` is satisfied;  this is equivalent to a WhenFinished(``rec_mech``) `Condition`
          in which ``rec_mech`` is the RecurrentTransferMechanism.
 
        See `learning_condition <RecurrentTransferMechanism.learning_condition>` for additional details.
 
-    params : Dict[param keyword: param value] : default None
-        a `parameter dictionary <ParameterState_Specification>` that can be used to specify the parameters for
-        the Mechanism, its function, and/or a custom function and its parameters.  Values specified for parameters in
-        the dictionary override any assigned to those parameters in arguments of the constructor.
-
-    name : str : default see `name <RecurrentTransferMechanism.name>`
-        specifies the name of the RecurrentTransferMechanism.
-
-    prefs : PreferenceSet or specification dict : default Mechanism.classPreferences
-        specifies the `PreferenceSet` for the RecurrentTransferMechanism; see `prefs <RecurrentTransferMechanism.prefs>`
-        for details.
-
-    context : str : default componentType+INITIALIZING
-        string used for contextualization of instantiation, hierarchical calls, executions, etc.
-
     Attributes
     ----------
 
-    variable : 2d np.array with one item in axis 0.
-        the input to Mechanism's `function <RecurrentTransferMechanism.function>`.
-
-    function : Function
-        the Function used to transform the input.
-
     matrix : 2d np.array
-        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection` for the Mechanism.
+        the `matrix <AutoAssociativeProjection.matrix>` parameter of the `recurrent_projection
+        <RecurrentTransferMechanism.recurrent_projection>` for the Mechanism.
 
     recurrent_projection : AutoAssociativeProjection
-        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputState <OutputState_Primary>`
-         to its `primary InputState <Mechanism_InputStates>`.
+        an `AutoAssociativeProjection` that projects from the Mechanism's `primary OutputPort <OutputPort_Primary>`
+        to its `primary InputPort <Mechanism_InputPorts>`.
 
-    has_recurrent_input_state : boolean
+    has_recurrent_input_port : boolean
         specifies whether the mechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`
-        points to a separate input state. If False, the recurrent_projection points to its `primary
-        InputState <InputState_Primary>`. If True, the recurrent_projection points to a separate input state, and
-        the values of all input states are combined using `LinearCombination <function.LinearCombination>` *before*
-        being passed to the RecurrentTransferMechanism's `function <RecurrentTransferMechanism.function>`.
+        points to a separate InputPort. If False, the recurrent_projection points to its `primary
+        InputPort <InputPort_Primary>`. If True, the recurrent_projection points to a separate InputPort, and
+        the values of all input ports are combined using `LinearCombination <function.LinearCombination>` *before*
+        being passed to the RecurrentTransferMechanism's `function <Mechanism_Base.function>`.
 
     combination_function : function
-        the Function used to combine the *RECURRENT* and *EXTERNAL* InputStates if `has_recurrent_input_state
-        <RecurrentTransferMechanism.has_recurrent_input_state>` is `True`.  By default this is a `LinearCombination`
+        the Function used to combine the *RECURRENT* and *EXTERNAL* InputPorts if `has_recurrent_input_port
+        <RecurrentTransferMechanism.has_recurrent_input_port>` is `True`.  By default this is a `LinearCombination`
         Function that simply adds them.
 
-    COMMENT:
-       THE FOLLOWING IS THE CURRENT ASSIGNMENT
-    COMMENT
-    initial_value :  value, list or np.ndarray : Transfer_DEFAULT_BIAS
-        determines the starting value for time-averaged input (only relevant if `integration_rate
-        <RecurrentTransferMechanism.integration_rate>` parameter is not 1.0).
-        COMMENT:
-            Transfer_DEFAULT_BIAS SHOULD RESOLVE TO A VALUE
-        COMMENT
-
-
-
-
-
-
-    integrator_mode :
-        **When integrator_mode is set to True:**
-
-        the variable of the mechanism is first passed into the following equation:
-
-        .. math::
-            value = previous\\_value(1-integration\\_rate) + variable \\cdot integration\\_rate + noise
-
-        The result of the integrator function above is then passed into the mechanism's `function
-        <RecurrentTransferMechanism.function>`. Note that on the first execution, *initial_value* determines the
-        `integrator_function's <RecurrentTransferMechanism.integrator_function>` `previous_value
-        <AdaptiveIntegrator.previous_value>`.
-
-        **When integrator_mode is set to False:**
-
-        The variable of the mechanism is passed into the `function of the mechanism
-        <RecurrentTransferMechanism.function>`. The Mechanism's `integrator_function
-        <RecurrentTransferMechanism.integrator_function>` is skipped entirely, and all related arguments
-        (*noise*, *leak*, *initial_value*, and *time_step_size*) are ignored.
-
-    integrator_mode : bool
-        determines whether the RecurrentTransferMechanism uses its `integrator_function
-        <RecurrentTransferMechanism.integrator_function>` to integrate its `variable
-        <RecurrentTransferMechanism.variable>` when it executes.
-
-        **If integrator_mode is set to** `True`:
-
-            the RecurrentTransferMechanism's `variable <RecurrentTransferMechanism.variable>` is first passed to its
-            `integrator_function <RecurrentTransferMechanism.integrator_function>`, and then the result is passed to
-            its `function <RecurrentTransferMechanism.function>` which computes the RecurrentTransferMechanism's `value
-            <RecurrentTransferMechanism.value>`.
-
-            .. note::
-                The RecurrentTransferMechanism's `integration_rate <RecurrentTransferMechanism.integration_rate>`,
-                `noise <RecurrentTransferMechanism.noise>`, and `initial_value
-                <RecurrentTransferMechanism.initial_value>` parameters specify the respective parameters of its
-                `integrator_function <RecurrentTransferMechanism.integrator_function>` (with `initial_value
-                <RecurrentTransferMechanism.initial_value>` corresponding to `initializer
-                <IntegratorFunction.initializer>` and `integration_rate <RecurrentTransferMechanism.integration_rate>`
-                corresponding to `rate <IntegratorFunction.rate>` of `integrator_function
-                <RecurrentTransferMechanism.integrator_function>`). However, if there are any disagreements between
-                these (e.g., any of these parameters is specified in the constructor for an `IntegratorFunction`
-                assigned as the **integration_function** arg of the RecurrentTransferMechanism), the values specified
-                for the `integrator_function <RecurrentTransferMechanism.integrator_function>` take precedence,
-                and their value(s) are assigned as those of the corresponding parameters on the
-                RecurrentTransferMechanism.
-
-        **If integrator_mode is set to** `False`:
-
-            if `noise <RecurrentTransferMechanism.noise>` is non-zero, it is applied to the RecurrentTransferMechanism's
-            `variable <RecurrentTransferMechanism>` which is htne passed directly to its `function
-            <RecurrentTransferMechanism.function>`  -- that is, its `integrator_function
-            <RecurrentTransferMechanism.integrator_function>` is bypassed, and its related attributes (`initial_value
-            <RecurrentTransferMechanism.initial_value>` and `integration_rate
-            <RecurrentTransferMechanism.integration_rate>`) are ignored.
-
-    integrator_function :  IntegratorFunction
-        the `IntegratorFunction` used when `integrator_mode <TransferMechanism.integrator_mode>` is set to
-        `True` (see `integrator_mode <TransferMechanism.integrator_mode>` for details).
-
-    integration_rate : float : default 0.5
-        the rate used for integrating of `variable <RecurrentTransferMechanism.variable>` when `integrator_mode
-        <RecurrentTransferMechanism.integrator_mode>` is set to `True`::
-
-          result = (integration_rate * current input) + (1-integration_rate * result on previous time_step)
-
-    noise : float or function : default 0.0
-        When `integrator_mode <RecurrentTransferMechanism.integrator_mode>` is set to `True`, noise is passed into the
-        `integrator_function <RecurrentTransferMechanism.integrator_function>`. Otherwise, noise is added to the result
-        of the `function <RecurrentTransferMechanism.function>`.
-
-        If noise is a list or array, it must be the same length as `variable
-        <RecurrentTransferMechanism.default_variable>`.
-
-        If noise is specified as a single float or function, while `variable <RecurrentTransferMechanism.variable>` is
-        a list or array, noise will be applied to each variable element. In the case of a noise function, this means
-        that the function will be executed separately for each variable element.
-
-        .. note::
-            In order to generate random noise, we recommend selecting a probability distribution function
-            (see `Distribution Functions <DistributionFunction>` for details), which will generate a new noise value
-            from its distribution on each execution. If noise is specified as a float or as a function with a fixed
-            output, then the noise will simply be an offset that remains the same across all executions.
-
-    clip : list [float, float] : default None (Optional)
-        specifies the allowable range for the result of `function <RecurrentTransferMechanism.function>`
-
-        the item in index 0 specifies the minimum allowable value of the result, and the item in index 1 specifies the
-        maximum allowable value; any element of the result that exceeds the specified minimum or maximum value is set
-        to the value of `clip <RecurrentTransferMechanism.clip>` that it exceeds.
-
-    previous_value : 2d np.array [array(float64)] : default None
-        `value <RecurrentTransferMechanism.value>` after the previous execution of the Mechanism; it is assigned `None`
-        until the 2nd execution, and when the Mechanism's `reinitialize <Mechanism.reinitialize>` method is called.
-
-        .. note::
-           The RecurrentTransferMechanism's `previous_value` attribute is distinct from the `previous_value
-           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
-           <RecurrentTransferMechanism.integrator_function>`.
-
-    delta : scalar
-        value returned by `convergence_function <RecurrentTransferMechanism.convergence_function>`;  used to determined
-        when `is_converged <RecurrentTransferMechanism.is_converged>` is `True`.
-
-    is_converged : bool
-        `True` if `delta <RecurrentTransferMechanism.delta>` is less than or equal to `convergence_criterion
-        <RecurrentTransferMechanism.convergence_criterion>`.
-
-    convergence_function : function
-        compares `value <RecurrentTransferMechanism.value>` with `previous_value
-        <RecurrentTransferMechanism.previous_value>`; result is used to determine when `is_converged
-        <RecurrentTransferMechanism.is_converged>` is `True`.
-
-    convergence_criterion : float
-        determines the value of `delta <RecurrentTransferMechanism.delta>` at which `is_converged
-        <RecurrentTransferMechanism.is_converged>` is `True`.
-
-    max_passes : int or None
-        determines maximum number of executions (`passes <TimeScale.PASS>`) that can occur in a trial before reaching
-        the `convergence_criterion <RecurrentTransferMechanism.convergence_criterion>`, after which an error occurs;
-        if `None` is specified, execution may continue indefinitely or until an interpreter exception is generated.
-
-    learning_enabled : bool : default False
+    learning_enabled : bool
         indicates whether learning has been enabled for the RecurrentTransferMechanism.  It is set to `True` if
-        `learning is specified <Recurrent_Transfer_Learning>` at the time of construction (i.e., if the
+        `learning is specified <RecurrentTransferMechanism_Learning>` at the time of construction (i.e., if the
         **enable_learning** argument of the Mechanism's constructor is assigned `True`, or when it is configured for
         learning using the `configure_learning <RecurrentTransferMechanism.configure_learning>` method.  Once learning
         has been configured, `learning_enabled <RecurrentMechahinsm.learning_enabled>` can be toggled at any time to
@@ -748,7 +493,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         ignored.
 
     learning_mechanism : LearningMechanism
-        created automatically if `learning is specified <Recurrent_Transfer_Learning>`, and used to train the
+        created automatically if `learning is specified <RecurrentTransferMechanism_Learning>`, and used to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
     learning_rate : float, 1d or 2d np.array, or np.matrix of numeric values : default None
@@ -757,12 +502,12 @@ class RecurrentTransferMechanism(TransferMechanism):
         <AutoAssociativeLearningMechanism.learning_rate>` for details concerning specification and default value
         assignment).
 
-    learning_function : function : default Hebbian
+    learning_function : function
         the function used by the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>` to train the
         `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>` if `learning is specified
-        <Recurrent_Transfer_Learning>`.
+        <RecurrentTransferMechanism_Learning>`.
 
-    learning_condition : Condition : default None
+    learning_condition : Condition
         determines the condition under which the `learning_mechanism <RecurrentTransferMechanism.learning_mechanism>`
         is executed in the context of a `Composition`; it can be specified in the **learning_condition** argument of
         the Mechanism's constructor or of its `configure_learning <RecurrentTransferMechanism.configure_learning>`
@@ -775,48 +520,19 @@ class RecurrentTransferMechanism(TransferMechanism):
             (such as `Reinforcement` and `BackPropagation`), that are executed during the
             `learning phase <System_Execution>` of a System's execution
 
-    value : 2d np.array [array(float64)]
-        result of executing `function <RecurrentTransferMechanism.function>`; same value as first item of
-        `output_values <RecurrentTransferMechanism.output_values>`.
+    standard_output_ports : list[str]
+        list of `Standard OutputPorts <OutputPort_Standard>` that includes the following in addition to the
+        `standard_output_ports <TransferMechanism.standard_output_ports>` of a `TransferMechanism`:
 
-    COMMENT:
-        CORRECTED:
-        value : 1d np.array
-            the output of ``function``;  also assigned to ``value`` of the TRANSFER_RESULT OutputState
-            and the first item of ``output_values``.
-    COMMENT
+        *ENERGY* : float
+            the energy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+            calculated using the `Stability` Function using the `ENERGY` metric.
 
-    output_states : Dict[str: OutputState]
-        an OrderedDict with the following `OutputStates <OutputState>`:
+        .. _LCAMechanism_ENTROPY:
 
-        * `TRANSFER_RESULT`, the :keyword:`value` of which is the **result** of `function <RecurrentTransferMechanism.function>`;
-        * `TRANSFER_MEAN`, the :keyword:`value` of which is the mean of the result;
-        * `TRANSFER_VARIANCE`, the :keyword:`value` of which is the variance of the result;
-        * `ENERGY`, the :keyword:`value` of which is the energy of the result,
-          calculated using the `Stability` Function with the ENERGY metric;
-        * `ENTROPY`, the :keyword:`value` of which is the entropy of the result,
-          calculated using the `Stability` Function with the ENTROPY metric;
-          note:  this is only present if the Mechanism's :keyword:`function` is bounded between 0 and 1
-          (e.g., the `Logistic` function).
-
-    output_values : List[array(float64), float, float]
-        a list with the following items:
-
-        * **result** of the ``function`` calculation (value of TRANSFER_RESULT OutputState);
-        * **mean** of the result (``value`` of TRANSFER_MEAN OutputState)
-        * **variance** of the result (``value`` of TRANSFER_VARIANCE OutputState);
-        * **energy** of the result (``value`` of ENERGY OutputState);
-        * **entropy** of the result (if the ENTROPY OutputState is present).
-
-    name : str
-        the name of the RecurrentTransferMechanism; if it is not specified in the **name** argument of the constructor,
-        a default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
-    prefs : PreferenceSet or specification dict
-        the `PreferenceSet` for the RecurrentTransferMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
-
+        *ENTROPY* : float
+            the entropy of the elements in the LCAMechanism's `value <Mechanism_Base.value>`,
+            calculated using the `Stability` Function using the `ENTROPY <CROSS_ENTROPY>` metric.
 
     Returns
     -------
@@ -834,7 +550,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `auto <RecurrentTransferMechanism.auto>`
 
                     :default value: 1
-                    :type: int
+                    :type: ``int``
 
                 combination_function
                     see `combination_function <RecurrentTransferMechanism.combination_function>`
@@ -842,29 +558,29 @@ class RecurrentTransferMechanism(TransferMechanism):
                     :default value: `LinearCombination`
                     :type: `Function`
 
-                convergence_function
-                    see `convergence_function <RecurrentTransferMechanism.convergence_function>`
-
-                    :default value: `Distance`(metric=max_abs_diff)
-                    :type: `Function`
-
                 enable_learning
                     see `enable_learning <RecurrentTransferMechanism.enable_learning>`
 
                     :default value: False
-                    :type: bool
+                    :type: ``bool``
+
+                has_recurrent_input_port
+                    see `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>`
+
+                    :default value: None
+                    :type:
 
                 hetero
                     see `hetero <RecurrentTransferMechanism.hetero>`
 
                     :default value: 0
-                    :type: int
+                    :type: ``int``
 
                 integration_rate
                     see `integration_rate <RecurrentTransferMechanism.integration_rate>`
 
                     :default value: 0.5
-                    :type: float
+                    :type: ``float``
 
                 learning_condition
                     see `learning_condition <RecurrentTransferMechanism.learning_condition>`
@@ -888,45 +604,45 @@ class RecurrentTransferMechanism(TransferMechanism):
                     see `matrix <RecurrentTransferMechanism.matrix>`
 
                     :default value: `HOLLOW_MATRIX`
-                    :type: str
+                    :type: ``str``
 
                 noise
                     see `noise <RecurrentTransferMechanism.noise>`
 
                     :default value: 0.0
-                    :type: float
+                    :type: ``float``
 
                 smoothing_factor
                     see `smoothing_factor <RecurrentTransferMechanism.smoothing_factor>`
 
                     :default value: 0.5
-                    :type: float
-
+                    :type: ``float``
         """
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
         integration_rate = Parameter(0.5, modulable=True)
-        convergence_function = Distance(metric=MAX_ABS_DIFF)
         noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         learning_function = Parameter(Hebbian, stateful=False, loggable=False)
-        learning_rate = Parameter(None, modulable=True, setter=_recurrent_transfer_mechanism_learning_rate_setter)
+        learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
+        has_recurrent_input_port = Parameter(None, stateful=False, loggable=False)
 
-    paramClassDefaults = TransferMechanism.paramClassDefaults.copy()
 
-    standard_output_states = TransferMechanism.standard_output_states.copy()
-    standard_output_states.extend([{NAME:ENERGY}, {NAME:ENTROPY}])
+    standard_output_ports = TransferMechanism.standard_output_ports.copy()
+    standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
+    standard_output_port_names = TransferMechanism.standard_output_port_names.copy()
+    standard_output_port_names.extend([ENERGY_OUTPUT_PORT_NAME, ENTROPY_OUTPUT_PORT_NAME])
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states:tc.optional(tc.any(list, dict)) = None,
-                 has_recurrent_input_state=False,
+                 input_ports:tc.optional(tc.any(list, dict)) = None,
+                 has_recurrent_input_port=False,
                  combination_function:is_function_type=LinearCombination,
                  function=Linear,
                  matrix=None,
@@ -938,15 +654,12 @@ class RecurrentTransferMechanism(TransferMechanism):
                  integration_rate: is_numeric_or_none=0.5,
                  noise=0.0,
                  clip=None,
-                 convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
-                 convergence_criterion:float=0.01,
-                 max_passes:tc.optional(int)=1000,
                  enable_learning:bool=False,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
                  learning_function: tc.any(is_function_type) = Hebbian,
                  learning_condition:tc.optional(tc.any(Condition, TimeScale,
                                                        tc.enum(UPDATE, CONVERGENCE)))=None,
-                 output_states:tc.optional(tc.any(str, Iterable))=RESULT,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs: is_pref_set=None,
@@ -954,11 +667,11 @@ class RecurrentTransferMechanism(TransferMechanism):
         """Instantiate RecurrentTransferMechanism
         """
 
-        # Default output_states is specified in constructor as a string rather than a list
+        # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_states is None or output_states is RESULT:
-            output_states = [RESULT]
+        if output_ports is None or output_ports is RESULT:
+            output_ports = [RESULT]
 
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
@@ -974,58 +687,31 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = enable_learning
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(matrix=matrix,
-                                                  integrator_mode=integrator_mode,
-                                                  learning_rate=learning_rate,
-                                                  learning_function=learning_function,
-                                                  learning_condition=learning_condition,
-                                                  auto=auto,
-                                                  hetero=hetero,
-                                                  has_recurrent_input_state=has_recurrent_input_state,
-                                                  combination_function=combination_function,
-                                                  output_states=output_states,
-                                                  params=params,
-                                                  )
-
-        if not isinstance(self.standard_output_states, StandardOutputStates):
-            self.standard_output_states = StandardOutputStates(self,
-                                                               self.standard_output_states,
-                                                               indices=PRIMARY)
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         input_states=input_states,
-                         function=function,
-                         integrator_function=integrator_function,
-                         initial_value=initial_value,
-                         noise=noise,
-                         integrator_mode=integrator_mode,
-                         integration_rate=integration_rate,
-                         clip=clip,
-                         convergence_function=convergence_function,
-                         convergence_criterion=convergence_criterion,
-                         max_passes=max_passes,
-                         output_states=output_states,
-                         params=params,
-                         name=name,
-                         prefs=prefs,
-                         **kwargs)
-
-    # def _handle_default_variable(self, default_variable=None, size=None, input_states=None, params=None):
-    #     """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item"""
-    #     default_variable = super()._handle_default_variable(default_variable, size, input_states, params)
-    #     self.recurrent_size = self.recurrent_size or len(default_variable[0])
-    #     return default_variable
-
-    def _instantiate_defaults(
-            self,variable=None,request_set=None,assign_missing=True,target_set=None,default_set=None,context=None):
-        """Set self.recurrent_size if it was not set by subclass;  assumes it is size of first item of variable"""
-        try:
-            self.recurrent_size
-        except AttributeError:
-            self.recurrent_size = len(variable[0])
-        super()._instantiate_defaults(variable,request_set,assign_missing,target_set,default_set, context=context)
+        super().__init__(
+            default_variable=default_variable,
+            size=size,
+            input_ports=input_ports,
+            function=function,
+            integrator_function=integrator_function,
+            initial_value=initial_value,
+            noise=noise,
+            matrix=matrix,
+            integrator_mode=integrator_mode,
+            integration_rate=integration_rate,
+            learning_rate=learning_rate,
+            learning_function=learning_function,
+            learning_condition=learning_condition,
+            auto=auto,
+            hetero=hetero,
+            has_recurrent_input_port=has_recurrent_input_port,
+            combination_function=combination_function,
+            clip=clip,
+            output_ports=output_ports,
+            params=params,
+            name=name,
+            prefs=prefs,
+            **kwargs
+        )
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate shape and size of auto, hetero, matrix.
@@ -1123,15 +809,13 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """using the `matrix` argument the user passed in (which is now stored in function_params), instantiate
-        ParameterStates for auto and hetero if they haven't already been instantiated. This is useful if auto and
+        ParameterPorts for auto and hetero if they haven't already been instantiated. This is useful if auto and
         hetero were None in the initialization call.
         :param function:
         """
-        self.parameters.previous_value._set(None, context)
-
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        param_keys = self._parameter_states.key_values
+        param_keys = self._parameter_ports.key_values
 
         matrix = get_matrix(self.defaults.matrix, rows=self.recurrent_size, cols=self.recurrent_size)
 
@@ -1171,55 +855,55 @@ class RecurrentTransferMechanism(TransferMechanism):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
-                                         "auto or hetero parameter is missing.".format(self.params[MATRIX], self))
+                                         "auto or hetero parameter is missing.".format(self.matrix, self))
 
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()
-            state = _instantiate_state(owner=self,
-                                       state_type=ParameterState,
+            port = _instantiate_port(owner=self,
+                                       port_type=ParameterPort,
                                        name=AUTO,
                                        reference_value=d,
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
-            self._auto = d
-            if state is not None:
-                self._parameter_states[AUTO] = state
-                state.source = self
+            self.auto = d
+            if port is not None:
+                self._parameter_ports[AUTO] = port
+                port.source = self
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `auto` attribute for {} \"{}\"".
+                raise RecurrentTransferError("Failed to create ParameterPort for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
         if HETERO not in param_keys and AUTO in param_keys:
 
             m = matrix.copy()
             np.fill_diagonal(m, 0.0)
-            self._hetero = m
-            state = _instantiate_state(owner=self,
-                                       state_type=ParameterState,
+            self.hetero = m
+            port = _instantiate_port(owner=self,
+                                       port_type=ParameterPort,
                                        name=HETERO,
                                        reference_value=m,
                                        reference_value_name=HETERO,
                                        params=None,
                                        context=context)
-            if state is not None:
-                self._parameter_states[HETERO] = state
-                state.source = self
+            if port is not None:
+                self._parameter_ports[HETERO] = port
+                port.source = self
             else:
-                raise RecurrentTransferError("Failed to create ParameterState for `hetero` attribute for {} \"{}\"".
+                raise RecurrentTransferError("Failed to create ParameterPort for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
 
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             comb_fct = self.combination_function
             if (
                 not (
                     isinstance(comb_fct, LinearCombination)
                     or (isinstance(comb_fct, type) and issubclass(comb_fct, LinearCombination))
-                    or (isinstance(comb_fct, MethodType) and comb_fct.__self__ == self)
+                    or (isinstance(comb_fct, types.MethodType) and comb_fct.__self__ == self)
                 )
             ):
                 if isinstance(comb_fct, type):
                     comb_fct = comb_fct()
-                elif isinstance(comb_fct, (function_type, method_type)):
+                elif isinstance(comb_fct, (types.FunctionType, types.MethodType)):
                     comb_fct = UserDefinedFunction(comb_fct, self.defaults.variable)
                 try:
                     cust_fct_result = comb_fct.execute(self.defaults.variable)
@@ -1250,7 +934,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             if not isinstance(comb_fct, Function):
                 if isinstance(comb_fct, type):
                     self.combination_function = comb_fct(default_variable=self.defaults.variable)
-                elif isinstance(comb_fct, MethodType) and comb_fct.__self__ == self:
+                elif isinstance(comb_fct, types.MethodType) and comb_fct.__self__ == self:
                     pass
                 else:
                     self.combination_function = UserDefinedFunction(custom_function=comb_fct,
@@ -1268,7 +952,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                              format(self.__class__.__name__))
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputStates
+        """Instantiate recurrent_projection, matrix, and the functions for the ENERGY and ENTROPY OutputPorts
         """
         from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
@@ -1288,36 +972,34 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.learning_enabled:
             self.configure_learning(context=context)
 
-        if ENERGY in self.output_states.names:
+        if ENERGY_OUTPUT_PORT_NAME in self.output_ports.names:
             energy = Stability(self.defaults.variable[0],
                                metric=ENERGY,
                                transfer_fct=self.function,
-                               matrix=self.recurrent_projection._parameter_states[MATRIX])
-            self.output_states[ENERGY]._calculate = energy.function
+                               matrix=self.recurrent_projection._parameter_ports[MATRIX])
+            self.output_ports[ENERGY_OUTPUT_PORT_NAME]._calculate = energy.function
 
-        if ENTROPY in self.output_states.names:
+        if ENTROPY_OUTPUT_PORT_NAME in self.output_ports.names:
             if self.function.bounds == (0,1) or self.clip == (0,1):
                 entropy = Stability(self.defaults.variable[0],
                                     metric=ENTROPY,
                                     transfer_fct=self.function,
-                                    matrix=self.recurrent_projection._parameter_states[MATRIX])
-                self.output_states[ENTROPY]._calculate = entropy.function
+                                    matrix=self.recurrent_projection._parameter_ports[MATRIX])
+                self.output_ports[ENTROPY_OUTPUT_PORT_NAME]._calculate = entropy.function
             else:
-                del self.output_states[ENTROPY]
+                del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
-    def _update_parameter_states(self, context=None, runtime_params=None):
-        for state in self._parameter_states:
+    def _update_parameter_ports(self, context=None, runtime_params=None):
+        for port in self._parameter_ports:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
-            # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param states are updated in the
-            # projection's _update_parameter_states, and accordingly are not updated here
-            if state.name != AUTO and state.name != HETERO:
-                state._update(context=context, params=runtime_params)
+            # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param ports are updated in the
+            # projection's _update_parameter_ports, and accordingly are not updated here
+            if port.name != AUTO and port.name != HETERO:
+                port._update(context=context, params=runtime_params)
 
-    def _update_previous_value(self, context=None):
-        value = self.parameters.value._get(context)
-        if value is None:
-            value = self.defaults.value
-        self.parameters.previous_value._set(value, context)
+    @property
+    def recurrent_size(self):
+        return len(self.defaults.variable[0])
 
     # 8/2/17 CW: this property is not optimal for performance: if we want to optimize performance we should create a
     # single flag to check whether to get matrix from auto and hetero?
@@ -1331,15 +1013,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         # unexpected values to be set to previous_value
         # KDM 7/1/19: reinstating below
         if hasattr(self, "recurrent_projection"):
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = val
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
 
         self.parameters.matrix._set(val, self.most_recent_context)
 
-        if hasattr(self, '_parameter_states') and 'matrix' in self._parameter_states:
-            param_state = self._parameter_states['matrix']
+        if hasattr(self, '_parameter_ports') and 'matrix' in self._parameter_ports:
+            param_port = self._parameter_ports['matrix']
 
-            if hasattr(param_state.function, 'initializer'):
-                param_state.function.reinitialize = val
+            if hasattr(param_port.function, 'initializer'):
+                param_port.function.reinitialize = val
 
     @property
     def auto(self):
@@ -1349,8 +1031,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def auto(self, val):
         self.parameters.auto._set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix
+        if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_ports:
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
 
 
     @property
@@ -1361,8 +1043,8 @@ class RecurrentTransferMechanism(TransferMechanism):
     def hetero(self, val):
         self.parameters.hetero._set(val, self.most_recent_context)
 
-        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_states:
-            self.recurrent_projection.parameter_states["matrix"].function.previous_value = self.matrix_param
+        if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_ports:
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix_param
 
     @property
     def learning_enabled(self):
@@ -1399,27 +1081,27 @@ class RecurrentTransferMechanism(TransferMechanism):
             matrix = get_matrix(matrix, size, size)
 
         # IMPLEMENTATION NOTE: THIS SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             # # FIX: 7/12/18 MAKE THIS A METHOD THAT CAN BE OVERRIDDEN BY CONTRASTIVEHEBBIAN
-            new_input_state = InputState(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
-                                         internal_only=True)
-            assert (len(new_input_state.all_afferents) == 0)  # just a sanity check
-            assert(self.input_state.name != "Recurrent Input State")
-            # Rename existing InputState as EXTERNAL
-            remove_instance_from_registry(registry=self._stateRegistry,
-                                          category=INPUT_STATE,
-                                          component=self.input_state)
-            register_instance(self.input_state, EXTERNAL, InputState, self._stateRegistry, INPUT_STATE)
+            new_input_port = InputPort(owner=self, name=RECURRENT, variable=self.defaults.variable[0],
+                                        internal_only=True)
+            assert (len(new_input_port.all_afferents) == 0)  # just a sanity check
+            assert(self.input_port.name != "Recurrent Input Port")
+            # Rename existing InputPort as EXTERNAL
+            remove_instance_from_registry(registry=self._portRegistry,
+                                          category=INPUT_PORT,
+                                          component=self.input_port)
+            register_instance(self.input_port, EXTERNAL, InputPort, self._portRegistry, INPUT_PORT)
             proj = AutoAssociativeProjection(owner=mech,
-                                             receiver=new_input_state,
+                                             receiver=new_input_port,
                                              matrix=matrix,
                                              name=mech.name + ' recurrent projection')
-            receiver = new_input_state
+            receiver = new_input_port
         else:
             proj = AutoAssociativeProjection(owner=mech,
                                              matrix=matrix,
                                              name=mech.name + ' recurrent projection')
-            receiver = self.input_state
+            receiver = self.input_port
 
         proj._activate_for_compositions(ConnectionInfo.ALL)
         return proj
@@ -1445,16 +1127,20 @@ class RecurrentTransferMechanism(TransferMechanism):
         # (via aux_components attr)
 
         learning_mechanism.condition = learning_condition
-        self.aux_components.append(learning_mechanism)
+        # # MODIFIED 10/23/19 OLD:
+        # self.aux_components.append(learning_mechanism)
+        # MODIFIED 10/23/19 NEW:
+        self.aux_components.append((learning_mechanism, NodeRole.LEARNING))
+        # MODIFIED 10/23/19 END
         # Instantiate Projection from Mechanism's output to LearningMechanism
         mproj = MappingProjection(sender=activity_vector,
-                          receiver=learning_mechanism.input_states[ACTIVATION_INPUT],
+                          receiver=learning_mechanism.input_ports[ACTIVATION_INPUT],
                           name="Error Projection for {}".format(learning_mechanism.name))
         mproj._activate_for_all_compositions()
         self.aux_components.append(mproj)
         # Instantiate Projection from LearningMechanism to Mechanism's AutoAssociativeProjection
-        lproj = LearningProjection(sender=learning_mechanism.output_states[LEARNING_SIGNAL],
-                           receiver=matrix.parameter_states[MATRIX],
+        lproj = LearningProjection(sender=learning_mechanism.output_ports[LEARNING_SIGNAL],
+                           receiver=matrix.parameter_ports[MATRIX],
                            name="{} for {}".format(LearningProjection.className, self.recurrent_projection.name))
         lproj._activate_for_all_compositions()
         self.aux_components.append((lproj, True))
@@ -1475,10 +1161,10 @@ class RecurrentTransferMechanism(TransferMechanism):
           specified, they are used to construct the LearningMechanism, otherwise the values specified in the
           RecurrentTransferMechanism's constructor are used;
         ..
-        * a `MappingProjection` from the RecurrentTransferMechanism's `primary OutputState <OutputState_Primary>`
-          to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* InputState;
+        * a `MappingProjection` from the RecurrentTransferMechanism's `primary OutputPort <OutputPort_Primary>`
+          to the AutoAssociativeLearningMechanism's *ACTIVATION_INPUT* InputPort;
         ..
-        * a `LearningProjection` from the AutoAssociativeLearningMechanism's *LEARNING_SIGNAL* OutputState to
+        * a `LearningProjection` from the AutoAssociativeLearningMechanism's *LEARNING_SIGNAL* OutputPort to
           the RecurrentTransferMechanism's `recurrent_projection <RecurrentTransferMechanism.recurrent_projection>`.
 
         """
@@ -1504,7 +1190,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
 
-        self.learning_projection = self.learning_mechanism.output_states[LEARNING_SIGNAL].efferents[0]
+        self.learning_projection = self.learning_mechanism.output_ports[LEARNING_SIGNAL].efferents[0]
         if self.learning_mechanism is None:
             self.learning_enabled = False
 
@@ -1517,18 +1203,18 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._execute(variable, context, runtime_params)
 
     def _parse_function_variable(self, variable, context=None):
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             variable = self.combination_function.execute(variable=variable, context=context)
 
         return super()._parse_function_variable(variable, context=context)
 
     def _get_variable_from_input(self, input, context=None):
-        if self.has_recurrent_input_state:
+        if self.has_recurrent_input_port:
             input = np.atleast_2d(input)
             input_len = len(input[0])
             num_inputs = np.size(input, 0)
-            num_input_states = len(self.input_states)
-            if num_inputs != num_input_states:
+            num_input_ports = len(self.input_ports)
+            if num_inputs != num_input_ports:
                 z = np.zeros((1, input_len))
                 input = np.concatenate((input, z))
 
@@ -1538,119 +1224,228 @@ class RecurrentTransferMechanism(TransferMechanism):
     def reinitialize(self, *args, context=None):
         if self.parameters.integrator_mode.get(context):
             super().reinitialize(*args, context=context)
-        self.parameters.previous_value.set(None, context, override=True)
+        self.parameters.value.clear_history(context)
 
     @property
     def _learning_signal_source(self):
-        """Return default source of learning signal (`Primary OutputState <OutputState_Primary>)`
+        """Return default source of learning signal (`Primary OutputPort <OutputPort_Primary>)`
               Subclass can override this to provide another source (e.g., see `ContrastiveHebbianMechanism`)
         """
-        return self.output_state
+        return self.output_port
 
     def _get_input_struct_type(self, ctx):
         input_type_list = []
-        # FIXME: What if we have more than one state? Does the autoprojection
-        # connect only to the first one?
-        assert len(self.input_states) == 1
-        for state in self.input_states:
-            s_type = ctx.get_input_struct_type(state)
-            if isinstance(s_type, pnlvm.ir.ArrayType):
+        # FIXME: Assume only one input port
+        #        (autoassociative projection connects to primary input port)
+        assert len(self.input_ports) == 1
+        for port in self.input_ports:
+            # Extract the non-modulation portion of InputPort input struct
+            p_type = ctx.get_input_struct_type(port).elements[0]
+            if isinstance(p_type, pnlvm.ir.ArrayType):
                 # Subtract one incoming mapping projections.
                 # Unless it's the only incoming projection (mechanism is standalone)
-                new_count = max(s_type.count - 1, 1)
-                new_type = pnlvm.ir.ArrayType(s_type.element, new_count)
-            # FIXME consider struct types
+                new_count = max(p_type.count - 1, 1)
+                new_type = pnlvm.ir.ArrayType(p_type.element, new_count)
             else:
-                assert False
+                # FIXME consider other types
+                assert False, "Input struct is not an array!"
             input_type_list.append(new_type)
-        for state in self.parameter_states:
-            state_input_type_list = []
-            for proj in state.mod_afferents:
-                state_input_type_list.append(ctx.get_output_struct_type(proj))
-            input_type_list.append(pnlvm.ir.LiteralStructType(state_input_type_list))
+
+        # Add modulatory inputs
+        mod_input_type_list = []
+        for proj in self.mod_afferents:
+            mod_input_type_list.append(ctx.get_output_struct_type(proj))
+        if len(mod_input_type_list) > 1:
+            input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+
         return pnlvm.ir.LiteralStructType(input_type_list)
+
+    def _get_param_ids(self):
+        return super()._get_param_ids() + ["recurrent_projection"]
 
     def _get_param_struct_type(self, ctx):
         transfer_t = ctx.get_param_struct_type(super())
         projection_t = ctx.get_param_struct_type(self.recurrent_projection)
-        return pnlvm.ir.LiteralStructType([transfer_t, projection_t])
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, projection_t])
+
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["old_val", "recurrent_projection"]
 
     def _get_state_struct_type(self, ctx):
         transfer_t = ctx.get_state_struct_type(super())
         projection_t = ctx.get_state_struct_type(self.recurrent_projection)
         return_t = ctx.get_output_struct_type(self)
-        return pnlvm.ir.LiteralStructType([transfer_t, projection_t, return_t])
+        return pnlvm.ir.LiteralStructType([*transfer_t.elements, return_t, projection_t])
 
     def _get_param_initializer(self, context):
         transfer_params = super()._get_param_initializer(context)
         projection_params = self.recurrent_projection._get_param_initializer(context)
-        return tuple([transfer_params, projection_params])
+        return (*transfer_params, projection_params)
 
     def _get_state_initializer(self, context):
         transfer_init = super()._get_state_initializer(context)
         projection_init = self.recurrent_projection._get_state_initializer(context)
 
-        # Initialize to output state defaults. That is what the recurrent
-        # projection finds.
-        retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_states)
-        return tuple((transfer_init, projection_init, tuple(retval_init)))
+        # Initialize to OutputPort defaults.
+        # That is what the recurrent projection finds.
+        # FIXME: This should use standard 'previous_value' stateful param
+        retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
+        return (*transfer_init, tuple(retval_init), projection_init)
 
-    def _gen_llvm_function_body(self, ctx, builder, params, context, arg_in, arg_out):
-        real_input_type = super()._get_input_struct_type(ctx)
-        real_in = builder.alloca(real_input_type)
-        old_val = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reinitialize" in tags
 
-        # FIXME: What if we have more than one state? Does the autoprojection
-        # connect only to the first one?
-        assert len(self.input_states) == 1
-        for i, state in enumerate(self.input_states):
-            is_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            is_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            for idx in range(len(is_current_input.type.pointee)):
-                curr_ptr = builder.gep(is_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                real_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+        # Check if we have reinitializers
+        has_reinitializers_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "has_initializers")
+        has_initializers = builder.load(has_reinitializers_ptr)
+        not_initializers = builder.fcmp_ordered("==", has_initializers,
+                                                has_initializers.type(0))
+        with builder.if_then(not_initializers):
+            builder.ret_void()
+
+        # Reinit main function. This is a no-op if it's not a stateful function.
+        reinit_func = ctx.import_llvm_function(self.function, tags=tags)
+        reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
+                                   reinit_out])
+
+        # Reinit integrator function
+        if self.integrator_mode:
+            reinit_f = ctx.import_llvm_function(self.integrator_function,
+                                                tags=tags)
+            reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
+            reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
+            reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "integrator_function")
+            reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "integrator_function")
+            builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,
+                                    reinit_out])
+
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
+        builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
+        return builder
+
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        #FIXME: This should really be in TransferMechanism, but those don't
+        #       support 'is_finished' yet
+        # previous_value is appended before AutoProjection in state struct
+        # FIXME: This should use standard "previous_value" param
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
+
+        # preserve the old prev value
+        prev_val = builder.load(prev_val_ptr)
+        # Update previous value to make sure that repeated executions work
+        builder.store(builder.load(current), prev_val_ptr)
+
+        if self.parameters.termination_threshold.get(None) is None or \
+           not self.execute_until_finished:
+            return pnlvm.ir.IntType(1)(1)
+
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                          "termination_threshold")
+        threshold = builder.load(threshold_ptr)
+        cmp_val_ptr = builder.alloca(threshold.type)
+        builder.store(threshold, cmp_val_ptr)
+        if self.termination_measure is max:
+            assert self._termination_measure_num_items_expected == 1
+            # Get inside of the structure
+            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            builder.store(first_val, cmp_val_ptr)
+            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
+                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
+                max_val = b.load(cmp_val_ptr)
+                cond = b.fcmp_ordered(">=", test_val, max_val)
+                max_val = b.select(cond, test_val, max_val)
+                b.store(max_val, cmp_val_ptr)
+        elif isinstance(self.termination_measure, Function):
+            # FIXME: HACK the distance function is not initialized
+            self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
+            self.termination_measure.defaults.value = float(0)
+            warnings.warn("Shape mismatch: Termination measure is not initialized")
+
+            func = ctx.import_llvm_function(self.termination_measure)
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
+            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
+            func_in = builder.alloca(func.args[2].type.pointee)
+            # Populate input
+            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(current_ptr), func_in_current_ptr)
+
+            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                     ctx.int32_ty(1)])
+            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
+
+            builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
+        elif isinstance(self.termination_measure, TimeScale):
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
+            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
+            builder.store(ptr_val, cmp_val_ptr)
+        else:
+            assert False, "Not Supported: {}".format(self.termination_measure)
+
+        cmp_val = builder.load(cmp_val_ptr)
+        cmp_str = self.parameters.termination_comparison_op.get(None)
+        return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
+
+    def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
+        # Allocate space for transfer mechanism.
+        # This includes space for the autoprojection
+        transfer_input_type = ctx.get_input_struct_type(super())
+        transfer_in = builder.alloca(transfer_input_type)
+
+        # FIXME: Assume only one input port
+        #        (autoassociative projection connects to primary input port)
+        assert len(self.input_ports) == 1
+        for i, port in enumerate(self.input_ports):
+            ip_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            ip_trans_input = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+
+            # Copy all inputs to this port
+            for idx in range(len(ip_current_input.type.pointee)):
+                curr_ptr = builder.gep(ip_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
+                real_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
                 builder.store(builder.load(curr_ptr), real_ptr)
 
-            # FIXME: This is a workaround to find out if we are in a
-            #        composition
-            if len(state.pathway_projections) == 1:
+            # FIXME: This is a workaround to find out if we are in a composition
+            #        Standalone mechanisms don't update the recurrent projection
+            if len(port.pathway_projections) == 1:
                 continue
 
-            assert len(is_real_input.type.pointee) == len(is_current_input.type.pointee) + 1
-            last_idx = len(is_real_input.type.pointee) - 1
-            real_last_ptr = builder.gep(is_real_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
+            assert len(ip_trans_input.type.pointee) == len(ip_current_input.type.pointee) + 1
 
-            recurrent_f = ctx.get_llvm_function(self.recurrent_projection)
-            recurrent_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            recurrent_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
-            # FIXME: Why does this have a wrapper struct?
-            recurrent_in = builder.gep(old_val, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.call(recurrent_f, [recurrent_params, recurrent_context, recurrent_in, real_last_ptr])
+            # Run the autoprojection function to fill in the missing input
+            last_idx = len(ip_trans_input.type.pointee) - 1
+            real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
 
-        # Copy modulating inputs as well
-        for i, state in enumerate(self.parameter_states):
-            idx = i + len(self.input_states)
-            ps_real_input = builder.gep(real_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            ps_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-            builder.store(builder.load(ps_current_input), ps_real_input)
+            recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                "recurrent_projection")
+            recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                 "recurrent_projection")
+            recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
-        transfer_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        transfer_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        builder = super()._gen_llvm_function_body(ctx, builder, transfer_params, transfer_context, real_in, arg_out)
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
+            # Extract the correct output port
+            recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
+                ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
+            builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
 
-        builder.store(builder.load(arg_out), old_val)
+        # Copy mod afferents. These are not impacted by the recurrent projection
+        if len(self.mod_afferents) > 1:
+            mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
+            mod_afferent_in_ptr = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
+            builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
 
-        return builder
+        return super()._gen_llvm_input_ports(ctx, builder, params, state, transfer_in)
 
     @property
     def _dependent_components(self):
         return list(itertools.chain(
             super()._dependent_components,
             [self.recurrent_projection],
-            [self.combination_function] if (
-                self.combination_function is not None
-                and not isinstance(self.combination_function, MethodType)
-                and self.has_recurrent_input_state
-            )
-            else [],
         ))

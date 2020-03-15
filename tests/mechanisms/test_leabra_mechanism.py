@@ -4,9 +4,8 @@ import pytest
 import random
 try:
     import leabra
-    leabra_available = True
 except ImportError:
-    leabra_available = False
+    leabra = None
 
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -16,10 +15,9 @@ from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import LEARNING
 from psyneulink.library.components.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, run_leabra_network, train_leabra_network
 
-@pytest.mark.skipif(
-    not leabra_available,
-    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
-)
+LEABRA_NOT_AVAILABLE='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
+
+@pytest.mark.skipif(leabra is None, reason=LEABRA_NOT_AVAILABLE)
 class TestLeabraMechInit:
 
     def test_leabra_init_empty(self):
@@ -57,10 +55,7 @@ class TestLeabraMechInit:
         assert len(val[0]) == 4
 
 
-@pytest.mark.skipif(
-    not leabra_available,
-    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
-)
+@pytest.mark.skipif(leabra is None, reason=LEABRA_NOT_AVAILABLE)
 class TestLeabraMechRuntimeParams:
 
     def test_leabra_runtime_alone(self):
@@ -101,10 +96,7 @@ class TestLeabraMechRuntimeParams:
         pass
 
 
-@pytest.mark.skipif(
-    not leabra_available,
-    reason='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
-)
+@pytest.mark.skipif(leabra is None, reason=LEABRA_NOT_AVAILABLE)
 class TestLeabraMechPrecision:
 
     def test_leabra_prec_no_train(self):
@@ -131,12 +123,12 @@ class TestLeabraMechPrecision:
         T2_net = TransferMechanism(name='T2', size=out_size, function=Linear)
 
         p1_spec = Process(pathway=[T1_spec, L_spec])
-        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_states[1])
+        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_ports[1])
         p2_spec = Process(pathway=[T2_spec, proj_spec, L_spec])
         s_spec = System(processes=[p1_spec, p2_spec])
 
         p1_net = Process(pathway=[T1_net, L_net])
-        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_states[1])
+        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_ports[1])
         p2_net = Process(pathway=[T2_net, proj_net, L_net])
         s_net = System(processes=[p1_net, p2_net])
         for i in range(num_trials):
@@ -183,12 +175,12 @@ class TestLeabraMechPrecision:
         T2_net = TransferMechanism(name='T2', size=out_size, function=Linear)
 
         p1_spec = Process(pathway=[T1_spec, L_spec])
-        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_states[1])
+        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_ports[1])
         p2_spec = Process(pathway=[T2_spec, proj_spec, L_spec])
         s_spec = System(processes=[p1_spec, p2_spec])
 
         p1_net = Process(pathway=[T1_net, L_net])
-        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_states[1])
+        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_ports[1])
         p2_net = Process(pathway=[T2_net, proj_net, L_net])
         s_net = System(processes=[p1_net, p2_net])
         for i in range(num_trials):
@@ -237,12 +229,12 @@ class TestLeabraMechPrecision:
         T2_net = TransferMechanism(name='T2', size=out_size, function=Linear)
 
         p1_spec = Process(pathway=[T1_spec, L_spec])
-        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_states[1])
+        proj_spec = MappingProjection(sender=T2_spec, receiver=L_spec.input_ports[1])
         p2_spec = Process(pathway=[T2_spec, proj_spec, L_spec])
         s_spec = System(processes=[p1_spec, p2_spec])
 
         p1_net = Process(pathway=[T1_net, L_net])
-        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_states[1])
+        proj_net = MappingProjection(sender=T2_net, receiver=L_net.input_ports[1])
         p2_net = Process(pathway=[T2_net, proj_net, L_net])
         s_net = System(processes=[p1_net, p2_net])
         for i in range(num_trials):  # training round
@@ -280,7 +272,7 @@ class TestLeabraMechPrecision:
 #         T1 = TransferMechanism(size=5, function=Linear)
 #         T2 = TransferMechanism(size=3, function=Linear)
 #         L = LeabraMechanism(input_size=5, output_size=3, hidden_layers=2, hidden_sizes=[4, 4])
-#         train_data_proj = MappingProjection(sender=T2, receiver=L.input_states[1])
+#         train_data_proj = MappingProjection(sender=T2, receiver=L.input_ports[1])
 #         out = TransferMechanism(size=3, function=Logistic(bias=2))
 #         p1 = Process(pathway=[T1, L, out], learning=LEARNING, learning_rate=1.0, target=[0, .1, .8])
 #         p2 = Process(pathway=[T2, train_data_proj, L, out])

@@ -25,92 +25,93 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
-    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
+    'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_PORT', 'ADD_OUTPUT_PORT',
+    'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
     'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
     'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
     'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
-    'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'COMPARATOR_MECHANISM', 'COMPONENT', 'COMPONENT_INIT',
-    'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
-    'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION',
-    'CONTEXT', 'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION', 'CONTROL_PROJECTION_PARAMS',
-    'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
-    'CONTROLLER', 'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
-    'CURRENT_EXECUTION_COUNT', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
+    'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'comparison_operators', 'COMPARATOR_MECHANISM', 'COMPONENT',
+    'COMPONENT_INIT', 'COMPONENT_PREFERENCE_SET', 'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
+    'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION', 'CONTEXT',
+    'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS',
+    'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
+    'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
-    'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM',
+    'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
-    'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
+    'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
     'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
     'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
-    'EID_SIMULATION', 'EID_FROZEN', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'ERROR_DERIVATIVE_FUNCTION',
-    'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
-    'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE', 'EXECUTION_TIME',
+    'EID_SIMULATION', 'EID_FROZEN', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'EQUAL',
+    'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
+    'EXECUTE_UNTIL_FINISHED', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE',
     'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
     'FITZHUGHNAGUMO_INTEGRATOR_FUNCTION', 'FINAL', 'FLAGS', 'FULL', 'FULL_CONNECTIVITY_MATRIX',
-    'FUNCTION', 'FUNCTIONS', 'FUNCTION_CHECK_ARGS', 'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION',
-    'FUNCTION_PARAMS',
+    'FUNCTION', 'FUNCTIONS', 'FUNCTION_COMPONENT_CATEGORY','FUNCTION_CHECK_ARGS',
+    'FUNCTION_OUTPUT_TYPE', 'FUNCTION_OUTPUT_TYPE_CONVERSION', 'FUNCTION_PARAMS',
     'GAIN', 'GAMMA_DIST_FUNCTION', 'GATE', 'GATING', 'GATING_MECHANISM', 'GATING_ALLOCATION', 'GATING_PROJECTION',
     'GATING_PROJECTION_PARAMS', 'GATING_PROJECTIONS', 'GATING_SIGNAL', 'GATING_SIGNAL_SPECS', 'GATING_SIGNALS',
     'GAUSSIAN', 'GAUSSIAN_FUNCTION', 'GILZENRAT_INTEGRATOR_FUNCTION',
-    'GRADIENT_OPTIMIZATION_FUNCTION', 'GRID_SEARCH_FUNCTION',
+    'GREATER_THAN', 'GREATER_THAN_OR_EQUAL', 'GRADIENT_OPTIMIZATION_FUNCTION', 'GRID_SEARCH_FUNCTION',
     'HARD_CLAMP', 'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT_EXECUTE_METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INITIALIZATION_STATUS',
-    'INPUT', 'INPUT_LABELS_DICT', 'INPUT_STATE', 'INPUT_STATES', 'INPUT_STATE_PARAMS', 'INPUT_STATE_VARIABLES',
+    'INPUT', 'INPUT_LABELS_DICT', 'INPUT_PORT', 'INPUT_PORTS', 'INPUT_PORT_PARAMS', 'INPUT_PORT_VARIABLES',
     'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
     'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
     'INTERNAL_ONLY', 'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
-    'kpMechanismControlAllocationsLogEntry', 'kpMechanismExecutedLogEntry', 'kpMechanismInputLogEntry',
-    'kpMechanismOutputLogEntry', 'kpMechanismTimeScaleLogEntry', 'kwAddInputState', 'kwAddOutputState',
-    'kwAggregate', 'kwAssign', 'kwComponentCategory', 'kwComponentPreferenceSet', 'kwDefaultPreferenceSetOwner',
-    'kwInitialPoint', 'kwInstantiate', 'kwMechanismAdjustFunction', 'kwMechanismComponentCategory',
-    'kwMechanismConfidence', 'kwMechanismDefault', 'kwMechanismDefaultInputValue', 'kwMechanismDefaultParams',
-    'kwMechanismDuration', 'kwMechanismExecuteFunction', 'kwMechanismExecutionSequenceTemplate',
-    'kwMechanismInterrogateFunction', 'kwMechanismName', 'kwMechanismOutputValue', 'kwMechanismParams',
-    'kwMechanismParamValue', 'kwMechanismPerformance', 'kwMechanismTerminateFunction', 'kwMechanismType', 'kwParams',
-    'kwPrefBaseValue', 'kwPrefCurrentValue', 'kwPreferenceSet', 'kwPreferenceSetName', 'kwPrefLevel', 'kwPrefs',
-    'kwPrefsOwner', 'kwProcessComponentCategory', 'kwProcessDefaultMechanism', 'kwProcessDefaultProjectionFunction',
-    'kwProcessExecute', 'kwProgressBarChar', 'kwProjectionComponentCategory', 'kwProjectionReceiver', 'kwProjections',
-    'kwReceiverArg', 'kwSeparator', 'kwStateComponentCategory',
-    'kwSystemComponentCategory', 'kwThreshold',
     'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING', 'LEARNED_PARAM',
     'LEARNED_PROJECTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
     'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
-    'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION', 'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES',
-    'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
-    'MAKE_DEFAULT_GATING_MECHANISM', 'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
+    'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
+    'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
+    'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
-    'MAX_ABS_VAL', 'MAX_ABS_INDICATOR', 'MAX_ABS_DIFF', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE', 'MECHANISM', 'METRIC',
-    'MECHANISM_VALUE', 'MIN_VAL', 'MODE',
-    'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_SIGNALS', 'MODULATORY_MECHANISM',
-    'MONITOR', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION', 'MUTUAL_ENTROPY',
-    'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY',
-    'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT',
-    'OFF', 'OFFSET', 'OLDEST', 'ON', 'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN',
-    'ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME',
-    'OUTPUT', 'OUTCOME_FUNCTION', 'OUTPUT_LABELS_DICT', 'OUTPUT_MEAN',
-    'OUTPUT_MEDIAN', 'OUTPUT_STD_DEV', 'OUTPUT_STATE', 'OUTPUT_STATE_PARAMS', 'output_state_spec_to_parameter_name',
-    'OUTPUT_STATES', 'OUTPUT_TYPE', 'OUTPUT_VARIANCE', 'OVERWRITE', 'OWNER', 'OWNER_VALUE', 'OWNER_VARIABLE',
-    'PARAM_CLASS_DEFAULTS', 'PARAM_INSTANCE_DEFAULTS', 'PARAMETER_STATE', 'PARAMETER_STATE_PARAMS',
-    'PARAMETER_STATES', 'PARAMS', 'PARAMS_DICT', 'PARAMS_CURRENT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
+    'MAX_ABS_DIFF', 'MAX_ABS_INDICATOR', 'MAX_ONE_HOT', 'MAX_ABS_ONE_HOT', 'MAX_ABS_VAL',
+    'MAX_EXECUTIONS_BEFORE_FINISHED', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE', 'MEAN',
+    'MECHANISM', 'MECHANISM_COMPONENT_CATEGORY', 'MECHANISM_DEFAULT', 'MECHANISM_DEFAULTInputValue',
+    'MECHANISM_DEFAULTParams', 'MECHANISM_EXECUTED_LOG_ENTRY', 'MECHANISM_NAME', 'MECHANISM_PARAM_VALUE',
+    'MECHANISM_TYPE', 'MECHANISM_VALUE', 'MEDIAN', 'METRIC', 'MIN_VAL', 'MIN_ABS_VAL', 'MIN_ABS_INDICATOR', 'MODE',
+    'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL', 'MODULATORY_SIGNALS',
+    'MONITOR', 'MONITOR_FOR_CONTROL', 'MONITOR_FOR_LEARNING', 'MONITOR_FOR_MODULATION',
+    'MODEL_SPEC_ID_GENERIC', 'MODEL_SPEC_ID_INPUT_PORTS', 'MODEL_SPEC_ID_OUTPUT_PORTS', 'MODEL_SPEC_ID_PSYNEULINK',
+    'MODEL_SPEC_ID_SENDER_MECH', 'MODEL_SPEC_ID_SENDER_PORT', 'MODEL_SPEC_ID_RECEIVER_MECH',
+    'MODEL_SPEC_ID_RECEIVER_PORT',
+    'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE', 'MSE',
+    'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
+    'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
+    'NUM_EXECUTIONS_BEFORE_FINISHED',
+    'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
+    'ON',  'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
+    'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_LABELS_DICT',
+    'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
+    'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
+    'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
+    'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
+    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
-    'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
-    'PROCESS', 'PROCESSING', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING_MECHANISM', 'PRODUCT',
-    'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS',
-    'QUOTIENT', 'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER',
+    'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
+    'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
+    'PROCESS', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
+    'PROCESS_EXECUTE', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING', 'PROCESSING_MECHANISM',
+    'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER',
+    'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY', 'QUOTIENT',
+    'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER', 'RECEIVER_ARG',
     'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'REINITIALIZE', 'REINITIALIZE_WHEN',
-    'RELU_FUNCTION', 'REST', 'RESULT', 'RESULTS', 'ROLES', 'RL_FUNCTION', 'RUN',
+    'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
     'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
     'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
-    'SOFTMAX_FUNCTION', 'SOURCE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_STATES',
-    'STATE', 'STATE_CONTEXT', 'STATE_NAME', 'STATE_PARAMS', 'STATE_PREFS', 'STATE_TYPE', 'STATE_VALUE', 'STATES',
-    'SUBTRACTION', 'SUM', 'SYSTEM', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
-    'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE',
-    'TIME_STEPS_DIM', 'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRIAL', 'TRIALS_DIM',
-    'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE', 'USER_PARAMS',
+    'SOFTMAX_FUNCTION', 'SOURCE', 'SSE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
+    'PORT', 'PORT_COMPONENT_CATEGORY', 'PORT_CONTEXT', 'Port_Name', 'port_params', 'PORT_PREFS', 'PORT_TYPE',
+    'port_value', 'PORTS', 'STANDARD_DEVIATION', 'SUBTRACTION', 'SUM',
+    'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
+    'TARGET', 'TARGET_MECHANISM', 'TARGET_LABELS_DICT', 'TERMINAL', 'TERMINATION_MEASURE', 'TERMINATION_THRESHOLD',
+    'TERMINATION_COMPARISION_OP', 'THRESHOLD', 'TIME', 'TIME_STEP_SIZE', 'TIME_STEPS_DIM', 'TRAINING_SET',
+    'TRANSFER_FUNCTION_TYPE', 'TRANSFER_MECHANISM', 'TRANSFER_WITH_COSTS_FUNCTION', 'TRIAL', 'TRIALS_DIM',
+    'UNCHANGED', 'UNIFORM_DIST_FUNCTION', 'USER_DEFINED_FUNCTION', 'USER_DEFINED_FUNCTION_TYPE',
     'VALUES', 'VALIDATE', 'VALIDATION', 'VALUE', 'VALUE_ASSIGNMENT', 'VALUE_FUNCTION', 'VARIABLE', 'VARIANCE',
-    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0'
+    'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
 ]
 
 
@@ -120,59 +121,71 @@ class NodeRoles:
     ----------
 
     ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Process` and/or `System`,
-        and that receives the input to the Process or System when it is :ref:`executed or run <Run>`.  A Process may
-        have only one `ORIGIN` Mechanism, but a System may have many.  Note that the `ORIGIN`
-        Mechanism of a Process is not necessarily an `ORIGIN` of the System to which it belongs, as it may receive
-        `Projections <Projection>` from other Processes in the System. The `ORIGIN` Mechanisms of a Process or
-        System are listed in its :keyword:`origin_mechanisms` attribute, and can be displayed using its :keyword:`show`
-        method.  For additional details about `ORIGIN` Mechanisms in Processes, see
+        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Composition`,
+        and that receives the input to the Composition when it is :ref:`executed or run <Run>`.
+        A Composition may have more than one `ORIGIN` Mechanism.
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        For additional details about `ORIGIN` Mechanisms in Processes, see
         `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
         and for Systems see `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        COMMENT
 
     INTERNAL
         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
 
     CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-        <Projection>` that closes a recurrent loop in a `Process` and/or `System`.  If it is an `ORIGIN` Mechanism, then
+        <Projection>` that closes a recurrent loop in a `Composition`.  If it is an `ORIGIN` Mechanism, then
         it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
 
     INITIALIZE_CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Process` or `System`, and that is not an `ORIGIN` Mechanism
+        `Projection <Projection>` that closes a loop in a `Composition`, and that is not an `ORIGIN` Mechanism
         (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Process or System when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`, `System Mechanisms <System_Mechanisms>` and
+        assigned to such Mechanisms, that will be used to initialize the Composition when it is first run.  For
+        additional information, see `Run <Run_Initial_Values>`.
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        `System Mechanisms <System_Mechanisms>` and
         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+        COMMENT
 
     TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Process` and/or `System`, and
-        that provides the output to the Process or System when it is `executed or run <Run>`.  A Process may
-        have only one `TERMINAL` Mechanism, but a System may have many.  Note that the `TERMINAL`
+        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Composition`.
+        A Composition may have more than one `TERMINAL` Mechanism .
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        Note that the `TERMINAL`
         Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
         as it may send projections to other processes in the System (see `example
         <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
         its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
         additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
+        COMMENT
 
     SINGLETON
-        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Process` and/or `System`.
+        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Composition`.
         It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
 
     LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Process` and/or `System`.
+        A `LearningMechanism <LearningMechanism>` in a `Composition`.
 
     TARGET
-        A `ComparatorMechanism` of a `Process` and/or `System` configured for learning that receives a target value
+        A `ProcessingMechanism` that receives the target for a learning sequence.
+        COMMENT:
+        ADD VERSION FOR COMPOSITION
+        A `ComparatorMechanism` of a `Composition` configured for learning that receives a target value
         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.  It is usually (but not necessarily)
-        associated with the `TERMINAL` Mechanism of the Process or System. The `TARGET` Mechanisms of a Process or
+        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.
+        It is usually (but not necessarily)
+        associated with the `TERMINAL` Mechanism of the Composition. The `TARGET` Mechanisms of a Process or
         System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
+        COMMENT
 
 
     """
@@ -269,11 +282,11 @@ class DistanceMetrics:
         :math:`d = \\max(|a_1-a_2|)`
 
     DIFFERENCE
-        (can also be referenced as L0)\n
+        (can also be referenced as *L0*)\n
         :math:`d = \\sum\\limits^{len}(|a_1-a_2|)`
 
     EUCLIDEAN
-        (can also be referenced as L1)\n
+        (can also be referenced as *L1*)\n
         :math:`d = \\sum\\limits^{len}\\sqrt{(a_1-a_2)^2}`
 
     COSINE
@@ -283,12 +296,8 @@ class DistanceMetrics:
         :math:`d = 1 - \\left|\\frac{\\sum\\limits^{len}(a_1-\\bar{a}_1)(a_2-\\bar{a}_2)}{(len-1)\\sigma_{a_1}\\sigma_{
         a_2}}\\right|`
 
-    COMMENT:
-    PEARSON
-        <Description>
-    COMMENT
-
-    ENTROPY and CROSS_ENTROPY
+    CROSS_ENTROPY
+        (can also be referenced as *ENTROPY*)\n
         :math:`d = \\sum\\limits^{len}a_1log(a_2)`
 
     ENERGY:
@@ -348,6 +357,7 @@ DISTANCE_METRICS_NAMES = DISTANCE_METRICS._names()
 
 ENERGY = 'energy'
 ENTROPY = 'entropy'
+CONVERGENCE = 'CONVERGENCE'
 
 
 # **********************************************************************************************************************
@@ -373,10 +383,9 @@ ALL = 'all'
 BOTH = 'both'
 MAYBE = 0.5
 
-kwSeparator = ': '
 SEPARATOR_BAR = ' | '
-kwProgressBarChar = '.'
-# kwValueSuffix = '_value'
+PROGRESS_BAR_CHAR = '.'
+# VALUE_SUFFIX = '_value'
 SELF = 'self'
 FLAGS = 'flags'
 INITIALIZATION_STATUS = 'initialization_status'
@@ -384,28 +393,39 @@ EXECUTION_PHASE = 'execution_phase'
 SOURCE = 'source'
 INITIALIZING = " INITIALIZING "  # Used as status and context for Log
 INITIALIZED = " INITIALIZED "  # Used as status
-kwInstantiate = " INSTANTIATING "  # Used as context for Log
 EXECUTING = " EXECUTING " # Used in context for Log and ReportOutput pref
-kwAssign = '| Assign' # Used in context for Log
 ASSIGN_VALUE = ': Assign value'
-kwAggregate = ': Aggregate' # Used in context for Log
 VALIDATE = 'Validate'
 COMMAND_LINE = "COMMAND_LINE"
-kwParams = 'params'
 CHANGED = 'CHANGED'
 UNCHANGED = 'UNCHANGED'
 ENABLED = 'ENABLED'
 STATEFUL_ATTRIBUTES = 'stateful_attributes'
-COUNT = 'COUNT'
 BOLD = 'bold'
-BEFORE = 'before'
-AFTER = 'after'
 ONLINE = 'online'
+COUNT = 'COUNT'
 INPUT = 'input'
 OUTPUT = 'output'
-RANDOM =  'random'
+RANDOM = 'random'
+BEFORE = 'before'
+AFTER = 'after'
 OLDEST = 'oldest'
 NEWEST = 'newest'
+
+LESS_THAN = '<'
+LESS_THAN_OR_EQUAL = '<='
+EQUAL = '=='
+GREATER_THAN = '>'
+GREATER_THAN_OR_EQUAL = '>='
+NOT_EQUAL = '!='
+
+import operator
+comparison_operators = {LESS_THAN : operator.lt,
+                        LESS_THAN_OR_EQUAL : operator.le,
+                        EQUAL : operator.eq,
+                        GREATER_THAN : operator.gt,
+                        GREATER_THAN_OR_EQUAL : operator.ge,
+                        NOT_EQUAL : operator.ne}
 
 EID_SIMULATION = '-sim'
 EID_FROZEN = '-frozen'
@@ -414,22 +434,20 @@ EID_FROZEN = '-frozen'
 
 #region -------------------------------------------    Preferences    --------------------------------------------------
 
-kwPrefs = "Prefs"
-kwPrefsOwner = "kwPrefsOwner"
-kwPrefLevel = 'kwPrefLevel'
-kwPrefCurrentValue = 'kwPrefCurrentValue'
-kwPrefBaseValue = 'kwPrefBaseValue'
-kwPreferenceSetName = 'kwPreferenceSetName'
-kwDefaultPreferenceSetOwner = 'DefaultPreferenceSetOwner'
-# kpLogPref = '_log_pref'
-# kpParamValidationPref = '_param_validation_pref'
-# kpVerbosePref = '_verbose_pref'
+PREFS = "Prefs"
+PREFS_OWNER = "PrefsOwner"
+PREF_LEVEL = 'PrefLevel'
+PREF_CURRENT_VALUE = 'PrefCurrentValue'
+PREF_BASE_VALUE = 'PrefBaseValue'
+PREFERENCE_SET_NAME = 'PreferenceSetName'
+DEFAULT_PREFERENCE_SET_OWNER = 'DefaultPreferenceSetOwner'
 #endregion
 
 #region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
-kwPreferenceSet = 'PreferenceSet'
-kwComponentPreferenceSet = 'PreferenceSet'
+PREFERENCE_SET = 'PreferenceSet'
+COMPONENT_PREFERENCE_SET = 'BasePreferenceSet'
+# COMPONENT_PREFERENCE_SET = 'PreferenceSet'
 #endregion
 
 #region ------------------------------------------------   LOG    ------------------------------------------------------
@@ -444,14 +462,6 @@ VALUE_ASSIGNMENT = 'VALUE_ASSIGNMENT'
 FINAL = 'FINAL'
 
 
-#endregion
-
-#region -----------------------------------------------  UTILITIES  ----------------------------------------------------
-
-kpMechanismTimeScaleLogEntry = "Mechanism TimeScale"
-kpMechanismInputLogEntry = "Mechanism Input"
-kpMechanismOutputLogEntry = "Mechanism Output"
-kpMechanismControlAllocationsLogEntry = "Mechanism Control Allocations"
 #endregion
 
 #region ----------------------------------------------   COMPONENT   ---------------------------------------------------
@@ -475,10 +485,13 @@ NAME = "name"
 PREFS_ARG = "prefs"
 CONTEXT = "context"
 STANDARD_ARGS = {NAME, VARIABLE, VALUE, PARAMS, PREFS_ARG, CONTEXT}
+EXECUTION_COUNT = 'execution_count' # Total number of executions of a Component
+EXECUTE_UNTIL_FINISHED = 'execute_until_finished' # Specifies mode of execution
+NUM_EXECUTIONS_BEFORE_FINISHED = 'num_executions_before_finished' # Number of executions since last finished
+MAX_EXECUTIONS_BEFORE_FINISHED = 'max_executions_before_finished'
 
 INITIAL_VALUES = 'initial_values'
 CURRENT_EXECUTION_TIME = 'current_execution_time'
-CURRENT_EXECUTION_COUNT = 'current_execution_count'
 EXECUTION_ID = 'execution_id'
 
 # inputs list/ndarray:
@@ -491,16 +504,9 @@ COMPONENT_INIT = 'Component.__init__'
 DEFERRED_INITIALIZATION = 'Deferred Init'
 DEFERRED_ASSIGNMENT = 'Deferred Assignment'
 DEFERRED_DEFAULT_NAME = 'DEFERRED_DEFAULT_NAME'
-USER_PARAMS = 'user_params' # Parameters available to user for inspection in user_params dict
 FUNCTION = "function" # Parameter name for function, method, or type to instantiate and assign to self.execute
 FUNCTION_PARAMS  = "function_params" # Parameters used to instantiate or assign to a FUNCTION
 
-PARAM_CLASS_DEFAULTS = "paramClassDefaults"        # "Factory" default params for a Function
-PARAM_INSTANCE_DEFAULTS = "paramInstanceDefaults" # Parameters used to instantiate a Function; supercede paramClassDefaults
-PARAMS_CURRENT = "paramsCurrent"                  # Parameters currently in effect for an instance of a Function
-                                                   #    in general, this includes params specifed as arg in a
-                                                   #    to Function.execute;  however, there are some exceptions
-                                                   #    in which those are kept separate from paramsCurrent (see DDM)
 FUNCTION_CHECK_ARGS = 'super._check_args' # Use for "context" arg
 FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Function Components to set output type
 
@@ -510,32 +516,31 @@ FUNCTION_OUTPUT_TYPE_CONVERSION = "enable_output_type_conversion"  # Used in Fun
 
 # Component Categories   -----------------
 
-kwSystemComponentCategory = "System"
-kwProcessComponentCategory = "Process"
-kwMechanismComponentCategory = "Mechanism_Base"
-kwStateComponentCategory = "State_Base"
-kwProjectionComponentCategory = "Projection_Base"
-kwComponentCategory = "Function_Base"
+SYSTEM_COMPONENT_CATEGORY = "System"
+PROCESS_COMPONENT_CATEGORY = "Process"
+MECHANISM_COMPONENT_CATEGORY = "Mechanism_Base"
+PORT_COMPONENT_CATEGORY = "Port_Base"
+PROJECTION_COMPONENT_CATEGORY = "Projection_Base"
+FUNCTION_COMPONENT_CATEGORY = "Function_Base"
 
 # Component TYPES  -----------------
 
 # Mechanisms:
 PROCESSING_MECHANISM = "ProcessingMechanism"
-ADAPTIVE_MECHANISM = "AdaptiveMechanism"
+ADAPTIVE_MECHANISM = "ModulatoryMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
 TARGET_MECHANISM = "TargetMechanism"
 GATING_MECHANISM = 'GatingMechanism'
-MODULATORY_MECHANISM = 'ModulatoryMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
-# States:
-INPUT_STATE = "InputState"
-PROCESS_INPUT_STATE = "ProcessInputState"
-SYSTEM_INPUT_STATE = "SystemInputState"
-PARAMETER_STATE = "ParameterState"
-OUTPUT_STATE = "OutputState"
+# Ports:
+INPUT_PORT = "InputPort"
+PROCESS_INPUT_PORT = "ProcessInputPort"
+SYSTEM_INPUT_PORT = "SystemInputPort"
+PARAMETER_PORT = "ParameterPort"
+OUTPUT_PORT = "OutputPort"
 MODULATORY_SIGNAL = 'ModulatorySignal'
 LEARNING_SIGNAL = 'LearningSignal'
 CONTROL_SIGNAL = 'ControlSignal'
@@ -602,27 +607,35 @@ PROCESSING_MECHANISM = "ProcessingMechanism"
 # Functions:
 ARGUMENT_THERAPY_FUNCTION = "Contradiction Function"
 USER_DEFINED_FUNCTION = "USER DEFINED FUNCTION"
+
+# CombinationFunctions:
 REDUCE_FUNCTION = "Reduce Function"
 CONCATENATE_FUNCTION = "Concatenate Function"
 REARRANGE_FUNCTION = 'Rearrange Function'
 LINEAR_COMBINATION_FUNCTION = "LinearCombination Function"
-PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 COMBINE_MEANS_FUNCTION = "CombineMeans Function"
+
+# TransferFunctions:
+IDENTITY_FUNCTION = 'Identity Function'
 LINEAR_FUNCTION = "Linear Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"
+TANH_FUNCTION = "Tanh Function"
 RELU_FUNCTION = "ReLU Function"
-ONE_HOT_FUNCTION = "OneHot Function"
 GAUSSIAN_FUNCTION = "Gaussian Function"
 GAUSSIAN_DISTORT_FUNCTION = "GaussianDistort Function"
-NORMAL_FUNCTION = 'Normal Function'
 SOFTMAX_FUNCTION = 'SoftMax Function'
+LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+TRANSFER_WITH_COSTS_FUNCTION = "TransferWithCosts Function"
+
+# SelectionFunctions:
+ONE_HOT_FUNCTION = "OneHot Function"
+
+# IntegratorFunctions:
 INTEGRATOR_FUNCTION = "IntegratorFunction Function"
-INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION = "Interactive Activation IntegratorFunction Function"
 SIMPLE_INTEGRATOR_FUNCTION = "SimpleIntegrator Function"
-BUFFER_FUNCTION = 'Buffer Function'
-ContentAddressableMemory_FUNCTION = 'ContentAddressableMemory Function'
+INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION = "Interactive Activation IntegratorFunction Function"
 ACCUMULATOR_INTEGRATOR_FUNCTION = "AccumulatorIntegrator Function"
 FITZHUGHNAGUMO_INTEGRATOR_FUNCTION = "FitzHughNagumoIntegrator Function"
 DUAL_ADAPTIVE_INTEGRATOR_FUNCTION = "DualAdaptiveIntegrator Function"
@@ -632,9 +645,16 @@ ADAPTIVE_INTEGRATOR_FUNCTION = "AdaptiveIntegrator Function"
 GILZENRAT_INTEGRATOR_FUNCTION = "GilzenratDecisionIntegrator Function"
 DRIFT_DIFFUSION_INTEGRATOR_FUNCTION = "DriftDiffusionIntegrator Function"
 ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION = "OU IntegratorFunction Function"
-LINEAR_MATRIX_FUNCTION = "LinearMatrix Function"
+
+# MemoryFunctions:
+BUFFER_FUNCTION = 'Buffer Function'
+ContentAddressableMemory_FUNCTION = 'ContentAddressableMemory Function'
+
+# OptimizationFunctions:
 GRADIENT_OPTIMIZATION_FUNCTION = "GradientOptimization Function"
 GRID_SEARCH_FUNCTION = 'GridSearch Function'
+
+# LearningFunctions:
 GAUSSIAN_PROCESS_FUNCTION = 'GaussianProcess Function'
 HEBBIAN_FUNCTION = 'Hebbian Learning Function'
 CONTRASTIVE_HEBBIAN_FUNCTION = 'ContrastiveHebbian Learning Function'
@@ -642,11 +662,10 @@ KOHONEN_FUNCTION = 'Kohonen Learning Function'
 RL_FUNCTION = 'ReinforcementLearning Function'
 BACKPROPAGATION_FUNCTION = 'Backpropagation Learning Function'
 TDLEARNING_FUNCTION = "TD Learning Function"
+PREDICTION_ERROR_DELTA_FUNCTION = "PredictionErrorDelta Function"
 ERROR_DERIVATIVE_FUNCTION = 'Error Derivative Function'
-IDENTITY_FUNCTION = 'Identity Function'
-STATE_MAP_FUNCTION = 'State Map Function'
-# Distribution functions
 
+# Distributionfunctions
 NORMAL_DIST_FUNCTION = "Normal Distribution Function"
 UNIFORM_DIST_FUNCTION = "Uniform Distribution Function"
 EXPONENTIAL_DIST_FUNCTION = "Exponential Distribution Function"
@@ -654,9 +673,12 @@ GAMMA_DIST_FUNCTION = "Gamma Distribution Function"
 WALD_DIST_FUNCTION = "Wald Distribution Function"
 DRIFT_DIFFUSION_ANALYTICAL_FUNCTION = "Drift Diffusion Analytical Function"
 
-# Objective functions
+# ObjectiveFunctions
 STABILITY_FUNCTION = 'Stability Function'
 DISTANCE_FUNCTION = 'Distance Function'
+
+# Interface Functions:
+PORT_MAP_FUNCTION = 'Port Map Function'
 
 #endregion
 
@@ -679,6 +701,12 @@ FUNCTIONS = 'functions'
 
 #endregion
 
+#region ---------------------------------------    AUTODIFF COMPOSITION   ----------------------------------------------
+
+TRAINING_SET = 'training set'
+
+#endregion
+
 #region ----------------------------------------------    PROCESS   ----------------------------------------------------
 
 PROCESS = "PROCESS"
@@ -693,42 +721,42 @@ NO_CLAMP = "no_clamp"
 LEARNING_RATE = "learning_rate"
 CONTROL = 'CONTROL'
 GATING = 'gating'
-kwProjections = "projections"
-kwProcessDefaultProjectionFunction = "Default Projection Function"
-kwProcessExecute = "ProcessExecute"
-kpMechanismExecutedLogEntry = "Mechanism Executed"
+PROCESS_DEFAULT_PROJECTION_FUNCTION = "Default Projection Function"
+PROCESS_EXECUTE = "ProcessExecute"
+MECHANISM_EXECUTED_LOG_ENTRY = "Mechanism Executed"
 #endregion
 
 #region ---------------------------------------------    MECHANISM   ---------------------------------------------------
 
 MECHANISM = 'MECHANISM'
 MECHANISMS = 'MECHANISMS'
-kwMechanismName = "MECHANISM NAME"
-kwMechanismDefault = "DEFAULT MECHANISM"
+MECHANISM_NAME = "MECHANISM NAME"
+MECHANISM_DEFAULT = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
-kwProcessDefaultMechanism = "ProcessDefaultMechanism"
-kwMechanismType = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
-kwMechanismDefaultInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
-kwMechanismParamValue = "Mechanism Parameter Value"                 # Used to specify mechanism param value
-kwMechanismDefaultParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
+PROCESS_DEFAULT_MECHANISM = "ProcessDefaultMechanism"
+MECHANISM_TYPE = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
+MECHANISM_DEFAULTInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
+MECHANISM_PARAM_VALUE = "Mechanism Parameter Value"                 # Used to specify mechanism param value
+MECHANISM_DEFAULTParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
 
-# Keywords for OUTPUT_STATE_VARIABLE dict:
+# Keywords for OUTPUT_PORT_VARIABLE dict:
 OWNER_VARIABLE = 'OWNER_VARIABLE'
 OWNER_VALUE = 'OWNER_VALUE'
-EXECUTION_COUNT = 'EXECUTION_COUNT'
-EXECUTION_TIME = 'EXECUTION_TIME'
-INPUT_STATE_VARIABLES = 'INPUT_STATE_VARIABLES'
+OWNER_EXECUTION_COUNT = EXECUTION_COUNT
+OWNER_EXECUTION_TIME = 'EXECUTION_TIME'
+INPUT_PORT_VARIABLES = 'INPUT_PORT_VARIABLES'
 PARAMS_DICT = 'PARAMS_DICT'
 
-# this exists because kws like OWNER_VALUE are set as properties
+# this exists because keywords like OWNER_VALUE are set as properties
 # on Mechanisms, so you can't just change the string value to map
 # as you want - the property "value" will be overwritten then
-output_state_spec_to_parameter_name = {
+output_port_spec_to_parameter_name = {
     OWNER_VARIABLE: VARIABLE,
     OWNER_VALUE: VALUE,
-    INPUT_STATE_VARIABLES: 'input_state_variables',
-    EXECUTION_COUNT: 'execution_count',
+    INPUT_PORT_VARIABLES: 'input_port_variables',
+    OWNER_EXECUTION_COUNT: EXECUTION_COUNT,
+    OWNER_EXECUTION_TIME: 'current_execution_time'
 }
 
 # Dictionaries of labels for input, output and target arrays
@@ -750,45 +778,24 @@ ERROR = 'ERROR'
 
 RESULTS = 'RESULTS'
 RESULT = 'RESULT'
-OUTPUT_MEAN = 'OUTPUT_MEAN'
-OUTPUT_MEDIAN = 'OUTPUT_MEDIAN'
-OUTPUT_VARIANCE = 'OUTPUT_VARIANCE'
-OUTPUT_STD_DEV = 'OUTPUT_STD_DEV'
+MEAN = 'MEAN'
+MEDIAN = 'MEDIAN'
 MECHANISM_VALUE = 'MECHANISM_VALUE'
 SIZE = 'size'
 K_VALUE = 'k_value'
-THRESHOLD = 'threshold'
 RATIO = 'ratio'
 
-STATE_VALUE = "State value"   # Used in State specification dict
-                                                 #  to specify State value
-STATE_PARAMS = "State params" # Used in State specification dict
+THRESHOLD = 'threshold'
+TERMINATION_MEASURE = 'termination_measure'
+TERMINATION_THRESHOLD = 'termination_threshold'
+TERMINATION_COMPARISION_OP = 'termination_comparison_op'
 
-# ParamClassDefaults:
-kwMechanismExecutionSequenceTemplate = "Mechanism Execution Sequence Template"
+port_value = "Port value"   # Used in Port specification dict to specify Port value
+port_params = "Port params" # Used in Port specification dict to specify Port params
 
-# Entries for output OrderedDict, describing the current state of the Mechanism
-kwMechanismOutputValue = "MechanismOutputValue" # points to <mechanism>.outputStateValue
-kwMechanismConfidence = "MechanismConfidence"   # contains confidence of current kwMechanismValue
-kwMechanismPerformance = "MechanismPerformance" # contains value from objective function
-kwMechanismDuration = "MechanismDuration"       # contains number of time steps since process.execute was called
-kwMechanismParams = "MechanismParams"           # dict of ParameterState objects in <mechanism>.params
-
-kwMechanismExecuteFunction = "MECHANISM EXECUTE FUNCTION"
-kwMechanismAdjustFunction = "MECHANISM ADJUST FUNCTION"
-kwMechanismInterrogateFunction = "MECHANISM INTERROGATE FUNCTION"
-kwMechanismTerminateFunction = "MECHANISM TERMINATE FUNCTION"
-# TBI: kwMechanismAccuracyFunction = "MECHANISM ACCURACY FUNCTION"
-
-#DDM
-kwThreshold = 'thresh'
-kwInitialPoint = 'initial_point'
 #endregion
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------
-
-MODULATION = 'modulation'
-MONITOR_FOR_MODULATION = 'monitor_for_modulation'
 
 # LearningMechanism:
 LEARNING_SIGNALS = 'learning_signals'
@@ -825,61 +832,67 @@ ALLOCATION_SAMPLES = "allocation_samples"
 
 
 # GatingMechanism
-MAKE_DEFAULT_GATING_MECHANISM = "make_default_gating_mechanism"
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
 GATE = 'GATE'
-GATED_STATES = 'GATED_STATES'
+GATED_PORTS = 'GATED_PORTS'
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_ALLOCATION = 'gating_allocation'
 
 MODULATORY_SPEC_KEYWORDS = {LEARNING, LEARNING_SIGNAL, LEARNING_PROJECTION, LEARNING_MECHANISM,
                             CONTROL, CONTROL_SIGNAL, CONTROL_PROJECTION, CONTROL_MECHANISM,
-                            GATING, GATING_SIGNAL, GATING_PROJECTION, GATING_MECHANISM,
-                            MODULATORY_MECHANISM}
+                            GATING, GATING_SIGNAL, GATING_PROJECTION, GATING_MECHANISM}
 
 MODULATED_PARAMETER_PREFIX = 'mod_'
 
 #endregion
 
-#region ----------------------------------------------    STATES  ------------------------------------------------------
+#region ----------------------------------------------    PORTS  ------------------------------------------------------
 
-STATE = "State"
-STATE_TYPE = "state_type"
-# These are used as keys in State specification dictionaries
-STATES = "STATES"
+PORT = "Port"
+PORT_TYPE = "port_type"
+# These are used as keys in Port specification dictionaries
+PORTS = "PORTS"
 MODULATES = "modulates"
-PROJECTIONS = "projections"  # Used to specify projection list to State DEPRECATED;  REPLACED BY CONNECTIONS
+PROJECTIONS = "projections"  # Used to specify projection list to Port DEPRECATED;  REPLACED BY CONNECTIONS
 CONNECTIONS = 'CONNECTIONS'
-STATE_NAME = "StateName"
-STATE_PREFS = "StatePrefs"
-STATE_CONTEXT = "StateContext"
-kwAddInputState = 'kwAddNewInputState'     # Used by Mechanism._add_projection_to()
-kwAddOutputState = 'kwAddNewOutputState'   # Used by Mechanism._add_projection_from()
+Port_Name = "PortName"
+PORT_PREFS = "PortPrefs"
+PORT_CONTEXT = "PortContext"
+ADD_INPUT_PORT = 'AddNewInputPort'     # Used by Mechanism._add_projection_to()
+ADD_OUTPUT_PORT = 'AddNewOutputPort'   # Used by Mechanism._add_projection_from()
 FULL = 'FULL'
 OWNER = 'owner'
 REFERENCE_VALUE = 'reference_value'
 REFERENCE_VALUE_NAME = 'reference_value_name'
 
-# InputStates:
+# InputPorts:
 PRIMARY = 'Primary'
-INPUT_STATES = 'input_states'
-INPUT_STATE_PARAMS = 'input_state_params'
+INPUT_PORTS = 'input_ports'
+INPUT_PORT_PARAMS = 'input_port_params'
 WEIGHT = 'weight'
 EXPONENT = 'exponent'
 INTERNAL_ONLY = 'internal_only'
 
-# ParameterStates:
-PARAMETER_STATES = 'parameter_states'
-PARAMETER_STATE_PARAMS = 'parameter_state_params'
+# ParameterPorts:
+PARAMETER_PORTS = 'parameter_ports'
+PARAMETER_PORT_PARAMS = 'parameter_port_params'
 
-# OutputStates:
-OUTPUT_STATES = 'output_states'
-OUTPUT_STATE_PARAMS = 'output_states_params'
-STANDARD_OUTPUT_STATES = 'standard_output_states'
+# OutputPorts:
+OUTPUT_PORTS = 'output_ports'
+OUTPUT_PORT_PARAMS = 'output_ports_params'
+STANDARD_OUTPUT_PORTS = 'standard_output_ports'
 INDEX = 'index'       # For backward compatibility with INDEX and ASSIGN
 ASSIGN = 'assign'     # For backward compatibility with INDEX and ASSIGN
 CALCULATE = 'assign'  # For backward compatibility with CALCULATE
+
+# Modulation
+MODULATION = 'modulation'
+MONITOR_FOR_MODULATION = 'monitor_for_modulation'
+ADDITIVE = ADDITIVE_PARAM = 'additive_param'
+MULTIPLICATIVE = MULTIPLICATIVE_PARAM = 'multiplicative_param'
+OVERRIDE = OVERRIDE_PARAM = 'OVERRIDE'
+DISABLE = DISABLE_PARAM = 'DISABLE'
 
 #endregion
 
@@ -898,9 +911,7 @@ SENDER = 'sender'
 RECEIVER = "receiver"
 PROJECTION_DIRECTION = {SENDER: 'to',
                         RECEIVER: 'from'}
-kwProjectionReceiver = 'projection_receiver'
-kwReceiverArg = 'receiver'
-# kpLog = "ProjectionLog"
+RECEIVER_ARG = 'receiver'
 MONITOR_FOR_LEARNING = 'monitor_for_learning'
 AUTO = 'auto'
 HETERO = 'hetero'
@@ -938,11 +949,11 @@ INTEGRATION_TYPE = "integration_type"
 TIME_STEP_SIZE = 'time_step_size'
 DECAY = 'decay'
 INTEGRATOR_MODE_VALUE = "integrator_mode_value"
-INSTANTANEOUS_MODE_VALUE = "instantaenous_mode_value"
+INSTANTANEOUS_MODE_VALUE = "instantaneous_mode_value"
 LINEAR = 'linear'
 CONSTANT = 'constant'
 SIMPLE = 'scaled'
-ADAPTIVE = 'adaptive'
+ADAPTIVE = 'modulatory'
 DIFFUSION = 'diffusion'
 EXPONENTIAL = 'exponential'
 GAUSSIAN = 'gaussian'
@@ -968,17 +979,19 @@ INTERCEPT = 'intercept'
 RATE = 'rate'
 SCALE = 'scale'
 NOISE = 'noise'
-
 BETA = 'beta'
-
 DIST_SHAPE = 'dist_shape'
-
-STANDARD_DEVIATION = 'standard_deviation'
-VARIANCE = 'variance'
 DIST_MEAN = 'mean'
 
+# Note:  These are used as both arg names (hence lower case) and names of StandardOutputPorts
+STANDARD_DEVIATION = 'standard_deviation'
+VARIANCE = 'variance'
+
+# Note:  These are used only as names of StandardOutputPorts (hence upper case)
 MAX_VAL = 'MAX_VAL'
 MAX_ABS_VAL = 'MAX_ABS_VAL'
+MAX_ONE_HOT = 'MAX_ONE_HOT'
+MAX_ABS_ONE_HOT = 'MAX_ABS_ONE_HOT'
 MAX_INDICATOR = 'MAX_INDICATOR'
 MAX_ABS_INDICATOR = 'MAX_ABS_INDICATOR'
 MIN_VAL = 'MIN_VAL'
@@ -1002,4 +1015,27 @@ REWARD = 'reward'
 NETWORK = 'network'
 
 GAMMA = 'gamma'
+
+MSE = 'MSE'
+SSE = 'SSE'
 #endregion
+
+# model spec keywords
+MODEL_SPEC_ID_TYPE = 'type'
+MODEL_SPEC_ID_PSYNEULINK = 'PNL'
+MODEL_SPEC_ID_GENERIC = 'generic'
+
+MODEL_SPEC_ID_INPUT_PORTS = 'input_ports'
+MODEL_SPEC_ID_OUTPUT_PORTS = 'output_ports'
+
+MODEL_SPEC_ID_SENDER_MECH = 'sender'
+MODEL_SPEC_ID_SENDER_PORT = 'sender_port'
+MODEL_SPEC_ID_RECEIVER_MECH = 'receiver'
+MODEL_SPEC_ID_RECEIVER_PORT = 'receiver_port'
+
+MODEL_SPEC_ID_PARAMETER_SOURCE = 'source'
+MODEL_SPEC_ID_PARAMETER_VALUE = 'value'
+
+MODEL_SPEC_ID_NODES = 'nodes'
+MODEL_SPEC_ID_PROJECTIONS = 'edges'
+MODEL_SPEC_ID_COMPOSITION = 'graphs'

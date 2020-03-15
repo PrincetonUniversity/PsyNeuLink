@@ -6,7 +6,7 @@ import pytest
 
 from math import e, pi, sqrt
 
-SIZE=5
+SIZE=10
 test_var = np.random.rand(SIZE)
 test_matrix = np.random.rand(SIZE, SIZE)
 test_matrix_s = np.random.rand(SIZE, SIZE // 4)
@@ -21,14 +21,14 @@ softmax_helper = RAND1 * test_var
 softmax_helper = softmax_helper - np.max(softmax_helper)
 softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 
-tanh_helper = -2*(RAND1 * (test_var + RAND2 - RAND3) + RAND4)
+tanh_helper = -2 * (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
 tanh_helper = (1 - e**tanh_helper)/ (1 + e**tanh_helper)
 
-gaussian_helper = e**(-(test_var-RAND2)**2/(2*RAND1**2)) / sqrt(2*pi*RAND1)
+gaussian_helper = e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / sqrt(2 * pi * RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
 
 def gaussian_distort_helper(seed):
-    state = np.random.RandomState(np.asarray([seed]))
+    state = np.random.RandomState([seed])
     # compensate for construction
     state.normal(test_var + RAND1, RAND2)
     return RAND4 * state.normal(test_var + RAND1, RAND2) + RAND3
@@ -71,45 +71,55 @@ names = [
 
 @pytest.mark.function
 @pytest.mark.transfer_function
-@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(func, variable, params, fail, expected, benchmark):
+@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
+@pytest.mark.parametrize("mode", [
+    "Python",
+    pytest.param("LLVM", marks=pytest.mark.llvm),
+    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_execute(func, variable, params, fail, expected, benchmark, mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName
-    res = f.function(variable)
+    if mode == "Python":
+        ex = f
+    elif mode == "LLVM":
+        ex = pnlvm.execution.FuncExecution(f).execute
+    elif mode == "PTX":
+        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    res = ex(variable)
+    assert np.allclose(res, expected)
     benchmark(f.function, variable)
-    assert np.allclose(res, expected)
 
 
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.transfer_function
-@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(func, variable, params, fail, expected, benchmark):
-    if fail is not None:
-        pytest.xfail(fail)
-
-    f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName
-    m = pnlvm.execution.FuncExecution(f)
-    res = m.execute(variable)
-    benchmark(m.execute, variable)
-    assert np.allclose(res, expected)
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.transfer_function
-@pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(func, variable, params, fail, expected, benchmark):
-    if fail is not None:
-        pytest.xfail(fail)
-
-    f = func(default_variable=variable, **params)
-    benchmark.group = "TransferFunction " + func.componentName
-    m = pnlvm.execution.FuncExecution(f)
-    res = m.cuda_execute(variable)
-    benchmark(m.cuda_execute, variable)
-    assert np.allclose(res, expected)
+def test_transfer_with_costs_function():
+    f = Functions.TransferWithCosts()
+    result = f(1)
+    assert np.allclose(result, 1)
+    f.toggle_cost(Functions.CostFunctions.INTENSITY)
+    f = Functions.TransferWithCosts(enabled_cost_functions=Functions.CostFunctions.INTENSITY)
+    result = f(2)
+    assert np.allclose(result, 2)
+    assert np.allclose(f.intensity_cost, 7.38905609893065)
+    assert f.adjustment_cost is None
+    assert f.duration_cost is None
+    assert np.allclose(np.float(f.combined_costs), 7.38905609893065)
+    f.toggle_cost(Functions.CostFunctions.ADJUSTMENT)
+    result = f(3)
+    assert np.allclose(result, 3)
+    assert np.allclose(f.intensity_cost, 20.085536923187668)
+    assert np.allclose(f.adjustment_cost, 1)
+    assert f.duration_cost is None
+    assert np.allclose(np.float(f.combined_costs), 21.085536923187668)
+    f.toggle_cost(Functions.CostFunctions.DURATION)
+    result = f(5)
+    assert np.allclose(result, 5)
+    assert np.allclose(f.intensity_cost, 148.413159102576603)
+    assert np.allclose(f.adjustment_cost, 2)
+    assert np.allclose(f.duration_cost, 5)
+    assert np.allclose(np.float(f.combined_costs), 155.413159102576603)
+    result = f(1)
+    assert np.allclose(result, 1)
+    assert np.allclose(f.intensity_cost, 2.718281828459045)
+    assert np.allclose(f.adjustment_cost, 4)
+    assert np.allclose(f.duration_cost, 6)
+    assert np.allclose(np.float(f.combined_costs), 12.718281828459045)

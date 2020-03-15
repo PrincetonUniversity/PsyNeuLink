@@ -14,11 +14,12 @@ from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
-from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
-from psyneulink.core.globals.preferences.componentpreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
+from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX, RESULT
+from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.core.globals.utilities import UtilitiesError
 from psyneulink.core.scheduling.condition import Never
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RECURRENT_OUTPUT, RecurrentTransferError, RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferError, RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 class TestMatrixSpec:
@@ -99,8 +100,8 @@ class TestRecurrentTransferMechanismInputs:
             size=3
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        assert R.recurrent_projection.sender is R.output_state
-        assert R.recurrent_projection.receiver is R.input_state
+        assert R.recurrent_projection.sender is R.output_port
+        assert R.recurrent_projection.receiver is R.input_port
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -165,7 +166,7 @@ class TestRecurrentTransferMechanismInputs:
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
-                                       output_states = [RECURRENT_OUTPUT.RESULT])
+                                       output_ports = [RESULT])
         if mode == 'Python':
             EX = R.execute
         elif mode == 'LLVM':
@@ -309,7 +310,7 @@ class TestRecurrentTransferMechanismMatrix:
             size=3,
             hetero=-1
         )
-        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputState of the mechanism: if
+        # (7/28/17 CW) these numbers assume that execute() leaves its value in the outputPort of the mechanism: if
         # the behavior of execute() changes, feel free to change these numbers
         val = R.execute([-1, -2, -3])
         np.testing.assert_allclose(val, [[-1, -2, -3]])
@@ -660,7 +661,7 @@ class TestRecurrentTransferMechanismInProcess:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_process_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
@@ -747,7 +748,7 @@ class TestRecurrentTransferMechanismInSystem:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
     def test_recurrent_mech_transfer_mech_system_three_runs(self):
-        # this test ASSUMES that the parameter state for auto and hetero is updated one run-cycle AFTER they are set by
+        # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
             size=4,
@@ -874,7 +875,7 @@ class TestRecurrentTransferMechanismInSystem:
             ]
         )
         np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        np.testing.assert_allclose(R.input_state.path_afferents[0].matrix, R.matrix)
+        np.testing.assert_allclose(R.input_port.path_afferents[0].matrix, R.matrix)
 
         # Test that activity is properly computed prior to learning
         p = Process(pathway=[R])
@@ -920,7 +921,6 @@ class TestRecurrentTransferMechanismInSystem:
         assert R.learning_rate == 0.1
         assert R.learning_mechanism.learning_rate == 0.1
         # assert R.learning_mechanism.function.learning_rate == 0.1
-
         s.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
         matrix_1 = [[0., 1.1, 1.1, 1.1],
                     [1.1, 0., 1.1, 1.1],
@@ -983,10 +983,10 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.0,  0.0,         0.0]
             ]
         )
-        np.testing.assert_allclose(R.output_state.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
+        np.testing.assert_allclose(R.output_port.parameters.value.get(S), [1.18518086, 0.0, 1.18518086, 0.0])
 
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_state.parameters.value.set([0, 0, 0, 0], S, override=True)
+        R.output_port.parameters.value.set([0, 0, 0, 0], S, override=True)
         inputs_dict = {R:[0,1,0,1]}
         S.run(num_trials=4,
               inputs=inputs_dict)
@@ -999,7 +999,7 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.0,        0.23700501, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_state.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
+        np.testing.assert_allclose(R.output_port.parameters.value.get(S),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
 # this doesn't work consistently due to EVC's issue with the scheduler
@@ -1016,7 +1016,7 @@ class TestRecurrentTransferMechanismInSystem:
 #             function=Linear)
 #         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
 #         s = System(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
-#            enable_controller = True, monitor_for_control = [T.output_state], control_signals=[('auto', R), ('hetero', R)])
+#            enable_controller = True, monitor_for_control = [T.output_port], control_signals=[('auto', R), ('hetero', R)])
 #         s.run(inputs = {R: [[1, 3, 2, 5]]})
 #         print('T.value: ', T.value)
 #         np.testing.assert_allclose(T.value, [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])
@@ -1088,28 +1088,28 @@ class TestClip:
         assert np.allclose(R.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
-class TestRecurrentInputState:
+class TestRecurrentInputPort:
 
     def test_ris_simple(self):
         R2 = RecurrentTransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                                             matrix=[[1.0, 2.0, 3.0],
                                                     [2.0, 1.0, 2.0],
                                                     [3.0, 2.0, 1.0]],
-                                            has_recurrent_input_state=True)
+                                            has_recurrent_input_port=True)
         R2.execute(input=[1, 3, 2])
         p2 = Process(pathway=[R2])
         s2 = System(processes=[p2])
         s2.run(inputs=[[1, 3, 2]])
         np.testing.assert_allclose(R2.parameters.value.get(s2), [[14., 12., 13.]])
-        assert len(R2.input_states) == 2
-        assert "Recurrent Input State" not in R2.input_state.name  # make sure recurrent input state isn't primary
+        assert len(R2.input_ports) == 2
+        assert "Recurrent Input Port" not in R2.input_port.name  # make sure recurrent InputPort isn't primary
 
 
 class TestCustomCombinationFunction:
 
     def test_rt_without_custom_comb_fct(self):
         R1 = RecurrentTransferMechanism(
-                has_recurrent_input_state=True,
+                has_recurrent_input_port=True,
                 size=2,
         )
         result = R1.execute([1,2])
@@ -1119,13 +1119,137 @@ class TestCustomCombinationFunction:
         def my_fct(x):
             return x[0] * x[1] if len(x) == 2 else x[0]
         R2 = RecurrentTransferMechanism(
-                has_recurrent_input_state=True,
+                has_recurrent_input_port=True,
                 size=2,
                 combination_function=my_fct
         )
         result = R2.execute([1,2])
         np.testing.assert_allclose(result, [[0,0]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('cond0, cond1, expected', [
+        (pnl.Never(), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.75]), np.array([0.75])],
+          [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.9375]), np.array([0.75])],
+          [np.array([0.96875]), np.array([0.875])],
+          [np.array([0.984375]), np.array([0.9375])],
+          [np.array([0.9921875]), np.array([0.96875])]]),
+        (pnl.Never(), pnl.AtTrialStart(),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.75]), np.array([0.5])],
+          [np.array([0.875]), np.array([0.5])],
+          [np.array([0.9375]), np.array([0.5])],
+          [np.array([0.96875]), np.array([0.5])],
+          [np.array([0.984375]), np.array([0.5])],
+          [np.array([0.9921875]), np.array([0.5])]]),
+        (pnl.AtPass(0), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.875])],
+          [np.array([0.5]), np.array([0.9375])],
+          [np.array([0.5]), np.array([0.96875])]]),
+        ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
+    def test_reinitialize_when_composition(self, mode, cond0, cond1, expected):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I1.reinitialize_when = cond0
+        I2.reinitialize_when = cond1
+        C = pnl.Composition()
+        C.add_node(I1)
+        C.add_node(I2)
+
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+
+        assert np.allclose(expected, C.results)
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('cond0, cond1, expected', [
+        (pnl.AtPass(0), pnl.AtTrial(2),
+         [[np.array([0.5]), np.array([0.5])],
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.75])],
+          [np.array([0.5]), np.array([0.875])],
+          [np.array([0.5]), np.array([0.9375])],
+          [np.array([0.5]), np.array([0.96875])]]),
+        ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
+    @pytest.mark.parametrize('has_initializers2', [True, False],
+                             ids=lambda x: "initializers1" if x else "NO initializers1")
+    @pytest.mark.parametrize('has_initializers1', [True, False],
+                             ids=lambda x: "initializers2" if x else "NO initializers2")
+    def test_reinitialize_when_has_initializers_composition(self, mode, cond0, cond1, expected,
+                                           has_initializers1, has_initializers2):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5)
+        I1.reinitialize_when = cond0
+        I2.reinitialize_when = cond1
+        I1.has_initializers = has_initializers1
+        I2.has_initializers = has_initializers2
+        C = pnl.Composition()
+        C.add_node(I1)
+        C.add_node(I2)
+        exp = expected.copy()
+        def_res = [np.array([0.5]), np.array([0.75]), np.array([0.875]),
+                   np.array([0.9375]), np.array([0.96875]),
+                   np.array([0.984375]), np.array([0.9921875])]
+        if not has_initializers1:
+            exp = list(zip(def_res, (x[1] for x in exp)))
+        if not has_initializers2:
+            exp = list(zip((x[0] for x in exp), def_res))
+
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+
+        assert np.allclose(exp, C.results)
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    @pytest.mark.benchmark(group="IntegratorMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    @pytest.mark.parametrize('until_finished, expected', [
+        (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
+        (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
+    ], ids=['until_finished', 'oneshot'])
+    def test_max_executions_before_finished(self, mode, until_finished, expected):
+        I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
+                                            integration_rate=0.5,
+                                            termination_threshold=0.0,
+                                            max_executions_before_finished=5,
+                                            execute_until_finished=until_finished)
+        C = pnl.Composition()
+        C.add_node(I1)
+
+        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        if mode == 'Python':
+            assert I1.parameters.is_finished_flag.get(C) is until_finished
+        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        assert np.allclose(expected[0], results)
+        assert np.allclose(expected[1], results2)
 
 class TestDebugProperties:
 

@@ -7,7 +7,7 @@ import psyneulink as pnl
 # the associated accuracy of the trial will be the probability that the DDM hits the upper threshold
 def computeAccuracy(variable):
 
-    # variable is the list of values given by the monitored output states in the Objective Mechanism
+    # variable is the list of values given by the monitored output ports in the Objective Mechanism
 
     print("Inputs to ComputeAccuracy Function: ", variable)
 
@@ -79,7 +79,7 @@ T0 = 0.2 # T0
 inputLayer = pnl.TransferMechanism(#default_variable=[[0.0, 0.0]],
                                    size=2,
                                    function=pnl.Linear(slope=1, intercept=0),
-                                   output_states = [pnl.RESULT],
+                                   output_ports = [pnl.RESULT],
                                    name='Input')
 inputLayer.set_log_conditions([pnl.RESULT])
 
@@ -93,7 +93,7 @@ activation = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
                                             integrator_mode = True,
                                             integrator_function=pnl.AdaptiveIntegrator(rate=(tau)),
                                             initial_value=np.array([[0.0, 0.0]]),
-                                            output_states = [pnl.RESULT],
+                                            output_ports = [pnl.RESULT],
                                             name = 'Activity')
 
 activation.set_log_conditions([pnl.RESULT, "mod_gain"])
@@ -102,7 +102,7 @@ activation.set_log_conditions([pnl.RESULT, "mod_gain"])
 stimulusInfo = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                      size = 2,
                                      function = pnl.Linear(slope=1, intercept=0),
-                                     output_states = [pnl.RESULT],
+                                     output_ports = [pnl.RESULT],
                                      name = "Stimulus Info")
 
 stimulusInfo.set_log_conditions([pnl.RESULT])
@@ -110,15 +110,15 @@ stimulusInfo.set_log_conditions([pnl.RESULT])
 controlledElement = pnl.TransferMechanism(default_variable=[[0.0, 0.0]],
                                           size = 2,
                                           function=pnl.Linear(slope=1, intercept= 0),
-                                          input_states=pnl.InputState(combine=pnl.PRODUCT),
-                                          output_states = [pnl.RESULT],
+                                          input_ports=pnl.InputPort(combine=pnl.PRODUCT),
+                                          output_ports = [pnl.RESULT],
                                           name = 'Stimulus Info * Activity')
 
 controlledElement.set_log_conditions([pnl.RESULT])
 
 ddmCombination = pnl.TransferMechanism(size = 1,
                                        function = pnl.Linear(slope=1, intercept=0),
-                                       output_states = [pnl.RESULT],
+                                       output_ports = [pnl.RESULT],
                                        name = "DDM Integrator")
 ddmCombination.set_log_conditions([pnl.RESULT])
 
@@ -127,7 +127,7 @@ decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate = DRIFT
                                                                  threshold = THRESHOLD,
                                                                  noise = NOISE,
                                                                  t0 = T0),
-                                                                 output_states = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
+                                                                 output_ports = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                                                   pnl.PROBABILITY_UPPER_THRESHOLD, pnl.PROBABILITY_LOWER_THRESHOLD],
                                                                  name='DDM')
 
@@ -170,7 +170,7 @@ objective_mech = pnl.ObjectiveMechanism(monitor = [inputLayer, stimulusInfo,
                                                            function = computeAccuracy)
 
 meta_controller = pnl.OptimizationControlMechanism(agent_rep = stabilityFlexibility,
-                                                   features = [inputLayer.input_state,stimulusInfo.input_state],
+                                                   features = [inputLayer.input_port,stimulusInfo.input_port],
                                                    # features = {pnl.SHADOW_INPUTS: [inputLayer, stimulusInfo]},
                                                    # features = [(inputLayer, pnl.SHADOW_INPUTS),
                                                    #             (stimulusInfo, pnl.SHADOW_INPUTS)],

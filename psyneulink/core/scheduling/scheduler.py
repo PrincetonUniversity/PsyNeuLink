@@ -196,14 +196,14 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, B, C])
-    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to B[InputState-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULTS] to C[InputState-0]), (TransferMechanism C)]
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> # implicit condition of Always for A
-    >>> comp.scheduler_processing.add_condition(B, pnl.EveryNCalls(A, 2))
-    >>> comp.scheduler_processing.add_condition(C, pnl.EveryNCalls(B, 3))
+    >>> comp.scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> comp.scheduler.add_condition(C, pnl.EveryNCalls(B, 3))
 
     >>> # implicit AllHaveRun Termination condition
-    >>> execution_sequence = list(comp.scheduler_processing.run())
+    >>> execution_sequence = list(comp.scheduler.run())
     >>> execution_sequence
     [{(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism C)}]
 
@@ -211,9 +211,9 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, B])
-    [(TransferMechanism A), (MappingProjection MappingProjection-2), (TransferMechanism B)]
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B)]
 
-    >>> comp.scheduler_processing.add_condition(
+    >>> comp.scheduler.add_condition(
     ...     A,
     ...     pnl.Any(
     ...         pnl.AtPass(0),
@@ -221,7 +221,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     ...     )
     ... )
 
-    >>> comp.scheduler_processing.add_condition(
+    >>> comp.scheduler.add_condition(
     ...     B,
     ...     pnl.Any(
     ...         pnl.EveryNCalls(A, 1),
@@ -231,7 +231,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
-    >>> execution_sequence = list(comp.scheduler_processing.run(termination_conds=termination_conds))
+    >>> execution_sequence = list(comp.scheduler.run(termination_conds=termination_conds))
     >>> execution_sequence # doctest: +SKIP
     [{(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism B)}, {(TransferMechanism B)}]
 
@@ -239,14 +239,14 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 
     >>> comp = pnl.Composition()
     >>> comp.add_linear_processing_pathway([A, C])
-    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULTS] to C[InputState-0]), (TransferMechanism C)]
+    [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> comp.add_linear_processing_pathway([B, C])
-    [(TransferMechanism B), (MappingProjection MappingProjection-4), (TransferMechanism C)]
+    [(TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
-    >>> comp.scheduler_processing.add_condition(A, pnl.EveryNPasses(1))
-    >>> comp.scheduler_processing.add_condition(B, pnl.EveryNCalls(A, 2))
-    >>> comp.scheduler_processing.add_condition(
+    >>> comp.scheduler.add_condition(A, pnl.EveryNPasses(1))
+    >>> comp.scheduler.add_condition(B, pnl.EveryNCalls(A, 2))
+    >>> comp.scheduler.add_condition(
     ...     C,
     ...     pnl.Any(
     ...         pnl.AfterNCalls(A, 3),
@@ -256,7 +256,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> termination_conds = {
     ...     pnl.TimeScale.TRIAL: pnl.AfterNCalls(C, 4, time_scale=pnl.TimeScale.TRIAL)
     ... }
-    >>> execution_sequence = list(comp.scheduler_processing.run(termination_conds=termination_conds))
+    >>> execution_sequence = list(comp.scheduler.run(termination_conds=termination_conds))
     >>> execution_sequence  # doctest: +SKIP
     [{(TransferMechanism A)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}, {(TransferMechanism A)}, {(TransferMechanism C)}, {(TransferMechanism A), (TransferMechanism B)}, {(TransferMechanism C)}]
 
@@ -271,12 +271,12 @@ import collections
 import copy
 import datetime
 import logging
-import uuid
 import warnings
 
 from toposort import toposort, toposort_flatten
 
 from psyneulink.core.globals.context import Context, handle_external_context
+from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
@@ -296,7 +296,7 @@ class SchedulerError(Exception):
         return repr(self.error_value)
 
 
-class Scheduler(object):
+class Scheduler(JSONDumpable):
     """Generates an order of execution for `Components <Component>` in a `Composition <Composition>` or graph
     specification dictionary, possibly determined by a set of `Conditions <Condition>`.
 
@@ -367,7 +367,7 @@ class Scheduler(object):
         :param composition: (Composition) - the Composition this scheduler is scheduling for
         :param conditions: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         """
-        self.conditions = conditions if conditions is not None else ConditionSet()
+        self.conditions = ConditionSet(conditions)
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
@@ -543,11 +543,11 @@ class Scheduler(object):
             Attributes
             ----------
 
-                execution_id : uuid.uuid4
+                execution_id
                     the execution_id to initialize counts for
                     default : self.default_execution_id
 
-                base_execution_id : uuid.uuid4
+                base_execution_id
                     if specified, the counts for execution_id will be copied from the counts of base_execution_id
                     default : None
         """
@@ -561,7 +561,7 @@ class Scheduler(object):
 
             if base_execution_id is not None:
                 if base_execution_id not in self.counts_total:
-                    raise SchedulerError('UUID {0} not in {1}.counts_total'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.counts_total'.format(base_execution_id, self))
 
                 self.counts_total[execution_id] = {
                     ts: {n: self.counts_total[base_execution_id][ts][n] for n in self.nodes} for ts in TimeScale
@@ -581,7 +581,7 @@ class Scheduler(object):
 
             if base_execution_id is not None:
                 if base_execution_id not in self.counts_useable:
-                    raise SchedulerError('UUID {0} not in {1}.counts_useable'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.counts_useable'.format(base_execution_id, self))
 
                 self.counts_useable[execution_id] = {
                     node: {n: self.counts_useable[base_execution_id][node][n] for n in self.nodes} for node in self.nodes
@@ -594,7 +594,7 @@ class Scheduler(object):
         if execution_id not in self.execution_list:
             if base_execution_id is not None:
                 if base_execution_id not in self.execution_list:
-                    raise SchedulerError('UUID {0} not in {1}.execution_list'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.execution_list'.format(base_execution_id, self))
 
                 self.execution_list[execution_id] = list(self.execution_list[base_execution_id])
             else:
@@ -608,7 +608,7 @@ class Scheduler(object):
         if execution_id not in self.clocks:
             if base_execution_id is not None:
                 if base_execution_id not in self.clocks:
-                    raise SchedulerError('UUID {0} not in {1}.clocks'.format(base_execution_id, self))
+                    raise SchedulerError('execution_id {0} not in {1}.clocks'.format(base_execution_id, self))
 
                 self.clocks[execution_id] = copy.deepcopy(self.clocks[base_execution_id])
             else:
@@ -826,21 +826,18 @@ class Scheduler(object):
 
         return self.execution_list[context.execution_id]
 
+    @property
     def _dict_summary(self):
         return {
             'conditions': {
                 'termination': {
-                    str(k): str(v) for k, v in self.termination_conds.items()
+                    str(k): v._dict_summary for k, v in self.termination_conds.items()
                 },
                 'node': {
-                    n.name: str(self.conditions[n]) for n in self.nodes if n in self.conditions
+                    n.name: self.conditions[n]._dict_summary for n in self.nodes if n in self.conditions
                 }
             }
         }
-
-    def json_summary(self):
-        import json
-        return json.dumps(self._dict_summary(), sort_keys=True, indent=4, separators=(',', ': '))
 
     @property
     def clock(self):

@@ -97,14 +97,14 @@ def diff_fct(variable):
 def test_fct(variable):
     if variable is None:
         return 0
-    return variable[1]-variable[0]
+    return variable[1] - variable[0]
 
 if PERCEPTUAL_DISTORT:
     CTL_PARAM = VARIANCE
 else:
     CTL_PARAM = SLOPE
 # agent_comp._analyze_graph()
-ocm = OptimizationControlMechanism(features=[player_obs.input_state, predator_obs.input_state, prey_obs.input_state],
+ocm = OptimizationControlMechanism(features=[player_obs.input_port, predator_obs.input_port, prey_obs.input_port],
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),
@@ -112,24 +112,24 @@ ocm = OptimizationControlMechanism(features=[player_obs.input_state, predator_ob
                                            # function=diff_fct,
                                            function=test_fct,
                                            monitor=[player_obs,
-                                                    player_obs.input_state,
+                                                    player_obs.input_port,
                                                     predator_obs,
-                                                    predator_obs.input_state,
+                                                    predator_obs.input_port,
                                                     prey_obs,
-                                                    prey_obs.input_state
+                                                    prey_obs.input_port
                                                     ]
-                                           # monitored_output_states=[player_input, player_obs,
+                                           # monitored_output_ports=[player_input, player_obs,
                                            #                          predator_input, predator_obs,
                                            #                          prey_input, prey_obs
                                            #                          ]
-                                           # monitored_output_states=[agent_comp.input_CIM_states[
-                                           #                              player_obs.input_state][1],
+                                           # monitored_output_ports=[agent_comp.input_CIM_ports[
+                                           #                              player_obs.input_port][1],
                                            #                          player_obs,
-                                           #                          agent_comp.input_CIM_states[
-                                           #                              predator_obs.input_state][1],
+                                           #                          agent_comp.input_CIM_ports[
+                                           #                              predator_obs.input_port][1],
                                            #                          predator_obs,
-                                           #                          agent_comp.input_CIM_states[
-                                           #                              prey_obs.input_state][1],
+                                           #                          agent_comp.input_CIM_ports[
+                                           #                              prey_obs.input_port][1],
                                            #                          prey_obs
                                            #                          ]
                                    ),
@@ -212,7 +212,7 @@ def main():
                                                  },
                                          bin_execute=BIN_EXECUTE
                                          )
-            action = np.where(run_results[0]==0,0,run_results[0]/np.abs(run_results[0]))
+            action = np.where(run_results[0] == 0, 0, run_results[0] / np.abs(run_results[0]))
             # action = np.squeeze(np.where(greedy_action_mech.value==0,0,
             #                              greedy_action_mech.value[0]/np.abs(greedy_action_mech.value[0])))
             observation, reward, done, _ = env.step(action)

@@ -15,14 +15,14 @@ Shell Classes
 
 Used to allow classes to refer to one another without creating import loops,
 including (but not restricted to) the following dependencies:
-- `Projection <Projection>` subclasses must see (particular) `State <State>` subclasses in order to assign
+- `Projection <Projection>` subclasses must see (particular) `Port <Port>` subclasses in order to assign
   `kwProjectionSender`
-- `State <State>` subclasses must see (particular) `Projection <Projection>` subclasses in order to assign
+- `Port <Port>` subclasses must see (particular) `Projection <Projection>` subclasses in order to assign
   `PROJECTION_TYPE`
 - `Process` must see `Mechanism <Mechanism>` subclasses to assign `PsyNeuLink.Components.DefaultMechanism`
 
 TBI:
-  `Mechanism <Mechanism>`, `Projection <Projection>` (and possibly `State <State>`) classes should be extensible:
+  `Mechanism <Mechanism>`, `Projection <Projection>` (and possibly `Port <Port>`) classes should be extensible:
   developers should be able to create, register and refer to subclasses (plug-ins), without modifying core code
 
 """
@@ -30,7 +30,7 @@ TBI:
 from psyneulink.core.components.component import Component
 
 __all__ = [
-    'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'State', 'System_Base',
+    'Function', 'Mechanism', 'Process_Base', 'Projection', 'ShellClass', 'ShellClassError', 'Port', 'System_Base',
 ]
 
 
@@ -59,38 +59,14 @@ class Composition_Base(ShellClass):
 # ******************************************* SYSTEM *******************************************************************
 
 class System_Base(ShellClass):
-
-    def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 param_defaults=None,
-                 name=None,
-                 prefs=None,
-                 context=None):
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=param_defaults,
-                         name=name,
-                         prefs=prefs)
+    pass
 
 
 # ****************************************** PROCESS *******************************************************************
 
 
 class Process_Base(ShellClass):
-    def __init__(self,
-                 default_variable=None,
-                 size=None,
-                 param_defaults=None,
-                 name=None,
-                 prefs=None):
-
-        super().__init__(default_variable=default_variable,
-                         size=size,
-                         param_defaults=param_defaults,
-                         name=name,
-                         prefs=prefs)
+    pass
 
 # ******************************************* MECHANISM ****************************************************************
 
@@ -120,10 +96,10 @@ class Mechanism(ShellClass):
         raise ShellClassError("Must implement adjust_function in {0}".format(self))
 
 
-# ********************************************* STATE ******************************************************************
+# ********************************************* PORT ******************************************************************
 
 
-class State(ShellClass):
+class Port(ShellClass):
 
     @property
     def owner(self):
@@ -132,14 +108,6 @@ class State(ShellClass):
     @owner.setter
     def owner(self, assignment):
         raise ShellClassError("Must implement @owner.setter method in {0}".format(self.__class__.__name__))
-
-    @property
-    def projections(self):
-        raise ShellClassError("Must implement @property projections method in {0}".format(self.__class__.__name__))
-
-    @projections.setter
-    def projections(self, assignment):
-        raise ShellClassError("Must implement @projections.setter method in {0}".format(self.__class__.__name__))
 
     def _validate_variable(self, variable, context=None):
         raise ShellClassError("Must implement _validate_variable in {0}".format(self))

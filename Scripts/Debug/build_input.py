@@ -26,7 +26,7 @@ def to1HOT(subfeatureNum, colValue):
 	return thisarr
 
 
-# returns an array with 2 elements; 
+# returns an array with 2 elements;
 # a 1 in the first position means color naming task
 def getReward(CN_rewarded):
 	if CN_rewarded == 1:
@@ -82,7 +82,7 @@ subj_id = 1
 for index, row in df.iterrows():
 	if row[0] != subj_id:
 
-		xor_dict.append([color_stim, word_stim, color_task, 
+		xor_dict.append([color_stim, word_stim, color_task,
 			word_task, reward, freq, trial_type])
 
 		color_stim = []
@@ -104,7 +104,7 @@ for index, row in df.iterrows():
 	freq.append(row[1])
 	trial_type.append(row[2])
 
-xor_dict.append([color_stim, word_stim, color_task, 
+xor_dict.append([color_stim, word_stim, color_task,
 			word_task, reward, freq, trial_type])
 
 # print(xor_dict)

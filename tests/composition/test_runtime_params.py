@@ -15,19 +15,19 @@ class TestRuntimeParams:
         C.add_node(T)
 
         assert T.function.slope == 1.0
-        assert T.parameter_states['slope'].value == 1.0
+        assert T.parameter_ports['slope'].value == 1.0
 
         # Runtime param used for slope
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
         C.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
         assert T.function.slope == 1.0
-        assert T.parameter_states['slope'].parameters.value.get(C) == 1.0
+        assert T.parameter_ports['slope'].parameters.value.get(C) == 1.0
         assert T.parameters.value.get(C.default_execution_id) == 20.0
 
         # Runtime param NOT used for slope
         C.run(inputs={T: 2.0})
         assert T.function.slope == 1.0
-        assert T.parameter_states['slope'].parameters.value.get(C) == 1.0
+        assert T.parameter_ports['slope'].parameters.value.get(C) == 1.0
         assert T.parameters.value.get(C.default_execution_id) == 2.0
 
     def test_composition_run_mechanism_param_no_condition(self):
@@ -38,20 +38,20 @@ class TestRuntimeParams:
         C.add_node(T)
 
         assert T.noise == 0.0
-        assert T.parameter_states['noise'].value == 0.0
+        assert T.parameter_ports['noise'].value == 0.0
 
         # Runtime param used for noise
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
         C.run(inputs={T: 2.0},
               runtime_params={T: {"noise": 10.0}})
         assert T.noise == 0.0
-        assert T.parameter_states['noise'].parameters.value.get(C) == 0.0
+        assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
         assert T.parameters.value.get(C.default_execution_id) == 12.0
 
         # Runtime param NOT used for noise
         C.run(inputs={T: 2.0}, )
         assert T.noise == 0.0
-        assert T.parameter_states['noise'].parameters.value.get(C) == 0.0
+        assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
         assert T.parameters.value.get(C.default_execution_id) == 2.0
 
     def test_composition_run_with_condition(self):
@@ -66,7 +66,7 @@ class TestRuntimeParams:
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it
         C.run(inputs={T: 2.0},
               runtime_params={T: {"noise": (10.0, AtTrial(1))}},
-              # scheduler_processing=S,
+              # scheduler=S,
               num_trials=4)
 
         # Runtime param NOT used for noise
@@ -88,7 +88,7 @@ class TestRuntimeParams:
         C.add_node(T)
 
         assert T.noise == 0.0
-        assert T.parameter_states['noise'].value == 0.0
+        assert T.parameter_ports['noise'].value == 0.0
 
         # Runtime param used for noise
         # ONLY mechanism value should reflect runtime param -- attr should be changed back by the time we inspect it

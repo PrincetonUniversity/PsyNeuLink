@@ -10,6 +10,10 @@
 
 from llvmlite import ir
 from contextlib import contextmanager
+import ctypes
+from ctypes import util
+
+from .debug import debug_env
 
 
 @contextmanager
@@ -43,7 +47,7 @@ def for_loop(builder, start, stop, inc, id):
 
     builder.position_at_end(out_block)
 
-# Helper that builds a for loop starting at 0, stopping at stop, and incremented by 1
+
 def for_loop_zero_inc(builder, stop, id):
     start = stop.type(0)
     inc = stop.type(1)
@@ -73,6 +77,26 @@ def uint_min(builder, val, other):
     return builder.select(cond, val, other)
 
 
+def get_param_ptr(builder, component, params_ptr, param_name):
+    idx = ir.IntType(32)(component._get_param_ids().index(param_name))
+    return builder.gep(params_ptr, [ir.IntType(32)(0), idx],
+                       name="ptr_param_{}_{}".format(param_name, component.name))
+
+
+def get_state_ptr(builder, component, state_ptr, stateful_name):
+    idx = ir.IntType(32)(component._get_state_ids().index(stateful_name))
+    return builder.gep(state_ptr, [ir.IntType(32)(0), idx],
+                       name="ptr_state_{}_{}".format(stateful_name,
+                                                     component.name))
+
+
+def unwrap_2d_array(builder, element):
+    if isinstance(element.type.pointee, ir.ArrayType) and isinstance(element.type.pointee.element, ir.ArrayType):
+        assert element.type.pointee.count == 1
+        return builder.gep(element, [ir.IntType(32)(0), ir.IntType(32)(0)])
+    return element
+
+
 def load_extract_scalar_array_one(builder, ptr):
     val = builder.load(ptr)
     if isinstance(val.type, ir.ArrayType) and val.type.count == 1:
@@ -82,6 +106,37 @@ def load_extract_scalar_array_one(builder, ptr):
 
 def fneg(builder, val, name=""):
     return builder.fsub(val.type(-0.0), val, name)
+
+
+def tanh(ctx, builder, x):
+    # (e**2x - 1)/(e**2x + 1)
+    exp_f = ctx.get_builtin("exp", [x.type])
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    num = builder.fsub(e2x, e2x.type(1))
+    den = builder.fadd(e2x, e2x.type(1))
+    return builder.fdiv(num, den)
+
+
+def coth(ctx, builder, x):
+    # (e**2x + 1)/(e**2x - 1)
+    exp_f = ctx.get_builtin("exp", [x.type])
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    num = builder.fadd(e2x, e2x.type(1))
+    den = builder.fsub(e2x, e2x.type(1))
+    return builder.fdiv(num, den)
+
+
+def csch(ctx, builder, x):
+    # (2e**x)/(e**2x - 1)
+    exp_f = ctx.get_builtin("exp", [x.type])
+    ex = builder.call(exp_f, [x])
+    num = builder.fmul(ex.type(2), ex)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    den = builder.fsub(e2x, e2x.type(1))
+    return builder.fdiv(num, den)
 
 
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
@@ -114,6 +169,54 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
         b1.store(all_val, all_ptr)
 
     return builder.load(all_ptr)
+
+
+def printf(builder, fmt, *args, override_debug=False):
+    if "print_values" not in debug_env and not override_debug:
+        return
+    #FIXME: Fix builtin printf and use that instead of this
+    try:
+        import llvmlite.binding as llvm
+        libc = util.find_library("c")
+        llvm.load_library_permanently(libc)
+        # Address will be none if the symbol is not found
+        printf_address = llvm.address_of_symbol("printf")
+        # Direct pointer constants don't work
+        printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+        printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
+        ir_module = builder.function.module
+        fmt += "\0"
+
+        int8 = ir.IntType(8)
+        fmt_data = bytearray(fmt.encode("utf8"))
+        fmt_ty = ir.ArrayType(int8, len(fmt_data))
+        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                    name="printf_fmt_" + str(len(ir_module.globals)))
+        global_fmt.linkage = "internal"
+        global_fmt.global_constant = True
+        global_fmt.initializer = fmt_ty(fmt_data)
+
+        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+        builder.call(printf, [fmt_ptr] + list(args))
+    except Exception as e:
+        return
+
+
+def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
+
+    with array_ptr_loop(builder, array, "print_array_loop") as (b1, i):
+        printf(b1, "%lf ", b1.load(b1.gep(array, [ir.IntType(32)(0), i])), override_debug=override_debug)
+
+    printf(builder, suffix, override_debug=override_debug)
+
+
+def printf_float_matrix(builder, matrix, prefix="", suffix="\n", override_debug=False):
+    printf(builder, prefix, override_debug=override_debug)
+    with array_ptr_loop(builder, matrix, "print_row_loop") as (b1, i):
+        row = b1.gep(matrix, [ir.IntType(32)(0), i])
+        printf_float_array(b1, row, suffix="\n", override_debug=override_debug)
+    printf(builder, suffix, override_debug=override_debug)
 
 
 class ConditionGenerator:
@@ -162,7 +265,7 @@ class ConditionGenerator:
 
         # run, pass, step
         for idx in range(3):
-            if idx == 0 or all(v == 0 for v in count[:idx]) == 0:
+            if idx == 0 or not all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
                 el = builder.add(el, self.ctx.int32_ty(count[idx]))
             else:
@@ -241,9 +344,11 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, EveryNCalls
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, Never
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
+        if isinstance(condition, Never):
+            return ir.IntType(1)(0)
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
@@ -257,6 +362,19 @@ class ConditionGenerator:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
+        elif isinstance(condition, AtTrial):
+            trial_num = condition.args[0]
+            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+            ts = builder.load(ts_ptr)
+            trial = builder.extract_value(ts, 0)
+            return builder.icmp_unsigned("==", trial, trial.type(trial_num))
+        elif isinstance(condition, AtPass):
+            pass_num = condition.args[0]
+            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+            ts = builder.load(ts_ptr)
+            current_pass = builder.extract_value(ts, 1)
+            return builder.icmp_unsigned("==", current_pass,
+                                         current_pass.type(pass_num))
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 

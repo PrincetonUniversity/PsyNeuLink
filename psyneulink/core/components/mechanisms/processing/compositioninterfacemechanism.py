@@ -8,8 +8,20 @@
 
 # **************************************  CompositionInterfaceMechanism *************************************************
 
-
 """
+
+Contents
+--------
+
+  * `CompositionInterfaceMechanism_Overview`
+  * `CompositionInterfaceMechanism_Creation`
+  * `CompositionInterfaceMechanism_Structure`
+  * `CompositionInterfaceMechanism_Execution`
+  * `CompositionInterfaceMechanism_Class_Reference`
+
+
+.. _CompositionInterfaceMechanism_Overview:
+
 Overview
 --------
 
@@ -22,7 +34,7 @@ Creating an CompositionInterfaceMechanism
 -----------------------------------------
 
 A CompositionInterfaceMechanism is created automatically when an `INPUT <NodeRole.INPUT>` Mechanism is identified in a
-Composition. When created, the CompositionInterfaceMechanism's OutputState is set directly by the Composition. This
+Composition. When created, the CompositionInterfaceMechanism's OutputPort is set directly by the Composition. This
 Mechanism should never be executed, and should never be created by a user.
 
 .. _CompositionInterfaceMechanism_Structure
@@ -54,11 +66,13 @@ from psyneulink.core.components.functions.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.states.inputstate import InputState
-from psyneulink.core.components.states.outputstate import OutputState
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, kwPreferenceSetName
-from psyneulink.core.globals.preferences.componentpreferenceset import is_pref_set, kpReportOutputPref
+from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, PREFERENCE_SET_NAME
+from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
 __all__ = ['CompositionInterfaceMechanism']
@@ -66,86 +80,50 @@ __all__ = ['CompositionInterfaceMechanism']
 
 class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     """
-    CompositionInterfaceMechanism(                            \
-    default_variable=None,                               \
-    size=None,                                              \
-    function=Identity() \
-    params=None,                                            \
-    name=None,                                              \
-    prefs=None)
+    CompositionInterfaceMechanism(  \
+        function=Identity())
 
-    Implements the CompositionInterfaceMechanism subclass of Mechanism.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
+    inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
 
-    Arguments
-    ---------
-
-    default_variable : number, list or np.ndarray
-        the input to the Mechanism to use if none is provided in a call to its
-        `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods;
-        also serves as a template to specify the length of `variable <CompositionInterfaceMechanism.variable>` for
-        `function <CompositionInterfaceMechanism.function>`, and the `primary outputState <OutputState_Primary>` of the
-        Mechanism.
-
-    size : int, list or np.ndarray of ints
-        specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
-
-    function : InterfaceFunction : default Identity
-        specifies the function used to transform the variable before assigning it to the Mechanism's OutputState(s)
-
-    params : Optional[Dict[param keyword, param value]]
-        a `parameter dictionary <ParameterState_Specifying_Parameters>` that can be used to specify the parameters for
-        the `Mechanism <Mechanism>`, parameters for its `function <CompositionInterfaceMechanism.function>`, and/or a
-        custom function and its parameters.  Values specified for parameters in the dictionary override any assigned
-        to those parameters in arguments of the constructor.
-
-    name : str : default CompositionInterfaceMechanism-<index>
-        a string used for the name of the Mechanism.
-        If not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        If it is not specified, a default is assigned using `classPreferences` defined in __init__.py
-        (see :doc:`PreferenceSet <LINK>` for details).
+    See `Mechanism <Mechanism_Class_Reference>` for arguments and additonal attributes.
 
     Attributes
     ----------
-    variable : value: default
-        the input to Mechanism's ``function``.
 
-    name : str : default CompositionInterfaceMechanism-<index>
-        the name of the Mechanism.
-        Specified in the **name** argument of the constructor for the Mechanism;
-        if not is specified, a default is assigned by `MechanismRegistry`
-        (see :doc:`Registry <LINK>` for conventions used in naming, including for default and duplicate names).
-
-    prefs : Optional[PreferenceSet or specification dict : Mechanism.classPreferences]
-        the `PreferenceSet` for Mechanism.
-        Specified in the **prefs** argument of the constructor for the Mechanism;
-        if it is not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
-        (see :doc:`PreferenceSet <LINK>` for details).
+    function : InterfaceFunction : default Identity
+        the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
+    outputPortTypes = [OutputPort, ControlSignal]
 
     classPreferenceLevel = PreferenceLevel.TYPE
-    # These will override those specified in TypeDefaultPreferences
+    # These will override those specified in TYPE_DEFAULT_PREFERENCES
     classPreferences = {
-        kwPreferenceSetName: 'CompositionInterfaceMechanismCustomClassPreferences',
-        kpReportOutputPref: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
+        PREFERENCE_SET_NAME: 'CompositionInterfaceMechanismCustomClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE)}
 
-    paramClassDefaults = Mechanism_Base.paramClassDefaults.copy()
-    paramClassDefaults.update({})
-    paramNames = paramClassDefaults.keys()
+    class Parameters(ProcessingMechanism_Base.Parameters):
+        """
+            Attributes
+            ----------
+
+                function
+                    see `function <CompositionInterfaceMechanism.function>`
+
+                    :default value: `Identity`
+                    :type: `Function`
+        """
+        function = Parameter(Identity, stateful=False, loggable=False)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_states: tc.optional(tc.any(Iterable, Mechanism, OutputState, InputState)) = None,
-                 function=Identity(),
+                 input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
+                 function=None,
                  composition=None,
                  params=None,
                  name=None,
@@ -156,14 +134,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         self.composition = composition
         self.connected_to_composition = False
 
-        # Assign args to params and functionParams dicts
-        params = self._assign_args_to_param_dicts(function=function,
-                                                  input_states=input_states,
-                                                  params=params)
-
         super(CompositionInterfaceMechanism, self).__init__(default_variable=default_variable,
                                                             size=size,
-                                                            input_states=input_states,
+                                                            input_ports=input_ports,
                                                             function=function,
                                                             params=params,
                                                             name=name,

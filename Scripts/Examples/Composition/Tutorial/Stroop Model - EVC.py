@@ -34,7 +34,7 @@ decision = DDM(name='DECISION',
                                                  noise=(0.5),
                                                  starting_point=(0),
                                                  t0=0.15),
-               output_states=[DECISION_VARIABLE,
+               output_ports=[DECISION_VARIABLE,
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD]
                )
@@ -56,14 +56,14 @@ Stroop_model.add_node(reward)
 # Assign Scheduler Conditions:
 settling_time = 1
 # scheduler = Scheduler(composition=Stroop_model)
-Stroop_model.scheduler_processing.add_condition(color_hidden, EveryNCalls(task, settling_time))
-Stroop_model.scheduler_processing.add_condition(word_hidden, EveryNCalls(task, settling_time))
+Stroop_model.scheduler.add_condition(color_hidden, EveryNCalls(task, settling_time))
+Stroop_model.scheduler.add_condition(word_hidden, EveryNCalls(task, settling_time))
 
 # Construct and add ControlMechanism
 control_signal_search_range = SampleSpec(start=1.0, stop=1.8, step=0.2)
 evc = OptimizationControlMechanism(name='EVC',
                                    agent_rep=Stroop_model,
-                                   features=[color_input.input_state, word_input.input_state, reward.input_state],
+                                   features=[color_input.input_port, word_input.input_port, reward.input_port],
                                    feature_function=AdaptiveIntegrator(rate=1.0),
                                    # feature_function=AdaptiveIntegrator,
                                    objective_mechanism= \
@@ -71,7 +71,7 @@ evc = OptimizationControlMechanism(name='EVC',
                                                name='EVC Objective Mechanism',
                                                function=LinearCombination(operation=PRODUCT),
                                                monitor=[reward,
-                                                        (decision.output_states[PROBABILITY_UPPER_THRESHOLD], 1, -1)]),
+                                                        (decision.output_ports[PROBABILITY_UPPER_THRESHOLD], 1, -1)]),
                                    function=GridSearch,
                                    control_signals=[ControlSignal(modulates=[(GAIN, color_hidden)],
                                                                   function=Linear,
@@ -110,7 +110,7 @@ def print_after():
     print(f'\nEnd of trial {t}:')
     print(f'\t\t\t\tcolor  word')
     print(f'\ttask:\t\t{task.value[0]}')
-    print(f'\ttask gain:\t   {task.parameter_states[GAIN].value}')
+    print(f'\ttask gain:\t   {task.parameter_ports[GAIN].value}')
     print(f'\t\t\t\tred   green')
     print(f'\toutput:\t\t{output.value[0]}')
     print(f'\tdecision:\t{decision.value[0]}{decision.value[1]}')
@@ -126,9 +126,9 @@ task.reinitialize_when=AtPass(n=0)
 # task.reinitialize_when=AtTrialStart()
 
 num_trials = 2
-stimuli = {color_input:[red]*num_trials,
-           word_input:[green]*num_trials,
-           task_input:[color]*num_trials}
+stimuli = {color_input:[red] * num_trials,
+           word_input:[green] * num_trials,
+           task_input:[color] * num_trials}
 Stroop_model.run(inputs=stimuli,
                  # animate=True,
                  animate={'show_controller':True,

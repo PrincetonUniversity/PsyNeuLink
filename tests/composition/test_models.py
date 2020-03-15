@@ -268,12 +268,12 @@ class TestModels:
         result = z.run(inputs={myMechanism: [[40]]})[0][0]
 
         expected_output = [
-            (myMechanism.input_states[0].parameters.value.get(z), np.array([40.])),
-            (myMechanism.output_states[0].parameters.value.get(z), np.array([10.])),
-            (myMechanism_2.input_states[0].parameters.value.get(z), np.array([10.])),
-            (myMechanism_2.output_states[0].parameters.value.get(z), np.array([20.])),
-            (myMechanism_3.input_states[0].parameters.value.get(z), np.array([20.])),
-            (myMechanism_3.output_states[0].parameters.value.get(z), np.array([30.])),
+            (myMechanism.input_ports[0].parameters.value.get(z), np.array([40.])),
+            (myMechanism.output_ports[0].parameters.value.get(z), np.array([10.])),
+            (myMechanism_2.input_ports[0].parameters.value.get(z), np.array([10.])),
+            (myMechanism_2.output_ports[0].parameters.value.get(z), np.array([20.])),
+            (myMechanism_3.input_ports[0].parameters.value.get(z), np.array([20.])),
+            (myMechanism_3.output_ports[0].parameters.value.get(z), np.array([30.])),
             (result, np.array([30.])),
         ]
 
@@ -471,8 +471,8 @@ class TestModels:
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
         def pass_threshold(mech1, mech2, thresh, context=None):
-            results1 = mech1.output_states[0].parameters.value.get(context)
-            results2 = mech2.output_states[0].parameters.value.get(context)
+            results1 = mech1.output_ports[0].parameters.value.get(context)
+            results2 = mech2.output_ports[0].parameters.value.get(context)
             for val in results1:
                 if val >= thresh:
                     return True
@@ -604,7 +604,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
-            output_states=[{  # Create new output state by applying
+            output_ports=[{  # Create new OutputPort by applying
                 pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_special_Logistic" function
                 pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                 pnl.FUNCTION: my_special_Logistic
@@ -618,7 +618,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
-            output_states=[{  # Create new output state by applying
+            output_ports=[{  # Create new OutputPort by applying
                 pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_special_Logistic" function
                 pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                 pnl.FUNCTION: my_special_Logistic
@@ -632,7 +632,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition,  # Inhibition among units within a layer
-            output_states=[{  # Create new output state by applying
+            output_ports=[{  # Create new OutputPort by applying
                 pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_special_Logistic" function
                 pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
                 pnl.FUNCTION: my_special_Logistic
@@ -640,7 +640,7 @@ class TestModels:
             name='RESPONSE_LAYER'
         )
 
-        # The task_demand_layer is set up as the color_feature_layer but with a different python function on it's output state
+        # The task_demand_layer is set up as the color_feature_layer but with a different python function on it's OutputPort
         # and a differnet inhibition weight on the hetero
         task_demand_layer = pnl.RecurrentTransferMechanism(
             size=2,  # Define unit size
@@ -648,7 +648,7 @@ class TestModels:
             integrator_mode=True,  # Set IntegratorFunction mode to True
             integration_rate=Lambda,  # smoothing factor ==  integration rate
             hetero=inhibition_task,  # Inhibition among units within a layer
-            output_states=[  # Create new output state by applying
+            output_ports=[  # Create new OutputPort by applying
                 {
                     pnl.NAME: 'SPECIAL_LOGISTIC',  # the "my_conflict_function" function
                     pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
@@ -729,11 +729,11 @@ class TestModels:
 
         # to send a control signal from the task demand layer to the response layer,
         # set matrix to -1 to reduce response layer activation
-        # specify the sender of the projection which is the second output state the task demand layer
+        # specify the sender of the projection which is the second OutputPort the task demand layer
         # specify the receiver of the projection
         task_conflict_to_response_weights = pnl.MappingProjection(
             matrix=np.array([[-1.0, -1.0]]),
-            sender=task_demand_layer.output_states[1],
+            sender=task_demand_layer.output_ports[1],
             receiver=response_layer
         )
 
@@ -795,8 +795,8 @@ class TestModels:
             PCTC.add_linear_processing_pathway(pathway)
 
         def pass_threshold(response_layer, thresh, context=None):
-            results1 = response_layer.output_state.parameters.value.get(context)[0]  # red response
-            results2 = response_layer.output_state.parameters.value.get(context)[1]  # green response
+            results1 = response_layer.output_port.parameters.value.get(context)[0]  # red response
+            results2 = response_layer.output_port.parameters.value.get(context)[1]  # green response
             if results1 >= thresh or results2 >= thresh:
                 return True
             return False
@@ -829,7 +829,7 @@ class TestModels:
         results_1 = PCTC.run(inputs=initialize_input,
                              num_trials=settle)  # run system to settle for 200 trials with congruent stimuli input
 
-        # results_1 is all zeros due to output state function
+        # results_1 is all zeros due to OutputPort function
         #
         # assert np.allclose(words_input_layer.value, [[1., 0.]])
         # assert np.allclose(word_feature_layer.value, [[0.00550112, 0.00550112]])
@@ -851,8 +851,8 @@ class TestModels:
 
         # KDM 8/23/18: below must be added because these were expected to be changed with the above matrix setting, but this has appeared
         # to be incorrect behavior, and the reason for doing it is unknown
-        color_input_weights.parameter_states['matrix'].function.parameters.previous_value.set(color_input_weights.matrix, PCTC, override=True)
-        word_input_weights.parameter_states['matrix'].function.parameters.previous_value.set(word_input_weights.matrix, PCTC, override=True)
+        color_input_weights.parameter_ports['matrix'].function.parameters.previous_value.set(color_input_weights.matrix, PCTC, override=True)
+        word_input_weights.parameter_ports['matrix'].function.parameters.previous_value.set(word_input_weights.matrix, PCTC, override=True)
 
         results_2 = PCTC.run(inputs=congruent_input,
                              termination_processing=terminate_trial)  # run system with congruent stimulus input until
@@ -920,7 +920,7 @@ class TestModels:
     #                                                     hetero=-2.0,
     #                                                     integrator_mode=True,
     #                                                     integration_rate=0.01,
-    #                                                     output_states=[pnl.RECURRENT_OUTPUT.RESULT,
+    #                                                     output_ports=[pnl.RESULT,
     #                                                                    {pnl.NAME: 'DECISION_ENERGY',
     #                                                                     pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
     #                                                                     pnl.FUNCTION: pnl.Stability(

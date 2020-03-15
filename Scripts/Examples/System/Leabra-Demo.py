@@ -46,9 +46,9 @@ train_flag = False  # should the LeabraMechanism and leabra network learn?
 # The leabra network and LeabraMechanism experience this bug equally.
 
 # NOTE: The reason TransferMechanisms are used below is because there is currently a bug where LeabraMechanism
-# (and other `Mechanism`s with multiple input states) cannot be used as origin Mechanisms for a System. If you desire
+# (and other `Mechanism` with multiple input ports) cannot be used as origin Mechanisms for a System. If you desire
 # to use a LeabraMechanism as an origin Mechanism, you can work around this bug by creating two `TransferMechanism`s
-# as origin Mechanisms instead, and have these two TransferMechanisms pass their output to the InputStates of
+# as origin Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of
 # the LeabraMechanism.
 
 # create a LeabraMechanism in PsyNeuLink
@@ -67,7 +67,7 @@ T1 = pnl.TransferMechanism(name='T1', size=input_size, function=psyneulink.core.
 T2 = pnl.TransferMechanism(name='T2', size=output_size, function=psyneulink.core.components.functions.transferfunctions.Linear)
 
 p1 = pnl.Process(pathway=[T1, L])
-proj = pnl.MappingProjection(sender=T2, receiver=L.input_states[1])
+proj = pnl.MappingProjection(sender=T2, receiver=L.input_ports[1])
 p2 = pnl.Process(pathway=[T2, proj, L])
 s = pnl.System(processes=[p1, p2])
 

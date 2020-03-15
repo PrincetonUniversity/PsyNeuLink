@@ -128,34 +128,34 @@ class TestNaming:
 
     # ------------------------------------------------------------------------------------------------
     # TEST 9
-    # Test that InputStates and Projections constructed on their own and assigned are properly named
+    # Test that InputPorts and Projections constructed on their own and assigned are properly named
 
-    def test_input_state_and_assigned_projection_names(self):
+    def test_input_port_and_assigned_projection_names(self):
         T1 = pnl.TransferMechanism(name='T1')
-        T2 = pnl.TransferMechanism(name='T2', input_states=[T1])
-        I1 = pnl.InputState(owner=T2)
-        I2 = pnl.InputState(projections=[T1])
-        assert I2.name == 'Deferred Init InputState'
-        T2.add_states([I2])
-        assert I1.name == 'InputState-1'
-        assert I2.name == 'InputState-2'
-        assert T2.input_states[0].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputState-0]'
-        assert T2.input_states[2].path_afferents[0].name == \
-               'MappingProjection from T1[RESULTS] to T2[InputState-2]'
+        T2 = pnl.TransferMechanism(name='T2', input_ports=[T1])
+        I1 = pnl.InputPort(owner=T2)
+        I2 = pnl.InputPort(projections=[T1])
+        assert I2.name == 'Deferred Init InputPort'
+        T2.add_ports([I2])
+        assert I1.name == 'InputPort-1'
+        assert I2.name == 'InputPort-2'
+        assert T2.input_ports[0].path_afferents[0].name == \
+               'MappingProjection from T1[RESULT] to T2[InputPort-0]'
+        assert T2.input_ports[2].path_afferents[0].name == \
+               'MappingProjection from T1[RESULT] to T2[InputPort-2]'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 10
-    # Test that OutputStates are properly named
+    # Test that OutputPorts are properly named
 
-        T1 = pnl.TransferMechanism(output_states=['MY OUTPUT_STATE',[0]])
-        assert T1.output_states[0].name == 'MY OUTPUT_STATE'
-        assert T1.output_states[1].name == 'OutputState-0'
-        O = pnl.OutputState(owner=T1)
-        assert T1.output_states[2].name == 'OutputState-1'
-        O2 = pnl.OutputState()
-        T1.add_states([O2])
-        assert T1.output_states[3].name == 'OutputState-2'
+        T1 = pnl.TransferMechanism(output_ports=['MY OUTPUT_PORT',[0]])
+        assert T1.output_ports[0].name == 'MY OUTPUT_PORT'
+        assert T1.output_ports[1].name == 'OutputPort-0'
+        O = pnl.OutputPort(owner=T1)
+        assert T1.output_ports[2].name == 'OutputPort-1'
+        O2 = pnl.OutputPort()
+        T1.add_ports([O2])
+        assert T1.output_ports[3].name == 'OutputPort-2'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 11
@@ -166,24 +166,24 @@ class TestNaming:
         D2 = pnl.DDM(name='D2')
 
         # ControlSignal with one ControlProjection
-        C1 = pnl.ControlMechanism(control_signals=[D1.parameter_states[
+        C1 = pnl.ControlMechanism(control_signals=[D1.parameter_ports[
                                                        psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE]])
         assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
         assert C1.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
-        C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[
+        C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
-                                                                     D1.parameter_states[
-                                                                         psyneulink.core.components.functions.distributionfunctions.THRESHOLD]]}])
+                                                                     D1.parameter_ports[
+                                                                         psyneulink.core.globals.keywords.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
         assert C2.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'
 
         # ControlSignal with two ControlProjection to two parameters of different Mechanisms
-        C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_states[
+        C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
-                                                                     D2.parameter_states[
+                                                                     D2.parameter_ports[
                                                                          psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE]]}])
         assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
         assert C3.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
@@ -195,30 +195,30 @@ class TestNaming:
 
     def test_gating_signal_and_gating_projection_names(self):
         T3 = pnl.TransferMechanism(name='T3')
-        T4 = pnl.TransferMechanism(name='T4', input_states=['First State','Second State'])
+        T4 = pnl.TransferMechanism(name='T4', input_ports=['First Port','Second Port'])
 
         # GatingSignal with one GatingProjection
         G1 = pnl.GatingMechanism(gating_signals=[T3])
-        assert G1.gating_signals[0].name == 'T3[InputState-0] GatingSignal'
-        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
+        assert G1.gating_signals[0].name == 'T3[InputPort-0] GatingSignal'
+        assert G1.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'
 
-        # GatingSignal with two GatingProjections to two States of same Mechanism
-        G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_states[0], T4.input_states[1]]}])
-        assert G2.gating_signals[0].name == 'T4[First State, Second State] GatingSignal'
-        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First State]'
-        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second State]'
+        # GatingSignal with two GatingProjections to two Ports of same Mechanism
+        G2 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T4.input_ports[0], T4.input_ports[1]]}])
+        assert G2.gating_signals[0].name == 'T4[First Port, Second Port] GatingSignal'
+        assert G2.gating_signals[0].efferents[0].name == 'GatingProjection for T4[First Port]'
+        assert G2.gating_signals[0].efferents[1].name == 'GatingProjection for T4[Second Port]'
 
-        # GatingSignal with two GatingProjections to two States of different Mechanisms
+        # GatingSignal with two GatingProjections to two Ports of different Mechanisms
         G3 = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS:[T3, T4]}])
         assert G3.gating_signals[0].name == 'GatingSignal-0 divergent GatingSignal'
-        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputState-0]'
-        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First State]'
+        assert G3.gating_signals[0].efferents[0].name == 'GatingProjection for T3[InputPort-0]'
+        assert G3.gating_signals[0].efferents[1].name == 'GatingProjection for T4[First Port]'
 
         # GatingProjections to ProcessingMechanism from GatingSignals of existing GatingMechanism
         T5 = pnl.TransferMechanism(name='T5',
-                                   input_states=[T3.output_states[pnl.RESULTS],
+                                   input_ports=[T3.output_ports[pnl.RESULT],
                                                  G3.gating_signals['GatingSignal-0 divergent GatingSignal']],
-                                   output_states=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
+                                   output_ports=[G3.gating_signals['GatingSignal-0 divergent GatingSignal']])
 
     def test_composition_names(self):
         C1 = pnl.Composition()

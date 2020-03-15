@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
+    'sphinx_autodoc_typehints'
     # 'sphinx.ext.imgmath'
 ]
 
@@ -131,10 +132,10 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-import sphinx_rtd_theme
-html_theme = "sphinx_rtd_theme"
+import psyneulink_sphinx_theme
+html_theme = "psyneulink_sphinx_theme"
 # Add any paths that contain custom themes here, relative to this directory.
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_theme_path = [psyneulink_sphinx_theme.get_html_theme_path()]
 html_theme_options = {
     'navigation_depth': 5
 }
@@ -168,7 +169,7 @@ html_theme_options = {
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_css_files = ['css/custom.css']
+
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
 # directly to the root of the documentation.

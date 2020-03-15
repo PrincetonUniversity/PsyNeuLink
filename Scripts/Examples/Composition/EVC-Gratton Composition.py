@@ -1,32 +1,32 @@
-from psyneulink import *
+import psyneulink as pnl
 import numpy as np
 
-target_stim = TransferMechanism(name='Target Stimulus',
-                                function=Linear(slope=0.3324))
-flanker_stim = TransferMechanism(name='Flanker Stimulus',
-                                 function=Linear(slope=0.3545221843))
+target_stim = pnl.TransferMechanism(name='Target Stimulus',
+                                    function=pnl.Linear(slope=0.3324))
+flanker_stim = pnl.TransferMechanism(name='Flanker Stimulus',
+                                     function=pnl.Linear(slope=0.3545221843))
 
 # Processing Mechanisms (Control)
-Target_Rep = TransferMechanism(name='Target Representation')
-Flanker_Rep = TransferMechanism(name='Flanker Representation')
+Target_Rep = pnl.TransferMechanism(name='Target Representation')
+Flanker_Rep = pnl.TransferMechanism(name='Flanker Representation')
 
 # Processing Mechanism (Automatic)
-Automatic_Component = TransferMechanism(name='Automatic Component')
+Automatic_Component = pnl.TransferMechanism(name='Automatic Component')
 
 # Decision Mechanism
-Decision = DDM(name='Decision',
-               function=DriftDiffusionAnalytical(drift_rate=(1.0),
-                                                 threshold=(0.2645),
-                                                 noise=(0.5),
-                                                 starting_point=(0),
-                                                 t0=0.15),
-               output_states=[DECISION_VARIABLE,
-                              RESPONSE_TIME,
-                              PROBABILITY_UPPER_THRESHOLD]
-               )
+Decision = pnl.DDM(name='Decision',
+                   function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0),
+                                                         threshold=(0.2645),
+                                                         noise=(0.5),
+                                                         starting_point=(0),
+                                                         t0=0.15),
+                   output_ports=[pnl.DECISION_VARIABLE,
+                                  pnl.RESPONSE_TIME,
+                                  pnl.PROBABILITY_UPPER_THRESHOLD]
+                   )
 
 # Outcome Mechanism
-reward = TransferMechanism(name='reward')
+reward = pnl.TransferMechanism(name='reward')
 
 # Pathways
 target_control_pathway = [target_stim, Target_Rep, Decision]
@@ -37,42 +37,44 @@ pathways = [target_control_pathway, flanker_control_pathway, target_automatic_pa
             flanker_automatic_pathway]
 
 # Composition
-evc_gratton = Composition(name="EVCGratton")
-evc_gratton.add_node(Decision, required_roles=NodeRole.OUTPUT)
+evc_gratton = pnl.Composition(name="EVCGratton")
+evc_gratton.add_node(Decision, required_roles=pnl.NodeRole.OUTPUT)
 for path in pathways:
     evc_gratton.add_linear_processing_pathway(path)
-evc_gratton.add_node(reward, required_roles=NodeRole.OUTPUT)
+evc_gratton.add_node(reward, required_roles=pnl.NodeRole.OUTPUT)
 
 # Control Signals
-signalSearchRange = SampleSpec(start=1.0, stop=1.8, step=0.2)
+signalSearchRange = pnl.SampleSpec(start=1.0, stop=1.8, step=0.2)
 
-target_rep_control_signal = ControlSignal(modulates=[(SLOPE, Target_Rep)],
-                                          function=Linear,
-                                          variable=1.0,
-                                          intensity_cost_function=Exponential(rate=0.8046),
-                                          allocation_samples=signalSearchRange)
+target_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Target_Rep)],
+                                              variable=1.0,
+                                              intensity_cost_function=pnl.Exponential(rate=0.8046),
+                                              allocation_samples=signalSearchRange)
 
-flanker_rep_control_signal = ControlSignal(modulates=[(SLOPE, Flanker_Rep)],
-                                           function=Linear,
-                                           variable=1.0,
-                                           intensity_cost_function=Exponential(rate=0.8046),
-                                           allocation_samples=signalSearchRange)
+flanker_rep_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, Flanker_Rep)],
+                                               variable=1.0,
+                                               intensity_cost_function=pnl.Exponential(rate=0.8046),
+                                               allocation_samples=signalSearchRange)
 
-objective_mech = ObjectiveMechanism(function=LinearCombination(operation=PRODUCT),
-                                    monitor=[reward,
-                                             (Decision.output_states[
-                                                  PROBABILITY_UPPER_THRESHOLD], 1, -1)])
+objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                                        monitor=[reward,
+                                                                 (Decision.output_ports[
+                                                                      pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
 # Model Based OCM (formerly controller)
-evc_gratton.add_controller(controller=OptimizationControlMechanism(agent_rep=evc_gratton,
-                                                                   features=[target_stim.input_state,
-                                                                             flanker_stim.input_state,
-                                                                             reward.input_state],
-                                                                   feature_function=AdaptiveIntegrator(rate=1.0),
-                                                                   objective_mechanism=objective_mech,
-                                                                   function=GridSearch(),
-                                                                   control_signals=[
-                                                                       target_rep_control_signal,
-                                                                       flanker_rep_control_signal]))
+evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
+                                                                                 features=[target_stim.input_port,
+                                                                                           flanker_stim.input_port,
+                                                                                           reward.input_port],
+                                                                                 feature_function=pnl.AdaptiveIntegrator(
+                                                                                     rate=1.0),
+                                                                                 objective_mechanism=objective_mech,
+                                                                                 function=pnl.GridSearch(),
+                                                                                 control_signals=[
+                                                                                     target_rep_control_signal,
+                                                                                     flanker_rep_control_signal]))
+
+evc_gratton.show_graph(show_controller=True)
+
 evc_gratton.enable_controller = True
 
 targetFeatures = [1, 1, 1]
@@ -83,12 +85,8 @@ stim_list_dict = {target_stim: targetFeatures,
                   flanker_stim: flankerFeatures,
                   reward: rewardValues}
 
-# evc_gratton.show_graph(show_controller=True, show_cim=True)
 
-evc_gratton.run(inputs=stim_list_dict,
-                animate={'show_controller':True,
-                         'show_cim':True}
-                )
+evc_gratton.run(inputs=stim_list_dict)
 
 expected_results_array = [[[0.32257752863413636], [0.9481940753514433], [100.]],
                           [[0.42963678062444666], [0.47661180945923376], [100.]],
@@ -174,9 +172,9 @@ expected_sim_results_array = [
 
 for trial in range(len(evc_gratton.results)):
     assert np.allclose(expected_results_array[trial],
-                       # Note: Skip decision variable OutputState
+                       # Note: Skip decision variable OutputPort
                        evc_gratton.results[trial][1:])
 for simulation in range(len(evc_gratton.simulation_results)):
     assert np.allclose(expected_sim_results_array[simulation],
-                       # Note: Skip decision variable OutputState
+                       # Note: Skip decision variable OutputPort
                        evc_gratton.simulation_results[simulation][1:])

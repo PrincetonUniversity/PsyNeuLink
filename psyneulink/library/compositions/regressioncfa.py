@@ -10,22 +10,50 @@
 
 """
 
-RegressionCFA
--------------
+Contents
+--------
+
+  * `RegressionCFA_Overview`
+  * `RegressionCFA_Class_Reference`
+
+
+.. _RegressionCFA_Overview:
+
+Overview
+--------
 
 A `RegressionCFA` is a subclass of `CompositionFunctionApproximator` that parameterizes a set of `regression_weights
 <RegressionCFA.regression_weights>` over trials to predict the `net_outcome <ControlMechanism.net_outcome>` for a
-`Composition` (or part of one) controlled by an `OptimizationControlMechanism`.
+`Composition` (or part of one) controlled by an `OptimizationControlMechanism`.  The `regression_weights
+<RegressionCFA.regression_weights>` are updated by its `update_weights <RegressorCFA.update_weights>` `LearningFunction`
+assigned as its `adapt <CompositionFunctionApproximator.adapt>` method, which is called by the `evaluate
+<CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>` for a
+`Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, based on a set of `feature_values
+<OptimizationControlMechanism.feature_values>`, a `control_allocation  <ControlMechanism.control_allocation>`,
+and the `net_outcome <ControlMechanism.net_outcome>` they produced, passed to it from an `OptimizationControlMechanism`.
 
-Its `adapt <CompositionFunctionApproximator.adapt>` method updates its `regression_weights
-<RegressionCFA.regression_weights>`, based on a set of `feature_values <OptimizationControlMechanism.feature_values>`,
-a `control_allocation <ControlMechanism.control_allocation>`, and the `net_outcome <ControlMechanism.net_outcome>`
-they produced, passed to it from an `OptimizationControlMechanism`.
-
+COMMENT:
 Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `update_weights
 <RegressionCFA.regresssion_function>` to generate and return a predicted `net_outcome
 <ControlMechanism.net_outcome>` for a given set of `feature_values <OptimizationControlMechanism.feature_values>`
 and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlMechanism`.
+COMMENT
+
+The `feature_values <OptimiziationControlMechanism.feature_values>` and `control_allocation
+<ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method, and provided
+as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the `vector
+<PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s `prediction_vector
+<RegressorCFA.prediction_vector>` attribute.  The  `feature_values <OptimizationControlMechanism.feature_values>` are
+assigned to the features field of the `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
+<ControlMechanism_control_allocation>` is assigned to the control_allocation field of the `prediction_vector
+<RegressorCFA.prediction_vector>`.  The `prediction_vector <RegressorCFA.prediction_vector>` may also contain fields
+for the `costs ControlMechanism.costs` associated with the `control_allocation <ControlMechanism.control_allocation>`
+and for interactions among those terms.
+
+The `regression_weights <RegressorCFA.regression_weights>` returned by the `update_weights
+<RegressorCFA.update_weights>` are used by the RegressorCFA's `evaluate <RegressorCFA.evaluate>` method to predict
+the `net_outcome <ControlMechanism.net_outcome>` from the `prediction_vector <RegressorCFA.prediction_vector>`.
+
 
 COMMENT:
 .. note::
@@ -36,6 +64,12 @@ COMMENT:
   based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
 COMMENT
 
+
+.. _RegressionCFA_Class_Reference:
+
+Class Reference
+---------------
+
 """
 import itertools
 import numpy as np
@@ -45,8 +79,8 @@ from enum import Enum
 from itertools import product
 
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
-from psyneulink.core.components.states.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.states.state import _parse_state_spec
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
 from psyneulink.core.globals.keywords import ALL, CONTROL_SIGNALS, DEFAULT_VARIABLE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
@@ -101,13 +135,13 @@ class PV(Enum):
     # FCC =  auto()
     # FFCC = auto()
     # COST = auto()
-    F =    0
-    C =    1
-    FF =   2
-    CC =   3
-    FC =   4
-    FFC =  5
-    FCC =  6
+    F    = 0
+    C    = 1
+    FF   = 2
+    CC   = 3
+    FC   = 4
+    FFC  = 5
+    FCC  = 6
     FFCC = 7
     COST = 8
 
@@ -118,28 +152,61 @@ class RegressionCFAError(Exception):
 
 
 class RegressionCFA(CompositionFunctionApproximator):
-    """Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
-    <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
-    for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
-    <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
-    provided by the OptimiziationControlMechanism.
+    """
+    RegressionCFA(
+        update_weights=BayesGLM,
+        prediction_terms=[PV.F, PV.C, PV.COST])
 
-    The `feature_values <OptimiziationControlMechanism.feature_values>` and `control_allocation
-    <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method,
-    and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
-    `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
-    `prediction_vector <RegressorCFA.prediction_vector>` attribute.  The  `feature_values
-    <OptimizationControlMechanism.feature_values>` are assigned to the features field of the
-    `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
-    <ControlMechanism_control_allocation>` is assigned to the control_allocation field of the `prediction_vector
-    <RegressorCFA.prediction_vector>`.  The `prediction_vector <RegressorCFA.prediction_vector>` may also contain
-    fields for the `costs ControlMechanism.costs` associated with the `control_allocation
-    <ControlMechanism.control_allocation>` and for interactions among those terms.
+    Subclass of `CompositionFunctionApproximator` that implements a CompositionFunctionApproximator as the
+    `agent_rep <OptimizationControlmechanism.agent>` of an `OptimizationControlmechanism`.
 
-    The `regression_weights <RegressorCFA.regression_weights>` returned by the `update_weights
-    <RegressorCFA.update_weights>` are used by the RegressorCFA's `evaluate <RegressorCFA.evaluate>` method to
-    predict the `net_outcome <ControlMechanism.net_outcome>` from the
-    `prediction_vector <RegressorCFA.prediction_vector>`.
+    See `CompositionFunctionApproximator <CompositionFunctionApproximator_Class_Reference>` for additional arguments
+    and attributes.
+
+    Arguments
+    ---------
+
+    update_weights : LearningFunction, function or method : default BayesGLM
+        parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
+        <RegressionCFA.evaluate>` method to improve its prediction of `net_outcome <ControlMechanism.net_outcome>`
+        from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
+        `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimiziationControlMechanism`.
+        It must take a 2d array as its first argument, the first item of which is an array the same length of the
+        `vector <PredictionVector.prediction_vector>` attribute of its `prediction_vector
+        <RegressorCFA.prediction_vector>`, and the second item a 1d array containing a scalar
+        value that it tries predict.
+
+    prediction_terms : List[PV] : default [PV.F, PV.C, PV.COST]
+        terms to be included in (and thereby determines the length of) the `vector
+        <PredictionVector.prediction_vector>` attribute of the `prediction_vector <RegressorCFA.prediction_vector>`;
+        items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
+        If `None` is specified, the default values will automatically be assigned.
+
+    Attributes
+    ----------
+
+    update_weights : LearningFunction, function or method
+        parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
+        <RegressionCFA.evaluate>` method to improve prediction of `net_outcome <ControlMechanism.net_outcome>`
+        from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
+        `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimiziationControlMechanism`;
+        its result is assigned as the value of the `regression_weights <RegressorCFA.regression_weights>` attribute.
+
+    prediction_terms : List[PV]
+        terms included in `vector <PredictionVector.prediction_vector>` attribute of the
+        `prediction_vector <RegressorCFA.prediction_vector>`;  items are members of the `PV` enum; the
+        default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
+
+    prediction_vector : PredictionVector
+        represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
+        `evaluate <RegressorCFA.evaluate>`, along with `regression_weights <RegressorCFA.regression_weights>` to
+        make its prediction.  The values contained in the `vector <PredictionVector.vector>` attribute are
+        determined by `prediction_terms <RegressorCFA.prediction_terms>`.
+
+    regression_weights : 1d array
+        result returned by `update_weights <RegressorCFA.update_weights>, and used by
+        `evaluate <RegressorCFA.evaluate>` method together with `prediction_vector <RegressorCFA.prediction_vector>`
+        to generate predicted `net_outcome <OptimiziationControlMechanism.net_outcome>`.
 
     """
 
@@ -171,7 +238,6 @@ class RegressionCFA(CompositionFunctionApproximator):
 
                     :default value: `BayesGLM`
                     :type: `Function`
-
         """
         update_weights = Parameter(BayesGLM, stateful=False, loggable=False)
         prediction_vector = None
@@ -182,55 +248,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                  name=None,
                  update_weights=BayesGLM,
                  prediction_terms:tc.optional(list)=None):
-        """
 
-        Arguments
-        ---------
-
-        update_weights : LearningFunction, function or method : default BayesGLM
-            parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
-            <RegressionCFA.evaluate>` method to improve its prediction of `net_outcome <ControlMechanism.net_outcome>`
-            from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
-            `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimiziationControlMechanism`.
-            It must take a 2d array as its first argument, the first item of which is an array the same length of the
-            `vector <PredictionVector.prediction_vector>` attribute of its `prediction_vector
-            <RegressorCFA.prediction_vector>`, and the second item a 1d array containing a scalar
-            value that it tries predict.
-
-        prediction_terms : List[PV] : default [PV.F, PV.C, PV.COST]
-            terms to be included in (and thereby determines the length of) the `vector
-            <PredictionVector.prediction_vector>` attribute of the `prediction_vector <RegressorCFA.prediction_vector>`;
-            items are members of the `PV` enum; the default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
-            If `None` is specified, the default values will automatically be assigned.
-
-        Attributes
-        ----------
-
-        update_weights : LearningFunction, function or method
-            parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
-            <RegressionCFA.evaluate>` method to improve prediction of `net_outcome <ControlMechanism.net_outcome>`
-            from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
-            `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimiziationControlMechanism`;
-            its result is assigned as the value of the `regression_weights <RegressorCFA.regression_weights>` attribute.
-
-        prediction_terms : List[PV]
-            terms included in `vector <PredictionVector.prediction_vector>` attribute of the
-            `prediction_vector <RegressorCFA.prediction_vector>`;  items are members of the `PV` enum; the
-            default is [`F <PV.F>`, `C <PV.C>` `FC <PV.FC>`, `COST <PV.COST>`].
-
-        prediction_vector : PredictionVector
-            represents and manages values in its `vector <PredictionVector.vector>` attribute that are used by
-            `evaluate <RegressorCFA.evaluate>`, along with `regression_weights <RegressorCFA.regression_weights>` to
-            make its prediction.  The values contained in the `vector <PredictionVector.vector>` attribute are
-            determined by `prediction_terms <RegressorCFA.prediction_terms>`.
-
-        regression_weights : 1d array
-            result returned by `update_weights <RegressorCFA.update_weights>, and used by
-            `evaluate <RegressorCFA.evaluate>` method together with `prediction_vector <RegressorCFA.prediction_vector>`
-            to generate predicted `net_outcome <OptimiziationControlMechanism.net_outcome>`.
-        """
-
-        self.update_weights = update_weights
         self._instantiate_prediction_terms(prediction_terms)
 
         super().__init__(name=name, update_weights=update_weights)
@@ -264,7 +282,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.prediction_terms = [PV.F,PV.C,PV.COST]
 
     # def initialize(self, owner):
-    def initialize(self, features_array, control_signals):
+    def initialize(self, features_array, control_signals, context):
         """Assign owner and instantiate `prediction_vector <RegressorCFA.prediction_vector>`
 
         Must be called before RegressorCFA's methods can be used.
@@ -278,6 +296,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         if isinstance(self.update_weights, type):
             self.update_weights = \
                 self.update_weights(default_variable=update_weights_default_variable)
+            self._update_parameter_components(context)
         else:
             self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
 
@@ -323,8 +342,6 @@ class RegressionCFA(CompositionFunctionApproximator):
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
             it is differentiated using `autograd <https://github.com/HIPS/autograd>`_\\.grad().
         """
-        # # TEST PRINT 5/30/19:
-        # print(f'control allocation: {control_allocation}')
 
         predicted_outcome=0
 
@@ -346,7 +363,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             # Concatenate values for each prediction term, and same for corresponding weights
             for term_label, term_value in term_values_dict.items():
                 if term_label in terms:
-                    pv_enum_val =  term_label.value
+                    pv_enum_val = term_label.value
                     item_idx = prediction_vector.idx[pv_enum_val]
                     v = np.append(v, term_value.reshape(-1))
                     w = np.append(w, weights[item_idx])
@@ -358,11 +375,6 @@ class RegressionCFA(CompositionFunctionApproximator):
 
         return predicted_outcome
 
-    @property
-    def _dependent_components(self):
-        return list(itertools.chain(
-            [self.update_weights]
-        ))
 
     class PredictionVector():
         """Maintain a `vector <PredictionVector.vector>` of terms for a regression model specified by a list of
@@ -379,9 +391,8 @@ class RegressionCFA(CompositionFunctionApproximator):
             arrays of features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
 
         control_signals : List[ControlSignal]
-            list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;
-            the `variable <ControlSignal.variable>` of each is assigned as the `PV.C` term of `terms
-            <PredictionVector.terms>`.
+            list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;  the `variable
+            <Projection_Base.variable>` of each is assigned as the `PV.C` term of `terms <PredictionVector.terms>`.
 
         specified_terms : List[PV]
             terms to include in `vector <PredictionVector.vector>`; entries must be members of the `PV` Enum.
@@ -441,10 +452,11 @@ class RegressionCFA(CompositionFunctionApproximator):
                         assert False, "PROGRAM ERROR: unrecognized specification for {} arg of {}: {}".\
                                                       format(repr(CONTROL_SIGNALS), self.name, c)
                 else:
-                    state_spec_dict = _parse_state_spec(state_type=ControlSignal, owner=self, state_spec=c)
-                    v = state_spec_dict[VARIABLE]
+                    port_spec_dict = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=c)
+                    v = port_spec_dict[VARIABLE]
                     v = v or ControlSignal.defaults.variable
                 control_allocation.append(v)
+            # Get primary function and compute_costs function for each ControlSignal (called in compute_terms)
             self.control_signal_functions = [c.function for c in control_signals]
             self._compute_costs = [c.compute_costs for c in control_signals]
 
@@ -455,7 +467,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 spec_type = {'FF':'feature_values', 'CC':'control_signals'}
                 raise RegressionCFAError("Specification of {} for {} arg of {} "
                                                 "requires at least two {} be specified".
-                                                format('PV.'+term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
+                                                format('PV.' + term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
 
             F = PV.F.value
             C = PV.C.value
@@ -470,9 +482,9 @@ class RegressionCFA(CompositionFunctionApproximator):
             # RENAME THIS AS SPECIFIED_TERMS
             self.specified_terms = specified_terms
             self.terms = [None] * len(PV)
-            self.idx =  [None] * len(PV)
-            self.num =  [None] * len(PV)
-            self.num_elems =  [None] * len(PV)
+            self.idx = [None] * len(PV)
+            self.num = [None] * len(PV)
+            self.num_elems = [None] * len(PV)
             self.labels = [None] * len(PV)
 
             # MAIN EFFECT TERMS (unflattened)
@@ -481,20 +493,20 @@ class RegressionCFA(CompositionFunctionApproximator):
             self.terms[F] = f = feature_values
             self.num[F] = len(f)  # feature_values are arrays
             self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to vector
-            self.labels[F] = ['f'+str(i) for i in range(0,len(f))]
+            self.labels[F] = ['f' + str(i) for i in range(0, len(f))]
 
             # Placemarker until control_signals are instantiated
             self.terms[C] = c = np.array([[0]] * len(control_allocation))
             self.num[C] = len(c)
             self.num_elems[C] = len(c.reshape(-1))
-            self.labels[C] = ['c'+str(i) for i in range(0,len(control_allocation))]
+            self.labels[C] = ['c' + str(i) for i in range(0, len(control_allocation))]
 
             # Costs
             # Placemarker until control_signals are instantiated
             self.terms[COST] = cst = np.array([[0]] * len(control_allocation))
             self.num[COST] = self.num[C]
             self.num_elems[COST] = len(cst.reshape(-1))
-            self.labels[COST] = ['cst'+str(i) for i in range(0,self.num[COST])]
+            self.labels[COST] = ['cst' + str(i) for i in range(0, self.num[COST])]
 
             # INTERACTION TERMS (unflattened)
 
@@ -502,7 +514,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             if any(term in specified_terms for term in [PV.FF, PV.FFC, PV.FFCC]):
                 if len(f) < 2:
                     self.error_for_too_few_terms('FF')
-                self.terms[FF] = ff = np.array(tensor_power(f, levels=range(2,len(f)+1)))
+                self.terms[FF] = ff = np.array(tensor_power(f, levels=range(2, len(f) + 1)))
                 self.num[FF] = len(ff)
                 self.num_elems[FF] = len(ff.reshape(-1))
                 self.labels[FF]= get_intrxn_labels(self.labels[F])
@@ -511,7 +523,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             if any(term in specified_terms for term in [PV.CC, PV.FCC, PV.FFCC]):
                 if len(c) < 2:
                     self.error_for_too_few_terms('CC')
-                self.terms[CC] = cc = np.array(tensor_power(c, levels=range(2,len(c)+1)))
+                self.terms[CC] = cc = np.array(tensor_power(c, levels=range(2, len(c) + 1)))
                 self.num[CC]=len(cc)
                 self.num_elems[CC] = len(cc.reshape(-1))
                 self.labels[CC] = get_intrxn_labels(self.labels[C])
@@ -633,9 +645,9 @@ class RegressionCFA(CompositionFunctionApproximator):
 
             # Compute terms interaction that are used
             if any(term in terms for term in [PV.FF, PV.FFC, PV.FFCC]):
-                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num[PV.F.value]+1)))
+                computed_terms[PV.FF] = ff = np.array(tensor_power(f, range(2, self.num[PV.F.value] + 1)))
             if any(term in terms for term in [PV.CC, PV.FCC, PV.FFCC]):
-                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, self.num[PV.C.value]+1)))
+                computed_terms[PV.CC] = cc = np.array(tensor_power(c, range(2, self.num[PV.C.value] + 1)))
             if any(term in terms for term in [PV.FC, PV.FCC, PV.FFCC]):
                 computed_terms[PV.FC] = np.tensordot(f, c, axes=0)
             if any(term in terms for term in [PV.FFC, PV.FFCC]):

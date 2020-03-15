@@ -13,7 +13,11 @@ import re
 
 from collections import defaultdict, namedtuple
 
-from psyneulink.core.globals.keywords import CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_STATE, MAPPING_PROJECTION, OUTPUT_STATE, PARAMETER_STATE, kwComponentCategory, kwComponentPreferenceSet, kwMechanismComponentCategory, kwPreferenceSet, kwProcessComponentCategory, kwProjectionComponentCategory, kwStateComponentCategory, kwSystemComponentCategory
+from psyneulink.core.globals.keywords import \
+    CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_PORT, MAPPING_PROJECTION, OUTPUT_PORT, \
+    FUNCTION_COMPONENT_CATEGORY, COMPONENT_PREFERENCE_SET, MECHANISM_COMPONENT_CATEGORY, \
+    PARAMETER_PORT, PREFERENCE_SET, PROCESS_COMPONENT_CATEGORY, PROJECTION_COMPONENT_CATEGORY, \
+    PORT_COMPONENT_CATEGORY, SYSTEM_COMPONENT_CATEGORY
 
 __all__ = [
     'RegistryError',
@@ -27,21 +31,21 @@ __all__ = [
 
 DEFAULT_REGISTRY_VERBOSITY = False
 RegistryVerbosePrefs = {
-    kwPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
-    kwComponentPreferenceSet: DEFAULT_REGISTRY_VERBOSITY,
-    kwSystemComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwProcessComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwMechanismComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
-    kwStateComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
-    INPUT_STATE: DEFAULT_REGISTRY_VERBOSITY,
-    PARAMETER_STATE: DEFAULT_REGISTRY_VERBOSITY,
-    OUTPUT_STATE: DEFAULT_REGISTRY_VERBOSITY,
+    PREFERENCE_SET: DEFAULT_REGISTRY_VERBOSITY,
+    COMPONENT_PREFERENCE_SET: DEFAULT_REGISTRY_VERBOSITY,
+    SYSTEM_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
+    PROCESS_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
+    MECHANISM_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
+    PORT_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
+    INPUT_PORT: DEFAULT_REGISTRY_VERBOSITY,
+    PARAMETER_PORT: DEFAULT_REGISTRY_VERBOSITY,
+    OUTPUT_PORT: DEFAULT_REGISTRY_VERBOSITY,
     GATING_SIGNAL: DEFAULT_REGISTRY_VERBOSITY,
     DDM_MECHANISM: DEFAULT_REGISTRY_VERBOSITY,
-    kwProjectionComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
+    PROJECTION_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
     CONTROL_PROJECTION: DEFAULT_REGISTRY_VERBOSITY,
     MAPPING_PROJECTION: DEFAULT_REGISTRY_VERBOSITY,
-    kwComponentCategory: DEFAULT_REGISTRY_VERBOSITY,
+    FUNCTION_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
 }
 
 RegistryEntry = namedtuple('RegistryTuple', 'subclass, instanceDict, instanceCount, renamed_instance_counts, default')
@@ -114,12 +118,12 @@ def register_category(entry,
     COMMENT
     """
 
-    # IMPLEMENTATION NOTE:  Move to State when that is implemented as ABC
+    # IMPLEMENTATION NOTE:  Move to Port when that is implemented as ABC
     import inspect
-    from psyneulink.core.components.states.state import State, State_Base
-    if inspect.isclass(entry) and issubclass(entry, State) and not entry == State_Base:
+    from psyneulink.core.components.shellclasses import Port
+    if inspect.isclass(entry) and issubclass(entry, Port):
         try:
-           entry.stateAttributes
+           entry.portAttributes
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a stateSpecificParams attribute".
                                 format(entry.__name__))
@@ -268,13 +272,15 @@ def register_instance(entry, name, base_class, registry, sub_dict):
         else:
             renamed_instance_counts[match.groups()[0]] += 1
 
-def remove_instance_from_registry(registry, category, name=None, component=None):
-    """Remove instance from registry category entry
+def rename_instance_in_registry(registry, category, name=None, component=None):
+    """Rename instance in category registry
 
-    Instance to be removed can be specified by a reference to the component or its name.
-    Instance count for the category is decremented
+    Instance to be renamed can be specified by a reference to the component or its name.
+    COMMENT:
+    DEPRECACTED (SEE IMPLEMENTATION NOTE BELOW)
     If the name of the instance was a default name, and it was the last in the sequence,
         decrement renamed_instance_counts and if it was the only one, remove that name from the renamed_instance list
+    COMMENT
     """
 
     registry_entry = registry[category]
@@ -291,7 +297,7 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
                 name = n
 
     try:
-        clear_registry(registry_entry.instanceDict[name]._stateRegistry)
+        clear_registry(registry_entry.instanceDict[name]._portRegistry)
     except (AttributeError):
         pass
 
@@ -320,6 +326,57 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
                                        registry_entry.renamed_instance_counts,
                                        registry_entry.default)
 
+def remove_instance_from_registry(registry, category, name=None, component=None):
+    """Remove instance from registry category entry
+
+    Instance to be removed can be specified by a reference to the component or its name.
+    Instance count for the category is decremented
+    If the name of the instance was a default name, and it was the last in the sequence,
+        decrement renamed_instance_counts and if it was the only one, remove that name from the renamed_instance list
+    """
+
+    registry_entry = registry[category]
+
+    if not (name or component):
+        raise RegistryError("Must specify a name or component to remove an entry of {}".
+                            format(registry.__class__.__name__))
+    if (name and component) and name != component.name:
+        raise RegistryError("Conflicting  name ({}) and component ({}) specified for entry to remove from {}".
+                            format(name, component.name, registry.__class__.__name__))
+    if component and not name:
+        for n, c in registry_entry.instanceDict.items():
+            if component == c:
+                name = n
+
+    try:
+        clear_registry(registry_entry.instanceDict[name]._portRegistry)
+    except (AttributeError):
+        pass
+
+    # Delete instance
+    del registry_entry.instanceDict[name]
+
+    # Decrement count for instances in entry
+    instance_count = registry_entry.instanceCount - 1
+
+    # IMPLEMENTATION NOTE:
+    #    Don't decrement renamed_instance_counts as:
+    #        - doing so would require checking that the item being removed is the last in the sequence
+    #          (to avoid fouling subsequent indexing);
+    #        - it might be confusing for a subsequently added item to have the same name as one previously removed.
+    # # If instance's name was a duplicate with appended index, decrement the count for that item (and remove if it is 0)
+    # for base_name, count in registry_entry.renamed_instance_counts.items():
+    #     if base_name in name:
+    #         registry_entry.renamed_instance_counts[base_name] -= 1
+    #         if registry_entry.renamed_instance_counts[base_name] == 0:
+    #             del registry_entry.renamed_instance_counts[base_name]
+    #         break
+    # Reassign entry with new values
+    registry[category] = RegistryEntry(registry_entry.subclass,
+                                       registry_entry.instanceDict,
+                                       instance_count,
+                                       registry_entry.renamed_instance_counts,
+                                       registry_entry.default)
 
 def clear_registry(registry):
     """Clear specified registry of all entries, but leave any categories created within it intact.
@@ -335,7 +392,6 @@ def clear_registry(registry):
         for name in instance_dict:
             remove_instance_from_registry(registry, category, name)
         registry[category].renamed_instance_counts.clear()
-
 
 def process_registry_object_instances(registry, func):
     for category in registry:
