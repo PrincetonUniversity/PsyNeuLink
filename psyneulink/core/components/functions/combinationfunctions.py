@@ -880,11 +880,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             ptri = b.gep(vi, [ctx.int32_ty(0), idx])
             in_val = b.load(ptri)
 
-            exponent_index = b.mul(ctx.int32_ty(vo.type.pointee.count),
-                                   b.sub(idx, idx.type(1)))
-            exponent_index = b.add(exponent_index, index)
             exponent = self._gen_llvm_load_param(ctx, b, params, EXPONENTS,
-                                                 exponent_index, 1.0)
+                                                 index, 1.0)
+            # Vector of vectors (even 1-element vectors)
+            if isinstance(exponent.type, pnlvm.ir.ArrayType):
+                assert len(exponent.type) == 1 # FIXME: Add support for matrix weights
+                exponent = b.extract_value(exponent, [0])
             # FIXME: Remove this micro-optimization,
             #        it should be handled by the compiler
             if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
