@@ -244,16 +244,15 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
 @pytest.mark.parametrize("variable", [test_varr1, test_varr2], ids=["VAR1", "VAR2"])
 @pytest.mark.parametrize("operation", [pnl.SUM, pnl.PRODUCT])
 @pytest.mark.parametrize("exponents", [None, 2.0, [3.0], 'V'], ids=["E_NONE", "E_SCALAR", "E_VECTOR1", "E_VECTORN"])
-@pytest.mark.parametrize("weights", [None, 0.5, [[-1],[1]]], ids=["W_NONE", "W_SCALAR", "W_VECTOR"])
+@pytest.mark.parametrize("weights", [None, 0.5, 'V'], ids=["W_NONE", "W_SCALAR", "W_VECTORN"])
 @pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
 @pytest.mark.parametrize("bin_execute", ["Python",
                                         pytest.param("LLVM", marks=pytest.mark.llvm),
                                         pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
-    if weights is not None and not np.isscalar(weights) and len(variable) != len(weights):
-        pytest.skip("variable/weights mismatch")
-
+    if weights == 'V':
+        weights = [[-1 ** i] for i, v in enumerate(variable)]
     if exponents == 'V':
         exponents = [[v[0]] for v in variable]
 
