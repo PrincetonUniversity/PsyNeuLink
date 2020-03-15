@@ -892,7 +892,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                 in_val = b.call(pow_f, [in_val, exponent])
 
             weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
-                                               idx, 1.0)
+                                               index, 1.0)
             # Vector of vectors (even 1-element vectors)
             if isinstance(weight.type, pnlvm.ir.ArrayType):
                 assert len(weight.type) == 1 # FIXME: Add support for matrix weights
