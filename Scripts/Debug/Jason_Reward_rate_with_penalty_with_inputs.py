@@ -88,7 +88,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
-        noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
+        noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='COLORS HIDDEN'
     )
     hid_wrd = pnl.TransferMechanism(
@@ -96,7 +96,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
-        noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
+        noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='WORDS HIDDEN'
     )
     # output layer
@@ -105,7 +105,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=pnl.Logistic,
         integrator_mode=True,
         integration_rate=integration_rate,
-        noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
+        noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='OUTPUT'
     )
     # decision layer, some accumulator
@@ -276,7 +276,7 @@ for task in stim_dict_list:
             inputs=task,
             num_trials=1,
             context=execution_id,
-            # bin_execute='LLVMRun'
+            bin_execute='LLVMRun'
         )
         execution_id += 1
 
