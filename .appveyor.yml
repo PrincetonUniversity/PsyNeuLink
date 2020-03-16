@@ -1,5 +1,6 @@
 version: '{build}'
 clone_depth: 25
+skip_branch_with_pr: true
 
 branches:
   only:
@@ -24,6 +25,7 @@ install:
   - if not exist %GRAPHVIZ_INSTALLER% appveyor-retry curl https://graphviz.gitlab.io/_pages/Download/windows/%GRAPHVIZ_INSTALLER% -o %GRAPHVIZ_INSTALLER%
   - msiexec.exe /i %GRAPHVIZ_INSTALLER% /passive
   - pip --version
+  - pip install --user wheel
   - pip install --user git+https://github.com/benureau/leabra.git@master
 
   # pytorch does not distribute windows packages over pypi. Install it directly.
