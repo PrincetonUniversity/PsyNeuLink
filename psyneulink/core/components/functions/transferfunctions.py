@@ -407,8 +407,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
-        slope_ptr = ctx.get_param_ptr(self, builder, params, SLOPE)
-        intercept_ptr = ctx.get_param_ptr(self, builder, params, INTERCEPT)
+        slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
+        intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
 
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
@@ -662,10 +662,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        rate_ptr = ctx.get_param_ptr(self, builder, params, RATE)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        rate_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RATE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         rate = pnlvm.helpers.load_extract_scalar_array_one(builder, rate_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -932,11 +932,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1228,10 +1228,10 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        x_0_ptr = ctx.get_param_ptr(self, builder, params, X_0)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1361,7 +1361,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         specifies a value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        specifies a scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        specifies a scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -1384,7 +1384,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     bias : float : default 0.0
         value to subtract from each element of `variable <ReLU.variable>`.
     leak : float : default 0.0
-        scaling factor between 0 and 1 when (variable - bias) is lesser than or equal to 0.
+        scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
     bounds : (None,None)
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1484,9 +1484,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        leak_ptr = ctx.get_param_ptr(self, builder, params, LEAK)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        leak_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LEAK)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1691,10 +1691,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        standard_deviation_ptr = ctx.get_param_ptr(self, builder, params, STANDARD_DEVIATION)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        standard_deviation_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STANDARD_DEVIATION)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         standard_deviation = pnlvm.helpers.load_extract_scalar_array_one(builder, standard_deviation_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1975,10 +1975,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
-        variance_ptr = ctx.get_param_ptr(self, builder, params, VARIANCE)
-        bias_ptr = ctx.get_param_ptr(self, builder, params, BIAS)
-        scale_ptr = ctx.get_param_ptr(self, builder, params, SCALE)
-        offset_ptr = ctx.get_param_ptr(self, builder, params, OFFSET)
+        variance_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, VARIANCE)
+        bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
+        offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
 
         variance = pnlvm.helpers.load_extract_scalar_array_one(builder, variance_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
@@ -1986,7 +1986,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state_ptr = ctx.get_state_ptr(self, builder, state, "random_state")
+        rand_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
@@ -2312,7 +2312,7 @@ class SoftMax(TransferFunction):
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
 
-        gain_ptr = ctx.get_param_ptr(self, builder, params, GAIN)
+        gain_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, GAIN)
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "exp_sum_max") as args:
@@ -2928,7 +2928,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        matrix = ctx.get_param_ptr(self, builder, params, MATRIX)
+        matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
 
         # Convert array pointer to pointer to the fist element
         matrix = builder.gep(matrix, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -3223,8 +3223,11 @@ def _transfer_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3233,8 +3236,11 @@ def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3243,8 +3249,11 @@ def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3253,8 +3262,11 @@ def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3263,8 +3275,11 @@ def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3273,8 +3288,11 @@ def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3283,8 +3301,11 @@ def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
     try:
@@ -3293,8 +3314,11 @@ def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
         return None
 
 def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
 def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
     try:
@@ -3303,9 +3327,17 @@ def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
         return None
 
 def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
-    return value
+    try:
+        owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
+        return value
+    except (TypeError, IndexError, AttributeError):
+        return None
 
+TRANSFER_FCT = 'transfer_fct'
+INTENSITY_COST_FCT = 'intensity_cost_fct'
+ADJUSTMENT_COST_FCT = 'adjustment_cost_fct'
+DURATION_COST_FCT = 'duration_cost_fct'
+COMBINE_COSTS_FCT = 'combine_costs_fct'
 
 class TransferWithCosts(TransferFunction):
     """
@@ -3850,8 +3882,18 @@ class TransferWithCosts(TransferFunction):
             if not fct:
                 self.toggle_cost(fct_name, OFF)
                 return None
-            if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # # MODIFIED 3/10/20 OLD:
+            # if isinstance(fct, (Function, types.FunctionType, types.MethodType)):
+            # MODIFIED 3/10/20 NEW: [JDC]
+            elif isinstance(fct, Function):
                 return fct
+            elif isinstance(fct, (types.FunctionType, types.MethodType)):
+                from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+                return UserDefinedFunction(#default_variable=function_variable,
+                        custom_function=fct,
+                        owner=self,
+                        context=context)
+                # MODIFIED 3/10/20 END
             elif issubclass(fct, Function):
                 return fct()
             else:
@@ -4118,8 +4160,8 @@ class TransferWithCosts(TransferFunction):
         # Run transfer function first
         transfer_f = self.parameters.transfer_fct
         trans_f = ctx.import_llvm_function(transfer_f.get())
-        trans_p = ctx.get_param_ptr(self, builder, params, transfer_f.name)
-        trans_s = ctx.get_state_ptr(self, builder, state, transfer_f.name)
+        trans_p = pnlvm.helpers.get_param_ptr(builder, self, params, transfer_f.name)
+        trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
         if trans_in.type != trans_f.args[2].type:
             warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))

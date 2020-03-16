@@ -1711,9 +1711,6 @@ class NodeRole(Enum):
     LEARNING
         A Node that is only executed when learning is enabled.
 
-    AUTOASSOCIATIVE_LEARNING
-        A Node that implements an AutoassociativeLearningMechanism
-
     TARGET
         A Node that receives the target for a learning sequence
     """
@@ -1727,8 +1724,7 @@ class NodeRole(Enum):
     FEEDBACK_RECEIVER = 7
     CYCLE = 8
     LEARNING = 9
-    AUTOASSOCIATIVE_LEARNING = 10
-    TARGET = 11
+    TARGET = 10
 
 def unproxy_weakproxy(proxy):
     """

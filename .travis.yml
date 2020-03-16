@@ -16,7 +16,7 @@ dist: bionic
 env:
   jobs:
     - PYTHON=3.8.2
-    - PYTHON=3.7.6
+    - PYTHON=3.7.7
     - PYTHON=3.6.8
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
@@ -73,7 +73,7 @@ before_install:
   - source $HOME/venv/bin/activate
 
   - python --version
-  - pip install -U pip
+  - pip install -U pip wheel
   - pip --version
   - |
     # Install undeclared dependencies
@@ -89,7 +89,7 @@ install:
 
 script:
   - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
-  - pytest -n auto --strict-markers -p no:logging $COV_ARGS
+  - pytest -n auto -p no:logging $COV_ARGS
 
 after_script:
   - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi

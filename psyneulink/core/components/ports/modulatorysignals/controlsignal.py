@@ -21,7 +21,7 @@ Contents:
       - `ControlSignal_Modulation`
       - `ControlSignal_Allocation_and_Intensity`
       - `ControlSignal_Costs`
-  * `ControlSignal_Execution`
+  * `ControlSignal_Execution`d
   * `ControlSignal_Examples`
   * `ControlSignal_Class_Reference`
 
@@ -1027,15 +1027,34 @@ class ControlSignal(ModulatorySignal):
         # should probably just have the user instantiate this function with
         # their desired parameter values rather than trying to handle it in the
         # constructor here
-        function = TransferWithCosts(
-            default_variable=self.defaults.variable,
-            transfer_fct=self.defaults.transfer_function,
-            enabled_cost_functions=self.defaults.cost_options,
-            intensity_cost_fct=self.defaults.intensity_cost_function,
-            adjustment_cost_fct=self.defaults.adjustment_cost_function,
-            duration_cost_fct=self.defaults.duration_cost_function,
-            combine_costs_fct=self.defaults.combine_costs_function,
-        )
+        # JDC [3/10/20]:  Wanted API of ControlSignal to have these functions exposed in its constructor.
+
+        # # MODIFIED 3/10/20 OLD:
+        # function = TransferWithCosts(
+        #     default_variable=self.defaults.variable,
+        #     transfer_fct=self.defaults.transfer_function,
+        #     enabled_cost_functions=self.defaults.cost_options,
+        #     intensity_cost_fct=self.defaults.intensity_cost_function,
+        #     adjustment_cost_fct=self.defaults.adjustment_cost_function,
+        #     duration_cost_fct=self.defaults.duration_cost_function,
+        #     combine_costs_fct=self.defaults.combine_costs_function,
+        # )
+
+        # MODIFIED 3/10/20 NEW: [JDC]
+        from psyneulink.core.components.functions.transferfunctions import \
+            TRANSFER_FCT, INTENSITY_COST_FCT, ADJUSTMENT_COST_FCT, DURATION_COST_FCT, COMBINE_COSTS_FCT
+
+        fcts = {
+            TRANSFER_FCT:self.defaults.transfer_function,
+            INTENSITY_COST_FCT:self.defaults.intensity_cost_function,
+            ADJUSTMENT_COST_FCT:self.defaults.adjustment_cost_function,
+            DURATION_COST_FCT:self.defaults.duration_cost_function,
+            COMBINE_COSTS_FCT:self.defaults.combine_costs_function,
+        }
+        function = TransferWithCosts(default_variable=self.defaults.variable,
+                                     enabled_cost_functions=self.defaults.cost_options,
+                                     **fcts)
+        # MODIFIED 3/10/20 END
 
         super()._instantiate_function(function, function_params, context)
 
@@ -1115,27 +1134,17 @@ class ControlSignal(ModulatorySignal):
 
         cost_options = self.parameters.cost_options._get(context)
 
-        try:
-            intensity_change = intensity - self.parameters.intensity.get_previous(context)
-        except TypeError:
-            intensity_change = [0]
+        # try:
+        #     intensity_change = intensity - self.parameters.intensity.get_previous(context)
+        # except TypeError:
+        #     intensity_change = [0]
 
-        # COMPUTE COST(S)
-        intensity_cost = adjustment_cost = duration_cost = 0
-
-        if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity, context=context)
-            self.parameters.intensity_cost._set(intensity_cost, context)
-
-        if CostFunctions.ADJUSTMENT & cost_options:
-            adjustment_cost = self.adjustment_cost_function(intensity_change, context=context)
-            self.parameters.adjustment_cost._set(adjustment_cost, context)
         # COMPUTE COST(S)
         # Initialize as backups for cost function that are not enabled
         intensity_cost = adjustment_cost = duration_cost = 0
 
         if CostFunctions.INTENSITY & cost_options:
-            intensity_cost = self.intensity_cost_function(intensity)
+            intensity_cost = self.intensity_cost_function(intensity, context)
             self.parameters.intensity_cost._set(intensity_cost, context)
 
         if CostFunctions.ADJUSTMENT & cost_options:
@@ -1143,7 +1152,7 @@ class ControlSignal(ModulatorySignal):
                 intensity_change = intensity - self.parameters.intensity.get_previous(context)
             except TypeError:
                 intensity_change = [0]
-            adjustment_cost = self.adjustment_cost_function(intensity_change)
+            adjustment_cost = self.adjustment_cost_function(intensity_change, context)
             self.parameters.adjustment_cost._set(adjustment_cost, context)
 
         if CostFunctions.DURATION & cost_options:

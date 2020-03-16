@@ -2335,7 +2335,14 @@ class TestACLogging:
         out_map = MappingProjection()
 
         xor = AutodiffComposition(param_init_from_pnl=True)
-        xor.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
         hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
 
@@ -2392,6 +2399,59 @@ class TestACLogging:
 
         xor_out.log.print_entries()
 
+    def test_autodiff_loss_tracking(self):
+        xor_in = TransferMechanism(name='xor_in',
+                                   default_variable=np.zeros(2))
+
+        xor_hid = TransferMechanism(name='xor_hid',
+                                    default_variable=np.zeros(10),
+                                    function=Logistic())
+
+        xor_out = TransferMechanism(name='xor_out',
+                                    default_variable=np.zeros(1),
+                                    function=Logistic())
+
+        hid_map = MappingProjection()
+        out_map = MappingProjection()
+
+        xor = AutodiffComposition(param_init_from_pnl=True)
+
+        xor.add_node(xor_in)
+        xor.add_node(xor_hid)
+        xor.add_node(xor_out)
+
+        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+
+        # train model for a few epochs
+        num_epochs = 100
+        xor.learn(inputs={"inputs": {xor_in: xor_inputs},
+                        "targets": {xor_out: xor_targets},
+                        "epochs": num_epochs})
+
+        losses = xor.losses
+        # Since the losses track average losses per weight update, and weights are updated every minibatch,
+        # and minibatch_size is 1, then there should be num_epochs * num_minibatches = num_epochs * 4
+        # total entries
+        expected_loss_length = num_epochs * len(xor_inputs)
+        assert len(losses) == expected_loss_length
+
+        # test clearing ad losses
+        xor.clear_losses(context=xor)
+        assert len(xor.losses) == 0
+
 @pytest.mark.pytorch
 @pytest.mark.acnested
 class TestNested:
@@ -2441,7 +2501,13 @@ class TestNested:
             param_init_from_pnl=True,
             learning_rate=learning_rate,
         )
-        xor_autodiff.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
 
@@ -2508,7 +2574,12 @@ class TestNested:
             learning_rate=learning_rate,
         )
 
-        xor_autodiff.add_backpropagation_learning_pathway([xor_in, hid_map, xor_hid, out_map, xor_out])
+        xor_autodiff.add_node(xor_in)
+        xor_autodiff.add_node(xor_hid)
+        xor_autodiff.add_node(xor_out)
+
+        xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+        xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
         # -----------------------------------------------------------------
 

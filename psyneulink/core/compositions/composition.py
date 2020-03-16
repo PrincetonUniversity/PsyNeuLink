@@ -1279,7 +1279,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
-from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
@@ -1289,7 +1289,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
 ]
 
 # show_graph animation options
@@ -1586,7 +1586,7 @@ class Graph(object):
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
+PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -1866,8 +1866,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         )
 
         # Compiled resources
-        self.__generated_node_wrappers = {}
-
         self._compilation_data = self._CompilationData(owner=self)
 
         # If a PreferenceSet was provided, assign to instance
@@ -2398,18 +2396,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_nodes_copy = nodes.copy()
                 for node in output_nodes_copy:
                     if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                            or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                             or isinstance(node, ControlMechanism)
                             or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
                         nodes.remove(node)
 
-            if self.get_nodes_by_role(NodeRole.LEARNING) or self.get_nodes_by_role(NodeRole.AUTOASSOCIATIVE_LEARNING):
+            if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
                 output_nodes = list([items for items in self.scheduler.consideration_queue
                                      if any([item for item in items
-                                               if (not NodeRole.LEARNING in self.nodes_to_roles[item] and
-                                                   not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item])
+                                               if not NodeRole.LEARNING in self.nodes_to_roles[item]
                                                ])])[-1].copy()
             else:
                 output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
@@ -2428,8 +2424,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler.consideration_queue
                                            if any([item for item in items if
-                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item] and
-                                                    not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[item]
+                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
                                                     and not isinstance(item, ControlMechanism)
                                                     and not (isinstance(item, ObjectiveMechanism)
                                                              and item._role == CONTROL))
@@ -2449,7 +2444,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for node in self.nodes:
                         if (not node.efferents
                                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
-                                and not NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node]
                                 and not isinstance(node, ControlMechanism)
                                 and not (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)
                         ):
@@ -3553,8 +3547,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     feedback = False
                 sender = pathway[c - 1]
                 receiver = pathway[c + 1]
-                if isinstance(sender, (Mechanism, Composition)) \
-                        and isinstance(receiver, (Mechanism, Composition)):
+                # # MODIFIED 3/15/20 OLD:
+                # if isinstance(sender, (Mechanism, Composition)) \
+                #         and isinstance(receiver, (Mechanism, Composition)):
+                # MODIFIED 3/15/20 NEW: [JDC]
+                if is_spec(sender, NODE) and is_spec(receiver, NODE):
+                    if isinstance(sender, tuple):
+                        sender = sender[0]
+                    if isinstance(receiver, tuple):
+                        receiver = receiver[0]
+                # MODIFIED 3/15/20 END
                     try:
                         if isinstance(proj, (np.ndarray, np.matrix, list)):
                             proj = MappingProjection(sender=sender,
@@ -4924,7 +4926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context(execution_id=NotImplemented)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
-                                                            STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
+                                                            PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=False,
                    show_cim:bool=False,
@@ -4985,7 +4987,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
+        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, PORT_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
             show a detailed representation of each `Mechanism <Mechanism>` in the graph, including its `Ports <Port>`;
             can have any of the following settings alone or in a list:
@@ -5007,7 +5009,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * *MECH_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
               Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
-            * *STATE_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
+            * *PORT_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
               Port of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
             * *ROLES* -- show the `role <Composition.NodeRoles>` of the Mechanism in the Composition
@@ -5167,8 +5169,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If rcvr is a learning component and not an INPUT node,
             #    break and handle in _assign_learning_components()
             #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-            if ((NodeRole.LEARNING in self.nodes_to_roles[rcvr]
-                 or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr])
+            if (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
                     and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
                 return
 
@@ -5806,8 +5807,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                             # Projection to or from a LearningMechanism
-                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
-                                  or NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[rcvr]):
+                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
                                 proj_color = learning_color
                                 proj_width = str(default_width)
 
@@ -5891,7 +5891,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
                                 'show_port_function_params': any(key in show_node_structure
-                                                                  for key in {STATE_FUNCTION_PARAMS, ALL}),
+                                                                  for key in {PORT_FUNCTION_PARAMS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
@@ -5903,7 +5903,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
-                                'show_port_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
+                                'show_port_function_params': show_node_structure in {PORT_FUNCTION_PARAMS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
@@ -6590,6 +6590,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         output value of the final Node executed in the composition : various
         """
+
+        context.source = ContextFlags.COMPOSITION
+
         if scheduler is None:
             scheduler = self.scheduler
 
@@ -6600,11 +6603,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             new_conds.update(termination_processing)
             termination_processing = new_conds
 
+        for node in self.nodes:
+            num_execs = node.parameters.num_executions._get(context)
+            if num_execs is None:
+                node.parameters.num_executions._set(Time(), context)
+            else:
+                node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
+
         if initial_values is not None:
             for node in initial_values:
                 if node not in self.nodes:
-                    raise CompositionError("{} (entry in initial_values arg) is not a node in \'{}\'".
-                                           format(node.name, self.name))
+                    raise CompositionError(f"{node.name} (entry in initial_values arg) is not a node in '{self.name}'")
 
         if reinitialize_values is None:
             reinitialize_values = {}
@@ -6856,7 +6865,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         )
 
             # ---------------------------------------------------------------------------------
-            # store the result of this execute in case it will be the final result
+            # store the result of this execution in case it will be the final result
 
             # object.results.append(result)
             if isinstance(trial_output, collections.abc.Iterable):
@@ -6950,7 +6959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
                 the shape of which must match the node's default variable. This is identical to the input dict in `the run method <Composition.run>`
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same structure as input specification (1) of learn. The `targets` and `epochs` keys
-                should contain values of the same shape as `targets <Composition.learn>` and `epochs` <Composition.learn>
+                should contain values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`
 
             targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each node in the composition that receives target values to train on from
@@ -6971,14 +6980,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether the order of the input trials should be randomized on each epoch
 
             patience : int or None (default=None)
-                **patience** allows the model to stop training early, if training stops reducing loss. The model tracks how many
-                consecutive epochs of training have failed to reduce the model's loss. When this number exceeds **patience**,
-                the model stops training early. If **patience** is ``None``, the model will train for the number
-                of specified epochs and will not stop training early.
+                used for early stopping of training; If a model has more than `patience` bad consecutive epochs, then `learn` will prematurely return. A bad epoch is determined by the `min_delta` value
 
-             min_delta : float (default=0)
-                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch.
-                Used for early stopping of training, in combination with **patience**.
+            min_delta : float (default=0)
+                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch; Any reduction less than this value is considered to be a bad epoch.
+                Used for early stopping of training, in combination with `patience`.
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of this Composition
@@ -6996,7 +7002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Returns
             ---------
 
-            the results of the final epoch of training
+            the results of the final epoch of training : list
         """
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
@@ -7114,8 +7120,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         execution_scheduler = scheduler or self.scheduler
 
-        context.source = ContextFlags.COMPOSITION
-
         if termination_processing is None:
             termination_processing = self.termination_processing
 
@@ -7156,10 +7160,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(INITIAL_FRAME, context)
                 context.execution_id = old_eid
 
-        # Reinitialize any nodes that have satisfied 'reinitialize_when'
-        # conditions. This mimics the behavior used for Systems. (only
-        # checking for reinitialization at the beginning of a trial)
+        # Set num_executions.TRIAL to 0 for every node
+        # Reinitialize any nodes that have satisfied 'reinitialize_when' conditions.
         for node in self.nodes:
+            node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
             if node.parameters.has_initializers._get(context):
                 try:
                     if (
@@ -7209,6 +7213,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the scheduler terminates a trial immediately
         next_pass_before = 1
         next_pass_after = 1
+        last_pass = None
+
         if clamp_input:
             soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
             hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
@@ -7252,15 +7258,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
 
             # Exec failed for some reason, we can still try node level bin_execute
-            try:
-                # Filter out mechanisms. Nested compositions are not executed in this mode
-                # Filter out controller. Compilation of controllers is not supported yet
-                mechanisms = [n for n in self._all_nodes
-                              if isinstance(n, Mechanism) and (n is not self.controller or not is_simulation)]
-                # Generate all mechanism wrappers
-                for m in mechanisms:
-                    self._get_node_wrapper(m)
+            # Filter out nested compositions. They are not executed in this mode
+            # Filter out controller if running simulation.
+            mechanisms = (n for n in self._all_nodes
+                          if isinstance(n, Mechanism) and
+                             (n is not self.controller or not is_simulation))
 
+            try:
                 _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                 # Compile all mechanism wrappers
                 for m in mechanisms:
@@ -7326,38 +7330,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
-            # FIX: 6/12/19 WHY IS call_*after*_pass BEING CALLED BEFORE THE PASS?
-            # KDM 1/15/20: Because we can't tell at the end of this
-            # code block whether a PASS has ended or not. The scheduler
-            # only modifies the pass after we receive an execution_set.
-            # So, we only know a PASS has ended in retrospect after the
-            # scheduler has changed the clock to indicate it. So, we
-            # have to run call_after_pass before the next PASS (here) or
-            # after this code block (see the call to call_after_pass
-            # below)
+            # IMPLEMENTATION NOTE KDM 1/15/20:
+            # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
+            # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
+            # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
+            # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
+            curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
+            new_pass = False
+            if curr_pass != last_pass:
+                new_pass = True
+                last_pass = curr_pass
             if call_after_pass:
-                if next_pass_after == \
-                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
-                                                                                          TimeScale.TRIAL):
-                    logger.debug('next_pass_after {0}\tscheduler pass {1}'.
-                                 format(next_pass_after,
-                                        execution_scheduler.get_clock(
-                                            context).get_total_times_relative(
-                                                TimeScale.PASS, TimeScale.TRIAL)))
+                if next_pass_after == curr_pass:
+                    logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                     call_with_pruned_args(call_after_pass, context=context)
                     next_pass_after += 1
-
             if call_before_pass:
-                if next_pass_before == \
-                        execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
-                                                                                          TimeScale.TRIAL):
+                if next_pass_before == curr_pass:
                     call_with_pruned_args(call_before_pass, context=context)
-                    logger.debug('next_pass_before {0}\tscheduler pass {1}'.
-                                 format(next_pass_before,
-                                        execution_scheduler.get_clock(
-                                            context).get_total_times_relative(
-                                                TimeScale.PASS,
-                                                TimeScale.TRIAL)))
+                    logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
                     next_pass_before += 1
 
             if call_before_time_step:
@@ -7387,6 +7378,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
+
+                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
+                if new_pass:
+                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
+
 
                 # Store values of all nodes in this execution_set for use by other nodes in the execution set
                 #    throughout this timestep (e.g., for recurrent Projections)
@@ -7473,11 +7469,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Set up compilation
                     if bin_execute:
-                        # Values of node with compiled wrappers are in binary data structure
+                        # Values of Mechanisms are in binary data structure
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents if
-                                proj.sender.owner in self.__generated_node_wrappers)
+                                proj.sender.owner in self._all_nodes and
+                                isinstance(proj.sender.owner, Mechanism))
                         for srnode in srcs:
-                            assert srnode in self.nodes or srnode is self.input_CIM
+                            assert srnode in self.nodes or srnode is self.input_CIM, "{} is not a valid source node".format(srnode)
                             data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
                                 # This sets frozen values
@@ -7891,7 +7888,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # of the nested composition. Filter them out.
         return (p for p in self.projections
                   if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM)
+                     p.receiver.owner is not self.parameter_CIM and
+                     p.sender.owner is not self.output_CIM)
 
     def _get_param_struct_type(self, ctx):
         node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
@@ -7943,12 +7941,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_list = list(self._all_nodes)
         return node_list.index(node)
 
-    def _gen_llvm_function(self, *, tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            if "run" in tags:
-                return ctx.gen_composition_run(self, tags=tags)
-            else:
-                return ctx.gen_composition_exec(self, tags=tags)
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        if "run" in tags:
+            return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
+        else:
+            return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
     def reinitialize(self, context=None):
@@ -7964,180 +7961,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __ptx_initialize(self, context=None, additional_tags=frozenset()):
         if self._compilation_data.ptx_execution._get(context) is None:
             self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id], additional_tags=additional_tags), context)
-
-    def _get_node_wrapper(self, node):
-        """Return a (memoized) wrapper instance that generates node invocation sequence.
-
-           Since nodes in general don't know about their owning composition this structure ties together composition and its nodes.
-        """
-        if node not in self.__generated_node_wrappers:
-            class node_wrapper():
-                def __init__(self, node, gen_f):
-                    self._node = node
-                    self._gen_f = gen_f
-                def _gen_llvm_function(self, *, tags:frozenset):
-                    return self._gen_f(self._node, tags=tags)
-            wrapper = node_wrapper(node, self._gen_node_wrapper)
-            self.__generated_node_wrappers[node] = wrapper
-            return wrapper
-
-        return self.__generated_node_wrappers[node]
-
-    def _gen_node_wrapper(self, node, *, tags:frozenset):
-        assert "node_wrapper" in tags
-        func_tags = tags.difference({"node_wrapper"})
-        is_mech = isinstance(node, Mechanism)
-
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            node_function = ctx.import_llvm_function(node, tags=func_tags)
-
-            data_struct_ptr = ctx.get_data_struct_type(self).as_pointer()
-            args = [
-                ctx.get_state_struct_type(self).as_pointer(),
-                ctx.get_param_struct_type(self).as_pointer(),
-                ctx.get_input_struct_type(self).as_pointer(),
-                data_struct_ptr, data_struct_ptr]
-
-            if not is_mech and "reinitialize" not in tags:
-                # Add condition struct of the parent composition
-                # This includes structures of all nested compositions
-                cond_gen = pnlvm.helpers.ConditionGenerator(ctx, self)
-                cond_ty = cond_gen.get_condition_struct_type().as_pointer()
-                args.append(cond_ty)
-
-            builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
-            llvm_func = builder.function
-            llvm_func.attributes.add('alwaysinline')
-            for a in llvm_func.args:
-                a.attributes.add('nonnull')
-
-            context, params, comp_in, data_in, data_out = llvm_func.args[:5]
-
-            if node is self.input_CIM:
-                # if there are incoming modulatory projections,
-                # the input structure is shared
-                if self.parameter_CIM.afferents:
-                    node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-                else:
-                    node_in = comp_in
-                incoming_projections = []
-            elif node is self.parameter_CIM and node.afferents:
-                # if parameter_CIM has afferent projections,
-                # their values are in comp_in[1]
-                node_in = builder.gep(comp_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
-                # And we run no further projection
-                incoming_projections = []
-            elif not is_mech:
-                node_in = builder.alloca(node_function.args[2].type.pointee)
-                incoming_projections = node.input_CIM.afferents + node.parameter_CIM.afferents
-            else:
-                # this path also handles parameter_CIM with no afferent
-                # projections. 'comp_in' does not include any extra values,
-                # and the entire call should be optimized out.
-                node_in = builder.alloca(node_function.args[2].type.pointee)
-                incoming_projections = node.afferents
-
-            if "reinitialize" in tags:
-                incoming_projections = []
-
-            # Execute all incoming projections
-            inner_projections = list(self._inner_projections)
-            for proj in incoming_projections:
-                # Skip autoassociative projections
-                if proj.sender.owner is proj.receiver.owner:
-                    continue
-
-                # Get location of projection input data
-                par_mech = proj.sender.owner
-                if par_mech in self._all_nodes:
-                    par_idx = self._get_node_index(par_mech)
-                else:
-                    comp = par_mech.composition
-                    assert par_mech is comp.output_CIM
-                    par_idx = self.nodes.index(comp)
-
-                output_s = proj.sender
-                assert output_s in par_mech.output_ports
-                output_port_idx = par_mech.output_ports.index(output_s)
-                proj_in = builder.gep(data_in, [ctx.int32_ty(0),
-                                                ctx.int32_ty(0),
-                                                ctx.int32_ty(par_idx),
-                                                ctx.int32_ty(output_port_idx)])
-
-                # Get location of projection output (in mechanism's input structure
-                rec_port = proj.receiver
-                assert rec_port.owner is node or rec_port.owner is node.input_CIM or rec_port.owner is node.parameter_CIM
-                indices = [0]
-                if proj in rec_port.owner.path_afferents:
-                    rec_port_idx = rec_port.owner.input_ports.index(rec_port)
-
-                    assert proj in rec_port.pathway_projections
-                    projection_idx = rec_port.pathway_projections.index(proj)
-
-                    # Adjust for AutoAssociative projections
-                    for i in range(projection_idx):
-                        if isinstance(rec_port.pathway_projections[i], AutoAssociativeProjection):
-                            projection_idx -= 1
-                    if not is_mech and node.parameter_CIM.afferents:
-                        # If there are afferent projections to parameter_CIM
-                        # the input structure is split between input_CIM
-                        # and parameter_CIM
-                        if proj in node.parameter_CIM.afferents:
-                            # modulatory projection
-                            indices.append(1)
-                        else:
-                            # pathway projection
-                            indices.append(0)
-                    indices.extend([rec_port_idx, projection_idx])
-                elif proj in rec_port.owner.mod_afferents:
-                    # Only mechanism ports list mod projections in mod_afferents
-                    assert is_mech
-                    projection_idx = rec_port.owner.mod_afferents.index(proj)
-                    indices.extend([len(rec_port.owner.input_ports), projection_idx])
-                else:
-                    assert False, "Projection neither pathway nor modulatory"
-
-                proj_out = builder.gep(node_in, [ctx.int32_ty(i) for i in indices])
-
-                # Get projection parameters and state
-                proj_idx = inner_projections.index(proj)
-                # Projections are listed second in param and state structure
-                proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-                proj_function = ctx.import_llvm_function(proj, tags=func_tags)
-
-                if proj_out.type != proj_function.args[3].type:
-                    warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
-                    proj_out = builder.bitcast(proj_out, proj_function.args[3].type)
-                builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
-
-            idx = ctx.int32_ty(self._get_node_index(node))
-            zero = ctx.int32_ty(0)
-            node_params = builder.gep(params, [zero, zero, idx])
-            node_context = builder.gep(context, [zero, zero, idx])
-            node_out = builder.gep(data_out, [zero, zero, idx])
-            if is_mech:
-                call_args = [node_params, node_context, node_in, node_out]
-                if len(node_function.args) > 4:
-                    assert node is self.controller
-                    call_args += [params, context, data_in]
-                builder.call(node_function, call_args)
-            elif "reinitialize" not in tags:
-                # FIXME: reinitialization of compositions is not supported
-                # Condition and data structures includes parent first
-                nested_idx = ctx.int32_ty(self._get_node_index(node) + 1)
-                node_data = builder.gep(data_in, [zero, nested_idx])
-                node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-                builder.call(node_function, [node_context, node_params, node_in,
-                                             node_data, node_cond])
-                # Copy output of the nested composition to its output place
-                output_idx = node._get_node_index(node.output_CIM)
-                result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
-                builder.store(builder.load(result), node_out)
-
-            builder.ret_void()
-
-        return llvm_func
 
     def enable_logging(self):
         for item in self.nodes + self.projections:
@@ -8347,8 +8170,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def learning_components(self):
-        return [node for node in self.nodes if (NodeRole.LEARNING in self.nodes_to_roles[node] or
-                                                NodeRole.AUTOASSOCIATIVE_LEARNING in self.nodes_to_roles[node])]
+        return [node for node in self.nodes if NodeRole.LEARNING in self.nodes_to_roles[node]]
 
     @property
     def learned_components(self):

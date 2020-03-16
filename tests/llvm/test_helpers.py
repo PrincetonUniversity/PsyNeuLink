@@ -1,4 +1,5 @@
 import ctypes
+import ctypes.util
 import copy
 import numpy as np
 import pytest

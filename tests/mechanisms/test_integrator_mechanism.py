@@ -317,10 +317,10 @@ class TestReinitialize:
     def test_LCIIntegrator_valid(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',
-            function=LeakyCompetingIntegrator(),
+            function=LeakyCompetingIntegrator(leak=1),
         )
 
-        # previous_value + (rate*previous_value + new_value)*time_step_size + noise
+        # previous_value + (new_value - rate*previous_value)*time_step_size + noise
         # initializer=0.0, rate=1.0, time_step_size=0.1, noise=0.0
         # returns 0.0 + (1.0*0.0 + 2.0)*0.1 = 2.0
         I.execute(2.0)
@@ -347,8 +347,8 @@ class TestReinitialize:
 
         I.execute(1.0)
         # 4.0 + (1.0*4.0 + 1.0)*0.1 + 0.0
-        assert np.allclose(I.value, 4.5)
-        assert np.allclose(I.output_ports[0].value, 4.5)
+        assert np.allclose(I.value, 3.7)
+        assert np.allclose(I.output_ports[0].value, 3.7)
 
         # reinitialize mechanism without value spec
         I.reinitialize()

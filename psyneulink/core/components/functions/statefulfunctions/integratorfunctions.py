@@ -372,8 +372,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # Get rid of 2d array.
         # When part of a Mechanism, the input and output are 2d arrays.
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
-        arg_out = ctx.unwrap_2d_array(builder, arg_out)
+        arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
+        arg_out = pnlvm.helpers.unwrap_2d_array(builder, arg_out)
 
         with pnlvm.helpers.array_ptr_loop(builder, arg_in, "integrate") as args:
             self._gen_llvm_integrate(*args, ctx, arg_in, arg_out, params, state)
@@ -382,11 +382,11 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     def _gen_llvm_load_param(self, ctx, builder, params, index, param, *,
                              state=None):
-        param_p = ctx.get_param_ptr(self, builder, params, param)
+        param_p = pnlvm.helpers.get_param_ptr(builder, self, params, param)
         if param == NOISE and isinstance(param_p.type.pointee, pnlvm.ir.LiteralStructType):
             # This is a noise function so call it to get value
             assert state is not None
-            state_p = ctx.get_state_ptr(self, builder, state, NOISE)
+            state_p = pnlvm.helpers.get_state_ptr(builder, self, state, NOISE)
             noise_f = ctx.import_llvm_function(self.parameters.noise.get())
             noise_in = builder.alloca(noise_f.args[2].type.pointee)
             noise_out = builder.alloca(noise_f.args[3].type.pointee)
@@ -877,10 +877,10 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                                           state=state)
 
         # Get the only context member -- previous value
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -1140,10 +1140,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                           state=state)
 
         # Get the only context member -- previous value
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -2506,7 +2506,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
-        random_state = ctx.get_state_ptr(self, builder, state, "random_state")
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
         rand_val_ptr = builder.alloca(ctx.float_ty)
         rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(rand_f, [random_state, rand_val_ptr])
@@ -2517,8 +2517,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             rate = builder.extract_value(rate, 0)
 
         # Get state pointers
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
-        prev_time_ptr = ctx.get_state_ptr(self, builder, state, "previous_time")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
 
         # value = previous_value + rate * variable * time_step_size \
         #       + np.sqrt(time_step_size * noise) * random_state.normal()
@@ -2901,7 +2901,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     """
     LeakyCompetingIntegrator(                  \
         default_variable=None,      \
-        rate=1.0,                   \
+        leak=1.0,                   \
         noise=0.0,                  \
         offset=None,                \
         time_step_size=0.1,         \
@@ -2918,14 +2918,14 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     .. math::
 
-        previous\\_value + (rate \\cdot previous\\_value + variable) \\cdot time\\_step\\_size +
+        previous\\_value + (variable - leak \\cdot previous\\_value) \\cdot time\\_step\\_size +
         noise \\sqrt{time\\_step\\_size}
 
-    where `rate <LeakyCompetingIntegrator.rate>` corresponds to :math:`k` (the leak parameter), `variable
-    <LeakyCompetingIntegrator.variable>` corresponds to :math:`\\rho_i` + :math:`\\beta` :math:`\\Sigma f(x_{\\neq i})`
-    (the net input to a unit), and `time_step_size <LeakyCompetingIntegrator.time_step_size>` corresponds to
-    :math:`\\frac{dt}{\\tau}` in Equation 2 of `Usher & McClelland (2001)
-    <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+    where `variable <LeakyCompetingIntegrator.variable>` corresponds to
+    :math:`\\rho_i` + :math:`\\beta`:math:`\\Sigma f(x_{\\neq i})` (the net input to a unit),
+    `leak <LeakyCompetingIntegrator.leak>` corresponds to :math:`k`, and `time_step_size
+    <LeakyCompetingIntegrator.time_step_size>` corresponds to :math:`\\frac{dt}{\\tau}`
+    in Equation 4 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
 
     .. note::
         When used as the `function <Mechanism.function>` of an `LCAMechanism`, the value passed to `variable
@@ -2933,8 +2933,16 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         (see `here <RecurrentTransferMechanism_Structure>` for how the external and recurrent inputs can be
         configured in a `RecurrentTransferMechanism`, of which LCAMechanism is subclass).
 
-    .. hint::
-        ``leak`` can be used as an alias for `rate <LeakyCompetingIntegrator.rate>`.
+    .. note::
+        the value of the **leak** argument is assigned to the `rate <LeakyCompetingIntegrator.rate>` parameter (and
+        the `leak <LeakyCompetingIntegrator.leak>` parameter as an alias of the `rate <LeakyCompetingIntegrator.rate>`
+        parameter); this is to be consistent with the parent class, `IntegratorFunction`.  However, note that
+        in contrast to a standard IntegratorFunction, where :math:`rate \\cdot previous\\_value` is added to
+        `variable <LeakyCompetingIntegrator.variable>`, here it is subtracted from `variable
+        <LeakyCompetingIntegrator.variable>` in order to implement decay. Thus, the value returned by the function can
+        increase in a given time step only if `rate <LeakyCompetingIntegrator.rate>` (aka `leak
+        <LeakyCompetingIntegrator.leak>`) is negative or `variable <LeakyCompetingIntegrator.variable>` is
+        sufficiently positive.
 
     *Modulatory Parameters:*
 
@@ -2949,13 +2957,10 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         specifies a template for the value to be integrated;  if it is a list or array, each element is independently
         integrated.
 
-    rate : float, list or 1d array : default 1.0
-        specifies the value used to scale the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>`
-        to the integral on each time step.  If it is a list or array, it must be the same length as `variable
-        <LeakyCompetingIntegrator.variable>` (see `rate <LeakyCompetingIntegrator.rate>` for details).
-
     leak : float, list or 1d array : default 1.0
-        alias for **rate**.
+        specifies the value used to scale the rate of decay of the integral on each time step.
+        If it is a list or array, it must be the same length as `variable <LeakyCompetingIntegrator.variable>` (see
+        `leak <LeakyCompetingIntegrator.leak>` for details).
 
     noise : float, function, list or 1d array : default 0.0
         specifies random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`;
@@ -2997,17 +3002,21 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         current input value some portion of which (determined by `rate <LeakyCompetingIntegrator.rate>`) will be
         added to the prior value;  if it is an array, each element is independently integrated.
 
-    rate : float or 1d array
-        scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the accumulation of
-        the `value <LeakyCompetingIntegrator.value>` on each time step (corrsponding to the ``leak`` term of the
-        function described in Equation 2 of `Usher & McClelland (2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
+    rate : float, list or 1d array
+        scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the decay of
+        the `value <LeakyCompetingIntegrator.value>` on each time step (corresponding to the ``leak`` term of the
+        function described in Equation 4 of `Usher & McClelland, 2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
         If it is a float or has a single element, its value is applied to all the elements of `previous_value
         <LeakyCompetingIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
         element of `previous_value <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
         `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
+        .. note::
+          aliased by the `leak <LeakyCompetingIntegrator.leak>` parameter.
+
     leak : float, list or 1d array
-        alias for `rate <LeakyCompetingIntegrator.rate>`.
+        alias of `rate <LeakyCompetingIntegrator.rate>` (to be consistent with the standard format of an
+        `IntegratorFunction`).
 
     noise : float, Function, or 1d array
         random value added to integral in each call to `function <LeakyCompetingIntegrator.function>`.
@@ -3076,25 +3085,30 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
+                 leak: parameter_spec = 1.0,
                  noise=0.0,
                  offset=None,
                  time_step_size=0.1,
                  initializer=None,
                  params: tc.optional(dict) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: is_pref_set = None,
+                 **kwargs):
+
+        # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
+        if RATE in kwargs:
+            leak = kwargs[RATE]
 
         super().__init__(
             default_variable=default_variable,
-            rate=rate,
+            rate=leak,
             noise=noise,
             offset=offset,
             time_step_size=time_step_size,
             initializer=initializer,
             params=params,
             owner=owner,
-            prefs=prefs,
+            prefs=prefs
         )
 
         self.has_initializers = True
@@ -3134,7 +3148,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         new_value = variable
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
+        value = previous_value + (-rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
 
         adjusted_value = value + offset
 
@@ -3154,10 +3168,10 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
         # Get the only context member -- previous value
-        prev_ptr = ctx.get_state_ptr(self, builder, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
-        prev_ptr = ctx.unwrap_2d_array(builder, prev_ptr)
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
         assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
 
         prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
@@ -3167,7 +3181,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         in_val = builder.load(in_ptr)
 
         ret = builder.fmul(prev_val, rate)
-        ret = builder.fadd(ret, in_val)
+        # ret = builder.fadd(ret, in_val)
+        ret = builder.fsub(in_val, ret)
         ret = builder.fmul(ret, time_step)
 
         sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
@@ -4164,23 +4179,23 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and state) are 2d arrays.
-        arg_in = ctx.unwrap_2d_array(builder, arg_in)
+        arg_in = pnlvm.helpers.unwrap_2d_array(builder, arg_in)
 
         # Get state pointers
         def _get_state_ptr(x):
-            ptr = ctx.get_state_ptr(self, builder, state, x)
-            return ctx.unwrap_2d_array(builder, ptr)
+            ptr = pnlvm.helpers.get_state_ptr(builder, self, state, x)
+            return pnlvm.helpers.unwrap_2d_array(builder, ptr)
         prev = {s: _get_state_ptr(s) for s in self._get_state_ids()}
 
         # Output locations
         def _get_out_ptr(i):
             ptr = builder.gep(arg_out, [zero_i32, ctx.int32_ty(i)])
-            return ctx.unwrap_2d_array(builder, ptr)
+            return pnlvm.helpers.unwrap_2d_array(builder, ptr)
         out = {l: _get_out_ptr(i) for i, l in enumerate(('v', 'w', 'time'))}
 
         # Load parameters
         def _get_param_val(x):
-            ptr = ctx.get_param_ptr(self, builder, params, x)
+            ptr = pnlvm.helpers.get_param_ptr(builder, self, params, x)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
         param_vals = {p: _get_param_val(p) for p in self._get_param_ids()}
 

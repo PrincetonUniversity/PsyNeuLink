@@ -1,10 +1,8 @@
 import numpy as np
-import psyneulink.core.llvm as pnlvm
-import psyneulink.core.components.functions.distributionfunctions as Functions
-import psyneulink.core.globals.keywords as kw
 import pytest
 
-from math import e, pi, sqrt
+import psyneulink.core.llvm as pnlvm
+import psyneulink.core.components.functions.distributionfunctions as Functions
 
 np.random.seed(0)
 test_var = np.random.rand()

@@ -12,9 +12,8 @@ class Loss():
         self._DELTA_W_NUM = 0
 
 
-    def _gen_llvm_function(self, *, tags:frozenset):
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
-            return self._gen_loss_function(ctx)
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        return self._gen_loss_function(ctx)
 
 
     def gen_inject_lossfunc_call(self, ctx, builder, bin_func, value, target):
@@ -82,4 +81,3 @@ class MSELoss(Loss):
             tmp = gen_inject_vec_sub(ctx, builder, value, target)
             gen_inject_vec_add(ctx, builder, output, tmp, output)
         return output
-        
