@@ -1289,7 +1289,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'STATE_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
 ]
 
 # show_graph animation options
@@ -1586,7 +1586,7 @@ class Graph(object):
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-STATE_FUNCTION_PARAMS = "STATE_FUNCTION_PARAMS"
+PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -3547,8 +3547,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     feedback = False
                 sender = pathway[c - 1]
                 receiver = pathway[c + 1]
-                if isinstance(sender, (Mechanism, Composition)) \
-                        and isinstance(receiver, (Mechanism, Composition)):
+                # # MODIFIED 3/15/20 OLD:
+                # if isinstance(sender, (Mechanism, Composition)) \
+                #         and isinstance(receiver, (Mechanism, Composition)):
+                # MODIFIED 3/15/20 NEW: [JDC]
+                if is_spec(sender, NODE) and is_spec(receiver, NODE):
+                    if isinstance(sender, tuple):
+                        sender = sender[0]
+                    if isinstance(receiver, tuple):
+                        receiver = receiver[0]
+                # MODIFIED 3/15/20 END
                     try:
                         if isinstance(proj, (np.ndarray, np.matrix, list)):
                             proj = MappingProjection(sender=sender,
@@ -4918,7 +4926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context(execution_id=NotImplemented)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
-                                                            STATE_FUNCTION_PARAMS, ROLES, ALL))=False,
+                                                            PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=False,
                    show_cim:bool=False,
@@ -4979,7 +4987,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, STATE_FUNCTION_PARAMS, ROLES, \
+        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, PORT_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
             show a detailed representation of each `Mechanism <Mechanism>` in the graph, including its `Ports <Port>`;
             can have any of the following settings alone or in a list:
@@ -5001,7 +5009,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * *MECH_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
               Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
-            * *STATE_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
+            * *PORT_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
               Port of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
             * *ROLES* -- show the `role <Composition.NodeRoles>` of the Mechanism in the Composition
@@ -5883,7 +5891,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_mech_function_params': any(key in show_node_structure
                                                                  for key in {MECH_FUNCTION_PARAMS, ALL}),
                                 'show_port_function_params': any(key in show_node_structure
-                                                                  for key in {STATE_FUNCTION_PARAMS, ALL}),
+                                                                  for key in {PORT_FUNCTION_PARAMS, ALL}),
                                 'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
                                 'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
                                 'show_headers': show_headers,
@@ -5895,7 +5903,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
                                 'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
-                                'show_port_function_params': show_node_structure in {STATE_FUNCTION_PARAMS, ALL},
+                                'show_port_function_params': show_node_structure in {PORT_FUNCTION_PARAMS, ALL},
                                 'show_values': show_node_structure in {VALUES, LABELS, ALL},
                                 'use_labels': show_node_structure in {LABELS, ALL},
                                 'show_headers': show_headers,
@@ -7880,7 +7888,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # of the nested composition. Filter them out.
         return (p for p in self.projections
                   if p.receiver.owner is not self.input_CIM and
-                     p.receiver.owner is not self.parameter_CIM)
+                     p.receiver.owner is not self.parameter_CIM and
+                     p.sender.owner is not self.output_CIM)
 
     def _get_param_struct_type(self, ctx):
         node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
