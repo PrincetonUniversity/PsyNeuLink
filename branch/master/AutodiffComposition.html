@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.5.0 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.5.0+81.g5034dcf documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.0
+                  0.7.5.0+81
                 </div>
               
             
@@ -207,13 +207,10 @@
 <div><ul class="simple">
 <li><a class="reference internal" href="#autodiffcomposition-overview"><span class="std std-ref">Overview</span></a></li>
 <li><a class="reference internal" href="#autodiffcomposition-creation"><span class="std std-ref">Creating an AutodiffComposition</span></a></li>
-<li><a class="reference internal" href="#autodiffcomposition-structure"><span class="std std-ref">Structure</span></a></li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#autodiffcomposition-execution"><span class="std std-ref">Execution</span></a></dt>
 <dd><ul class="first last">
-<li><code class="xref any docutils literal"><span class="pre">Input</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">Input</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">AutodiffComposition_Logging</span></code></li>
+<li><a class="reference internal" href="#autodiffcomposition-logging"><span class="std std-ref">Logging</span></a></li>
 <li><a class="reference internal" href="#autodiffcomposition-nested-execution"><span class="std std-ref">Nested Execution</span></a></li>
 </ul>
 </dd>
@@ -233,15 +230,13 @@
 with <a class="reference external" href="https://pytorch.org/">PyTorch</a>, a popular machine learning library, which executes considerably more quickly
 than using the <a class="reference internal" href="Composition.html#composition-learning-standard"><span class="std std-ref">standard implementation of learning</span></a> in a Composition, using its
 <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a>. An AutodiffComposition is configured and run similarly to a standard
-Composition, with some exceptions that are described below.  An example is provided in the
-<code class="xref any docutils literal"><span class="pre">xor_in_psyneulink_and_pytorch.py</span></code> script (in the Scripts folder of the PsyNeuLink source code), which also provides
-a comparison of runtimes.</p>
+Composition, with some exceptions that are described below.</p>
 </div>
 <div class="section" id="creating-an-autodiffcomposition">
 <span id="autodiffcomposition-creation"></span><h2>Creating an AutodiffComposition<a class="headerlink" href="#creating-an-autodiffcomposition" title="Permalink to this headline">¶</a></h2>
 <p>An AutodiffComposition can be created by calling its constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using the
 standard <a class="reference internal" href="Composition.html#composition-creation"><span class="std std-ref">Composition methods</span></a> for doing so.  The constructor also includes an number of
-arguments that are specific to the AutodiffComposition, as described below.</p>
+parameters that are specific to the AutodiffComposition. See the &lt;class reference <a class="reference internal" href="#"><span class="doc">AutodiffComposition</span></a>&gt; for a list of these parameters.</p>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
 <p class="last">Mechanisms or Projections should not be added to or deleted from an AutodiffComposition after it has
@@ -250,84 +245,9 @@ functionality.</p>
 </div>
 <div class="admonition warning">
 <p class="first admonition-title">Warning</p>
-<p class="last">When comparing models built in PyTorch to those using AutodiffComposition, the <code class="xref any docutils literal"><span class="pre">bias</span></code> parameter of PyTorch modules should be set to <code class="xref any docutils literal"><span class="pre">False</span></code>, as AutodiffComposition does not currently support trainable biases.</p>
+<p class="last">When comparing models built in PyTorch to those using AutodiffComposition,
+the <code class="xref any docutils literal"><span class="pre">bias</span></code> parameter of PyTorch modules should be set to <code class="xref any docutils literal"><span class="pre">False</span></code>, as AutodiffComposition does not currently support trainable biases.</p>
 </div>
-<ul>
-<li><p class="first"><strong>param_init_from_pnl</strong> argument – determines how parameters are set up for the internal PyTorch representation of
-the model.  If it is set to True:</p>
-<blockquote>
-<div><ul class="simple">
-<li>only weight parameters that correspond to the <code class="xref any docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
-parameter of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> in the Composition are created;  no bias parameters are
-created, as the bias parameters associated with Mechanisms are not trainable;</li>
-<li>the weight parameters are initialized to be identical to the <code class="xref any docutils literal"><span class="pre">value</span></code> of <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameters of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> in the Composition;
-the tensor of the parameter object corresponding to a particular MappingProjection not only has the same
-dimensionality as its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>, it also has the exact same values;</li>
-<li>Pytorch functions representing the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the
-Composition incorporate their scalar, untrainable biases.</li>
-</ul>
-<p>If it is set to False:</p>
-<blockquote>
-<div><ul class="simple">
-<li>weight parameters have the same dimensionality as the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of the
-corresponding <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>;  however, their values – and those of the bias
-parameters – are sampled from a random distribution;</li>
-</ul>
-</div></blockquote>
-</div></blockquote>
-</li>
-<li><p class="first"><strong>learning_rate</strong> – specifies the learning rate for the current run (default 0.001), which is passed to the
-optimized specified in the <strong>optimizer</strong> argument.</p>
-</li>
-<li><p class="first"><strong>optimizer</strong> – specifies the kind of optimizer used in training. The current options are ‘sgd’ (the default) or
-‘adam’.</p>
-</li>
-<li><p class="first"><strong>optimizer_type</strong> – specifies the kind of optimizer used in training. The current options are ‘sgd’ (which is the
-default) or ‘adam’.</p>
-</li>
-<li><p class="first"><strong>disable_learning</strong> – specifies whether the AutodiffComposition should disable learning (default is False). When False,
-the AutodiffComposition trains using PyTorch when ran in <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learning</span> <span class="pre">mode</span></code></a>. When True, the AutodiffComposition runs like an ordinary
-<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, which does not change weights.</p>
-</li>
-<li><p class="first"><strong>weight_decay</strong> – specifies the L2 penalty (which discourages large weights) used by the optimizer. This defaults
-to 0.</p>
-</li>
-<li><p class="first"><strong>loss_spec</strong> – specifies the loss function for training. It can be a string or a PyTorch loss function. The current
-options for strings are ‘mse’ (the default), ‘crossentropy’, ‘l1’, ‘nll’, ‘poissonnll’, and ‘kldiv’. These refer to
-Mean Squared Error, Cross Entropy, L1 loss, Negative Log Likelihood loss, Poisson Negative Log Likelihood, and KL
-Divergence respectively. The <strong>loss_spec</strong> can also be any PyTorch loss function, including a custom-written one.
-For a list of PyTorch loss functions, see <a class="reference external" href="https://pytorch.org/docs/stable/nn.html#loss-functions">Loss function</a>.
-For information on writing a custom loss function, see <a class="reference external" href="https://pytorch.org/docs/master/notes/extending.html">Extending PyTorch</a>, as well as <a class="reference external" href="https://discuss.pytorch.org/t/build-your-own-loss-function-in-pytorch/235">Build your own loss function in PyTorch</a>.</p>
-</li>
-<li><p class="first"><strong>force_no_retain_graph</strong> – False by default.  If True, the AutodiffComposition does not use PyTorch’s <a class="reference external" href="https://pytorch.org/docs/master/autograd.html?highlight=retain_graph">retain_graph</a>  option when computing the gradient. This
-can reduce memory usage; however, it breaks recurrent networks, so it should only be used when the network is not
-recurrent.</p>
-</li>
-</ul>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The AutodiffComposition detachs all gradients between epochs of training. For more information on why this is done,
-see <a class="reference external" href="https://discuss.pytorch.org/t/runtimeerror-trying-to-backward-through-the-graph-a-second-time-but-the-buffers-have-already-been-freed-specify-retain-graph-true-when-calling-backward-the-first-time/6795">Trying to backward through a graph a second time</a>
-and <a class="reference external" href="https://discuss.pytorch.org/t/solved-why-we-need-to-detach-variable-which-contains-hidden-representation/1426/4">Why we need to detach Variable which contains [a] hidden representation</a>.</p>
-</div>
-</div>
-<div class="section" id="structure">
-<span id="autodiffcomposition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>An AutodiffComposition has all the attributes of its parent class <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, as well ones corresponding to the
-arguments described above, and the following.</p>
-<ul class="simple">
-<li><code class="xref any docutils literal"><span class="pre">target_CIM</span></code> – analogous to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">input_CIM</span></code></a> of
-a standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, but instead of representing the input to the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism(s) of the Composition
-represents the targets used to specify the target <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism(s)
-(see <code class="xref any docutils literal"><span class="pre">below</span></code> for a description of how these are specified).</li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation"><code class="xref any py py-attr docutils literal"><span class="pre">pytorch_representation</span></code></a> – containsa the PyTorch representation
-of the PsyNeuLink model that AutodiffComposition contains.</li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a> – tracks the average loss for each training batch.</li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">optimizer</span></code></a> – contains the PyTorch optimizer function used for learning. It
-is determined at initialization by the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong> arguments.</li>
-<li><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.loss" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.loss"><code class="xref any py py-attr docutils literal"><span class="pre">loss</span></code></a> – contains the PyTorch loss function used for learning. It is determined
-at initialization by the <strong>loss_spec</strong> argument.</li>
-</ul>
 </div>
 <div class="section" id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
@@ -356,22 +276,22 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p id="autodiffcomposition-logging"># Logging
-# ~~~~~~~</p>
-<p># Logging in AutodiffCompositions follows the same procedure as logging in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. However, there are some small gotchas to be aware of;
-# Since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
-# then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
-# As of present, the ones that are supported are:
-# 1) the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of Projections
-# 2) the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> parameter of its inner components</p>
+<div class="section" id="logging">
+<span id="autodiffcomposition-logging"></span><h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>Logging in AutodiffCompositions follows the same procedure as <a class="reference internal" href="Log.html"><span class="doc">logging in a Composition</span></a>. However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
+then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
+Currently, the only supported parameters are:</p>
+<ol class="arabic simple">
+<li>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of Projections</li>
+<li>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> parameter of its inner components</li>
+</ol>
+</div>
 <div class="section" id="nested-execution">
 <span id="autodiffcomposition-nested-execution"></span><h3>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h3>
 <p>Like any other <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, an AutodiffComposition may be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested inside another</span></a>.</p>
 <p>The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
 Composition:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">_analyze_graph</span><span class="p">()</span>  <span class="c1"># alternatively, my_autodiff.run( ... )</span>
-<span class="go">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create outer composition</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Create outer composition</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_outer_composition</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_outer_composition</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">my_autodiff</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Specify dict containing inputs and targets for nested Composition</span>
@@ -394,134 +314,22 @@ See <a class="reference internal" href="Composition.html#composition-class-refer
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>param_init_from_pnl</strong> (<em>boolean : default True</em>) – a Boolean specifying how parameters are initialized. <strong>WARNING: deprecated!</strong> (See
-<a class="reference internal" href="#autodiffcomposition-creation"><span class="std std-ref">Creating an AutodiffComposition</span></a> for details)</li>
 <li><strong>learning_rate</strong> (<em>float : default 0.001</em>) – the learning rate, which is passed to the optimizer.</li>
-<li><strong>disable_learning</strong> (<em>bool: default False</em>) – specifies whether the AutodiffComposition should disable learning (default is False). When False,
-the AutodiffComposition trains using PyTorch when ran in <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learning</span> <span class="pre">mode</span></code></a>. When True, the AutodiffComposition runs like an ordinary
-<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, which does not change weights.</li>
+<li><strong>disable_learning</strong> (<em>bool: default False</em>) – specifies whether the AutodiffComposition should disable learning when ran in <a class="reference internal" href="Composition.html#composition-learning-mode"><span class="std std-ref">learning mode</span></a></li>
 <li><strong>optimizer_type</strong> (<em>str : default 'sgd'</em>) – the kind of optimizer used in training. The current options are ‘sgd’ or ‘adam’.</li>
 <li><strong>weight_decay</strong> (<em>float : default 0</em>) – specifies the L2 penalty (which discourages large weights) used by the optimizer.</li>
 <li><strong>loss_spec</strong> (<em>str</em><em> or </em><em>PyTorch loss function : default 'mse'</em>) – specifies the loss function for training. The current string options are ‘mse’ (the default), ‘crossentropy’,
 ‘l1’, ‘nll’, ‘poissonnll’, and ‘kldiv’. Any PyTorch loss function can work here, such as ones from
 <a class="reference external" href="https://pytorch.org/docs/stable/nn.html#loss-functions">https://pytorch.org/docs/stable/nn.html#loss-functions</a></li>
+<li><strong>losses</strong> (<em>list of floats</em>) – tracks the average for each weight update (i.e. each minibatch)</li>
+<li><strong>optimizer</strong> (<em>PyTorch optimizer function</em>) – the optimizer used for training. Depends on the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong>
+arguments from initialization.</li>
+<li><strong>loss</strong> (<em>PyTorch loss function</em>) – the loss function used for training. Depends on the <strong>loss_spec</strong> argument from initialization.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation">
-<code class="descname">pytorch_representation</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PytorchModelCreator</em> – the PyTorch representation of the PsyNeuLink model</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses">
-<code class="descname">losses</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list of floats</em> – tracks the average loss for each training epoch</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer">
-<code class="descname">optimizer</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PyTorch optimizer function</em> – the optimizer used for training. Depends on the <strong>optimizer_type</strong>, <strong>learning_rate</strong>, and <strong>weight_decay</strong>
-arguments from initialization.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.loss">
-<code class="descname">loss</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.loss" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PyTorch loss function</em> – the loss function used for training. Depends on the <strong>loss_spec</strong> argument from initialization.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str : default AutodiffComposition-&lt;index&gt;</em> – the name of the Composition. Specified in the <strong>name</strong> argument of the constructor for the Projection;
-if not specified, a default is assigned by <code class="xref any docutils literal"><span class="pre">CompositionRegistry</span></code> (see <span class="xref std std-doc">Registry</span> for conventions
-used in naming, including for default and duplicate names).</p>
-</dd></dl>
-
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>instance of AutodiffComposition</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">AutodiffComposition</a></td>
-</tr>
-</tbody>
-</table>
-<dl class="class">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters">
-<em class="property">class </em><code class="descname">Parameters</code><span class="sig-paren">(</span><em>owner</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.learning_rate">
-<code class="descname">learning_rate</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.learning_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <code class="xref any docutils literal"><span class="pre">learning_rate</span></code></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">0.001</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><code class="docutils literal"><span class="pre">float</span></code></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.losses">
-<code class="descname">losses</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.losses" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.losses"><code class="xref any py py-attr docutils literal"><span class="pre">losses</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.optimizer">
-<code class="descname">optimizer</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.optimizer" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.optimizer"><code class="xref any py py-attr docutils literal"><span class="pre">optimizer</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.pytorch_representation">
-<code class="descname">pytorch_representation</code><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.Parameters.pytorch_representation" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.pytorch_representation"><code class="xref any py py-attr docutils literal"><span class="pre">pytorch_representation</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default value:</th><td class="field-body">None</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -574,8 +382,8 @@ used in naming, including for default and duplicate names).</p>
 <li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#creating-an-autodiffcomposition">Creating an AutodiffComposition</a></li>
-<li><a class="reference internal" href="#structure">Structure</a></li>
 <li><a class="reference internal" href="#execution">Execution</a><ul>
+<li><a class="reference internal" href="#logging">Logging</a></li>
 <li><a class="reference internal" href="#nested-execution">Nested Execution</a></li>
 </ul>
 </li>
@@ -599,7 +407,7 @@ used in naming, including for default and duplicate names).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.0',
+               VERSION:'0.7.5.0+81.g5034dcf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
