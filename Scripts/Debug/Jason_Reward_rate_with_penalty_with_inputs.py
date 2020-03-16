@@ -276,7 +276,7 @@ for task in stim_dict_list:
             inputs=task,
             num_trials=1,
             context=execution_id,
-            # bin_execute='LLVMRun'
+            bin_execute='LLVMRun'
         )
         execution_id += 1
 
