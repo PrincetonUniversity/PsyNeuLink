@@ -1053,8 +1053,8 @@ class DDM(ProcessingMechanism):
 
             )
 
-            # TEST_PRINT
-            print(result)
+            # # TEST_PRINT
+            # print(result)
 
             if isinstance(self.function, DriftDiffusionAnalytical):
                 return_value = np.zeros(shape=(10,1))
