@@ -14,8 +14,11 @@ WORKDIR=/scratch/gpfs/dmturner/${SLURM_JOB_ID}
 # Create a directory on scratch for this job
 mkdir $WORKDIR
 
-srun dask-mpi --no-nanny --scheduler-file $WORKDIR/scheduler.json --local-directory $WORKDIR --nthreads 1
+rm scheduler.json
+
+srun dask-mpi --no-nanny --scheduler-file scheduler.json --local-directory $WORKDIR --nthreads 1
 
 # Cleanup the work directory and scheduler JSON
 rm -rf $WORKDIR
+rm scheduler.json
 

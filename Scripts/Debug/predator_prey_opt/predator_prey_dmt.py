@@ -13,9 +13,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--seed", type=int,
         default=int.from_bytes(os.urandom(4), byteorder="big"),
         help='Random seed, seed from os.urandom if unspecified.')
-args = parser.parse_args()
+#args = parser.parse_args()
 
-SEED = args.seed
+SEED = int.from_bytes(os.urandom(4), byteorder="big")
 
 from psyneulink.core.globals.utilities import set_global_seed
 set_global_seed(SEED)
@@ -27,7 +27,7 @@ np.random.seed(SEED+1)
 
 # Runtime switches:
 MPI_IMPLEMENTATION = True
-RENDER = True
+RENDER = False
 PNL_COMPILE = False
 RUN = True
 SHOW_GRAPH = False
@@ -91,6 +91,12 @@ NUM_EPISODES = 100
 class PredatorPreySimulator:
 
     def __init__(self):
+
+        SEED = int.from_bytes(os.urandom(4), byteorder="big")
+
+        from psyneulink.core.globals.utilities import set_global_seed
+        set_global_seed(SEED)
+        np.random.seed(SEED+1)
 
         # Setup a Gym Forager environment for the game
         self.gym_forager_env = ForagerEnv(obs_type='egocentric', incl_values=False, frameskip=2)
@@ -399,9 +405,31 @@ class PredatorPreySimulator:
 
         return loss
 
-def main(cost_rate):
+def run_games(cost_rate):
     return PredatorPreySimulator().run_games(cost_rate)
 
+def run_search():
+
+    from dask.distributed import Client, LocalCluster
+    import joblib
+    import hypertunity as ht
+
+    client = Client(scheduler_file='scheduler.json')
+    #client = Client()  # This is actually the following two commands
+    print(client)
+    client.restart()
+
+    domain = ht.Domain({
+                    "cost_rate": set([-.8])
+    })
+
+    with joblib.parallel_backend('dask'):
+        with joblib.Parallel() as parallel:
+            print("Doing the work ... ")
+            results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(2))
+
+    print(results)
+
 if __name__ == "__main__":
-    main(COST_RATE)
+    run_search()
 

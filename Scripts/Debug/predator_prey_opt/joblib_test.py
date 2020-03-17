@@ -8,6 +8,7 @@ client.restart()
 import time
 import joblib
 import hypertunity as ht
+from hypertunity.scheduling.jobs import reset_registry
 
 def long_running_function(i):
     time.sleep(.1)
@@ -23,6 +24,7 @@ if __name__ == "__main__":
 
     with joblib.parallel_backend('dask'):
         with joblib.Parallel() as parallel:
+            parallel(joblib.delayed(reset_registry)())
             jobs = [ht.Job(task="joblib_test2.py:run_games", args=(*domain.sample().as_namedtuple(),)) for s in range(10)]
             print([job.id for job in jobs])
             results = parallel(joblib.delayed(job)() for job in jobs)

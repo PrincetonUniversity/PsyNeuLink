@@ -1709,8 +1709,8 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            assert direction is MAXIMIZE or direction is MINIMIZE, \
-                "PROGRAM ERROR: bad value for {} arg of {}: {}". \
+            assert direction == MAXIMIZE or direction == MINIMIZE, \
+                "PROGRAM ERROR: bad value for {} arg of {}: {}, {}". \
                     format(repr(DIRECTION), self.name, direction)
 
             last_sample, last_value, all_samples, all_values = super()._function(
