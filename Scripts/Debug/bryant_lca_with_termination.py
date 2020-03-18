@@ -42,13 +42,15 @@ comp.add_node(cueInterval)
 comp.add_node(csiController)
 # csiController.control_signals[0].set_log_conditions([pnl.VALUE])
 
+# comp.show_graph()
+
+
 cueInterval.set_log_conditions([pnl.VALUE])
 activation.set_log_conditions([pnl.RESULT, 'termination_threshold'])
 csiController.set_log_conditions([pnl.VALUE])
 taskLayer.set_log_conditions([pnl.VALUE])
 
 
-comp.show_graph()
 inputs = {taskLayer: [[1, 0], [1, 0], [1, 0], [1, 0]],
           cueInterval: [[1], [5], [1], [5]]}
 
