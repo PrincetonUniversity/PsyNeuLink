@@ -1252,12 +1252,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             input_type_list.append(new_type)
 
         # Add modulatory inputs
-        mod_input_type_list = []
-        for proj in self.mod_afferents:
-            mod_input_type_list.append(ctx.get_output_struct_type(proj))
-        if len(mod_input_type_list) > 1:
-            input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
-
+        mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
+        input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+        
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_ids(self):
