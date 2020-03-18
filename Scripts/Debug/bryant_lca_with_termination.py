@@ -29,7 +29,6 @@ activation = pnl.LCAMechanism(default_variable=[[0.0, 0.0]],
 
 # Create controller
 csiController = pnl.ControlMechanism(
-        # objective_mechanism=pnl.ObjectiveMechanism(monitor=[cueInterval]),
         monitor_for_control=cueInterval,
         control_signals=[(pnl.TERMINATION_THRESHOLD, activation)],
         modulation=pnl.OVERRIDE
@@ -38,37 +37,22 @@ csiController = pnl.ControlMechanism(
 comp = pnl.Composition(
         # controller_mode=pnl.BEFORE
 )
-# comp.add_node(cueInterval)
-# comp.add_node(taskLayer)
-# comp.add_node(activation)
-# comp.add_projection(sender=taskLayer, receiver=activation)
-# comp.add_node(csiController)
-# comp.add_controller(csiController)
-# comp.scheduler.add_condition(activation,pnl.WhenFinished(csiController))
-# comp.enable_controller=True
 comp.add_linear_processing_pathway(pathway=[taskLayer,activation])
 comp.add_node(cueInterval)
 comp.add_node(csiController)
+# csiController.control_signals[0].set_log_conditions([pnl.VALUE])
 
 cueInterval.set_log_conditions([pnl.VALUE])
 activation.set_log_conditions([pnl.RESULT, 'termination_threshold'])
 csiController.set_log_conditions([pnl.VALUE])
 taskLayer.set_log_conditions([pnl.VALUE])
 
-# csiController.control_signals[0].set_log_conditions([pnl.VALUE])
-
-
-def print_ctl(context):
-    print('\ncontrol_signal:', csiController.control_signals[0].parameters.value.get(context))
-    print('parameter_port:', activation.parameter_ports['termination_threshold'].parameters.value.get(context))
-    print('mod_term_thresh:', activation.get_mod_termination_threshold(context)),
-    print('term_thresh w/ context:', activation.parameters.termination_threshold.get(context))
 
 comp.show_graph()
 inputs = {taskLayer: [[1, 0], [1, 0], [1, 0], [1, 0]],
           cueInterval: [[1], [5], [1], [5]]}
 
-comp.run(inputs, bin_execute=False, call_after_trial=print_ctl)
+comp.run(inputs, bin_execute=False)
 
 activation.log.print_entries()
 csiController.log.print_entries()
