@@ -2083,7 +2083,6 @@ class Port_Base(Port):
             variable,
             context=context,
             runtime_params=runtime_params,
-
         )
 
     def _get_modulated_param(self, mod_proj, receiver=None, context=None):
