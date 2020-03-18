@@ -80,7 +80,7 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
 
-NUM_EPISODES = 100
+NUM_EPISODES = 5
 
 # **********************************************************************************************************************
 # **************************************  CREATE COMPOSITION ***********************************************************
@@ -92,15 +92,15 @@ class PredatorPreySimulator:
 
     def __init__(self):
 
-        SEED = int.from_bytes(os.urandom(4), byteorder="big")
+        self.seed = int.from_bytes(os.urandom(4), byteorder="big")
 
         from psyneulink.core.globals.utilities import set_global_seed
-        set_global_seed(SEED)
-        np.random.seed(SEED+1)
+        set_global_seed(self.seed)
+        np.random.seed(self.seed+1)
 
         # Setup a Gym Forager environment for the game
         self.gym_forager_env = ForagerEnv(obs_type='egocentric', incl_values=False, frameskip=2)
-        self.gym_forager_env.seed(SEED+2)
+        self.gym_forager_env.seed(self.seed+2)
 
         # Setup an instance of the double DQN agent for determining optimal actions
         self.ddqn_agent = DoubleDQNAgent(model_load_path=MODEL_PATH,
@@ -417,7 +417,6 @@ def run_search():
     client = Client(scheduler_file='scheduler.json')
     #client = Client()  # This is actually the following two commands
     print(client)
-    client.restart()
 
     domain = ht.Domain({
                     "cost_rate": set([-.8])
@@ -426,7 +425,7 @@ def run_search():
     with joblib.parallel_backend('dask'):
         with joblib.Parallel() as parallel:
             print("Doing the work ... ")
-            results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(2))
+            results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(5))
 
     print(results)
 
