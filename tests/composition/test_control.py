@@ -936,12 +936,14 @@ class TestControlMechanisms:
         comp.add_node(monitor)
         comp.add_node(rtm)
         comp.add_node(controller)
-        comp.run(inputs = {
+        val = comp.run(inputs = {
                     monitor: [[1], [5], [1], [5]],
                     rtm: [[1,0], [1,0] ,[1,0], [1,0]]
                 },
             bin_execute=mode
         )
+        assert np.allclose(val[0], [5])
+        assert np.allclose(val[1], [0.7573055560600637, 0.4500512583901123])
 
 class TestModelBasedOptimizationControlMechanisms:
 
