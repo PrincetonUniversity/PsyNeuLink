@@ -1152,11 +1152,16 @@ class OptimizationControlMechanism(ControlMechanism):
         # Construct input
         comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
 
-        num_features = len(arg_in.type.pointee) - 1
-        for i in range(num_features):
-            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+        for src_idx, ip in enumerate(self.input_ports):
+            if ip.shadow_inputs is None:
+                continue
+            cim_in_port = self.agent_rep.input_CIM_ports[ip.shadow_inputs][0]
+            dst_idx = self.agent_rep.input_CIM.input_ports.index(cim_in_port)
+
+            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
             # Destination is a struct of 2d arrays
-            dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i),
+            dst = builder.gep(comp_input, [ctx.int32_ty(0),
+                                           ctx.int32_ty(dst_idx),
                                            ctx.int32_ty(0)])
             builder.store(builder.load(src), dst)
 
