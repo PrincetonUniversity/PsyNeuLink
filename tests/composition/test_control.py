@@ -911,7 +911,7 @@ class TestControlMechanisms:
                                       pytest.param("LLVMExec", marks=pytest.mark.llvm),
                                       pytest.param("LLVMRun", marks=pytest.mark.llvm),
                                      ])
-    def test_recurrent_control(self, mode, benchmark):
+    def test_recurrent_control(self, mode):
         monitor = pnl.TransferMechanism(default_variable=[[0.0]],
                                     size=1,
                                     function=pnl.Linear(slope=1, intercept=0),
