@@ -1910,7 +1910,7 @@ class TestModelBasedOptimizationControlMechanisms:
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                 control_signals=[
                     pnl.ControlSignal(modulates=[(pnl.SLOPE, input_a)],
-                                      intensity_cost_function=pnl.Linear(slope=0),
+                                      intensity_cost_function=pnl.Linear(slope=1),
                                       allocation_samples=[-1, 1]),
                     pnl.ControlSignal(modulates=[(pnl.SLOPE, input_b)],
                                       intensity_cost_function=pnl.Linear(slope=0),
