@@ -25,26 +25,30 @@ activation = pnl.LCAMechanism(default_variable=[[0.0, 0.0]],
                               termination_threshold=3,
                               name='Task Activations [Act 1, Act 2]')
 
+# response = pnl.ProcessingMechanism()
+
 # Create controller
 csiController = pnl.ControlMechanism(
-        objective_mechanism=pnl.ObjectiveMechanism(monitor=[cueInterval]),
-        # monitor_for_control=cueInterval,
+        # objective_mechanism=pnl.ObjectiveMechanism(monitor=[cueInterval]),
+        monitor_for_control=cueInterval,
         control_signals=[(pnl.TERMINATION_THRESHOLD, activation)],
         modulation=pnl.OVERRIDE
 )
 
 comp = pnl.Composition(
-        controller_mode=pnl.BEFORE
+        # controller_mode=pnl.BEFORE
 )
-comp.add_node(cueInterval)
-comp.add_node(taskLayer)
-comp.add_node(activation)
-comp.add_projection(sender=taskLayer, receiver=activation)
+# comp.add_node(cueInterval)
+# comp.add_node(taskLayer)
+# comp.add_node(activation)
+# comp.add_projection(sender=taskLayer, receiver=activation)
 # comp.add_node(csiController)
-comp.add_controller(csiController)
-comp.scheduler.add_condition(activation,pnl.WhenFinished(csiController))
+# comp.add_controller(csiController)
+# comp.scheduler.add_condition(activation,pnl.WhenFinished(csiController))
 # comp.enable_controller=True
-
+comp.add_linear_processing_pathway(pathway=[taskLayer,activation])
+comp.add_node(cueInterval)
+comp.add_node(csiController)
 
 cueInterval.set_log_conditions([pnl.VALUE])
 activation.set_log_conditions([pnl.RESULT, 'termination_threshold'])
@@ -61,8 +65,8 @@ def print_ctl(context):
     print('term_thresh w/ context:', activation.parameters.termination_threshold.get(context))
 
 comp.show_graph()
-inputs = {taskLayer: [[1, 0], [1, 0], [1, 0]],
-          cueInterval: [[1], [5], [1]]}
+inputs = {taskLayer: [[1, 0], [1, 0], [1, 0], [1, 0]],
+          cueInterval: [[1], [5], [1], [5]]}
 
 comp.run(inputs, bin_execute=False, call_after_trial=print_ctl)
 
