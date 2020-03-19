@@ -1207,7 +1207,7 @@ class OutputPort(Port_Base):
         elif type(fct_variable) is str:
             is_PARAMS_DICT = fct_variable == PARAMS_DICT
 
-        fct = _parse_output_port_function(owner, OutputPort.__name__, function, fct_variable == is_PARAMS_DICT)
+        fct = _parse_output_port_function(owner, OutputPort.__name__, function, is_PARAMS_DICT)
 
         try:
             # return fct(variable=fct_variable)
