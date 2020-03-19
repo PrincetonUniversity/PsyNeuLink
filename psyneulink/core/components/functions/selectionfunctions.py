@@ -413,7 +413,7 @@ class OneHot(SelectionFunction):
             min_value = np.min(np.absolute(variable))
             result = np.where(np.absolute(variable) == min_value, 1, 0)
 
-        elif self.mode == {PROB, PROB_INDICATOR}:
+        elif self.mode in {PROB, PROB_INDICATOR}:
             # 1st item of variable should be data, and 2nd a probability distribution for choosing
             v = variable[0]
             prob_dist = variable[1]
@@ -425,7 +425,7 @@ class OneHot(SelectionFunction):
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)
-            if self.mode == PROB:
+            if self.mode is PROB:
                 result = v * chosen_in_cum_sum
             else:
                 result = np.ones_like(v) * chosen_in_cum_sum
