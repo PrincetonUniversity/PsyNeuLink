@@ -142,7 +142,7 @@ class LearningFunction(Function_Base):
 
         self._validate_parameter_spec(learning_rate, LEARNING_RATE)
 
-        if type is AUTOASSOCIATIVE:
+        if type == AUTOASSOCIATIVE:
 
             if learning_rate_dim == 1 and len(learning_rate) != len(self.defaults.variable):
                 raise FunctionError("Length of {} arg for {} ({}) must be the same as its variable ({})".
@@ -2091,10 +2091,10 @@ class BackPropagation(LearningFunction):
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
-        if loss_function is MSE:
+        if loss_function == MSE:
             num_output_units = self._get_current_function_param(ERROR_SIGNAL, context).shape[0]
             dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context)) / num_output_units * 2
-        elif loss_function is SSE:
+        elif loss_function == SSE:
             dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context)) * 2
         else:
             dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context))

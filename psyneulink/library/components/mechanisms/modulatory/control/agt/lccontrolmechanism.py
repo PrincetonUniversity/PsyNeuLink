@@ -777,14 +777,14 @@ class LCControlMechanism(ControlMechanism):
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
         # FIX: IMPLEMENT FOR COMPOSITION
-        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
+        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
             if self.systems:
                 for system in self.systems:
                     self.modulated_mechanisms = []
                     for mech in system.mechanisms:
                         if (mech not in self.modulated_mechanisms and
                                 isinstance(mech, ProcessingMechanism_Base) and
-                                not (isinstance(mech, ObjectiveMechanism) and mech._role is CONTROL) and
+                                not (isinstance(mech, ObjectiveMechanism) and mech._role == CONTROL) and
                                 hasattr(mech.function, MULTIPLICATIVE_PARAM)):
                             self.modulated_mechanisms.append(mech)
             else:
@@ -880,7 +880,7 @@ class LCControlMechanism(ControlMechanism):
     @tc.typecheck
     def _add_system(self, system, role:str):
         super()._add_system(system, role)
-        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms is ALL:
+        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
             # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
             self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 

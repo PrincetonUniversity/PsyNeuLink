@@ -403,9 +403,9 @@ class UserDefinedFunction(Function_Base):
                 # Custom function specified owner as arg
                 if arg_name in {SELF, OWNER, CONTEXT}:
                     # Flag for inclusion in call to function
-                    if arg_name is SELF:
+                    if arg_name == SELF:
                         self.self_arg = True
-                    elif arg_name is OWNER:
+                    elif arg_name == OWNER:
                         self.owner_arg = True
                     else:
                         self.context_arg = True

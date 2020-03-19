@@ -2092,7 +2092,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                           param_value in {CONTROL_PROJECTION, LEARNING_PROJECTION, LEARNING}) or
                 isinstance(param_value, Projection) or  # These should be just ControlProjection or LearningProjection
                 inspect.isclass(param_value) and issubclass(param_value,(Projection)))
-                and not param_name is FUNCTION):
+                and not param_name == FUNCTION):
                 param_value = getattr(self.defaults, param_name)
 
             # If self is a Function and param is a class ref for function, instantiate it as the function
@@ -2115,7 +2115,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     #     compatible but different from the one in defaults;
                     #     therefore, FUNCTION_PARAMS will not match defaults;
                     #     instead, check that functionParams are compatible with the function's default params
-                    if param_name is FUNCTION_PARAMS:
+                    if param_name == FUNCTION_PARAMS:
                         if not self.assign_default_FUNCTION_PARAMS:
                             # Get function:
                             try:
@@ -2586,7 +2586,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _parse_param_port_sources(self):
         try:
             for param_port in self._parameter_ports:
-                if param_port.source is FUNCTION:
+                if param_port.source == FUNCTION:
                     param_port.source = self.function
         except AttributeError:
             pass

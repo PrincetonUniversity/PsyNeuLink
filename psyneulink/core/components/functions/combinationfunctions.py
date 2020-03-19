@@ -844,10 +844,10 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             variable = variable * weights
 
         # Calculate using relevant aggregation operation and return
-        if operation is SUM:
+        if operation == SUM:
             # result = np.sum(np.atleast_2d(variable), axis=0) * scale + offset
             result = np.sum(np.atleast_2d(variable), axis=1) * scale + offset
-        elif operation is PRODUCT:
+        elif operation == PRODUCT:
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
@@ -861,10 +861,10 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         # assume operation does not change dynamically
         operation = self.parameters.operation.get()
-        if operation is SUM:
+        if operation == SUM:
             val = ctx.float_ty(-0.0)
             comb_op = "fadd"
-        elif operation is PRODUCT:
+        elif operation == PRODUCT:
             val = ctx.float_ty(1.0)
             comb_op = "fmul"
         else:
@@ -1355,9 +1355,9 @@ class LinearCombination(
                 offset = offset[0]
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
-        if operation is SUM:
+        if operation == SUM:
             combination = np.sum(variable, axis=0)
-        elif operation is PRODUCT:
+        elif operation == PRODUCT:
             combination = np.product(variable, axis=0)
         else:
             raise FunctionError("Unrecognized operator ({0}) for LinearCombination function".
@@ -1391,10 +1391,10 @@ class LinearCombination(
 
         # assume operation does not change dynamically
         operation = self.parameters.operation.get()
-        if operation is SUM:
+        if operation == SUM:
             val = ctx.float_ty(-0.0)
             comb_op = "fadd"
-        elif operation is PRODUCT:
+        elif operation == PRODUCT:
             val = ctx.float_ty(1.0)
             comb_op = "fmul"
         else:
@@ -1844,10 +1844,10 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         # CALCULATE RESULT USING RELEVANT COMBINATION OPERATION AND MODULATION
 
-        if operation is SUM:
+        if operation == SUM:
             result = np.sum(means, axis=0) * scale + offset
 
-        elif operation is PRODUCT:
+        elif operation == PRODUCT:
             result = np.product(means, axis=0) * scale + offset
 
         else:

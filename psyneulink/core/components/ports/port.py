@@ -1981,9 +1981,9 @@ class Port_Base(Port):
                 #    and get the function parameter to be modulated to type_match the projection value below
                 mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
                 # If meta_param is DISABLE, ignore the ModulatoryProjection
-                if mod_spec is DISABLE:
+                if mod_spec == DISABLE:
                     continue
-                if mod_spec is OVERRIDE:
+                if mod_spec == OVERRIDE:
                     # If paramValidationPref is set, allow all projections to be processed
                     #    to be sure there are no other conflicting OVERRIDES assigned
                     if self.owner.paramValidationPref:
@@ -2250,13 +2250,13 @@ class Port_Base(Port):
                                              ctx.int32_ty(idx + 1)])
 
             # Get name of the modulated parameter
-            if afferent.sender.modulation is MULTIPLICATIVE:
+            if afferent.sender.modulation == MULTIPLICATIVE:
                 name = self.function.parameters.multiplicative_param.source.name
-            elif afferent.sender.modulation is ADDITIVE:
+            elif afferent.sender.modulation == ADDITIVE:
                 name = self.function.parameters.additive_param.source.name
-            elif afferent.sender.modulation is DISABLE:
+            elif afferent.sender.modulation == DISABLE:
                 name = None
-            elif afferent.sender.modulation is OVERRIDE:
+            elif afferent.sender.modulation == OVERRIDE:
                 # Directly store the value in the output array
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder

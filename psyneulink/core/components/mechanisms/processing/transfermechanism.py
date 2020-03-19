@@ -1119,7 +1119,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports is RESULTS:
+        if output_ports is None or output_ports == RESULTS:
             output_ports = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
