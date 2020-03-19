@@ -670,7 +670,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports is RESULT:
+        if output_ports is None or output_ports == RESULT:
             output_ports = [RESULT]
 
         if isinstance(hetero, (list, np.matrix)):
@@ -1178,9 +1178,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_condition = learning_condition
 
         if not isinstance(self.learning_condition, Condition):
-            if self.learning_condition is CONVERGENCE:
+            if self.learning_condition == CONVERGENCE:
                 self.learning_condition = WhenFinished(self)
-            elif self.learning_condition is UPDATE:
+            elif self.learning_condition == UPDATE:
                 self.learning_condition = None
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,

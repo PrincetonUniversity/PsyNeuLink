@@ -845,7 +845,7 @@ class GradientOptimization(OptimizationFunction):
         convergence_criterion = Parameter(VALUE, pnl_internal=True)
 
         def _parse_direction(self, direction):
-            if direction is ASCENT:
+            if direction == ASCENT:
                 return 1
             else:
                 return -1
@@ -1549,7 +1549,7 @@ class GridSearch(OptimizationFunction):
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
             # KDM 8/22/19: nonstateful direction here - OK?
-            direction = "<" if self.direction is MINIMIZE else ">"
+            direction = "<" if self.direction == MINIMIZE else ">"
             replace = b.fcmp_unordered(direction, value, min_value)
             b.store(replace, replace_ptr)
 
@@ -1668,9 +1668,9 @@ class GridSearch(OptimizationFunction):
                 value = self.objective_function(sample, context=context)
 
                 # Evaluate for optimal value
-                if direction is MAXIMIZE:
+                if direction == MAXIMIZE:
                     value_optimal = max(value, value_optimal)
-                elif direction is MINIMIZE:
+                elif direction == MINIMIZE:
                     value_optimal = min(value, value_optimal)
                 else:
                     assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\

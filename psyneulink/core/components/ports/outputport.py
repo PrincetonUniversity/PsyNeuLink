@@ -1204,7 +1204,7 @@ class OutputPort(Port_Base):
             except AttributeError:
                 fct_variable = None
 
-        fct = _parse_output_port_function(owner, OutputPort.__name__, function, fct_variable is PARAMS_DICT)
+        fct = _parse_output_port_function(owner, OutputPort.__name__, function, fct_variable == PARAMS_DICT)
 
         try:
             # return fct(variable=fct_variable)
@@ -1564,13 +1564,13 @@ class StandardOutputPorts():
                 port_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign indices sequentially based on order of items in output_port_dicts arg
-        elif indices is SEQUENTIAL:
+        elif indices == SEQUENTIAL:
             for index, port_dict in enumerate(dict_list):
                 port_dict.update({VARIABLE:(OWNER_VALUE, index)})
 
         # Assign (OWNER_VALUE, PRIMARY) as VARIABLE for all OutputPorts in output_port_dicts that don't
         #    have VARIABLE (or INDEX) specified (INDEX is included here for backward compatibility)
-        elif indices is PRIMARY:
+        elif indices == PRIMARY:
             for port_dict in dict_list:
                 if INDEX in port_dict or VARIABLE in port_dict:
                     continue
@@ -1681,7 +1681,7 @@ def _maintain_backward_compatibility(d:dict, name, owner):
             index_present = True
             # if output_port[INDEX] is SEQUENTIAL:
             #     return
-            if x[INDEX] is ALL:
+            if x[INDEX] == ALL:
                 x[VARIABLE] = OWNER_VALUE
             else:
                 x[VARIABLE] = (OWNER_VALUE, x[INDEX])
@@ -1721,7 +1721,7 @@ def _maintain_backward_compatibility(d:dict, name, owner):
                       "specification dictionary for {} of {} should be changed to \'FUNCTION\' "
                       "for future compatibility.".format(OutputPort.__name__, name, owner.name))
 
-    if name is MECHANISM_VALUE:
+    if name == MECHANISM_VALUE:
         warnings.warn("The name of the \'MECHANISM_VALUE\' StandardOutputPort has been changed to \'OWNER_VALUE\';  "
                       "it will still work, but should be changed in {} specification of {} for future compatibility.".
                       format(OUTPUT_PORTS, owner.name))
