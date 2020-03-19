@@ -1197,7 +1197,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "search_space",
-                     "activation_derivative_fct"}
+                     "activation_derivative_fct", "costs"}
         # mechanism functions are handled separately
         if hasattr(self, 'ports'):
             blacklist.add("function")

@@ -1019,23 +1019,23 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_param_struct_type(self, ctx):
         num_estimates = ctx.int32_ty
-        intensity_cost = [ctx.get_param_struct_type(os.intensity_cost_function) for os in self.output_ports]
+        intensity_cost = (ctx.get_param_struct_type(op.intensity_cost_function) for op in self.output_ports)
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
 
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
         # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple(os.intensity_cost_function._get_param_initializer(None) for os in self.output_ports)
+        intensity_cost = tuple(op.intensity_cost_function._get_param_initializer(None) for op in self.output_ports)
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
-        intensity_cost = [ctx.get_state_struct_type(os.intensity_cost_function) for os in self.output_ports]
+        intensity_cost = (ctx.get_state_struct_type(op.intensity_cost_function) for op in self.output_ports)
         intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
         return pnlvm.ir.LiteralStructType([intensity_cost_struct])
 
     def _get_evaluate_state_initializer(self, context):
-        intensity_cost = tuple(os.intensity_cost_function._get_state_initializer(context) for os in self.output_ports)
+        intensity_cost = tuple(op.intensity_cost_function._get_state_initializer(context) for op in self.output_ports)
         return (intensity_cost,)
 
     def _get_evaluate_input_struct_type(self, ctx):
@@ -1067,11 +1067,11 @@ class OptimizationControlMechanism(ControlMechanism):
         # calculate cost function
         total_cost = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(-0.0), total_cost)
-        for i, os in enumerate(self.output_ports):
+        for i, op in enumerate(self.output_ports):
             # FIXME: Add support for other cost types
-            assert os.cost_options == CostFunctions.INTENSITY
+            assert op.cost_options == CostFunctions.INTENSITY
 
-            func = ctx.import_llvm_function(os.intensity_cost_function)
+            func = ctx.import_llvm_function(op.intensity_cost_function)
             func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
             func_out = builder.alloca(func.args[3].type.pointee)
@@ -1150,13 +1150,19 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.store(builder.load(sample_ptr), sample_dst)
 
         # Construct input
-        num_features = len(arg_in.type.pointee) - 1
         comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
 
-        for i in range(num_features):
-            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+        for src_idx, ip in enumerate(self.input_ports):
+            if ip.shadow_inputs is None:
+                continue
+            cim_in_port = self.agent_rep.input_CIM_ports[ip.shadow_inputs][0]
+            dst_idx = self.agent_rep.input_CIM.input_ports.index(cim_in_port)
+
+            src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
             # Destination is a struct of 2d arrays
-            dst = builder.gep(comp_input, [ctx.int32_ty(0), ctx.int32_ty(i), ctx.int32_ty(0)])
+            dst = builder.gep(comp_input, [ctx.int32_ty(0),
+                                           ctx.int32_ty(dst_idx),
+                                           ctx.int32_ty(0)])
             builder.store(builder.load(src), dst)
 
 

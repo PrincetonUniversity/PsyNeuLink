@@ -1743,7 +1743,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                   (equivalent to setting Component.execute_until_finished = False)
         """
 
-        threshold = self.parameters.termination_threshold._get(context)
+        try:
+            threshold = self.get_mod_termination_threshold(context)
+        except:
+            threshold = self.parameters.termination_threshold._get(context)
         integrator_mode = self.parameters.integrator_mode._get(context)
 
         if (not integrator_mode

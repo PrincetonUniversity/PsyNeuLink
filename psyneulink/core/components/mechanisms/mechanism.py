@@ -3085,7 +3085,7 @@ class Mechanism_Base(Mechanism):
                 if include_function:
                     if show_port_function_params:
                         fct_params = []
-                        for param in [param for param in self.function_parameters
+                        for param in [param for param in port.function_parameters
                                       if param.modulable and param.name not in {ADDITIVE_PARAM, MULTIPLICATIVE_PARAM}]:
                             fct_params.append(f'{param.name}={param._get(context)}')
                         fct_params = ", ".join(fct_params)
