@@ -1194,6 +1194,7 @@ class OutputPort(Port_Base):
         fct_variable = _parse_output_port_variable(variable, owner)
 
         # If variable has not been specified, assume it is the default of (OWNER_VALUE,0), and use that value
+        is_PARAMS_DICT = False
         if fct_variable is None:
             try:
                 if owner.value is not None:
@@ -1203,8 +1204,10 @@ class OutputPort(Port_Base):
                     fct_variable = owner.function(owner.defaults.variable)[0]
             except AttributeError:
                 fct_variable = None
+        elif type(fct_variable) is str:
+            is_PARAMS_DICT = fct_variable == PARAMS_DICT
 
-        fct = _parse_output_port_function(owner, OutputPort.__name__, function, fct_variable == PARAMS_DICT)
+        fct = _parse_output_port_function(owner, OutputPort.__name__, function, fct_variable == is_PARAMS_DICT)
 
         try:
             # return fct(variable=fct_variable)

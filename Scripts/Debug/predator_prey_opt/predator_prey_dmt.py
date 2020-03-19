@@ -41,7 +41,7 @@ ACTION = AGENT_ACTION
 # Verbosity levels for console printout
 ACTION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = 1
+VERBOSE = 0
 
 
 # ControlSignal parameters
@@ -80,7 +80,7 @@ prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
 player_len = prey_len = predator_len = obs_coords
 
-NUM_EPISODES = 5
+NUM_EPISODES = 100
 
 # **********************************************************************************************************************
 # **************************************  CREATE COMPOSITION ***********************************************************
