@@ -41,7 +41,7 @@ ACTION = AGENT_ACTION
 # Verbosity levels for console printout
 ACTION_REPORTING = 2
 STANDARD_REPORTING = 1
-VERBOSE = 0
+VERBOSE = 1
 
 
 # ControlSignal parameters
@@ -125,9 +125,12 @@ class PredatorPreySimulator:
 
     def _setup_composition(self):
 
+        def get_new_episode_flag():
+            return self.new_episode_flag
+
         # Condition for executing controller, execute on a new episode.
         self.new_episode_flag = True
-        CONTROLLER_CONDITION = Condition(func=lambda: self.new_episode_flag)  # tells schedule when to run OCM
+        self.CONTROLLER_CONDITION = Condition(func=get_new_episode_flag)  # tells schedule when to run OCM
 
         # **************************************  PROCESSING MECHANISMS ********************************************************
 
@@ -219,7 +222,7 @@ class PredatorPreySimulator:
         self.agent_comp.add_controller(self.ocm)
         self.agent_comp.enable_controller = True
         self.agent_comp.controller_mode = BEFORE
-        self.agent_comp.controller_condition=CONTROLLER_CONDITION # can also specify this condition on the node if the ocm is added as a node
+        self.agent_comp.controller_condition=self.CONTROLLER_CONDITION # can also specify this condition on the node if the ocm is added as a node
                                                             # agent_comp,scheduler_processing.add_condition((com, CONTROLLER_CONDITION))
 
         if SHOW_GRAPH:
@@ -414,20 +417,21 @@ def run_search():
     import joblib
     import hypertunity as ht
 
-    client = Client(scheduler_file='scheduler.json')
-    #client = Client()  # This is actually the following two commands
+    #client = Client(scheduler_file='scheduler.json')
+    client = Client()
     print(client)
 
     domain = ht.Domain({
                     "cost_rate": set([-.8])
     })
 
-    with joblib.parallel_backend('dask'):
-        with joblib.Parallel() as parallel:
-            print("Doing the work ... ")
-            results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(5))
-
-    print(results)
+    # with joblib.parallel_backend('dask'):
+    #     with joblib.Parallel() as parallel:
+    #         print("Doing the work ... ")
+    #         results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(1))
+    #
+    # print(results)
+    run_games(-.8)
 
 if __name__ == "__main__":
     run_search()

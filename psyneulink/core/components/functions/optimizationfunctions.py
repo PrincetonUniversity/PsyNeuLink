@@ -1617,7 +1617,6 @@ class GridSearch(OptimizationFunction):
         return_all_samples = return_all_values = []
 
         direction = self.parameters.direction._get(context)
-
         if MPI_IMPLEMENTATION:
 
             from mpi4py import MPI
@@ -1737,8 +1736,8 @@ class GridSearch(OptimizationFunction):
                     if random_value < probability:
                         value_optimal, sample_optimal = value, sample
 
-                elif (value > value_optimal and direction is MAXIMIZE) or \
-                        (value < value_optimal and direction is MINIMIZE):
+                elif (value > value_optimal and direction == MAXIMIZE) or \
+                        (value < value_optimal and direction == MINIMIZE):
                     value_optimal, sample_optimal = value, sample
                     optimal_value_count = 1
 

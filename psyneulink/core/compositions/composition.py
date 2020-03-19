@@ -7265,7 +7265,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Execute controller --------------------------------------------------------
 
         if (self.enable_controller and
-            self.controller_mode is BEFORE and
+            self.controller_mode == BEFORE and
             self.controller_condition.is_satisfied(scheduler=execution_scheduler,
                                                    context=context)):
 
