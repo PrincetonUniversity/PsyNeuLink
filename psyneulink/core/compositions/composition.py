@@ -5140,7 +5140,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(show_nested, dict):
                     args = show_nested
                     args.update(output_fmt_arg)
-                elif show_nested is ALL:
+                elif show_nested == ALL:
                     # Pass args from main call to show_graph to call for nested Composition
                     args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
                     args.update(output_fmt_arg)
@@ -5201,7 +5201,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # # Feedback Node
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     if rcvr in active_items:
-                #         if active_color is BOLD:
+                #         if active_color == BOLD:
                 #             rcvr_color = feedback_color
                 #         else:
                 #             rcvr_color = active_color
@@ -5215,7 +5215,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
                         rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             rcvr_color = input_and_output_color
                         else:
                             rcvr_color = active_color
@@ -5228,7 +5228,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Input Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
                     if rcvr in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             rcvr_color = input_color
                         else:
                             rcvr_color = active_color
@@ -5242,7 +5242,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Output Node
                 elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
                     if rcvr in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             rcvr_color = output_color
                         else:
                             rcvr_color = active_color
@@ -5257,7 +5257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 elif isinstance(rcvr, Composition):
                     node_shape = composition_shape
                     if rcvr in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             rcvr_color = composition_color
                         else:
                             rcvr_color = active_color
@@ -5268,7 +5268,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         rcvr_penwidth = str(bold_width)
 
                 elif rcvr in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         rcvr_color = default_node_color
                     else:
                         rcvr_color = active_color
@@ -5316,7 +5316,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Also take opportunity to verify that cim is either input_CIM or output_CIM
                 if cim is self.input_CIM:
                     if cim in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             cim_color = input_color
                         else:
                             cim_color = active_color
@@ -5327,7 +5327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 elif cim is self.output_CIM:
                     if cim in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             cim_color = output_color
                         else:
                             cim_color = active_color
@@ -5393,7 +5393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color is BOLD:
+                                if active_color == BOLD:
                                     proj_color = default_node_color
                                 else:
                                     proj_color = active_color
@@ -5438,7 +5438,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color is BOLD:
+                                if active_color == BOLD:
                                     proj_color = default_node_color
                                 else:
                                     proj_color = active_color
@@ -5464,7 +5464,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
 
             if controller in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     ctlr_color = controller_color
                 else:
                     ctlr_color = active_color
@@ -5496,7 +5496,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
                     if controller in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             ctl_proj_color = controller_color
                         else:
                             ctl_proj_color = active_color
@@ -5528,7 +5528,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # get projection from ObjectiveMechanism to ControlMechanism
                 objmech_ctlr_proj = controller.input_port.path_afferents[0]
                 if controller in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         objmech_ctlr_proj_color = controller_color
                     else:
                         objmech_ctlr_proj_color = active_color
@@ -5541,7 +5541,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # get ObjectiveMechanism
                 objmech = objmech_ctlr_proj.sender.owner
                 if objmech in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         objmech_color = controller_color
                     else:
                         objmech_color = active_color
@@ -5587,7 +5587,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for input_port in objmech.input_ports:
                     for projection in input_port.path_afferents:
                         if objmech in active_items:
-                            if active_color is BOLD:
+                            if active_color == BOLD:
                                 proj_color = controller_color
                             else:
                                 proj_color = active_color
@@ -5622,7 +5622,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 agent_rep = controller.agent_rep
                 # controller is active, treat
                 if controller in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         agent_rep_color = controller_color
                     else:
                         agent_rep_color = active_color
@@ -5668,7 +5668,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Get rcvr info
                 rcvr_label = self._get_graph_node_label(rcvr, show_types, show_dimensions)
                 if rcvr in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         rcvr_color = learning_color
                     else:
                         rcvr_color = active_color
@@ -5707,7 +5707,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if proj_receiver in active_items:
                 # edge_color = proj_color
                 # edge_width = str(proj_width)
-                if active_color is BOLD:
+                if active_color == BOLD:
                     edge_color = proj_color
                 else:
                     edge_color = active_color
@@ -5727,7 +5727,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # LearningProjection(s) to node
             # if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
             if proj in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     learning_proj_color = learning_color
                 else:
                     learning_proj_color = active_color
@@ -5795,7 +5795,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                             # Check if Projection or its receiver is active
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color is BOLD:
+                                if active_color == BOLD:
                                     # if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
                                     if is_learning_component:
                                         proj_color = learning_color
@@ -6693,8 +6693,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._set_up_animation(context)
 
         # SET UP EXECUTION -----------------------------------------------
-
-        results = []
+        results = self.parameters.results._get(context)
+        if results is None:
+            results = []
 
         self._assign_execution_ids(context)
 
@@ -6769,13 +6770,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.__ptx_initialize(context, additional_tags=comp_ex_tags)
                     EX = self._compilation_data.ptx_execution._get(context)
                     results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
-                full_results = self.parameters.results._get(context)
-                if full_results is None:
-                    full_results = results
-                else:
-                    full_results.extend(results)
 
-                self.parameters.results._set(full_results, context)
+                # Update the parameter for results
+                self.parameters.results._set(results, context)
 
                 if self._is_learning(context):
                     # copies back matrix to pnl from param struct (after learning)
@@ -6784,8 +6781,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
                 self.most_recent_context = context
-
-                return full_results[-1]
+                return results[-1]
 
             except Exception as e:
                 if bin_execute is not True:
@@ -6875,6 +6871,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if ContextFlags.SIMULATION not in context.execution_phase:
                 results.append(result_copy)
+                self.parameters.results._set(results, context)
 
                 if not self.parameters.retain_old_simulation_data._get():
                     if self.controller is not None:
@@ -6894,14 +6891,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.parameters.input_specification._set(None, context)
 
         scheduler.get_clock(context)._increment_time(TimeScale.RUN)
-
-        full_results = self.parameters.results._get(context)
-        if full_results is None:
-            full_results = results
-        else:
-            full_results.extend(results)
-
-        self.parameters.results._set(full_results, context)
 
         self.most_recent_context = context
 
@@ -7204,6 +7193,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             inputs = self._adjust_execution_stimuli(inputs)
             self._assign_values_to_input_CIM(inputs, context=context)
+            for comp in [node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)]:
+                for port in comp.input_ports:
+                    port._update(context)
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
@@ -7281,7 +7273,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Execute controller --------------------------------------------------------
 
         if (self.enable_controller and
-            self.controller_mode is BEFORE and
+            self.controller_mode == BEFORE and
             self.controller_condition.is_satisfied(scheduler=execution_scheduler,
                                                    context=context)):
 
@@ -7371,7 +7363,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            if self._animate is not False and self._animate_unit is EXECUTION_SET:
+            if self._animate is not False and self._animate_unit == EXECUTION_SET:
                 self._animate_execution(next_execution_set, context)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
@@ -7507,7 +7499,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                   skip_log=True)
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if self._animate is not False and self._animate_unit is COMPONENT:
+                if self._animate is not False and self._animate_unit == COMPONENT:
                     self._animate_execution(node, context)
 
 

@@ -891,7 +891,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
     if is_numeric(param_value) and not isinstance(param_value, bool):
         pass
     # Only allow a FUNCTION_PARAMS dict
-    elif isinstance(param_value, (ReadOnlyOrderedDict, dict)) and param_name is FUNCTION_PARAMS:
+    elif isinstance(param_value, (ReadOnlyOrderedDict, dict)) and param_name == FUNCTION_PARAMS:
         pass
     # Allow ModulatoryProjection
     elif isinstance(param_value, Projection):
@@ -924,7 +924,7 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
     elif isinstance(param_value, str) and param_value in parameter_keywords:
         pass
     # Exclude function (see docstring above)
-    elif param_name is FUNCTION:
+    elif param_name == FUNCTION:
         return
     # (7/19/17 CW) added this if statement below while adding `hetero` and `auto` and AutoAssociativeProjections: this
     # allows `hetero` to be specified as a matrix, while still generating a ParameterPort

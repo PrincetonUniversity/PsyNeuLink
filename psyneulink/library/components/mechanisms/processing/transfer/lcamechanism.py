@@ -434,7 +434,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports is RESULT:
+        if output_ports is None or output_ports == RESULT:
             output_ports = [RESULT]
 
         # MODIFIED 1/22/20 NEW: [JDC]
@@ -540,7 +540,7 @@ class LCAMechanism(RecurrentTransferMechanism):
                 raise LCAError(f"The {repr('threshold_criterion')} and {repr(TERMINATION_MEASURE)} "
                                f"args of {self.__name__} can't both be specified.")
             else:
-                if threshold_criterion is VALUE:
+                if threshold_criterion == VALUE:
                     termination_measure = max
                     termination_comparison_op = GREATER_THAN_OR_EQUAL
                 elif threshold_criterion == MAX_VS_NEXT:

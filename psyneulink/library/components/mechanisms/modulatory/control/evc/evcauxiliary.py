@@ -902,10 +902,10 @@ class PredictionMechanism(IntegratorMechanism):
 
         if function in input_types:
 
-            if function is INPUT:
+            if function == INPUT:
                 function = Linear(slope=rate, intercept=noise)
 
-            elif function is TIME_AVERAGE_INPUT:
+            elif function == TIME_AVERAGE_INPUT:
                 # Use default for IntegratorMechanism: AdaptiveIntegrator
                 function = self.class_defaults.function
 
@@ -943,11 +943,11 @@ class PredictionMechanism(IntegratorMechanism):
 
             # If inputs are being recorded (#recorded = window_size):
             if len(value) > 1:
-                if self.input_type is AVERAGE_INPUTS:
+                if self.input_type == AVERAGE_INPUTS:
                     # Compute average input over window_size
                     value = np.sum(value) / value.shape[0]
 
-                elif self.input_type is INPUT_SEQUENCE:
+                elif self.input_type == INPUT_SEQUENCE:
                     if self.filter_function:
                         # Use filter_function to return input values
                         value = self.filter_function(value)
