@@ -58,7 +58,6 @@ Class Reference
 
 """
 
-import warnings
 import typecheck as tc
 
 from collections.abc import Iterable
@@ -143,8 +142,3 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                                             name=name,
                                                             prefs=prefs,
                                                             )
-    def add_ports(self, ports):
-        warnings.warn('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
-                      'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
-                      'that project to or are projected to from the CIM.')
-        super(CompositionInterfaceMechanism, self).add_ports(ports)
