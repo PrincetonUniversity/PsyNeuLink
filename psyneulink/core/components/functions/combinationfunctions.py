@@ -81,10 +81,13 @@ class CombinationFunction(Function_Base):
     def _gen_llvm_load_param(self, ctx, builder, params, param_name, index, default):
         param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, param_name)
         param_type = param_ptr.type.pointee
-        if isinstance(param_type, pnlvm.ir.ArrayType):
+        if isinstance(param_type, pnlvm.ir.LiteralStructType):
+            assert len(param_type) == 0
+            return ctx.float_ty(default)
+        elif isinstance(param_type, pnlvm.ir.ArrayType):
             index = ctx.int32_ty(0) if len(param_type) == 1 else index
             param_ptr = builder.gep(param_ptr, [ctx.int32_ty(0), index])
-        return ctx.float_ty(default) if isinstance(param_type, pnlvm.ir.LiteralStructType) and len(param_type.elements) == 0 else builder.load(param_ptr)
+        return builder.load(param_ptr)
 
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Sometimes we arg_out to 2d array
@@ -891,10 +894,14 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             if not isinstance(exponent, pnlvm.ir.Constant) or exponent.constant != 1.0:
                 in_val = b.call(pow_f, [in_val, exponent])
 
+            # Try per element weights first
             weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
-                                               index, 1.0)
+                                               idx, 1.0)
+
             # Vector of vectors (even 1-element vectors)
             if isinstance(weight.type, pnlvm.ir.ArrayType):
+                weight = self._gen_llvm_load_param(ctx, b, params, WEIGHTS,
+                                                   index, 1.0)
                 assert len(weight.type) == 1 # FIXME: Add support for matrix weights
                 weight = b.extract_value(weight, [0])
 
