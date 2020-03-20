@@ -1080,7 +1080,9 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
         mech_out = builder.alloca(mech_out_ty)
 
@@ -1120,13 +1122,13 @@ class DDM(ProcessingMechanism):
                                           prob_lower_thr)
             builder.store(prob_upper_thr, dst)
             
-            # Load mechanism state and function threshold parameter
-            params, state, _, _ = builder.function.args
-            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+            # Load function threshold
             threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
-                                              func_params, THRESHOLD)
+                                                        params, THRESHOLD)
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
+            # Load mechanism state to generate random numbers
+            state = builder.function.args[1]
             random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
             random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
@@ -1143,7 +1145,8 @@ class DDM(ProcessingMechanism):
 
             builder.store(res, dst)
         else:
-            assert False, "Only Integrator mode is supported for compiled DDM!"
+            assert False, "Unknown mode in compiled DDM!"
+
         return mech_out, builder
 
     @handle_external_context(execution_id=NotImplemented)
