@@ -2711,22 +2711,17 @@ class Mechanism_Base(Mechanism):
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output)
 
-        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
-
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
         exec_count = builder.load(exec_count_ptr)
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
         return builder, pnlvm.ir.IntType(1)(1)
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
-
-    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
-        return mf_out, builder
 
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
