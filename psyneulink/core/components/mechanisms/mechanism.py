@@ -2228,7 +2228,7 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
-            elif self.initMethod is INIT_EXECUTE_METHOD_ONLY:
+            elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
                 return_value = self._execute(
                     variable=self.defaults.variable,
                     context=context,
@@ -2257,7 +2257,7 @@ class Mechanism_Base(Mechanism):
                     return converted_to_2d
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
-            elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+            elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
                 return_value = super()._execute(
                     variable=self.defaults.variable,
                     context=context,
@@ -3231,7 +3231,8 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_ports(self, ports):
+    @handle_external_context()
+    def add_ports(self, ports, context=None):
         """
         add_ports(ports)
 

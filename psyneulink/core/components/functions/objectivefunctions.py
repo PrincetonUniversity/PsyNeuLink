@@ -361,7 +361,7 @@ class Stability(ObjectiveFunction):
         default_variable = [self.defaults.variable,
                             self.defaults.variable]
 
-        if self.metric is ENTROPY:
+        if self.metric == ENTROPY:
             self.metric_fct = Distance(default_variable=default_variable, metric=CROSS_ENTROPY, normalize=self.normalize)
         elif self.metric in DISTANCE_METRICS._set():
             self.metric_fct = Distance(default_variable=default_variable, metric=self.metric, normalize=self.normalize)
@@ -989,7 +989,7 @@ class Distance(ObjectiveFunction):
             inner = functools.partial(self.__gen_llvm_sum_product, **kwargs)
         elif self.metric == CROSS_ENTROPY:
             inner = functools.partial(self.__gen_llvm_cross_entropy, **kwargs)
-        elif self.metric is COSINE:
+        elif self.metric == COSINE:
             del kwargs['acc']
             numer_acc = builder.alloca(ctx.float_ty)
             denom1_acc = builder.alloca(ctx.float_ty)
@@ -1041,7 +1041,7 @@ class Distance(ObjectiveFunction):
             ret = builder.call(sqrt, [ret])
         elif self.metric == MAX_ABS_DIFF:
             ret = builder.load(max_diff_ptr)
-        elif self.metric is COSINE:
+        elif self.metric == COSINE:
             numer = builder.load(numer_acc)
             denom1 = builder.load(denom1_acc)
             denom1 = builder.call(sqrt, [denom1])
@@ -1151,35 +1151,35 @@ class Distance(ObjectiveFunction):
             v2 = variable[1]
 
         # Maximum of Hadamard (elementwise) difference of v1 and v2
-        if self.metric is MAX_ABS_DIFF:
+        if self.metric == MAX_ABS_DIFF:
             result = np.max(abs(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
-        elif self.metric is DIFFERENCE:
+        elif self.metric == DIFFERENCE:
             result = np.sum(np.abs(v1 - v2))
 
         # Similarity (used specifically for testing Compilation of Predator-Prey Model)
-        elif self.metric is NORMED_L0_SIMILARITY:
+        elif self.metric == NORMED_L0_SIMILARITY:
             result = 1 - np.sum(np.abs(v1 - v2)) / 4
 
         # Euclidean distance between v1 and v2
-        elif self.metric is EUCLIDEAN:
+        elif self.metric == EUCLIDEAN:
             result = np.linalg.norm(v2 - v1)
 
         # Cosine similarity of v1 and v2
-        elif self.metric is COSINE:
+        elif self.metric == COSINE:
             # result = np.correlate(v1, v2)
             result = 1 - np.abs(Distance.cosine(v1, v2))
             return self.convert_output_type(result)
 
         # Correlation of v1 and v2
-        elif self.metric is CORRELATION:
+        elif self.metric == CORRELATION:
             # result = np.correlate(v1, v2)
             result = 1 - np.abs(Distance.correlation(v1, v2))
             return self.convert_output_type(result)
 
         # Cross-entropy of v1 and v2
-        elif self.metric is CROSS_ENTROPY:
+        elif self.metric == CROSS_ENTROPY:
             # FIX: VALIDATE THAT ALL ELEMENTS OF V1 AND V2 ARE 0 TO 1
             if not self.is_initializing:
                 v1 = np.where(v1 == 0, EPSILON, v1)
@@ -1190,14 +1190,14 @@ class Distance(ObjectiveFunction):
             result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0, v1 * np.log(v2)))
 
         # Energy
-        elif self.metric is ENERGY:
+        elif self.metric == ENERGY:
             result = -np.sum(v1 * v2) / 2
 
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
         if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
-            if self.metric is ENERGY:
+            if self.metric == ENERGY:
                 result /= len(v1) ** 2
             else:
                 result /= len(v1)
