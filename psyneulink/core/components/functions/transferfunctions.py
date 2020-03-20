@@ -2922,10 +2922,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
-            warnings.warn("Unexpected data shape: {} got 2D input: {}".format(self, self.defaults.variable))
+            warnings.warn("Unexpected data shape: {} (in {}) got 2D input: {}".format(self, self.owner, self.defaults.variable))
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         if self.defaults.value.ndim != 1:
-            warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
+            warnings.warn("Unexpected data shape: {} (in {}) has 2D output: {}".format(self, self.owner, self.defaults.value))
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
