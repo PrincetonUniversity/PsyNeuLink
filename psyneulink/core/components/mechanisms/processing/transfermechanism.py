@@ -1549,21 +1549,21 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                          "integrator_function")
-            if_param_raw = pnlvm.helpers.get_param_ptr(builder, self, params,
+            if_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                              "integrator_function")
-            if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
-                                                            if_param_raw, ctx, builder,
-                                                            params, state, arg_in)
+            if_params, builder = self._gen_llvm_param_ports_for_obj(
+                    self.integrator_function, if_param_ptr, ctx, builder,
+                    params, state, arg_in)
 
-            mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
-                                                            if_params, if_state, ip_out)
+            mf_in, builder = self._gen_llvm_invoke_function(
+                    ctx, builder, self.integrator_function, if_params, if_state, ip_out)
         else:
             mf_in = ip_out
 
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         mf_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
-                                                        builder, params, state, arg_in)
+        mf_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
 
