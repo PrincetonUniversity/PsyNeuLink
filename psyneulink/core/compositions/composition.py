@@ -1945,6 +1945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              GRAPH
     # ******************************************************************************************************************
 
+    @handle_external_context(source=ContextFlags.COMPOSITION)
     def _analyze_graph(self, scheduler=None, context=None):
         """
         Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
@@ -2035,6 +2036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                               NODES
     # ******************************************************************************************************************
 
+    @handle_external_context(source = ContextFlags.COMPOSITION)
     def add_node(self, node, required_roles=None, context=None):
         """
             Add a Composition Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
@@ -2052,7 +2054,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadows_dict(node)
 
         try:
-            node._analyze_graph()
+            node._analyze_graph(context = context)
         except AttributeError:
             pass
 
@@ -2541,15 +2543,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if there is not a corresponding CIM OutputPort, add one
                 if input_port not in set(self.input_CIM_ports.keys()):
                     interface_input_port = InputPort(owner=self.input_CIM,
-                                                      variable=input_port.defaults.value,
-                                                      reference_value=input_port.defaults.value,
-                                                      name="INPUT_CIM_" + node.name + "_" + input_port.name)
+                                                     variable=input_port.defaults.value,
+                                                     reference_value=input_port.defaults.value,
+                                                     name="INPUT_CIM_" + node.name + "_" + input_port.name,
+                                                     context=context)
+
+                    self.input_CIM.add_ports([interface_input_port],
+                                             context=context)
 
                     interface_output_port = OutputPort(owner=self.input_CIM,
-                                                        variable=OWNER_VALUE,
-                                                        function=InterfacePortMap(
-                                                             corresponding_input_port=interface_input_port),
-                                                        name="INPUT_CIM_" + node.name + "_" + input_port.name)
+                                                       variable=OWNER_VALUE,
+                                                       function=InterfacePortMap(
+                                                            corresponding_input_port=interface_input_port),
+                                                       name="INPUT_CIM_" + node.name + "_" + input_port.name,
+                                                       context=context)
+
+                    self.input_CIM.add_ports([interface_output_port],
+                                             context=context)
 
                     self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
 
@@ -2611,14 +2621,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_input_port = InputPort(owner=self.output_CIM,
                                                      variable=output_port.defaults.value,
                                                      reference_value=output_port.defaults.value,
-                                                     name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
+                                                     name="OUTPUT_CIM_" + node.name + "_" + output_port.name,
+                                                     context=context)
+
+                    self.output_CIM.add_ports([interface_input_port],
+                                              context=context)
 
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
                             variable=OWNER_VALUE,
                             function=InterfacePortMap(corresponding_input_port=interface_input_port),
                             reference_value=output_port.defaults.value,
-                            name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
+                            name="OUTPUT_CIM_" + node.name + "_" + output_port.name,
+                            context=context)
+
+                    self.output_CIM.add_ports([interface_output_port],
+                                              context=context)
 
                     self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
 

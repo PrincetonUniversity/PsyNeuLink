@@ -3233,7 +3233,8 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_ports(self, ports):
+    @handle_external_context()
+    def add_ports(self, ports, context=None):
         """
         add_ports(ports)
 
