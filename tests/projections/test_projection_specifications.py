@@ -1,6 +1,7 @@
 import psyneulink as pnl
 import numpy as np
 import pytest
+import warnings
 
 import psyneulink.core.components.functions.distributionfunctions
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
@@ -348,6 +349,30 @@ class TestProjectionSpecificationFormats:
         #     T2 = pnl.ProcessingMechanism(name='T2', output_ports=[pnl.ControlMechanism()])
         # assert 'Primary OutputPort of ControlMechanism-1 (ControlSignal-0) ' \
         #        'cannot be used as a sender of a Projection to OutputPort of T2' in error_text.value.args[0]
+
+    def test_no_warning_when_matrix_specified(self):
+
+        warning_fired = False
+        c = pnl.Composition()
+        m0 = pnl.ProcessingMechanism(
+            default_variable=[0, 0, 0, 0]
+        )
+        p0 = pnl.MappingProjection(
+            matrix=[[0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 0, 0, 0]]
+        )
+        m1 = pnl.TransferMechanism(
+            default_variable=[0, 0, 0, 0]
+        )
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error')
+            try:
+                c.add_linear_processing_pathway([m0, p0, m1])
+            except:
+                warning_fired = True
+        assert not warning_fired
 
     # KDM: this is a good candidate for pytest.parametrize
     def test_masked_mapping_projection(self):
