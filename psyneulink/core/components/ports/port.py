@@ -1012,7 +1012,6 @@ class Port_Base(Port):
             loggable=False
         )
         require_projection_in_composition = Parameter(True, stateful=False, loggable=False, read_only=True, pnl_internal=True)
-        projections = None
 
     portAttributes = {FUNCTION, FUNCTION_PARAMS, PROJECTIONS}
 

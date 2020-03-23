@@ -837,7 +837,10 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
+        assert function is self.function
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
         elements = gain_ty, *mf_out.type.pointee.elements
@@ -847,11 +850,11 @@ class LCControlMechanism(ControlMechanism):
         new_out = builder.alloca(elements_ty)
 
         # Load mechanism parameters
-        params, _, _, _ = builder.function.args
+        params = builder.function.args[0]
         scaling_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                               "scaling_factor_gain")
+                                                         "scaling_factor_gain")
         base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                           "base_level_gain")
+                                                      "base_level_gain")
         scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)
 
