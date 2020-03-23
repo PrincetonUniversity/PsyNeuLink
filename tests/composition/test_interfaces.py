@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import warnings
 
 import psyneulink.core.llvm as pnlvm
 
@@ -497,7 +496,9 @@ class TestConnectCompositionsViaCIMS:
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         assert np.allclose(level_2.get_output_values(level_2), [34.0])
 
+    @pytest.mark.filterwarnings("error")
     def test_warning_on_custom_cim_ports(self):
+
         comp = Composition()
         mech = ProcessingMechanism()
         warning_text = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
@@ -505,23 +506,21 @@ class TestConnectCompositionsViaCIMS:
                         'that project to or are projected to from the CIM.')
         warning_fired = False
         comp.add_node(mech)
-        with warnings.catch_warnings():
-            warnings.filterwarnings('error')
-            try:
-                comp.input_CIM.add_ports(OutputPort())
-            except Warning as w:
-                # confirm that warning fired and that its text is correct
-                assert w.args[0] == warning_text
+        try:
+            comp.input_CIM.add_ports(OutputPort())
+        except Warning as w:
+            # confirm that warning fired and that its text is correct
+            assert w.args[0] == warning_text
+            warning_fired = True
+        assert warning_fired
+        warning_fired = False
+        try:
+            comp._analyze_graph()
+            comp.run({mech: [[1]]})
+        except Warning:
+            if w.args[0] == warning_text:
                 warning_fired = True
-            assert warning_fired
-            warning_fired = False
-            try:
-                comp._analyze_graph()
-                comp.run({mech: [[1]]})
-            except Warning:
-                if w.args[0] == warning_text:
-                    warning_fired = True
-            assert not warning_fired
+        assert not warning_fired
 
 class TestInputCIMOutputPortToOriginOneToMany:
 
