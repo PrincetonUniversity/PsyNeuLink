@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import warnings
 
 import psyneulink.core.llvm as pnlvm
 
