@@ -1320,7 +1320,7 @@ class System(System_Base):
 
                 # LearningMechanisms or ObjectiveMechanism used for learning:  label as LEARNING and return
                 if (isinstance(sender_mech, LearningMechanism) or
-                        (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
+                        (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role == LEARNING)):
                     sender_mech._add_system(self, LEARNING)
                     return
                 # System's controller or ObjectiveMechanism that projects it: label as CONTROL and return
@@ -1396,7 +1396,7 @@ class System(System_Base):
                             for projection in output_port.efferents)
                         for output_port in sender_mech.output_ports)):
                 try:
-                    if sender_mech.systems[self] is ORIGIN:
+                    if sender_mech.systems[self] == ORIGIN:
                         sender_mech._add_system(self, SINGLETON)
                     else:
                         sender_mech._add_system(self, TERMINAL)
@@ -1412,7 +1412,7 @@ class System(System_Base):
                                      and not projection.receiver.owner is self.controller)
                             # or Projection to an ObjectiveMechanism that is not for the System's controller
                             or (isinstance(projection.receiver.owner, ObjectiveMechanism)
-                                and projection.receiver.owner._role is CONTROL
+                                and projection.receiver.owner._role == CONTROL
                                 and (self.controller is None or (self.controller is not None
                                 and not projection.receiver.owner is self.controller.objective_mechanism)))
                                     for projection in output_port.efferents)
@@ -1463,7 +1463,7 @@ class System(System_Base):
                                 or isinstance(receiver, LearningMechanism)
                                 or (self.controller is not None and
                                     isinstance(receiver, self.controller.objective_mechanism))
-                                or (isinstance(receiver, ObjectiveMechanism) and receiver._role is LEARNING)):
+                                or (isinstance(receiver, ObjectiveMechanism) and receiver._role == LEARNING)):
                             # If it is a LearningMechanism for the sender_mech that executes in the execution phase,
                             #    include it
                             if (isinstance(receiver, LearningMechanism) and
@@ -1601,7 +1601,7 @@ class System(System_Base):
                           format(mech.name, mech.systems[self]))
                 else:
                     status = mech.systems[self]
-                    if status is TERMINAL:
+                    if status == TERMINAL:
                         status = 'a ' + status
                     elif status in {INTERNAL, INITIALIZE_CYCLE}:
                         status = 'an ' + status
@@ -1765,7 +1765,7 @@ class System(System_Base):
 
             # All other sender_mechs must be either a LearningMechanism or a ComparatorMechanism with role=LEARNING
             elif not (isinstance(sender_mech, LearningMechanism) or
-                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role is LEARNING)):
+                          (isinstance(sender_mech, ObjectiveMechanism) and sender_mech._role == LEARNING)):
                 raise SystemError("PROGRAM ERROR: {} is not a legal object for learning graph;"
                                   "must be a LearningMechanism or an ObjectiveMechanism".
                                   format(sender_mech))
@@ -1833,7 +1833,7 @@ class System(System_Base):
                     # Then:
                     #    - obj_mech should NOT be included in the learning_execution_graph and
                     #    - should be replaced with appropriate projections to sample_mechs's afferent LearningMechanisms
-                    elif not sample_mech.systems[self] is TERMINAL:
+                    elif not sample_mech.systems[self] == TERMINAL:
                         _assign_error_signal_projections(sample_mech, system=self, scope=self, objective_mech=obj_mech)
                         # Don't process ObjectiveMechanism any further (since its been replaced)
                         return
@@ -1874,7 +1874,7 @@ class System(System_Base):
 
                     # INTERNAL CONVERGENCE
                     # None of the mechanisms that project to it are a TERMINAL mechanism
-                    elif (not all(all(projection.sender.owner.processes[proc] is TERMINAL
+                    elif (not all(all(projection.sender.owner.processes[proc] == TERMINAL
                                      for proc in projection.sender.owner.processes)
                                  for projection in obj_mech.input_ports[SAMPLE].path_afferents)
                           # and it is not for the last Mechanism in a learning sequence
@@ -2914,7 +2914,7 @@ class System(System_Base):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
             i = 0
 
-            if not self._animate is False and self._animate_unit is EXECUTION_SET:
+            if not self._animate is False and self._animate_unit == EXECUTION_SET:
                 self.show_graph(active_items=next_execution_set, **self._animate, output_fmt='gif', context=context)
 
             for mechanism in next_execution_set:
@@ -2940,7 +2940,7 @@ class System(System_Base):
                 # print("\nEXECUTING System._execute_processing\n")
                 mechanism.execute(context=context, runtime_params=execution_runtime_params)
 
-                if not self._animate is False and self._animate_unit is COMPONENT:
+                if not self._animate is False and self._animate_unit == COMPONENT:
                     self.show_graph(active_items=mechanism, **self._animate, output_fmt='gif', context=context)
                 self._component_execution_count += 1
 
@@ -3023,7 +3023,7 @@ class System(System_Base):
             logger.debug('Running next_execution_set {0}'.format(next_execution_set))
 
             if (not self._animate is False and
-                    self._animate_unit is EXECUTION_SET and
+                    self._animate_unit == EXECUTION_SET and
                     SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
                 # mech = [mech for mech in next_execution_set if isinstance(mech, Mechanism)]
                 self.show_graph(active_items=list(next_execution_set), **self._animate, output_fmt='gif', context=context)
@@ -3060,7 +3060,7 @@ class System(System_Base):
                     component._parameter_ports[MATRIX]._update(context=context)
 
                 if not self._animate is False:
-                    if (self._animate_unit is COMPONENT and
+                    if (self._animate_unit == COMPONENT and
                             SHOW_LEARNING in self._animate and self._animate[SHOW_LEARNING]):
                             self.show_graph(active_items=component, **self._animate, output_fmt='gif', context=context)
 
@@ -4083,7 +4083,7 @@ class System(System_Base):
             # Set rcvr color and penwidth info
             if ORIGIN in rcvr.systems[self] and TERMINAL in rcvr.systems[self]:
                 if rcvr in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         rcvr_color = origin_and_terminal_color
                     else:
                         rcvr_color = active_color
@@ -4094,7 +4094,7 @@ class System(System_Base):
                     rcvr_penwidth = str(bold_width)
             elif ORIGIN in rcvr.systems[self]:
                 if rcvr in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         rcvr_color = origin_color
                     else:
                         rcvr_color = active_color
@@ -4106,7 +4106,7 @@ class System(System_Base):
                 rcvr_rank = origin_rank
             elif TERMINAL in rcvr.systems[self]:
                 if rcvr in active_items:
-                    if active_color is BOLD:
+                    if active_color == BOLD:
                         rcvr_color = terminal_color
                     else:
                         rcvr_color = active_color
@@ -4117,7 +4117,7 @@ class System(System_Base):
                     rcvr_penwidth = str(bold_width)
                 rcvr_rank = terminal_rank
             elif rcvr in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     if LEARNING in rcvr.systems[self]:
                         rcvr_color = learning_color
                     else:
@@ -4177,7 +4177,7 @@ class System(System_Base):
                     if show_learning and has_learning:
                         # Render projection as node
                         if proj in active_items:
-                            if active_color is BOLD:
+                            if active_color == BOLD:
                                 proj_color = default_node_color
                             else:
                                 proj_color = active_color
@@ -4197,7 +4197,7 @@ class System(System_Base):
                     else:
                         # show projection as edge
                         if proj.sender in active_items:
-                            if active_color is BOLD:
+                            if active_color == BOLD:
                                 proj_color = default_node_color
                             else:
                                 proj_color = active_color
@@ -4251,7 +4251,7 @@ class System(System_Base):
 
                     # Render projections
                     if any(item in active_items for item in {selected_proj, selected_proj.receiver.owner}):
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
                                 proj_color = learning_color
                             else:
@@ -4343,7 +4343,7 @@ class System(System_Base):
             # Get rcvr info
             rcvr_label = self._get_label(rcvr, show_dimensions, show_roles)
             if rcvr in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     rcvr_color = learning_color
                 else:
                     rcvr_color = active_color
@@ -4370,8 +4370,8 @@ class System(System_Base):
             # Projections to ObjectiveMechanism
             if isinstance(rcvr, ObjectiveMechanism):
                 if (self in rcvr.systems
-                        and rcvr._role is LEARNING
-                        and show_learning is ALL):
+                        and rcvr._role == LEARNING
+                        and show_learning == ALL):
                     # Projections to ObjectiveMechanism
                     for input_port in rcvr.input_ports:
                         for proj in input_port.path_afferents:
@@ -4388,7 +4388,7 @@ class System(System_Base):
                             elif isinstance(smpl_or_trgt_src, System):
 
                                 if smpl_or_trgt_src in active_items:
-                                    if active_color is BOLD:
+                                    if active_color == BOLD:
                                         smpl_or_trgt_src_color = system_color
                                     else:
                                         smpl_or_trgt_src_color = active_color
@@ -4404,7 +4404,7 @@ class System(System_Base):
                                         penwidth=smpl_or_trgt_src_width)
 
                             if proj.receiver.owner in active_items:
-                                if active_color is BOLD:
+                                if active_color == BOLD:
                                     learning_proj_color = learning_color
                                 else:
                                     learning_proj_color = active_color
@@ -4435,7 +4435,7 @@ class System(System_Base):
                 for proj in input_port.path_afferents:
 
                     if proj.receiver.owner in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             learning_proj_color = learning_color
                         else:
                             learning_proj_color = active_color
@@ -4454,8 +4454,8 @@ class System(System_Base):
                     #    - it is from an ObjectiveMechanism used for learning in the same System
                     #    - **show_learning** argument was specifid as ALL
                     if (((isinstance(sndr, LearningMechanism)
-                          or (isinstance(sndr, ObjectiveMechanism) and sndr._role is LEARNING)))
-                            or show_learning is ALL):
+                          or (isinstance(sndr, ObjectiveMechanism) and sndr._role == LEARNING)))
+                            or show_learning == ALL):
                         if not self in sndr.systems:
                             continue
                         if show_projection_labels:
@@ -4511,7 +4511,7 @@ class System(System_Base):
             if proj_receiver in active_items:
                 # edge_color = proj_color
                 # edge_width = str(proj_width)
-                if active_color is BOLD:
+                if active_color == BOLD:
                     edge_color = proj_color
                 else:
                     edge_color = active_color
@@ -4530,7 +4530,7 @@ class System(System_Base):
 
             # LearningProjection(s) to node
             if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
-                if active_color is BOLD:
+                if active_color == BOLD:
                     learning_proj_color = learning_color
                 else:
                     learning_proj_color = active_color
@@ -4562,7 +4562,7 @@ class System(System_Base):
 
             controller = self.controller
             if controller in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     ctlr_color = control_color
                 else:
                     ctlr_color = active_color
@@ -4580,7 +4580,7 @@ class System(System_Base):
             # get projection from ObjectiveMechanism to ControlMechanism
             objmech_ctlr_proj = controller.input_port.path_afferents[0]
             if controller in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     objmech_ctlr_proj_color = control_color
                 else:
                     objmech_ctlr_proj_color = active_color
@@ -4593,7 +4593,7 @@ class System(System_Base):
             # get ObjectiveMechanism
             objmech = objmech_ctlr_proj.sender.owner
             if objmech in active_items:
-                if active_color is BOLD:
+                if active_color == BOLD:
                     objmech_color = control_color
                 else:
                     objmech_color = active_color
@@ -4657,7 +4657,7 @@ class System(System_Base):
                 for ctl_proj in control_signal.efferents:
                     proc_mech_label = self._get_label(ctl_proj.receiver.owner, show_dimensions, show_roles)
                     if controller in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             ctl_proj_color = control_color
                         else:
                             ctl_proj_color = active_color
@@ -4688,7 +4688,7 @@ class System(System_Base):
             for input_port in objmech.input_ports:
                 for projection in input_port.path_afferents:
                     if objmech in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             proj_color = control_color
                         else:
                             proj_color = active_color
@@ -4715,7 +4715,7 @@ class System(System_Base):
             if show_prediction_mechanisms:
                 for mech in self.execution_list:
                     if mech in active_items:
-                        if active_color is BOLD:
+                        if active_color == BOLD:
                             pred_mech_color = prediction_mechanism_color
                         else:
                             pred_mech_color = active_color
@@ -4724,7 +4724,7 @@ class System(System_Base):
                     else:
                         pred_mech_color = prediction_mechanism_color
                         pred_mech_width = str(default_width)
-                    if mech._role is CONTROL and hasattr(mech, 'origin_mech'):
+                    if mech._role == CONTROL and hasattr(mech, 'origin_mech'):
                         recvr = mech.origin_mech
                         recvr_label = self._get_label(recvr, show_dimensions, show_roles)
                         # IMPLEMENTATION NOTE:
@@ -4732,7 +4732,7 @@ class System(System_Base):
                         if show_mechanism_structure and False:
                             proj = mech.output_port.efferents[0]
                             if proj in active_items:
-                                if active_color is BOLD:
+                                if active_color == BOLD:
                                     pred_proj_color = prediction_mechanism_color
                                 else:
                                     pred_proj_color = active_color
@@ -4772,7 +4772,7 @@ class System(System_Base):
 
         if not active_items:
             active_items = []
-        elif active_items is INITIAL_FRAME:
+        elif active_items == INITIAL_FRAME:
             active_items = [INITIAL_FRAME]
         elif not isinstance(active_items, Iterable):
             active_items = [active_items]

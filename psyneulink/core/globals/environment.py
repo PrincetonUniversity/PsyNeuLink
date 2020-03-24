@@ -898,7 +898,7 @@ def run(obj,
                             execution_targets[mech] = targets[mech]
                         else:
                             execution_targets[mech] = targets[mech][input_num]
-                    if object_type is SYSTEM:
+                    if object_type == SYSTEM:
                         obj.target = execution_targets
                         obj.current_targets = execution_targets
 

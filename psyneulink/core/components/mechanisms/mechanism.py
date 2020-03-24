@@ -2228,7 +2228,7 @@ class Mechanism_Base(Mechanism):
                 # Run full execute method for init of Process and System
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
-            elif self.initMethod is INIT_EXECUTE_METHOD_ONLY:
+            elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
                 return_value = self._execute(
                     variable=self.defaults.variable,
                     context=context,
@@ -2257,7 +2257,7 @@ class Mechanism_Base(Mechanism):
                     return converted_to_2d
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
-            elif self.initMethod is INIT_FUNCTION_METHOD_ONLY:
+            elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
                 return_value = super()._execute(
                     variable=self.defaults.variable,
                     context=context,
@@ -2624,25 +2624,26 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports(self, func, f_params_in, ctx, builder,
-                               mech_params, mech_state, mech_input):
+    def _gen_llvm_param_ports_for_obj(self, obj, params_in, ctx, builder,
+                                      mech_params, mech_state, mech_input):
         # Allocate a shadow structure to overload user supplied parameters
-        f_params_out = builder.alloca(f_params_in.type.pointee)
+        params_out = builder.alloca(params_in.type.pointee)
         # Copy original values. This handles params without param ports.
         # Few extra copies will be eliminated by the compiler.
-        builder.store(builder.load(f_params_in), f_params_out)
+        builder.store(builder.load(params_in), params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in func._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in obj._get_param_ids()]
 
         def _get_output_ptr(b, i):
-            ptr = pnlvm.helpers.get_param_ptr(b, func, f_params_out,
+            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
                                               param_ports[i].name)
             return b, ptr
 
         def _fill_input(b, s_input, i):
-            param_in_ptr = pnlvm.helpers.get_param_ptr(b, func, f_params_in,
+            param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
                                                        param_ports[i].name)
+            # get rid of extra dimension
             raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(param_in_ptr), raw_ps_input)
             return b
@@ -2650,7 +2651,7 @@ class Mechanism_Base(Mechanism):
         builder = self._gen_llvm_ports(ctx, builder, param_ports,
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
-        return f_params_out, builder
+        return params_out, builder
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
@@ -2700,15 +2701,15 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
 
-        is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+        ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
+                                                        params, state, arg_in)
 
-        mf_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
+        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        f_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, f_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
-
-        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output)
 
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
@@ -2716,14 +2717,11 @@ class Mechanism_Base(Mechanism):
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
         return builder, pnlvm.ir.IntType(1)(1)
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
-
-    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
-        return mf_out, builder
 
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
@@ -3233,7 +3231,8 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_ports(self, ports):
+    @handle_external_context()
+    def add_ports(self, ports, context=None):
         """
         add_ports(ports)
 

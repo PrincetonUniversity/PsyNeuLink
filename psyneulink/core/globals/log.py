@@ -813,7 +813,7 @@ class Log:
 
             self._get_parameter_from_item_string(item).log_condition = level
 
-        if items is ALL:
+        if items == ALL:
             for component in self.loggable_components:
                 component.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
 
@@ -925,7 +925,7 @@ class Log:
 
     def get_logged_entries(self, entries=ALL, contexts=NotImplemented, exclude_sims=False):
         from psyneulink.core.globals.parameters import parse_context
-        if entries is ALL:
+        if entries == ALL:
             entries = self.all_items
 
         logged_entries = {}
@@ -1526,7 +1526,7 @@ class Log:
 
         logged_entries = self.logged_entries
         # If ALL, set entries to all entries in self.logged_entries
-        if entries is ALL or entries is None:
+        if entries == ALL or entries is None:
             entries = logged_entries.keys()
 
         # If entries is a single entry, put in list for processing below
@@ -1578,7 +1578,7 @@ class Log:
     def _dealias_owner_name(self, name):
         """De-alias VALUE to name of owner
         """
-        return self.owner.name if name is VALUE else name
+        return self.owner.name if name == VALUE else name
 
     def _scan_for_duplicates(self, time_values):
         # TEMPORARY FIX: this is slow and may not cover all possible cases properly!

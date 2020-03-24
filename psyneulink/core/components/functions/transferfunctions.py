@@ -2263,7 +2263,7 @@ class SoftMax(TransferFunction):
         output_type = self._get_current_function_param(OUTPUT_TYPE, context)
         bounds = None
 
-        if not output_type is ALL:
+        if not output_type == ALL:
             from psyneulink.core.components.functions.selectionfunctions import OneHot
             self.one_hot_function = OneHot(mode=output_type).function
 
@@ -2434,7 +2434,7 @@ class SoftMax(TransferFunction):
         size = len(output)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
 
-        if output_type is ALL:
+        if output_type == ALL:
             # Return full Jacobian matrix of derivatives
             derivative = np.empty([size, size])
             for j in range(size):
@@ -2712,14 +2712,14 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             for param_name, param_value in param_set.items():
 
                 # Receiver param already checked above
-                if param_name is RECEIVER:
+                if param_name == RECEIVER:
                     continue
 
                 # Not currently used here
                 if param_name in function_keywords:
                     continue
 
-                if param_name is HAS_INITIALIZERS:
+                if param_name == HAS_INITIALIZERS:
                     continue
 
                 # Matrix specification param
@@ -2922,10 +2922,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
-            warnings.warn("Unexpected data shape: {} got 2D input: {}".format(self, self.defaults.variable))
+            warnings.warn("Unexpected data shape: {} (in {}) got 2D input: {}".format(self, self.owner, self.defaults.variable))
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         if self.defaults.value.ndim != 1:
-            warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
+            warnings.warn("Unexpected data shape: {} (in {}) has 2D output: {}".format(self, self.owner, self.defaults.value))
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)

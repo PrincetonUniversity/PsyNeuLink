@@ -904,6 +904,47 @@ class TestControlMechanisms:
         assert np.allclose(res, [40])
         benchmark(oComp.run, [5], bin_execute=mode)
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+                                     ])
+    def test_recurrent_control(self, mode):
+        monitor = pnl.TransferMechanism(default_variable=[[0.0]],
+                                    size=1,
+                                    function=pnl.Linear(slope=1, intercept=0),
+                                    output_ports=[pnl.RESULT],
+                                    name='monitor')
+
+        rtm = pnl.RecurrentTransferMechanism(default_variable=[[0.0, 0.0]],
+                                            function=pnl.Logistic(gain=1.0),
+                                            matrix=[[1.0, -1.0],
+                                                    [-1.0, 1.0]],
+                                            integrator_mode=True,
+                                            integrator_function=pnl.AdaptiveIntegrator(rate=(1)),
+                                            initial_value=np.array([[0.0, 0.0]]),
+                                            output_ports=[pnl.RESULT],
+                                            name='rtm')
+    
+        controller = pnl.ControlMechanism(
+            monitor_for_control=monitor,
+            control_signals=[(pnl.NOISE, rtm)])
+        
+        comp = pnl.Composition()
+        comp.add_node(monitor)
+        comp.add_node(rtm)
+        comp.add_node(controller)
+        val = comp.run(inputs = {
+                    monitor: [[1], [5], [1], [5]],
+                    rtm: [[1,0], [1,0] ,[1,0], [1,0]]
+                },
+            bin_execute=mode
+        )
+        assert np.allclose(val[0], [5])
+        assert np.allclose(val[1], [0.7573055560600637, 0.4500512583901123])
+
 class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
@@ -1882,6 +1923,55 @@ class TestModelBasedOptimizationControlMechanisms:
         A.log.clear_entries()
         benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
         assert len(A.log.get_logged_entries()) == 0
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+                                     ])
+    def test_input_CIM_assignment(self, mode):
+        input_a = pnl.ProcessingMechanism(name='oa', function=pnl.Linear(slope=1))
+        input_b = pnl.ProcessingMechanism(name='ob', function=pnl.Linear(slope=1))
+        output = pnl.ProcessingMechanism(name='oc')
+        comp = pnl.Composition(name='ocomp',
+                               controller_mode=pnl.BEFORE,
+                               retain_old_simulation_data=True)
+        comp.add_linear_processing_pathway([input_a, output])
+        comp.add_linear_processing_pathway([input_b, output])
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[input_b.input_port, input_a.input_port],
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=output.output_port,
+                    function=pnl.SimpleIntegrator,
+                    name="Output Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[
+                    pnl.ControlSignal(modulates=[(pnl.SLOPE, input_a)],
+                                      intensity_cost_function=pnl.Linear(slope=1),
+                                      allocation_samples=[-1, 1]),
+                    pnl.ControlSignal(modulates=[(pnl.SLOPE, input_b)],
+                                      intensity_cost_function=pnl.Linear(slope=0),
+                                      allocation_samples=[-1, 1])
+                ]))
+        results = comp.run(inputs={input_a: [[5]], input_b: [[-2]]},
+                           bin_execute=mode)
+
+        # The controller of this model uses two control signals: one that modulates the slope of input_a and one that modulates
+        # the slope of input_b. Both control signals have two possible values: -1 or 1.
+        #
+        # In the correct case, input_a receives a control signal with value 1 and input_b receives a control signal with value
+        # -1 to maximize the output of the model given their respective input values of 5 and -2.
+        #
+        # In the errant case, the control signals are flipped so that input_b receives a control signal with value -1 and
+        # input_a receives a control signal with value 1.
+        #
+        # Thus, in the correct case, the output of the model is 7 ((5*1)+(-2*-1)) and in the errant case the output of the model is
+        # -7 ((5*-1)+(-2*1))
+        assert np.allclose(results, [[7]])
 
 class TestSampleIterator:
 

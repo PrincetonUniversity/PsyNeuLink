@@ -310,7 +310,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 #         (i.e., the mechanism before activation_output_mech in the learning sequence)
                 #         then this should be the LearningMechanism for the learning_projection,
                 #         so issue warning, assign it as the sender, and return
-                if (receiver_state.name is ACTIVATION_OUTPUT and
+                if (receiver_state.name == ACTIVATION_OUTPUT and
                         any(projection.sender.owner is lc.activation_mech_input.owner
                             for projection in receiver_mech.input_ports[ACTIVATION_INPUT].path_afferents)):
                         warnings.warn("An existing LearningMechanism ({}) was found for and is being assigned to {}".
@@ -324,7 +324,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             elif isinstance(receiver_mech, ObjectiveMechanism) and LEARNING in receiver_mech._role:
 
                 # ObjectiveMechanism is for learning but projection is not to its SAMPLE inputPort
-                if LEARNING in receiver_mech._role and not receiver_state.name is SAMPLE:
+                if LEARNING in receiver_mech._role and not receiver_state.name == SAMPLE:
                     raise LearningAuxiliaryError("PROGRAM ERROR: {} projects to the {} rather than the {} "
                                                   "inputPort of an ObjectiveMechanism for learning {}".
                                                  format(lc.activation_output_mech.name,
@@ -381,7 +381,7 @@ def _instantiate_learning_components(learning_projection, context=None):
     error_function = learning_projection._init_args['error_function']
 
     # HEBBIAN LEARNING FUNCTION
-    if learning_function.componentName is HEBBIAN_FUNCTION:
+    if learning_function.componentName == HEBBIAN_FUNCTION:
 
         activation = np.zeros_like(lc.activation_mech_input.value)
         learning_rate = learning_projection.learning_function.learning_rate
@@ -396,7 +396,7 @@ def _instantiate_learning_components(learning_projection, context=None):
         objective_mechanism = lc.activation_output_mech
 
     # REINFORCEMENT LEARNING FUNCTION
-    elif learning_function.componentName is RL_FUNCTION:
+    elif learning_function.componentName == RL_FUNCTION:
 
         activation_input = np.zeros_like(lc.activation_mech_input.value)
         activation_output = np.zeros_like(lc.activation_mech_output.value)
@@ -412,7 +412,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                           # activation_function=lc.activation_mech_fct,
                                           learning_rate=learning_rate)
 
-    elif learning_function.componentName is TDLEARNING_FUNCTION:
+    elif learning_function.componentName == TDLEARNING_FUNCTION:
         activation_input = np.zeros_like(lc.activation_mech_input.value)
         activation_output = np.zeros_like(lc.activation_mech_output.value)
 
@@ -427,7 +427,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                        learning_rate=learning_rate)
 
     # BACKPROPAGATION LEARNING FUNCTION
-    elif learning_function.componentName is BACKPROPAGATION_FUNCTION:
+    elif learning_function.componentName == BACKPROPAGATION_FUNCTION:
 
         # Get activation_output_mech values
         activation_input = np.zeros_like(lc.activation_mech_input.value)
@@ -1242,7 +1242,7 @@ class LearningComponents(object):
     def error_signal_mech(self, assignment):
         if (assignment is None or
                 isinstance(assignment, LearningMechanism) or
-                (isinstance(assignment, ObjectiveMechanism) and assignment._role is LEARNING)):
+                (isinstance(assignment, ObjectiveMechanism) and assignment._role == LEARNING)):
             self._error_signal_mech = assignment
         else:
             raise LearningAuxiliaryError("PROGRAM ERROR: illegal assignment "
