@@ -2755,8 +2755,8 @@ class Mechanism_Base(Mechanism):
         current_flag = builder.load(is_finished_flag_ptr)
         was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
         with builder.if_then(was_finished):
-            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
-            builder.store(current_flag.type(0), is_finished_flag_ptr)
+            builder.store(is_finished_count_ptr.type.pointee(0),
+                          is_finished_count_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
@@ -2796,6 +2796,15 @@ class Mechanism_Base(Mechanism):
         # Combine conditions
         is_finished = builder.or_(is_finished_cond, max_reached)
         iter_end = builder.or_(is_finished, exec_until_off)
+
+        # Check if in integrator mode
+        if hasattr(self, "integrator_mode"):
+            int_mode_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                       "integrator_mode")
+            int_mode = builder.load(int_mode_ptr)
+            int_mode_off = builder.fcmp_ordered("==", int_mode, int_mode.type(0))
+            iter_end = builder.or_(iter_end, int_mode_off)
+
         with builder.if_then(iter_end):
             new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
