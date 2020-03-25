@@ -1155,7 +1155,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions", "execution_count"}
+                     "num_executions_before_finished", "num_executions",
+                     "execution_count"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {}
         def _is_compilation_state(p):
@@ -1169,9 +1170,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return [sp.name for sp in self._get_compilation_state()]
 
     def _get_state_values(self, context=None):
-        def _state_values(x):
-            return x._get_state_values(context) if isinstance(x, Component) else x
-        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+        def _state_values(p):
+            val = p.get(context)
+            if isinstance(val, Component):
+                return val._get_state_values(context)
+            return val
+        return tuple(map(_state_values, self._get_compilation_state()))
 
     def _get_state_initializer(self, context):
         def _convert(x):
@@ -1182,7 +1186,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return [0] * 5
             try:
                 return (_convert(i) for i in x)
-            except:
+            except TypeError:
                 return x
         return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
