@@ -1169,6 +1169,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
+    @property
+    def llvm_state_ids(self):
+        ids = getattr(self, "_state_ids", None)
+        if ids is None:
+            ids = self._get_state_ids()
+            setattr(self, "_state_ids", ids)
+        return ids
+
     def _get_state_values(self, context=None):
         def _state_values(p):
             val = p.get(context)
@@ -1218,8 +1226,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return filter(_is_compilation_param, self.parameters)
 
-    def _get_param_ids(self, context=None):
+    def _get_param_ids(self):
         return [p.name for p in self._get_compilation_params()]
+
+    @property
+    def llvm_param_ids(self):
+        ids = getattr(self, "_param_ids", None)
+        if ids is None:
+            ids = self._get_param_ids()
+            setattr(self, "_param_ids", ids)
+        return ids
 
     def _get_param_values(self, context=None):
         def _get_values(p):
