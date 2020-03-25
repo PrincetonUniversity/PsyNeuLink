@@ -1545,9 +1545,9 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                         "integrator_function")
+                                                   "integrator_function")
             if_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                             "integrator_function")
+                                                       "integrator_function")
             if_params, builder = self._gen_llvm_param_ports_for_obj(
                     self.integrator_function, if_param_ptr, ctx, builder,
                     params, state, arg_in)
