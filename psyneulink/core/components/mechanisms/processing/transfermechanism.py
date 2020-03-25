@@ -1540,9 +1540,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
-        return pnlvm.ir.IntType(1)(1)
-
     def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
         ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 

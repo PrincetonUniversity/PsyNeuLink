@@ -2699,6 +2699,9 @@ class Mechanism_Base(Mechanism):
 
         return fun_out, builder
 
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        return pnlvm.ir.IntType(1)(1)
+
     def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
@@ -2718,7 +2721,9 @@ class Mechanism_Base(Mechanism):
         builder.store(exec_count, exec_count_ptr)
 
         builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
-        return builder, pnlvm.ir.IntType(1)(1)
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
+                                                           state, value)
+        return builder, is_finished_cond
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
@@ -2773,6 +2778,7 @@ class Mechanism_Base(Mechanism):
         is_finished_cond = builder.call(internal_f, builder.function.args)
 
         #FIXME: Flag and count should be int instead of float
+        # Check if we reached maximum iteration count
         is_finished_count = builder.load(is_finished_count_ptr)
         is_finished_count = builder.fadd(is_finished_count,
                                          is_finished_count.type(1))
@@ -2780,9 +2786,18 @@ class Mechanism_Base(Mechanism):
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
-        iter_end = builder.or_(is_finished_cond, max_reached)
+
+        # Check if execute until finished mode is enabled
+        exec_until_fin_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                         "execute_until_finished")
+        exec_until_fin = builder.load(exec_until_fin_ptr)
+        exec_until_off = builder.fcmp_ordered("==", exec_until_fin, exec_until_fin.type(0))
+
+        # Combine conditions
+        is_finished = builder.or_(is_finished_cond, max_reached)
+        iter_end = builder.or_(is_finished, exec_until_off)
         with builder.if_then(iter_end):
-            new_flag = builder.uitofp(iter_end, current_flag.type)
+            new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 

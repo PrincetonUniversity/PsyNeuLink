@@ -1336,8 +1336,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Update previous value to make sure that repeated executions work
         builder.store(builder.load(current), prev_val_ptr)
 
-        if self.parameters.termination_threshold.get(None) is None or \
-           not self.execute_until_finished:
+        if self.parameters.termination_threshold.get(None) is None:
             return pnlvm.ir.IntType(1)(1)
 
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
