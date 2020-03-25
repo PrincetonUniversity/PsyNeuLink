@@ -1429,7 +1429,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         starting_point = builder.fmul(starting_point, starting_point.type(2))
         starting_point = builder.fmul(starting_point, threshold)
 
-        abs_drift_rate = builder.call(abs_f, [drift_rate])
         drift_rate_limit = abs_drift_rate.type(0.01)
         small_drift = builder.fcmp_ordered("<", abs_drift_rate, drift_rate_limit)
         drift_rate = builder.select(small_drift, drift_rate_limit, drift_rate)
@@ -1443,7 +1442,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         Z = pnlvm.helpers.fclamp(builder, Z, Z.type(-100), Z.type(100))
 
         abs_Z = builder.call(abs_f, [Z])
-        tiny_Z = builder.fcmp_ordered("<", Z, Z.type(0.0001))
+        tiny_Z = builder.fcmp_ordered("<", abs_Z, Z.type(0.0001))
         Z = builder.select(tiny_Z, Z.type(0.0001), Z)
 
         # Mean helpers

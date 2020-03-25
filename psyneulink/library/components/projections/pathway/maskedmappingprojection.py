@@ -233,11 +233,11 @@ class MaskedMappingProjection(MappingProjection):
         matrix = self.parameters.matrix._get(context)
         # Apply mask to matrix using mask_operation
         if mask is not None:
-            if mask_operation is ADD:
+            if mask_operation == ADD:
                 matrix += mask
-            elif mask_operation is MULTIPLY:
+            elif mask_operation == MULTIPLY:
                 matrix *= mask
-            elif mask_operation is EXPONENTIATE:
+            elif mask_operation == EXPONENTIATE:
                 matrix **= mask
 
         self.parameters.matrix._set(matrix, context)

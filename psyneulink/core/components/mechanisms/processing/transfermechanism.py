@@ -1119,7 +1119,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports is RESULTS:
+        if output_ports is None or output_ports == RESULTS:
             output_ports = [RESULTS]
 
         initial_value = self._parse_arg_initial_value(initial_value)
@@ -1549,21 +1549,21 @@ class TransferMechanism(ProcessingMechanism_Base):
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                          "integrator_function")
-            if_param_raw = pnlvm.helpers.get_param_ptr(builder, self, params,
+            if_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                              "integrator_function")
-            if_params, builder = self._gen_llvm_param_ports(self.integrator_function,
-                                                            if_param_raw, ctx, builder,
-                                                            params, state, arg_in)
+            if_params, builder = self._gen_llvm_param_ports_for_obj(
+                    self.integrator_function, if_param_ptr, ctx, builder,
+                    params, state, arg_in)
 
-            mf_in, builder = self._gen_llvm_invoke_function(ctx, builder, self.integrator_function,
-                                                            if_params, if_state, ip_out)
+            mf_in, builder = self._gen_llvm_invoke_function(
+                    ctx, builder, self.integrator_function, if_params, if_state, ip_out)
         else:
             mf_in = ip_out
 
         mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         mf_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_param_ptr, ctx,
-                                                        builder, params, state, arg_in)
+        mf_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
 
@@ -1743,7 +1743,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                   (equivalent to setting Component.execute_until_finished = False)
         """
 
-        threshold = self.parameters.termination_threshold._get(context)
+        try:
+            threshold = self.get_mod_termination_threshold(context)
+        except:
+            threshold = self.parameters.termination_threshold._get(context)
         integrator_mode = self.parameters.integrator_mode._get(context)
 
         if (not integrator_mode
