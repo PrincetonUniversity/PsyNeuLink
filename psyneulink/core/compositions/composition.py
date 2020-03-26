@@ -4941,7 +4941,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @tc.typecheck
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
