@@ -1336,12 +1336,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Update previous value to make sure that repeated executions work
         builder.store(builder.load(current), prev_val_ptr)
 
-        if self.parameters.termination_threshold.get(None) is None or \
-           not self.execute_until_finished:
-            return pnlvm.ir.IntType(1)(1)
+        if self.parameters.termination_threshold.get(None) is None:
+            # Threshold is not defined, return the old value of finished flag
+            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                          "is_finished_flag")
+            is_finished_flag = builder.load(is_finished_ptr)
+            return builder.fcmp_ordered("!=", is_finished_flag,
+                                              is_finished_flag.type(0))
 
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                          "termination_threshold")
+                                                    "termination_threshold")
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
         builder.store(threshold, cmp_val_ptr)
