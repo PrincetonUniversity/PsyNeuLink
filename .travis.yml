@@ -20,13 +20,8 @@ env:
     - PIP_PROGRESS_BAR="off"
     - COVERALLS_PARALLEL=true
 
-# Cache downloaded(built) python packages
-# and homebrew downloads
-cache:
-  directories:
-    - $HOME/.cache/pip
-    - $HOME/Library/Caches/Homebrew
-    - $HOME/Library/Caches/pip
+# Cache downloaded and built python packages
+cache: pip
 
 addons:
   apt:
