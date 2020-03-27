@@ -11,4 +11,5 @@ Pathway Projections
 
 .. automodule:: psyneulink.core.components.projections.pathway.pathwayprojection
    :members:
+   :inherited-members:
    :exclude-members: PathwayProjection_Base, Linear, random, Parameters

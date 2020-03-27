@@ -5,4 +5,5 @@ RegressionCFA
    :maxdepth: 2
 
 .. automodule:: psyneulink.library.compositions.regressioncfa
+   :inherited-members:
    :members:

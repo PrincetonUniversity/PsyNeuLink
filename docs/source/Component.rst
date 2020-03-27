@@ -12,4 +12,5 @@ Component
 
 .. automodule:: psyneulink.core.components.component
    :members:
+   :inherited-members:
    :exclude-members: Parameters, ComponentLog, COMPONENT_BASE_CLASS, LogLevel

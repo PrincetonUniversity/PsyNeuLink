@@ -11,5 +11,5 @@ Modulatory Mechanisms
 
 .. automodule:: psyneulink.core.components.mechanisms.modulatory.modulatorymechanism
    :members:
+   :inherited-members:
    :exclude-members: Linear, random, Parameters
-

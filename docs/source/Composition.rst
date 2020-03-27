@@ -11,4 +11,5 @@ Composition
 
 .. automodule:: psyneulink.core.compositions.composition
    :members:
+   :inherited-members:
    :exclude-members: Parameters, show_structure

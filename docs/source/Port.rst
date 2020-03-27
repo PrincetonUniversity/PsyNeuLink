@@ -16,5 +16,6 @@ Subclasses:
 
 .. automodule:: psyneulink.core.components.ports.port
    :members:
+   :inherited-members:
    :exclude-members: random, update, Parameters
 

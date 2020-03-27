@@ -15,5 +15,5 @@ Modulatory Signals
 
 .. automodule:: psyneulink.core.components.ports.modulatorysignals.modulatorysignal
    :members:
+   :inherited-members:
    :exclude-members: random, update, Parameters
-

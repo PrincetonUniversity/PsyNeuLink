@@ -12,4 +12,5 @@ Processing Mechanisms
 
 .. automodule:: psyneulink.core.components.mechanisms.processing.processingmechanism
    :members:
+   :inherited-members:
    :exclude-members: ProcessingMechanism_Base, MechanismTuple, MechanismList, random, Parameters

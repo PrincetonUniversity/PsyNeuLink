@@ -6,4 +6,5 @@ ObjectiveFunctions
 
 .. automodule:: psyneulink.core.components.functions.objectivefunctions
    :members:
+   :inherited-members:
    :exclude-members: Parameters

@@ -9,4 +9,5 @@ Projections
 
 .. automodule:: psyneulink.core.components.projections.projection
    :members:
+   :inherited-members:
    :exclude-members: _is_projection_spec, random, Parameters

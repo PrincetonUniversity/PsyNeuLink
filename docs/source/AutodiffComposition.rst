@@ -2,4 +2,5 @@ AutodiffComposition
 ===================
 
 .. automodule:: psyneulink.library.compositions.autodiffcomposition
-   :members:
+    :inherited-members:
+    :members:

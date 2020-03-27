@@ -10,5 +10,6 @@ Mechanisms
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:
+   :inherited-members:
    :exclude-members: MechanismTuple, MechanismList, MonitoredOutputPortsOption, random, Parameters
 
