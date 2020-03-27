@@ -1294,8 +1294,6 @@ class GridSearch(OptimizationFunction):
             prefs=prefs,
         )
 
-        self.stateful_attributes = ["random_state"]
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)

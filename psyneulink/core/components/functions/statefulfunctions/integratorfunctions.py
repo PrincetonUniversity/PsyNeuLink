@@ -2408,10 +2408,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             seed = get_global_seed()
 
         if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point", "seed"]
+            self.initializers = ["initializer", "starting_point"]
 
         if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time", "random_state"]
+            self.stateful_attributes = ["previous_value", "previous_time"]
 
         random_state = np.random.RandomState([seed])
 

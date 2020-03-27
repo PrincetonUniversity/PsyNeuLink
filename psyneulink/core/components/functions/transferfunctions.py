@@ -1956,8 +1956,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["random_state"]
 
         super().__init__(
             default_variable=default_variable,
