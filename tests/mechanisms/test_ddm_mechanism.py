@@ -34,7 +34,7 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize function
-        D.function.reinitialize(2.0, 0.1, 0)
+        D.function.reinitialize(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -52,7 +52,7 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize mechanism
-        D.reinitialize(2.0, 0.1, 0)
+        D.reinitialize(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
