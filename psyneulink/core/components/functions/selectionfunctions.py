@@ -212,8 +212,6 @@ class OneHot(SelectionFunction):
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["random_state"]
 
         reset_default_variable_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:
@@ -282,42 +280,42 @@ class OneHot(SelectionFunction):
             cur_res_ptr = b1.gep(arg_out, [ctx.int32_ty(0), index])
             if self.mode not in {PROB, PROB_INDICATOR}:
                 fabs = ctx.get_builtin("fabs", [current.type])
-            if self.mode is MAX_VAL:
+            if self.mode == MAX_VAL:
                 cmp_op = ">="
                 cmp_prev = prev
                 cmp_curr = current
                 val = current
-            elif self.mode is MAX_ABS_VAL:
+            elif self.mode == MAX_ABS_VAL:
                 cmp_op = ">="
                 cmp_prev = b1.call(fabs, [prev])
                 cmp_curr = b1.call(fabs, [current])
                 val = current
-            elif self.mode is MAX_INDICATOR:
+            elif self.mode == MAX_INDICATOR:
                 cmp_op = ">="
                 cmp_prev = prev
                 cmp_curr = current
                 val = current.type(1.0)
-            elif self.mode is MAX_ABS_INDICATOR:
+            elif self.mode == MAX_ABS_INDICATOR:
                 cmp_op = ">="
                 cmp_prev = b1.call(fabs, [prev])
                 cmp_curr = b1.call(fabs, [current])
                 val = current.type(1.0)
-            elif self.mode is MIN_VAL:
+            elif self.mode == MIN_VAL:
                 cmp_op = "<="
                 cmp_prev = prev
                 cmp_curr = current
                 val = current
-            elif self.mode is MIN_ABS_VAL:
+            elif self.mode == MIN_ABS_VAL:
                 cmp_op = "<="
                 cmp_prev = b1.call(fabs, [prev])
                 cmp_curr = b1.call(fabs, [current])
                 val = current
-            elif self.mode is MIN_INDICATOR:
+            elif self.mode == MIN_INDICATOR:
                 cmp_op = "<="
                 cmp_prev = prev
                 cmp_curr = current
                 val = current.type(1.0)
-            elif self.mode is MIN_ABS_INDICATOR:
+            elif self.mode == MIN_ABS_INDICATOR:
                 cmp_op = "<="
                 cmp_prev = b1.call(fabs, [prev])
                 cmp_curr = b1.call(fabs, [current])
@@ -335,7 +333,7 @@ class OneHot(SelectionFunction):
                 cmp_prev = ctx.float_ty(1.0)
                 cmp_curr = b1.select(cond, cmp_prev, ctx.float_ty(0.0))
                 cmp_op = "=="
-                if self.mode is PROB:
+                if self.mode == PROB:
                     val = current
                 else:
                     val = ctx.float_ty(1.0)
@@ -381,35 +379,35 @@ class OneHot(SelectionFunction):
 
         """
 
-        if self.mode is MAX_VAL:
+        if self.mode == MAX_VAL:
             max_value = np.max(variable)
             result = np.where(variable == max_value, variable, 0)
 
-        elif self.mode is MAX_ABS_VAL:
+        elif self.mode == MAX_ABS_VAL:
             max_value = np.max(np.absolute(variable))
             result = np.where(np.absolute(variable)==max_value, np.absolute(variable), 0)
 
-        elif self.mode is MAX_INDICATOR:
+        elif self.mode == MAX_INDICATOR:
             max_value = np.max(variable)
             result = np.where(variable == max_value, 1, 0)
 
-        elif self.mode is MAX_ABS_INDICATOR:
+        elif self.mode == MAX_ABS_INDICATOR:
             max_value = np.max(np.absolute(variable))
             result = np.where(np.absolute(variable) == max_value, 1, 0)
 
-        if self.mode is MIN_VAL:
+        if self.mode == MIN_VAL:
             min_value = np.min(variable)
             result = np.where(variable == min_value, min_value, 0)
 
-        elif self.mode is MIN_ABS_VAL:
+        elif self.mode == MIN_ABS_VAL:
             min_value = np.min(np.absolute(variable))
             result = np.where(np.absolute(variable) == min_value, np.absolute(variable), 0)
 
-        elif self.mode is MIN_INDICATOR:
+        elif self.mode == MIN_INDICATOR:
             min_value = np.min(variable)
             result = np.where(variable == min_value, 1, 0)
 
-        elif self.mode is MIN_ABS_INDICATOR:
+        elif self.mode == MIN_ABS_INDICATOR:
             min_value = np.min(np.absolute(variable))
             result = np.where(np.absolute(variable) == min_value, 1, 0)
 

@@ -307,7 +307,7 @@ class PreferenceSet(object):
                     else:
                         prefs.update(class_prefs)
                 for pref_key in default_prefs_dict:
-                    if pref_key is PREFERENCE_SET_NAME:
+                    if pref_key == PREFERENCE_SET_NAME:
                         continue
                     try:
                         # Get pref from prefs arg;                                             # Condition 4
@@ -609,7 +609,7 @@ class PreferenceSet(object):
         # Note:
         # * this prevents use of LogEntry attributes not recognized by, or having different values from
         #     the LogEntry class in the owner object's module
-        if (not pref_set.owner.name is DEFAULT_PREFERENCE_SET_OWNER and
+        if (not pref_set.owner.name == DEFAULT_PREFERENCE_SET_OWNER and
                 not candidate_log_class.__module__ is pref_set.owner.__module__):
             raise PreferenceSetError("Attempt to assign logPref setting for {0} using value ({1}) from LogEntry"
                                      " in {2} which is different than the one defined in Globals.Log"

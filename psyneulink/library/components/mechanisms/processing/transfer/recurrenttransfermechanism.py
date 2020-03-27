@@ -670,7 +670,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Default output_ports is specified in constructor as a string rather than a list
         # to avoid "gotcha" associated with mutable default arguments
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports is RESULT:
+        if output_ports is None or output_ports == RESULT:
             output_ports = [RESULT]
 
         if isinstance(hetero, (list, np.matrix)):
@@ -1178,9 +1178,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.learning_condition = learning_condition
 
         if not isinstance(self.learning_condition, Condition):
-            if self.learning_condition is CONVERGENCE:
+            if self.learning_condition == CONVERGENCE:
                 self.learning_condition = WhenFinished(self)
-            elif self.learning_condition is UPDATE:
+            elif self.learning_condition == UPDATE:
                 self.learning_condition = None
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
@@ -1252,12 +1252,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             input_type_list.append(new_type)
 
         # Add modulatory inputs
-        mod_input_type_list = []
-        for proj in self.mod_afferents:
-            mod_input_type_list.append(ctx.get_output_struct_type(proj))
-        if len(mod_input_type_list) > 1:
-            input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
-
+        mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
+        input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+        
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_ids(self):
@@ -1339,12 +1336,16 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Update previous value to make sure that repeated executions work
         builder.store(builder.load(current), prev_val_ptr)
 
-        if self.parameters.termination_threshold.get(None) is None or \
-           not self.execute_until_finished:
-            return pnlvm.ir.IntType(1)(1)
+        if self.parameters.termination_threshold.get(None) is None:
+            # Threshold is not defined, return the old value of finished flag
+            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                          "is_finished_flag")
+            is_finished_flag = builder.load(is_finished_ptr)
+            return builder.fcmp_ordered("!=", is_finished_flag,
+                                              is_finished_flag.type(0))
 
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                          "termination_threshold")
+                                                    "termination_threshold")
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
         builder.store(threshold, cmp_val_ptr)

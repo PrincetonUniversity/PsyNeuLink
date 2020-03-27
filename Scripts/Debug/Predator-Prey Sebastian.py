@@ -11,9 +11,9 @@ from double_dqn import DoubleDQNAgent
 MPI_IMPLEMENTATION = True
 RENDER = True
 PNL_COMPILE = False
-RUN = False
-SHOW_GRAPH = True
-ANIMATE = True
+RUN = True
+SHOW_GRAPH = False
+ANIMATE = False
 MODEL_PATH = '../../../double-dqn/models/trained_models/policy_net_trained_0.99_20190214-1651.pt'
 
 # Switch for determining actual action taken in each step

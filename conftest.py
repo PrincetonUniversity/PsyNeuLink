@@ -1,8 +1,13 @@
+import doctest
 import pytest
 import numpy as np
 
-from psyneulink.core.llvm import ptx_enabled
+
 from psyneulink import clear_registry, primary_registries
+from psyneulink.core import llvm as pnlvm
+from psyneulink.core.globals.utilities import set_global_seed
+
+
 try:
     import torch
     pytorch_available = True
@@ -28,13 +33,11 @@ def pytest_addoption(parser):
     parser.addoption('--{0}'.format(mark_stress_tests), action='store_true', default=False, help='Run {0} tests (long)'.format(mark_stress_tests))
 
 def pytest_runtest_setup(item):
-    import doctest
-
     for m in marks_default_skip:
         if m in item.keywords and not item.config.getvalue(m):
             pytest.skip('{0} tests not requested'.format(m))
 
-    if 'cuda' in item.keywords and not ptx_enabled:
+    if 'cuda' in item.keywords and not pnlvm.ptx_enabled:
             pytest.skip('PTX engine not enabled/available')
 
     if 'pytorch' in item.keywords and not pytorch_available:
@@ -47,7 +50,6 @@ def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))
     seed = 0
     np.random.seed(seed)
-    from psyneulink.core.globals.utilities import set_global_seed
     set_global_seed(seed)
 
 
@@ -57,7 +59,6 @@ def pytest_runtest_teardown(item):
         # Clear Registry to have a stable reference for indexed suffixes of default names
         clear_registry(registry)
 
-    from psyneulink.core import llvm as pnlvm
     pnlvm.cleanup()
 
 

@@ -585,7 +585,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             monitor = kwargs.pop(MONITORED_OUTPUT_PORTS)
         monitor = monitor or None # deal with possibility of empty list
         input_ports = monitor
-        if output_ports is None or output_ports is OUTCOME:
+        if output_ports is None or output_ports == OUTCOME:
             output_ports = [OUTCOME]
 
         self._learning_role = None

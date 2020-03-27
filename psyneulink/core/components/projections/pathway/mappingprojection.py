@@ -542,7 +542,8 @@ class MappingProjection(PathwayProjection_Base):
 
         matrix_spec = self.defaults.matrix
 
-        if matrix_spec is AUTO_ASSIGN_MATRIX:
+        if (type(matrix_spec) == str and
+                matrix_spec == AUTO_ASSIGN_MATRIX):
             if mapping_input_len == receiver_len:
                 matrix_spec = IDENTITY_MATRIX
             else:

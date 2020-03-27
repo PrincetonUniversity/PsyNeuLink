@@ -7,6 +7,7 @@ from psyneulink.core.components.functions.transferfunctions import Identity, Lin
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -494,6 +495,30 @@ class TestConnectCompositionsViaCIMS:
         assert np.allclose(level_1.get_output_values(level_2), [14.0])
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         assert np.allclose(level_2.get_output_values(level_2), [34.0])
+
+    def test_warning_on_custom_cim_ports(self):
+
+        comp = Composition()
+        mech = ProcessingMechanism()
+        warning_text = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
+                        'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
+                        'that project to or are projected to from the CIM.')
+        warning_fired = False
+        comp.add_node(mech)
+        with pytest.warns(UserWarning) as w:
+            comp.input_CIM.add_ports(OutputPort())
+            # confirm that warning fired and that its text is correct
+            for warn in w:
+                if warn.message.args[0] == warning_text:
+                    warning_fired = True
+            assert warning_fired
+            warning_fired = False
+            comp._analyze_graph()
+            comp.run({mech: [[1]]})
+            for warn in w[1:]:
+                if warn.message.args[0] == warning_text:
+                    warning_fired = True
+            assert not warning_fired
 
 class TestInputCIMOutputPortToOriginOneToMany:
 

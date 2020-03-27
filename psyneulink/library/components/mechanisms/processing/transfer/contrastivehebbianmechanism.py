@@ -1000,7 +1000,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         """Instantiate ContrastiveHebbianMechanism
         """
 
-        if mode is SIMPLE_HEBBIAN:
+        if mode == SIMPLE_HEBBIAN:
             hidden_size=0
             # target_size=0
             separated = False
@@ -1152,7 +1152,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self.parameters.execution_phase._get(context) is None:
             self.parameters.execution_phase._set(MINUS_PHASE, context)
 
-        if self.parameters.execution_phase._get(context) is MINUS_PHASE:
+        if self.parameters.execution_phase._get(context) == MINUS_PHASE:
             self.parameters.current_termination_threshold._set(
                     self.parameters.minus_phase_termination_threshold._get(context), context)
             self.parameters.current_termination_condition._set(self.minus_phase_termination_condition, context)
@@ -1190,18 +1190,18 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         current_termination_condition = self.parameters.current_termination_condition._get(context)
 
-        if current_termination_condition is CONVERGENCE:
+        if current_termination_condition == CONVERGENCE:
             self.parameters.phase_convergence_threshold._set(
                     self.parameters.current_termination_threshold._get(context),context)
             self.parameters.phase_terminated._set(
                     self.is_converged(np.atleast_2d(current_activity), context), context)
-        elif current_termination_condition is COUNT:
+        elif current_termination_condition == COUNT:
             self.parameters.phase_terminated._set(
                 (self.parameters.phase_execution_count._get(context) ==
                  self.parameters.current_termination_threshold._get(context)),
                 context)
         else:
-            phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) is PLUS_PHASE \
+            phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) == PLUS_PHASE \
                                            else repr('MINUS_PHASE')
             raise ContrastiveHebbianError(f"Unrecognized {repr('current_termination_condition')} specification "
                                           f"({current_termination_condition}) in execution of {phase_str} of "
@@ -1251,18 +1251,18 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.parameters.execution_phase._get(context) == PLUS_PHASE:
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
-                    if self.mode is SIMPLE_HEBBIAN:
+                    if self.mode == SIMPLE_HEBBIAN:
                         return variable[RECURRENT_INDEX]
                     else:
                         variable[RECURRENT_INDEX][self.target_start:self.target_end] = variable[PLUS_PHASE_INDEX]
                 else:
                     variable[RECURRENT_INDEX][:self.input_size] += variable[MINUS_PHASE_INDEX]
-                    if self.mode is SIMPLE_HEBBIAN:
+                    if self.mode == SIMPLE_HEBBIAN:
                         return variable[RECURRENT_INDEX]
                     else:
                         variable[RECURRENT_INDEX][self.target_start:self.target_end] += variable[PLUS_PHASE_INDEX]
             else:
-                if self.mode is SIMPLE_HEBBIAN:
+                if self.mode == SIMPLE_HEBBIAN:
                     return variable[RECURRENT_INDEX]
                 if self.clamp == HARD_CLAMP:
                     variable[RECURRENT_INDEX][:self.input_size] = variable[MINUS_PHASE_INDEX]
@@ -1293,7 +1293,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             if self.delta(value, context) <= self.phase_convergence_threshold:
                 return True
             elif self.get_current_execution_time(context).pass_ >= self.max_passes:
-                phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) is PLUS_PHASE \
+                phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) == PLUS_PHASE \
                     else repr('MINUS_PHASE')
                 raise ContrastiveHebbianError(f"Maximum number of executions ({self.max_passes}) has occurred "
                                               f"before reaching convergence_threshold "

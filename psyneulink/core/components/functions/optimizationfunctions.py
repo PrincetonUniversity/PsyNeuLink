@@ -845,7 +845,7 @@ class GradientOptimization(OptimizationFunction):
         convergence_criterion = Parameter(VALUE, pnl_internal=True)
 
         def _parse_direction(self, direction):
-            if direction is ASCENT:
+            if direction == ASCENT:
                 return 1
             else:
                 return -1
@@ -1294,8 +1294,6 @@ class GridSearch(OptimizationFunction):
             prefs=prefs,
         )
 
-        self.stateful_attributes = ["random_state"]
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1549,7 +1547,7 @@ class GridSearch(OptimizationFunction):
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
             # KDM 8/22/19: nonstateful direction here - OK?
-            direction = "<" if self.direction is MINIMIZE else ">"
+            direction = "<" if self.direction == MINIMIZE else ">"
             replace = b.fcmp_unordered(direction, value, min_value)
             b.store(replace, replace_ptr)
 
@@ -1617,7 +1615,6 @@ class GridSearch(OptimizationFunction):
         return_all_samples = return_all_values = []
 
         direction = self.parameters.direction._get(context)
-
         if MPI_IMPLEMENTATION:
 
             from mpi4py import MPI
@@ -1669,9 +1666,9 @@ class GridSearch(OptimizationFunction):
                 value = self.objective_function(sample, context=context)
 
                 # Evaluate for optimal value
-                if direction is MAXIMIZE:
+                if direction == MAXIMIZE:
                     value_optimal = max(value, value_optimal)
-                elif direction is MINIMIZE:
+                elif direction == MINIMIZE:
                     value_optimal = min(value, value_optimal)
                 else:
                     assert False, "PROGRAM ERROR: bad value for {} arg of {}: {}".\
@@ -1709,8 +1706,8 @@ class GridSearch(OptimizationFunction):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
-            assert direction is MAXIMIZE or direction is MINIMIZE, \
-                "PROGRAM ERROR: bad value for {} arg of {}: {}". \
+            assert direction == MAXIMIZE or direction == MINIMIZE, \
+                "PROGRAM ERROR: bad value for {} arg of {}: {}, {}". \
                     format(repr(DIRECTION), self.name, direction)
 
             last_sample, last_value, all_samples, all_values = super()._function(
@@ -1737,8 +1734,8 @@ class GridSearch(OptimizationFunction):
                     if random_value < probability:
                         value_optimal, sample_optimal = value, sample
 
-                elif (value > value_optimal and direction is MAXIMIZE) or \
-                        (value < value_optimal and direction is MINIMIZE):
+                elif (value > value_optimal and direction == MAXIMIZE) or \
+                        (value < value_optimal and direction == MINIMIZE):
                     value_optimal, sample_optimal = value, sample
                     optimal_value_count = 1
 
@@ -1761,7 +1758,7 @@ class GridSearch(OptimizationFunction):
             raise OptimizationFunctionError("Expired grid in {} run from {} "
                                             "(execution_count: {}; num_iterations: {})".
                 format(self.__class__.__name__, self.owner.name,
-                       self.owner.paramters.execution_count.get(), self.num_iterations))
+                       self.owner.parameters.execution_count.get(), self.num_iterations))
         return sample
 
     def _grid_complete(self, variable, value, iteration, context=None):

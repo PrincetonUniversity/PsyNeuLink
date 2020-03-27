@@ -58,6 +58,7 @@ Class Reference
 
 """
 
+import warnings
 import typecheck as tc
 
 from collections.abc import Iterable
@@ -69,7 +70,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -142,3 +143,12 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                                                             name=name,
                                                             prefs=prefs,
                                                             )
+
+    @handle_external_context()
+    def add_ports(self, ports, context=None):
+        if context.source == ContextFlags.COMMAND_LINE:
+            warnings.warn(
+                'You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
+                'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
+                'that project to or are projected to from the CIM.')
+        super(CompositionInterfaceMechanism, self).add_ports(ports, context)

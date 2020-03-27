@@ -617,7 +617,7 @@ class LearningProjection(ModulatoryProjection_Base):
         # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
         try:
             candidate_objective_mech = learning_mechanism.input_ports[ERROR_SIGNAL].path_afferents[0].sender.owner
-            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role is LEARNING:
+            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role == LEARNING:
                 learned_projection.objective_mechanism = candidate_objective_mech
         except TypeError:
             # learning_mechanism does not receive from an ObjectiveMechanism

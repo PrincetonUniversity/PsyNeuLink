@@ -1996,7 +1996,7 @@ class Process(Process_Base):
                 if (isinstance(mech, ObjectiveMechanism) and
                         # any(projection.sender.owner.processes[self] == TERMINAL
                         #     for projection in mech.input_ports[SAMPLE].path_afferents) and
-                        mech._learning_role is TARGET and
+                        mech._learning_role == TARGET and
                         self.learning
                             ):
                     object_item._add_process(self, TARGET)
@@ -2108,7 +2108,7 @@ class Process(Process_Base):
                     # If Projection is not from another ObjectiveMechanism, ignore
                     if not isinstance(sender, (ObjectiveMechanism)):
                         continue
-                    if isinstance(sender, ObjectiveMechanism) and sender._learning_role is TARGET:
+                    if isinstance(sender, ObjectiveMechanism) and sender._learning_role == TARGET:
                         return sender
                     if sender.input_ports:
                         target_mech = trace_learning_objective_mechanism_projections(sender)
@@ -2126,7 +2126,7 @@ class Process(Process_Base):
         target_mechs = list(object_item
                            for object_item in self._mechs
                             if (isinstance(object_item, ObjectiveMechanism) and
-                                object_item._learning_role is TARGET))
+                                object_item._learning_role == TARGET))
 
         if target_mechs:
 
@@ -2329,7 +2329,7 @@ class Process(Process_Base):
         # Execute each Mechanism in the pathway, in the order listed, except those used for learning
         for mechanism in self._mechs:
             if (isinstance(mechanism, LearningMechanism) or
-                    (isinstance(mechanism, ObjectiveMechanism) and mechanism._role is LEARNING)):
+                    (isinstance(mechanism, ObjectiveMechanism) and mechanism._role == LEARNING)):
                 continue
 
             # Execute Mechanism
