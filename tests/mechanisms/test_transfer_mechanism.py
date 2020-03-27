@@ -22,7 +22,7 @@ from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import \
     INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE, COMBINE, RESULT, GREATER_THAN
-from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.globals.utilities import UtilitiesError, set_global_seed
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -282,7 +282,6 @@ class TestDistributionFunctions:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_normal_noise(self):
-
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
@@ -325,7 +324,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
+        assert np.allclose(val, [[0.87558564, 2.38719447, 0.7025651 , 0.33105989]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -339,7 +338,7 @@ class TestDistributionFunctions:
                 noise=UniformToNormalDist(),
                 integration_rate=1.0
             )
-            np.random.seed(22)
+            T.noise.parameters.random_state.get().seed(22)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[-0.81177443, -0.04593492, -0.20051725, 1.07665147]])
 
@@ -368,7 +367,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.3834415188257777, 0.7917250380826646, 0.5288949197529045, 0.5680445610939323]])
+        assert np.allclose(val, [[0.58338204, 0.90811289, 0.50468686, 0.28183784]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -383,7 +382,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.4836021009022533, 1.5688961399691683, 0.7526741095365884, 0.8394328467388229]])
+        assert np.allclose(val, [[0.87558564, 2.38719447, 0.7025651 , 0.33105989]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -398,7 +397,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[1.3939555850782692, 0.25118783985272053, 1.2272797824363235, 0.1190661760253029]])
+        assert np.allclose(val, [[0.41203028, 0.40277101, 1.0678432 , 0.34512569]])
 
 
 class TestTransferMechanismFunctions:
