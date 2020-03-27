@@ -212,8 +212,6 @@ class OneHot(SelectionFunction):
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["random_state"]
 
         reset_default_variable_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:
