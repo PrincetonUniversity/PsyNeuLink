@@ -1800,6 +1800,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def __init__(
             self,
             name=None,
+            nodes=None,
+            linear_pathways=None,
+            learning_pathways=None,
             controller:ControlMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
@@ -1874,6 +1877,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
+        # Controller
         self.controller = None
         if controller:
             self.add_controller(controller)
@@ -1892,6 +1896,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # populating both values and results, as it would be more consistent with
         # the behavior of components
         del self.parameters.value
+
+        # Nodes and pathways
+        if nodes is not None:
+            nodes = convert_to_list(nodes)
+            for node in nodes:
+                self.add_node(node)
+        if linear_pathways is not None:
+            linear_pathways = convert_to_list(linear_pathways)
+            for pway in linear_pathways:
+                self.add_linear_pathway(pway)
+        if learning_pathways is not None:
+            learning_pathways = convert_to_list(learning_pathways)
+            for pway in learning_pathways:
+                self.add_liearning_pathway(pway)
+
+
     @property
     def graph_processing(self):
         """
