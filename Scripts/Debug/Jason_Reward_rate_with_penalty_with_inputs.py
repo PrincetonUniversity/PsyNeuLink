@@ -190,7 +190,9 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     model.add_linear_processing_pathway([hid_wrd, wts_wrd_ho, output])
     model.add_linear_processing_pathway([inp_task, wts_tc, hid_clr])
     model.add_linear_processing_pathway([inp_task, wts_tw, hid_wrd])
-    model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])
+    model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])  # 3/15/20
+    # model.add_linear_processing_pathway([output, [[1,-1]], (decision, pnl.NodeRole.OUTPUT)])   # 3/15/20
+    # model.add_linear_processing_pathway([output, [[1],[-1]], decision])   # 3/15/20
 
     model.add_nodes([reward_rate, punish_rate])
 
