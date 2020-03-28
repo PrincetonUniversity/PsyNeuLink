@@ -1801,7 +1801,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             name=None,
             nodes=None,
-            linear_pathways=None,
+            linear_pathways:tc.optional(list)=None,
             learning_pathways=None,
             controller:ControlMechanism=None,
             enable_controller=None,
@@ -1903,13 +1903,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in nodes:
                 self.add_node(node)
         if linear_pathways is not None:
-            linear_pathways = convert_to_list(linear_pathways)
+            if not isinstance(linear_pathways[0],list):
+                linear_pathways = [linear_pathways]
             for pway in linear_pathways:
-                self.add_linear_pathway(pway)
+                self.add_linear_processing_pathway(pway)
         if learning_pathways is not None:
-            learning_pathways = convert_to_list(learning_pathways)
+            if not isinstance(learning_pathways[0],list):
+                learning_pathways = [learning_pathways]
             for pway in learning_pathways:
-                self.add_liearning_pathway(pway)
+                self.add_linear_learning_pathway(pway)
 
 
     @property
