@@ -1908,10 +1908,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for pway in linear_pathways:
                 self.add_linear_processing_pathway(pway)
         if learning_pathways is not None:
-            if not isinstance(learning_pathways[0],list):
-                learning_pathways = [learning_pathways]
+            learning_pathways = convert_to_list(learning_pathways)
+            if not all(isinstance(pway,tuple) for pway in learning_pathways):
+                raise CompositionError(f"One of the items in the argument to 'learning_pathways"
+                                       f"was not a (pathway, LearningFunction) tuple")
             for pway in learning_pathways:
-                self.add_linear_learning_pathway(pway)
+                self.add_linear_learning_pathway(*pway)
 
 
     @property
