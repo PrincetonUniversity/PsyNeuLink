@@ -76,11 +76,11 @@ The following arguments of the Composition's constructor can be used to add Comp
 
     - **learning_pathways**
 
-        adds one or more learning pathways to the Composition;  it must be passed either a (pathway, `LearningFunction`)
-        tuple or list of ones;  this is equivalent to constructing the Composition and calling its
-        `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` method for each tuple; the pathway in
-        each tuple should have the same form as the **pathway** argument of the `add_linear_learning_pathway
-        <Composition.add_linear_learning_pathway>` method.
+        adds one or more `learning pathways <Composition_Learning_Sequence>` to the Composition;  it must be passed
+        either a (pathway, `LearningFunction`) tuple or list of ones;  this is equivalent to constructing the
+        Composition and calling its `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` method
+        for each tuple; the pathway in each tuple should have the same form as the **pathway** argument of the
+        `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` method.
 
 
 The following methods can be used to add Components to an existing Composition:
@@ -106,8 +106,8 @@ The following methods can be used to add Components to an existing Composition:
         adds and connects a list of nodes and/or Projections to the Composition;
         Inserts a default Projection between any adjacent Nodes.
 
-In addition, a Composition has the following set of `learning methods <Composition_Learning_Methods>` that can also
-be used to or add pathways that implement `learning <Composition_Learning>`:
+The following set of `learning methods <Composition_Learning_Methods>` can be used to add pathways that implement
+`learning <Composition_Learning>` to an existing Composition:
 
     - `add_linear_learning_pathway` <Composition.add_linear_learning_pathway>`
 
@@ -828,7 +828,8 @@ which implements the strengths ("weights") of the associations between represent
 
 *Running a Composition in Learning Mode*
 ======================================
-A Composition only learns when ran in learning mode, and when its `disable_learning` parameter is False. To run the Composition in learning mode, use the `learn <Composition.learn>` method.
+A Composition only learns when run in learning mode, and when its `disable_learning` parameter is False.
+To run the Composition in learning mode, use the `learn <Composition.learn>` method.
 See `learn <Composition.learn>` for more details.
 
 *Implementing Learning in a Composition*
@@ -844,7 +845,7 @@ iii) using `UserDefinedFunctions <UserDefinedFunction>`.
 The advantage of using standard PsyNeuLink compoments is that it
 assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
 operations are, the sequence in which they are carried out, and how they interact with one another.  However,
-this can also make execution inefficient, due to the "overhead" incurred by distributing the calculations over
+this can also make execution inefficient, due to the overhead incurred by distributing the calculations over
 different Components.  If more efficient computation is critical, then the `AutodiffComposition` can be used to
 execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefinedFunctions <UserDefinedFunction>`
 can be assigned to either PyTorch functions or those in any other Python environment that implements learning and
@@ -925,6 +926,8 @@ three such methods:
     • `add_reinforcement_learning_pathway`
     • `add_td_learning_pathway`
     • `add_backpropagation_learning_pathway`.
+
+.. _Composition_Learning_Sequence:
 
 Each uses the Composition's `add_linear_processing_pathway` method to create a  *learning sequence* specified in their
 **pathway** argument: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the `MappingProjections
@@ -1101,9 +1104,9 @@ COMMENT
 AutodiffComposition constructor provides arguments for configuring the PyTorch implementation in various ways; the
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
 etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>`
-— AutodiffCompositions automatically creates backpropagation learning pathways between all input - output node paths.
-It can be run just as a standard Composition would - using `learn <AutodiffComposition.learn>` for learning mode, and
-`run <AutodiffComposition.run>` for test mode.
+— AutodiffCompositions automatically creates backpropagation learning pathways <Composition_Learning_Sequence>` between
+all input - output node paths. It can be run just as a standard Composition would - using `learn
+<AutodiffComposition.learn>` for learning mode, and `run <AutodiffComposition.run>` for test mode.
 
 The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
 the efficiency of execution in PyTorch (which can yield as much as three orders of magnitude improvement).  However,
@@ -1739,11 +1742,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     COMMENT:
     learning_pathways : list[list]
-        contains a list of the learning pathways specified for the Composition; each item contains a list of the
-        `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s) <MappingProjection>` specified a
-        a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see `Composition_Learning`
-        for details).  This does *not* contain the components used for learning; those are contained in
-        `learning_components <Composition.learning_components>` attribute.
+        contains a list of the `learning pathways <Composition_Learning_Sequence>` specified for the Composition; each
+        item contains a list of the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s)
+        <MappingProjection>` specified a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see
+        `Composition_Learning` for details).  This does *not* contain the components used for learning; those are
+        contained in `learning_components <Composition.learning_components>` attribute.
     COMMENT
 
     results : 3d array
@@ -4324,7 +4327,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_related_components
 
     def infer_backpropagation_learning_pathways(self):
-        """Convenience method that automatically creates backpropapagation learning pathways for every Input Node --> Output Node pathway"""
+        """Convenience method that automatically creates backpropapagation learning pathways for every
+        Input Node --> Output Node pathway
+        """
         self._analyze_graph()
         # returns a list of all pathways from start -> output node
         def bfs(start):
