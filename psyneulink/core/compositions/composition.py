@@ -4180,7 +4180,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         path_length = len(processing_pathway)
 
-        # Pathway length must be >=3 (Mechanism, Projection, Mechanism
+        # Pathway length must be >=3 (Mechanism, Projection, Mechanism)
         if path_length >= 3:
             # get the "terminal_sequence" --
             # the last 2 nodes in the back prop pathway and the projection between them
@@ -4223,9 +4223,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        learning_update)
             sequence_end = path_length - 3
 
-        # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTIONS TO ANY MECHANISMS WITH LEARNING ROLE
-        # Otherwise, if output_source already projects to a LearningMechanism, integrate with existing sequence
-        elif any(isinstance(p.receiver.owner, LearningMechanism) for p in output_source.efferents):
+        # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTS TO ANY MECHANISMS WITH LEARNING ROLE
+        # Otherwise, if output_source already projects to a LearningMechanism in the current Composition,
+        #     integrate with existing sequence
+        elif any((isinstance(p.receiver.owner, LearningMechanism)
+                  and p.receiver.owner in self.learning_components)
+                 for p in output_source.efferents):
             # Set learning_mechanism to the one to which output_source projects
             learning_mechanism = next((p.receiver.owner for p in output_source.efferents
                                        if isinstance(p.receiver.owner, LearningMechanism)))
