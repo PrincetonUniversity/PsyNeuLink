@@ -3512,8 +3512,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway : list
             specifies the nodes and optionally Projections used to construct the linear processing pathway.
-            Each node must be a `Mechanisms <Mechanism>`, `Compositions <Composition>` or a (node,
-            `NodeRoles <NodeRole>`) tuple.  The list must begin and end with a node, and a `Projection specification
+            Each node must be a `Mechanism <Mechanism>`, `Composition <Composition>` or a (Mechanism,
+            `NodeRoles <NodeRole>`) tuple;  the list must begin and end with a node, and a `Projection specification
             <Projection_Specification>` can optionally be interposed between each pair of nodes.
 
         """
