@@ -58,12 +58,36 @@ for other user-specified scheduling and termination conditions to be specified.
 Creating a Composition
 ----------------------
 
-A generic Composition can be created by calling the constructor, and then adding `Components <Component>` using the
-following Composition methods:
+A Composition can be created by calling the constructor and specifying `Components <Component>` to be added using either
+arguments of the constructor and/or methods that allow Components to be added to it once it has been constructed.
+
+The following arguments of the Composition's constructor can be used to add Compnents when it is constructed:
+
+    - **nodes**
+
+        adds the specified nodes to the Composition;  this is equivalent to constructing the Composition and calling its
+        `add_nodes <Composition.add_nodes>` method, and takes the same values as the **nodes** argument of that method.
+
+    - **linear_pathways**
+
+        adds one or more processing pathways to the Composition;  this is equivalent to constructing the Composition
+        and calling its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method,
+        and takes the same values as the **pathways** argument of that method.
+
+    - **learning_pathways**
+
+        adds one or more learning pathways to the Composition;  it must be passed either a (pathway, `LearningFunction`)
+        tuple or list of ones;  this is equivalent to constructing the Composition and calling its
+        `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` method for each tuple; the pathway in
+        each tuple should have the same form as the **pathway** argument of the `add_linear_learning_pathway
+        <Composition.add_linear_learning_pathway>` method.
+
+
+The following methods can be used to add Components to an existing Composition:
 
     - `add_node <Composition.add_node>`
 
-        adds a node to the Composition
+        adds a node to the Composition;
 
     - `add_nodes <Composition.add_nodes>`
 
@@ -83,7 +107,7 @@ following Composition methods:
         Inserts a default Projection between any adjacent Nodes.
 
 In addition, a Composition has the following set of `learning methods <Composition_Learning_Methods>` that can also
-be used to create a Composition from (or add) pathways that implement `learning <Composition_Learning>`:
+be used to or add pathways that implement `learning <Composition_Learning>`:
 
     - `add_linear_learning_pathway` <Composition.add_linear_learning_pathway>`
 
@@ -3438,13 +3462,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # -----------------------------------------  PROCESSING  -----------------------------------------------------------
 
     def add_pathway(self, path):
-        """
-            Adds an existing Pathway to the current Composition
+        """Add an existing Pathway to the current Composition
 
-            Arguments
-            ---------
+        Arguments
+        ---------
 
-            path: the Pathway (Composition) to be added
+        path : the Pathway (Composition) to be added
+
         """
 
         # identify nodes and projections
@@ -3468,7 +3492,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
 
     def add_linear_processing_pathway(self, pathway, *args):
-        """Add sequence of Mechanisms or Compositions possibly with intercolated Projections
+        """Add sequence of Mechanisms or Compositions with intercolated Projections.
 
         A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
         in the **pathway** argument, from the `primary OutputPort <OutputPort_Primary>` of the first one to the
@@ -3482,6 +3506,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for an ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
+
+        Arguments
+        ---------
+
+        pathway : list
+            specifies the nodes and optionally Projections used to construct the linear processing pathway.
+            Each node must be a `Mechanisms <Mechanism>`, `Compositions <Composition>` or a (node,
+            `NodeRoles <NodeRole>`) tuple.  The list must begin and end with a node, and a `Projection specification
+            <Projection_Specification>` can optionally be interposed between each pair of nodes.
+
         """
         nodes = []
 
@@ -3690,6 +3724,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specified, that projection is the learned projection. Otherwise, a default MappingProjection is
             automatically generated for the learned projection.
 
+        learning_function : LearningFunction
+            specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
+            `MappingProjection` in the **pathway**.
+
+        loss_function : MSE or SSE : default None
+            specifies the loss function used if `BackPropagation` is specified as the **learning_function**
+            (see `add_backpropagation_learning_pathway <Composition.add_backpropagation_learning_pathway>`).
+
         learning_rate : float : default 0.05
             specifies the `learning_rate <LearningMechanism.learning_rate>` used for the **learning_function**
             of the `LearningMechanism` in the **pathway**.
@@ -3882,6 +3924,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         error_function : function : default LinearCombination
             specifies the function assigned to `ComparatorMechanism` used to compute the error from the target and the
             output (`value <Mechanism_Base.value>`) of the `TARGET` (last) Mechanism in the **pathway**).
+
+        loss_function : MSE or SSE : default MSE
+            specifies the loss function used in computing the error term;
+            MSE = mean squared error, and SSE = sum squared error.
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
