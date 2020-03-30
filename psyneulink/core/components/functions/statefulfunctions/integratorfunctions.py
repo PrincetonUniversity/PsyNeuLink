@@ -2244,6 +2244,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
         <DriftDiffusionIntegrator.function>`.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     noise : float or 1d array
         scales the normally distributed random value added to integral in each call to `function
         <DriftDiffusionIntegrator.function>`. If `variable <DriftDiffusionIntegrator.variable>` is a list or array,

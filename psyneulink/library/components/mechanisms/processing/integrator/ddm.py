@@ -497,6 +497,9 @@ class DDM(ProcessingMechanism):
         `DDM_Execution`, and `DDM_Output` for additional information about other values that can be reported and
         their interpretation.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     output_ports : ContentAddressableList[OutputPort]
         list of the DDM's `OutputPorts <OutputPort>`.  There are always two OutputPorts, `DECISION_VARIABLE
         <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>`; additional ones may be included

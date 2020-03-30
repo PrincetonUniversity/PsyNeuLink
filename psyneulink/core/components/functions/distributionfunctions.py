@@ -100,6 +100,9 @@ class NormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     standard_deviation : float : default 1.0
         Standard deviation of the normal distribution; if it is 0.0, returns `mean <NormalDist.mean>`.
 
@@ -137,6 +140,12 @@ class NormalDist(DistributionFunction):
 
                     :default value: 1.0
                     :type: ``float``
+
+                random_state
+                    see `random_state <NormalDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])

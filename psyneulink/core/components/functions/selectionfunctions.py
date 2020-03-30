@@ -144,6 +144,9 @@ class OneHot(SelectionFunction):
         determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`
         (see `above <OneHot>` for options).
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
