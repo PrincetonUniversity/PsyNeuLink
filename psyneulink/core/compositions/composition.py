@@ -1783,6 +1783,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+
     class Parameters(ParametersBase):
         """
             Attributes
@@ -1817,12 +1818,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
+
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         state_struct = None
         data_struct = None
         scheduler_conditions = None
+
 
     def __init__(
             self,
@@ -3509,6 +3512,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for an ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>`
         supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
         argument.
+        
 
         Arguments
         ---------
@@ -3518,6 +3522,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Each node must be a `Mechanism <Mechanism>`, `Composition <Composition>` or a (Mechanism,
             `NodeRoles <NodeRole>`) tuple;  the list must begin and end with a node, and a `Projection specification
             <Projection_Specification>` can optionally be interposed between each pair of nodes.
+            
+            
+        Returns
+        -------
+        
+        A list of the components in the pathway, including any Projections that were automatically generated.
 
         """
         nodes = []
