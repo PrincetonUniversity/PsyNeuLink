@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DistributionFunctions &mdash; PsyNeuLink 0.7.5.2+11.ge248a9e documentation</title>
+  <title>DistributionFunctions &mdash; PsyNeuLink 0.7.5.2+18.g8b977ee documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.2+11
+                  0.7.5.2+18
                 </div>
               
             
@@ -251,6 +251,12 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.NormalDist.random_state">
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.NormalDist.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.distributionfunctions.NormalDist.standard_deviation">
 <code class="descname">standard_deviation</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.NormalDist.standard_deviation" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float : default 1.0</em> – Standard deviation of the normal distribution; if it is 0.0, returns <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.NormalDist.mean" title="psyneulink.core.components.functions.distributionfunctions.NormalDist.mean"><code class="xref any py py-attr docutils literal"><span class="pre">mean</span></code></a>.</p>
@@ -286,7 +292,7 @@ arguments of the constructor.</p>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">UniformToNormalDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mean=0.0</em>, <em>standard_deviation=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">UniformToNormalDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mean=0.0</em>, <em>standard_deviation=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>seed=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist" title="Permalink to this definition">¶</a></dt>
 <dd><p id="uniformtonormaldist">Return a random sample from a normal distribution using first np.random.rand(1) to generate a sample from a uniform
 distribution, and then converting that sample to a sample from a normal distribution with the following equation:</p>
 <div class="math">
@@ -342,6 +348,12 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist.random_state">
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist.owner">
 <code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformToNormalDist.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
@@ -363,7 +375,7 @@ arguments of the constructor.</p>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.distributionfunctions.ExponentialDist">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">ExponentialDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>beta=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.ExponentialDist" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">ExponentialDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>beta=1.0</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.ExponentialDist" title="Permalink to this definition">¶</a></dt>
 <dd><p id="exponentialdist">Return a random sample from a exponential distribution using numpy.random.exponential</p>
 <p><em>Modulatory Parameters:</em></p>
 <div class="line-block">
@@ -391,6 +403,12 @@ arguments of the constructor.</li>
 <dt id="psyneulink.core.components.functions.distributionfunctions.ExponentialDist.beta">
 <code class="descname">beta</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.ExponentialDist.beta" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>float : default 1.0</em> – The scale parameter of the exponential distribution</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.ExponentialDist.random_state">
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.ExponentialDist.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -423,7 +441,7 @@ arguments of the constructor.</p>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.distributionfunctions.UniformDist">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">UniformDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>low=0.0</em>, <em>high=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformDist" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">UniformDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>low=0.0</em>, <em>high=1.0</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformDist" title="Permalink to this definition">¶</a></dt>
 <dd><p id="uniformdist">Return a random sample from a uniform distribution using numpy.random.uniform</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -456,6 +474,12 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.UniformDist.random_state">
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformDist.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.distributionfunctions.UniformDist.params">
 <code class="descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.UniformDist.params" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[param keyword: param value] : default None</em> – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -485,7 +509,7 @@ arguments of the constructor.</p>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.distributionfunctions.GammaDist">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">GammaDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=1.0</em>, <em>dist_shape=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.GammaDist" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">GammaDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=1.0</em>, <em>dist_shape=1.0</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.GammaDist" title="Permalink to this definition">¶</a></dt>
 <dd><p id="gammadist">Return a random sample from a gamma distribution using numpy.random.gamma</p>
 <p><em>Modulatory Parameters:</em></p>
 <div class="line-block">
@@ -524,6 +548,12 @@ arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.distributionfunctions.GammaDist.random_state">
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.GammaDist.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.distributionfunctions.GammaDist.params">
 <code class="descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.GammaDist.params" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>Dict[param keyword: param value] : default None</em> – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
@@ -553,7 +583,7 @@ arguments of the constructor.</p>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.distributionfunctions.WaldDist">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">WaldDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=1.0</em>, <em>mean=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.WaldDist" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.distributionfunctions.</code><code class="descname">WaldDist</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=1.0</em>, <em>mean=1.0</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.WaldDist" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>WaldDist(                           scale=1.0,              mean=1.0,              params=None,              owner=None,              prefs=None              )</p>
 <p id="walddist">Return a random sample from a Wald distribution using numpy.random.wald</p>
@@ -580,6 +610,12 @@ arguments of the constructor.</dd>
 <dd>the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function. If it is not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code>
 defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</dd>
 </dl>
+<blockquote>
+<div><dl class="docutils">
+<dt>random_state <span class="classifier-delimiter">:</span> <span class="classifier">numpy.RandomState</span></dt>
+<dd>private pseudorandom number generator</dd>
+</dl>
+</div></blockquote>
 <dl class="docutils">
 <dt>scale <span class="classifier-delimiter">:</span> <span class="classifier">float</span> <span class="classifier-delimiter">:</span> <span class="classifier">default 1.0</span></dt>
 <dd>Scale parameter of the Wald distribution. Should be greater than zero.</dd>
@@ -837,7 +873,7 @@ and drift_rate (<strong>input</strong> arg).  Reward rate (<span class="math">\(
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.2+11.ge248a9e',
+               VERSION:'0.7.5.2+18.g8b977ee',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
