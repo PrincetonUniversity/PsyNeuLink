@@ -260,12 +260,22 @@ class ConditionGenerator:
         return tuple(data)
 
     def bump_ts(self, builder, cond_ptr, count=(0, 0, 1)):
+        """
+        Increments the time structure of the composition.
+        Count should be a tuple where there is a number in only one spot, and zeroes elsewhere.
+        Indices greater than that of the one are zeroed.
+        """
+        
+        # Validate count tuple
+        assert count.count(0) == len(count) - 1
+
+        # Get timestruct pointer
         ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts_ptr)
 
-        # run, pass, step
+        # Update run, pass, step of ts
         for idx in range(3):
-            if idx == 0 or not all(v == 0 for v in count[:idx]):
+            if all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
                 el = builder.add(el, self.ctx.int32_ty(count[idx]))
             else:
