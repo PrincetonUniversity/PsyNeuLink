@@ -352,9 +352,10 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_run, global_run)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flags=None):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, Never
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, Never, WhenFinished
+
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
         if isinstance(condition, Never):
@@ -362,7 +363,7 @@ class ConditionGenerator:
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_flags)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
         elif isinstance(condition, AllHaveRun):
@@ -407,5 +408,12 @@ class ConditionGenerator:
 
             # Return: target.calls % N == 0 AND me.last_time < target.last_time
             return builder.and_(completedNruns, ran_after_me)
+        
+        elif isinstance(condition, WhenFinished):
+            target = condition.args[0]
+            assert target in is_finished_flags
+            target_is_finished = is_finished_flags[target]
+            
+            return builder.fcmp_ordered("==", target_is_finished, target_is_finished.type(1))
 
         assert False, "Unsupported scheduling condition: {}".format(condition)
