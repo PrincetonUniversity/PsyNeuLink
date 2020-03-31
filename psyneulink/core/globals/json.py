@@ -1059,6 +1059,8 @@ def read_json_file(filename:str, path:str=None):
         # exec(orig_file.read())
         # exec(generate_script_from_json(exec(orig_file.read())))
         exec(generate_script_from_json(orig_file.read()), globals())
+        # assert True
+        return globals()
 
     # compositions = [i for i in list(locals().values()) if
     #                 hasattr(i, 'componentType') and

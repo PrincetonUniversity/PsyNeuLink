@@ -68,9 +68,10 @@ def test_json_results_equivalence(
     json_filename = filename+'.json'
     with open(json_filename, 'w') as json_file:
         json_file.write(json_summary)
-        pnl.read_json_file(filename=json_filename,
-                           path=os.path.dirname(__file__)
-                           )
+        g = pnl.read_json_file(filename=json_filename,
+                               path=os.path.dirname(__file__)
+                               )
+        globals().update(g)
         exec(f'{composition_name}.run(inputs={input_dict_str})')
         final_results = eval(f'{composition_name}.results')
 
