@@ -186,7 +186,7 @@ from psyneulink.core.scheduling.time import Time
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
     'generate_script_from_json',
-    'construct_compositions_from_json'
+    'read_json_file'
 ]
 
 
@@ -1026,14 +1026,16 @@ def generate_script_from_json(model_input):
     return model_output
 
 
-def construct_compositions_from_json(filename:str, path:str=None):
+def read_json_file(filename:str, path:str=None):
     """
-        Construct Composition(s) specified in the `general JSON format <JSON_Model_Specification>`
+        Construct Composition(s) and associated objects specified in the `general JSON format
+        <JSON_Model_Specification>`
 
         Arguments
         ---------
         filename : str
-             specifies name of file with JSON specification for one or more `Compositions <Composition>`.
+             specifies name of file with JSON specification for one or more `Compositions <Composition>`
+             and associated objects.
 
         path : str : default None
              specifies path of file with JSON specification;  if it is not specified then the
@@ -1042,7 +1044,7 @@ def construct_compositions_from_json(filename:str, path:str=None):
         Returns
         -------
 
-        List of Composition objects specified in <path/>filename : list[Composition(s)]
+        List of Composition(s) and associated objects specified in <path/>filename : list[Composition(s)]
     """
 
     if path:
@@ -1058,11 +1060,16 @@ def construct_compositions_from_json(filename:str, path:str=None):
         # exec(generate_script_from_json(exec(orig_file.read())))
         exec(generate_script_from_json(orig_file.read()))
 
-    compositions = [i for i in list(locals().values()) if
-                    hasattr(i, 'componentType') and
-                    i.componentType == 'Composition']
+    # compositions = [i for i in list(locals().values()) if
+    #                 hasattr(i, 'componentType') and
+    #                 i.componentType == 'Composition']
 
-    # Composition.generate_script_from_json(eval(orig_file.read()))
-    return compositions
+    # return compositions
+
+    pnl_objects = [i for i in list(locals().values()) if hasattr(i, 'componentType')]
+    return pnl_objects
+
+
+def write_json_file(filename:str, path:str=None):
 
 
