@@ -1058,18 +1058,18 @@ def read_json_file(filename:str, path:str=None):
     with open(file, 'r') as orig_file:
         # exec(orig_file.read())
         # exec(generate_script_from_json(exec(orig_file.read())))
-        exec(generate_script_from_json(orig_file.read()))
+        exec(generate_script_from_json(orig_file.read()), globals())
 
-    # compositions = [i for i in list(locals().values()) if
-    #                 hasattr(i, 'componentType') and
-    #                 i.componentType == 'Composition']
+    compositions = [i for i in list(locals().values()) if
+                    hasattr(i, 'componentType') and
+                    i.componentType == 'Composition']
 
-    # return compositions
+    return compositions
 
-    pnl_objects = [i for i in list(locals().values()) if hasattr(i, 'componentType')]
-    return pnl_objects
+    # pnl_objects = [i for i in list(locals().values()) if hasattr(i, 'componentType')]
+    # return pnl_objects
 
 
-def write_json_file(filename:str, path:str=None):
+# def write_json_file(filename:str, path:str=None):
 
 
