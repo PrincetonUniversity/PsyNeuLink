@@ -185,7 +185,8 @@ from psyneulink.core.scheduling.time import Time
 
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
-    'generate_script_from_json'
+    'generate_script_from_json',
+    'construct_compositions_from_json'
 ]
 
 
@@ -922,7 +923,7 @@ def _generate_composition_string(composition_list, component_identifiers):
 
 def generate_script_from_json(model_input):
     """
-        Generates a Python script from JSON **model_input** in the
+        Generate a Python script from JSON **model_input** in the
         `general JSON format <JSON_Model_Specification>`
 
         Arguments
@@ -931,6 +932,14 @@ def generate_script_from_json(model_input):
             model_input : str
                 a JSON string in the proper format, or a filename
                 containing such
+
+        Returns
+        -------
+
+            Text of Python script : str
+
+
+
     """
 
     def get_declared_identifiers(composition_list):
@@ -1015,3 +1024,45 @@ def generate_script_from_json(model_input):
     )
 
     return model_output
+
+
+def construct_compositions_from_json(filename:str, path:str=None):
+    """
+        Construct Composition(s) specified in the `general JSON format <JSON_Model_Specification>`
+
+        Arguments
+        ---------
+        filename : str
+             specifies name of file with JSON specification for one or more `Compositions <Composition>`.
+
+        path : str : default None
+             specifies path of file with JSON specification;  if it is not specified then the
+             current directory is used.
+
+        Returns
+        -------
+
+        List of Composition objects specified in <path/>filename : list[Composition(s)]
+    """
+
+    if path:
+        if path[-1] != '/':
+            path += '/'
+        file = path+filename
+    else:
+        import os
+        file = f'{os.path.dirname(__file__)}/{filename}'
+
+    with open(file, 'r') as orig_file:
+        # exec(orig_file.read())
+        # exec(generate_script_from_json(exec(orig_file.read())))
+        exec(generate_script_from_json(orig_file.read()))
+
+    compositions = [i for i in list(locals().values()) if
+                    hasattr(i, 'componentType') and
+                    i.componentType == 'Composition']
+
+    # Composition.generate_script_from_json(eval(orig_file.read()))
+    return compositions
+
+

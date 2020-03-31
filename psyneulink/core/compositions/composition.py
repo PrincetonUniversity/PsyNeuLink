@@ -1756,6 +1756,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+
     class Parameters(ParametersBase):
         """
             Attributes
@@ -1790,12 +1791,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
+
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         state_struct = None
         data_struct = None
         scheduler_conditions = None
+
 
     def __init__(
             self,
