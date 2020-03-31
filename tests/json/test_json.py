@@ -57,6 +57,7 @@ def test_json_results_equivalence(
 
     assert orig_results == new_results
 
+    # Delete any traces from previous Compositions
     exec(f'del {composition_name}')
     # for mech in [m for m in locals().values() if isinstance(m, pnl.Mechanism)]:
     for mech in [m for m in locals().items() if isinstance(m[1], pnl.Mechanism)]:
@@ -70,7 +71,7 @@ def test_json_results_equivalence(
         pnl.read_json_file(filename=json_filename,
                            path=os.path.dirname(__file__)
                            )
-        exec(f'x.run(inputs={input_dict_str})')
+        exec(f'{composition_name}.run(inputs={input_dict_str})')
         final_results = eval(f'{composition_name}.results')
 
     assert orig_results == final_results
