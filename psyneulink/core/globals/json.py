@@ -1032,11 +1032,13 @@ def generate_script_from_json(model_input):
 
 def write_json_file(compositions, filename:str, path:str=None):
     """
-        Write Composition(s) and associated objects in the `general JSON format <JSON_Model_Specification>` to file.
+        Write one or more `Compositions <Composition>` and associated objects to file in the `general JSON format
+        <JSON_Model_Specification>`
 
         Arguments
         ---------
         compositions : Composition or list
+             specifies `Composition` or list of ones to be written to **filename**
 
         filename : str
              specifies name of file in which to write JSON specification of `Composition(s) <Composition>`
