@@ -178,15 +178,19 @@ import psyneulink
 import re
 import types
 
-from psyneulink.core.globals.keywords import MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE
+from psyneulink.core.globals.keywords import \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
+    MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import get_all_explicit_arguments, parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals
+from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
+    parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals
 from psyneulink.core.scheduling.time import Time
 
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
     'generate_script_from_json',
-    'read_json_file'
+    'write_json_file'
 ]
 
 
@@ -1026,27 +1030,28 @@ def generate_script_from_json(model_input):
     return model_output
 
 
-def read_json_file(filename:str, path:str=None):
+def write_json_file(compositions, filename:str, path:str=None):
     """
-        Construct Composition(s) and associated objects specified in the `general JSON format
-        <JSON_Model_Specification>`
+        Write Composition(s) and associated objects in the `general JSON format <JSON_Model_Specification>` to file.
 
         Arguments
         ---------
+        compositions : Composition or list
+
         filename : str
-             specifies name of file with JSON specification for one or more `Compositions <Composition>`
+             specifies name of file in which to write JSON specification of `Composition(s) <Composition>`
              and associated objects.
 
         path : str : default None
-             specifies path of file with JSON specification;  if it is not specified then the
-             current directory is used.
+             specifies path of file for JSON specification;  if it is not specified then the current directory is used.
 
-        Returns
-        -------
-
-        List of Composition(s) and associated objects specified in <path/>filename : list[Composition(s)]
     """
 
+    compositions = convert_to_list(compositions)
+    for c in compositions:
+        from psyneulink.core.compositions.composition import Composition
+        if not isinstance(c, Composition):
+            raise PNLJSONError(f'Item in compositions arg of write_to_json_file() is not a Composition: {c}.')
     if path:
         if path[-1] != '/':
             path += '/'
@@ -1055,23 +1060,6 @@ def read_json_file(filename:str, path:str=None):
         import os
         file = f'{os.path.dirname(__file__)}/{filename}'
 
-    with open(file, 'r') as orig_file:
-        # exec(orig_file.read())
-        # exec(generate_script_from_json(exec(orig_file.read())))
-        exec(generate_script_from_json(orig_file.read()), globals())
-        # assert True
-        return globals()
-
-    # compositions = [i for i in list(locals().values()) if
-    #                 hasattr(i, 'componentType') and
-    #                 i.componentType == 'Composition']
-    #
-    # return compositions
-
-    # pnl_objects = [i for i in list(locals().values()) if hasattr(i, 'componentType')]
-    # return pnl_objects
-
-
-# def write_json_file(filename:str, path:str=None):
-
-
+    with open(file, 'w') as json_file:
+        for c in compositions:
+            json_file.write(c.json_summary)

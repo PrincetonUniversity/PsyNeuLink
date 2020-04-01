@@ -39,7 +39,7 @@ def test_json_results_equivalence(
     composition_name,
     input_dict_str,
 ):
-    # Get python script from disk and execute
+    # Get python script from file and execute
     full_filename = f'{os.path.dirname(__file__)}/{filename}'
     with open(full_filename, 'r') as orig_file:
         exec(orig_file.read())
@@ -54,27 +54,14 @@ def test_json_results_equivalence(
     exec(pnl.generate_script_from_json(json_summary))
     exec(f'{composition_name}.run(inputs={input_dict_str})')
     new_results = eval(f'{composition_name}.results')
-
     assert orig_results == new_results
 
-    # Delete any traces from previous Compositions
-    exec(f'del {composition_name}')
-    # for mech in [m for m in locals().values() if isinstance(m, pnl.Mechanism)]:
-    for mech in [m for m in locals().items() if isinstance(m[1], pnl.Mechanism)]:
-        del locals()[mech[0]]
-    exec(f'pnl.clear_registry(pnl.CompositionRegistry)')
-    exec(f'pnl.clear_registry(pnl.MechanismRegistry)')
-
-    json_filename = filename+'.json'
-    with open(json_filename, 'w') as json_file:
-        json_file.write(json_summary)
-        g = pnl.read_json_file(filename=json_filename,
-                               path=os.path.dirname(__file__)
-                               )
-        globals().update(g)
-        exec(f'{composition_name}.run(inputs={input_dict_str})')
-        final_results = eval(f'{composition_name}.results')
-
+    # Save json_summary of Composition to file and read back in.
+    json_filename = filename.replace('.py','.json')
+    exec(f'pnl.write_json_file({composition_name}, json_filename)')
+    exec(pnl.generate_script_from_json(json_filename))
+    exec(f'{composition_name}.run(inputs={input_dict_str})')
+    final_results = eval(f'{composition_name}.results')
     assert orig_results == final_results
 
 
