@@ -232,7 +232,7 @@ class PNLJSONEncoder(json.JSONEncoder):
                 # some builtin modules are internally "_module"
                 # but are imported with "module"
                 return f"{o.__module__.lstrip('_')}.{o.__name__}"
-        elif isinstance(o, (enum.Enum, types.FunctionType)):
+        elif isinstance(o, (enum.Enum, types.FunctionType, types.SimpleNamespace)):
             return str(o)
         elif isinstance(o, types.MethodType):
             return o.__qualname__
@@ -242,10 +242,6 @@ class PNLJSONEncoder(json.JSONEncoder):
             return o.name
         elif isinstance(o, SampleIterator):
             return f'{o.__class__.__name__}({repr(o.specification)})'
-        # MODIFIED  NEW: [JDC]
-        elif isinstance(o, Time):
-            return f'{o.life}:{o.run}:{o.trial}:{o.pass_}:{o.time_step}'
-        # MODIFIED  END
         elif isinstance(o, numpy.ndarray):
             return list(o)
         elif isinstance(o, numpy.random.RandomState):
