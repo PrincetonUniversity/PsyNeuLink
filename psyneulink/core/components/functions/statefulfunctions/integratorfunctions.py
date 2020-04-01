@@ -2244,6 +2244,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
         <DriftDiffusionIntegrator.function>`.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     noise : float or 1d array
         scales the normally distributed random value added to integral in each call to `function
         <DriftDiffusionIntegrator.function>`. If `variable <DriftDiffusionIntegrator.variable>` is a list or array,
@@ -2718,6 +2721,9 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <OrnsteinUhlenbeckIntegrator.default_time_step_size>`.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -2763,6 +2769,12 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :default value: 0.0
                     :type: ``float``
 
+                random_state
+                    see `random_state <OrnsteinUhlenbeckIntegrator.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
                 rate
                     see `rate <OrnsteinUhlenbeckIntegrator.rate>`
 
@@ -2788,6 +2800,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = Parameter(0.0, pnl_internal=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2807,6 +2820,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  time_step_size=1.0,
                  initializer=None,
                  params: tc.optional(dict) = None,
+                 seed=None,
                  owner=None,
                  prefs: is_pref_set = None):
 
@@ -2815,6 +2829,11 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value", "previous_time"]
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
 
         super().__init__(
             default_variable=default_variable,
@@ -2828,6 +2847,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             previous_value=initializer,
             previous_time=starting_point,
             params=params,
+            random_state=random_state,
             owner=owner,
             prefs=prefs,
         )
@@ -2870,12 +2890,15 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         noise = self._get_current_function_param(NOISE, context)
         offset = self._get_current_function_param(OFFSET, context)
         time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
+        random_state = self._get_current_function_param('random_state', context)
 
         previous_value = np.atleast_2d(self.get_previous_value(context))
 
+        random_normal = random_state.normal()
+
         # dx = (lambda*x + A)dt + c*dW
         value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
-            time_step_size * noise) * np.random.normal()
+            time_step_size * noise) * random_normal
 
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
