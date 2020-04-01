@@ -1057,11 +1057,8 @@ def write_json_file(compositions, filename:str, path:str=None):
     if path:
         if path[-1] != '/':
             path += '/'
-        file = path+filename
-    else:
-        import os
-        file = f'{os.path.dirname(__file__)}/{filename}'
+        filename = path + filename
 
-    with open(file, 'w') as json_file:
+    with open(filename, 'w') as json_file:
         for c in compositions:
             json_file.write(c.json_summary)
