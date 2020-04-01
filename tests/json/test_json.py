@@ -83,6 +83,7 @@ def test_write_json_file(
     json_filename = filename.replace('.py','.json')
     exec(f'pnl.write_json_file({composition_name}, json_filename)')
     exec(pnl.generate_script_from_json(json_filename))
-    exec(f'{composition_name}.run(inputs={input_dict_str})')
+    # exec(f'{composition_name}.run(inputs={input_dict_str})')
+    exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
     final_results = eval(f'{composition_name}.results')
     assert orig_results == final_results
