@@ -87,3 +87,44 @@ def test_write_json_file(
     exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
     final_results = eval(f'{composition_name}.results')
     assert orig_results == final_results
+
+
+@pytest.mark.parametrize(
+    'filename, input_dict_strs',
+    [
+        pytest.param(
+            'model_with_two_conjoint_comps.py',
+            {'comp': '{A: 1}', 'comp2': '{A: 1}'},
+            marks=pytest.mark.xfail
+        ),
+        ('model_with_two_disjoint_comps.py', {'comp': '{A: 1}', 'comp2': '{C: 1}'}),
+    ]
+)
+def test_write_json_file_multiple_comps(
+    filename,
+    input_dict_strs,
+):
+    orig_results = {}
+
+    # Get python script from file and execute
+    filename = f'{os.path.dirname(__file__)}/{filename}'
+    with open(filename, 'r') as orig_file:
+        exec(orig_file.read())
+
+        for composition_name in input_dict_strs:
+            exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
+            orig_results[composition_name] = eval(f'{composition_name}.results')
+
+    # reset random seed
+    pnl.core.globals.utilities.set_global_seed(0)
+
+    # Save json_summary of Composition to file and read back in.
+    json_filename = filename.replace('.py', '.json')
+
+    exec(f'pnl.write_json_file([{",".join(input_dict_strs)}], json_filename)')
+    exec(pnl.generate_script_from_json(json_filename))
+
+    for composition_name in input_dict_strs:
+        exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
+        final_results = eval(f'{composition_name}.results')
+        assert orig_results[composition_name] == final_results, f'{composition_name}:'

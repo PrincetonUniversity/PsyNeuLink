@@ -220,13 +220,7 @@ class JSONDumpable:
 
     @property
     def json_summary(self):
-        return json.dumps(
-            self._dict_summary,
-            sort_keys=True,
-            indent=4,
-            separators=(',', ': '),
-            cls=PNLJSONEncoder
-        )
+        return _dump_pnl_json_from_dict(self._dict_summary)
 
 
 class PNLJSONEncoder(json.JSONEncoder):
@@ -277,6 +271,16 @@ class PNLJSONEncoder(json.JSONEncoder):
                 pass
 
         return super().default(o)
+
+
+def _dump_pnl_json_from_dict(dict_summary):
+    return json.dumps(
+        dict_summary,
+        sort_keys=True,
+        indent=4,
+        separators=(',', ': '),
+        cls=PNLJSONEncoder
+    )
 
 
 def _parse_component_type(component_dict):
@@ -1079,6 +1083,14 @@ def write_json_file(compositions, filename:str, path:str=None):
             path += '/'
         filename = path + filename
 
+    merged_dict_summary = {}
+    for c in compositions:
+        try:
+            merged_dict_summary[MODEL_SPEC_ID_COMPOSITION].extend(
+                c._dict_summary[MODEL_SPEC_ID_COMPOSITION]
+            )
+        except KeyError:
+            merged_dict_summary.update(c._dict_summary)
+
     with open(filename, 'w') as json_file:
-        for c in compositions:
-            json_file.write(c.json_summary)
+        json_file.write(_dump_pnl_json_from_dict(merged_dict_summary))
