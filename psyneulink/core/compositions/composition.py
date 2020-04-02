@@ -8222,4 +8222,3 @@ def get_compositions():
     import inspect
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
-˚
