@@ -1069,7 +1069,7 @@ def write_json_file(compositions, filename:str, path:str=None):
 
         Arguments
         ---------
-        compositions : Composition or list
+        compositions : Composition or list˚
              specifies `Composition` or list of ones to be written to **filename**
 
         filename : str
