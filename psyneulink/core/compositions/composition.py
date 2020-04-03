@@ -1639,9 +1639,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
         `Compositions <Composition>`) and `Projections <Projection>`
 
-    nodes : `list[Mechanisms and Compositions]`
+    nodes : list[`Mechanism(s) <Mechanism>` and/or `Composition(s) <Composition>`]
         a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
         this Composition
+
+    processing_pathays : list[list[`node(s)` [and `Projection(s) <Projection>`], list...]
+        a list of all pathways specified either using the **pathways** argument of the Composition's constructor
+        and/or the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
@@ -1701,7 +1705,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     disable_learning: bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in `learning mode <Composition.learn>`.
 
-    learning_components : list
+    learning_components : list[list]
         contains the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
         `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
@@ -1716,8 +1720,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     COMMENT:
     learning_pathways : list[list]
-        contains a list of the learning pathways specified for the Composition; each item contains a list of the
-        `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s) <MappingProjection>` specified a
+        contains a list of the pathways subject to learning specified for the Composition; each item contains a list
+        of the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s) <MappingProjection>` specified
         a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see `Composition_Learning`
         for details).  This does *not* contain the components used for learning; those are contained in
         `learning_components <Composition.learning_components>` attribute.
