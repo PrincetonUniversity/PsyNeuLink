@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
@@ -295,6 +295,9 @@ class BayesGLM(LearningFunction):
     gamma_size_n : 2d array with single scalar value
         current value of the size parameter of the gamma distribution used to sample the prediction weights.
 
+    random_state : numpy.RandomState
+      private pseudorandom number generator
+
     weights_sample : 1d array
         last sample of prediction weights drawn in call to `sample_weights <BayesGLM.sample_weights>` and returned by
         `function <BayesGLM.function>`.
@@ -396,12 +399,19 @@ class BayesGLM(LearningFunction):
                     :default value: 0
                     :type: ``int``
 
+                random_state
+                    see `random_state <BayesGLM.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
                 sigma_0
                     see `sigma_0 <BayesGLM.sigma_0>`
 
                     :default value: 1
                     :type: ``int``
         """
+        random_state = Parameter(None, stateful=True, loggable=False)
         variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
         value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'], pnl_internal=True)
 
@@ -424,16 +434,22 @@ class BayesGLM(LearningFunction):
         gamma_size_prior = 1
 
     def __init__(self,
-                 default_variable = None,
+                 default_variable=None,
                  mu_0=0,
                  sigma_0=1,
                  gamma_shape_0=1,
                  gamma_size_0=1,
                  params=None,
                  owner=None,
+                 seed=None,
                  prefs: is_pref_set = None):
 
         self.user_specified_default_variable = default_variable
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
 
         super().__init__(
             default_variable=default_variable,
@@ -441,6 +457,7 @@ class BayesGLM(LearningFunction):
             sigma_0=sigma_0,
             gamma_shape_0=gamma_shape_0,
             gamma_size_0=gamma_size_0,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -593,15 +610,17 @@ class BayesGLM(LearningFunction):
         self.parameters.gamma_shape_n._set(gamma_shape_n, context)
         self.parameters.gamma_size_n._set(gamma_size_n, context)
 
-        return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n)
+        return self.sample_weights(gamma_shape_n, gamma_size_n, mu_n, Lambda_n, context)
 
-    def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n):
+    def sample_weights(self, gamma_shape_n, gamma_size_n, mu_n, Lambda_n, context):
         """Draw a sample of prediction weights from the distributions parameterized by `mu_n <BayesGLM.mu_n>`,
         `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
         <BayesGLM.gamma_size_n>`.
         """
-        phi = np.random.gamma(gamma_shape_n / 2, gamma_size_n / 2)
-        return np.random.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
+        random_state = self._get_current_function_param('random_state', context)
+
+        phi = random_state.gamma(gamma_shape_n / 2, gamma_size_n / 2)
+        return random_state.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
 
 
 class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------

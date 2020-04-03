@@ -1316,7 +1316,8 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS',
+    'get_compositions'
 ]
 
 # show_graph animation options
@@ -1665,9 +1666,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the full `Graph` associated with this Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
         `Compositions <Composition>`) and `Projections <Projection>`
 
-    nodes : `list[Mechanisms and Compositions]`
+    nodes : list[`Mechanism(s) <Mechanism>` and/or `Composition(s) <Composition>`]
         a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
         this Composition
+
+    processing_pathays : list[list[`node(s)` [and `Projection(s) <Projection>`], list...]
+        a list of all pathways specified either using the **pathways** argument of the Composition's constructor
+        and/or the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
@@ -1727,7 +1732,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     disable_learning: bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in `learning mode <Composition.learn>`.
 
-    learning_components : list
+    learning_components : list[list]
         contains the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
         `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
@@ -1783,6 +1788,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+
     class Parameters(ParametersBase):
         """
             Attributes
@@ -1817,12 +1823,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
+
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         state_struct = None
         data_struct = None
         scheduler_conditions = None
+
 
     def __init__(
             self,
@@ -8284,3 +8292,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         yield self.parameter_CIM
         if self.controller:
             yield self.controller
+
+
+def get_compositions():
+    """Return list of Compositions in caller's namespace."""
+    import inspect
+    frame = inspect.currentframe()
+    return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
