@@ -1670,9 +1670,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
         this Composition
 
-    processing_pathays : list[list[`node(s)` [and `Projection(s) <Projection>`], list...]
-        a list of all pathways specified either using the **pathways** argument of the Composition's constructor
-        and/or the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method.
+    processing_pathways : list
+        a list of all pathways specified using the **pathways** argument of the Composition's constructor
+        and/or the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method;
+        each item is a list of nodes (`Mechanisms <Mechanism>` and/or Compositions) intercolated wit the
+        `Projections <Projection>` between them.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
@@ -1730,29 +1732,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         stores all execution_ids used by this Composition.
 
     disable_learning: bool : default False
-        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in `learning mode <Composition.learn>`.
+        determines whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
+        `learning mode <Composition.learn>`.
 
     learning_components : list[list]
-        contains the learning-related components in the Composition, all or many of which may have been
+        a list of the learning-related components in the Composition, all or many of which may have been
         created automatically in a call to one of its `add_<*learning_type*>_pathway' methods (see
         `Composition_Learning` for details).  This does *not* contain the `ProcessingMechanisms
         <ProcessingMechanism>` or `MappingProjections <MappingProjection>` in the pathway(s) being learned;
         those are contained in `learning_pathways <Composition.learning_pathways>` attribute.
 
     learned_components : list[list]
-        contains a list of the components subject to learning in the Composition (`ProcessingMechanisms
+        a list of the components subject to learning in the Composition (`ProcessingMechanisms
         <ProcessingMechanism>` and `MappingProjections <MappingProjection>`);  this does *not* contain the
         components used for learning; those are contained in `learning_components
         <Composition.learning_components>` attribute.
 
-    COMMENT:
     learning_pathways : list[list]
-        contains a list of the `learning pathways <Composition_Learning_Sequence>` specified for the Composition; each
+        a list of the `learning pathways <Composition_Learning_Sequence>` specified for the Composition; each
         item contains a list of the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s)
         <MappingProjection>` specified a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see
         `Composition_Learning` for details).  This does *not* contain the components used for learning; those are
         contained in `learning_components <Composition.learning_components>` attribute.
-    COMMENT
 
     results : 3d array
         stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
@@ -1836,7 +1837,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             name=None,
             nodes=None,
-            linear_pathways:tc.optional(list)=None,
+            processing_pathways:tc.optional(list)=None,
             learning_pathways=None,
             controller:ControlMechanism=None,
             enable_controller=None,
@@ -1937,10 +1938,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes = convert_to_list(nodes)
             for node in nodes:
                 self.add_node(node)
-        if linear_pathways is not None:
-            if not isinstance(linear_pathways[0],list):
-                linear_pathways = [linear_pathways]
-            for pway in linear_pathways:
+        if processing_pathways is not None:
+            if not isinstance(processing_pathways[0],list):
+                processing_pathways = [processing_pathways]
+            for pway in processing_pathways:
                 self.add_linear_processing_pathway(pway)
         if learning_pathways is not None:
             learning_pathways = convert_to_list(learning_pathways)
@@ -3561,8 +3562,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError("The first item in a linear processing pathway must be a Node (Mechanism or "
-                                   "Composition).")
+            raise CompositionError(f"The first item in a linear processing pathway must be a node "
+                                   f"(Mechanism or Composition).")
 
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
@@ -3623,8 +3624,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Projection specification
             elif is_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
-                    raise CompositionError("{} is the last item in the pathway. A projection cannot be the last item in"
-                                           " a linear processing pathway.".format(pathway[c]))
+                    raise CompositionError(f"{pathway[c]} is the last item in the pathway. "
+                                           f"A projection cannot be the last item in a linear processing pathway.")
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c], tuple):
                     proj = pathway[c][0]
@@ -3650,8 +3651,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         duplicate = [p for p in receiver.afferents if p in sender.efferents]
                         assert len(duplicate)==1, \
                             f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                            f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                            f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
                         duplicate = duplicate[0]
                         warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
                                       f"in call to 'add_linear_projection' for {self.name} is a duplicate of one"
@@ -3679,14 +3680,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(proj)
 
                 else:
-                    raise CompositionError(
-                        "{} is not between two Composition Nodes. A Projection in a linear processing pathway must be "
-                        "preceded by a Composition Node (Mechanism or Composition) and followed by a Composition Node"
-                            .format(pathway[c]))
+                    raise CompositionError(f"{pathway[c]} is not between two Composition Nodes. "
+                                           f"A Projection in a linear processing "
+                                           f"pathway must be preceded by a Composition Node (Mechanism or Composition) "
+                                           f"and followed by a Composition Node.")
             else:
-                raise CompositionError("{} is not a Projection or a Composition node (Mechanism or Composition). A "
-                                       "linear processing pathway must be made up of Projections and Composition Nodes."
-                                       .format(pathway[c]))
+                raise CompositionError(f"{pathway[c]} is not a node (Mechanism or Composition) or a Projection. ")
         # interleave nodes and projections
         explicit_pathway = [nodes[0]]
         for i in range(len(projections)):
