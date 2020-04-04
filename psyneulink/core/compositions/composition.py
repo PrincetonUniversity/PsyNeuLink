@@ -68,7 +68,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         adds the specified nodes to the Composition;  this is equivalent to constructing the Composition and calling its
         `add_nodes <Composition.add_nodes>` method, and takes the same values as the **nodes** argument of that method.
 
-    - **linear_pathways**
+    - **processing_pathways**
 
         adds one or more processing pathways to the Composition;  this is equivalent to constructing the Composition
         and calling its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method,
@@ -927,26 +927,31 @@ three such methods:
     • `add_td_learning_pathway`
     • `add_backpropagation_learning_pathway`.
 
-.. _Composition_Learning_Sequence:
 
 Each uses the Composition's `add_linear_processing_pathway` method to create a  *learning sequence* specified in their
-**pathway** argument: a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the `MappingProjections
-<MappingProjection>` between them, in which learning modifies the `matrix <MappingProjection.matrix>` parameter of the
-MappingProjections in the sequence, so that the input to the first ProcessingMechanism in the sequence generates an
-output from the last ProcessingMechanism that matches as closely as possible the value specified for the `target
-mechanism <Process_Learning_Components>` in the **inputs** argument of the Composition's `run <Composition.run>` method.
-The Mechanisms in the pathway must be compatible with learning (that is, their `function <Mechanism_Base.function>` must
-be compatible with the `function <LearningMechanism.function>` of the `LearningMechanism` for the MappingProjections
-they receive (see `LearningMechanism_Function`).  The Composition's `learning methods <Composition_Learning_Methods>`
-return the set of learning components generates for the pathway, as described below.
+**pathway** argument.
+
+.. _Composition_Learning_Sequence:
+
+A *learning sequence* is a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the
+`MappingProjections <MappingProjection>` between them, in which learning modifies the `matrix
+<MappingProjection.matrix>` parameter of the MappingProjections in the sequence, so that the input to the first
+ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that matches as closely as
+possible the value specified for the `target mechanism <Process_Learning_Components>` in the **inputs** argument of the
+Composition's `run <Composition.run>` method. The Mechanisms in the pathway must be compatible with learning (that is,
+their `function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
+`LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
+`learning methods <Composition_Learning_Methods>` return the set of learning components generates for the pathway,
+as described below.
 
 .. _Composition_Learning_Components:
 
 *Learning Components*
 ^^^^^^^^^^^^^^^^^^^^^
 
-For each learning sequence specified in a `learning method <Composition_Learning_Methods>`, it creates the
-following Components, and assigns to them the `NodeRoles <NodeRole>` indicated:
+For each `learning sequence <Composition_Learning_Sequence>` specified in a `learning method
+<Composition_Learning_Methods>`, it creates the following Components, and assigns to them the `NodeRoles <NodeRole>`
+indicated:
 
     .. _COMPARATOR_MECHANISM:
     * *COMPARATOR_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
@@ -1042,11 +1047,12 @@ in that in that case, it will not project to a *COMPARATOR_MECHANISM* (see `figu
 them (that is, all of the specified pathways converge on that Mechanism), only one *COMPARATOR_MECHANISM* is created
 for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
 are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
-conversely, even though the last Mechanism of a learning sequence projects to a *COMPARATOR_MECHANISM*, and thus is not
-the `TERMINAL` node of a Composition, if it does not project to any other Mechanisms in the Composition it is
-nevertheless assigned as an `OUTPUT` of the Composition.  That is, Mechanisms that would otherwise have been the
-`TERMINAL` Mechanism of a Composition preserve their role as an `OUTPUT` of the Composition if they are part of a
-learning sequence even though they project to another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
+conversely, even though the last Mechanism of a `learning sequence <Composition_Learning_Sequence>` projects to a
+*COMPARATOR_MECHANISM*, and thus is not the `TERMINAL` node of a Composition, if it does not project to any other
+Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.  That is, Mechanisms
+that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as an `OUTPUT` of the
+Composition if they are part of a `learning sequence <Composition_Learning_Sequence>` even though they project to
+another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -1056,8 +1062,8 @@ learning sequence even though they project to another Mechanism (the *COMPARATOR
        :alt: Schematic of Mechanisms and Projections involved in learning
        :scale: 50 %
 
-       Configuration of Components generated by the creation of two intersecting learning sequences
-       (e.g., ``add_backpropagation_learning_pathway(pathway=[A,B])`` and
+       Configuration of Components generated by the creation of two intersecting `learning sequences
+       <Composition_Learning_Sequence>` (e.g., ``add_backpropagation_learning_pathway(pathway=[A,B])`` and
        ``add_backpropagation_learning_pathway(pathway=[D,B,C])``).  Mechanism B is the last Mechanism of the
        sequence specified for the first pathway, and so would project to a `ComparatorMechanism`, and would be
        assigned as an `OUTPUT` node of the Composition, if that pathway was created on its own.  However,
@@ -1069,9 +1075,9 @@ learning sequence even though they project to another Mechanism (the *COMPARATOR
 
 *Execution of Learning*
 ^^^^^^^^^^^^^^^^^^^^^^^
-When a Composition is run that contains one or more learning sequences, all of the ProcessingMechanisms for a
-sequence are executed first, and then its LearningComponents. This is shown in an animation of the XOR network
-from the `example above <Composition_XOR_Example>`:
+When a Composition is run that contains one or more `learning sequences <Composition_Learning_Sequence>`, all of the
+ProcessingMechanisms for a sequence are executed first, and then its LearningComponents. This is shown in an animation
+of the XOR network from the `example above <Composition_XOR_Example>`:
 
 .. _Composition_Learning_Animation_Figure:
 
@@ -1295,7 +1301,8 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
     CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
-    LABELS, LEARNED_PROJECTION, LEARNING_MECHANISM, MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
+    LABELS, LEARNED_PROJECTION, LEARNING, LEARNING_MECHANISM, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, MSE, NAME, NO_CLAMP, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
@@ -1611,6 +1618,70 @@ class Graph(object):
     @property
     def dependency_dict(self):
         return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
+
+class PathwayRole:
+    """
+    Attributes
+    ----------
+
+    ORIGIN
+        A `Pathway` that includes an `ORIGIN` `Mechanism <Mechanism>` or `Composition`.
+
+    INTERNAL
+        A `Pathway` that is not designated as having any other PathwayRole.
+
+    CYCLE
+        A `Pathway` that constitutes a `CYCLE`.
+
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` `Mechanism <Mechanism>` or `Composition`.
+
+    LEARNING
+        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
+
+    TARGET
+        A `Pathway` that includes a `TARGET` `Mechanism <Mechanism>`.
+
+    """
+    def __init__(self):
+        self.ORIGIN = ORIGIN
+        self.INTERNAL = INTERNAL
+        self.CYCLE = CYCLE
+        self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
+        self.TERMINAL = TERMINAL
+        self.SINGLETON = SINGLETON
+        self.LEARNING = LEARNING
+        self.TARGET = TARGET
+
+
+class Pathway(object):
+    """
+        A sequence of nodes and intercolated Projections within a `Composition`.
+
+        Arguments
+        ---------
+
+        pathway : list[node, Projection, node...]
+            specifies list of nodes (`Mechanism(s) <Mechanism>` or `Composition(s) <Composition>` and intercolated
+            `Projections <Projection>` in the pathway.
+
+        type : NodeRole or list[PathwayRole] : default PathwayRole.PROCESSING
+            specifies the `PathwayRole` to assign to the Pathway.
+
+        Attributes
+        ----------
+
+        pathway : list[node, Projection, node...]
+            list of nodes (`Mechanism(s) <Mechanism>` or `Composition(s) <Composition>` and intercolated `Projections
+            <Projection>` in the pathway.
+
+        type : list[PathwayRole]
+            list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway.
+
+    """
+
+    def __init__(self, pathway:list, role:tc.any(PathwayRole, list)):
+
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -1938,11 +2009,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes = convert_to_list(nodes)
             for node in nodes:
                 self.add_node(node)
+
+        self.processing_pathways = []
         if processing_pathways is not None:
             if not isinstance(processing_pathways[0],list):
                 processing_pathways = [processing_pathways]
             for pway in processing_pathways:
                 self.add_linear_processing_pathway(pway)
+
+        self.learning_pathways = []
         if learning_pathways is not None:
             learning_pathways = convert_to_list(learning_pathways)
             if not all(isinstance(pway,tuple) for pway in learning_pathways):
@@ -3516,8 +3591,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Note that any specifications of a ControlMechanism's **monitor_for_control** `argument
         <ControlMechanism_Monitor_for_Control_Argument>` or the **monitor** argument specified in the constructor
         for an ObjectiveMechanism in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>`
-        supercede any MappingProjections that would otherwise be created for them when specified in the **pathway**
-        argument.
+        of a ControlMechanism supercede any MappingProjections that would otherwise be created for them when
+        specified in the **pathway** argument.
+
+        *args is used internally to flag if call is for learning_pathway.
 
         Arguments
         ---------
@@ -3692,6 +3769,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
+        if not args or args[0]!=LEARNING:
+            self.processing_pathways.append(explicit_pathway)
+
         return explicit_pathway
 
 
@@ -3785,7 +3865,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         input_source, output_source, learned_projection = \
             self._unpack_processing_components_of_learning_pathway(pathway)
-        self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+        pway = self.add_linear_processing_pathway([input_source, learned_projection, output_source], LEARNING)
+        self.learning_pathways.append(pway)
 
         # FIX: CONSOLIDATE LEARNING - WAS SPECIFIC TO RL AND NOT IN TD
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
@@ -4183,7 +4264,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_function = LinearCombination()
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
-        processing_pathway = self.add_linear_processing_pathway(pathway)
+        processing_pathway = self.add_linear_processing_pathway(pathway, LEARNING)
+        self.learning_pathways.append(processing_pathway)
 
         path_length = len(processing_pathway)
 

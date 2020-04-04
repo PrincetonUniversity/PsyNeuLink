@@ -133,7 +133,7 @@ class NodeRoles:
         COMMENT
 
     INTERNAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
+        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other NodeRole.
 
     CYCLE
         A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
