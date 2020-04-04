@@ -2040,6 +2040,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
+
+        # Instantiate any deferred init components
+        if context.source != ContextFlags.METHOD:  # Prevent recursion in call from add_controller
+            self._check_initialization_status()
+
+        # Call _analzye_graph() for any nested Compositions
         for n in self.nodes:
             try:
                 n._analyze_graph(context=context)
@@ -2426,11 +2432,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         objective_mechanism = None
-        # # MODIFIED 10/24/19 OLD:
-        # if self.controller and self.enable_controller and self.controller.objective_mechanism:
-        # MODIFIED 10/24/19 NEW:
-        if self.controller and self.controller.objective_mechanism:
-        # MODIFIED 10/24/19 END
+        if (self.controller
+                and self.controller.objective_mechanism
+                and not self.controller.initialization_status == ContextFlags.DEFERRED_INIT):
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
@@ -3744,7 +3748,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
+        # MODIFIED 4/4/20 NEW:
         self._analyze_graph()
+        # MODIFIED 4/4/20 END
         pathway = Pathway(pathway=explicit_pathway, composition=self)
         self.pathways.append(pathway)
 
@@ -4749,7 +4755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = True
 
             controller._activate_projections_for_compositions(self)
-            self._analyze_graph()
+            self._analyze_graph(context=Context(source=ContextFlags.METHOD))
             self._update_shadows_dict(controller)
 
             # INSTANTIATE SHADOW_INPUT PROJECTIONS
