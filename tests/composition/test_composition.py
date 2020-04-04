@@ -1980,9 +1980,8 @@ class TestRun:
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([Nonsense_Projection, A, B])
-
-        assert "The first item in a linear processing pathway must be a Node (Mechanism or Composition)." in str(
-            error_text.value)
+        assert "The first item in a linear processing pathway must be a node (Mechanism or Composition)." in str(
+                error_text.value)
 
     def test_LPP_wrong_component(self):
         from psyneulink.core.components.ports.inputport import InputPort
@@ -1993,8 +1992,9 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
 
-        assert "A linear processing pathway must be made up of Projections and Composition Nodes." in str(
+        assert "(InputPort Deferred Init InputPort) is not a node (Mechanism or Composition) or a Projection." in str(
             error_text.value)
+
 
     def test_lpp_invalid_matrix_keyword(self):
         comp = Composition()

@@ -1732,7 +1732,16 @@ class PathwayRole(Enum):
     """
 
     ORIGIN
-        A `Pathway` that includes an `ORIGIN` `Mechanism <Mechanism>` or `Composition`.
+        A `Pathway` that includes an `ORIGIN` node of the `Composition`.
+
+    INPUT
+        A `Pathway` that includes an `INPUT` node of the `Composition`.
+
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` node of the `Composition`.
+
+    OUTPUT
+        A `Pathway` that an `OUTPUT` node of the `Composition`.
 
     INTERNAL
         A `Pathway` that is not designated as having any other PathwayRole.
@@ -1740,22 +1749,21 @@ class PathwayRole(Enum):
     CYCLE
         A `Pathway` that constitutes a `CYCLE`.
 
-    TERMINAL
-        A `Pathway` that includes a `TERMINAL` `Mechanism <Mechanism>` or `Composition`.
-
     LEARNING
         A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
 
     TARGET
-        A `Pathway` that includes a `TARGET` `Mechanism <Mechanism>`.
+        A `Pathway` that includes a `TARGET` node of the `Compositoin`.
 
     """
     ORIGIN = 0
-    INTERNAL = 1
-    CYCLE = 2
-    TERMINAL = 3
-    LEARNING = 4
-    TARGET = 5
+    INPUT = 1
+    TERMINAL = 2
+    OUTPUT = 3
+    INTERNAL = 4
+    CYCLE = 5
+    LEARNING = 6
+    TARGET = 7
 
 def unproxy_weakproxy(proxy):
     """
