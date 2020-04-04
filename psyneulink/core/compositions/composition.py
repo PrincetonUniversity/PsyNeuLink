@@ -1327,7 +1327,8 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
     PredictionErrorMechanism
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'Pathway', 'PathwayRegistry', 'get_compositions',
+    'Composition', 'CompositionError', 'CompositionRegistry',
+    'Pathway', 'PathwayRegistry', 'get_compositions',
     'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
 ]
 
@@ -1624,71 +1625,6 @@ class Graph(object):
     def dependency_dict(self):
         return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
 
-
-class Pathway(object):
-    """
-        A sequence of nodes (`Mechanism(s) <Mechanism>` and/or nested `Composition(s) <Composition>`
-        and Projections within a `Composition`.
-
-        Arguments
-        ---------
-
-        pathway : list[node, Projection, node...]
-            specifies list of nodes (`Mechanism(s) <Mechanism>` or `Composition(s) <Composition>` and intercolated
-            `Projections <Projection>` in the pathway.
-
-        type : NodeRole or list[PathwayRole] : default PathwayRole.PROCESSING
-            specifies the `PathwayRole` to assign to the Pathway.
-
-        Attributes
-        ----------
-
-        pathway : list[node, Projection, node...]
-            list of nodes (`Mechanism(s) <Mechanism>` or `Composition(s) <Composition>` and intercolated `Projections
-            <Projection>` in the pathway.
-
-        type : list[PathwayRole]
-            list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway.
-
-    """
-
-    def __init__(
-            self,
-            pathway:list,
-            roles:tc.optional(tc.any(PathwayRole, list, set))=None,
-            name=None
-    ):
-
-        # also sets name
-        register_category(
-            entry=self,
-            base_class=Pathway,
-            registry=PathwayRegistry,
-            name=name,
-        )
-
-        # Check validity of pathway
-        for i in range(0, len(pathway)):
-            # Odd items must be a node (Mechanism or Composition)
-            if not i % 2:
-                if not isinstance(pathway[i], (Mechanism, Composition)):
-                    raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a node "
-                                           f"({Mechanism.__name__} or {Composition.__name__}).")
-            # Even items must be a Projection
-            elif not isinstance(pathway[i], Projection):
-                    raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a `{Projection.__name}.")
-        # If len is not odd, then must be missing a node
-        if not len(pathway) % 2:
-            raise CompositionError(f"'pathway' arg of {self.name} is missing a terminal node.")
-
-        self.pathway = pathway
-
-        roles = set(convert_to_list(roles or []))
-        for role in roles:
-            if not isinstance(role, PathwayRole):
-                raise CompositionError(f"Item ({role}) in 'roles' arg of {self.name} "
-                                       f"is not a {PathwayRole.__name__}.")
-        self.roles = roles
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -2627,21 +2563,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     def _determine_pathway_roles(self, context=None):
-        for pathway in self.pathways:
-            for node in pathway.pathway:
+        for pway in self.pathways:
+            for node in pway.pathway:
                 if not isinstance(node, (Mechanism, Composition)):
                     continue
                 roles = self.get_roles_by_node(node)
                 if NodeRole.ORIGIN in roles:
-                    pathway.roles.add(PathwayRole.ORIGIN)
+                    pway.roles.add(PathwayRole.ORIGIN)
+                if NodeRole.INPUT in roles:
+                    pway.roles.add(PathwayRole.INPUT)
                 if NodeRole.TERMINAL in roles:
-                    pathway.roles.add(PathwayRole.TERMINAL)
+                    pway.roles.add(PathwayRole.TERMINAL)
+                if NodeRole.OUTPUT in roles:
+                    pway.roles.add(PathwayRole.OUTPUT)
                 if NodeRole.CYCLE in roles:
-                    pathway.roles.add(PathwayRole.CYCLE)
+                    pway.roles.add(PathwayRole.CYCLE)
                 if NodeRole.TARGET in roles:
-                    pathway.roles.add(PathwayRole.TARGET)
-            if not [role in pathway.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
-                pathway.roles.add(PathwayRole.INTERNAL)
+                    pway.roles.add(PathwayRole.TARGET)
+            if not [role in pway.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
+                pway.roles.add(PathwayRole.INTERNAL)
+            if pway.learning_components:
+                pway.roles.add(PathwayRole.LEARNING)
         assert True
 
 
@@ -3794,13 +3736,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"and followed by a Composition Node.")
             else:
                 raise CompositionError(f"{pathway[c]} is not a node (Mechanism or Composition) or a Projection. ")
+
+        # clean up any tuple specs
+        for i, n in enumerate(nodes):
+            if isinstance(n, tuple):
+                nodes[i] = nodes[i][0]
         # interleave nodes and projections
         explicit_pathway = [nodes[0]]
         for i in range(len(projections)):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
-        pathway = Pathway(explicit_pathway)
+        pathway = Pathway(pathway=explicit_pathway, composition=self)
         self.pathways.append(pathway)
 
         return pathway
@@ -3892,6 +3839,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  learning_rate,
                                                                  error_function,
                                                                  learning_update)
+
+
+        # If BackPropagation is not specified, then the learning pathway is "one-layered"
+        #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
 
         # Processing Components
         input_source, output_source, learned_projection = \
@@ -4296,7 +4247,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_function = LinearCombination()
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
-        processing_pathway = self.add_linear_processing_pathway(pathway, LEARNING).pathway
+        pway = self.add_linear_processing_pathway(pathway, LEARNING)
+        processing_pathway = pway.pathway
 
         path_length = len(processing_pathway)
 
@@ -4443,6 +4395,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        COMPARATOR_MECHANISM: comparator,
                                        TARGET_MECHANISM: target,
                                        LEARNED_PROJECTION: learned_projections}
+
+        pway.learning_components = learning_related_components
 
         # Update graph in case method is called again
         self._analyze_graph()
@@ -8411,3 +8365,115 @@ def get_compositions():
     import inspect
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
+
+
+class Pathway(object):
+    """
+        A sequence of nodes (`Mechanism(s) <Mechanism>` and/or nested `Composition(s) <Composition>`
+        and Projections within a `Composition`.
+
+        Arguments
+        ---------
+
+        pathway : list[node, Projection, node...]
+            specifies list of nodes (`Mechanism(s) <Mechanism>` or `Composition(s) <Composition>` and intercolated
+            `Projections <Projection>` in the pathway.
+
+        type : NodeRole or list[PathwayRole] : default PathwayRole.PROCESSING
+            specifies the `PathwayRole` to assign to the Pathway.
+
+        Attributes
+        ----------
+
+        pathway : list[node, Projection, node...]
+            list of nodes (`Mechanism(s) <Mechanism>` or `Composition(s) <Composition>` and intercolated `Projections
+            <Projection>` in the pathway.
+
+        roles : list[PathwayRole]
+            list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway.
+
+        input : Mechanism
+            `INPUT` node if `roles <Pathway.roles>` includes `PathwayRole.INPUT>`, else None.
+
+        output : Mechanism
+            `OUTPUT` node if `roles <Pathway.roles>` includes `PathwayRole.OUTPUT`, else None.
+
+        target : Mechanism
+            `TARGET` node if `roles <Pathway.roles>` includes `PathwayRole.TARGET`, else None.
+
+    """
+
+    def __init__(
+            self,
+            pathway:list,
+            composition:Composition,
+            roles:tc.optional(tc.any(PathwayRole, list, set))=None,
+            name=None
+    ):
+
+        # also sets name
+        register_category(
+            entry=self,
+            base_class=Pathway,
+            registry=PathwayRegistry,
+            name=name,
+        )
+
+        self.composition = composition
+        self.learning_components = {}
+
+        # Check validity of pathway
+        for i in range(0, len(pathway)):
+            # Odd items must be a node (Mechanism or Composition)
+            if not i % 2:
+                if not isinstance(pathway[i], (Mechanism, Composition)):
+                    raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a node "
+                                           f"({Mechanism.__name__} or {Composition.__name__}).")
+            # Even items must be a Projection
+            elif not isinstance(pathway[i], Projection):
+                    raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a `{Projection.__name}.")
+        # If len is not odd, then must be missing a node
+        if not len(pathway) % 2:
+            raise CompositionError(f"'pathway' arg of {self.name} is missing a terminal node.")
+
+        self.pathway = pathway
+
+        roles = set(convert_to_list(roles or []))
+        for role in roles:
+            if not isinstance(role, PathwayRole):
+                raise CompositionError(f"Item ({role}) in 'roles' arg of {self.name} "
+                                       f"is not a {PathwayRole.__name__}.")
+        self.roles = roles
+
+    @property
+    def input(self):
+        if PathwayRole.INPUT in self.roles:
+            return next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.INPUT))
+
+    @property
+    def output(self):
+        if PathwayRole.OUTPUT in self.roles:
+            return next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.OUTPUT))
+
+    @property
+    def target(self):
+        try:
+            return self.learning_components[TARGET_MECHANISM]
+        except:
+            # FIX:  CHECK THAT IT HAS learning_components
+            #       IF SO, ASSERT FALSE WITH PROGRAM ERROR
+            #       ELSE, WARNING THAT IT IS NOT A LEARNING PATHWAY
+            # if PathwayRole.LEARNING in self.roles:
+            return None
+
+    @property
+    def comparator(self):
+        try:
+            return self.learning_components[COMPARATOR_MECHANISM]
+        except:
+            # FIX:  CHECK THAT IT HAS learning_components
+            #       IF SO, ASSERT FALSE WITH PROGRAM ERROR
+            #       ELSE, WARNING THAT IT IS NOT A LEARNING PATHWAY
+            # if PathwayRole.LEARNING in self.roles:
+            return None
+

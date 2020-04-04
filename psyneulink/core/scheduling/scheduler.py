@@ -195,6 +195,7 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> C = pnl.TransferMechanism(name='C')
 
     >>> comp = pnl.Composition()
+
     >>> pway = comp.add_linear_processing_pathway([A, B, C])
     >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]

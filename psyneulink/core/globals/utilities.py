@@ -1731,6 +1731,9 @@ class NodeRole(Enum):
 class PathwayRole(Enum):
     """
 
+    Attributes
+    ----------
+
     ORIGIN
         A `Pathway` that includes an `ORIGIN` node of the `Composition`.
 

@@ -210,6 +210,9 @@ class PathwayRoles:
     ORIGIN
         A `Pathway` that includes an `ORIGIN` `Mechanism <Mechanism>` or `Composition`.
 
+    INPUT
+        A `Pathway` that includes an `INPUT` `Mechanism <Mechanism>` or `Composition`.
+
     INTERNAL
         A `Pathway` that is not designated as having any other PathwayRole.
 
@@ -218,6 +221,9 @@ class PathwayRoles:
 
     TERMINAL
         A `Pathway` that includes a `TERMINAL` `Mechanism <Mechanism>` or `Composition`.
+
+    OUTPUT
+        A `Pathway` that includes an `OUTPUT` `Mechanism <Mechanism>` or `Composition`.
 
     LEARNING
         A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
