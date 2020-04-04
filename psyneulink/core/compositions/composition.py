@@ -1311,7 +1311,8 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, NodeRole, PathwayRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -1323,9 +1324,8 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
     PredictionErrorMechanism
 
 __all__ = [
-
-    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS',
-    'get_compositions'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'Pathway', 'PathwayRegistry', 'get_compositions',
+    'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
 ]
 
 # show_graph animation options
@@ -1346,6 +1346,7 @@ SHOW_LEARNING = 'show_learning'
 
 logger = logging.getLogger(__name__)
 CompositionRegistry = {}
+PathwayRegistry= {}
 
 
 class CompositionError(Exception):
@@ -1620,40 +1621,6 @@ class Graph(object):
     def dependency_dict(self):
         return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
 
-class PathwayRole:
-    """
-    Attributes
-    ----------
-
-    ORIGIN
-        A `Pathway` that includes an `ORIGIN` `Mechanism <Mechanism>` or `Composition`.
-
-    INTERNAL
-        A `Pathway` that is not designated as having any other PathwayRole.
-
-    CYCLE
-        A `Pathway` that constitutes a `CYCLE`.
-
-    TERMINAL
-        A `Pathway` that includes a `TERMINAL` `Mechanism <Mechanism>` or `Composition`.
-
-    LEARNING
-        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
-
-    TARGET
-        A `Pathway` that includes a `TARGET` `Mechanism <Mechanism>`.
-
-    """
-    def __init__(self):
-        self.ORIGIN = ORIGIN
-        self.INTERNAL = INTERNAL
-        self.CYCLE = CYCLE
-        self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
-        self.TERMINAL = TERMINAL
-        self.SINGLETON = SINGLETON
-        self.LEARNING = LEARNING
-        self.TARGET = TARGET
-
 
 class Pathway(object):
     """
@@ -1681,40 +1648,44 @@ class Pathway(object):
 
     """
 
-    def __init__(self, pathway:list, role:tc.any(PathwayRole, list)):
+    def __init__(
+            self,
+            pathway:list,
+            roles:tc.optional(tc.any(PathwayRole, list))=None,
+            name=None
+    ):
 
-        #     raise CompositionError(f"The first item in a linear processing pathway must be a node "
-        #                            f"(Mechanism or Composition).")
-        #
-        # for i, p in enumerate(pathway):
-        #     any(not isinstance(p, (Mechanism, Projection, Composition)) for p in pathway):
-        #     raise CompositionError(f"An item in the list specified for {self.__name__} is not a "
-        #                            f"{Mechanism.__name__, Projection.__name__ or Compositoin.__name__}: ()")
-        #
-        #
+        # also sets name
+        register_category(
+            entry=self,
+            base_class=Pathway,
+            registry=PathwayRegistry,
+            name=name,
+        )
+
+        # Check validity of pathway
+        for i in range(0, len(pathway)):
+            # Odd items must be a node (Mechanism or Composition)
+            if not i % 2:
+                if not isinstance(pathway[i], (Mechanism, Composition)):
+                    raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a node "
+                                           f"({Mechanism.__name__} or {Composition.__name__}).")
+            # Even items must be a Projection
+            elif not isinstance(pathway[i], Projection):
+                    raise CompositionError(f"Item {i} of {self._name__} ({node[0]}) must be a `{Projection.__name}.")
+        # If len is not odd, then must be missing a node
+        if not len(pathway) % 2:
+            raise CompositionError(f"'pathway' arg of {self._name__} is missing a terminal node.")
+
+
         self.pathway = pathway
 
-
-    # from psyneulink.core.globals.keywords import NODE, PROJECTION
-    def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
-        """Test whether pathway entry is specified type (NODE or PROJECTION)"""
-        node_specs = (Mechanism, Composition)
-        proj_specs = (Projection, np.ndarray, np.matrix, str, list)
-        if desired_type == NODE:
-            if (isinstance(entry, node_specs)
-                    or (isinstance(entry, tuple)
-                        and isinstance(entry[0], node_specs)
-                        and isinstance(entry[1], NodeRole))):
-                return True
-        elif desired_type == PROJECTION:
-            if (isinstance(entry, proj_specs)
-                    or (isinstance(entry, tuple)
-                        and isinstance(entry[0], proj_specs)
-                        and entry[1] in {True, False, MAYBE})):
-                return True
-        else:
-            return False
-
+        roles = convert_to_list(roles or [])
+        for role in roles:
+            if role not in PathwayRole.__members__:
+                raise CompositionError(f"Item ({role}) in 'roles' arg of {self._name__} "
+                                       f"is not a {PathwayRole.__name__}.")
+        self.roles = roles
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -1774,11 +1745,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
         this Composition
 
-    processing_pathways : list
-        a list of all pathways specified using the **pathways** argument of the Composition's constructor
-        and/or the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method;
-        each item is a list of nodes (`Mechanisms <Mechanism>` and/or Compositions) intercolated wit the
-        `Projections <Projection>` between them.
+    pathways : list
+        a list of all `Pathways <Pathway>` in the Composition that were specified using either the
+        **processing_pathways** or **learning_pathways** argument of the Composition's constructor,
+        and/or its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
+        `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` methods; each item
+        is a list of nodes (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the
+        `Projection <Projection>` between each pair of nodes.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
@@ -1852,12 +1825,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         components used for learning; those are contained in `learning_components
         <Composition.learning_components>` attribute.
 
+    COMMENT:
     learning_pathways : list[list]
         a list of the `learning pathways <Composition_Learning_Sequence>` specified for the Composition; each
         item contains a list of the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s)
         <MappingProjection>` specified a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see
         `Composition_Learning` for details).  This does *not* contain the components used for learning; those are
         contained in `learning_components <Composition.learning_components>` attribute.
+    COMMENT
 
     results : 3d array
         stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
@@ -2043,14 +2018,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in nodes:
                 self.add_node(node)
 
-        self.processing_pathways = []
+        self.pathways = []
         if processing_pathways is not None:
             if not isinstance(processing_pathways[0],list):
                 processing_pathways = [processing_pathways]
             for pway in processing_pathways:
                 self.add_linear_processing_pathway(pway)
-
-        self.learning_pathways = []
         if learning_pathways is not None:
             learning_pathways = convert_to_list(learning_pathways)
             if not all(isinstance(pway,tuple) for pway in learning_pathways):
@@ -2136,6 +2109,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._check_feedback(scheduler=scheduler, context=context)
         self._determine_node_roles(context=context)
+        self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
@@ -2648,6 +2622,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         self.nodes_to_roles[node].remove(role)
+
+    def _determine_pathway_roles(self, context=None):
+        for pathway in self.pathways:
+            for node in pathway.pathway:
+                if not isinstance(node, (Mechanism, Composition)):
+                    continue
+                roles = self.get_roles_by_node(node)
+                if NodeRole.ORIGIN in roles:
+                    pathway.roles.append(PathwayRole.ORIGIN)
+                if NodeRole.TERMINAL in roles:
+                    pathway.roles.append(PathwayRole.TERMINAL)
+                if NodeRole.CYCLE in roles:
+                    pathway.roles.append(PathwayRole.CYCLE)
+                if NodeRole.TARGET in roles:
+                    pathway.roles.append(PathwayRole.TARGET)
+            if not [role in pathway.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
+                pathway.roles.append(PathwayRole.INTERNAL)
+        assert True
+
 
     tc.typecheck
     def _create_CIM_ports(self, context=None):
@@ -3640,8 +3633,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         nodes = []
-        is_spec = Pathway.is_spec
 
+        def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
+            """Test whether pathway entry is specified type (NODE or PROJECTION)"""
+            node_specs = (Mechanism, Composition)
+            proj_specs = (Projection, np.ndarray, np.matrix, str, list)
+            if desired_type == NODE:
+                if (isinstance(entry, node_specs)
+                        or (isinstance(entry, tuple)
+                            and isinstance(entry[0], node_specs)
+                            and isinstance(entry[1], NodeRole))):
+                    return True
+            elif desired_type == PROJECTION:
+                if (isinstance(entry, proj_specs)
+                        or (isinstance(entry, tuple)
+                            and isinstance(entry[0], proj_specs)
+                            and entry[1] in {True, False, MAYBE})):
+                    return True
+            else:
+                return False
 
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
@@ -3785,7 +3795,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(nodes[i + 1])
 
         if not args or args[0]!=LEARNING:
-            self.processing_pathways.append(explicit_pathway)
+            self.pathways.append(Pathway(explicit_pathway))
+        else:
+            self.pathways.append(Pathway(explicit_pathway, roles=PathwayRole.LEARNING))
 
         return explicit_pathway
 
@@ -3880,8 +3892,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         input_source, output_source, learned_projection = \
             self._unpack_processing_components_of_learning_pathway(pathway)
-        pway = self.add_linear_processing_pathway([input_source, learned_projection, output_source], LEARNING)
-        self.learning_pathways.append(pway)
+        self.add_linear_processing_pathway([input_source, learned_projection, output_source], LEARNING)
 
         # FIX: CONSOLIDATE LEARNING - WAS SPECIFIC TO RL AND NOT IN TD
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
@@ -4280,7 +4291,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         processing_pathway = self.add_linear_processing_pathway(pathway, LEARNING)
-        self.learning_pathways.append(processing_pathway)
 
         path_length = len(processing_pathway)
 

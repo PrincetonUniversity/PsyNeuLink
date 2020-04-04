@@ -89,7 +89,7 @@ __all__ = [
     'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
     'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
-    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
+    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PathwayRoles', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
     'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
@@ -200,6 +200,40 @@ class NodeRoles:
         self.TARGET = TARGET
 
 NODE = 'NODE'
+
+
+class PathwayRoles:
+    """
+    Attributes
+    ----------
+
+    ORIGIN
+        A `Pathway` that includes an `ORIGIN` `Mechanism <Mechanism>` or `Composition`.
+
+    INTERNAL
+        A `Pathway` that is not designated as having any other PathwayRole.
+
+    CYCLE
+        A `Pathway` that constitutes a `CYCLE`.
+
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` `Mechanism <Mechanism>` or `Composition`.
+
+    LEARNING
+        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
+
+    TARGET
+        A `Pathway` that includes a `TARGET` `Mechanism <Mechanism>`.
+
+    """
+    def __init__(self):
+        self.ORIGIN = ORIGIN
+        self.INTERNAL = INTERNAL
+        self.CYCLE = CYCLE
+        self.TERMINAL = TERMINAL
+        self.LEARNING = LEARNING
+        self.TARGET = TARGET
+
 
 class MatrixKeywords:
     """

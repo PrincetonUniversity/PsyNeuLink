@@ -113,16 +113,18 @@ from psyneulink.core.globals.keywords import \
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_comparison_operator', 'is_component',
-    'is_distance_metric', 'is_matrix',
-    'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list',
+    'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
+    'insert_list', 'is_matrix_spec', 'all_within_range',
+    'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
-    'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
+    'is_value_spec',
+    'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
-    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf', 'parse_valid_identifier', 'parse_string_to_psyneulink_object_string',
-    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
+    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
+    'parse_valid_identifier', 'parse_string_to_psyneulink_object_string', 'parameter_spec', 'powerset', 'PathwayRole',
+    'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
@@ -1725,6 +1727,35 @@ class NodeRole(Enum):
     CYCLE = 8
     LEARNING = 9
     TARGET = 10
+
+class PathwayRole(Enum):
+    """
+
+    ORIGIN
+        A `Pathway` that includes an `ORIGIN` `Mechanism <Mechanism>` or `Composition`.
+
+    INTERNAL
+        A `Pathway` that is not designated as having any other PathwayRole.
+
+    CYCLE
+        A `Pathway` that constitutes a `CYCLE`.
+
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` `Mechanism <Mechanism>` or `Composition`.
+
+    LEARNING
+        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
+
+    TARGET
+        A `Pathway` that includes a `TARGET` `Mechanism <Mechanism>`.
+
+    """
+    ORIGIN = 0
+    INTERNAL = 1
+    CYCLE = 2
+    TERMINAL = 3
+    LEARNING = 4
+    TARGET = 5
 
 def unproxy_weakproxy(proxy):
     """
