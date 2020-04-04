@@ -2578,8 +2578,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     pway.roles.add(PathwayRole.OUTPUT)
                 if NodeRole.CYCLE in roles:
                     pway.roles.add(PathwayRole.CYCLE)
-                if NodeRole.TARGET in roles:
-                    pway.roles.add(PathwayRole.TARGET)
             if not [role in pway.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
                 pway.roles.add(PathwayRole.INTERNAL)
             if pway.learning_components:
