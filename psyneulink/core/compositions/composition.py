@@ -1304,7 +1304,8 @@ from psyneulink.core.globals.keywords import \
     LABELS, LEARNED_PROJECTION, LEARNING, LEARNING_MECHANISM, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, MSE, NAME, NO_CLAMP, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, \
+    NAME, NO_CLAMP, NODE, \
     ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -1681,6 +1682,38 @@ class Pathway(object):
     """
 
     def __init__(self, pathway:list, role:tc.any(PathwayRole, list)):
+
+        #     raise CompositionError(f"The first item in a linear processing pathway must be a node "
+        #                            f"(Mechanism or Composition).")
+        #
+        # for i, p in enumerate(pathway):
+        #     any(not isinstance(p, (Mechanism, Projection, Composition)) for p in pathway):
+        #     raise CompositionError(f"An item in the list specified for {self.__name__} is not a "
+        #                            f"{Mechanism.__name__, Projection.__name__ or Compositoin.__name__}: ()")
+        #
+        #
+        self.pathway = pathway
+
+
+    # from psyneulink.core.globals.keywords import NODE, PROJECTION
+    def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
+        """Test whether pathway entry is specified type (NODE or PROJECTION)"""
+        node_specs = (Mechanism, Composition)
+        proj_specs = (Projection, np.ndarray, np.matrix, str, list)
+        if desired_type == NODE:
+            if (isinstance(entry, node_specs)
+                    or (isinstance(entry, tuple)
+                        and isinstance(entry[0], node_specs)
+                        and isinstance(entry[1], NodeRole))):
+                return True
+        elif desired_type == PROJECTION:
+            if (isinstance(entry, proj_specs)
+                    or (isinstance(entry, tuple)
+                        and isinstance(entry[0], proj_specs)
+                        and entry[1] in {True, False, MAYBE})):
+                return True
+        else:
+            return False
 
 
 # Options for show_node_structure argument of show_graph()
@@ -3607,26 +3640,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         nodes = []
+        is_spec = Pathway.is_spec
 
-        from psyneulink.core.globals.keywords import PROJECTION, NODE
-        def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
-            """Test whether pathway entry is specified type (NODE or PROJECTION)"""
-            node_specs = (Mechanism, Composition)
-            proj_specs = (Projection, np.ndarray, np.matrix, str, list)
-            if desired_type == NODE:
-                if (isinstance(entry, node_specs)
-                        or (isinstance(entry, tuple)
-                            and isinstance(entry[0], node_specs)
-                            and isinstance(entry[1], NodeRole))):
-                    return True
-            elif desired_type == PROJECTION:
-                if (isinstance(entry, proj_specs)
-                        or (isinstance(entry, tuple)
-                            and isinstance(entry[0], proj_specs)
-                            and entry[1] in {True, False, MAYBE})):
-                    return True
-            else:
-                return False
 
         # First, verify that the pathway begins with a node
         if not isinstance(pathway, (list, tuple)):
