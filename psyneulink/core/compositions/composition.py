@@ -4755,6 +4755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = True
 
             controller._activate_projections_for_compositions(self)
+            # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
             self._analyze_graph(context=Context(source=ContextFlags.METHOD))
             self._update_shadows_dict(controller)
 
