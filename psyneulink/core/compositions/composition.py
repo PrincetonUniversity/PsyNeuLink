@@ -2461,17 +2461,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.INPUT)
 
         # If no OUTPUT nodes were explicitly specified as required_roles by *user* , assign them:
-        # - ignore OUTPUT nodes specified for learning pathways
         # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # - ignore OUTPUT nodes in learning pathways as those are assigned automatically in add_linear_learning_pathway
+        #   and don't want that to suppress normal assignment of TERMINAL nodes in non-learning pathways as OUTPUT nodes
+        #   (if user has not specified any as required roles)
 
         # MODIFIED 4/4/20 OLD:
         # if not self.get_nodes_by_role(NodeRole.OUTPUT):
         # MODIFIED 4/4/20 NEW:
         # If the only nodes designated as OUTPUT are in a learning pathway
-        # - ignore OUTPUTS of learning pathways as those are assigned as OUTPUTS automatically in
-        #   add_linear_learning_pathway, and  don't want those to suppress normal assignment of TERMINAL nodes
-        #   in non-learning pathways as OUTPUT nodes (if user has not specified any as required roles)
         if not any([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
                     if not any(n for n in [pathway for pathway in self.pathways
                                  if PathwayRole.LEARNING in pathway.roles])]):
