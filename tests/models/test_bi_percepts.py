@@ -107,8 +107,8 @@ def test_simplified_necker_cube(benchmark, mode):
                                # [[3127.65559899], [3610.74194658],  # original:  no seed and
                                #  [6468.6978669], [-4615.15074428],  #            no_analyze_graph in Composition:3776
                                #  [-7369.73302025], [-11190.45001744]])
-                               [[-11190.45001744], [3127.65559899],  # no seed,
-                                [3610.74194658], [6468.6978669],     # but with_analyze_graph in Composition:3776
+                               [[-11190.45001744], [3127.65559899],  # no seed, but with with_analyze_graph in
+                                [3610.74194658], [6468.6978669],     #  Composition:3776; passes for Python but not LLVM
                                 [-4615.15074428], [-7369.73302025]])
                                # [[4380.19172585], [5056.09548856],   # seed but no _analyze_graph in Composition:3776
                                #  [9058.54210893], [-6465.3497555],   # passes for Python abd LLVM
