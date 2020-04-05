@@ -1958,11 +1958,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in nodes:
                 self.add_node(node)
 
+        {xx:'yy'}
+        [xx:]
+
+        [{xx:'yy'}]
+        [[xx:]]
+
+
         if processing_pathways is not None:
-            if not isinstance(processing_pathways[0],list):
-                processing_pathways = [processing_pathways]
+            try:
+                if not isinstance(processing_pathways[0],list):
+                    processing_pathways = [processing_pathways]
+            except:
+
             for pway in processing_pathways:
                 self.add_linear_processing_pathway(pway)
+
         if learning_pathways is not None:
             learning_pathways = convert_to_list(learning_pathways)
             if not all(isinstance(pway,tuple) for pway in learning_pathways):
