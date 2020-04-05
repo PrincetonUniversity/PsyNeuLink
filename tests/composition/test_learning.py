@@ -503,7 +503,7 @@ class TestBackProp:
                                                                 learning_rate=0.5)
         # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
-        learning_mechanism = backprop_pathway.learning_compnents[pnl.LEARNING_MECHANISM]
+        learning_mechanism = backprop_pathway.learning_components[pnl.LEARNING_MECHANISM]
         target_mechanism = backprop_pathway.target
         # comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
         for node in comp.nodes:

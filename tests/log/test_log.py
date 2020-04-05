@@ -1242,15 +1242,13 @@ class TestFullModels:
         comp = pnl.Composition(name='multilayer')
 
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
-        learning_components = comp.add_backpropagation_learning_pathway(
+        backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
             loss_function='sse',
             learning_rate=1.
         )
 
-        target_node = learning_components[pnl.TARGET_MECHANISM]
-
-        input_dictionary = {target_node: [[0., 0., 1.]],
+        input_dictionary = {backprop_pathway.target: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}
 
         middle_weights.set_log_conditions(('mod_matrix', pnl.PROCESSING))
