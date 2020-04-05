@@ -3934,8 +3934,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                           learned_projection,
                                                                                           learning_rate,
                                                                                           learning_update)
+
+        # Suppress warning regarding no efferent projections from Comparator (since it is a TERMINAL node)
+        for s in comparator.output_ports:
+            s.parameters.require_projection_in_composition.set(False,
+                                                               override=True)
+        # Add nodes to Composition
         self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
 
+        # Create Projections to and among learning-related Mechanisms and add to Composition
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
                                                                                  target,
@@ -3943,19 +3950,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                  learning_mechanism)
         self.add_projections(learning_related_projections)
 
+        # Create Projection to learned Projection and add to Composition
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, learning_projection=True)
 
+        # Wrap up and return
         learning_related_components = {LEARNING_MECHANISM: learning_mechanism,
                                        COMPARATOR_MECHANISM: comparator,
                                        TARGET_MECHANISM: target,
                                        LEARNED_PROJECTION: learned_projection}
-
         learning_pathway.learning_components = learning_related_components
-
         # Update graph in case method is called again
         self._analyze_graph()
-
         return learning_related_components
 
     def _add_linear_learning_pathways(self, pathways, context=None):
