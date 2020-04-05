@@ -2460,10 +2460,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
-        # If OUTPUT nodes were not specified by user, assign them:
+        # If no OUTPUT nodes were explicitly specified as required_roles by *user* , assign them:
+        # - ignore OUTPUT nodes specified for learning pathways
         # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
-        if not self.get_nodes_by_role(NodeRole.OUTPUT):
+
+        # MODIFIED 4/4/20 OLD:
+        # if not self.get_nodes_by_role(NodeRole.OUTPUT):
+        # MODIFIED 4/4/20 NEW:
+        # If the only nodes designated as OUTPUT are in a learning pathway
+        # - ignore OUTPUTS of learning pathways as those are assigned as OUTPUTS automatically in
+        #   add_linear_learning_pathway, and  don't want those to suppress normal assignment of TERMINAL nodes
+        #   in non-learning pathways as OUTPUT nodes (if user has not specified any as required roles)
+        if not any([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
+                    if not any(n for n in [pathway for pathway in self.pathways
+                                 if PathwayRole.LEARNING in pathway.roles])]):
+        # MODIFIED 4/4/20 END:
 
             # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_controller_objective_mech_not_terminal
             #                 if controller_enabled = False
@@ -2681,7 +2693,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         sends_to_input_ports = set(self.input_CIM_ports.keys())
 
-        # For any ports still registered on the CIM that does not map to a corresponding INPUT node I.S.:
+        # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
             for projection in input_port.path_afferents:
                 if projection.sender == self.input_CIM_ports[input_port][1]:
@@ -3920,11 +3932,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         input_source, output_source, learned_projection = \
             self._unpack_processing_components_of_learning_pathway(pathway)
+
+        # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
+        self.add_required_node_role(output_source, NodeRole.OUTPUT)
+
         learning_pathway = self.add_linear_processing_pathway([input_source, learned_projection, output_source],
                                                               name=name)
 
-        # FIX: CONSOLIDATE LEARNING - WAS SPECIFIC TO RL AND NOT IN TD
-        self.add_required_node_role(output_source, NodeRole.OUTPUT)
 
         # Learning Components
         target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
