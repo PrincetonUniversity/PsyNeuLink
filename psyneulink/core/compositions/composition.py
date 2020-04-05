@@ -4383,7 +4383,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_function = LinearCombination()
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
-        # FIX 4/4/20:  PASS CONTEXT AS INITIAZLING HERE
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
         learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING))
@@ -4400,8 +4399,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             terminal_sequence = processing_pathway[path_length - 3: path_length]
         else:
             raise CompositionError(f"Backpropagation pathway specification ({pathway}) must not contain "
-                                   f"at least three components "
-                                   f"([{Mechanism.__name__}, {Projection.__name__}, {Mechanism.__name__}]).")
+                                   f"at least three components: "
+                                   f"[{Mechanism.__name__}, {Projection.__name__}, {Mechanism.__name__}].")
 
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
@@ -4540,11 +4539,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Update graph in case method is called again
         self._analyze_graph()
 
-        # # MODIFIED 4/4/20 OLD:
-        # return learning_related_components
-        # MODIFIED 4/4/20 NEW:
         return learning_pathway
-        # MODIFIED 4/4/20 END:
 
     def infer_backpropagation_learning_pathways(self):
         """Convenience method that automatically creates backpropapagation learning pathways for every
