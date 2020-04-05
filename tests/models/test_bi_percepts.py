@@ -17,13 +17,19 @@ from itertools import product
 @pytest.mark.model
 @pytest.mark.benchmark(group="Simplified Necker Cube")
 @pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
+                                  pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                  pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                  pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  ])
+
+# # MODIFIED 4/4/20 NEW:
+# np.random.seed(12345)
+# # MODIFIED 4/4/20 OLD
+
+
 def test_simplified_necker_cube(benchmark, mode):
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']
@@ -45,17 +51,11 @@ def test_simplified_necker_cube(benchmark, mode):
         tm_integration_rate = .5
 
         node_ = pnl.TransferMechanism(
-
             name='{percept}-{node_id}'.format(percept=percept, node_id=node_id),
-
             function=tm_function,
-
             integrator_mode=tm_integrator_mode,
-
             integration_rate=tm_integration_rate,
-
             default_variable=np.zeros((1,)),
-
         )
 
         return node_
@@ -94,7 +94,7 @@ def test_simplified_necker_cube(benchmark, mode):
         # turn off report
         node.reportOutputPref = reportOutputPref
 
-#    bp_comp.show_graph()
+    # bp_comp.show_graph()
 
     # init the inputs
     # MODIFIED 4/4/20 NEW:
@@ -109,28 +109,29 @@ def test_simplified_necker_cube(benchmark, mode):
     # run the model
     res = bp_comp.run(input_dict, num_trials=10, bin_execute=mode)
     np.testing.assert_allclose(res,
-                               # [[3127.65559899], [3610.74194658],
-                               #  [6468.6978669], [-4615.15074428],
+                               # [[3127.65559899], [3610.74194658],  # original:  no seed and
+                               #  [6468.6978669], [-4615.15074428],  #            no_analyze_graph in Composition:3776
                                #  [-7369.73302025], [-11190.45001744]])
-                               # [[-11190.45001744], [3127.65559899],
-                               #  [3610.74194658], [6468.6978669],
-                               #  [-4615.15074428], [-7369.73302025]])
-                               [[-15673.99046508], [4380.19172585],
-                                [5056.09548856], [9058.54210893],
+                               # [[4380.19172585], [5056.09548856],   # seed but no _analyze_graph in Composition:3776
+                               #  [9058.54210893], [-6465.3497555],   # passes for Python abd LLVM
+                               #  [-10322.33734752], [-15673.99046508]])
+                               [[-15673.99046508], [4380.19172585],  # seed + _analyze_graph in Composition:3776
+                                [5056.09548856], [9058.54210893],    # passes for Python but not LLVM
                                 [-6465.3497555], [-10322.33734752]])
+
 
     benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Necker Cube")
 @pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
+                                  pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                  pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                  pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  ])
 def test_necker_cube(benchmark, mode):
 
     Build_N_Matrix = np.zeros((16,5))
