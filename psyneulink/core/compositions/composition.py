@@ -3899,6 +3899,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
+        # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
+        for node in self.get_nodes_by_role(NodeRole.OUTPUT):
+            if not any(node for node in [pathway for pathway in self.pathways
+                                     if PathwayRole.LEARNING in pathway.roles]):
+                self.add_required_node_role(node, NodeRole.OUTPUT)
+
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
             return self._create_backpropagation_learning_pathway(pathway,

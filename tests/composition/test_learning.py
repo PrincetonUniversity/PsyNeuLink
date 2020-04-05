@@ -814,10 +814,10 @@ class TestBackProp:
         'BRANCH DOWN',
         'EXTEND DOWN',
         'BOW',
-        'COMPLEX'
+        'COMPLEX',
         'JOIN BY TERMINAL'
     ])
-    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration, show_graph=False):
+    def test_backprop_with_various_intersecting_pathway_configurations(self, configuration, show_graph=True):
         '''Test add_backpropgation using various configuration of intersecting pathways
 
         References in description are to attachment point of added pathway (always A)
