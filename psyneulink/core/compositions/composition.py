@@ -3392,14 +3392,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Projection):
                 projections.append(node)
                 continue
-            for input_port in node.input_ports:
-                if input_port.require_projection_in_composition and not input_port.path_afferents:
-                    warnings.warn(f'{InputPort.__name__} ({input_port.name}) of {node.name} '
-                                  f'doesn\'t have any afferent {Projection.__name__}s')
-            for output_port in node.output_ports:
-                if output_port.require_projection_in_composition and not output_port.efferents:
-                    warnings.warn(f'{OutputPort.__name__} ({output_port.name}) of {node.name} '
-                                  f'doesn\'t have any efferent {Projection.__name__}s in {self.name}')
+
+            if context.source != ContextFlags.INITIALIZING:
+                for input_port in node.input_ports:
+                    if input_port.require_projection_in_composition and not input_port.path_afferents:
+                        warnings.warn(f'{InputPort.__name__} ({input_port.name}) of {node.name} '
+                                      f'doesn\'t have any afferent {Projection.__name__}s')
+                for output_port in node.output_ports:
+                    if output_port.require_projection_in_composition and not output_port.efferents:
+                        warnings.warn(f'{OutputPort.__name__} ({output_port.name}) of {node.name} '
+                                      f'doesn\'t have any efferent {Projection.__name__}s in {self.name}')
 
         for projection in projections:
             if not projection.sender:
@@ -3550,7 +3552,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway, *args):
+    def add_linear_processing_pathway(self, pathway, context=None, *args):
         """Add sequence of Mechanisms and/or Compositions with intercolated Projections.
 
         A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
@@ -3748,11 +3750,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
-        # MODIFIED 4/4/20 NEW:
-        self._analyze_graph()
-        # MODIFIED 4/4/20 END
         pathway = Pathway(pathway=explicit_pathway, composition=self)
         self.pathways.append(pathway)
+        # MODIFIED 4/4/20 NEW:
+        self._analyze_graph(context=context)
+        # MODIFIED 4/4/20 END
 
         return pathway
 
@@ -4251,7 +4253,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             error_function = LinearCombination()
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
-        pway = self.add_linear_processing_pathway(pathway, LEARNING)
+        # FIX 4/4/20:  PASS CONTEXT AS INITIAZLING HERE
+        # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
+        #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
+        pway = self.add_linear_processing_pathway(pathway, Context(source=ContextFlags.INITIALIZING))
         processing_pathway = pway.pathway
 
         path_length = len(processing_pathway)

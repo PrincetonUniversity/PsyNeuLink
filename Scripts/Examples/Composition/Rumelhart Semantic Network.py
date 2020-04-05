@@ -8,17 +8,21 @@ import typecheck as tc
 
 # Semantic Network:
 
-#  Represention  Property  Quality  Action
-#           \________\_______/_______/
+#    (REP_OUT)  (PROP_OUT) (QUAL_OUT) (ACT_OUT)
+#  Represention  Property    Quality   Action
+#           \________\_________/________/
 #                        |
 #                 Relations_Hidden
 #                   _____|_____
 #                  /           \
 #   Representation_Hidden  Relations_Input
+#                /           (REL_IN)
 #               /
-#   Representation_Input
+#   Representation_Input (REP_IN)
 
 # Construct Mechanisms
+import timeit
+start_time = timeit.default_timer()
 rep_in = TransferMechanism(size=10, name='REP_IN')
 rel_in = TransferMechanism(size=11, name='REL_IN')
 rep_hidden = TransferMechanism(size=4, function=Logistic, name='REP_HIDDEN')
@@ -37,3 +41,5 @@ comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, qual_out])
 comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, act_out])
 comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 comp.show_graph(show_learning=True)
+stop_time = timeit.default_timer()
+print(stop_time-start_time)
