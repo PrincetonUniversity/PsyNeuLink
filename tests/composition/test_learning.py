@@ -453,7 +453,7 @@ class TestNestedLearning:
         target_mech = mnet.add_backpropagation_learning_pathway(
             [il, pih, hl, pho, ol],
             learning_rate=100
-        )[pnl.TARGET_MECHANISM]
+        ).target
 
         mnet.add_backpropagation_learning_pathway(
             [cl, pch, hl, pho, ol],
@@ -499,12 +499,12 @@ class TestBackProp:
                                              function=pnl.Logistic())
 
         comp = pnl.Composition(name="backprop-composition")
-        learning_components = comp.add_backpropagation_learning_pathway(pathway=[input_layer, hidden_layer, output_layer],
+        backprop_pathway = comp.add_backpropagation_learning_pathway(pathway=[input_layer, hidden_layer, output_layer],
                                                                 learning_rate=0.5)
         # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
-        learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
-        target_mechanism = learning_components[pnl.TARGET_MECHANISM]
+        learning_mechanism = backprop_pathway.learning_compnents[pnl.LEARNING_MECHANISM]
+        target_mechanism = backprop_pathway.target
         # comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
         for node in comp.nodes:
             node.log.set_log_conditions(pnl.VALUE)
@@ -579,15 +579,13 @@ class TestBackProp:
         comp = pnl.Composition(name='multilayer')
 
         p = [input_layer, input_weights, hidden_layer_1, middle_weights, hidden_layer_2, output_weights, output_layer]
-        learning_components = comp.add_backpropagation_learning_pathway(
+        backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=p,
             loss_function='sse',
             learning_rate=1.
         )
 
-        target_node = learning_components[pnl.TARGET_MECHANISM]
-
-        input_dictionary = {target_node: [[0., 0., 1.]],
+        input_dictionary = {backprop_pathway.target: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}
 
         # comp.show_graph()
@@ -728,14 +726,14 @@ class TestBackProp:
                                         receiver=output_comp)
     
             xor_comp = pnl.Composition()
-    
-            learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                         in_to_hidden_comp,
-                                                                         hidden_comp,
-                                                                         hidden_to_out_comp,
-                                                                         output_comp],
-                                                                        learning_rate=10)
-            target_mech = learning_components[pnl.TARGET_MECHANISM]
+
+            backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                              in_to_hidden_comp,
+                                                                              hidden_comp,
+                                                                              hidden_to_out_comp,
+                                                                              output_comp],
+                                                                             learning_rate=10)
+            target_mech = backprop_pathway.target
 
         # AutodiffComposition
         if 'AUTODIFF' in models:
@@ -1345,7 +1343,7 @@ class TestBackProp:
         target_mech = mnet.add_backpropagation_learning_pathway(
             [il, pih, hl, pho, ol],
             learning_rate=100
-        )[pnl.TARGET_MECHANISM]
+        ).target
 
         mnet.add_backpropagation_learning_pathway(
             [cl, pch, hl, pho, ol],
@@ -1617,19 +1615,19 @@ class TestLearningPathwayMethods:
 
         xor_comp = pnl.Composition()
 
-        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                        in_to_hidden_comp,
-                                                                        hidden_comp,
-                                                                        hidden_to_out_comp,
-                                                                        output_comp],
-                                                                    learning_rate=10)
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
         # Try readd the same learning pathway (shouldn't error)
-        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                        in_to_hidden_comp,
-                                                                        hidden_comp,
-                                                                        hidden_to_out_comp,
-                                                                        output_comp],
-                                                                    learning_rate=10)
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
     def test_run_no_targets(self):
         in_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
@@ -1657,12 +1655,12 @@ class TestLearningPathwayMethods:
 
         xor_comp = pnl.Composition()
 
-        learning_components = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                        in_to_hidden_comp,
-                                                                        hidden_comp,
-                                                                        hidden_to_out_comp,
-                                                                        output_comp],
-                                                                    learning_rate=10)
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
         # Try to run without any targets (non-learning
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],

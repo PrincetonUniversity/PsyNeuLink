@@ -1021,15 +1021,14 @@ The following example implements a simple three-layered network that learns the 
     >>> input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
     >>> output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
     >>> xor_comp = Composition('XOR Composition')
-    >>> learning_components = xor_comp.add_backpropagation_learning_pathway(
+    >>> backprop_pathway = xor_comp.add_backpropagation_learning_pathway(
     >>>                       pathway=[input, input_weights, hidden, output_weights, output])
-    >>> target = learning_components[TARGET_MECHANISM]
 
     # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
     >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
     >>>               'targets':[  [0],     [1],     [1],     [0] ]}
     >>> xor_comp.learn(inputs={input:xor_inputs['stimuli'],
-    >>>                      target:xor_inputs['targets']},
+    >>>                      backprop_pathway.target:xor_inputs['targets']},
     >>>              num_trials=1,
     >>>              animate={'show_learning':True})
 
@@ -1958,8 +1957,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in nodes:
                 self.add_node(node)
 
-        self.add_linear_processing_pathways(processing_pathways)
-        self.add_linear_learning_pathways(learning_pathways)
+        self._add_linear_processing_pathways(processing_pathways)
+        self._add_linear_learning_pathways(learning_pathways)
 
     @property
     def graph_processing(self):
@@ -3541,7 +3540,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway, context=None, *args):
+    def add_linear_processing_pathway(self, pathway:list, name:str=None, context=None, *args):
         """Add sequence of Mechanisms and/or Compositions with intercolated Projections.
 
         A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
@@ -3560,13 +3559,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        pathway : list or dict
-            specifies the nodes and optionally Projections used to construct the linear processing pathway.
-            If it is a dict, it must have a single entry, the key of which must be a string that is used as the
-            name of the `Pathway`, and the value of which must be a list.  Each item of the list must be
-            a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a (Mechanism, `NodeRoles <NodeRole>`)
-            tuple) or, optionally, a `Projection specification <Projection_Specification>` interposed between
-            a pair of nodes.  The list must begin and end with a node.
+        pathway : list
+            specifies the nodes and optionally Projections used to construct the linear processing `Pathway`.
+            Each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
+            (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
+            <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
+
+        name : str
+            species the name used for `Pathway`.
 
         Returns
         -------
@@ -3601,16 +3601,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
         #                            f"{Composition.__name__} must be a list of nodes")
         # MODIFIED 4/5/20 NEW: [JDC]
-        if isinstance(pathway, dict):
-            if len(pathway)!=1:
-                raise CompositionError(f"A dict specified as the `pathway` arg of add_linear_processing_pathway for "
-                                       f" '{self.name}' must contain exactly one entry".)
-            pathway_name, pathway = list(pathway.items())[0]
-            if not isinstance(pathway, str):
-
-        else:
-            raise CompositionError(f"The `pathway` arg of add_linear_processing_pathway for '{self.name}' "
-                                   f"must be a list or a dict")
+        # if isinstance(pathway, dict):
+        #     if len(pathway)!=1:
+        #         raise CompositionError(f"The dict ({pway}) specified as the 'pathway' arg of "
+        #                                f"add_linear_processing_pathway for {self.name}' contains more than one entry.")
+        #     pathway_name, pathway = list(pathway.items())[0]
+        #     if not isinstance(pathway_name, str):
+        #         raise CompositionError(f"The key ({pathway_name}) of the dict specified as the 'pathway' arg of "
+        #                                f"add_linear_processing_pathway for {self.name}' must be a str"
+        #                                f"(used as the name of the Pathway).")
+        #     if not isinstance(pathway, list):
+        #         raise CompositionError(f"The value ({pathway}) of the dict specified as the 'pathway' arg of "
+        #                                f"add_linear_processing_pathway for {self.name}' must be a list.")
+        # else:
+        #     raise CompositionError(f"The 'pathway' arg of add_linear_processing_pathway for {self.name} "
+        #                            f"must be a list or a dict.")
         # MODIFIED 4/5/20 END
 
         # Then make sure the first item is a node and not a Projection
@@ -3754,7 +3759,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
-        pathway = Pathway(pathway=explicit_pathway, composition=self)
+        pathway = Pathway(pathway=explicit_pathway, composition=self, name=name)
         self.pathways.append(pathway)
         # MODIFIED 4/4/20 NEW:
         self._analyze_graph(context=context)
@@ -3762,7 +3767,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return pathway
 
-    def add_linear_processing_pathways(self, pathways, context=None):
+    def _add_linear_processing_pathways(self, pathways, context=None):
         """Add processing pathways to Composition
 
         Arguments
@@ -3796,8 +3801,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"or list containing either or both")
 
         added_pathways = []
-        for pway in pathways:
-            added_pathways.append(self.add_linear_processing_pathway(pway))
+
+        for pathway in pathways:
+            if isinstance(pathway, dict):
+                if len(pathway)!=1:
+                    raise CompositionError(f"A dict ({pathway}) specified in the 'processing_pathways' arg for "
+                                           f"{self.name}' contains more than one entry.")
+                pathway_name, pathway = list(pathway.items())[0]
+                if not isinstance(pathway_name, str):
+                    raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'processing_pathways' "
+                                           f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
+                if not isinstance(pathway, list):
+                    raise CompositionError(f"The value ({pathway}) in a dict specified in the 'processing_pathways' "
+                                           f"arg for {self.name}' must be a list.")
+            added_pathways.append(self.add_linear_processing_pathway(pathway=pathway, name=pathway_name))
+
         return added_pathways
 
     # ------------------------------------------  LEARNING  ------------------------------------------------------------
@@ -3808,7 +3826,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     loss_function=None,
                                     learning_rate=0.05,
                                     error_function=LinearCombination(),
-                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
+                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                    name=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
         Generic method for implementing a learning pathway.  Calls `add_linear_processing_pathway` to implement
@@ -3885,7 +3904,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  loss_function,
                                                                  learning_rate,
                                                                  error_function,
-                                                                 learning_update)
+                                                                 learning_update,
+                                                                 name=name)
 
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
@@ -3894,7 +3914,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Processing Components
         input_source, output_source, learned_projection = \
             self._unpack_processing_components_of_learning_pathway(pathway)
-        learning_pathway = self.add_linear_processing_pathway([input_source, learned_projection, output_source])
+        learning_pathway = self.add_linear_processing_pathway([input_source, learned_projection, output_source],
+                                                              name=name)
 
         # FIX: CONSOLIDATE LEARNING - WAS SPECIFIC TO RL AND NOT IN TD
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
@@ -3931,7 +3952,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_related_components
 
-    def add_linear_learning_pathways(self, pathways, context=None):
+    def _add_linear_learning_pathways(self, pathways, context=None):
         """Add learning pathways to Composition
 
         Arguments
@@ -3969,8 +3990,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"or list containing either or both")
 
         added_pathways = []
-        for pway in pathways:
-            added_pathways.append(self.add_linear_learning_pathway(pway))
+        for pathway in pathways:
+            if isinstance(pathway, dict):
+                if len(pathway)!=1:
+                    raise CompositionError(f"A dict ({pathway}) specified in the 'learning_pathways' arg for "
+                                           f"{self.name}' contains more than one entry.")
+                pathway_name, pathway = list(pathway.items())[0]
+                if not isinstance(pathway_name, str):
+                    raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'learning_pathways' "
+                                           f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
+                if not isinstance(pathway, tuple):
+                    raise CompositionError(f"The value ({pathway}) in a dict specified in the 'learning_pathways' "
+                                           f"arg for {self.name}' must be a tuple.")
+                if not isinstance(pathway[0], list):
+                    raise CompositionError(f"The 1st item ({pathway[0]}) in the value of the dict specified in the "
+                                           f"'learning_pathways' arg for {self.name}' must be a list.")
+                if not isinstance(pathway[1], LearningFunction):
+                    raise CompositionError(f"The 2nd item ({pathway[1]}) in the value of the dict specified in the "
+                                           f"'learning_pathways' arg for {self.name}' must be a LearningFunction.")
+
+            added_pathways.append(self.add_linear_learning_pathway(pathway=pathway[0],
+                                                                   learning_function=pathway[1],
+                                                                   name=pathway_name))
         return added_pathways
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
@@ -4328,8 +4369,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return target_mechanism, comparator_mechanism, learning_mechanism
 
-    def _create_backpropagation_learning_pathway(self, pathway, loss_function, learning_rate=0.05, error_function=None,
-                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+    def _create_backpropagation_learning_pathway(self,
+                                                 pathway,
+                                                 loss_function,
+                                                 learning_rate=0.05,
+                                                 error_function=None,
+                                                 learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE,
+                                                                                                  AFTER)))=AFTER,
+                                                 name=None):
 
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
@@ -4339,8 +4386,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX 4/4/20:  PASS CONTEXT AS INITIAZLING HERE
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        pway = self.add_linear_processing_pathway(pathway, Context(source=ContextFlags.INITIALIZING))
-        processing_pathway = pway.pathway
+        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING))
+        processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
 
@@ -4488,12 +4535,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        TARGET_MECHANISM: target,
                                        LEARNED_PROJECTION: learned_projections}
 
-        pway.learning_components = learning_related_components
+        learning_pathway.learning_components = learning_related_components
 
         # Update graph in case method is called again
         self._analyze_graph()
 
-        return learning_related_components
+        # # MODIFIED 4/4/20 OLD:
+        # return learning_related_components
+        # MODIFIED 4/4/20 NEW:
+        return learning_pathway
+        # MODIFIED 4/4/20 END:
 
     def infer_backpropagation_learning_pathways(self):
         """Convenience method that automatically creates backpropapagation learning pathways for every

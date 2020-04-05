@@ -378,10 +378,10 @@ class TestAddProjection:
                                            matrix=Output_Weights_matrix)
         pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
         comp = Composition()
-        learning_components = comp.add_backpropagation_learning_pathway(pathway=pathway)
+        backprop_pathway = comp.add_backpropagation_learning_pathway(pathway=pathway)
         stim_list = {
             Input_Layer: [[-1, 30]],
-            learning_components[TARGET_MECHANISM]: [[0, 0, 1]]}
+            backprop_pathway.target: [[0, 0, 1]]}
         results = comp.run(num_trials=2, inputs=stim_list)
 
     def test_linear_processing_pathway_weights_only(self):
