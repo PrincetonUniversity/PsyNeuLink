@@ -3899,6 +3899,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
+        # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
             return self._create_backpropagation_learning_pathway(pathway,
                                                                  loss_function,
@@ -3906,7 +3907,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  error_function,
                                                                  learning_update,
                                                                  name=name)
-
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
         #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
