@@ -3773,7 +3773,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway = Pathway(pathway=explicit_pathway, composition=self, name=name)
         self.pathways.append(pathway)
         # # MODIFIED 4/4/20 NEW:
-        # self._analyze_graph(context=context)
+        self._analyze_graph(context=context)
         # MODIFIED 4/4/20 END
 
         return pathway
