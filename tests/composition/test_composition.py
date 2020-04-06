@@ -580,22 +580,41 @@ class TestPathway:
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
         D = ProcessingMechanism(name='D')
-        with pytest.raises(pnl.CompositionError):
-            c = Composition(processing_pathways=[{'P1':[A,B], 'P2':[C,D]}])
-        assert "A dict ({'P1': [(ProcessingMechanism A), (ProcessingMechanism B)], " \
-               "'P2': [(ProcessingMechanism C), (ProcessingMechanism D)]}) " \
-               "specified in the 'processing_pathways' arg for Composition-0' contains more than one entry."
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(processing_pathways=C)
+        assert "The 'processing_pathways' arg of Composition-0 must be a list, dict, or list containing either or both"\
+               in str(error_text.value)
 
-    # def test_composition_processing_pathway_args_error_2(self):
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     C = ProcessingMechanism(name='C')
-    #     D = ProcessingMechanism(name='D')
-    #     with pytest.raises(pnl.CompositionError):
-    #         c = Composition(processing_pathways=[{'P1':[A,B], [C,D]}])
-    #     assert "A dict ({'P1': [(ProcessingMechanism A), (ProcessingMechanism B)], " \
-    #            "'P2': [(ProcessingMechanism C), (ProcessingMechanism D)]}) " \
-    #            "specified in the 'processing_pathways' arg for Composition-0' contains more than one entry."
+    def test_composition_processing_pathway_args_error_2(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(processing_pathways=[[A,B], C])
+        assert '"An item ((ProcessingMechanism C)) in the \'processing_pathways\' arg of ' \
+               'Composition-0is not a list or dict"' in str(error_text.value)
+
+    def test_composition_processing_pathway_args_error_3(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(processing_pathways=[{'P1':[A,B], 'P2':[C,D]}])
+        assert ("A dict ({'P1': [(ProcessingMechanism A), (ProcessingMechanism B)], 'P2'" in str(error_text.value)
+                and "[(ProcessingMechanism C), (ProcessingMechanism D)]}) specified in " in str(error_text.value)
+                and "for Composition-0' contains more than one entry." in str(error_text.value))
+
+    def test_composition_processing_pathway_args_error_4(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(processing_pathways=[{'P1':[A,B]}, C])
+        assert "Each item in the 'processing_pathways' arg of Composition-0 must be a list, dict, or list." \
+               in str(error_text.value)
 
     def test_composition_processing_and_learning_pathway_args(self):
         A = ProcessingMechanism(name='A')

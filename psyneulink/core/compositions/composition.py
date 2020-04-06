@@ -3798,23 +3798,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not pathways:
             return
+        # Validate pathways arg itself and format as list (in case there is a solo item)
         elif isinstance(pathways, dict):
             pathways = [pathways]      # {} -> [{}]
         elif isinstance(pathways, list):
             if not isinstance(pathways[0],(list, dict)):
                 pathways = [pathways]  # [] -> [[]]
-                for pway in pathways:
-                    if not isinstance(pway,(list, dict)):
-                        raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
-                                               f"is not a list or dict")
+            if not all(isinstance(p, (list, dict)) for p in pathways):
+                pway = next(p for p in pathways if not isinstance(p, (list, dict)))
+                raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
+                                       f"is not a list or dict")
         else:
             raise CompositionError(f"The 'processing_pathways' arg of {self.name} must be a list, dict, "
                                    f"or list containing either or both")
 
         added_pathways = []
 
+        # Validate items in pathways list
         for pathway in pathways:
-            if isinstance(pathway, dict):
+            if isinstance(pathway, list):
+                pass # validation of items in pathway list spec is handled in add_linear_processing_pathway()
+            elif isinstance(pathway, dict):
                 if len(pathway)!=1:
                     raise CompositionError(f"A dict ({pathway}) specified in the 'processing_pathways' arg for "
                                            f"{self.name}' contains more than one entry.")
@@ -3825,6 +3829,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pathway, list):
                     raise CompositionError(f"The value ({pathway}) in a dict specified in the 'processing_pathways' "
                                            f"arg for {self.name}' must be a list.")
+            else:
+                raise CompositionError(f"Each item in the 'processing_pathways' arg of {self.name} "
+                                       f"must be a list, dict, or list.")
+
             added_pathways.append(self.add_linear_processing_pathway(pathway=pathway, name=pathway_name))
 
         return added_pathways
