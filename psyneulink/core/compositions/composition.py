@@ -8640,7 +8640,7 @@ class Pathway(object):
             return self.learning_components[TARGET_MECHANISM]
         except:
             if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.name} has empty 'target' attribute because it is not a learning_pathway.")
+                warnings.warn(f"{self.name} 'target' attribute is None because it is not a learning_pathway.")
             else:
                 assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
                               f"has PathwayRole.LEARNING assigned but no 'target' attribute."
@@ -8652,7 +8652,7 @@ class Pathway(object):
             return self.learning_components[COMPARATOR_MECHANISM]
         except:
             if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.name} has empty 'comparator' attribute because it is not a learning_pathway.")
+                warnings.warn(f"{self.name} 'comparator' attribute  is None because it is not a learning_pathway.")
             else:
                 assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
                               f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
