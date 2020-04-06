@@ -658,6 +658,7 @@ class TestPathway:
                 "must be a list or node (Mechanism or Composition)" in str(error_text.value))
 
     def test_composition_processing_and_learning_pathway_args(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -670,6 +671,7 @@ class TestPathway:
         assert c.pathways['P2'].target == c.nodes['Target']
 
     def test_composition_learning_pathway_arg_dict_and_tuple(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
