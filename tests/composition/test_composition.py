@@ -566,7 +566,38 @@ class TestPathway:
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
 
-    def composition_processing_and_learning_pathway_args(self):
+    def test_composition_processing_pathway_args_dict_and_list(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(processing_pathways=[{'P1':[A,B]}, [C,D]])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+
+    def test_composition_processing_pathway_args_error_1(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError):
+            c = Composition(processing_pathways=[{'P1':[A,B], 'P2':[C,D]}])
+        assert "A dict ({'P1': [(ProcessingMechanism A), (ProcessingMechanism B)], " \
+               "'P2': [(ProcessingMechanism C), (ProcessingMechanism D)]}) " \
+               "specified in the 'processing_pathways' arg for Composition-0' contains more than one entry."
+
+    # def test_composition_processing_pathway_args_error_2(self):
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     C = ProcessingMechanism(name='C')
+    #     D = ProcessingMechanism(name='D')
+    #     with pytest.raises(pnl.CompositionError):
+    #         c = Composition(processing_pathways=[{'P1':[A,B], [C,D]}])
+    #     assert "A dict ({'P1': [(ProcessingMechanism A), (ProcessingMechanism B)], " \
+    #            "'P2': [(ProcessingMechanism C), (ProcessingMechanism D)]}) " \
+    #            "specified in the 'processing_pathways' arg for Composition-0' contains more than one entry."
+
+    def test_composition_processing_and_learning_pathway_args(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
