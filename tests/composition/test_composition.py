@@ -671,6 +671,16 @@ class TestPathway:
         assert c.pathways['P2'].name == 'P2'
         assert c.pathways['P2'].target == c.nodes['Target']
 
+    def test_composition_learning_pathway_args(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(learning_pathways=[{'P1':([A,B], pnl.BackPropagation)}, (C)])
+        assert all(n in {B, C} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P1'].target == c.nodes['Target']
+
 
 class TestAnalyzeGraph:
 
