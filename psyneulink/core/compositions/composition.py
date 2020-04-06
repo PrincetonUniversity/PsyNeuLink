@@ -3521,6 +3521,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # -----------------------------------------  PROCESSING  -----------------------------------------------------------
 
+    def _is_pathway_entry_spec(self, entry, desired_type:tc.enum(NODE, PROJECTION)):
+        """Test whether pathway entry is specified type (NODE or PROJECTION)"""
+        node_specs = (Mechanism, Composition)
+        proj_specs = (Projection, np.ndarray, np.matrix, str, list)
+        if desired_type == NODE:
+            if (isinstance(entry, node_specs)
+                    or (isinstance(entry, tuple)
+                        and isinstance(entry[0], node_specs)
+                        and isinstance(entry[1], NodeRole))):
+                return True
+        elif desired_type == PROJECTION:
+            if (isinstance(entry, proj_specs)
+                    or (isinstance(entry, tuple)
+                        and isinstance(entry[0], proj_specs)
+                        and entry[1] in {True, False, MAYBE})):
+                return True
+        else:
+            return False
+
     def add_pathway(self, path):
         """Add an existing Pathway to the current Composition
 
@@ -3587,25 +3606,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         nodes = []
 
-        def is_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
-            """Test whether pathway entry is specified type (NODE or PROJECTION)"""
-            node_specs = (Mechanism, Composition)
-            proj_specs = (Projection, np.ndarray, np.matrix, str, list)
-            if desired_type == NODE:
-                if (isinstance(entry, node_specs)
-                        or (isinstance(entry, tuple)
-                            and isinstance(entry[0], node_specs)
-                            and isinstance(entry[1], NodeRole))):
-                    return True
-            elif desired_type == PROJECTION:
-                if (isinstance(entry, proj_specs)
-                        or (isinstance(entry, tuple)
-                            and isinstance(entry[0], proj_specs)
-                            and entry[1] in {True, False, MAYBE})):
-                    return True
-            else:
-                return False
-
         # # MODIFIED 4/5/20 OLD:
         # # First, verify that the pathway begins with a node
         # if not isinstance(pathway, (list, tuple)):
@@ -3630,7 +3630,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 4/5/20 END
 
         # Then make sure the first item is a node and not a Projection
-        if is_spec(pathway[0], NODE):
+        if self._is_pathway_entry_spec(pathway[0], NODE):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
         else:
@@ -3641,7 +3641,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
-            if is_spec(pathway[c], NODE):
+            if self._is_pathway_entry_spec(pathway[c], NODE):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
@@ -3658,7 +3658,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
-                if i>0 and is_spec(pathway[i - 1],PROJECTION):
+                if i>0 and self._is_pathway_entry_spec(pathway[i - 1],PROJECTION):
                     items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
@@ -3678,8 +3678,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
 
             # if the current item is a Node
-            if is_spec(pathway[c], NODE):
-                if is_spec(pathway[c - 1], NODE):
+            if self._is_pathway_entry_spec(pathway[c], NODE):
+                if self._is_pathway_entry_spec(pathway[c - 1], NODE):
                     # if the previous item was also a node, add a MappingProjection between them
                     if isinstance(pathway[c - 1], tuple):
                         sender = pathway[c - 1][0]
@@ -3695,7 +3695,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(proj)
 
             # if the current item is a Projection specification
-            elif is_spec(pathway[c], PROJECTION):
+            elif self._is_pathway_entry_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
                     raise CompositionError(f"{pathway[c]} is the last item in the pathway. "
                                            f"A projection cannot be the last item in a linear processing pathway.")
@@ -3708,7 +3708,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     feedback = False
                 sender = pathway[c - 1]
                 receiver = pathway[c + 1]
-                if is_spec(sender, NODE) and is_spec(receiver, NODE):
+                if self._is_pathway_entry_spec(sender, NODE) and self._is_pathway_entry_spec(receiver, NODE):
                     if isinstance(sender, tuple):
                         sender = sender[0]
                     if isinstance(receiver, tuple):
