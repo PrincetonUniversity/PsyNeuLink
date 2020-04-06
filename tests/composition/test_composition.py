@@ -556,11 +556,27 @@ class TestPathway:
         c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
 
-    def composition_processing_pathway_args(self):
-        pass
+    def test_composition_processing_pathway_args(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(processing_pathways=[{'P1':[A,B]}, {'P2':[C,D]}])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P2'].name == 'P2'
 
-    def composition_learning_pathway_args(self):
-        pass
+    def composition_processing_and_learning_pathway_args(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(processing_pathways=[{'P1':[A,B]}],
+                        learning_pathways=[{'P2':[C,D]}])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P2'].name == 'P2'
+        assert c.pathways['P2'].target == c.nodes['Target']
 
 
 class TestAnalyzeGraph:
