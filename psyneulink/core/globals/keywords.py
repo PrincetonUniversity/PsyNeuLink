@@ -228,9 +228,6 @@ class PathwayRoles:
     LEARNING
         A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
 
-    TARGET
-        A `Pathway` that includes a `TARGET` `Mechanism <Mechanism>`.
-
     """
     def __init__(self):
         self.ORIGIN = ORIGIN
@@ -238,7 +235,6 @@ class PathwayRoles:
         self.CYCLE = CYCLE
         self.TERMINAL = TERMINAL
         self.LEARNING = LEARNING
-        self.TARGET = TARGET
 
 
 class MatrixKeywords:

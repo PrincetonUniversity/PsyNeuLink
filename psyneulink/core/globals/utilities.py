@@ -1755,9 +1755,6 @@ class PathwayRole(Enum):
     LEARNING
         A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
 
-    TARGET
-        A `Pathway` that includes a `TARGET` node of the `Compositoin`.
-
     """
     ORIGIN = 0
     INPUT = 1
@@ -1766,7 +1763,6 @@ class PathwayRole(Enum):
     INTERNAL = 4
     CYCLE = 5
     LEARNING = 6
-    TARGET = 7
 
 def unproxy_weakproxy(proxy):
     """

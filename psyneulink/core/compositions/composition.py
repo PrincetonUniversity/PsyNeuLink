@@ -3975,7 +3975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_pathway.learning_components = learning_related_components
         # Update graph in case method is called again
         self._analyze_graph()
-        return learning_related_components
+        return learning_pathway
 
     def _add_linear_learning_pathways(self, pathways, context=None):
         """Add learning pathways to Composition
@@ -8563,8 +8563,10 @@ class Pathway(object):
             `OUTPUT` node if `roles <Pathway.roles>` includes `PathwayRole.OUTPUT`, else None.
 
         target : Mechanism
-            `TARGET` node if `roles <Pathway.roles>` includes `PathwayRole.TARGET`, else None.
+            `TARGET` node if `roles <Pathway.roles>` includes `PathwayRole.LEARNING`, else None.
 
+        comparator : Mechanism
+            `COMPARATOR` node if `roles <Pathway.roles>` includes `PathwayRole.LEARNING`, else None.
     """
 
     componentType = 'Pathway'
@@ -8615,22 +8617,33 @@ class Pathway(object):
     @property
     def input(self):
         if PathwayRole.INPUT in self.roles:
-            return next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.INPUT))
+            input_node = next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.INPUT))
+            if input_node:
+                return input_node
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                              f"is assigned PathwayRole.INPUT but has no INPUT node."
 
     @property
     def output(self):
         if PathwayRole.OUTPUT in self.roles:
-            return next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.OUTPUT))
+            output_node = next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.OUTPUT))
+            if output_node:
+                return output_node
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                              f"is assigned PathwayRole.OUTPUT but has no OUTPUT node."
 
     @property
     def target(self):
         try:
             return self.learning_components[TARGET_MECHANISM]
         except:
-            # FIX:  CHECK THAT IT HAS learning_components
-            #       IF SO, ASSERT FALSE WITH PROGRAM ERROR
-            #       ELSE, WARNING THAT IT IS NOT A LEARNING PATHWAY
-            # if PathwayRole.LEARNING in self.roles:
+            if PathwayRole.LEARNING not in self.roles:
+                warnings.warn(f"{self.name} has empty 'target' attribute because it is not a learning_pathway.")
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                              f"has PathwayRole.LEARNING assigned but no 'target' attribute."
             return None
 
     @property
@@ -8638,9 +8651,10 @@ class Pathway(object):
         try:
             return self.learning_components[COMPARATOR_MECHANISM]
         except:
-            # FIX:  CHECK THAT IT HAS learning_components
-            #       IF SO, ASSERT FALSE WITH PROGRAM ERROR
-            #       ELSE, WARNING THAT IT IS NOT A LEARNING PATHWAY
-            # if PathwayRole.LEARNING in self.roles:
+            if PathwayRole.LEARNING not in self.roles:
+                warnings.warn(f"{self.name} has empty 'comparator' attribute because it is not a learning_pathway.")
+            else:
+                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                              f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
             return None
 
