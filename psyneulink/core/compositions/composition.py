@@ -3995,10 +3995,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        pathways : list, dict or list[list, dict]
-            specifies the learning pathways to be added to the Composition.  Argument can be a single list or dict
-            specifying a learning pathway (see **pathway** arg for `add_linear_learning_pathway
-            <Compositon.add_linear_learning_pathway>) or a list containing either or both.
+        pathways : tuple, dict or list[tuple, dict]
+            specifies the learning pathway(s) to be added to the Composition.  Each pathway must be specified as
+            a tuple, the first item of which is the pathway itself (see **pathway** argument of
+            `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`) and the second item its
+            `LearningFunction` (see **learning_function** argument of `add_linear_learning_pathway
+            <Composition.add_linear_learning_pathway>`).  The tuple can be included as the single entry in a dict,
+            the key of which must be a str (used as the name of the `Pathway` created), and is the tuple.  Multiple
+            tuples and/or dicts can be included in a list as the pathways argument, to construct more than one
+            learning pathway.
 
         Returns
         -------
@@ -4007,21 +4012,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
-        # if learning_pathways is not None:
-        #     learning_pathways = convert_to_list(learning_pathways)
-        #     if not all(isinstance(pway,tuple) for pway in learning_pathways):
-        #         raise CompositionError(f"One of the items in the argument to 'learning_pathways"
-        #                                f"is not a (pathway, LearningFunction) tuple")
-        #     for pway in learning_pathways:
-        #         self.add_linear_learning_pathway(*pway)
-
         if not pathways:
             return
         pathways = convert_to_list(pathways)
         for pway in pathways:
             if not isinstance(pway,(tuple, dict)):
                 raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
-                                       f"is not a tuple or dict")
+                                       f"is not a dict or tuple.")
 
         added_pathways = []
         for pathway in pathways:
@@ -4039,7 +4036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pathway[0], list):
                     raise CompositionError(f"The 1st item ({pathway[0]}) in the value of the dict specified in the "
                                            f"'learning_pathways' arg for {self.name}' must be a list.")
-                if not issubclass(pathway[1], LearningFunction):
+                if not (isinstance(pathway[1], type) and issubclass(pathway[1], LearningFunction)):
                     raise CompositionError(f"The 2nd item ({pathway[1]}) in the value of the dict specified in the "
                                            f"'learning_pathways' arg for {self.name}' must be a LearningFunction.")
 
@@ -4432,9 +4429,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # they inform the construction of the Target and Comparator mechs
             terminal_sequence = processing_pathway[path_length - 3: path_length]
         else:
-            raise CompositionError(f"Backpropagation pathway specification ({pathway}) must not contain "
-                                   f"at least three components: "
-                                   f"[{Mechanism.__name__}, {Projection.__name__}, {Mechanism.__name__}].")
+            raise CompositionError(f"Backpropagation pathway specification "
+                                   f"does not have enough components: {pathway}.")
 
         # Unpack and process terminal_sequence:
         input_source, learned_projection, output_source = terminal_sequence
