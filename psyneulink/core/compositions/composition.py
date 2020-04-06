@@ -3570,7 +3570,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
-    def add_linear_processing_pathway(self, pathway:list, name:str=None, context=None, *args):
+    def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
         """Add sequence of Mechanisms and/or Compositions with intercolated Projections.
 
         A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
@@ -3630,6 +3630,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 4/5/20 END
 
         # Then make sure the first item is a node and not a Projection
+
+        pathway = convert_to_list(pathway)
+
         if self._is_pathway_entry_spec(pathway[0], NODE):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
@@ -3804,10 +3807,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(pathways, list):
             if not isinstance(pathways[0],(list, dict)):
                 pathways = [pathways]  # [] -> [[]]
-            if not all(isinstance(p, (list, dict)) for p in pathways):
-                pway = next(p for p in pathways if not isinstance(p, (list, dict)))
-                raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
-                                       f"is not a list or dict")
+            if not all((isinstance(p, (list, dict)) or self._is_pathway_entry_spec(p, NODE)) for p in pathways):
+                pway = next(p for p in pathways if not (isinstance(p, (list, dict)) or
+                                                        self._is_pathway_entry_spec(p, NODE)))
+                raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name} "
+                                       f"is not a list or dict, or node (Mechanism or Composition).")
         else:
             raise CompositionError(f"The 'processing_pathways' arg of {self.name} must be a list, dict, "
                                    f"or list containing either or both")
@@ -3816,7 +3820,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Validate items in pathways list
         for pathway in pathways:
-            if isinstance(pathway, list):
+            if isinstance(pathway, list) or self._is_pathway_entry_spec(pathway, NODE):
                 pass # validation of items in pathway list spec is handled in add_linear_processing_pathway()
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
@@ -3826,12 +3830,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pathway_name, str):
                     raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'processing_pathways' "
                                            f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
-                if not isinstance(pathway, list):
+                if not (isinstance(pathway, list) or self._is_pathway_entry_spec(pathway, NODE)):
                     raise CompositionError(f"The value ({pathway}) in a dict specified in the 'processing_pathways' "
-                                           f"arg for {self.name}' must be a list.")
+                                           f"arg for {self.name}' must be a list or node (Mechanism or Composition).")
             else:
-                raise CompositionError(f"Each item in the 'processing_pathways' arg of {self.name} "
-                                       f"must be a list, dict, or list.")
+                assert False, \
+                    f"PROGRAM ERROR: non list, dict or node should have been caught in validation of pathways above."
 
             added_pathways.append(self.add_linear_processing_pathway(pathway=pathway, name=pathway_name))
 
@@ -4018,9 +4022,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(pway,(tuple, dict)):
                 raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
                                        f"is not a tuple or dict")
-        else:
-            raise CompositionError(f"The 'learning_pathways' arg of {self.name} must be a tuple, dict, "
-                                   f"or list containing either or both")
 
         added_pathways = []
         for pathway in pathways:
@@ -4038,7 +4039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pathway[0], list):
                     raise CompositionError(f"The 1st item ({pathway[0]}) in the value of the dict specified in the "
                                            f"'learning_pathways' arg for {self.name}' must be a list.")
-                if not isinstance(pathway[1], LearningFunction):
+                if not issubclass(pathway[1], LearningFunction):
                     raise CompositionError(f"The 2nd item ({pathway[1]}) in the value of the dict specified in the "
                                            f"'learning_pathways' arg for {self.name}' must be a LearningFunction.")
 
