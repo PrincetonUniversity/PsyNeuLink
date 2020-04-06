@@ -14,6 +14,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -459,6 +460,107 @@ comp.add_node(B)
                    )
         print()
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
+
+
+class TestPathway:
+
+    def test_pathway_attributes(self):
+        c = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        G = ProcessingMechanism(name='G')
+        p1 = c.add_linear_processing_pathway(pathway=[A,B,C], name='P')
+        p2 = c.add_linear_processing_pathway(pathway=[D,B])
+        p3 = c.add_linear_processing_pathway(pathway=[B,E])
+        l = c.add_linear_learning_pathway(pathway=[F,G], learning_function=Reinforcement, name='L')
+        assert p1.name == 'P'
+        assert p1.input == A
+        assert p1.output == C
+        assert p1.target == None
+        assert p2.input == D
+        assert p2.output == None
+        assert p2.target == None
+        assert p3.input == None
+        assert p3.output == E
+        assert p3.target == None
+        assert l.name == 'L'
+        assert l.input == F
+        assert l.output == G
+        assert l.target == c.nodes['Target']
+        assert l.learning_components[pnl.LEARNING_MECHANISM] == \
+               c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
+        assert l.comparator == c.nodes['Comparator']
+        assert all(p in {p1, p2, p3, l} for p in c.pathways)
+
+    def test_pathway_order_1(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_processing_pathway(pathway=[A,B])
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_2(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_processing_pathway(pathway=[A,B])
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=BackPropagation)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_3(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=Reinforcement)
+        c.add_linear_processing_pathway(pathway=[C,D])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_4(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
+        c.add_linear_processing_pathway(pathway=[C,D])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_5(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=Reinforcement)
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=BackPropagation)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_6(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def composition_processing_pathway_args(self):
+        pass
+
+    def composition_learning_pathway_args(self):
+        pass
 
 
 class TestAnalyzeGraph:
@@ -5273,7 +5375,6 @@ class TestReinitializeValues:
                            [np.array([[0.36]]), np.array([[0.056]]), np.array([[0.056]])])
         assert np.allclose(np.asfarray(run_2_values),
                            [np.array([[0.5904]]), np.array([[0.16384]]), np.array([[0.16384]])])
-
 
 
 class TestNodeRoles:

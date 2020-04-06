@@ -8610,7 +8610,7 @@ class Pathway(object):
         roles = set(convert_to_list(roles or []))
         for role in roles:
             if not isinstance(role, PathwayRole):
-                raise CompositionError(f"Item ({role}) in 'roles' arg of {self.name} "
+                raise CompositionError(f"Item ({role}) in 'roles' arg of {self.__class__.__name__} {self.name} "
                                        f"is not a {PathwayRole.__name__}.")
         self.roles = roles
 
@@ -8621,7 +8621,7 @@ class Pathway(object):
             if input_node:
                 return input_node
             else:
-                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                               f"is assigned PathwayRole.INPUT but has no INPUT node."
 
     @property
@@ -8631,7 +8631,7 @@ class Pathway(object):
             if output_node:
                 return output_node
             else:
-                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                               f"is assigned PathwayRole.OUTPUT but has no OUTPUT node."
 
     @property
@@ -8640,9 +8640,10 @@ class Pathway(object):
             return self.learning_components[TARGET_MECHANISM]
         except:
             if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.name} 'target' attribute is None because it is not a learning_pathway.")
+                warnings.warn(f"{self.__class__.__name__} {self.name} 'target' attribute is None "
+                              f"because it is not a learning_pathway.")
             else:
-                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                               f"has PathwayRole.LEARNING assigned but no 'target' attribute."
             return None
 
@@ -8652,9 +8653,10 @@ class Pathway(object):
             return self.learning_components[COMPARATOR_MECHANISM]
         except:
             if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.name} 'comparator' attribute  is None because it is not a learning_pathway.")
+                warnings.warn(f"{self.__class__.__name__} {self.name} 'comparator' attribute "
+                              f"is None because it is not a learning_pathway.")
             else:
-                assert False, f"PROGRAM ERROR: {self.name} of {self.composition.name} " \
+                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                               f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
             return None
 
