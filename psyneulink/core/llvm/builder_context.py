@@ -283,9 +283,10 @@ class LLVMBuilderContext:
         if type(t) is list:
             if len(t) == 0:
                 return ir.LiteralStructType([])
-            assert all(type(x) is type(t[0]) for x in t)
-            elem_t = self.convert_python_struct_to_llvm_ir(t[0])
-            return ir.ArrayType(elem_t, len(t))
+            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+            if all(x == elems_t[0] for x in elems_t):
+                return ir.ArrayType(elems_t[0], len(elems_t))
+            return ir.LiteralStructType(elems_t)
         elif type(t) is tuple:
             elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
             return ir.LiteralStructType(elems_t)
