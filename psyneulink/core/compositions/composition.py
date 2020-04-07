@@ -16,7 +16,16 @@ Contents
   * `Composition_Overview`
   * `Composition_Creation`
       - `Composition_Nested`
-  * `Composition_Run`
+  * `Composition_Structure`
+      - `Composition_Graph`
+          - `Composition_Node`
+          - `Composition_Projection`
+          - `Composition_Nested`
+      - `Composition_Pathway`
+          - `Composition_Processing_Pathway`
+          - `Composition_Learning_Pathway`
+      - `Composition_Control`
+    * `Composition_Run`
       - `Composition_Run_Static_Inputs`
       - `Composition_Run_Dynamic_Inputs`
       - `Composition_Scope_of_Execution`
@@ -41,38 +50,41 @@ Contents
 Overview
 --------
 
-.. warning:: As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed! Please see `this link <RefactoredLearningGuide>` for more details!
-
+.. warning::
+    As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed!
+    Please see `this link <RefactoredLearningGuide>` for more details!
 
 Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.
 
-Composition "Nodes" are `Mechanisms <Mechanism>` and/or nested `Compositions <Composition>`. `Projections
-<Projection>` connect two Nodes. The Composition's `graph <Composition.graph>` stores the structural relationships
-among the Nodes of a Composition and the Projections that connect them.  The Composition's `scheduler
-<Composition.scheduler>` generates an execution queue based on these structural dependencies, allowing
-for other user-specified scheduling and termination conditions to be specified.
+Composition `Nodes <Composition_Node>` are `Mechanisms <Mechanism>` and/or nested `Compositions <Composition>`.
+`Projections <Projection>` connect pairs of Nodes. The Composition's `graph <Composition.graph>` stores the
+structural relationships among the Nodes of a Composition and the Projections that connect them.  The Composition's
+`scheduler <Composition.scheduler>` generates an execution queue based on these structural dependencies, allowing for
+other user-specified scheduling and termination conditions to be specified.
 
 .. _Composition_Creation:
 
 Creating a Composition
 ----------------------
 
-A Composition can be created by calling the constructor and specifying `Components <Component>` to be added using either
-arguments of the constructor and/or methods that allow Components to be added to it once it has been constructed.
+A Composition can be created by calling the constructor and specifying `Components <Component>` to be added, using
+either arguments of the constructor and/or methods that allow Components to be added once it has been constructed.
 
 The following arguments of the Composition's constructor can be used to add Compnents when it is constructed:
 
     - **nodes**
 
-        adds the specified nodes to the Composition;  this is equivalent to constructing the Composition and calling its
-        `add_nodes <Composition.add_nodes>` method, and takes the same values as the **nodes** argument of that method.
+        adds the specified `Nodes <Composition_Nodes>` to the Composition;  this is equivalent to constructing the
+        Composition and calling its `add_nodes <Composition.add_nodes>` method, and takes the same values as the
+        **nodes** argument of that method.
 
     - **processing_pathways**
 
-        adds one or more processing pathways to the Composition;  this is equivalent to constructing the Composition
-        and calling its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method,
-        and takes the same values as the **pathways** argument of that method.
+        adds one or more processing `Pathways <Component_Processing_Pathway>` to the Composition; this
+        is equivalent to constructing the Composition and calling its `add_linear_processing_pathway
+        <Composition.add_linear_processing_pathway>` method for each Pathway to be added;  it takes the
+        same values as the **pathways** argument of that method.
 
     - **learning_pathways**
 
@@ -87,52 +99,61 @@ The following methods can be used to add Components to an existing Composition:
 
     - `add_node <Composition.add_node>`
 
-        adds a node to the Composition;
+        adds a `Node <Component_Node>` to the Composition.
 
     - `add_nodes <Composition.add_nodes>`
 
-        adds mutiple nodes to the Composition
+        adds mutiple `Nodes <Component_Node>` to the Composition.
 
     - `add_projection <Composition.add_projection>`
 
-        adds a connection between a pair of nodes in the Composition
+        adds a `Projection <Projection>` between a pair of `Nodes <Component_Node>` in the Composition.
 
     - `add_projections <Composition.add_projections>`
 
-        adds connection between multiple pairs of nodes in the Composition
+        adds `Projections <Projection>` between multiple pairs of `Nodes <Component_Node>` in the Composition.
 
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
 
-        adds and connects a list of nodes and/or Projections to the Composition,
-        inserting a default `Projection` between any adjacent Nodes for which one is not otherwise specified;
-        returns the `Pathway` added to the `Composition`.
+        adds and a list of `Nodes <Component_Node>` and `Projections <Projection>` to the Composition,
+        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified;
+        returns the `Pathway <Component_Pathway>` added to the Composition.
 
-The following set of `learning methods <Composition_Learning_Methods>` can be used to add pathways that implement
-`learning <Composition_Learning>` to an existing Composition:
+The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
+    <Component_Pathway>` that implement `learning <Composition_Learning>` to an existing Composition:
 
     - `add_linear_learning_pathway` <Composition.add_linear_learning_pathway>`
 
-        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
-        needed to implement the algorithm specified in its **learning_function** argument in the specified pathway;
-        returns the `learning Pathway <Composition_Learning_Sequence>` added to the `Composition`.
+        adds a list of `Nodes <Component_Node>` and `Projections <Projection>` to implement a `learning pathway
+        <Composition_Learning_Sequence>`, including the `learning components <Composition_Learning_Components>`
+        needed to implement the algorithm specified in its **learning_function** argument;
+        returns the `learning Pathway <Composition_Learning_Sequence>` added to the Composition.
 
     - `add_reinforcement_learning_pathway <Composition.add_reinforcement_learning_pathway>`
 
         adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
         needed to implement `reinforcement learning` in the specified pathway;
 
+        adds a list of `Nodes <Component_Node>` and `Projections <Projection>`, including the `learning components
+        <Composition_Learning_Components>` needed to implement `reinforcement learning <Reinforcement>` in the
+        specified pathway; returns the `learning Pathway <Composition_Learning_Sequence>` added to the Composition.
+
     - `add_td_learning_pathway <Composition.add_td_learning_pathway>`
 
-        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
-        needed to implement the `temporal differences` method of reinforcement learning` in the specified pathway;
+        adds a list of `Nodes <Component_Node>` and `Projections <Projection>`, including the `learning components
+        <Composition_Learning_Components>` needed to implement `temporal differences TDLearning>` method of
+        reinforcement learning` in the specified pathway; returns the `learning Pathway <Composition_Learning_Sequence>`
+        added to the Composition.
 
     - `add_backpopagation_learning_pathway <Composition.add_backpopagation_learning_pathway>`
 
-        adds and connects a list of nodes, including `learning components <Composition_Learning_Components>`
-        needed to implement the `backpropagation learning algorithm` in the specified pathway.
+        adds a list of `Nodes <Component_Node>` and `Projections <Projection>`, including the `learning components
+        <Composition_Learning_Components>` needed to implement the `backpropagation learning algorithm
+        <BackPropagation>` in the specified pathway; returns the `learning Pathway <Composition_Learning_Sequence>`
+        added to the Composition.
 
 .. note::
-  Only Mechanisms and Projections added to a Composition via the methods above constitute a Composition, even if
+  Only Mechanisms and Projections added to a Composition using the methods above constitute a Composition, even if
   other Mechanism and/or Projections are constructed in the same script.
 
 COMMENT:
@@ -231,6 +252,63 @@ the nested composition just as for any other node.
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
 
+COMMENT:
+
+.. _Composition_Structure:
+
+Composition Structure
+---------------------
+
+Overview of structure, elements of which are covered in greater detail in sections below
+
+.._Composition_Graph:
+
+*Graph*
+=======
+
+.._Composition_Node:
+
+refer to show graph
+
+Nodes
+~~~~~
+
+.._Composition_Projection:
+
+Projections
+~~~~~~~~~~~
+
+.._Composition_Nested:
+
+Nested Compositions
+~~~~~~~~~~~~~~~~~~~
+
+Can project into any Mechanism w/in a nested Composition
+
+.._Composition_Pathway:
+
+*Pathways*
+==========
+
+.. _Composistion_Processing_Pathway:
+
+Processing Pathways
+~~~~~~~~~~~~~~~~~~~
+
+.. _Composistion_Learning_Pathway:
+
+Learning Pathways
+~~~~~~~~~~~~~~~~~
+
+.. _Composition_Control:
+
+*Control*
+=========
+
+controller
+
+COMMENT
+
 .. _Composition_Run:
 
 Running a Composition
@@ -241,9 +319,10 @@ Running a Composition
 *Run with Input Dictionary*
 ============================
 
-The `run <Composition.run>` method presents the inputs for each `TRIAL` to the input_ports of the INPUT Nodes in the
-`scope of execution <Composition_Scope_of_Execution>`. These input values are specified in the **inputs** argument of
-a Composition's `execute <Composition.execute>` or `run <Composition.run>` methods.
+The `run <Composition.run>` method presents the inputs for each `trial` to the `input_ports <InputPort>` of the `INPUT`
+`Nodes <Composition_Node>` in the `scope of execution <Composition_Scope_of_Execution>`. These input values are
+specified in the **inputs** argument of a Composition's `execute <Composition.execute>` or `run <Composition.run>`
+methods.
 
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
@@ -251,19 +330,19 @@ COMMENT:
     Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
 COMMENT
 
-The standard way to specificy inputs is a Python dictionary in which each key is an `INPUT <NodeRole.INPUT>` Node and
-each value is a list. The lists represent the inputs to the key `INPUT <NodeRole.INPUT>` Nodes, in which the i-th
-element of the list represents the input value to the key Node on trial i.
+The standard way to specificy inputs is a Python dictionary, in which each entry specifies the inputs to a given
+`INPUT` `Node <Component_Node>`.  The key of each entry is a Node, and the value is a list
+of the inputs to that Node, one for each `trial` to be executed (i.e., the i-th item of the list represents the input
+value to the Node on `trial` i).
 
 .. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
 
-
-Each input value must be compatible with the shape of the key `INPUT <NodeRole.INPUT>` Node's `external_input_values
-<MechanismBase.external_input_values>`. As a result, each item in the list of inputs is typically a 2d list/array,
-though `some shorthand notations are allowed <Composition_Input_Specification_Examples>`.
+Each input value must be compatible with the shape of the `INPUT` Node's `external_input_values
+<MechanismBase.external_input_values>`. Accordingly, each item in the list of inputs is typically a 2d list or array,
+though `some shorthand notations <Composition_Input_Specification_Examples>` are allowed.
 
         >>> import psyneulink as pnl
 
@@ -645,7 +724,7 @@ FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY M
 MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
 ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
 a list or ndarray of **initial_values**[...] The **initial_values** are
-assigned at the start of a `TRIAL` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
+assigned at the start of a `trial` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
 and listed in the Composition's ?? attribute),
 COMMENT
 
@@ -705,8 +784,8 @@ the Composition, and provides the result to the `controller <Composition.control
 
 .. _Composition_Controller_Assignment:
 
-Assigning a Controller
-======================
+*Assigning a Controller*
+========================
 
 A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
@@ -763,8 +842,8 @@ COMMENT
 
 .. _Composition_Controller_Execution:
 
-Controller Execution
-====================
+*Controller Execution*
+======================
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
 <Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
@@ -805,7 +884,7 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
 method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run
-<Composition.run>`, which constitutes a `TRIAL` of execution.  For each `TRIAL`, the Component makes repeated calls
+<Composition.run>`, which constitutes a `trial` of execution.  For each `trial`, the Component makes repeated calls
 to its `scheduler <Composition.scheduler>`, executing the Components it specifies in each
 `TIME_STEP`, until every Component has been executed at least once or another `termination condition
 <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
@@ -1774,7 +1853,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     results : 3d array
         stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
-        every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.  Each item in the outermost
+        every `trial` executed in a call to `run <Composition.run>`.  Each item in the outermost
         dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
         `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
 
@@ -3904,7 +3983,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            in each `trial` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
@@ -4067,7 +4146,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            in each `trial` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
@@ -4112,7 +4191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            in each `trial` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
@@ -4166,7 +4245,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
-            in each `TRIAL` when the Composition executes;  it is assigned as the default value for the
+            in each `trial` when the Composition executes;  it is assigned as the default value for the
             `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanisms
             <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
             (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
@@ -6792,7 +6871,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each Node in the composition that receives inputs from
                 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-                list corresponds to a certain `TRIAL`.
+                list corresponds to a certain `trial`.
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition.
