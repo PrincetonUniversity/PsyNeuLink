@@ -1355,7 +1355,7 @@ from psyneulink.core.components.functions.interfacefunctions import InterfacePor
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -2911,6 +2911,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             input_projection._activate_for_compositions(self)
                             input_projection._activate_for_compositions(comp)
+
+        for cim in [self.input_CIM, self.output_CIM, self.parameter_CIM]:
+            # KDM 4/3/20: should reevluate this some time - is it
+            # acceptable to consider _update_default_variable as
+            # happening outside of this normal context? This is here as
+            # a fix to the problem that when called within
+            # Composition.run, context has assigned an execution_id but
+            # not initialized yet. This is because _analyze_graph must
+            # be called before _initialize_from_context because
+            # otherwise, CIM ports will not be initialized properly
+            orig_eid = context.execution_id
+            context.execution_id = None
+
+            new_default_variable = [
+                deepcopy(input_port.defaults.value)
+                for input_port in cim.input_ports
+            ]
+
+            try:
+                cim._update_default_variable(new_default_variable, context)
+            except MechanismError as e:
+
+                if 'number of input_ports (0)' not in str(e):
+                    raise
+                # else:
+                # no input ports in CIM, so assume Composition is blank
+
+            context.execution_id = orig_eid
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
