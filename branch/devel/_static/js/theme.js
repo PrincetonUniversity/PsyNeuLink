@@ -757,10 +757,14 @@ function ThemeNav () {
         });
 
         // Replace "Parameters" in class references with "Arguments"
-        var sphinxSections = document.querySelectorAll('dl.py.class dl.field-list.simple dt.field-odd')
+
+        var sphinxSections = document.querySelectorAll('dl.class tr.field-odd.field th.field-name')
+        // When we update sphinx on build server, switch to query below
+        // var sphinxSections = document.querySelectorAll('dl.py.class dl.field-list.simple dt.field-odd')
+
         sphinxSections.forEach((i) => {
-            if (i.textContent === 'Parameters') {
-                i.textContent = 'Arguments'
+            if (i.textContent === 'Parameters:') {
+                i.textContent = 'Arguments:'
             }
         })
     };
