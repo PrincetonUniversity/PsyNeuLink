@@ -2455,16 +2455,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_required_node_role(self, node, role):
         """
-            Assign the `NodeRole` specified by *role* to *node*.
+            Assign the `NodeRole` specified by **role** to **node**.
 
             Arguments
             _________
 
             node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` to which *role* should be assigned.
+                `Node <Composition_Nodes>` to which **role** should be assigned.
 
             role : `NodeRole`
-                `NodeRole` to assign to *node*.
+                `NodeRole` to assign to **node**.
 
         """
         if role not in NodeRole:
@@ -2476,16 +2476,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def remove_required_node_role(self, node, role):
         """
-            Remove `NodeRole` specified by *role* from *node* if it was been assigned.
+            Remove `NodeRole` specified by **role** from **node** if it was been assigned.
 
             Arguments
             _________
 
             node : `Node <Composition_Nodes>`
-                `Node <Composition_Nodes>` from which *role* should be removed.
+                `Node <Composition_Nodes>` from which **role** should be removed.
 
             role : `NodeRole`
-                `NodeRole` to remove from *node*.
+                `NodeRole` to remove from **node**.
 
         """
         if role not in NodeRole:
@@ -2497,7 +2497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def get_roles_by_node(self, node):
         """
-            Return a list of `NodeRoles <NodeRole>` assigned to *node*.
+            Return a list of `NodeRoles <NodeRole>` assigned to **node**.
 
             Arguments
             _________
@@ -2518,7 +2518,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_nodes_by_role(self, role):
         """
             Return a list of `Nodes <Composition_Nodes>` in the Composition that are assigned the `NodeRole`
-            specified in *role*.
+            specified in **role**.
 
             Arguments
             _________
