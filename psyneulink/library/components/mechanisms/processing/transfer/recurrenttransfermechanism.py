@@ -1285,8 +1285,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Initialize to OutputPort defaults.
         # That is what the recurrent projection finds.
-        # FIXME: This should use standard 'previous_value' stateful param
-        retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
+        retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
         return (*transfer_init, tuple(retval_init), projection_init)
 
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
