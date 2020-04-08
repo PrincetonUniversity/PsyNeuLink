@@ -1299,76 +1299,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
         return builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
-        #FIXME: This should really be in TransferMechanism, but those don't
-        #       support 'is_finished' yet
-        # previous_value is appended before AutoProjection in state struct
-        # FIXME: This should use standard "previous_value" param
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
-
-        # preserve the old prev value
-        prev_val = builder.load(prev_val_ptr)
-        # Update previous value to make sure that repeated executions work
-        builder.store(builder.load(current), prev_val_ptr)
-
-        if self.parameters.termination_threshold.get(None) is None:
-            # Threshold is not defined, return the old value of finished flag
-            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                          "is_finished_flag")
-            is_finished_flag = builder.load(is_finished_ptr)
-            return builder.fcmp_ordered("!=", is_finished_flag,
-                                              is_finished_flag.type(0))
-
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                    "termination_threshold")
-        threshold = builder.load(threshold_ptr)
-        cmp_val_ptr = builder.alloca(threshold.type)
-        builder.store(threshold, cmp_val_ptr)
-        if self.termination_measure is max:
-            assert self._termination_measure_num_items_expected == 1
-            # Get inside of the structure
-            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
-            builder.store(first_val, cmp_val_ptr)
-            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
-                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
-                max_val = b.load(cmp_val_ptr)
-                cond = b.fcmp_ordered(">=", test_val, max_val)
-                max_val = b.select(cond, test_val, max_val)
-                b.store(max_val, cmp_val_ptr)
-        elif isinstance(self.termination_measure, Function):
-            # FIXME: HACK the distance function is not initialized
-            self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
-            self.termination_measure.defaults.value = float(0)
-            warnings.warn("Shape mismatch: Termination measure is not initialized")
-
-            func = ctx.import_llvm_function(self.termination_measure)
-            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
-            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
-            func_in = builder.alloca(func.args[2].type.pointee)
-            # Populate input
-            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)])
-            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(current_ptr), func_in_current_ptr)
-
-            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                     ctx.int32_ty(1)])
-            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
-
-            builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
-        elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
-            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
-            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
-            builder.store(ptr_val, cmp_val_ptr)
-        else:
-            assert False, "Not Supported: {}".format(self.termination_measure)
-
-        cmp_val = builder.load(cmp_val_ptr)
-        cmp_str = self.parameters.termination_comparison_op.get(None)
-        return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
-
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                             "recurrent_projection")
@@ -1395,6 +1325,15 @@ class RecurrentTransferMechanism(TransferMechanism):
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+
+    def _gen_llvm_output_ports(self, ctx, builder, value,
+                               mech_params, mech_state, mech_in, mech_out):
+        ret = super()._gen_llvm_output_ports(ctx, builder, value, mech_params,
+                                             mech_state, mech_in, mech_out)
+
+        old_val = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "old_val")
+        builder.store(builder.load(mech_out), old_val)
+        return ret
 
     @property
     def _dependent_components(self):
