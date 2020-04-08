@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.7.5.2 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.7.5.2+25.gf5b7416 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.2
+                  0.7.5.2+25
                 </div>
               
             
@@ -264,7 +264,7 @@ value (i.e., whether it is a scalar or array) and how it is used depend on the f
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BayesGLM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mu_0=0</em>, <em>sigma_0=1</em>, <em>gamma_shape_0=1</em>, <em>gamma_size_0=1</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BayesGLM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mu_0=0</em>, <em>sigma_0=1</em>, <em>gamma_shape_0=1</em>, <em>gamma_size_0=1</em>, <em>params=None</em>, <em>owner=None</em>, <em>seed=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> uses a normal linear model:</p>
 <blockquote>
@@ -406,6 +406,12 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.random_state">
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample">
 <code class="descname">weights_sample</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>1d array</em> – last sample of prediction weights drawn in call to <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights"><code class="xref any py py-meth docutils literal"><span class="pre">sample_weights</span></code></a> and returned by
@@ -434,7 +440,7 @@ to their initial (_0) values, and assign current (_n) values to the priors</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights">
-<code class="descname">sample_weights</code><span class="sig-paren">(</span><em>gamma_shape_n</em>, <em>gamma_size_n</em>, <em>mu_n</em>, <em>Lambda_n</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="Permalink to this definition">¶</a></dt>
+<code class="descname">sample_weights</code><span class="sig-paren">(</span><em>gamma_shape_n</em>, <em>gamma_size_n</em>, <em>mu_n</em>, <em>Lambda_n</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a sample of prediction weights from the distributions parameterized by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n"><code class="xref any py py-attr docutils literal"><span class="pre">mu_n</span></code></a>,
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n"><code class="xref any py py-attr docutils literal"><span class="pre">Lambda_n</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_shape_n</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n"><code class="xref any py py-attr docutils literal"><span class="pre">gamma_size_n</span></code></a>.</p>
 </dd></dl>
@@ -1013,7 +1019,7 @@ the system to which it belongs is used. If all are <code class="xref any docutil
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.2',
+               VERSION:'0.7.5.2+25.gf5b7416',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

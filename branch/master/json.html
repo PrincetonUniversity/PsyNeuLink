@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>JSON &mdash; PsyNeuLink 0.7.5.2 documentation</title>
+  <title>JSON &mdash; PsyNeuLink 0.7.5.2+25.gf5b7416 documentation</title>
   
 
   
@@ -28,7 +28,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Library" href="Library.html" />
+    <link rel="prev" title="Log" href="Log.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -95,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.2
+                  0.7.5.2+25
                 </div>
               
             
@@ -123,11 +125,11 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -170,6 +172,8 @@
       </li>
 
         
+          <li><a href="Core.html">Core</a> &gt;</li>
+        
       <li>JSON</li>
     
   </ul>
@@ -209,9 +213,24 @@
 <span id="json-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The developers of PsyNeuLink are collaborating with the scientific community, as part of the <a class="reference external" href="https://openneuro.org">OpenNeuro effort</a>, to create a standard, JSON-based format for the description and exchange of computational
 models of brain and psychological function across different simulation environments. As part of this effort,
-PsyNeuLink includes the ability to export models into, and import valid Python scripts from this JSON format.</p>
-<p>Each Component can be exported to the JSON format using its <code class="xref any docutils literal"><span class="pre">json_summary</span></code> method, which uses its <code class="xref any docutils literal"><span class="pre">_dict_summary</span></code>. Passing this output into <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> produced a valid Python script
-replicating the original PsyNeuLink model.</p>
+PsyNeuLink includes the ability to export models into, and import valid Python scripts that express a PsyNeuLink
+model from this JSON format.</p>
+<p>Any PsyNeuLink <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> can be exported to the JSON format using its <code class="xref any docutils literal"><span class="pre">json_summary</span></code> method, that
+uses its <code class="xref any docutils literal"><span class="pre">_dict_summary</span></code>.  This generates a string that, passed into the
+<a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> function, produces a valid Python script replicating the original PsyNeuLink model.
+<a class="reference internal" href="#psyneulink.core.globals.json.write_json_file" title="psyneulink.core.globals.json.write_json_file"><code class="xref any py py-func docutils literal"><span class="pre">write_json_file</span></code></a> can be used to write the json_summary for one or more Compositions into a specified file (though
+see <a class="reference internal" href="#json-write-multiple-compositions-note"><span class="std std-ref">note</span></a>).  <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> can accept either the string returned
+by <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> or the name of a file containing one.
+Calling <code class="docutils literal"><span class="pre">exec(generate_script_from_json(&lt;input&gt;))</span></code> will load into the current namespace all of the PsyNeuLink
+objects specified in the <code class="docutils literal"><span class="pre">input</span></code>; and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.get_compositions" title="psyneulink.core.compositions.composition.get_compositions"><code class="xref any py py-func docutils literal"><span class="pre">get_compositions</span></code></a> can be used to retrieve a list of all of the Compositions
+in that namespace, including any generated by execution of <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a>.</p>
+<div class="admonition warning" id="json-security-warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Use of <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> to generate a Python script from a file without taking proper precautions can
+introduce a security risk to the system on which the Python interpreter is running.  This is because it calls
+exec, which has the potential to execute non-PsyNeuLink-related code embedded in the file.  Therefore,
+<a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> should be used to read only files of known and secure origin.</p>
+</div>
 </div>
 <div class="section" id="model-examples">
 <span id="json-examples"></span><h2>Model Examples<a class="headerlink" href="#model-examples" title="Permalink to this headline">¶</a></h2>
@@ -329,14 +348,51 @@ into a more JSON-friendly format.</p>
 <dl class="function">
 <dt id="psyneulink.core.globals.json.generate_script_from_json">
 <code class="descclassname">psyneulink.core.globals.json.</code><code class="descname">generate_script_from_json</code><span class="sig-paren">(</span><em>model_input</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.json.generate_script_from_json" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates a Python script from JSON <strong>model_input</strong> in the
+<dd><p>Generate a Python script from JSON <strong>model_input</strong> in the
 <a class="reference internal" href="#json-model-specification"><span class="std std-ref">general JSON format</span></a></p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Use of <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> to generate a Python script from a file without taking proper precautions
+can introduce a security risk to the system on which the Python interpreter is running.  This is because it
+calls exec, which has the potential to execute non-PsyNeuLink-related code embedded in the file.  Therefore,
+<a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal"><span class="pre">generate_script_from_json</span></code></a> should be used to read only files of known and secure origin.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model_input</strong> (<em>str</em>) – a JSON string in the proper format, or a filename
 containing such</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>Text of Python script</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.json.write_json_file">
+<code class="descclassname">psyneulink.core.globals.json.</code><code class="descname">write_json_file</code><span class="sig-paren">(</span><em>compositions</em>, <em>filename</em>, <em>path=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.json.write_json_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write one or more <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> and associated objects to file in the <a class="reference internal" href="#json-model-specification"><span class="std std-ref">general JSON format</span></a></p>
+<div class="admonition note" id="json-write-multiple-compositions-note">
+<p class="first admonition-title">Note</p>
+<p class="last">At present, if more than one Composition is specified, all must be fully disjoint;  that is, they must not
+share  any <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (e.g., <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="Projections.html"><span class="doc">Projections</span></a> etc.).  This limitation will be
+addressed in a future update.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>compositions</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em> or </em><em>list˚</em>) – specifies <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or list of ones to be written to <strong>filename</strong></li>
+<li><strong>filename</strong> (<em>str</em>) – specifies name of file in which to write JSON specification of <a class="reference internal" href="Composition.html"><span class="doc">Composition(s)</span></a>
+and associated objects.</li>
+<li><strong>path</strong> (<em>str : default None</em>) – specifies path of file for JSON specification;  if it is not specified then the current directory is used.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -350,6 +406,15 @@ containing such</td>
              
             </div>
             <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Library.html" class="btn btn-neutral float-right" title="Library" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="Log.html" class="btn btn-neutral" title="Log" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
   
 
   
@@ -403,7 +468,7 @@ containing such</td>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.2',
+               VERSION:'0.7.5.2+25.gf5b7416',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
