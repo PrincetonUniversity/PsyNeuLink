@@ -77,15 +77,18 @@ The following arguments of the Composition's constructor can be used to add Comp
         Composition and then calling its `add_nodes <Composition.add_nodes>` method, and takes the same values as the
         **nodes** argument of that method.
 
+    COMMENT:
+    TBI
     - **projections**
         adds the specified `Projections <Projection>` to the Composition;  this is equivalent to constructing the
         Composition and then calling its `add_projections <Composition.add_projections>` method, and takes the same
         values as the **projections** argument of that method.
+    COMMENT
 
     - **pathways**
         adds one or more `Pathways <Component_Pathways>` to the Composition; this is equivalent to constructing the
-        Composition and then calling its `add_pathways <Composition.add_pathways>` method, and takes the same values
-        as the **pathways** argument of that method.
+        Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
+        of specification as the **pathways** argument of that method.
 
     COMMENT:
     - **processing_pathways**
@@ -122,14 +125,23 @@ The following methods can be used to add Components to an existing Composition:
 
         adds `Projections <Projection>` between multiple pairs of `Nodes <Composition_Nodes>` in the Composition.
 
+The methods can be used to add `Pathways <Composition_Pathways>` to the Composition:
+
+    - `add_pathways <Composition.add_pathways>`
+
+        adds one or more Pathways to the Composition; this a convenience method, that determines the type of
+        each Pathway, and calls the relevant ones of the following methods for each Pathway.
+
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
 
         adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition,
         inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified;
         returns the `Pathway <Component_Pathway>` added to the Composition.
 
-The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
-    <Component_Pathway>` that implement `learning <Composition_Learning>` to an existing Composition:
+    COMMENT:
+    The following set of `learning methods <Composition_Learning_Methods>` can be used to add `Pathways
+        <Component_Pathway>` that implement `learning <Composition_Learning>` to an existing Composition:
+    COMMENT
 
     - `add_linear_learning_pathway` <Composition.add_linear_learning_pathway>`
 
@@ -1483,13 +1495,13 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
-    CONTROL, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING, LEARNING_MECHANISM, LEARNING_MECHANISMS, \
+    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, \
     NAME, NO_CLAMP, NODE, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -1821,21 +1833,35 @@ PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
     Composition(
+        nodes=None,
+        pathways=None,
         controller=None,
         enable_controller=None,
         controller_mode=AFTER,
         controller_condition=Always,
-        disable_learning=False,
+        retain_old_simulation_data=None,
         name=None,
-        prefs=Composition.classPreferences
-        context=None)
+        prefs=Composition.classPreference
+        )
 
     Base class for Composition.
 
     Arguments
     ---------
 
-    controller:   `OptimizationControlmechanism` : default None
+    nodes : `Node <Composition_Nodes>` or list[`Node <Composition_Nodes>`] : default None
+        specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
+        `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
+
+    projections : `Projection <Projection>` or list[`Projection <Projection>`] : default None
+        specifies one or more `Projections <Projection>` to add to the Composition;  these are not functional
+        unless they are explicitly assigned a `sender <Projection.sender>` and `receiver <Projection.receiver>`.
+
+    pathways : Pathway specification or list[Pathway specification...]
+        specifies one or more Pathways to add to the Compositions (see **pathways** argument of `add_pathways
+        `Composition.add_pathways` for specification format).
+
+    controller : `OptimizationControlmechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the Composition's `controller
         <Composition.controller>` (see `Composition_Controller` for details).
 
@@ -2040,15 +2066,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __init__(
             self,
-            name=None,
-            nodes=None,
-            processing_pathways:tc.optional(list)=None,
-            learning_pathways=None,
+            nodes:tc.optional(_is_node_spec)=None,
+            projections=None,
+            pathways=None,
             controller:ControlMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
             retain_old_simulation_data=None,
+            name=None,
             prefs=None,
             **param_defaults
     ):
@@ -2139,14 +2165,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # the behavior of components
         del self.parameters.value
 
-        # Nodes and pathways
+        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
+        # Nodes, Projections, and Pathways
         if nodes is not None:
             nodes = convert_to_list(nodes)
             for node in nodes:
                 self.add_node(node)
 
-        self._add_linear_processing_pathways(processing_pathways)
-        self._add_linear_learning_pathways(learning_pathways)
+        # FIX 4/8/20 [JDC]: TEST THIS
+        if projections is not None:
+            projections = convert_to_list(projections)
+            self.add_projections(projection)
+
+        self.add_pathways(pathways)
 
     @property
     def graph_processing(self):
@@ -3853,9 +3884,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        pathway : list
+        pathway : `Node <Composition_Nodes>` or list
             specifies the nodes and optionally Projections used to construct the linear processing `Pathway`.
-            Each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
+            If it is a list, each item must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>`
             (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
             <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
 
@@ -3895,6 +3926,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 4/5/20 END
 
         # Then make sure the first item is a node and not a Projection
+
+        # FIX 4/8/20 [JDC]: HANDLE Context PASSED IN FROM add_pathways (?AS METHOD?)
 
         pathway = convert_to_list(pathway)
 
@@ -4046,6 +4079,183 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return pathway
 
+    @handle_external_context()
+    def add_pathways(self, pathways, context=None):
+        """Add pathways to Composition.
+
+        Arguments
+        ---------
+
+        pathways : Pathway specification or list[Pathway specification...]
+            specifies one or more Pathways to add to the Composition.  In addition to the standard forms of
+            `Pathway specification <Pathway_Specification`, each can be specified using the constructor for a
+            `Pathway`, or a dict with a single entry in which the key is a str used for the Pathway's `name
+            <Pathway.name>` and the value is a standard `Pathway specification <Pathway_Specification>`.
+
+        Returns
+        -------
+
+        list[`Pathway`] :
+            list of `processing Pathways <Composition_Processing_Pathways>` added to the Composition.
+
+        """
+        # FIX 4/8/20 [JDC]: INTEGRATE NOTE INTO ABOVE
+
+        # Note:  A standalone Node (not in a list), a single Node in a list,
+        #        or a single Node in a list with other forms of spec (i.e., tuples or dicts) is treated as
+        #        as a `SINGLETON` pathway` (i.e., one containing a single Node) in a list of multiple pathways;
+        #        whereas single Nodes all in a list are treated as part of a pathway. Thus:
+        #        NODE -> [NODE] -> single pathway
+        #        [NODE] -> single pathway
+        #        [NODE, NODE, NODE] -> single pathway
+        #        [NODE, () or {}...] -> multiple pathways
+
+        # Possible specifications for **pathways** arg:
+        # 1  Single node:  NODE
+        #    Single pathway spec (list, tuple or dict):
+        # 2   single list:    PWAY = [NODE] or [NODE...] in which *all* are NODES
+        # 3   single tuple:   (PWAY, LearningFunction) = (NODE, LearningFunction) or
+        #                                                ([NODE...], LearningFunction)
+        # 4   single dict:    {NAME: PWAY} = {NAME: NODE} or
+        #                                    {NAME: [NODE...]} or
+        #                                    {NAME: ([NODE...], LearningFunction)}
+        #   Multiple pathway specs (outer list):
+        # 5   list with list: [PWAY] = [NODE, [NODE]] or [[NODE...]...]
+        # 6   list with tuple:  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
+        #                                                      [([NODE...], LearningFunction)...]
+        # 7   list with dict: [{NAME: PWAY}...] = [{NAME: NODE...}...] or
+        #                                         [{NAME: [NODE...]}...] or
+        #                                         [{NAME: (NODE, LearningFunction)}...] or
+        #                                         [{NAME: ([NODE...], LearningFunction)}...]
+
+        # FIX 4/8/20 [JDC]: ADD handling of Pathway() as specification
+
+        if context.source == ContextFlags.COMMAND_LINE:
+            pathways_arg_str = f"pathways arg for the add_pathways method of {self.name}"
+        elif context.source == ContextFlags.CONSTRUCTOR:
+            pathways_arg_str = f"pathways arg of the constructor for {self.name}"
+        else:
+            assert False, f"PROGRAM ERROR:  unrecognized context pass to add_pathways of {self.name}."
+        context.string = pathways_arg_str
+
+        if not pathways:
+            return
+        # Possibilities 1, 3 or 4 (single NODE, tuple or dict specified, so convert to list
+        elif self._is_pathway_entry_spec(pathways, NODE) or isinstance(pathways, (tuple, dict)):
+            pathways = convert_to_list(pathways)
+        # Possibility 2 (list is a single pathway spec):
+        if all(self._is_pathway_entry_spec(p, NODE) for p in pathways):
+            # Place in outter list (to conform to processing of multiple pathways below)
+            pathways = [pathways]
+        # If pathways is not now a list it must be illegitimate
+        else:
+            raise CompositionError(f"The {pathways_arg_str} must be a Node, list, tuple or dict: {pathways}.")
+
+        # pathways should now be a list in which each entry should be *some* form of pathway specification
+
+        added_pathways = []
+
+        def identify_pway_type_and_parse_tuple_prn(pway, tuple_or_dict_str):
+                learning_function = None
+                if self._is_pathway_entry_spec(pway, NODE) or isinstance(pway, list):
+                    pway_type = PROCESSING_PATHWAY
+                    return pway_type, pway, None
+                elif isinstance(pway, tuple):
+                    pway_type = LEARNING_PATHWAY
+                    if len(pway)!=2:
+                        raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
+                                               f" has more than two items: {pway}")
+                    pway, learning_function = pway
+                    if not (self._is_pathway_entry_spec(pway, NODE) or isinstance(pway[0], list)):
+                        raise CompositionError(f"The 1st item ({pway[0]}) in {tuple_or_dict_str} specified in the "
+                                               f" {pathways_arg_str} must be a node or a list.")
+                    if not (isinstance(pway[1], type) and issubclass(pway[1], LearningFunction)):
+                        raise CompositionError(f"The 2nd item ({pway[1]}) in {tuple_or_dict_str} specified in the "
+                                               f"{pathways_arg_str} must be a LearningFunction.")
+                    return pway_type, pway, learning_function
+                else:
+                    assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
+                                  f"is not a Node, list or tuple: {pway}"
+
+        # Validate items in pathways list and add to Composition using relevant add_linear_XXX method.
+        for pathway in pathways:
+            pathway_name = None
+            if self._is_pathway_entry_spec(pathway, NODE) or isinstance(pathway, (list, tuple)):
+                pathway_type, pway, _ = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
+            elif isinstance(pathway, dict):
+                if len(pathway)!=1:
+                    raise CompositionError(f"A dict specified in the {pathways_arg_str} contains more than one entry:"
+                                           f" {pathway}.")
+                pathway_name, pway = list(pathway.items())[0]
+                if not isinstance(pathway_name, str):
+                    raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
+                                           f"(to be used as its name): {pathway_name}.")
+                if self._is_pathway_entry_spec(pway, NODE) or isinstance(pway, (list, tuple)):
+                    pathway_type, pway, _ = identify_pway_type_and_parse_tuple_prn(pway, f"the value of a dict")
+                else:
+                    raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
+                                           f"a pathway specification (Node, list or tuple): {pway}.")
+            else:
+                assert False, f"PROGRAM ERROR: non node, list, tuple or dict specification " \
+                              f"should have been caught in validation of 'pathways' in {self.name}."
+
+            context.source == ContextFlags.METHOD
+            if pathway_type == PROCESSING_PATHWAY:
+                new_pathway = self.add_linear_processing_pathway(pathway=pway, name=pathway_name, context=context)
+            elif pathway_type == LEARNING_PATHWAY:
+                new_pathway = self.add_linear_learning_pathway(pathway=pway, name=pathway_name, context=context)
+            else:
+                assert False, f"PROGRAM ERROR: failure to determine pathway_type in add_pathways for {self.name}."
+
+            added_pathways.append(new_pathway)
+
+        return added_pathways
+
+        # # MODIFIED 4/8/20 OLD:
+        # if not pathways:
+        #     return
+        # # Validate pathways arg itself and format as list (in case it is a solo item)
+        # elif isinstance(pathways, (tuple, dict)):
+        #     pathways = [pathways]      # {} or () -> [{}] or [()]
+        # elif isinstance(pathways, list): # Determine whether it is a single pathway spec or a list of ones
+        #     if not isinstance(pathways[0],(list, dict, tuple)):
+        #         pathways = [pathways]  # [] -> [[x]]
+        #     if not all((isinstance(p, (list, tuple, dict)) or self._is_pathway_entry_spec(p, NODE)) for p in pathways):
+        #         pway = next(p for p in pathways if not (isinstance(p, (list, dict)) or
+        #                                                 self._is_pathway_entry_spec(p, NODE)))
+        #         raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name} "
+        #                                f"is not a list or dict, or node (Mechanism or Composition).")
+        # else:
+        #     raise CompositionError(f"The 'processing_pathways' arg of {self.name} must be a list, dict, "
+        #                            f"or list containing either or both")
+        #
+        # added_pathways = []
+        #
+        # # Validate items in pathways list
+        # for pathway in pathways:
+        #     if isinstance(pathway, list) or self._is_pathway_entry_spec(pathway, NODE):
+        #         pass # validation of items in pathway list spec is handled in add_linear_processing_pathway()
+        #     elif isinstance(pathway, dict):
+        #         if len(pathway)!=1:
+        #             raise CompositionError(f"A dict ({pathway}) specified in the 'processing_pathways' arg for "
+        #                                    f"{self.name}' contains more than one entry.")
+        #         pathway_name, pathway = list(pathway.items())[0]
+        #         if not isinstance(pathway_name, str):
+        #             raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'processing_pathways' "
+        #                                    f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
+        #         if not (isinstance(pathway, list) or self._is_pathway_entry_spec(pathway, NODE)):
+        #             raise CompositionError(f"The value ({pathway}) in a dict specified in the 'processing_pathways' "
+        #                                    f"arg for {self.name}' must be a list or node (Mechanism or Composition).")
+        #     else:
+        #         assert False, \
+        #             f"PROGRAM ERROR: non list, dict or node should have been caught in validation of pathways above."
+        #
+        #     added_pathways.append(self.add_linear_processing_pathway(pathway=pathway, name=pathway_name))
+        #
+        # return added_pathways
+        # # MODIFIED 4/8/20 END:
+
+
     def _add_linear_processing_pathways(self, pathways, context=None):
         """Add processing pathways to Composition
 
@@ -4108,6 +4318,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # ------------------------------------------  LEARNING  ------------------------------------------------------------
 
+    @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
                                     learning_function,
@@ -4115,7 +4326,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_rate=0.05,
                                     error_function=LinearCombination(),
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
-                                    name=None):
+                                    name=None,
+                                    context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
         Generic method for implementing a learning pathway.  Calls `add_linear_processing_pathway` to implement
@@ -4216,7 +4428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
 
         learning_pathway = self.add_linear_processing_pathway([input_source, learned_projection, output_source],
-                                                              name=name)
+                                                              name=name, context=context)
 
 
         # Learning Components
@@ -8825,19 +9037,36 @@ class Pathway(object):
         corresponding to the specified `PathwayRoles <PathwayRole>` are assigned to the nodes in the sequence
         specified in the **pathways** argument.
 
+        .. _Pathway_Specification:
+
+        *Specification of **pathway** argument*.  The following formats can be used to specify a Pathway in the
+        **pathway** argument of the constructor for the Pathway, a `Composition`, or any of the Composition's methods
+        used to add a Pathway to it.
+
+            * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
+            ..
+            .. _Pathway_Specification_List:
+            * **list:** -- [`Node <Composition_Nodes>`, <`Projection <Projection>`>,`Node <Composition_Nodes>`...] --
+              each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
+              (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
+              <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
+             ..
+             * **2-item tuple:** *(Pathway, `LearningFunction`)* -- used to specify a `learning Pathway
+              <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
+              described above, and the 2nd item be a subclass of `LearningFunction`.
+
         Arguments
         ---------
 
         pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`>, `Node <Composition_Nodes>`...]
             specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
-            created for the Pathway (see **pathway** argument of `add_linear_processing_pathway
-            <Composition.add_linear_processing_pathway>` for specification format).
+            created for the Pathway, and possible a name  (see `Pathway_Specification` for ).
 
-        learning_function : `LearningFunction`
-            specifies `LearningFunction` if `learning Pathway <Composition_Learning_Pathways>` is being constructed.
-
-        composition : `Composition`
+        composition : `Composition` default None
             specifies `Composition` to which the Pathway should be assigned.
+
+        name : str : default see `name <Pathway.name>`
+            specifies the name of the Pathway.
 
         Attributes
         ----------
@@ -8877,6 +9106,11 @@ class Pathway(object):
                 *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
             These are generated automatically and added to the Composition when the Pathway is assigned to the
             Composition.
+
+        name : str
+            the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
+            default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
+
 
     """
 
