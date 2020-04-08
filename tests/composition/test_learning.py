@@ -42,12 +42,12 @@ class TestReinforcement:
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
             comp = pnl.Composition(name='comp')
-            learning_components = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+            learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                           learning_rate=0.05)
-            learned_projection = learning_components[pnl.LEARNED_PROJECTIONS]
-            learning_mechanism = learning_components[pnl.LEARNING_MECHANISMS]
-            target_mechanism = learning_components[pnl.TARGET_MECHANISM]
-            comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+            learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
+            learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+            target_mechanism = learning_pathway.target
+            comparator_mechanism = learning_pathway.comparator
 
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
@@ -82,11 +82,11 @@ class TestReinforcement:
 
         comp = pnl.Composition(name='TD_Learning')
         pathway = [sample_mechanism, sample_to_action_selection, action_selection]
-        learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
+        learning_pathway = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
-        comparator_mechanism = learning_related_components[pnl.COMPARATOR_MECHANISM]
+        comparator_mechanism = learning_pathway.comparator
         comparator_mechanism.log.set_log_conditions(pnl.VALUE)
-        target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
+        target_mechanism = learning_pathway.target
 
         # comp.show_graph()
 
@@ -146,12 +146,12 @@ class TestReinforcement:
             action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
             comp = pnl.Composition(name='comp')
-            learning_components = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+            learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                           learning_rate=0.05)
-            learned_projection = learning_components[pnl.LEARNED_PROJECTIONS]
-            learning_mechanism = learning_components[pnl.LEARNING_MECHANISMS]
-            target_mechanism = learning_components[pnl.TARGET_MECHANISM]
-            comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+            learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
+            learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+            target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
+            comparator_mechanism = learning_pathway.learning_components[pnl.COMPARATOR_MECHANISM]
 
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
@@ -203,11 +203,11 @@ class TestReinforcement:
 
         comp = pnl.Composition(name='TD_Learning')
         pathway = [sample_mechanism, sample_to_action_selection, action_selection]
-        learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
+        learning_pathway = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
-        comparator_mechanism = learning_related_components[pnl.COMPARATOR_MECHANISM]
+        comparator_mechanism = learning_pathway.comparator
         comparator_mechanism.log.set_log_conditions(pnl.VALUE)
-        target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
+        target_mechanism = learning_pathway.target
 
         # comp.show_graph()
 
@@ -311,7 +311,7 @@ class TestNestedLearning:
         model = pnl.Composition(name='Adaptive Replay Model')
         model.add_nodes([stim_in, context_in, reward_in, perceptual_state, rl_agent, action])
         model.add_projection(sender=perceptual_state, receiver=rl_agent_state)
-        model.add_projection(sender=reward_in, receiver=rl_learning_components[pnl.TARGET_MECHANISM])
+        model.add_projection(sender=reward_in, receiver=rl_learning_components.target)
         model.add_projection(sender=rl_agent_action, receiver=action)
         model.add_projection(sender=rl_agent, receiver=action)
 
