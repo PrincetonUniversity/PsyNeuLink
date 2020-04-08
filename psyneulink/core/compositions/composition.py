@@ -1241,7 +1241,7 @@ from psyneulink.core.components.functions.interfacefunctions import InterfacePor
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -1289,7 +1289,8 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS',
+    'get_compositions'
 ]
 
 # show_graph animation options
@@ -1756,6 +1757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+
     class Parameters(ParametersBase):
         """
             Attributes
@@ -1790,12 +1792,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
+
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         state_struct = None
         data_struct = None
         scheduler_conditions = None
+
 
     def __init__(
             self,
@@ -2726,6 +2730,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             input_projection._activate_for_compositions(self)
                             input_projection._activate_for_compositions(comp)
+
+        for cim in [self.input_CIM, self.output_CIM, self.parameter_CIM]:
+            # KDM 4/3/20: should reevluate this some time - is it
+            # acceptable to consider _update_default_variable as
+            # happening outside of this normal context? This is here as
+            # a fix to the problem that when called within
+            # Composition.run, context has assigned an execution_id but
+            # not initialized yet. This is because _analyze_graph must
+            # be called before _initialize_from_context because
+            # otherwise, CIM ports will not be initialized properly
+            orig_eid = context.execution_id
+            context.execution_id = None
+
+            new_default_variable = [
+                deepcopy(input_port.defaults.value)
+                for input_port in cim.input_ports
+            ]
+
+            try:
+                cim._update_default_variable(new_default_variable, context)
+            except MechanismError as e:
+
+                if 'number of input_ports (0)' not in str(e):
+                    raise
+                # else:
+                # no input ports in CIM, so assume Composition is blank
+
+            context.execution_id = orig_eid
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
@@ -4941,7 +4973,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @tc.typecheck
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
@@ -8211,3 +8243,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         yield self.parameter_CIM
         if self.controller:
             yield self.controller
+
+
+def get_compositions():
+    """Return list of Compositions in caller's namespace."""
+    import inspect
+    frame = inspect.currentframe()
+    return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]

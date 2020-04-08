@@ -959,7 +959,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2286,6 +2286,10 @@ class Mechanism_Base(Mechanism):
             else:
                 if context.source & ContextFlags.COMMAND_LINE:
                     context.execution_phase = ContextFlags.PROCESSING
+
+                    if input is not None:
+                        input = convert_all_elements_to_np_array(input)
+
                 if input is None:
                     input = self.defaults.variable
                 #     FIX:  this input value is sent to input CIMs when compositions are nested
@@ -2699,6 +2703,9 @@ class Mechanism_Base(Mechanism):
 
         return fun_out, builder
 
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        return pnlvm.ir.IntType(1)(1)
+
     def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
@@ -2718,7 +2725,9 @@ class Mechanism_Base(Mechanism):
         builder.store(exec_count, exec_count_ptr)
 
         builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
-        return builder, pnlvm.ir.IntType(1)(1)
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
+                                                           state, value)
+        return builder, is_finished_cond
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
@@ -2750,8 +2759,8 @@ class Mechanism_Base(Mechanism):
         current_flag = builder.load(is_finished_flag_ptr)
         was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
         with builder.if_then(was_finished):
-            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
-            builder.store(current_flag.type(0), is_finished_flag_ptr)
+            builder.store(is_finished_count_ptr.type.pointee(0),
+                          is_finished_count_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
@@ -2773,6 +2782,7 @@ class Mechanism_Base(Mechanism):
         is_finished_cond = builder.call(internal_f, builder.function.args)
 
         #FIXME: Flag and count should be int instead of float
+        # Check if we reached maximum iteration count
         is_finished_count = builder.load(is_finished_count_ptr)
         is_finished_count = builder.fadd(is_finished_count,
                                          is_finished_count.type(1))
@@ -2780,9 +2790,27 @@ class Mechanism_Base(Mechanism):
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
-        iter_end = builder.or_(is_finished_cond, max_reached)
+
+        # Check if execute until finished mode is enabled
+        exec_until_fin_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                         "execute_until_finished")
+        exec_until_fin = builder.load(exec_until_fin_ptr)
+        exec_until_off = builder.fcmp_ordered("==", exec_until_fin, exec_until_fin.type(0))
+
+        # Combine conditions
+        is_finished = builder.or_(is_finished_cond, max_reached)
+        iter_end = builder.or_(is_finished, exec_until_off)
+
+        # Check if in integrator mode
+        if hasattr(self, "integrator_mode"):
+            int_mode_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                       "integrator_mode")
+            int_mode = builder.load(int_mode_ptr)
+            int_mode_off = builder.fcmp_ordered("==", int_mode, int_mode.type(0))
+            iter_end = builder.or_(iter_end, int_mode_off)
+
         with builder.if_then(iter_end):
-            new_flag = builder.uitofp(iter_end, current_flag.type)
+            new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 

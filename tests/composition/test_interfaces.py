@@ -11,6 +11,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 
 
 class TestExecuteCIM:
@@ -833,3 +834,91 @@ class TestSimplifedNestedCompositionSyntax:
 
         for node in [A2, B2, C2]:
             assert np.allclose(node.parameters.value.get(eid), [[6.0]])
+
+@pytest.mark.parametrize(
+    # expected_input_shape: one input per source input_port
+    # expected_output_shape: one output per terminal output_port
+    # TODO: change mechanisms to input_ports and output_ports args?
+    'mechanisms, expected_input_shape, expected_output_shape',
+    [
+        (
+            [TransferMechanism()], [[0]], [[0]]
+        ),
+        (
+            [
+                TransferMechanism(),
+                TransferMechanism(output_ports=['RESULT', 'MEAN']),
+            ],
+            [[0], [0]],
+            [[0], [0], [0]],
+        ),
+        (
+            [
+                TransferMechanism(),
+                TransferMechanism(output_ports=['RESULT', 'MEAN']),
+                TransferMechanism(output_ports=['RESULT', 'MEAN', 'MEDIAN']),
+            ],
+            [[0], [0], [0]],
+            [[0], [0], [0], [0], [0], [0]],
+        ),
+        (
+            [
+                TransferMechanism(input_ports=['Port1', 'Port2']),
+                TransferMechanism(output_ports=['RESULT', 'MEAN']),
+            ],
+            [[0], [0], [0]],
+            # an output_port generated for each custom input_port
+            # overwrites output_ports arg - intentional?
+            [[0], [0], [0], [0]],
+        ),
+        (
+            [
+                TransferMechanism(),
+                TransferMechanism(
+                    input_ports=['Port1', 'Port2'],
+                ),
+                TransferMechanism(
+                    input_ports=['Port1', 'Port2', 'Port3'],
+                ),
+            ],
+            [[0], [0], [0], [0], [0], [0]],
+            [[0], [0], [0], [0], [0], [0]],
+        ),
+    ]
+)
+def test_CIM_shapes(mechanisms, expected_input_shape, expected_output_shape):
+    comp = Composition()
+
+    for i in range(len(mechanisms)):
+        comp.add_node(mechanisms[i])
+
+    comp._analyze_graph()
+
+    for cim, expected_shape in [
+        (comp.input_CIM, expected_input_shape),
+        (comp.output_CIM, expected_output_shape),
+    ]:
+        np.testing.assert_array_equal(
+            cim.defaults.variable.shape,
+            cim.defaults.value.shape,
+            err_msg=f'{cim}:',
+            verbose=True
+        )
+        np.testing.assert_array_equal(
+            cim.defaults.variable.shape,
+            cim.parameters.variable.get().shape,
+            err_msg=f'{cim}:',
+            verbose=True
+        )
+        np.testing.assert_array_equal(
+            cim.defaults.value.shape,
+            cim.parameters.value.get().shape,
+            err_msg=f'{cim}:',
+            verbose=True
+        )
+        np.testing.assert_array_equal(
+            cim.defaults.variable,
+            convert_all_elements_to_np_array(expected_shape),
+            err_msg=f'{cim}:',
+            verbose=True
+        )

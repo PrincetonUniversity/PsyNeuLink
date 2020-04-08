@@ -1879,7 +1879,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     offset : float
         determines value added to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
-    random_state : numpy.RandomState instance
+    random_state : numpy.RandomState
+        private pseudorandom number generator
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1956,8 +1957,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["random_state"]
 
         super().__init__(
             default_variable=default_variable,
