@@ -793,12 +793,13 @@ function ThemeNav () {
             if (link.length > 0) {
                 $('.psyneulink-menu-vertical .current').removeClass('current');
                 link.addClass('current');
-                link.closest('li.toctree-l1').addClass('current');
                 link.closest('li.toctree-l1').parent().addClass('current');
+                link.closest('li.toctree-l1').addClass('current');
                 link.closest('li.toctree-l1').addClass('current');
                 link.closest('li.toctree-l2').addClass('current');
                 link.closest('li.toctree-l3').addClass('current');
                 link.closest('li.toctree-l4').addClass('current');
+                link.closest('li.toctree-l5').addClass('current');
             }
         }
         catch (err) {
