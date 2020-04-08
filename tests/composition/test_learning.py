@@ -44,8 +44,8 @@ class TestReinforcement:
             comp = pnl.Composition(name='comp')
             learning_components = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                           learning_rate=0.05)
-            learned_projection = learning_components[pnl.LEARNED_PROJECTION]
-            learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+            learned_projection = learning_components[pnl.LEARNED_PROJECTIONS]
+            learning_mechanism = learning_components[pnl.LEARNING_MECHANISMS]
             target_mechanism = learning_components[pnl.TARGET_MECHANISM]
             comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
 
@@ -148,8 +148,8 @@ class TestReinforcement:
             comp = pnl.Composition(name='comp')
             learning_components = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                                                           learning_rate=0.05)
-            learned_projection = learning_components[pnl.LEARNED_PROJECTION]
-            learning_mechanism = learning_components[pnl.LEARNING_MECHANISM]
+            learned_projection = learning_components[pnl.LEARNED_PROJECTIONS]
+            learning_mechanism = learning_components[pnl.LEARNING_MECHANISMS]
             target_mechanism = learning_components[pnl.TARGET_MECHANISM]
             comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
 
@@ -503,7 +503,7 @@ class TestBackProp:
                                                                 learning_rate=0.5)
         # learned_projection = learning_components[pnl.LEARNED_PROJECTION]
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
-        learning_mechanism = backprop_pathway.learning_components[pnl.LEARNING_MECHANISM]
+        learning_mechanism = backprop_pathway.learning_components[pnl.LEARNING_MECHANISMS]
         target_mechanism = backprop_pathway.target
         # comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
         for node in comp.nodes:

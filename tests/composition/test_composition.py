@@ -491,7 +491,7 @@ class TestPathway:
         assert l.input == F
         assert l.output == G
         assert l.target == c.nodes['Target']
-        assert l.learning_components[pnl.LEARNING_MECHANISM] == \
+        assert l.learning_components[pnl.LEARNING_MECHANISMS] == \
                c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
         assert l.comparator == c.nodes['Comparator']
         assert all(p in {p1, p2, p3, l} for p in c.pathways)
