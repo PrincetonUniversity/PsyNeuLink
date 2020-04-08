@@ -90,7 +90,9 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
+from psyneulink.core.globals.keywords import \
+    DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
+    LEARNED_PROJECTIONS, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec

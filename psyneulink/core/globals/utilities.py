@@ -1744,7 +1744,7 @@ class PathwayRole(Enum):
         A `Pathway` that includes a `TERMINAL` node of the `Composition`.
 
     OUTPUT
-        A `Pathway` that an `OUTPUT` node of the `Composition`.
+        A `Pathway` that includes an `OUTPUT` node of the `Composition`.
 
     INTERNAL
         A `Pathway` that is not designated as having any other PathwayRole.
