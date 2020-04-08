@@ -1156,9 +1156,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
-                     "execution_count"}
+                     "execution_count", "value"}
         # mechanism functions are handled separately
-        blacklist = {"function"} if hasattr(self, 'ports') else {}
+        blacklist = {"function"} if hasattr(self, 'ports') else {"value"}
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
