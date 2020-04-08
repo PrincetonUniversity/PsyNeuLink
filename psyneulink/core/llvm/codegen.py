@@ -113,11 +113,6 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
             assert proj in rec_port.pathway_projections
             projection_idx = rec_port.pathway_projections.index(proj)
 
-            # Adjust for AutoAssociative projections
-            for i in range(projection_idx):
-                p = rec_port.pathway_projections[i]
-                if p.sender.owner is p.receiver.owner:
-                    projection_idx -= 1
             if not is_mech and node.parameter_CIM.afferents:
                 # If there are afferent projections to parameter_CIM
                 # the input structure is split between input_CIM

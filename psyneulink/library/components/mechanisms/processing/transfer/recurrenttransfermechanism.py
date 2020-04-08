@@ -1233,30 +1233,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
         return self.output_port
 
-    def _get_input_struct_type(self, ctx):
-        input_type_list = []
-        # FIXME: Assume only one input port
-        #        (autoassociative projection connects to primary input port)
-        assert len(self.input_ports) == 1
-        for port in self.input_ports:
-            # Extract the non-modulation portion of InputPort input struct
-            p_type = ctx.get_input_struct_type(port).elements[0]
-            if isinstance(p_type, pnlvm.ir.ArrayType):
-                # Subtract one incoming mapping projections.
-                # Unless it's the only incoming projection (mechanism is standalone)
-                new_count = max(p_type.count - 1, 1)
-                new_type = pnlvm.ir.ArrayType(p_type.element, new_count)
-            else:
-                # FIXME consider other types
-                assert False, "Input struct is not an array!"
-            input_type_list.append(new_type)
-
-        # Add modulatory inputs
-        mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
-        input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
-        
-        return pnlvm.ir.LiteralStructType(input_type_list)
-
     def _get_param_ids(self):
         return super()._get_param_ids() + ["recurrent_projection"]
 
@@ -1394,54 +1370,31 @@ class RecurrentTransferMechanism(TransferMechanism):
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
-        # Allocate space for transfer mechanism.
-        # This includes space for the autoprojection
-        transfer_input_type = ctx.get_input_struct_type(super())
-        transfer_in = builder.alloca(transfer_input_type)
+        recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                            "recurrent_projection")
+        recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                             "recurrent_projection")
+        recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
-        # FIXME: Assume only one input port
-        #        (autoassociative projection connects to primary input port)
-        assert len(self.input_ports) == 1
-        for i, port in enumerate(self.input_ports):
-            ip_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            ip_trans_input = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+        # Extract the correct output port value
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
+        recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
+            ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
 
-            # Copy all inputs to this port
-            for idx in range(len(ip_current_input.type.pointee)):
-                curr_ptr = builder.gep(ip_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                real_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                builder.store(builder.load(curr_ptr), real_ptr)
+        # Get the correct recurrent output location
+        recurrent_out = builder.gep(arg_in, [ctx.int32_ty(0),
+                                             ctx.int32_ty(self.input_ports.index(self.recurrent_projection.receiver)),
+                                             ctx.int32_ty(self.recurrent_projection.receiver.pathway_projections.index(self.recurrent_projection))])
 
-            # FIXME: This is a workaround to find out if we are in a composition
-            #        Standalone mechanisms don't update the recurrent projection
-            if len(port.pathway_projections) == 1:
-                continue
+        # the recurrent projection is not executed in standalone mode
+        if len(self.afferents) == 1:
+            assert self.path_afferents[0] is self.recurrent_projection
+            # NOTE: we should zero the target location here, but in standalone
+            # mode ctypes does it for us when instantiating the input structure
+        else:
+            builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
-            assert len(ip_trans_input.type.pointee) == len(ip_current_input.type.pointee) + 1
-
-            # Run the autoprojection function to fill in the missing input
-            last_idx = len(ip_trans_input.type.pointee) - 1
-            real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
-
-            recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                "recurrent_projection")
-            recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                 "recurrent_projection")
-            recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
-
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
-            # Extract the correct output port
-            recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
-                ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
-            builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
-
-        # Copy mod afferents. These are not impacted by the recurrent projection
-        if len(self.mod_afferents) > 1:
-            mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
-            mod_afferent_in_ptr = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
-            builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
-
-        return super()._gen_llvm_input_ports(ctx, builder, params, state, transfer_in)
+        return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
     @property
     def _dependent_components(self):
