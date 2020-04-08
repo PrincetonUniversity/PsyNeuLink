@@ -1829,6 +1829,9 @@ class Graph(object):
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
 PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
+def _is_node_spec(value):
+    return _is_pathway_entry_spec(NODE, value)
+
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
@@ -3815,25 +3818,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # -----------------------------------------  PROCESSING  -----------------------------------------------------------
 
-    def _is_pathway_entry_spec(self, entry, desired_type:tc.enum(NODE, PROJECTION)):
-        """Test whether pathway entry is specified type (NODE or PROJECTION)"""
-        node_specs = (Mechanism, Composition)
-        proj_specs = (Projection, np.ndarray, np.matrix, str, list)
-        if desired_type == NODE:
-            if (isinstance(entry, node_specs)
-                    or (isinstance(entry, tuple)
-                        and isinstance(entry[0], node_specs)
-                        and isinstance(entry[1], NodeRole))):
-                return True
-        elif desired_type == PROJECTION:
-            if (isinstance(entry, proj_specs)
-                    or (isinstance(entry, tuple)
-                        and isinstance(entry[0], proj_specs)
-                        and entry[1] in {True, False, MAYBE})):
-                return True
-        else:
-            return False
-
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
         """Add an existing `Pathway <Component_Pathways>` to the Composition
@@ -3931,7 +3915,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway = convert_to_list(pathway)
 
-        if self._is_pathway_entry_spec(pathway[0], NODE):
+        if _is_pathway_entry_spec(pathway[0], NODE):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
         else:
@@ -3942,7 +3926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Then, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
-            if self._is_pathway_entry_spec(pathway[c], NODE):
+            if _is_pathway_entry_spec(pathway[c], NODE):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
@@ -3959,7 +3943,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
-                if i>0 and self._is_pathway_entry_spec(pathway[i - 1],PROJECTION):
+                if i>0 and _is_pathway_entry_spec(pathway[i - 1],PROJECTION):
                     items_to_delete.append(pathway[i - 1])
         for item in items_to_delete:
             if isinstance(item, ControlMechanism):
@@ -3979,8 +3963,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
 
             # if the current item is a Node
-            if self._is_pathway_entry_spec(pathway[c], NODE):
-                if self._is_pathway_entry_spec(pathway[c - 1], NODE):
+            if _is_pathway_entry_spec(pathway[c], NODE):
+                if _is_pathway_entry_spec(pathway[c - 1], NODE):
                     # if the previous item was also a node, add a MappingProjection between them
                     if isinstance(pathway[c - 1], tuple):
                         sender = pathway[c - 1][0]
@@ -3996,7 +3980,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(proj)
 
             # if the current item is a Projection specification
-            elif self._is_pathway_entry_spec(pathway[c], PROJECTION):
+            elif _is_pathway_entry_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
                     raise CompositionError(f"{pathway[c]} is the last item in the pathway. "
                                            f"A projection cannot be the last item in a linear processing pathway.")
@@ -4009,7 +3993,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     feedback = False
                 sender = pathway[c - 1]
                 receiver = pathway[c + 1]
-                if self._is_pathway_entry_spec(sender, NODE) and self._is_pathway_entry_spec(receiver, NODE):
+                if _is_pathway_entry_spec(sender, NODE) and _is_pathway_entry_spec(receiver, NODE):
                     if isinstance(sender, tuple):
                         sender = sender[0]
                     if isinstance(receiver, tuple):
@@ -4141,10 +4125,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not pathways:
             return
         # Possibilities 1, 3 or 4 (single NODE, tuple or dict specified, so convert to list
-        elif self._is_pathway_entry_spec(pathways, NODE) or isinstance(pathways, (tuple, dict)):
+        elif _is_pathway_entry_spec(pathways, NODE) or isinstance(pathways, (tuple, dict)):
             pathways = convert_to_list(pathways)
         # Possibility 2 (list is a single pathway spec):
-        if all(self._is_pathway_entry_spec(p, NODE) for p in pathways):
+        if all(_is_pathway_entry_spec(p, NODE) for p in pathways):
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
@@ -4157,7 +4141,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def identify_pway_type_and_parse_tuple_prn(pway, tuple_or_dict_str):
                 learning_function = None
-                if self._is_pathway_entry_spec(pway, NODE) or isinstance(pway, list):
+                if _is_pathway_entry_spec(pway, NODE) or isinstance(pway, list):
                     pway_type = PROCESSING_PATHWAY
                     return pway_type, pway, None
                 elif isinstance(pway, tuple):
@@ -4166,7 +4150,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
                                                f" has more than two items: {pway}")
                     pway, learning_function = pway
-                    if not (self._is_pathway_entry_spec(pway, NODE) or isinstance(pway[0], list)):
+                    if not (_is_pathway_entry_spec(pway, NODE) or isinstance(pway[0], list)):
                         raise CompositionError(f"The 1st item ({pway[0]}) in {tuple_or_dict_str} specified in the "
                                                f" {pathways_arg_str} must be a node or a list.")
                     if not (isinstance(pway[1], type) and issubclass(pway[1], LearningFunction)):
@@ -4180,7 +4164,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Validate items in pathways list and add to Composition using relevant add_linear_XXX method.
         for pathway in pathways:
             pathway_name = None
-            if self._is_pathway_entry_spec(pathway, NODE) or isinstance(pathway, (list, tuple)):
+            if _is_pathway_entry_spec(pathway, NODE) or isinstance(pathway, (list, tuple)):
                 pathway_type, pway, _ = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
@@ -4190,7 +4174,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pathway_name, str):
                     raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
                                            f"(to be used as its name): {pathway_name}.")
-                if self._is_pathway_entry_spec(pway, NODE) or isinstance(pway, (list, tuple)):
+                if _is_pathway_entry_spec(pway, NODE) or isinstance(pway, (list, tuple)):
                     pathway_type, pway, _ = identify_pway_type_and_parse_tuple_prn(pway, f"the value of a dict")
                 else:
                     raise CompositionError(f"The value in a dict specified in the {pathways_arg_str} must be "
@@ -4282,9 +4266,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(pathways, list):
             if not isinstance(pathways[0],(list, dict)):
                 pathways = [pathways]  # [] -> [[]]
-            if not all((isinstance(p, (list, dict)) or self._is_pathway_entry_spec(p, NODE)) for p in pathways):
+            if not all((isinstance(p, (list, dict)) or _is_pathway_entry_spec(p, NODE)) for p in pathways):
                 pway = next(p for p in pathways if not (isinstance(p, (list, dict)) or
-                                                        self._is_pathway_entry_spec(p, NODE)))
+                                                        _is_pathway_entry_spec(p, NODE)))
                 raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name} "
                                        f"is not a list or dict, or node (Mechanism or Composition).")
         else:
@@ -4295,7 +4279,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Validate items in pathways list
         for pathway in pathways:
-            if isinstance(pathway, list) or self._is_pathway_entry_spec(pathway, NODE):
+            if isinstance(pathway, list) or _is_pathway_entry_spec(pathway, NODE):
                 pass # validation of items in pathway list spec is handled in add_linear_processing_pathway()
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
@@ -4305,7 +4289,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pathway_name, str):
                     raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'processing_pathways' "
                                            f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
-                if not (isinstance(pathway, list) or self._is_pathway_entry_spec(pathway, NODE)):
+                if not (isinstance(pathway, list) or _is_pathway_entry_spec(pathway, NODE)):
                     raise CompositionError(f"The value ({pathway}) in a dict specified in the 'processing_pathways' "
                                            f"arg for {self.name}' must be a list or node (Mechanism or Composition).")
             else:
@@ -9002,6 +8986,26 @@ def get_compositions():
     import inspect
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
+
+
+def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
+    """Test whether pathway entry is specified type (NODE or PROJECTION)"""
+    node_specs = (Mechanism, Composition)
+    proj_specs = (Projection, np.ndarray, np.matrix, str, list)
+    if desired_type == NODE:
+        if (isinstance(entry, node_specs)
+                or (isinstance(entry, tuple)
+                    and isinstance(entry[0], node_specs)
+                    and isinstance(entry[1], NodeRole))):
+            return True
+    elif desired_type == PROJECTION:
+        if (isinstance(entry, proj_specs)
+                or (isinstance(entry, tuple)
+                    and isinstance(entry[0], proj_specs)
+                    and entry[1] in {True, False, MAYBE})):
+            return True
+    else:
+        return False
 
 
 class Pathway(object):
