@@ -82,7 +82,9 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     # Execute all incoming projections
     inner_projections = list(composition._inner_projections)
     for proj in incoming_projections:
-        # Skip autoassociative projections
+        # Skip autoassociative projections.
+        # Recurrent projections are executed as part of the mechanism to
+        # make sure their value is up-to-date inside the 'is_finished' loop
         if proj.sender.owner is proj.receiver.owner:
             continue
 
