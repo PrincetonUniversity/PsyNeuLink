@@ -4147,8 +4147,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                                         [{NAME: (NODE, LearningFunction)}...] or
         #                                         [{NAME: ([NODE...], LearningFunction)}...]
 
-        # FIX 4/8/20 [JDC]: ADD handling of Pathway() as specification
-
         if context.source == ContextFlags.COMMAND_LINE:
             pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
         elif context.source == ContextFlags.CONSTRUCTOR:
