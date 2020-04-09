@@ -3890,8 +3890,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         nodes = []
 
+        # FIX 4/8/20 [JDC]: HANDLE Context PASSED IN FROM add_pathways (?AS METHOD?)
+
+        # First, deal with Pathway() or (pathway, LearningFunction) tuple specification
+        # if isinstance(pathway, Pathway):
+        #     pathway = pathway.pathway
+        # if isinstance(pathway, tuple) and isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
+        #     pathway = pathway[0]
+        # pathway = convert_to_list(pathway)
+
+
+        # Then, verify that the pathway begins with a node
+
         # # MODIFIED 4/5/20 OLD:
-        # # First, verify that the pathway begins with a node
         # if not isinstance(pathway, (list, tuple)):
         #     raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
         #                            f"{Composition.__name__} must be a list of nodes")
@@ -3913,16 +3924,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                            f"must be a list or a dict.")
         # MODIFIED 4/5/20 END
 
-        # Then make sure the first item is a node and not a Projection
-
-        # FIX 4/8/20 [JDC]: HANDLE Context PASSED IN FROM add_pathways (?AS METHOD?)
-
-        if isinstance(pathway, Pathway):
-            pathway = pathway.pathway
-        if isinstance(pathway, tuple):
-            pathway = pathway[0]
-        pathway = convert_to_list(pathway)
-
         if _is_node_spec(pathway[0]):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
@@ -3931,7 +3932,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"The first item in a linear processing pathway must be a Node "
                                    f"(Mechanism or Composition): {pathway}.")
 
-        # Then, add all of the remaining nodes in the pathway
+        # Next, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if _is_node_spec(pathway[c]):
@@ -4053,7 +4054,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError(f"{pathway[c]} is not a node (Mechanism or Composition) or a Projection. ")
 
-        # clean up any tuple specs
+        # Finally, clean up any tuple specs
         for i, n in enumerate(nodes):
             if isinstance(n, tuple):
                 nodes[i] = nodes[i][0]
