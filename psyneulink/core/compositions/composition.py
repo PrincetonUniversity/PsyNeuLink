@@ -3891,15 +3891,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         nodes = []
 
-        # FIX 4/8/20 [JDC]: HANDLE Context (METHOD?) PASSED IN (FROM add_pathways or COMMMAND_LINE for error mesages
-
         # If called from add_pathways(), use its pathway_arg_str
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = "'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/8/20 [JDC]: Reset for now to replicate prior behavior, but need to implement proper behavior
+            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            # FIX 4/8/20 [JDC]: Reset for to None for now to replicate prior behavior,
+            #                   but need to implement proper behavior wrt call to analyze_graph()
+            #                   _check_initalization_state()
             context = None
 
         # First, deal with Pathway() or tuple specifications
@@ -3917,8 +3917,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = convert_to_list(pathway)
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
-
-
 
 
         # Then, verify that the pathway begins with a node
@@ -4067,12 +4065,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(proj)
 
                 else:
-                    raise CompositionError(f"{pathway[c]} is not between two Nodes in {pathway_arg_str}. "
-                                           f"A Projection in a linear processing "
-                                           f"pathway must be preceded by a Node (Mechanism or Composition) "
-                                           f"and followed by a Composition Node.")
+                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                                           f"is not between two Nodes: {pathway[c]}")
             else:
-                raise CompositionError(f"{pathway[c]} is not a node (Mechanism or Composition) or a Projection. ")
+                raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
+                                       f"or a Projection: {pathway[c]}.")
 
         # Finally, clean up any tuple specs
         for i, n in enumerate(nodes):

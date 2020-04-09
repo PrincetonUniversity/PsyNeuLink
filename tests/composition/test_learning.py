@@ -473,7 +473,7 @@ class TestNestedLearning:
             target_mech: oSs
         }
 
-        outer = pnl.Composition("outer-composition")
+        outer = pnl.Composition(name="outer-composition")
         outer.add_node(mnet)
         mnet.learn(inputs=inputs)
 
@@ -845,8 +845,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {A})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {E,C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {A})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {E,C})
             print(f'Completed configuration: {configuration}')
 
         if 'BRANCH UP' == configuration:
@@ -871,8 +871,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {A,D})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {A,D})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C})
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND UP' == configuration:
@@ -899,8 +899,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {D})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C})
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND DOWN BRANCH UP' == configuration:
@@ -923,8 +923,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {B})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {D, C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {B})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {D, C})
             print(f'Completed configuration: {configuration}')
 
         if 'CROSS' == configuration:
@@ -947,8 +947,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {D,B})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {E,C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,B})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {E,C})
             print(f'Completed configuration: {configuration}')
 
         if 'Y UP AND DOWN' == configuration:
@@ -971,8 +971,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {D,B})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,B})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C})
             print(f'Completed configuration: {configuration}')
 
         if 'BRANCH DOWN' == configuration:
@@ -995,8 +995,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[B,A])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {C,B})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {D})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {C,B})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {D})
             print(f'Completed configuration: {configuration}')
 
         if 'EXTEND DOWN' == configuration:
@@ -1019,8 +1019,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[C,B,A])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {D,C})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {A})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {A})
             print(f'Completed configuration: {configuration}')
 
         if 'BOW' == configuration:
@@ -1048,8 +1048,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[A,D,C,F])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {E})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {F})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {E})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {F})
             print(f'Completed configuration: {configuration}')
 
         if 'COMPLEX' == configuration:
@@ -1080,8 +1080,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[H,D,G,I])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {E,H})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {C,I})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {E,H})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C,I})
             print(f'Completed configuration: {configuration}')
 
         if 'JOIN BY TERMINAL' == configuration:
@@ -1106,8 +1106,8 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[B,A])
             if show_graph == True:
                 comp.show_graph(show_learning=True)
-            assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in {D,C})
-            assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in {A,F})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,C})
+            assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {A,F})
             print(f'Completed configuration: {configuration}')
 
 
