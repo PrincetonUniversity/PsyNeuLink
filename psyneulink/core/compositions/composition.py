@@ -3850,6 +3850,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
+    @handle_external_context()
     def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
         """Add sequence of Mechanisms and/or Compositions with intercolated Projections.
 
@@ -3890,14 +3891,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         nodes = []
 
-        # FIX 4/8/20 [JDC]: HANDLE Context PASSED IN FROM add_pathways (?AS METHOD?)
+        # FIX 4/8/20 [JDC]: HANDLE Context (METHOD?) PASSED IN (FROM add_pathways or COMMMAND_LINE for error mesages
 
-        # First, deal with Pathway() or (pathway, LearningFunction) tuple specification
-        # if isinstance(pathway, Pathway):
-        #     pathway = pathway.pathway
-        # if isinstance(pathway, tuple) and isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-        #     pathway = pathway[0]
-        # pathway = convert_to_list(pathway)
+        # If called from add_pathways(), use its pathway_arg_str
+        if context.source == ContextFlags.METHOD:
+            pathway_arg_str = context.string
+        # Otherwise, refer to call from this method
+        else:
+            pathway_arg_str = "'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            # FIX 4/8/20 [JDC]: Reset for now to replicate prior behavior, but need to implement proper behavior
+            context = None
+
+        # First, deal with Pathway() or tuple specifications
+        if isinstance(pathway, Pathway):
+            pathway = pathway.pathway
+        elif isinstance(pathway, tuple):
+            # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
+            if all(_is_pathway_entry_spec(n, ALL) for n in pathway):
+                pathway = list(pathway)
+            # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
+            elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
+                pathway = pathway[0]
+            # If singleton (node, required_role), embed in list
+            elif isinstance(pathway[1], NodeRole):
+                pathway = convert_to_list(pathway)
+            else:
+                raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
+
+
 
 
         # Then, verify that the pathway begins with a node
@@ -3929,8 +3950,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
-            raise CompositionError(f"The first item in a linear processing pathway must be a Node "
-                                   f"(Mechanism or Composition): {pathway}.")
+            raise CompositionError(f"First item in {pathway_arg_str} must be "
+                                   f"a Node (Mechanism or Composition): {pathway}.")
 
         # Next, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
@@ -3961,8 +3982,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 arg_name = f'either in the {repr(MONITOR)} arg of its constructor, ' \
                            f'or in the {repr(MONITOR_FOR_CONTROL)} arg of its associated {ControlMechanism.__name__}'
             warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
-                          f'the {repr(PATHWAY)} arg of add_linear_processing_pathway for {self.name}, '
-                          f'since there were ones already specified {arg_name}.')
+                          f'the {pathway_arg_str}, since there were ones already specified {arg_name}.')
             del pathway[pathway.index(item)]
         # MODIFIED 8/12/19 END
 
@@ -3991,7 +4011,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
-                    raise CompositionError(f"{pathway[c]} is the last item in the pathway. "
+                    raise CompositionError(f"{pathway[c]} is the last item in the {pathway_arg_str}. "
                                            f"A projection cannot be the last item in a linear processing pathway.")
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c], tuple):
@@ -4022,7 +4042,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
                         duplicate = duplicate[0]
                         warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                      f"in call to 'add_linear_projection' for {self.name} is a duplicate of one"
+                                      f"in {pathway_arg_str} is a duplicate of one"
                         # IMPLEMENTATION NOTE: Version that allows different Projections between same
                         #                      sender and receiver in different Compositions
                         # if duplicate in self.projections:
@@ -4047,9 +4067,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(proj)
 
                 else:
-                    raise CompositionError(f"{pathway[c]} is not between two Composition Nodes. "
+                    raise CompositionError(f"{pathway[c]} is not between two Nodes in {pathway_arg_str}. "
                                            f"A Projection in a linear processing "
-                                           f"pathway must be preceded by a Composition Node (Mechanism or Composition) "
+                                           f"pathway must be preceded by a Node (Mechanism or Composition) "
                                            f"and followed by a Composition Node.")
             else:
                 raise CompositionError(f"{pathway[c]} is not a node (Mechanism or Composition) or a Projection. ")
@@ -8948,22 +8968,36 @@ def get_compositions():
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
 
 
-def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
+def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ALL)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     node_specs = (Mechanism, Composition)
     proj_specs = (Projection, np.ndarray, np.matrix, str, list)
-    if desired_type == NODE:
-        if (isinstance(entry, node_specs)
-                or (isinstance(entry, tuple)
-                    and isinstance(entry[0], node_specs)
-                    and isinstance(entry[1], NodeRole))):
-            return True
-    elif desired_type == PROJECTION:
-        if (isinstance(entry, proj_specs)
-                or (isinstance(entry, tuple)
-                    and isinstance(entry[0], proj_specs)
-                    and entry[1] in {True, False, MAYBE})):
-            return True
+    is_node = is_proj = False
+
+    if desired_type in {NODE, ALL}:
+        # if (isinstance(entry, node_specs)
+        #         or (isinstance(entry, tuple)
+        #             and isinstance(entry[0], node_specs)
+        #             and isinstance(entry[1], NodeRole))):
+        #     return True
+        is_node = (isinstance(entry, node_specs)
+                   or (isinstance(entry, tuple)
+                       and isinstance(entry[0], node_specs)
+                       and isinstance(entry[1], NodeRole)))
+
+    if desired_type in {PROJECTION, ALL}:
+        # if (isinstance(entry, proj_specs)
+        #         or (isinstance(entry, tuple)
+        #             and isinstance(entry[0], proj_specs)
+        #             and entry[1] in {True, False, MAYBE})):
+        #     return True
+        is_proj = (isinstance(entry, proj_specs)
+                   or (isinstance(entry, tuple)
+                       and isinstance(entry[0], proj_specs)
+                       and entry[1] in {True, False, MAYBE}))
+
+    if is_node or is_proj:
+        return True
     else:
         return False
 
