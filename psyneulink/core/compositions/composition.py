@@ -21,8 +21,8 @@ Contents
           - `Composition_Nodes`
           - `Composition_Nested`
       - `Composition_Pathways`
-          - `Composition_Processing_Pathway`
-          - `Composition_Learning_Pathway`
+          - `Composition_Processing_Pathways`
+          - `Composition_Learning_Pathways`
       - `Composition_Control`
     * `Composition_Run`
       - `Composition_Run_Static_Inputs`
@@ -382,25 +382,26 @@ lists the Nodes and Projections in the Pathway, a `roles <Pathway.roles>` attrib
 <PathwayRole>` assigned to it (based on the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for
 particular types of nodes (e.g., `INPUT` and `OUTPUT`) if the Pathway includes nodes assigned the corresponding
 `NodeRoles <NodeRole>`.  If a Pathway does not have a particular type of node, then its attribute returns None.
-There are two types of Pathways, `processing Pathways<Composistion_Processing_Pathways>` and `learning Pathways
-<Composistion_Learning_Pathways>`, each of which is described below.  All of the Pathways in a Composition are listed
+There are two types of Pathways, `processing Pathways<Composition_Processing_Pathways>` and `learning Pathways
+<Composition_Learning_Pathways>`, each of which is described below.  All of the Pathways in a Composition are listed
 in its `pathways <Composition.pathways>` attribute.
 
-.. _Composistion_Processing_Pathways:
+.. _Composition_Processing_Pathways:
 
 Processing Pathways
 ~~~~~~~~~~~~~~~~~~~
 
-These are linear pathways that are not configured for learning.  One or more processing Pathway can be added to a
-Composition by specifying them in the **processing_pathways** argument of the Composition's constructor, or using
-the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method for each pathway to be added.
+These are linear Pathways that are not configured for learning.  One or more processing `Pathways <Pathway>` can be
+added to a Composition by specifying them in the **processing_pathways** argument of the Composition's constructor,
+or using the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method for each pathway to
+be added.
 
-.. _Composistion_Learning_Pathways:
+.. _Composition_Learning_Pathways:
 
 Learning Pathways
 ~~~~~~~~~~~~~~~~~
 
-These are linear pathways that are configured for learning.  One or more learning Pathways can be added to a
+These are linear Pathways that are configured for learning. One or more learning `Pathways <Pathway>` can be added to a
 Composition either by specifying them in the **learning_pathways** argument of the Composition's constructor, or using
 the `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method for each pathway to be added.
 A learning Pathway has a `learning_components <Pathway.learning_compoenents>` attribute with a dict that contains the
@@ -1186,7 +1187,7 @@ that provides them with the `error_signal <LearningMechanism.error_signal>` from
 and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\\s)
 in the sequence, as shown for an example in the figure below.  These additional learning components are listed in the
 *LEARNING_MECHANISMS* and *LEARNED_PROJECTIONS* entries of the dictionary assigned to the `learning_components
-<Pathway.learning_components>` attribute of the `learning Pathway <Component_Learning_Pathways>` return by the learning
+<Pathway.learning_components>` attribute of the `learning Pathway <Composition_Learning_Pathways>` return by the learning
 method.
 
 .. _Composition_MultilayerLearning_Figure:
@@ -2478,7 +2479,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_nodes(self, nodes, required_roles=None):
         """
-            Add a list of Composition Nodes (`Mechanism <Mechanism>` or `Composition`) to the Composition,
+            Add a list of `Nodes <Composition_Nodes>` to the Composition.
 
             Arguments
             ---------
@@ -4066,16 +4067,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def add_pathways(self, pathways, context=None):
-        """Add pathways to Composition.
+        """Add pathways to the Composition.
+
+        .. _Multiple_Pathway_Specification:
+
+        Multiple Pathways can be specified in a list in the **pathways** argmument;  each item in the list must
+        specify a Pathway using the standard forms of `Pathway specification <Pathway_Specification` or either
+        of the following two additional forms:
+
+            * **constructor**: Pathway(pathway=`Pathway specification <Pathway_Specification>`, name=str)
+            * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a either the a
+              standard `Pathway specification <Pathway_Specification>` or a Pathway constructor.
+
+        .. note::
+           If any of the following is used to specify the **pathways** argument:
+             * a **standalone** `Node <Composition_Nodes>` (i.e., not in a list), \n
+             * a **single Node** alone in a list, \n
+             * one or more Nodes with **any other form of `Pathway specification <Pathway_Specification>` in the list \n
+           then each such Node in the list is treated as its own `SINGLETON` pathway (i.e., one containing a single
+           Node that is both the `ORIGIN` and the`TERMINAL` of the Pathway).  However, if the list contains only
+           Nodes, then it is treated as a single Pathway (i.e., the list form of `Pathway specification
+           <Pathway_Specification>`.  Thus:
+             **pathway**: NODE -> single pathway \n
+             **pathway**: [NODE] -> single pathway \n
+             **pathway**: [NODE, NODE...] -> single pathway \n
+             **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
+
+        COMMENT:
+           If the specificaiton for **pathways** is a standalone `Node <Composition_Nodes>` (i.e., not in a list),
+           a single Node alone in a list, or appears with any other form of `Pathway specification
+           <Pathway_Specification>` other than another Node (i.e., there any lists, tuples or dicts in the list),
+           then each such Node in the list is treated as its own `SINGLETON` pathway (i.e., one containing a single
+           Node that is both the `ORIGIN` and the`TERMINAL` of the Pathway).  However, if the list contains only
+           Nodes, then it is treated as a single Pathway (i.e., the list form of `Pathway specification
+           <Pathway_Specification>`.  Thus:
+               **pathway**: NODE -> single pathway
+               **pathway**: [NODE] -> single pathway
+               **pathway**: [NODE, NODE...] -> single pathway
+               **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
+        COMMENT
 
         Arguments
         ---------
 
-        pathways : Pathway specification or list[Pathway specification...]
-            specifies one or more Pathways to add to the Composition.  In addition to the standard forms of
-            `Pathway specification <Pathway_Specification`, each can be specified using the constructor for a
-            `Pathway`, or a dict with a single entry in which the key is a str used for the Pathway's `name
-            <Pathway.name>` and the value is a standard `Pathway specification <Pathway_Specification>`.
+        pathways : Pathway or list[Pathway]
+            specifies one or more Pathways to add to the Composition.  Each Pathway can be specified using either a
+            standard form of `Pathway specification <Pathway_Specification`, one of the additonal methods described
+            `above <Multiple_Pathway_Specification>`.
 
         Returns
         -------
@@ -4084,16 +4122,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             list of `processing Pathways <Composition_Processing_Pathways>` added to the Composition.
 
         """
-        # FIX 4/8/20 [JDC]: INTEGRATE NOTE INTO ABOVE
-
-        # Note:  A standalone Node (not in a list), a single Node in a list,
-        #        or a single Node in a list with other forms of spec (i.e., tuples or dicts) is treated as
-        #        as a `SINGLETON` pathway` (i.e., one containing a single Node) in a list of multiple pathways;
-        #        whereas single Nodes all in a list are treated as part of a pathway. Thus:
-        #        NODE -> [NODE] -> single pathway
-        #        [NODE] -> single pathway
-        #        [NODE, NODE, NODE] -> single pathway
-        #        [NODE, () or {}...] -> multiple pathways
 
         # Possible specifications for **pathways** arg:
         # 1  Single node:  NODE
@@ -8968,18 +8996,21 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION)):
 
 class Pathway(object):
     """
-        A sequence of `Nodes <Composition_Node>` and `Projections <Projection>` in a `Composition`, or a template
+        A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
         for one that can be assigned to one or more Compositions.
 
-        Creating a Pathway
-        ------------------
+        **Creating a Pathway**
+        ----------------------
 
-        A Pathway can be created as part of a Composition or on its own.  If the **composition** argument of its
-        constructor is specified, it is added to the specified `Composition`;  if that is not specified, then a
-        standalone Pathway is created that can be used as a template for specifiying the pathway of one or more
-        Compositions, as described below.
+        A Pathway can be created as part of a Composition or on its own.  If the **composition** argument of the
+        Pathway's constructor is specified, it is added to the specified `Composition`;  if that is not specified,
+        then a standalone Pathway is created that can be used as a template for specifiying the pathway of one or
+        more Compositions, as described below.
 
-        *Assigning to a Pathway to a Composition*. If the **composition** argument is specified in the Pathway's
+        *Assigning to a Pathway to a Composition*
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        If the **composition** argument is specified in the Pathway's
         constructor, then the sequence assigned to its **pathway** argument is added to the specified `Composition`
         using its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method or its
         `add_linear_learning_pathway <Composition.add_linear_processing_pathway>` method, depending on the
@@ -8988,7 +9019,10 @@ class Pathway(object):
 
         .. _Pathway_Template:
 
-        *Pathway as a Template*.  If the **composition** argument is *not* specified in the Pathway's constructor, then
+        *Pathway as a Template*
+        ~~~~~~~~~~~~~~~~~~~~~~~
+
+        If the **composition** argument is *not* specified in the Pathway's constructor, then
         the Pathway is created on its own.  This can serve as a template for a Pathway assigned to a `Composition`,
         by using it in the **processing_pathways** or **learning_pathways** argument of the constructor for a
         Composition, or in its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
@@ -9001,28 +9035,32 @@ class Pathway(object):
 
         .. _Pathway_Specification:
 
-        *Specification of **pathway** argument*.  The following formats can be used to specify a Pathway in the
+        *Specification of* **pathway** *argument*
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        The following formats can be used to specify a Pathway in the
         **pathway** argument of the constructor for the Pathway, a `Composition`, or any of the Composition's methods
         used to add a Pathway to it.
 
             * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
             ..
             .. _Pathway_Specification_List:
-            * **list:** -- [`Node <Composition_Nodes>`, <`Projection <Projection>`>,`Node <Composition_Nodes>`...] --
+
+            * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
               each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
               (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
               <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
-             ..
-             * **2-item tuple:** *(Pathway, `LearningFunction`)* -- used to specify a `learning Pathway
+            ..
+            * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
               <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
               described above, and the 2nd item be a subclass of `LearningFunction`.
 
         Arguments
         ---------
 
-        pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`>, `Node <Composition_Nodes>`...]
+        pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...]
             specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
-            created for the Pathway, and possible a name  (see `Pathway_Specification` for ).
+            created for the Pathway.
 
         composition : `Composition` default None
             specifies `Composition` to which the Pathway should be assigned.
@@ -9044,7 +9082,7 @@ class Pathway(object):
             assigned to its `Nodes <Composition>` in the `composition <Pathway.composition>` to which it belongs.
 
         learning_function : `LearningFunction` or None
-            `LearningFunction used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
+            `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
             it is a `learning pathway <Composition_Learning_Pathways>`.
 
         input : `Mechanism <Mechanism>` or None
@@ -9054,20 +9092,26 @@ class Pathway(object):
             `OUTPUT` node if Pathway contains one.
 
         target : `Mechanism <Mechanism>` or None
-            `TARGET` node if if Pathway contains one.
+            `TARGET` node if if Pathway contains one; same as `learning_components
+            <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
         comparator : `Mechanism <Mechanism>` or None
-            `COMPARATOR` node if Pathway conatains one.
+            `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
+            <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
         learning_components : dict
-            dict containing the following entries if the Pathway is a `learning Pathway <Component_Learning_Pathways>`
+            dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathways>`
             (and is assigned `PathwayRole.LEARNING` in `roles <Pathway.roles>`):
-                *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
-                *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`
-                *LEARNING_MECHANISMS*: `LearningMechanism` or list[LearningMechanism]
-                *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
-            These are generated automatically and added to the Composition when the Pathway is assigned to the
-            Composition.
+
+              *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
+              ..
+              *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`)
+              ..
+              *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
+              ..
+              *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
+
+            These are generated automatically and added to the `Composition` when the Pathway is assigned to it.
 
         name : str
             the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
@@ -9083,7 +9127,7 @@ class Pathway(object):
     def __init__(
             self,
             pathway:list,
-            composition:Composition,
+            composition:Composition=None,
             roles:tc.optional(tc.any(PathwayRole, list, set))=None,
             name=None
     ):
@@ -9166,4 +9210,3 @@ class Pathway(object):
                 assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                               f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
             return None
-
