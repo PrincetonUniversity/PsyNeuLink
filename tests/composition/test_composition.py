@@ -2276,8 +2276,7 @@ class TestRun:
         # Typo in IdentityMatrix
             comp.add_linear_processing_pathway([A, "IdntityMatrix", B])
         assert ("An entry in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value) and
-                "is not a Node (Mechanism or Composition) or a Projection: \'IdntityMatrix\'."  in str(
-                    error_text.value))
+                "is not a Node (Mechanism or Composition) or a Projection: \'IdntityMatrix\'." in str(error_text.value))
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
