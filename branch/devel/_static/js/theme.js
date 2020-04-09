@@ -199,7 +199,7 @@ window.highlightNavigation = {
             }
           }
 
-          navigationListItem.classList.add("active");
+          // navigationListItem.classList.add("active");
 
           // Scroll to active item. Not a requested feature but we could revive it. Needs work.
 
@@ -793,13 +793,14 @@ function ThemeNav () {
             if (link.length > 0) {
                 $('.psyneulink-menu-vertical .current').removeClass('current');
                 link.addClass('current');
-                link.closest('li.toctree-l1').parent().addClass('current');
                 link.closest('li.toctree-l1').addClass('current');
+                link.closest('li.toctree-l1').parent().addClass('current');
                 link.closest('li.toctree-l1').addClass('current');
                 link.closest('li.toctree-l2').addClass('current');
                 link.closest('li.toctree-l3').addClass('current');
                 link.closest('li.toctree-l4').addClass('current');
                 link.closest('li.toctree-l5').addClass('current');
+                link.closest('li.toctree-l6').addClass('current');
             }
         }
         catch (err) {
