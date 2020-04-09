@@ -24,7 +24,6 @@ from itertools import product
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   ])
-
 def test_simplified_necker_cube(benchmark, mode):
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']
