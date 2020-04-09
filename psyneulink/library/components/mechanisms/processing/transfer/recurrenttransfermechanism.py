@@ -1301,9 +1301,9 @@ class RecurrentTransferMechanism(TransferMechanism):
 
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
         recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                            "recurrent_projection")
+                                                      "recurrent_projection")
         recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                             "recurrent_projection")
+                                                       "recurrent_projection")
         recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
         # Extract the correct output port value
@@ -1322,6 +1322,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             # NOTE: we should zero the target location here, but in standalone
             # mode ctypes does it for us when instantiating the input structure
         else:
+            # Execute the recurrent projection here. This makes it part of the
+            # 'is_finished' inner loop so we always see the most up-to-date
+            # input
             builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
         return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
