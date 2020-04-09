@@ -1574,10 +1574,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
         elif isinstance(self.termination_measure, Function):
-            # FIXME: HACK the distance function is not initialized
-            self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
-            self.termination_measure.defaults.value = float(0)
-            warnings.warn("Shape mismatch: Termination measure is not initialized")
+            expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
+            got = np.empty_like(self.termination_measure.defaults.variable)
+            if expected.shape != got.shape:
+                warnings.warn("Shape mismatch: Termination measure input: {} should be {}".format(self.termination_measure.defaults.variable, expected.shape))
+                # FIXME: HACK the distance function is not initialized
+                self.termination_measure.defaults.variable = expected
 
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")

@@ -290,7 +290,7 @@ class LLVMBuilderContext:
         elif type(t) is tuple:
             elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
             return ir.LiteralStructType(elems_t)
-        elif isinstance(t, (int, float)):
+        elif isinstance(t, (int, float, np.number)):
             return self.float_ty
         elif isinstance(t, np.ndarray):
             return self.convert_python_struct_to_llvm_ir(t.tolist())
