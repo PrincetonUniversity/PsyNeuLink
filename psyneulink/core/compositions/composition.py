@@ -4340,7 +4340,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
 
         """
-
         # FIX 4/8/20: Add support of Pathway() in pathway arg
         # Reconcile spec of learning function in Pathway's pathway arg, and in arg to method here
         # Assign learning_function to Pathway.learning_function
