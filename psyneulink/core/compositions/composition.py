@@ -4358,9 +4358,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
 
         """
-        # FIX 4/8/20: Add support of Pathway() in pathway arg
-        # Reconcile spec of learning function in Pathway's pathway arg, and in arg to method here
-        # Assign learning_function to Pathway.learning_function
+        # FIX 4/8/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
+        # FIX 4/8/20 [JDC]: Assign learning_function to Pathway.learning_function
+
+        # If called from add_pathways(), use its pathway_arg_str
+        if context.source == ContextFlags.METHOD:
+            pathway_arg_str = context.string
+        # Otherwise, refer to call from this method
+        else:
+            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            # FIX 4/8/20 [JDC]: Reset for to None for now to replicate prior behavior,
+            #                   but need to implement proper behavior wrt call to analyze_graph()
+            #                   _check_initalization_state()
+            context = None
+
+        # Deal with Pathway() specifications
+        if isinstance(pathway, Pathway):
+            pathway = pathway.pathway
 
         # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
@@ -4429,63 +4443,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         return learning_pathway
 
-    # FIX 4/8/20 [JDC]: REMOVE
-    # def _add_linear_learning_pathways(self, pathways, context=None):
-    #     """Add learning pathways to Composition
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     pathways : tuple, dict or list[tuple, dict]
-    #         specifies the learning pathway(s) to be added to the Composition.  Each pathway must be specified as
-    #         a tuple, the first item of which is the pathway itself (see **pathway** argument of
-    #         `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`) and the second item its
-    #         `LearningFunction` (see **learning_function** argument of `add_linear_learning_pathway
-    #         <Composition.add_linear_learning_pathway>`).  The tuple can be included as the single entry in a dict,
-    #         the key of which must be a str (used as the name of the `Pathway` created), and is the tuple.  Multiple
-    #         tuples and/or dicts can be included in a list as the pathways argument, to construct more than one
-    #         learning pathway.
-    #
-    #     Returns
-    #     -------
-    #
-    #     list[`Pathway`] :
-    #         list of `learning Pathways <Composition_Learning_Pathways>` added to the Composition.
-    #
-    #     """
-    #     if not pathways:
-    #         return
-    #     pathways = convert_to_list(pathways)
-    #     for pway in pathways:
-    #         if not isinstance(pway,(tuple, dict)):
-    #             raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
-    #                                    f"is not a dict or tuple.")
-    #
-    #     added_pathways = []
-    #     for pathway in pathways:
-    #         pathway_name = None
-    #         if isinstance(pathway, dict):
-    #             if len(pathway)!=1:
-    #                 raise CompositionError(f"A dict ({pathway}) specified in the 'learning_pathways' arg for "
-    #                                        f"{self.name}' contains more than one entry.")
-    #             pathway_name, pathway = list(pathway.items())[0]
-    #             if not isinstance(pathway_name, str):
-    #                 raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'learning_pathways' "
-    #                                        f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
-    #             if not isinstance(pathway, tuple):
-    #                 raise CompositionError(f"The value ({pathway}) in a dict specified in the 'learning_pathways' "
-    #                                        f"arg for {self.name}' must be a tuple.")
-    #             if not isinstance(pathway[0], list):
-    #                 raise CompositionError(f"The 1st item ({pathway[0]}) in the value of the dict specified in the "
-    #                                        f"'learning_pathways' arg for {self.name}' must be a list.")
-    #             if not (isinstance(pathway[1], type) and issubclass(pathway[1], LearningFunction)):
-    #                 raise CompositionError(f"The 2nd item ({pathway[1]}) in the value of the dict specified in the "
-    #                                        f"'learning_pathways' arg for {self.name}' must be a LearningFunction.")
-    #
-    #         added_pathways.append(self.add_linear_learning_pathway(pathway=pathway[0],
-    #                                                                learning_function=pathway[1],
-    #                                                                name=pathway_name))
-    #     return added_pathways
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
                                            learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
