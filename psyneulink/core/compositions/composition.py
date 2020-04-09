@@ -4341,6 +4341,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
 
+        # FIX 4/8/20: Add support of Pathway() in pathway arg
+        # Reconcile spec of learning function in Pathway's pathway arg, and in arg to method here
+        # Assign learning_function to Pathway.learning_function
+
         # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
