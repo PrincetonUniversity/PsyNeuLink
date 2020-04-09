@@ -2229,7 +2229,8 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, A_to_B, B, C, D, E, C_to_E])
 
-        assert "A projection cannot be the last item in a linear processing pathway." in str(error_text.value)
+        assert ("The last item in the \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value)
+                and "cannot be a Projection:" in str(error_text.value))
 
     def test_LPP_two_projections_in_a_row(self):
         comp = Composition()
@@ -2256,13 +2257,16 @@ class TestRun:
     def test_LPP_wrong_component(self):
         from psyneulink.core.components.ports.inputport import InputPort
         comp = Composition()
-        Nonsense = InputPort()
+        Nonsense = InputPort() # Note:  ports are OK in general, but this one was unassigned
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
         B = TransferMechanism(name="composition-pytests-B", function=Linear(slope=2.0))
         with pytest.raises(CompositionError) as error_text:
             comp.add_linear_processing_pathway([A, Nonsense, B])
-        assert ("An entry in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value) and
-                "is not a Node (Mechanism or Composition) or a Projection:" in str(error_text.value))
+        assert ("Bad Projection specification in \'pathway\' arg " in str(error_text.value)
+                and "for add_linear_procesing_pathway method" in str(error_text.value)
+                and "Attempt to assign Projection" in str(error_text.value)
+                and "to InputPort" in str(error_text.value)
+                and "that is in deferred init" in str(error_text.value))
 
     def test_lpp_invalid_matrix_keyword(self):
         comp = Composition()
@@ -2271,8 +2275,9 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
         # Typo in IdentityMatrix
             comp.add_linear_processing_pathway([A, "IdntityMatrix", B])
-
-        assert "Invalid projection" in str(error_text.value)
+        assert ("An entry in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value) and
+                "is not a Node (Mechanism or Composition) or a Projection: \'IdntityMatrix\'."  in str(
+                    error_text.value))
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',

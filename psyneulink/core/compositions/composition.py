@@ -1480,23 +1480,23 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.core.components.projections.projection import DuplicateProjectionError
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.ports.port import Port
-from psyneulink.core.components.ports.inputport import InputPort, SHADOW_INPUTS
+from psyneulink.core.components.ports.inputport import InputPort, InputPortError, SHADOW_INPUTS
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
-    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
+    AFTER, ALL, ANY, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
+    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, EITHER, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
     LABELS, LEARNED_PROJECTIONS, LEARNING, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -3907,7 +3907,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway = pathway.pathway
         elif isinstance(pathway, tuple):
             # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
-            if all(_is_pathway_entry_spec(n, ALL) for n in pathway):
+            if all(_is_pathway_entry_spec(n, ANY) for n in pathway):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
@@ -4009,8 +4009,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
-                    raise CompositionError(f"{pathway[c]} is the last item in the {pathway_arg_str}. "
-                                           f"A projection cannot be the last item in a linear processing pathway.")
+                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                                           f"{pathway[c]}.")
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c], tuple):
                     proj = pathway[c][0]
@@ -4027,9 +4027,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver = receiver[0]
                     try:
                         if isinstance(proj, (np.ndarray, np.matrix, list)):
+                            # If proj is a matrix specification, use it as the matrix arg
                             proj = MappingProjection(sender=sender,
                                                      matrix=proj,
                                                      receiver=receiver)
+                        else:
+                            # Otherwise, if it is Port specification, implement default Projection
+                            try:
+                                if isinstance(proj, InputPort):
+                                    proj = MappingProjection(sender=sender,
+                                                             receiver=proj)
+                                elif isinstance(proj, OutputPort):
+                                    proj = MappingProjection(sender=proj,
+                                                             receiver=receiver)
+                            except (InputPortError, ProjectionError) as error:
+                                # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
+                                raise ProjectionError(str(error.error_value))
+
+                    except (InputPortError, ProjectionError, MappingError) as error:
+                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                                   f"{str(error.error_value)}")
+
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
                         # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
@@ -4069,7 +4087,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"is not between two Nodes: {pathway[c]}")
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
-                                       f"or a Projection: {pathway[c]}.")
+                                       f"or a Projection: {repr(pathway[c])}.")
 
         # Finally, clean up any tuple specs
         for i, n in enumerate(nodes):
@@ -8922,32 +8940,22 @@ def get_compositions():
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
 
 
-def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ALL)):
+def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
+    from psyneulink.core.components.projections.projection import _is_projection_spec
     node_specs = (Mechanism, Composition)
-    proj_specs = (Projection, np.ndarray, np.matrix, str, list)
     is_node = is_proj = False
 
-    if desired_type in {NODE, ALL}:
-        # if (isinstance(entry, node_specs)
-        #         or (isinstance(entry, tuple)
-        #             and isinstance(entry[0], node_specs)
-        #             and isinstance(entry[1], NodeRole))):
-        #     return True
+    if desired_type in {NODE, ANY}:
         is_node = (isinstance(entry, node_specs)
                    or (isinstance(entry, tuple)
                        and isinstance(entry[0], node_specs)
                        and isinstance(entry[1], NodeRole)))
 
-    if desired_type in {PROJECTION, ALL}:
-        # if (isinstance(entry, proj_specs)
-        #         or (isinstance(entry, tuple)
-        #             and isinstance(entry[0], proj_specs)
-        #             and entry[1] in {True, False, MAYBE})):
-        #     return True
-        is_proj = (isinstance(entry, proj_specs)
+    if desired_type in {PROJECTION, ANY}:
+        is_proj = (_is_projection_spec(entry)
                    or (isinstance(entry, tuple)
-                       and isinstance(entry[0], proj_specs)
+                       and _is_projection_spec(entry[0])
                        and entry[1] in {True, False, MAYBE}))
 
     if is_node or is_proj:
