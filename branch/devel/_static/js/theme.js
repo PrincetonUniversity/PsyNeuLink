@@ -1,5 +1,7 @@
 require=(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.utilities = {
+  OFFSET_HEIGHT_PADDING: 20,
+
   scrollTop: function() {
     var supportPageOffset = window.pageXOffset !== undefined;
     var isCSS1Compat = ((document.compatMode || "") === "CSS1Compat");
@@ -87,12 +89,13 @@ window.utilities = {
   },
 
   headersHeight: function() {
-    if (document.getElementById("psyneulink-left-menu").classList.contains("make-fixed")) {
-      return document.getElementById("psyneulink-page-level-bar").offsetHeight;
-    } else {
-      return document.getElementById("header-holder").offsetHeight +
-             document.getElementById("psyneulink-page-level-bar").offsetHeight;
-    }
+    return document.getElementById("psyneulink-page-level-bar").offsetHeight
+    // if (document.getElementById("psyneulink-left-menu").classList.contains("make-fixed")) {
+    //   return document.getElementById("psyneulink-page-level-bar").offsetHeight;
+    // } else {
+    //   return document.getElementById("header-holder").offsetHeight +
+    //          document.getElementById("psyneulink-page-level-bar").offsetHeight;
+    // }
   },
 
   windowHeight: function() {
@@ -152,6 +155,8 @@ window.highlightNavigation = {
   navigationListItems: document.querySelectorAll("#psyneulink-right-menu li"),
   sections: document.querySelectorAll(".psyneulink-article .section"),
   sectionIdTonavigationLink: {},
+  contents: document.querySelector(".psyneulink-article #contents"),
+  contentsIdTonavigationLink: {},
 
   bind: function() {
     if (!sideMenus.displayRightMenu) {
@@ -199,7 +204,7 @@ window.highlightNavigation = {
             }
           }
 
-          // navigationListItem.classList.add("active");
+          navigationListItem.classList.add("active");
 
           // Scroll to active item. Not a requested feature but we could revive it. Needs work.
 
@@ -334,9 +339,7 @@ window.scrollToAnchor = {
     var anchorScrolls = {
       ANCHOR_REGEX: /^#[^ ]+$/,
       offsetHeightPx: function() {
-        var OFFSET_HEIGHT_PADDING = 20;
-        // TODO: this is a little janky. We should try to not rely on JS for this
-        return utilities.headersHeight() + OFFSET_HEIGHT_PADDING;
+        return utilities.headersHeight() + utilities.OFFSET_HEIGHT_PADDING;
       },
 
       /**
@@ -374,6 +377,7 @@ window.scrollToAnchor = {
         match = document.getElementById(href.slice(1));
 
         if(match) {
+          // var anchorOffset = $(match).offset().top - this.getFixedOffset();
           var anchorOffset = $(match).offset().top - this.getFixedOffset();
           $('html, body').scrollTop(anchorOffset);
 
@@ -767,6 +771,21 @@ function ThemeNav () {
                 i.textContent = 'Arguments:'
             }
         })
+
+        // Adjust spans for each section in TOC for scrolling that's consistent with side menu
+
+        var tocSections = document.querySelectorAll('#psyneulink-article #contents a.reference.internal')
+
+        tocSections.forEach(
+            (section) => {
+                let utilities = window.utilities;
+                let href = section.getAttribute('href')
+                let span = document.querySelector(`span${href}`)
+                span.style.display = 'block';
+                span.style.position = 'relative';
+                span.style.bottom = `${utilities.OFFSET_HEIGHT_PADDING + utilities.headersHeight()}px`
+            }
+        )
     };
 
     nav.reset = function () {
@@ -799,8 +818,6 @@ function ThemeNav () {
                 link.closest('li.toctree-l2').addClass('current');
                 link.closest('li.toctree-l3').addClass('current');
                 link.closest('li.toctree-l4').addClass('current');
-                link.closest('li.toctree-l5').addClass('current');
-                link.closest('li.toctree-l6').addClass('current');
             }
         }
         catch (err) {

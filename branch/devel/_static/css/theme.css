@@ -10561,7 +10561,6 @@ a:hover {
   padding-left: 0;
   margin-bottom: 2.5rem;
   line-height: 1.3rem;
-  position: relative;
 }
 .psyneulink-left-menu > ul,
 .psyneulink-right-menu > ul {
@@ -10624,11 +10623,6 @@ a:hover {
   display: none;
 }
 
-.psyneulink-left-menu li.toctree-l1 {
-  position: relative;
-  left: 15px;
-}
-
 .psyneulink-left-menu li.toctree-l1 ul,
 .psyneulink-left-menu li.toctree-l2 ul {
   position: relative;
@@ -10639,7 +10633,6 @@ a:hover {
 .psyneulink-right-menu li.toctree-l1.current > a {
   color: #ee4c2c;
 }
-
 .psyneulink-left-menu li.toctree-l1.current > a:before,
 .psyneulink-left-menu li.toctree-l2.current > a:before,
 .psyneulink-left-menu li.toctree-l3.current > a:before,
