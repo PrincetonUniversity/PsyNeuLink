@@ -88,7 +88,7 @@ def test_simplified_necker_cube(benchmark, mode):
         # turn off report
         node.reportOutputPref = reportOutputPref
 
-    bp_comp.show_graph()
+    # bp_comp.show_graph()
 
     # init the inputs
     # # MODIFIED 4/4/20 NEW:
