@@ -12,9 +12,9 @@ dist: bionic
 
 env:
   jobs:
-    - PYTHON=3.8.2
-    - PYTHON=3.7.7
-    - PYTHON=3.6.8
+    - PYTHON=3.8
+    - PYTHON=3.7
+    - PYTHON=3.6
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
     - PIP_PROGRESS_BAR="off"
@@ -33,8 +33,8 @@ before_install:
     # Install venv on Linux using Ubuntu distributed python
     # distutils and lib2to3 are only needed for python3.8
     # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
-    sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv python3-distutils python3-lib2to3
-    python${PYTHON%.*} -m venv $HOME/venv
+    sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python3-distutils python3-lib2to3
+    python$PYTHON -m venv $HOME/venv
     # Provide fake xdg-open
     echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
     chmod +x $HOME/venv/bin/xdg-open
