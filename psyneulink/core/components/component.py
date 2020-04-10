@@ -1209,7 +1209,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "search_space",
-                     "activation_derivative_fct", "costs"}
+                     "activation_derivative_fct", "costs",
+                     # composition specific FIXME: Move to inherited blacklist on comp.
+                     "input_specification",
+                     # autodiff specific types
+                     "pytorch_representation", "optimizer"}
         # mechanism functions are handled separately
         if hasattr(self, 'ports'):
             blacklist.add("function")
@@ -1249,9 +1253,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
             try:
                 # Modulated parameters change shape to array
-                modulations = (p.sender.modulation for p in self.owner.mod_afferents)
-                modulated_params = [getattr(self.parameters, m).source.name for m in modulations]
-                if p.name in modulated_params:
+                modulated_params = (
+                    getattr(self.parameters, p.sender.modulation).source
+                    for p in self.owner.mod_afferents)
+                if p in modulated_params:
                     param = [param]
             except AttributeError:
                 pass

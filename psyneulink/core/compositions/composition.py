@@ -8634,19 +8634,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      p.receiver.owner is not self.parameter_CIM and
                      p.sender.owner is not self.output_CIM)
 
+    def _get_param_ids(self):
+        return ["nodes", "projections"] + super()._get_param_ids()
+
     def _get_param_struct_type(self, ctx):
         node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
+        comp_param_type_list = ctx.get_param_struct_type(super())
+
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(node_param_type_list),
-            pnlvm.ir.LiteralStructType(proj_param_type_list)))
+            pnlvm.ir.LiteralStructType(proj_param_type_list),
+            *comp_param_type_list))
+
+    def _get_state_ids(self):
+        return ["nodes", "projections"] + super()._get_param_ids()
 
     def _get_state_struct_type(self, ctx):
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
         proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
+        comp_state_type_list = ctx.get_state_struct_type(super())
+
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(node_state_type_list),
-            pnlvm.ir.LiteralStructType(proj_state_type_list)))
+            pnlvm.ir.LiteralStructType(proj_state_type_list),
+            *comp_state_type_list))
 
     def _get_input_struct_type(self, ctx):
         pathway = ctx.get_input_struct_type(self.input_CIM)
@@ -8667,12 +8679,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_state_initializer(self, context):
         node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
         proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
-        return (tuple(node_states), tuple(proj_states))
+        comp_states = super()._get_state_initializer(context)
+
+        return (tuple(node_states), tuple(proj_states), *comp_states)
 
     def _get_param_initializer(self, context):
         node_params = (m._get_param_initializer(context) for m in self._all_nodes)
         proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
-        return (tuple(node_params), tuple(proj_params))
+        comp_params = super()._get_param_initializer(context)
+
+        return (tuple(node_params), tuple(proj_params), *comp_params)
 
     def _get_data_initializer(self, context):
         output_data = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)

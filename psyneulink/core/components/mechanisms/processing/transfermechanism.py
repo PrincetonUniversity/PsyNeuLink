@@ -1105,7 +1105,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 termination_measure=Distance(metric=MAX_ABS_DIFF),
+                 termination_measure=None,
                  termination_threshold:tc.optional(tc.any(int, float))=None,
                  termination_comparison_op:tc.any(str, is_comparison_operator)=LESS_THAN_OR_EQUAL,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
@@ -1121,6 +1121,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_ports is None or output_ports == RESULTS:
             output_ports = [RESULTS]
+
+        if termination_measure is None:
+            Distance(metric=MAX_ABS_DIFF)
 
         initial_value = self._parse_arg_initial_value(initial_value)
 

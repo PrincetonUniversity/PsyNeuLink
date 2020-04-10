@@ -20,7 +20,6 @@ try:
 except ImportError:
     torch_available = False
 
-
 __all__ = ['PytorchModelCreator']
 # Class that is called to create pytorch representations of autodiff compositions based on their processing graphs.
 # Called to do so when the composition is run for the first time.
@@ -382,7 +381,8 @@ class PytorchModelCreator(torch.nn.Module):
             raise Exception("LOSS TYPE",loss_type,"NOT SUPPORTED")
 
         optimizer_step_f = ctx.import_llvm_function(optimizer)
-        optimizer_struct = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+        optimizer_struct_idx = len(state.type.pointee.elements) - 1
+        optimizer_struct = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(optimizer_struct_idx)])
         optimizer_zero_grad = ctx.import_llvm_function(optimizer.zero_grad(ctx).name)
         backprop = ctx.import_llvm_function(self._gen_llvm_training_backprop(ctx, optimizer, loss).name)
         

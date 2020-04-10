@@ -50,7 +50,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     for a in llvm_func.args:
         a.attributes.add('nonnull')
 
-    context, params, comp_in, data_in, data_out = llvm_func.args[:5]
+    state, params, comp_in, data_in, data_out = llvm_func.args[:5]
 
     if node is composition.input_CIM:
         # if there are incoming modulatory projections,
@@ -81,6 +81,11 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
     # Execute all incoming projections
     inner_projections = list(composition._inner_projections)
+    zero = ctx.int32_ty(0)
+    projections_params = helpers.get_param_ptr(builder, composition,
+                                               params, "projections")
+    projections_states = helpers.get_state_ptr(builder, composition,
+                                               state, "projections")
     for proj in incoming_projections:
         # Skip autoassociative projections.
         # Recurrent projections are executed as part of the mechanism to
@@ -91,18 +96,16 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # Get location of projection input data
         par_mech = proj.sender.owner
         if par_mech in composition._all_nodes:
-            par_idx = composition._get_node_index(par_mech)
+            parent_idx = composition._get_node_index(par_mech)
         else:
-            comp = par_mech.composition
-            assert par_mech is comp.output_CIM
-            par_idx = composition.nodes.index(comp)
+            assert par_mech is par_mech.composition.output_CIM
+            parent_idx = composition.nodes.index(par_mech.composition)
 
-        output_s = proj.sender
-        assert output_s in par_mech.output_ports
-        output_port_idx = par_mech.output_ports.index(output_s)
+        assert proj.sender in par_mech.output_ports
+        output_port_idx = par_mech.output_ports.index(proj.sender)
         proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                         ctx.int32_ty(0),
-                                        ctx.int32_ty(par_idx),
+                                        ctx.int32_ty(parent_idx),
                                         ctx.int32_ty(output_port_idx)])
 
         # Get location of projection output (in mechanism's input structure
@@ -138,26 +141,27 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
         # Get projection parameters and state
         proj_idx = inner_projections.index(proj)
-        # Projections are listed second in param and state structure
-        proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-        proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
+        proj_params = builder.gep(projections_params, [zero, ctx.int32_ty(proj_idx)])
+        proj_state = builder.gep(projections_states, [zero, ctx.int32_ty(proj_idx)])
         proj_function = ctx.import_llvm_function(proj, tags=func_tags)
 
         if proj_out.type != proj_function.args[3].type:
             warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
             proj_out = builder.bitcast(proj_out, proj_function.args[3].type)
-        builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
+        builder.call(proj_function, [proj_params, proj_state, proj_in, proj_out])
 
-    idx = ctx.int32_ty(composition._get_node_index(node))
-    zero = ctx.int32_ty(0)
-    node_params = builder.gep(params, [zero, zero, idx])
-    node_context = builder.gep(context, [zero, zero, idx])
-    node_out = builder.gep(data_out, [zero, zero, idx])
+
+    node_idx = ctx.int32_ty(composition._get_node_index(node))
+    nodes_params = helpers.get_param_ptr(builder, composition, params, "nodes")
+    nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
+    node_params = builder.gep(nodes_params, [zero, node_idx])
+    node_state = builder.gep(nodes_states, [zero, node_idx])
+    node_out = builder.gep(data_out, [zero, zero, node_idx])
     if is_mech:
-        call_args = [node_params, node_context, node_in, node_out]
+        call_args = [node_params, node_state, node_in, node_out]
         if len(node_function.args) > 4:
             assert node is composition.controller
-            call_args += [params, context, data_in]
+            call_args += [params, state, data_in]
         builder.call(node_function, call_args)
     elif "reinitialize" not in tags:
         # FIXME: reinitialization of compositions is not supported
@@ -165,7 +169,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
         node_data = builder.gep(data_in, [zero, nested_idx])
         node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-        builder.call(node_function, [node_context, node_params, node_in,
+        builder.call(node_function, [node_state, node_params, node_in,
                                      node_data, node_cond])
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
@@ -233,15 +237,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
     simulation = "simulation" in tags
     node_tags = tags.union({"node_wrapper"})
     extra_args = []
-    # If there is a node that needs learning input we need to export it
-    for node in filter(lambda n: hasattr(n, 'learning_enabled') and "learning" in tags, composition.nodes):
-        node_wrap = ctx.get_node_wrapper(composition, node)
-        node_f = ctx.import_llvm_function(node_wrap, tags=node_tags)
-        extra_args = [node_f.args[-1].type]
-
 
     with _gen_composition_exec_context(ctx, composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
-        state, _, comp_in, _, cond, *learning = builder.function.args
+        state, _, comp_in, _, cond = builder.function.args
 
         # Reset internal clocks of each node
         for idx, node in enumerate(composition._all_nodes):
@@ -347,8 +345,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 args = [state, params, comp_in, data, output_storage]
                 if len(node_f.args) >= 6:  # Composition wrappers have 6 args
                     args.append(cond)
-                if len(node_f.args) == 7:  # Learning wrappers have 7 args
-                    args.append(*learning)
                 builder.call(node_f, args)
 
                 cond_gen.generate_update_after_run(builder, cond, node)
