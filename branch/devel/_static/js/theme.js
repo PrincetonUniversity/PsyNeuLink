@@ -90,12 +90,6 @@ window.utilities = {
 
   headersHeight: function() {
     return document.getElementById("psyneulink-page-level-bar").offsetHeight
-    // if (document.getElementById("psyneulink-left-menu").classList.contains("make-fixed")) {
-    //   return document.getElementById("psyneulink-page-level-bar").offsetHeight;
-    // } else {
-    //   return document.getElementById("header-holder").offsetHeight +
-    //          document.getElementById("psyneulink-page-level-bar").offsetHeight;
-    // }
   },
 
   windowHeight: function() {
@@ -155,8 +149,6 @@ window.highlightNavigation = {
   navigationListItems: document.querySelectorAll("#psyneulink-right-menu li"),
   sections: document.querySelectorAll(".psyneulink-article .section"),
   sectionIdTonavigationLink: {},
-  contents: document.querySelector(".psyneulink-article #contents"),
-  contentsIdTonavigationLink: {},
 
   bind: function() {
     if (!sideMenus.displayRightMenu) {
@@ -375,10 +367,9 @@ window.scrollToAnchor = {
         }
 
         match = document.getElementById(href.slice(1));
-
         if(match) {
-          // var anchorOffset = $(match).offset().top - this.getFixedOffset();
           var anchorOffset = $(match).offset().top - this.getFixedOffset();
+          console.log($(match).offset().top, this.getFixedOffset())
           $('html, body').scrollTop(anchorOffset);
 
           // Add the state to history as-per normal anchor links
@@ -412,11 +403,12 @@ window.scrollToAnchor = {
        */
       delegateAnchors: function(e) {
         var elem = e.target;
-
         if (elem.tagName.toLowerCase() === 'em'){
           elem = elem.offsetParent
         }
-
+        else if (elem.tagName.toLowerCase() === 'span'){
+          elem = elem.parentNode
+        }
         if(this.scrollIfAnchor(elem.getAttribute('href'), true)) {
           e.preventDefault();
         }
@@ -784,6 +776,18 @@ function ThemeNav () {
                 span.style.display = 'block';
                 span.style.position = 'relative';
                 span.style.bottom = `${utilities.OFFSET_HEIGHT_PADDING + utilities.headersHeight()}px`
+            }
+        )
+
+        var nonTocNavSections = document.querySelectorAll('.psyneulink-article .section')
+
+        nonTocNavSections.forEach(
+            (section) => {
+                let span = section.querySelector('span')
+                if (span && span.textContent === ''){
+                    span.style.display = 'block';
+                    span.style.position = 'relative';
+                }
             }
         )
     };
