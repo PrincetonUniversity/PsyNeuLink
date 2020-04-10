@@ -7933,6 +7933,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      p.receiver.owner is not self.parameter_CIM and
                      p.sender.owner is not self.output_CIM)
 
+    def _get_param_ids(self):
+        return ["nodes", "projections"] + super()._get_param_ids()
+
     def _get_param_struct_type(self, ctx):
         node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
@@ -7942,6 +7945,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pnlvm.ir.LiteralStructType(node_param_type_list),
             pnlvm.ir.LiteralStructType(proj_param_type_list),
             *comp_param_type_list))
+
+    def _get_state_ids(self):
+        return ["nodes", "projections"] + super()._get_param_ids()
 
     def _get_state_struct_type(self, ctx):
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
