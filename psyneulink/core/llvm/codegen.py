@@ -237,15 +237,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
     simulation = "simulation" in tags
     node_tags = tags.union({"node_wrapper"})
     extra_args = []
-    # If there is a node that needs learning input we need to export it
-    for node in filter(lambda n: hasattr(n, 'learning_enabled') and "learning" in tags, composition.nodes):
-        node_wrap = ctx.get_node_wrapper(composition, node)
-        node_f = ctx.import_llvm_function(node_wrap, tags=node_tags)
-        extra_args = [node_f.args[-1].type]
-
 
     with _gen_composition_exec_context(ctx, composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
-        state, _, comp_in, _, cond, *learning = builder.function.args
+        state, _, comp_in, _, cond = builder.function.args
 
         # Reset internal clocks of each node
         for idx, node in enumerate(composition._all_nodes):
@@ -351,8 +345,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 args = [state, params, comp_in, data, output_storage]
                 if len(node_f.args) >= 6:  # Composition wrappers have 6 args
                     args.append(cond)
-                if len(node_f.args) == 7:  # Learning wrappers have 7 args
-                    args.append(*learning)
                 builder.call(node_f, args)
 
                 cond_gen.generate_update_after_run(builder, cond, node)
