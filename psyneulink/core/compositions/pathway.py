@@ -84,20 +84,28 @@ Structure
 
 .. _Pathway_Attribute:
 
-The primary attribute is of a Pathway is `pathway <Pathway.pathway>`.  If the Pathway was created on its own, this
-contains the specification provided in the **pathway** arg of its constructor; that is, depending upon how it was
-specified, it may or may not contain fully constructed `Components <Component>`.  This is passed to the **pathway**
-argument of a Composition's constructor or one of its `pathway creation methods <Composition_Pathway_Methods>` when
-the Pathway is used in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition
-(and assigned to its `pathways <Composition.pathways>` attribute), then the actual `Mechanism(s) <Mechanism>` and/or
-`Composition(s)` that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are
-listed in the Pathway's `pathway <Pathway.pathway>` attribute.
+A Pathway has the following primary attributes:
 
-A Pathway also has a `composition <Pathway.composition>` attribute that contains the Composition to which it belongs
-if it was created by one, or None if it was constructed on its own; a `roles <Pathway.roles>` attribute that lists
-the `PathwayRoles` assigned by the Compositon to which it belongs, corresponding to the `NodeRoles <NodeRole`> of its
-Components;  and attributes for the `Nodes <Composition_Nodes>` with those assigned `NodeRoles <NodeRole>.
+* `pathway <Pathway.pathway>` - if the Pathway was created on its own, this contains the specification provided in
+  the **pathway** arg of its constructor; that is, depending upon how it was specified, it may or may not contain
+  fully constructed `Components <Component>`.  This is passed to the **pathway** argument of a Composition's
+  constructor or one of its `pathway creation methods <Composition_Pathway_Methods>` when the Pathway is used in the
+  specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
+  `pathways <Composition.pathways>` attribute), then the actual `Mechanism(s) <Mechanism>` and/or `Composition(s)`
+  that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are listed in the
+  Pathway's `pathway <Pathway.pathway>` attribute.
 
+* `composition <Pathway.composition>` - contains the Composition to which it belongs if it was created by one,
+  or None if it was constructed on its own.
+
+* `roles <Pathway.roles>` and `Node <Composition_Nodes>` attributes - if the Pathway was created by a Composition,
+  the `roles <Pathway.roles>` attribute `this lists the `PathwayRoles` assigned to it by the Compositon that
+  correspond to the `NodeRoles <NodeRole`> of its Components, and the `Nodes <Composition_Nodes>` with each of those
+  `NodeRoles <NodeRole>` is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
+  to a Composition (i.e., it is a `template <Pathway_Template>`), then these attributes return None.
+
+* `learning_function <Pathway.learning_function>` - the LearningFunction assigned to the Pathway if it is a
+  `learning Pathway <Composition_Learning_Pathway>` that belongs to a Composition; otherwise it is None.
 
 Execution
 ---------
@@ -105,7 +113,6 @@ Execution
 A Pathway cannot be executed on its own.  Its Components are executed when the Composition to which it belongs is
 executed, by default in the order in which they appear in the `pathway <Pathway.pathway>` attribute;  however, this
 can be modified by `Conditions <Condition>` added to the Composition's `scheduler <Composition.scheduler>`.
-
 
 Class Reference
 ---------------
