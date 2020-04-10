@@ -8,6 +8,109 @@
 
 # *********************************************** Pathway **************************************************************
 
+"""
+
+.. _Pathway_Overview:
+
+Overview
+--------
+
+A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`. Pathways
+are created and added to a `Composition` if the **pathways** argument of the Composition's constructor is specified,
+and/or whenever the Composition's `pathway creation methods <Composition_Pathway_Methods>` are used.  A Pathway can
+also be created on its own, and used in the **pathway** argument of the Composition's constructor or one of its
+`pathway creation methods <Composition_Pathway_Methods>` methods.  Although Pathways are not required in Compositions,
+they are useful for constructing them, and are required to implement `learning <Composition_Learning>` in a Composition.
+
+Creating a Pathway
+------------------
+
+A Pathway can be created as part of a Composition or on its own.  If the **composition** argument of the
+Pathway's constructor is specified, it is added to the specified `Composition`;  if that is not specified,
+then a standalone Pathway is created that can be used as a template for specifiying the pathway of one or
+more Compositions, as described below.
+
+*Assigning to a Pathway to a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the **composition** argument is specified in the Pathway's
+constructor, then the sequence assigned to its **pathway** argument is added to the specified `Composition`
+using its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method or its
+`add_linear_learning_pathway <Composition.add_linear_processing_pathway>` method, depending on the
+specifiation in the *pathway* argument (see those methods for corresponding specifications).  In this case,
+the Pathway object returned by the constructor is the same as the one added to the Composition.
+
+.. _Pathway_Template:
+
+*Pathway as a Template*
+~~~~~~~~~~~~~~~~~~~~~~~
+
+If the **composition** argument is *not* specified in the Pathway's constructor, then
+the Pathway is created on its own.  This can serve as a template for a Pathway assigned to a `Composition`,
+by using it in the **processing_pathways** or **learning_pathways** argument of the constructor for a
+Composition, or in its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
+`add_linear_learning_pathway <Composition.add_linear_processing_pathway>` methods.  In any of these cases,
+a new Pathway object is created and assigned to the Composition, and the template remains unassigned.
+
+COMMENT:
+*Roles*.  If the **roles** agument of the Pathway's constructor is specified, then the `NodeRole(s) <NodeRole>`
+corresponding to the specified `PathwayRoles <PathwayRole>` are assigned to the nodes in the sequence
+specified in the **pathways** argument.
+COMMENT
+
+.. _Pathway_Specification:
+
+*Specification of* **pathway** *argument*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
+Pathway, a `Composition`, or any of the Composition's methods used to add a Pathway to it.
+
+    * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
+    ..
+    .. _Pathway_Specification_List:
+
+    * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
+      each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
+      (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
+      <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
+    ..
+    * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
+      <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
+      described above, and the 2nd item be a subclass of `LearningFunction`.
+
+Structure
+---------
+
+.. _Pathway_Attribute:
+
+The primary attribute is of a Pathway is `pathway <Pathway.pathway>`.  If the Pathway was created on its own, this
+contains the specification provided in the **pathway** arg of its constructor; that is, depending upon how it was
+specified, it may or may not contain fully constructed `Components <Component>`.  This is passed to the **pathway**
+argument of a Composition's constructor or one of its `pathway creation methods <Composition_Pathway_Methods>` when
+the Pathway is used in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition
+(and assigned to its `pathways <Composition.pathways>` attribute), then the actual `Mechanism(s) <Mechanism>` and/or
+`Composition(s)` that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are
+listed in the Pathway's `pathway <Pathway.pathway>` attribute.
+
+A Pathway also has a `composition <Pathway.composition>` attribute that contains the Composition to which it belongs
+if it was created by one, or None if it was constructed on its own; a `roles <Pathway.roles>` attribute that lists
+the `PathwayRoles` assigned by the Compositon to which it belongs, corresponding to the `NodeRoles <NodeRole`> of its
+Components;  and attributes for the `Nodes <Composition_Nodes>` with those assigned `NodeRoles <NodeRole>.
+
+
+Execution
+---------
+
+A Pathway cannot be executed on its own.  Its Components are executed when the Composition to which it belongs is
+executed, by default in the order in which they appear in the `pathway <Pathway.pathway>` attribute;  however, this
+can be modified by `Conditions <Condition>` added to the Composition's `scheduler <Composition.scheduler>`.
+
+
+Class Reference
+---------------
+
+"""
 import warnings
 
 import typecheck as tc
@@ -16,7 +119,8 @@ from psyneulink.core.components.functions.learningfunctions import LearningFunct
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError
-from psyneulink.core.globals.keywords import ANY, COMPARATOR_MECHANISM, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
+from psyneulink.core.globals.keywords import \
+    ANY, COMPARATOR_MECHANISM, CONTEXT, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import NodeRole, PathwayRole, convert_to_list
 
@@ -58,125 +162,75 @@ PathwayRegistry= {}
 
 class Pathway(object):
     """
-        A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
-        for one that can be assigned to one or more Compositions.
+    Pathway(
+        pathway,
+        name=None,
+        )
 
-        **Creating a Pathway**
-        ----------------------
+    A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
+    for one that can be assigned to one or more Compositions.
 
-        A Pathway can be created as part of a Composition or on its own.  If the **composition** argument of the
-        Pathway's constructor is specified, it is added to the specified `Composition`;  if that is not specified,
-        then a standalone Pathway is created that can be used as a template for specifiying the pathway of one or
-        more Compositions, as described below.
+    Arguments
+    ---------
 
-        *Assigning to a Pathway to a Composition*
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...]
+        specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
+        created for the Pathway.
 
-        If the **composition** argument is specified in the Pathway's
-        constructor, then the sequence assigned to its **pathway** argument is added to the specified `Composition`
-        using its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method or its
-        `add_linear_learning_pathway <Composition.add_linear_processing_pathway>` method, depending on the
-        specifiation in the *pathway* argument (see those methods for corresponding specifications).  In this case,
-        the Pathway object returned by the constructor is the same as the one added to the Composition.
+    name : str : default see `name <Pathway.name>`
+        specifies the name of the Pathway.
 
-        .. _Pathway_Template:
+    Attributes
+    ----------
 
-        *Pathway as a Template*
-        ~~~~~~~~~~~~~~~~~~~~~~~
+    pathway : `Node <Component_Nodes>`, list, tuple, or dict.
+        if the Pathway is created on its own, this contains the specification provided to the **pathway** argument
+        of its constructor, and take any of the forms permitted for `Pathway specification <Pathway_Specification>`;
+        if the Pathway is created by a Composition, this is a list of the `Nodes <Pathway_Nodes>` and intercolated
+        `Projections <Projection>` in the Pathway (see `above <Pathway_Attribute>` for additional details).
 
-        If the **composition** argument is *not* specified in the Pathway's constructor, then
-        the Pathway is created on its own.  This can serve as a template for a Pathway assigned to a `Composition`,
-        by using it in the **processing_pathways** or **learning_pathways** argument of the constructor for a
-        Composition, or in its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
-        `add_linear_learning_pathway <Composition.add_linear_processing_pathway>` methods.  In any of these cases,
-        a new Pathway object is created and assigned to the Composition, and the template remains unassigned.
+    composition : `Composition` or None
+        `Composition` to which the Pathway belongs;  if None, then Pathway is a `template <Pathway_Template>`.
 
-        *Roles*.  If the **roles** agument of the Pathway's constructor is specified, then the `NodeRole(s) <NodeRole>`
-        corresponding to the specified `PathwayRoles <PathwayRole>` are assigned to the nodes in the sequence
-        specified in the **pathways** argument.
+    roles : list[`PathwayRole`]
+        list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway, based on the `NodeRole(s) <NodeRole>`
+        assigned to its `Nodes <Composition>` in the `composition <Pathway.composition>` to which it belongs.
 
-        .. _Pathway_Specification:
+    learning_function : `LearningFunction` or None
+        `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
+        it is a `learning pathway <Composition_Learning_Pathways>`.
 
-        *Specification of* **pathway** *argument*
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    input : `Mechanism <Mechanism>` or None
+        `INPUT` node if Pathway contains one.
 
-        The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-        Pathway, a `Composition`, or any of the Composition's methods used to add a Pathway to it.
+    output : `Mechanism <Mechanism>` or None
+        `OUTPUT` node if Pathway contains one.
 
-            * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
-            ..
-            .. _Pathway_Specification_List:
+    target : `Mechanism <Mechanism>` or None
+        `TARGET` node if if Pathway contains one; same as `learning_components
+        <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
-            * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
-              each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
-              (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
-              <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
-            ..
-            * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
-              <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
-              described above, and the 2nd item be a subclass of `LearningFunction`.
+    comparator : `Mechanism <Mechanism>` or None
+        `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
+        <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
-        Arguments
-        ---------
+    learning_components : dict
+        dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathways>`
+        (and is assigned `PathwayRole.LEARNING` in `roles <Pathway.roles>`):
 
-        pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...]
-            specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
-            created for the Pathway.
+          *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
+          ..
+          *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`)
+          ..
+          *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
+          ..
+          *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
 
-        composition : `Composition` default None
-            specifies `Composition` to which the Pathway should be assigned.
+        These are generated automatically and added to the `Composition` when the Pathway is assigned to it.
 
-        name : str : default see `name <Pathway.name>`
-            specifies the name of the Pathway.
-
-        Attributes
-        ----------
-
-        pathway : list[`Node <Pathway_Nodes>`, `Projection <Projection>`, `Node <Pathway_Nodes>`...]
-            list of `Nodes <Pathway_Nodes>` and intercolated `Projections <Projection>` in the Pathway.
-
-        composition : `Composition` or None
-            `Composition` to which the Pathway belongs;  if None, then Pathway is `template <Pathway_Template>`.
-
-        roles : list[`PathwayRole`]
-            list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway, based on the `NodeRole(s) <NodeRole>`
-            assigned to its `Nodes <Composition>` in the `composition <Pathway.composition>` to which it belongs.
-
-        learning_function : `LearningFunction` or None
-            `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
-            it is a `learning pathway <Composition_Learning_Pathways>`.
-
-        input : `Mechanism <Mechanism>` or None
-            `INPUT` node if Pathway contains one.
-
-        output : `Mechanism <Mechanism>` or None
-            `OUTPUT` node if Pathway contains one.
-
-        target : `Mechanism <Mechanism>` or None
-            `TARGET` node if if Pathway contains one; same as `learning_components
-            <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
-
-        comparator : `Mechanism <Mechanism>` or None
-            `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
-            <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
-
-        learning_components : dict
-            dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathways>`
-            (and is assigned `PathwayRole.LEARNING` in `roles <Pathway.roles>`):
-
-              *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
-              ..
-              *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`)
-              ..
-              *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
-              ..
-              *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
-
-            These are generated automatically and added to the `Composition` when the Pathway is assigned to it.
-
-        name : str
-            the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
-            default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
+    name : str
+        the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
+        default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
 
     """
     componentType = 'Pathway'
@@ -187,10 +241,18 @@ class Pathway(object):
     def __init__(
             self,
             pathway:list,
-            composition:Composition=None,
             name=None,
-            context=None
+            **kwargs
     ):
+
+        self.composition = None
+        self.composition = kwargs.pop('composition',None)
+        if not isinstance(self.composition, Composition):
+            raise Composition(f"'composition' arg of constructor for {self.__class__.__name__} "
+                              f"must be a {Composition.__name__}")
+        context = kwargs.pop(CONTEXT, None)
+        if kwargs:
+            raise Composition(f"Illegal argument(s) provided to {self.name}: {list(kwarg.keys())}")
 
         # If called from command line, being used as a template, so don't register
         if context.source == ContextFlags.COMMAND_LINE:
@@ -204,7 +266,6 @@ class Pathway(object):
                 registry=PathwayRegistry,
                 name=name
             )
-        self.composition = composition
         self.learning_components = {}
 
         # # Check validity of pathway

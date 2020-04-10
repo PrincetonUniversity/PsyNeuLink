@@ -43,7 +43,6 @@ Contents
   * `Composition_Visualization`
   * `Composition_Class_Reference`
 
-
 .. _Composition_Overview:
 
 Overview
@@ -107,6 +106,8 @@ The following arguments of the Composition's constructor can be used to add Comp
         `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` method.
     COMMENT
 
+.. _Composition_Component_Methods:
+
 The following methods can be used to add Components to an existing Composition:
 
     - `add_node <Composition.add_node>`
@@ -124,6 +125,8 @@ The following methods can be used to add Components to an existing Composition:
     - `add_projections <Composition.add_projections>`
 
         adds `Projections <Projection>` between multiple pairs of `Nodes <Composition_Nodes>` in the Composition.
+
+.. _Composition_Pathway_Methods:
 
 The methods can be used to add `Pathways <Composition_Pathways>` to the Composition:
 
@@ -288,7 +291,7 @@ describe these in greater detail, and how they are used to implement various for
 .. _Composition_Graph:
 
 *Graph*
-=======
+~~~~~~~
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
 <Mechanism>` and/or nested Composition(s) that carry out computations, and the edges of which are `Projections
@@ -302,7 +305,7 @@ displayed  using the `show_graph <Composition.show_graph>` method.
 .. _Composition_Acyclic_Cyclic:
 
 Acyclic and Cyclic Graphs
-~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
 Composition has no recurrent Projections then its structure is a `directed acyclic graph (DAG)
@@ -315,8 +318,8 @@ and also for allowing the user specify how this is done (see `Composition_Initia
 
 .. _Composition_Nodes:
 
-Nodes
-~~~~~
+*Nodes*
+~~~~~~~
 
 Every Node in a Composition's graph must be either a `Mechanism` or a `nested Composition <Composition_Nested>`.
 The nodes of a Compositions are graph are listed in the Composition's `nodes <Composition.nodes>` attribute.
@@ -354,16 +357,16 @@ COMMENT:
 
 .. _Composition_Projection:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 Directed flow of info
 Can perform linear transformation
 
 .. _Composition_Nested:
 
-Nested Compositions
-~~~~~~~~~~~~~~~~~~~
+*Nested Compositions*
+~~~~~~~~~~~~~~~~~~~~~
 
 Can project into any Mechanism w/in a nested Composition
 COMMENT
@@ -371,7 +374,7 @@ COMMENT
 .. _Composition_Pathways:
 
 *Pathways*
-==========
+~~~~~~~~~~
 
 A `Pathway` is an alternating sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a Composition,
 that is linear — that is, that has no branches.  Although a Composition is not required to have any Pathways, these are
@@ -389,7 +392,7 @@ in its `pathways <Composition.pathways>` attribute.
 .. _Composition_Processing_Pathways:
 
 Processing Pathways
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 These are linear Pathways that are not configured for learning.  One or more processing `Pathways <Pathway>` can be
 added to a Composition by specifying them in the **processing_pathways** argument of the Composition's constructor,
@@ -399,7 +402,7 @@ be added.
 .. _Composition_Learning_Pathways:
 
 Learning Pathways
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 These are linear Pathways that are configured for learning. One or more learning `Pathways <Pathway>` can be added to a
 Composition either by specifying them in the **learning_pathways** argument of the Composition's constructor, or using
@@ -416,7 +419,7 @@ Components associated with learning Pathways.
 COMMENT:
 
 *Control*
-=========
+~~~~~~~~~
 
 controller
 
@@ -430,7 +433,7 @@ Running a Composition
 .. _Composition_Run_Static_Inputs:
 
 *Run with Input Dictionary*
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `run <Composition.run>` method presents the inputs for each `trial` to the `input_ports <InputPort>` of the `INPUT`
 `Nodes <Composition_Nodes>` in the `scope of execution <Composition_Scope_of_Execution>`. These input values are
@@ -692,7 +695,7 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
 .. _Composition_Run_Dynamic_Inputs:
 
 *Run with Function, Generator, or Generator Function*
-===========================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Inputs can also be specified with a function, generator, or generator function.
 
@@ -844,7 +847,7 @@ COMMENT
 .. _Composition_Scope_of_Execution:
 
 *Execution Contexts*
-====================
+~~~~~~~~~~~~~~~~~~~~
 
 An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
 <Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
@@ -898,7 +901,7 @@ the Composition, and provides the result to the `controller <Composition.control
 .. _Composition_Controller_Assignment:
 
 *Assigning a Controller*
-========================
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
@@ -956,7 +959,7 @@ COMMENT
 .. _Composition_Controller_Execution:
 
 *Controller Execution*
-======================
+~~~~~~~~~~~~~~~~~~~~~~
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
 <Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
@@ -1022,13 +1025,15 @@ which implements the strengths ("weights") of the associations between represent
 .. _Composition_Learning_Mode:
 
 *Running a Composition in Learning Mode*
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 A Composition only learns when run in learning mode, and when its `disable_learning` parameter is False.
 To run the Composition in learning mode, use the `learn <Composition.learn>` method.
 See `learn <Composition.learn>` for more details.
 
 *Implementing Learning in a Composition*
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 There are three ways of implementing learning in a Composition:
 
 i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
@@ -1049,7 +1054,7 @@ accepts and returns tensors. Each of these approaches is described in more detai
 .. _Composition_Learning_Standard:
 
 *Learning Using PsyNeuLink Components*
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * `Composition_Learning_Unsupervised`
 * `Composition_Learning_Supervised`
@@ -1074,7 +1079,7 @@ or modified by assigning values to their attributes.
 .. _Composition_Learning_Unsupervised:
 
 Unsupervised Learning
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
 to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
@@ -1095,7 +1100,7 @@ COMMENT
 .. _Composition_Learning_Supervised:
 
 Supervised Learning
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 * `Composition_Learning_Methods`
 * `Composition_Learning_Components`
@@ -1111,8 +1116,8 @@ COMMENT
 
 .. _Composition_Learning_Methods:
 
-*Learning Methods*
-^^^^^^^^^^^^^^^^^^
+Learning Methods
+================
 
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
 three such methods:
@@ -1141,8 +1146,8 @@ as described below.
 
 .. _Composition_Learning_Components:
 
-*Learning Components*
-^^^^^^^^^^^^^^^^^^^^^
+Learning Components
+===================
 
 For each `learning sequence <Composition_Learning_Sequence>` specified in a `learning method
 <Composition_Learning_Methods>`, it creates the following Components, and assigns to them the `NodeRoles <NodeRole>`
@@ -1269,8 +1274,9 @@ another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Execution:
 
-*Execution of Learning*
-^^^^^^^^^^^^^^^^^^^^^^^
+Execution of Learning
+=====================
+
 When a Composition is run that contains one or more `learning sequences <Composition_Learning_Sequence>`, all of the
 ProcessingMechanisms for a sequence are executed first, and then its LearningComponents. This is shown in an animation
 of the XOR network from the `example above <Composition_XOR_Example>`:
@@ -1295,7 +1301,7 @@ they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of 
 .. _Composition_Learning_AutodiffComposition:
 
 *Learning Using AutodiffCompositon*
-===================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
 Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
@@ -1331,7 +1337,7 @@ trained, and then used to execute the trained Composition like any other.
 .. _Composition_Learning_UDF:
 
 *Learning Using UserDefinedFunctions*
-=====================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If execution efficiency is critical and the `AutodiffComposition` is too restrictive, a function from any Python
 environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism
