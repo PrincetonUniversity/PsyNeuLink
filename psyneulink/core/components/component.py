@@ -1249,9 +1249,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
             try:
                 # Modulated parameters change shape to array
-                modulations = (p.sender.modulation for p in self.owner.mod_afferents)
-                modulated_params = [getattr(self.parameters, m).source.name for m in modulations]
-                if p.name in modulated_params:
+                modulated_params = (
+                    getattr(self.parameters, p.sender.modulation).source
+                    for p in self.owner.mod_afferents)
+                if p in modulated_params:
                     param = [param]
             except AttributeError:
                 pass
