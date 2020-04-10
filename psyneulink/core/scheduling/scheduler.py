@@ -195,7 +195,9 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> C = pnl.TransferMechanism(name='C')
 
     >>> comp = pnl.Composition()
-    >>> comp.add_linear_processing_pathway([A, B, C])
+
+    >>> pway = comp.add_linear_processing_pathway([A, B, C])
+    >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> # implicit condition of Always for A
@@ -210,7 +212,8 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 * Alternate basic phasing in a linear process::
 
     >>> comp = pnl.Composition()
-    >>> comp.add_linear_processing_pathway([A, B])
+    >>> pway = comp.add_linear_processing_pathway([A, B])
+    >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B)]
 
     >>> comp.scheduler.add_condition(
@@ -238,10 +241,12 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 * Basic phasing in two processes::
 
     >>> comp = pnl.Composition()
-    >>> comp.add_linear_processing_pathway([A, C])
+    >>> pway = comp.add_linear_processing_pathway([A, C])
+    >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
-    >>> comp.add_linear_processing_pathway([B, C])
+    >>> pway = comp.add_linear_processing_pathway([B, C])
+    >>> pway.pathway
     [(TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> comp.scheduler.add_condition(A, pnl.EveryNPasses(1))

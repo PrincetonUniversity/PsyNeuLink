@@ -659,8 +659,7 @@ def handle_external_context(
         ---------
 
         source
-            default ContextFlags to be used for source field when Context is not
-            specified
+            default ContextFlags to be used for source field when Context is not specified
 
         execution_phase
             default ContextFlags to be used for execution_phase field when
@@ -673,8 +672,7 @@ def handle_external_context(
         Returns
         -------
 
-        a decorator that ensures a Context argument is passed in to the
-        decorated method
+        a decorator that ensures a Context argument is passed in to the decorated method
 
     """
     def decorator(func):

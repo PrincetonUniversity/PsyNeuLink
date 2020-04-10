@@ -780,7 +780,7 @@ class TestModels:
 
         PCTC = pnl.Composition(name="PCTC")
 
-        composition_pathways = [color_response_pathway,
+        Composition_Pathwayss = [color_response_pathway,
                                 word_response_pathway,
                                 task_pathway,
                                 task_color_pathway_1,
@@ -791,7 +791,7 @@ class TestModels:
                                 bias_word_pathway,
                                 conflict_pathway]
 
-        for pathway in composition_pathways:
+        for pathway in Composition_Pathwayss:
             PCTC.add_linear_processing_pathway(pathway)
 
         def pass_threshold(response_layer, thresh, context=None):

@@ -2007,7 +2007,7 @@ class TestTrainingIdenticalness():
         # SET UP SYSTEM
         sem_net_sys = Composition()
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 nouns_in_sys,
                 map_nouns_h1_sys,
@@ -2019,9 +2019,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_I]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_I]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 rels_in_sys,
                 map_rels_h2_sys,
@@ -2031,9 +2031,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_is]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_is]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 h2_sys,
                 map_h2_has_sys,
@@ -2041,9 +2041,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_has]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_has]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 h2_sys,
                 map_h2_can_sys,
@@ -2051,7 +2051,7 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_can]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_can]
 
         # TRAIN SYSTEM
         results = sem_net_sys.learn(inputs=inputs_dict_sys,

@@ -353,10 +353,11 @@ function <ControlSignal_Costs>` can be modulated by another ControlSignal::
   ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
   ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
   >>> comp = Composition()
-  >>> comp.add_linear_processing_pathway(pathway=[mech,
-  ...                                             ctl_mech_A,
-  ...                                             ctl_mech_B
-  ...                                             ])
+  >>> pway = comp.add_linear_processing_pathway(pathway=[mech,
+  ...                                              ctl_mech_A,
+  ...                                              ctl_mech_B
+  ...                                              ])
+  >>> pway.pathway
   [(ProcessingMechanism my_mech)]
 
 Here, the `ControlSignal` of ``ctl_mech_A`` is configured to monitor the output of ``mech``, modulate the
@@ -366,7 +367,9 @@ default), and to implement its `intensity_cost_fct <TransferWithCosts.intensity_
 ``mech``, but to modulate the `multiplicative_param <Function_Modulatory_Params>` of the `intensity_cost_fct
 <TransferWithCosts.intensity_cost_fct>` of ``ctl_mech_A``\\s ControlSignal.  The default for the `intensity_cost_fct
 <TransferWithCosts.intensity_cost_fct>` is `Exponential`, the `multiplicative_param <Function_Modulatory_Params>`
-of which is `rate <Exponential>`.  When the ``comp`` is run with an input of ``3``, since the default `function
+of which is `rate <Exponential>`.  (Note that the pathway returned from the call to `add_linear_processing_pathway
+<Composition.add_linear_processing_pathway>` contains only ``my_mech``, since that is the only `ProcessingMechanism`
+in the `Pathway`. When the ``comp`` is run with an input of ``3``, since the default `function
 <Mechanism_Base.function>` for ``mech`` is `Linear` with a `slope <Linear.slope>` of 1 and an `intercept <Linear>`
 of 0, its output is also ``3``, which is used by both ``ctl_mech_A`` and ``ctl_mech_B`` as their `allocation
 <ControlSignal.allocation>`.  Since the ControlSignals of both use their default `function <ControlSignal>` ——
