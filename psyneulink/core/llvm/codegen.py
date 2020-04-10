@@ -96,18 +96,16 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # Get location of projection input data
         par_mech = proj.sender.owner
         if par_mech in composition._all_nodes:
-            par_idx = composition._get_node_index(par_mech)
+            parent_idx = composition._get_node_index(par_mech)
         else:
-            comp = par_mech.composition
-            assert par_mech is comp.output_CIM
-            par_idx = composition.nodes.index(comp)
+            assert par_mech is par_mech.composition.output_CIM
+            parent_idx = composition.nodes.index(par_mech.composition)
 
-        output_s = proj.sender
-        assert output_s in par_mech.output_ports
-        output_port_idx = par_mech.output_ports.index(output_s)
+        assert proj.sender in par_mech.output_ports
+        output_port_idx = par_mech.output_ports.index(proj.sender)
         proj_in = builder.gep(data_in, [ctx.int32_ty(0),
                                         ctx.int32_ty(0),
-                                        ctx.int32_ty(par_idx),
+                                        ctx.int32_ty(parent_idx),
                                         ctx.int32_ty(output_port_idx)])
 
         # Get location of projection output (in mechanism's input structure
