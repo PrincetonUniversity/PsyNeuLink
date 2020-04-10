@@ -50,7 +50,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     for a in llvm_func.args:
         a.attributes.add('nonnull')
 
-    context, params, comp_in, data_in, data_out = llvm_func.args[:5]
+    state, params, comp_in, data_in, data_out = llvm_func.args[:5]
 
     if node is composition.input_CIM:
         # if there are incoming modulatory projections,
@@ -81,6 +81,11 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
     # Execute all incoming projections
     inner_projections = list(composition._inner_projections)
+    zero = ctx.int32_ty(0)
+    projections_params = helpers.get_param_ptr(builder, composition,
+                                               params, "projections")
+    projections_states = helpers.get_state_ptr(builder, composition,
+                                               state, "projections")
     for proj in incoming_projections:
         # Skip autoassociative projections.
         # Recurrent projections are executed as part of the mechanism to
@@ -138,26 +143,27 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
         # Get projection parameters and state
         proj_idx = inner_projections.index(proj)
-        # Projections are listed second in param and state structure
-        proj_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
-        proj_context = builder.gep(context, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(proj_idx)])
+        proj_params = builder.gep(projections_params, [zero, ctx.int32_ty(proj_idx)])
+        proj_state = builder.gep(projections_states, [zero, ctx.int32_ty(proj_idx)])
         proj_function = ctx.import_llvm_function(proj, tags=func_tags)
 
         if proj_out.type != proj_function.args[3].type:
             warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
             proj_out = builder.bitcast(proj_out, proj_function.args[3].type)
-        builder.call(proj_function, [proj_params, proj_context, proj_in, proj_out])
+        builder.call(proj_function, [proj_params, proj_state, proj_in, proj_out])
 
-    idx = ctx.int32_ty(composition._get_node_index(node))
-    zero = ctx.int32_ty(0)
-    node_params = builder.gep(params, [zero, zero, idx])
-    node_context = builder.gep(context, [zero, zero, idx])
-    node_out = builder.gep(data_out, [zero, zero, idx])
+
+    node_idx = ctx.int32_ty(composition._get_node_index(node))
+    nodes_params = helpers.get_param_ptr(builder, composition, params, "nodes")
+    nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
+    node_params = builder.gep(nodes_params, [zero, node_idx])
+    node_state = builder.gep(nodes_states, [zero, node_idx])
+    node_out = builder.gep(data_out, [zero, zero, node_idx])
     if is_mech:
-        call_args = [node_params, node_context, node_in, node_out]
+        call_args = [node_params, node_state, node_in, node_out]
         if len(node_function.args) > 4:
             assert node is composition.controller
-            call_args += [params, context, data_in]
+            call_args += [params, state, data_in]
         builder.call(node_function, call_args)
     elif "reinitialize" not in tags:
         # FIXME: reinitialization of compositions is not supported
@@ -165,7 +171,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
         node_data = builder.gep(data_in, [zero, nested_idx])
         node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-        builder.call(node_function, [node_context, node_params, node_in,
+        builder.call(node_function, [node_state, node_params, node_in,
                                      node_data, node_cond])
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
