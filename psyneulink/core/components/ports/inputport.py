@@ -941,6 +941,15 @@ class InputPort(Port_Base):
         Returns redundant Projection if found, otherwise False.
         """
 
+        try:
+            self.path_afferents
+        except:
+            if self.initialization_status == ContextFlags.DEFERRED_INIT:
+                raise InputPortError(f"Attempt to assign Projection ('{projection}') "
+                                     f"to InputPort ('{self.name}') that is in deferred init")
+            else:
+                raise InputPortError(f"No 'path_afferents' for {self.name}")
+
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_PORT
         duplicate = next(iter([proj for proj in self.path_afferents
                                if ((proj.sender == projection.sender and proj != projection)

@@ -439,7 +439,7 @@ class MappingProjection(PathwayProjection_Base):
 
     projection_sender = OutputPort
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,

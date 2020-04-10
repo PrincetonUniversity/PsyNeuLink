@@ -43,7 +43,6 @@ Contents
   * `Composition_Visualization`
   * `Composition_Class_Reference`
 
-
 .. _Composition_Overview:
 
 Overview
@@ -107,6 +106,8 @@ The following arguments of the Composition's constructor can be used to add Comp
         `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` method.
     COMMENT
 
+.. _Composition_Component_Methods:
+
 The following methods can be used to add Components to an existing Composition:
 
     - `add_node <Composition.add_node>`
@@ -124,6 +125,8 @@ The following methods can be used to add Components to an existing Composition:
     - `add_projections <Composition.add_projections>`
 
         adds `Projections <Projection>` between multiple pairs of `Nodes <Composition_Nodes>` in the Composition.
+
+.. _Composition_Pathway_Methods:
 
 The methods can be used to add `Pathways <Composition_Pathways>` to the Composition:
 
@@ -288,7 +291,7 @@ describe these in greater detail, and how they are used to implement various for
 .. _Composition_Graph:
 
 *Graph*
-=======
+~~~~~~~
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
 <Mechanism>` and/or nested Composition(s) that carry out computations, and the edges of which are `Projections
@@ -302,7 +305,7 @@ displayed  using the `show_graph <Composition.show_graph>` method.
 .. _Composition_Acyclic_Cyclic:
 
 Acyclic and Cyclic Graphs
-~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
 Composition has no recurrent Projections then its structure is a `directed acyclic graph (DAG)
@@ -315,8 +318,8 @@ and also for allowing the user specify how this is done (see `Composition_Initia
 
 .. _Composition_Nodes:
 
-Nodes
-~~~~~
+*Nodes*
+~~~~~~~
 
 Every Node in a Composition's graph must be either a `Mechanism` or a `nested Composition <Composition_Nested>`.
 The nodes of a Compositions are graph are listed in the Composition's `nodes <Composition.nodes>` attribute.
@@ -354,16 +357,16 @@ COMMENT:
 
 .. _Composition_Projection:
 
-Projections
-~~~~~~~~~~~
+*Projections*
+~~~~~~~~~~~~~
 
 Directed flow of info
 Can perform linear transformation
 
 .. _Composition_Nested:
 
-Nested Compositions
-~~~~~~~~~~~~~~~~~~~
+*Nested Compositions*
+~~~~~~~~~~~~~~~~~~~~~
 
 Can project into any Mechanism w/in a nested Composition
 COMMENT
@@ -371,7 +374,7 @@ COMMENT
 .. _Composition_Pathways:
 
 *Pathways*
-==========
+~~~~~~~~~~
 
 A `Pathway` is an alternating sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a Composition,
 that is linear — that is, that has no branches.  Although a Composition is not required to have any Pathways, these are
@@ -389,7 +392,7 @@ in its `pathways <Composition.pathways>` attribute.
 .. _Composition_Processing_Pathways:
 
 Processing Pathways
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 These are linear Pathways that are not configured for learning.  One or more processing `Pathways <Pathway>` can be
 added to a Composition by specifying them in the **processing_pathways** argument of the Composition's constructor,
@@ -399,7 +402,7 @@ be added.
 .. _Composition_Learning_Pathways:
 
 Learning Pathways
-~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^
 
 These are linear Pathways that are configured for learning. One or more learning `Pathways <Pathway>` can be added to a
 Composition either by specifying them in the **learning_pathways** argument of the Composition's constructor, or using
@@ -416,7 +419,7 @@ Components associated with learning Pathways.
 COMMENT:
 
 *Control*
-=========
+~~~~~~~~~
 
 controller
 
@@ -430,7 +433,7 @@ Running a Composition
 .. _Composition_Run_Static_Inputs:
 
 *Run with Input Dictionary*
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `run <Composition.run>` method presents the inputs for each `trial` to the `input_ports <InputPort>` of the `INPUT`
 `Nodes <Composition_Nodes>` in the `scope of execution <Composition_Scope_of_Execution>`. These input values are
@@ -692,7 +695,7 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only IN
 .. _Composition_Run_Dynamic_Inputs:
 
 *Run with Function, Generator, or Generator Function*
-===========================================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Inputs can also be specified with a function, generator, or generator function.
 
@@ -844,7 +847,7 @@ COMMENT
 .. _Composition_Scope_of_Execution:
 
 *Execution Contexts*
-====================
+~~~~~~~~~~~~~~~~~~~~
 
 An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
 <Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
@@ -898,7 +901,7 @@ the Composition, and provides the result to the `controller <Composition.control
 .. _Composition_Controller_Assignment:
 
 *Assigning a Controller*
-========================
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
@@ -956,7 +959,7 @@ COMMENT
 .. _Composition_Controller_Execution:
 
 *Controller Execution*
-======================
+~~~~~~~~~~~~~~~~~~~~~~
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
 <Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
@@ -1022,13 +1025,15 @@ which implements the strengths ("weights") of the associations between represent
 .. _Composition_Learning_Mode:
 
 *Running a Composition in Learning Mode*
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 A Composition only learns when run in learning mode, and when its `disable_learning` parameter is False.
 To run the Composition in learning mode, use the `learn <Composition.learn>` method.
 See `learn <Composition.learn>` for more details.
 
 *Implementing Learning in a Composition*
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 There are three ways of implementing learning in a Composition:
 
 i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
@@ -1049,7 +1054,7 @@ accepts and returns tensors. Each of these approaches is described in more detai
 .. _Composition_Learning_Standard:
 
 *Learning Using PsyNeuLink Components*
-======================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * `Composition_Learning_Unsupervised`
 * `Composition_Learning_Supervised`
@@ -1074,7 +1079,7 @@ or modified by assigning values to their attributes.
 .. _Composition_Learning_Unsupervised:
 
 Unsupervised Learning
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
 to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
@@ -1095,7 +1100,7 @@ COMMENT
 .. _Composition_Learning_Supervised:
 
 Supervised Learning
-~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^
 
 * `Composition_Learning_Methods`
 * `Composition_Learning_Components`
@@ -1111,8 +1116,8 @@ COMMENT
 
 .. _Composition_Learning_Methods:
 
-*Learning Methods*
-^^^^^^^^^^^^^^^^^^
+Learning Methods
+================
 
 Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
 three such methods:
@@ -1141,8 +1146,8 @@ as described below.
 
 .. _Composition_Learning_Components:
 
-*Learning Components*
-^^^^^^^^^^^^^^^^^^^^^
+Learning Components
+===================
 
 For each `learning sequence <Composition_Learning_Sequence>` specified in a `learning method
 <Composition_Learning_Methods>`, it creates the following Components, and assigns to them the `NodeRoles <NodeRole>`
@@ -1269,8 +1274,9 @@ another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Execution:
 
-*Execution of Learning*
-^^^^^^^^^^^^^^^^^^^^^^^
+Execution of Learning
+=====================
+
 When a Composition is run that contains one or more `learning sequences <Composition_Learning_Sequence>`, all of the
 ProcessingMechanisms for a sequence are executed first, and then its LearningComponents. This is shown in an animation
 of the XOR network from the `example above <Composition_XOR_Example>`:
@@ -1295,7 +1301,7 @@ they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of 
 .. _Composition_Learning_AutodiffComposition:
 
 *Learning Using AutodiffCompositon*
-===================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
 Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
@@ -1331,7 +1337,7 @@ trained, and then used to execute the trained Composition like any other.
 .. _Composition_Learning_UDF:
 
 *Learning Using UserDefinedFunctions*
-=====================================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If execution efficiency is critical and the `AutodiffComposition` is too restrictive, a function from any Python
 environment that supports learning can be assigned as the `function <Mechanism_Base.function>` of a `Mechanism
@@ -1480,29 +1486,29 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
-from psyneulink.core.components.projections.projection import DuplicateProjectionError
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.ports.port import Port
-from psyneulink.core.components.ports.inputport import InputPort, SHADOW_INPUTS
+from psyneulink.core.components.ports.inputport import InputPort, InputPortError, SHADOW_INPUTS
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
-    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    AFTER, ALL, ANY, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
+    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, EITHER, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, \
     NAME, NO_CLAMP, NODE, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PATHWAY, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -1520,8 +1526,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
     PredictionErrorMechanism
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry',
-    'Pathway', 'PathwayRegistry', 'get_compositions',
+    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions',
     'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
 ]
 
@@ -1543,7 +1548,6 @@ SHOW_LEARNING = 'show_learning'
 
 logger = logging.getLogger(__name__)
 CompositionRegistry = {}
-PathwayRegistry= {}
 
 
 class CompositionError(Exception):
@@ -1830,9 +1834,6 @@ class Graph(object):
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
 PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
-def _is_node_spec(value):
-    return _is_pathway_entry_spec(value, NODE)
-
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
@@ -2018,6 +2019,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <LINK>` for details).
 
     """
+
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
     classPreferenceLevel = PreferenceLevel.CATEGORY
@@ -2070,7 +2072,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __init__(
             self,
-            nodes:tc.optional(_is_node_spec)=None,
+            # nodes:tc.optional(_is_node_spec)=None,
+            nodes=None,
             projections=None,
             pathways=None,
             controller:ControlMechanism=None,
@@ -2082,6 +2085,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             prefs=None,
             **param_defaults
     ):
+
         # also sets name
         register_category(
             entry=self,
@@ -2096,6 +2100,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes = ContentAddressableList(component_type=Component)
         self.required_node_roles = []
         self.node_ordering = []
+        from psyneulink.core.compositions.pathway import Pathway
         self.pathways = ContentAddressableList(component_type=Pathway)
 
         # 'env' attr required for dynamic inputs generated by gym forager env
@@ -3889,6 +3894,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `processing Pathway <Composition_Processing_Pathways>` added to Composition.
 
         """
+
+        from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+
         nodes = []
 
         # If called from add_pathways(), use its pathway_arg_str
@@ -3907,7 +3915,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway = pathway.pathway
         elif isinstance(pathway, tuple):
             # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
-            if all(_is_pathway_entry_spec(n, ALL) for n in pathway):
+            if all(_is_pathway_entry_spec(n, ANY) for n in pathway):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
@@ -4009,8 +4017,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
                 if c == len(pathway) - 1:
-                    raise CompositionError(f"{pathway[c]} is the last item in the {pathway_arg_str}. "
-                                           f"A projection cannot be the last item in a linear processing pathway.")
+                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                                           f"{pathway[c]}.")
                 # confirm that it is between two nodes, then add the projection
                 if isinstance(pathway[c], tuple):
                     proj = pathway[c][0]
@@ -4027,9 +4035,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver = receiver[0]
                     try:
                         if isinstance(proj, (np.ndarray, np.matrix, list)):
+                            # If proj is a matrix specification, use it as the matrix arg
                             proj = MappingProjection(sender=sender,
                                                      matrix=proj,
                                                      receiver=receiver)
+                        else:
+                            # Otherwise, if it is Port specification, implement default Projection
+                            try:
+                                if isinstance(proj, InputPort):
+                                    proj = MappingProjection(sender=sender,
+                                                             receiver=proj)
+                                elif isinstance(proj, OutputPort):
+                                    proj = MappingProjection(sender=proj,
+                                                             receiver=receiver)
+                            except (InputPortError, ProjectionError) as error:
+                                # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
+                                raise ProjectionError(str(error.error_value))
+
+                    except (InputPortError, ProjectionError, MappingError) as error:
+                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                                   f"{str(error.error_value)}")
+
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
                         # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
@@ -4069,7 +4095,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"is not between two Nodes: {pathway[c]}")
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
-                                       f"or a Projection: {pathway[c]}.")
+                                       f"or a Projection: {repr(pathway[c])}.")
 
         # Finally, clean up any tuple specs
         for i, n in enumerate(nodes):
@@ -4164,6 +4190,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                                         [{NAME: [NODE...]}...] or
         #                                         [{NAME: (NODE, LearningFunction)}...] or
         #                                         [{NAME: ([NODE...], LearningFunction)}...]
+
+        from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
 
         if context.source == ContextFlags.COMMAND_LINE:
             pathways_arg_str = f"'pathways' arg for the add_pathways method of {self.name}"
@@ -4358,9 +4386,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
 
         """
-        # FIX 4/8/20: Add support of Pathway() in pathway arg
-        # Reconcile spec of learning function in Pathway's pathway arg, and in arg to method here
-        # Assign learning_function to Pathway.learning_function
+        # FIX 4/8/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
+        # FIX 4/8/20 [JDC]: Assign learning_function to Pathway.learning_function
+
+        # If called from add_pathways(), use its pathway_arg_str
+
+        from psyneulink.core.compositions.pathway import Pathway
+
+        if context.source == ContextFlags.METHOD:
+            pathway_arg_str = context.string
+        # Otherwise, refer to call from this method
+        else:
+            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            # FIX 4/8/20 [JDC]: Reset for to None for now to replicate prior behavior,
+            #                   but need to implement proper behavior wrt call to analyze_graph()
+            #                   _check_initalization_state()
+            context = None
+
+        # Deal with Pathway() specifications
+        if isinstance(pathway, Pathway):
+            pathway = pathway.pathway
 
         # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
@@ -4429,63 +4474,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph()
         return learning_pathway
 
-    # FIX 4/8/20 [JDC]: REMOVE
-    # def _add_linear_learning_pathways(self, pathways, context=None):
-    #     """Add learning pathways to Composition
-    #
-    #     Arguments
-    #     ---------
-    #
-    #     pathways : tuple, dict or list[tuple, dict]
-    #         specifies the learning pathway(s) to be added to the Composition.  Each pathway must be specified as
-    #         a tuple, the first item of which is the pathway itself (see **pathway** argument of
-    #         `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`) and the second item its
-    #         `LearningFunction` (see **learning_function** argument of `add_linear_learning_pathway
-    #         <Composition.add_linear_learning_pathway>`).  The tuple can be included as the single entry in a dict,
-    #         the key of which must be a str (used as the name of the `Pathway` created), and is the tuple.  Multiple
-    #         tuples and/or dicts can be included in a list as the pathways argument, to construct more than one
-    #         learning pathway.
-    #
-    #     Returns
-    #     -------
-    #
-    #     list[`Pathway`] :
-    #         list of `learning Pathways <Composition_Learning_Pathways>` added to the Composition.
-    #
-    #     """
-    #     if not pathways:
-    #         return
-    #     pathways = convert_to_list(pathways)
-    #     for pway in pathways:
-    #         if not isinstance(pway,(tuple, dict)):
-    #             raise CompositionError(f"An item ({pway}) in the 'processing_pathways' arg of {self.name}"
-    #                                    f"is not a dict or tuple.")
-    #
-    #     added_pathways = []
-    #     for pathway in pathways:
-    #         pathway_name = None
-    #         if isinstance(pathway, dict):
-    #             if len(pathway)!=1:
-    #                 raise CompositionError(f"A dict ({pathway}) specified in the 'learning_pathways' arg for "
-    #                                        f"{self.name}' contains more than one entry.")
-    #             pathway_name, pathway = list(pathway.items())[0]
-    #             if not isinstance(pathway_name, str):
-    #                 raise CompositionError(f"The key ({pathway_name}) in a dict specified in the 'learning_pathways' "
-    #                                        f"arg for {self.name}' (to be used as the Pathway's name) must be a str.")
-    #             if not isinstance(pathway, tuple):
-    #                 raise CompositionError(f"The value ({pathway}) in a dict specified in the 'learning_pathways' "
-    #                                        f"arg for {self.name}' must be a tuple.")
-    #             if not isinstance(pathway[0], list):
-    #                 raise CompositionError(f"The 1st item ({pathway[0]}) in the value of the dict specified in the "
-    #                                        f"'learning_pathways' arg for {self.name}' must be a list.")
-    #             if not (isinstance(pathway[1], type) and issubclass(pathway[1], LearningFunction)):
-    #                 raise CompositionError(f"The 2nd item ({pathway[1]}) in the value of the dict specified in the "
-    #                                        f"'learning_pathways' arg for {self.name}' must be a LearningFunction.")
-    #
-    #         added_pathways.append(self.add_linear_learning_pathway(pathway=pathway[0],
-    #                                                                learning_function=pathway[1],
-    #                                                                name=pathway_name))
-    #     return added_pathways
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
                                            learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
@@ -8963,261 +8951,3 @@ def get_compositions():
     import inspect
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]
-
-
-def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ALL)):
-    """Test whether pathway entry is specified type (NODE or PROJECTION)"""
-    node_specs = (Mechanism, Composition)
-    proj_specs = (Projection, np.ndarray, np.matrix, str, list)
-    is_node = is_proj = False
-
-    if desired_type in {NODE, ALL}:
-        # if (isinstance(entry, node_specs)
-        #         or (isinstance(entry, tuple)
-        #             and isinstance(entry[0], node_specs)
-        #             and isinstance(entry[1], NodeRole))):
-        #     return True
-        is_node = (isinstance(entry, node_specs)
-                   or (isinstance(entry, tuple)
-                       and isinstance(entry[0], node_specs)
-                       and isinstance(entry[1], NodeRole)))
-
-    if desired_type in {PROJECTION, ALL}:
-        # if (isinstance(entry, proj_specs)
-        #         or (isinstance(entry, tuple)
-        #             and isinstance(entry[0], proj_specs)
-        #             and entry[1] in {True, False, MAYBE})):
-        #     return True
-        is_proj = (isinstance(entry, proj_specs)
-                   or (isinstance(entry, tuple)
-                       and isinstance(entry[0], proj_specs)
-                       and entry[1] in {True, False, MAYBE}))
-
-    if is_node or is_proj:
-        return True
-    else:
-        return False
-
-
-class Pathway(object):
-    """
-        A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
-        for one that can be assigned to one or more Compositions.
-
-        **Creating a Pathway**
-        ----------------------
-
-        A Pathway can be created as part of a Composition or on its own.  If the **composition** argument of the
-        Pathway's constructor is specified, it is added to the specified `Composition`;  if that is not specified,
-        then a standalone Pathway is created that can be used as a template for specifiying the pathway of one or
-        more Compositions, as described below.
-
-        *Assigning to a Pathway to a Composition*
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        If the **composition** argument is specified in the Pathway's
-        constructor, then the sequence assigned to its **pathway** argument is added to the specified `Composition`
-        using its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method or its
-        `add_linear_learning_pathway <Composition.add_linear_processing_pathway>` method, depending on the
-        specifiation in the *pathway* argument (see those methods for corresponding specifications).  In this case,
-        the Pathway object returned by the constructor is the same as the one added to the Composition.
-
-        .. _Pathway_Template:
-
-        *Pathway as a Template*
-        ~~~~~~~~~~~~~~~~~~~~~~~
-
-        If the **composition** argument is *not* specified in the Pathway's constructor, then
-        the Pathway is created on its own.  This can serve as a template for a Pathway assigned to a `Composition`,
-        by using it in the **processing_pathways** or **learning_pathways** argument of the constructor for a
-        Composition, or in its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
-        `add_linear_learning_pathway <Composition.add_linear_processing_pathway>` methods.  In any of these cases,
-        a new Pathway object is created and assigned to the Composition, and the template remains unassigned.
-
-        *Roles*.  If the **roles** agument of the Pathway's constructor is specified, then the `NodeRole(s) <NodeRole>`
-        corresponding to the specified `PathwayRoles <PathwayRole>` are assigned to the nodes in the sequence
-        specified in the **pathways** argument.
-
-        .. _Pathway_Specification:
-
-        *Specification of* **pathway** *argument*
-        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-        Pathway, a `Composition`, or any of the Composition's methods used to add a Pathway to it.
-
-            * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
-            ..
-            .. _Pathway_Specification_List:
-
-            * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
-              each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
-              (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
-              <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
-            ..
-            * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
-              <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
-              described above, and the 2nd item be a subclass of `LearningFunction`.
-
-        Arguments
-        ---------
-
-        pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...]
-            specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
-            created for the Pathway.
-
-        composition : `Composition` default None
-            specifies `Composition` to which the Pathway should be assigned.
-
-        name : str : default see `name <Pathway.name>`
-            specifies the name of the Pathway.
-
-        Attributes
-        ----------
-
-        pathway : list[`Node <Pathway_Nodes>`, `Projection <Projection>`, `Node <Pathway_Nodes>`...]
-            list of `Nodes <Pathway_Nodes>` and intercolated `Projections <Projection>` in the Pathway.
-
-        composition : `Composition` or None
-            `Composition` to which the Pathway belongs;  if None, then Pathway is `template <Pathway_Template>`.
-
-        roles : list[`PathwayRole`]
-            list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway, based on the `NodeRole(s) <NodeRole>`
-            assigned to its `Nodes <Composition>` in the `composition <Pathway.composition>` to which it belongs.
-
-        learning_function : `LearningFunction` or None
-            `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
-            it is a `learning pathway <Composition_Learning_Pathways>`.
-
-        input : `Mechanism <Mechanism>` or None
-            `INPUT` node if Pathway contains one.
-
-        output : `Mechanism <Mechanism>` or None
-            `OUTPUT` node if Pathway contains one.
-
-        target : `Mechanism <Mechanism>` or None
-            `TARGET` node if if Pathway contains one; same as `learning_components
-            <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
-
-        comparator : `Mechanism <Mechanism>` or None
-            `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
-            <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
-
-        learning_components : dict
-            dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathways>`
-            (and is assigned `PathwayRole.LEARNING` in `roles <Pathway.roles>`):
-
-              *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
-              ..
-              *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`)
-              ..
-              *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
-              ..
-              *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
-
-            These are generated automatically and added to the `Composition` when the Pathway is assigned to it.
-
-        name : str
-            the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
-            default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
-
-
-    """
-
-    componentType = 'Pathway'
-    componentName = componentType
-    name = componentName
-
-    @handle_external_context()
-    def __init__(
-            self,
-            pathway:list,
-            composition:Composition=None,
-            roles:tc.optional(tc.any(PathwayRole, list, set))=None,
-            name=None,
-            context=None
-    ):
-
-        # If called from command line, being used as a template, so don't register
-        if context.source == ContextFlags.COMMAND_LINE:
-            # But do pass through name so that it can be used to construct the instance that will be used
-            self.name = name
-        else:
-            # Sets name
-            register_category(
-                entry=self,
-                base_class=Pathway,
-                registry=PathwayRegistry,
-                name=name
-            )
-        self.composition = composition
-        self.learning_components = {}
-
-        # # Check validity of pathway
-        # for i in range(0, len(pathway)):
-        #     # Odd items must be a node (Mechanism or Composition)
-        #     if not i % 2:
-        #         if not isinstance(pathway[i], (Mechanism, Composition)):
-        #             raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a node "
-        #                                    f"({Mechanism.__name__} or {Composition.__name__}).")
-        #     # Even items must be a Projection
-        #     elif not isinstance(pathway[i], Projection):
-        #             raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a `{Projection.__name}.")
-        # # If len is not odd, then must be missing a node
-        # if not len(pathway) % 2:
-        #     raise CompositionError(f"'pathway' arg of {self.name} is missing a terminal node.")
-
-        self.pathway = pathway
-
-        roles = set(convert_to_list(roles or []))
-        for role in roles:
-            if not isinstance(role, PathwayRole):
-                raise CompositionError(f"Item ({role}) in 'roles' arg of {self.__class__.__name__} {self.name} "
-                                       f"is not a {PathwayRole.__name__}.")
-        self.roles = roles
-
-    @property
-    def input(self):
-        if PathwayRole.INPUT in self.roles:
-            input_node = next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.INPUT))
-            if input_node:
-                return input_node
-            else:
-                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
-                              f"is assigned PathwayRole.INPUT but has no INPUT node."
-
-    @property
-    def output(self):
-        if PathwayRole.OUTPUT in self.roles:
-            output_node = next(n for n in self.pathway if n in self.composition.get_nodes_by_role(NodeRole.OUTPUT))
-            if output_node:
-                return output_node
-            else:
-                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
-                              f"is assigned PathwayRole.OUTPUT but has no OUTPUT node."
-
-    @property
-    def target(self):
-        try:
-            return self.learning_components[TARGET_MECHANISM]
-        except:
-            if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.__class__.__name__} {self.name} 'target' attribute is None "
-                              f"because it is not a learning_pathway.")
-            else:
-                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
-                              f"has PathwayRole.LEARNING assigned but no 'target' attribute."
-            return None
-
-    @property
-    def comparator(self):
-        try:
-            return self.learning_components[COMPARATOR_MECHANISM]
-        except:
-            if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.__class__.__name__} {self.name} 'comparator' attribute "
-                              f"is None because it is not a learning_pathway.")
-            else:
-                assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
-                              f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
-            return None
