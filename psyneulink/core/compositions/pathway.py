@@ -95,8 +95,8 @@ A Pathway has the following primary attributes:
   that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are listed in the
   Pathway's `pathway <Pathway.pathway>` attribute.
 
-* `composition <Pathway.composition>` - contains the Composition to which it belongs if it was created by one,
-  or None if it was constructed on its own.
+* `composition <Pathway.composition>` - contains the `Composition` that created the Pathway and to which it belongs,
+  or None if it is a ``template <Pathway_Template>` (i.e., was constructed on its own).
 
 * `roles <Pathway.roles>` and `Node <Composition_Nodes>` attributes - if the Pathway was created by a Composition,
   the `roles <Pathway.roles>` attribute `this lists the `PathwayRoles` assigned to it by the Compositon that
