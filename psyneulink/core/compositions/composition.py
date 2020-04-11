@@ -180,7 +180,7 @@ The methods can be used to add `Pathways <Composition_Pathways>` to the Composit
   Only Mechanisms and Projections added to a Composition using the methods above constitute a Composition, even if
   other Mechanism and/or Projections are constructed in the same script.
 
-A `Node <Composition_Node>` can be removed from a Composition using the `remove_node <Composition.remove_node>` method.
+A `Node <Composition_Nodes>` can be removed from a Composition using the `remove_node <Composition.remove_node>` method.
 
 COMMENT:
 • MOVE THE EXAMPLES BELOW TO AN "Examples" SECTION
@@ -295,12 +295,12 @@ describe these in greater detail, and how they are used to implement various for
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
 <Mechanism>` and/or nested Composition(s) that carry out computations, and the edges of which are `Projections
-<Projecction>` that transmit the computational results from one Node to another Node.  The information about this
-structure is stored in the Composition`s `graph <Composition.graph>` attribute, that is a `Graph` object describing
-its Nodes and the dependencies defined by their edges.  There are no restrictions on the structure of the graph,
-which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
-`nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
-displayed  using the `show_graph <Composition.show_graph>` method.
+<Projection>` that transmit the computational results from one `Node <Composition_Nodes>` to another Node.  The
+information about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that is a
+`Graph` object describing its Nodes and the dependencies defined by their edges.  There are no restrictions on the
+structure of the graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e.,
+contain one or more `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph
+<Composition.graph>` can be displayed  using the `show_graph <Composition.show_graph>` method.
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -321,23 +321,23 @@ and also for allowing the user specify how this is done (see `Composition_Initia
 *Nodes*
 ~~~~~~~
 
-Every Node in a Composition's graph must be either a `Mechanism` or a `nested Composition <Composition_Nested>`.
-The nodes of a Compositions are graph are listed in the Composition's `nodes <Composition.nodes>` attribute.
-Each Node is assigned one or more `NodeRoles <NodeRole>` that designate its status in the graph.  Nodes are assigned
-one or more `NodeRoles <NodeRole>` automatically when a Composition is constructed, and when Nodes or `Pathways
-<Composition_Pathways>` are added to it. However, some of these can be explicitly assigned by specifying the desired
-`NodeRole` using any of the following ways:
+Every `Node <Composition_Nodes>` in a Composition's graph must be either a `Mechanism` or a `nested Composition
+<Composition_Nested>`. The nodes of a Compositions are graph are listed in the Composition's `nodes <Composition.nodes>`
+attribute. Each Node is assigned one or more `NodeRoles <NodeRole>` that designate its status in the graph.  Nodes
+are assigned one or more `NodeRoles <NodeRole>` automatically when a Composition is constructed, and when Nodes or
+`Pathways <Composition_Pathways>` are added to it. However, some of these can be explicitly assigned by specifying
+the desired `NodeRole` using any of the following ways:
 
   * in the **required_roles** argument of the Composition's `add_node <Composition.add_node>` or `add_nodes
     <Composition.add_nodes>` methods;
 
-  * in a tuple specifying the Node in the **processing_pathways** or **learning_pathways** arguments of the
-    Compositon's constructor, in the **pathways** argument of a `Pathway`, or in one of the methods used to add a
-    `Pathway <Composition_Pathways>` to the Composition (see `Composition_Creation`);  the Node must be the first
-    item of the tuple, and the `NodeRole` its 2nd item.
+  * in a tuple specifying the `Node <Composition_Nodes>` in the **processing_pathways** or **learning_pathways**
+    arguments of the Compositon's constructor, in the **pathways** argument of a `Pathway`, or in one of the methods
+    used to add a `Pathway <Composition_Pathways>` to the Composition (see `Composition_Creation`);  the Node must be
+    the first item of the tuple, and the `NodeRole` its 2nd item.
 
   * in the **role** argument of the `add_required_node_role <Composition.add_required_node_role>` called for an
-    an existing Node.
+    an existing `Node <Composition_Nodes>`.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
 receive its external input when it is `run <Composition.run>`), and similarly its `TERMINAL` Nodes are assigned as its
@@ -348,8 +348,8 @@ COMMENT:
 ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
 <Composition_Learning_Pathways>` (see XXX).
 COMMENT
-.  A NodeRole can also be removed from a Node using the `remove_required_node_role
-<Composition.remove_required_node_role>` method. All of the roles assigned assigned to a particular node can be
+.  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_required_node_role
+<Composition.remove_required_node_role>` method. All of the roles assigned assigned to a particular Node can be
 listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the nodes assigned a
 particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
 
@@ -382,10 +382,10 @@ useful for constructing Compositions, and are required for implementing `learnin
 Composition.  Pathways can be continguous, overlapping, intersecting, or disjoint. Each Pathway has a name (that can
 be assigned when it is constructed) and a set of attributes, including a `pathway <Pathway.pathway>` attribute that
 lists the Nodes and Projections in the Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles
-<PathwayRole>` assigned to it (based on the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for
-particular types of nodes (e.g., `INPUT` and `OUTPUT`) if the Pathway includes nodes assigned the corresponding
-`NodeRoles <NodeRole>`.  If a Pathway does not have a particular type of node, then its attribute returns None.
-There are two types of Pathways, `processing Pathways<Composition_Processing_Pathways>` and `learning Pathways
+<PathwayRole>` assigned to it (based on the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular
+types of nodes (e.g., `INPUT` and `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles
+<NodeRole>`.  If a Pathway does not have a particular type of `Node <Composition_Nodes>`, then its attribute returns
+None. There are two types of Pathways, `processing Pathways<Composition_Processing_Pathways>` and `learning Pathways
 <Composition_Learning_Pathways>`, each of which is described below.  All of the Pathways in a Composition are listed
 in its `pathways <Composition.pathways>` attribute.
 
@@ -446,17 +446,16 @@ COMMENT:
     Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
 COMMENT
 
-The standard way to specificy inputs is a Python dictionary, in which each entry specifies the inputs to a given
-`INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list
-of the inputs to that Node, one for each `trial` to be executed (i.e., the i-th item of the list represents the input
-value to the Node on `trial` i).
+The standard way to specificy inputs is a Python dictionary, in which each entry specifies the inputs to a given `INPUT`
+`Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
+for each `trial` to be executed (i.e., the i-th item of the list represents the input value to the Node on `trial` i).
 
 .. _Composition_Run_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
 
-Each input value must be compatible with the shape of the `INPUT` Node's `external_input_values
+Each input value must be compatible with the shape of the `INPUT` `Node's <Composition_Nodes>` `external_input_values
 <MechanismBase.external_input_values>`. Accordingly, each item in the list of inputs is typically a 2d list or array,
 though `some shorthand notations <Composition_Input_Specification_Examples>` are allowed.
 
@@ -482,14 +481,16 @@ though `some shorthand notations <Composition_Input_Specification_Examples>` are
         >>> comp.run(inputs=input_dictionary)
 
 .. note::
-    A Node's `external_input_values <MechanismBase.external_input_values>` attribute is always a 2d list in which the
-    index i element is the value of the Node's index i `external_input_port <MechanismBase.external_input_ports>`. In
-    many cases, `external_input_values <MechanismBase.external_input_values>` is the same as `variable
-    <MechanismBase.variable>`. Keep in mind that any InputPorts marked as "internal" are excluded from
-    `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified input values.
+    A `Node's <Composition_Nodes>` `external_input_values <MechanismBase.external_input_values>` attribute
+    is always a 2d list in which the index i element is the value of the Node's index i `external_input_port
+    <MechanismBase.external_input_ports>`. In many cases, `external_input_values <MechanismBase.external_input_values>`
+    is the same as `variable <MechanismBase.variable>`. Keep in mind that any InputPorts marked as "internal" are
+    excluded from `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified
+    input values.
 
 If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
-five inputs are provided for each INPUT Node, and num_trials is not specified, the Composition executes five times.
+five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition
+executes five times.
 
 +----------------------+-------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |
@@ -517,7 +518,8 @@ which only one input is specified). In other words, all of the values in the inp
 as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
-are provided for each `INPUT <NodeRole.INPUT>` Node, and num_trials = 7, the system executes seven times. The input
+are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
+five times., and num_trials = 7, the system executes seven times. The input
 values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
@@ -547,7 +549,7 @@ values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 For convenience, condensed versions of the input specification described above are also accepted in the following
 situations:
 
-* **Case 1: INPUT Node has only one InputPort**
+* **Case 1:** `INPUT` `Node <Composition_Nodes>` **has only one InputPort**
 +--------------------------+-------+------+------+------+------+
 | Trial #                  |0      |1     |2     |3     |4     |
 +--------------------------+-------+------+------+------+------+
@@ -583,7 +585,7 @@ Shorthand - drop the remaining list on each input because **Mechanism a**'s one 
 
         >>> comp.run(inputs=input_dictionary)
 
-* **Case 2: Only one input is provided for the INPUT Node**
+* **Case 2: Only one input is provided for the** `INPUT` `Node <Composition_Nodes>`
 
 +--------------------------+------------------+
 | Trial #                  |0                 |
@@ -654,7 +656,7 @@ Shorthand - drop the outer list on **Mechanism a**'s input specification and use
         ...          num_trials=5)
 ..
 
-* **Case 4: There is only one INPUT Node**
+* **Case 4: There is only one** `INPUT` `Node <Composition_Nodes>`
 
 +--------------------------+-------------------+-------------------+
 | Trial #                  |0                  |1                  |
@@ -683,7 +685,7 @@ Complete input specification:
         >>> comp.run(inputs=input_dictionary)
 ..
 
-Shorthand - specify **Mechanism a**'s inputs in a list because it is the only INPUT Node
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
 
 ::
 
@@ -701,7 +703,7 @@ Inputs can also be specified with a function, generator, or generator function.
 
 A function used as input must take as its sole argument the current trial number and return a value that satisfies
 all rules above for standard input specification. The only difference is that on each execution, the function must
-return the input values for each INPUT Node for a single trial.
+return the input values for each `INPUT` `Node <Composition_Nodes>` for a single trial.
 
 .. note::
     Default behavior when passing a function as input to a Composition is to execute for only one trial. Remember to
@@ -737,7 +739,7 @@ Complete input specification:
 
 A generator can also be used as input. On each yield, it should return a value that satisfies all rules above for
 standard input specification. The only difference is that on each execution, the generator must yield the input values
-for each INPUT Node for a single trial.
+for each `INPUT` `Node <Composition_Nodes>` for a single trial.
 
 .. note::
     Default behavior when passing a generator is to execute until the generator is exhausted. If the num_trials
@@ -1038,7 +1040,8 @@ There are three ways of implementing learning in a Composition:
 
 i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
 
-ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition that executes learning using `PyTorch <https://pytorch.org>`_
+ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -- a specialized subclass of Composition
+    that executes learning using `PyTorch <https://pytorch.org>`_
 
 iii) using `UserDefinedFunctions <UserDefinedFunction>`.
 
@@ -1188,12 +1191,12 @@ for a more detailed description and figure showing these Components.
 
 If the learning sequence involves more than two ProcessingMechanisms (e.g. using `add_backpropagation_learning_pathway`
 for a multilayered neural network), then additional LearningMechanisms are created, along with MappingProjections
-that provides them with the `error_signal <LearningMechanism.error_signal>` from the preceding LearningMechanism,
-and `LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\\s)
-in the sequence, as shown for an example in the figure below.  These additional learning components are listed in the
+that provides them with the `error_signal <LearningMechanism.error_signal>` from the preceding LearningMechanism, and
+`LearningProjections <LearningProjection>` that modify the additional MappingProjections (*LEARNED_PROJECTION*\\s) in
+the sequence, as shown for an example in the figure below.  These additional learning components are listed in the
 *LEARNING_MECHANISMS* and *LEARNED_PROJECTIONS* entries of the dictionary assigned to the `learning_components
-<Pathway.learning_components>` attribute of the `learning Pathway <Composition_Learning_Pathways>` return by the learning
-method.
+<Pathway.learning_components>` attribute of the `learning Pathway <Composition_Learning_Pathways>` return by the
+learning method.
 
 .. _Composition_MultilayerLearning_Figure:
 
@@ -1204,9 +1207,9 @@ method.
    :scale: 50 %
 
    Components for sequence of three Mechanisms generated by a call to a learning method (e.g.,
-   ``add_backpropagation_learning_pathway(pathway=[A,B,C])``), with `NodeRole` assigned to each node in the
-   Composition's `graph <Composition.graph>` (in italics below Mechanism type) and the names of the learning
-   components (capitalized in italics) returned by the learning method.
+   ``add_backpropagation_learning_pathway(pathway=[A,B,C])``), with `NodeRole` assigned to each
+   `Node <Composition_Nodes>` in the Composition's `graph <Composition.graph>` (in italics below Mechanism type)
+   and  the names of the learning components (capitalized in italics) returned by the learning method.
 
 .. _Composition_XOR_Example:
 
@@ -1244,16 +1247,17 @@ whereas ordinarily the last ProcessingMechanism of a sequence specified in a lea
 Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the Composition,
 ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in *all* of them;
 in that in that case, it will not project to a *COMPARATOR_MECHANISM* (see `figure below
-<Composition_Learning_Output_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all of
-them (that is, all of the specified pathways converge on that Mechanism), only one *COMPARATOR_MECHANISM* is created
+<Composition_Learning_Output_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all
+of them (that is, all of the specified pathways converge on that Mechanism), only one *COMPARATOR_MECHANISM* is created
 for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
 are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
 conversely, even though the last Mechanism of a `learning sequence <Composition_Learning_Sequence>` projects to a
-*COMPARATOR_MECHANISM*, and thus is not the `TERMINAL` node of a Composition, if it does not project to any other
-Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.  That is, Mechanisms
-that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as an `OUTPUT` of the
-Composition if they are part of a `learning sequence <Composition_Learning_Sequence>` even though they project to
-another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
+*COMPARATOR_MECHANISM*, and thus is not the `TERMINAL` `Node <Composition_Nodes>` of a Composition, if it does not
+project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.
+That is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as
+an `OUTPUT` `Node <Composition_Nodes>` of the Composition if they are part of a `learning sequence
+<Composition_Learning_Sequence>` even though  they project to another Mechanism (the *COMPARATOR_MECHANISM*) in the
+Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -1265,12 +1269,13 @@ another Mechanism (the *COMPARATOR_MECHANISM*) in the Composition.
 
        Configuration of Components generated by the creation of two intersecting `learning sequences
        <Composition_Learning_Sequence>` (e.g., ``add_backpropagation_learning_pathway(pathway=[A,B])`` and
-       ``add_backpropagation_learning_pathway(pathway=[D,B,C])``).  Mechanism B is the last Mechanism of the
-       sequence specified for the first pathway, and so would project to a `ComparatorMechanism`, and would be
-       assigned as an `OUTPUT` node of the Composition, if that pathway was created on its own.  However,
-       since Mechanims B is also in the middle of the sequence specified for the second pathway, it does not
-       project to a ComparatorMechanism, and is relegated to being an `INTERNAL` node of the Composition
-       Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT` node.
+       ``add_backpropagation_learning_pathway(pathway=[D,B,C])``).  Mechanism B is the last Mechanism of the sequence
+       specified for the first pathway, and so would project to a `ComparatorMechanism`, and would be assigned as an
+       `OUTPUT` `Node <Composition_Nodes>` of the Composition, if that pathway was created on its own. However, since
+       Mechanims B is also in the middle of the sequence specified for the second pathway, it does not project to a
+       ComparatorMechanism, and is relegated to being an `INTERNAL` `Node <Composition_Nodes>` of the Composition
+       Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT`
+       `Node <Composition_Nodes>`.
 
 .. _Composition_Learning_Execution:
 
@@ -1313,7 +1318,7 @@ AutodiffComposition constructor provides arguments for configuring the PyTorch i
 Composition is then built using the same methods (e.g., `add_node`, `add_projection`, `add_linear_processing_pathway`,
 etc.) as any other Composition. Note that there is no need to use any `learning methods <Composition_Learning_Methods>`
 — AutodiffCompositions automatically creates backpropagation learning pathways <Composition_Learning_Sequence>` between
-all input - output node paths. It can be run just as a standard Composition would - using `learn
+all input - output `Node <Composition_Nodes>` paths. It can be run just as a standard Composition would - using `learn
 <AutodiffComposition.learn>` for learning mode, and `run <AutodiffComposition.run>` for test mode.
 
 The advantage of this approach is that it allows the Composition to be implemented in PsyNeuLink, while exploiting
@@ -1485,7 +1490,8 @@ from psyneulink.core.components.mechanisms.processing.compositioninterfacemechan
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -1883,7 +1889,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
 
     disable_learning: bool : default False
-        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in `learning mode <Composition.learn>`.
+        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in
+        `learning mode <Composition.learn>`.
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -4967,8 +4974,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Suppress "no efferent connections" warning for:
         #    - error_signal OutputPort of last LearningMechanism in sequence
         #    - comparator
-        learning_mechanisms[-1].output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
-                                                                                                             override=True)
+        learning_mechanisms[-1].output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(
+            False,
+            override=True
+        )
         if comparator:
             for s in comparator.output_ports:
                 s.parameters.require_projection_in_composition.set(False,
@@ -5014,7 +5023,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     queue.append(efferent_node)
             return pathways
 
-        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
+        pathways = [p for n in self.get_nodes_by_role(NodeRole.INPUT) if
+                    NodeRole.TARGET not in self.get_roles_by_node(n) for p in bfs(n)]
         for pathway in pathways:
             self.add_backpropagation_learning_pathway(pathway=pathway)
 
@@ -5158,7 +5168,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
         #  1) Determine whether this is a terminal sequence:
-        #     - use arg passed in or determine from context (see current implementation in add_backpropagation_learning_pathway)
+        #     - use arg passed in or determine from context
+        #       (see current implementation in add_backpropagation_learning_pathway)
         #     - for terminal sequence, handle target and sample projections as below
         #  2) For non-terminal sequences, determine # of error_signals coming from LearningMechanisms associated with
         #     all efferentprojections of ProcessingMechanism that projects to ACTIVATION_OUTPUT of LearningMechanism
@@ -5198,10 +5209,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      if not e.path_afferents), None)
                     if error_signal_input_port is None:
                         error_signal_input_port = learning_mech.add_ports(
-                                                            InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
-                                                                      name=ERROR_SIGNAL,
-                                                                      context=Context(source=ContextFlags.METHOD)),
-                                                            context=Context(source=ContextFlags.METHOD))[0]
+                            InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
+                                      name=ERROR_SIGNAL,
+                                      context=Context(source=ContextFlags.METHOD)),
+                            context=Context(source=ContextFlags.METHOD))[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     try:
@@ -5361,7 +5372,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     proj_index].path_afferents[0]
                                 input_projection_sender = sender_corresponding_input_projection.sender
                                 if input_projection_sender.owner == self.input_CIM:
-                                    shadow_proj = MappingProjection(sender = input_projection_sender,receiver = input_port)
+                                    shadow_proj = MappingProjection(sender=input_projection_sender,
+                                                                    receiver = input_port)
                                     shadow_proj._activate_for_compositions(self)
                             else:
                                 try:
@@ -6583,7 +6595,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     continue
 
                             else:
-                                from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+                                from psyneulink.core.components.projections.modulatory.controlprojection \
+                                    import ControlProjection
                                 if isinstance(proj, ControlProjection):
                                     arrowhead=control_projection_arrow
                                 else:
@@ -7688,7 +7701,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             **kwargs
             ):
         """
-            Runs the composition in learning mode - that is, any components with disable_learning False will be executed in learning mode. See `Composition_Learning` for details.
+            Runs the composition in learning mode - that is, any components with disable_learning False will be
+            executed in learning mode. See `Composition_Learning` for details.
 
             Arguments
             ---------
@@ -7697,13 +7711,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 a dictionary containing a key-value pair for each node in the composition that receives inputs from
                 the user. There are several equally valid ways that this dict could be structured:
                 1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
-                the shape of which must match the node's default variable. This is identical to the input dict in `the run method <Composition.run>`
-                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same structure as input specification (1) of learn. The `targets` and `epochs` keys
-                should contain values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`
+                the shape of which must match the node's default variable. This is identical to the input dict in
+                `the run method <Composition.run>`;
+                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
+                same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
+                values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
 
             targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each node in the composition that receives target values to train on from
-                the user. This could be either target mechanisms or output nodes in backpropagation learning pathways.
+                a dictionary containing a key-value pair for each node in the composition that receives target values
+                to train on from the user. This could be either target mechanisms or output nodes in backpropagation
+                learning pathways.
 
             num_trials : int (default=None)
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -7714,16 +7731,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
 
             minibatch_size : int (default=1)
-                specifies the size of the minibatches to use. The input trials will be batched and ran, after which learning mechanisms with learning mode TRIAL will update weights
+                specifies the size of the minibatches to use. The input trials will be batched and ran, after which
+                learning mechanisms with learning mode TRIAL will update weights
 
             randomize_minibatch: bool (default=False)
                 specifies whether the order of the input trials should be randomized on each epoch
 
             patience : int or None (default=None)
-                used for early stopping of training; If a model has more than `patience` bad consecutive epochs, then `learn` will prematurely return. A bad epoch is determined by the `min_delta` value
+                used for early stopping of training; If a model has more than `patience` bad consecutive epochs,
+                then `learn` will prematurely return. A bad epoch is determined by the `min_delta` value
 
             min_delta : float (default=0)
-                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch; Any reduction less than this value is considered to be a bad epoch.
+                the minimum reduction in average loss that an epoch must provide in order to qualify as a 'good' epoch;
+                Any reduction less than this value is considered to be a bad epoch.
                 Used for early stopping of training, in combination with `patience`.
 
             scheduler : Scheduler
@@ -8162,9 +8182,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context.add_flag(ContextFlags.PROCESSING)
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
-                    #    for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
-                    #    Implementation Note: RecurrentTransferMechanisms are special cased as the AutoAssociativeMechanism
-                    #    should be handling learning - not the RTM itself.
+                    #   for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
+                    #   Implementation Note: RecurrentTransferMechanisms are special cased as the
+                    #   AutoAssociativeMechanism should be handling learning - not the RTM itself.
                     if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
                         projections = set(self.projections).intersection(set(node.path_afferents))
                         if any([p for p in projections if
@@ -8217,7 +8237,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj.sender.owner in self._all_nodes and
                                 isinstance(proj.sender.owner, Mechanism))
                         for srnode in srcs:
-                            assert srnode in self.nodes or srnode is self.input_CIM, "{} is not a valid source node".format(srnode)
+                            assert srnode in self.nodes or srnode is self.input_CIM, \
+                                "{} is not a valid source node".format(srnode)
                             data = _comp_ex.extract_frozen_node_output(srnode)
                             for i, v in enumerate(data):
                                 # This sets frozen values
@@ -8458,7 +8479,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             trial_adjusted_stimulus_list.append(translated_stimulus_dict[port][trial])
                         adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
                     stimuli[node] = adjusted_stimulus_list
-                    stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but it might be a hack
+                    stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but might be a hack
 
             # excludes any input ports marked "internal_only" (usually recurrent)
             # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
@@ -8486,14 +8507,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     check_spec_type = self._input_matches_variable(stim, input_must_match)
                     # loop over each input to verify that it matches variable
                     if check_spec_type == False:
-                        err_msg = "Input stimulus ({}) for {} is incompatible with its external_input_values ({}).". \
-                            format(stim, node.name, input_must_match)
-                        # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                        # for "functionality" but rather a hack for user clarity
+                        err_msg = f"Input stimulus ({stim}) for {node.name} is incompatible " \
+                                  f"with its external_input_values ({input_must_match})."
+                        # 8/3/17 CW: I admit the error message implementation here is very hacky;
+                        # but it's at least not a hack for "functionality" but rather a hack for user clarity
                         if "KWTA" in str(type(node)):
-                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros (or other values)" \
-                                                " to represent the outside stimulus for the inhibition InputPort, and " \
-                                                "for systems, put your inputs"
+                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
+                                                "(or other values) to represent the outside stimulus for " \
+                                                "the inhibition InputPort, and for systems, put your inputs"
                         raise RunError(err_msg)
                     elif check_spec_type == "homogeneous":
                         # np.atleast_2d will catch any single-input ports specified without an outer list
@@ -8719,7 +8740,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __ptx_initialize(self, context=None, additional_tags=frozenset()):
         if self._compilation_data.ptx_execution._get(context) is None:
-            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self, [context.execution_id], additional_tags=additional_tags), context)
+            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self,
+                                                                          [context.execution_id],
+                                                                          additional_tags=additional_tags),
+                                                      context)
 
     def enable_logging(self):
         for item in self.nodes + self.projections:
@@ -8874,7 +8898,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def default_external_input_values(self):
-        """Returns the default values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Returns the default values of all external InputPorts that belong to the
+        Input CompositionInterfaceMechanism"""
         try:
             return [input_port.defaults.value for input_port in self.input_CIM.input_ports if
                     not input_port.internal_only]
