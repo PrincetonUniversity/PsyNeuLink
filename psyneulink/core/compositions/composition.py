@@ -3936,10 +3936,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
                 pathway = pathway[0]
+            # MODIFIED 4/4/20 OLD:
             # If singleton (node, required_role), embed in list
-            elif (isinstance(pathway[1], NodeRole)
-                  or (isinstance(pathway[1], list) and all(isinstance(nr, NodeRole) for nr in pathway[1]))):
+            # elif (isinstance(pathway[1], NodeRole)
+            #       or (isinstance(pathway[1], list) and all(isinstance(nr, NodeRole) for nr in pathway[1]))):
+            #     pathway = convert_to_list(pathway)
+            # MODIFIED 4/4/20 NEW:
+            # FIX 4/4/20 [JDC]: TRY MOVING TO FIRST CONDITION
+            # If singleton (node, required_role), embed in list
+            elif _is_pathway_entry_spec(pathway):
                 pathway = convert_to_list(pathway)
+            # MODIFIED 4/4/20 END:
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
 

@@ -57,52 +57,52 @@ def test_simplified_necker_cube(benchmark, mode):
     # init composition
     bp_comp = pnl.Composition()
 
-    # # MODIFIED 4/11/20 OLD:
-    # # within-percept excitation
-    # for percept in ALL_PERCEPTS:
-    #     for node_i, node_j in product(node_dict[percept], node_dict[percept]):
-    #         if node_i is not node_j:
-    #             bp_comp.add_linear_processing_pathway(
-    #                 pathway=(node_i, [excit_level], node_j))
-    #
-    # # inter-percepts inhibition
-    # for node_i, node_j in zip(node_dict[ALL_PERCEPTS[0]],
-    #                           node_dict[ALL_PERCEPTS[1]]):
-    #     bp_comp.add_linear_processing_pathway(
-    #         pathway=(node_i, [-inhib_level], node_j))
-    #     bp_comp.add_linear_processing_pathway(
-    #         pathway=(node_j, [-inhib_level], node_i))
-    #
-    # # turn off report
-    # reportOutputPref = False
-    #
-    # # make sure all nodes are both input and outputs
-    # for node in bp_comp.nodes:
-    #     bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
-    #     bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
-    #     # turn off report
-    #     node.reportOutputPref = reportOutputPref
-    #
-    # MODIFIED 4/11/20 NEW:
+    # MODIFIED 4/11/20 OLD:
     # within-percept excitation
     for percept in ALL_PERCEPTS:
         for node_i, node_j in product(node_dict[percept], node_dict[percept]):
             if node_i is not node_j:
                 bp_comp.add_linear_processing_pathway(
-                    pathway=((node_i, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [excit_level], (node_j, [pnl.NodeRole.INPUT,
-                                                                                                   pnl.NodeRole.OUTPUT])))
+                    pathway=(node_i, [excit_level], node_j))
 
     # inter-percepts inhibition
     for node_i, node_j in zip(node_dict[ALL_PERCEPTS[0]],
                               node_dict[ALL_PERCEPTS[1]]):
         bp_comp.add_linear_processing_pathway(
-            pathway=((node_i, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])))
+            pathway=(node_i, [-inhib_level], node_j))
         bp_comp.add_linear_processing_pathway(
-            pathway=((node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_i, [pnl.NodeRole.INPUT,
-                                                                                            pnl.NodeRole.OUTPUT])))
+            pathway=(node_j, [-inhib_level], node_i))
 
     # turn off report
     reportOutputPref = False
+
+    # make sure all nodes are both input and outputs
+    for node in bp_comp.nodes:
+        bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
+        bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+        # turn off report
+        node.reportOutputPref = reportOutputPref
+
+    # MODIFIED 4/11/20 NEW:  [PASSES ALL TESTS]
+    # # within-percept excitation
+    # for percept in ALL_PERCEPTS:
+    #     for node_i, node_j in product(node_dict[percept], node_dict[percept]):
+    #         if node_i is not node_j:
+    #             bp_comp.add_linear_processing_pathway(
+    #                 pathway=((node_i, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [excit_level], (node_j, [pnl.NodeRole.INPUT,
+    #                                                                                                pnl.NodeRole.OUTPUT])))
+    #
+    # # inter-percepts inhibition
+    # for node_i, node_j in zip(node_dict[ALL_PERCEPTS[0]],
+    #                           node_dict[ALL_PERCEPTS[1]]):
+    #     bp_comp.add_linear_processing_pathway(
+    #         pathway=((node_i, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])))
+    #     bp_comp.add_linear_processing_pathway(
+    #         pathway=((node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_i, [pnl.NodeRole.INPUT,
+    #                                                                                         pnl.NodeRole.OUTPUT])))
+    #
+    # # turn off report
+    # reportOutputPref = False
     # MODIFIED 4/11/20 END:
 
 
