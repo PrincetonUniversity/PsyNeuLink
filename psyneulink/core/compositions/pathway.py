@@ -146,7 +146,8 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
         is_node = (isinstance(entry, node_specs)
                    or (isinstance(entry, tuple)
                        and isinstance(entry[0], node_specs)
-                       and isinstance(entry[1], NodeRole)))
+                       and (isinstance(entry[1], NodeRole) or
+                            (isinstance(entry[1], list) and all(isinstance(nr, NodeRole) for nr in entry[1])))))
 
     if desired_type in {PROJECTION, ANY}:
         is_proj = (_is_projection_spec(entry)

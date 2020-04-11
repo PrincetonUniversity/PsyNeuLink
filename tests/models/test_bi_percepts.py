@@ -35,15 +35,10 @@ def test_simplified_necker_cube(benchmark, mode):
     node_dict = {percept: None for percept in ALL_PERCEPTS}
 
     def get_node(percept, node_id):
-
-        # helper func for creating a node
-
+        """helper func for creating a node"""
         tm_function = pnl.Linear(slope=1, intercept=0)
-
         tm_integrator_mode = True
-
         tm_integration_rate = .5
-
         node_ = pnl.TransferMechanism(
             name='{percept}-{node_id}'.format(percept=percept, node_id=node_id),
             function=tm_function,
@@ -51,11 +46,9 @@ def test_simplified_necker_cube(benchmark, mode):
             integration_rate=tm_integration_rate,
             default_variable=np.zeros((1,)),
         )
-
         return node_
 
     # init all nodes, save them in list and dict form
-
     for percept in ALL_PERCEPTS:
         node_dict[percept] = [
             get_node(percept, i) for i in range(n_nodes_per_percepts)
@@ -63,30 +56,55 @@ def test_simplified_necker_cube(benchmark, mode):
 
     # init composition
     bp_comp = pnl.Composition()
+
+    # # MODIFIED 4/11/20 OLD:
+    # # within-percept excitation
+    # for percept in ALL_PERCEPTS:
+    #     for node_i, node_j in product(node_dict[percept], node_dict[percept]):
+    #         if node_i is not node_j:
+    #             bp_comp.add_linear_processing_pathway(
+    #                 pathway=(node_i, [excit_level], node_j))
+    #
+    # # inter-percepts inhibition
+    # for node_i, node_j in zip(node_dict[ALL_PERCEPTS[0]],
+    #                           node_dict[ALL_PERCEPTS[1]]):
+    #     bp_comp.add_linear_processing_pathway(
+    #         pathway=(node_i, [-inhib_level], node_j))
+    #     bp_comp.add_linear_processing_pathway(
+    #         pathway=(node_j, [-inhib_level], node_i))
+    #
+    # # turn off report
+    # reportOutputPref = False
+    #
+    # # make sure all nodes are both input and outputs
+    # for node in bp_comp.nodes:
+    #     bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
+    #     bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+    #     # turn off report
+    #     node.reportOutputPref = reportOutputPref
+    #
+    # MODIFIED 4/11/20 NEW:
     # within-percept excitation
     for percept in ALL_PERCEPTS:
         for node_i, node_j in product(node_dict[percept], node_dict[percept]):
             if node_i is not node_j:
                 bp_comp.add_linear_processing_pathway(
-                    pathway=(node_i, [excit_level], node_j))
+                    pathway=((node_i, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [excit_level], (node_j, [pnl.NodeRole.INPUT,
+                                                                                                   pnl.NodeRole.OUTPUT])))
 
     # inter-percepts inhibition
     for node_i, node_j in zip(node_dict[ALL_PERCEPTS[0]],
                               node_dict[ALL_PERCEPTS[1]]):
         bp_comp.add_linear_processing_pathway(
-            pathway=(node_i, [-inhib_level], node_j))
+            pathway=((node_i, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])))
         bp_comp.add_linear_processing_pathway(
-            pathway=(node_j, [-inhib_level], node_i))
+            pathway=((node_j, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]), [-inhib_level], (node_i, [pnl.NodeRole.INPUT,
+                                                                                            pnl.NodeRole.OUTPUT])))
 
-    # make sure all nodes are both input and outputs
+    # turn off report
     reportOutputPref = False
+    # MODIFIED 4/11/20 END:
 
-    for node in bp_comp.nodes:
-        bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
-        bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
-
-        # turn off report
-        node.reportOutputPref = reportOutputPref
 
     # bp_comp.show_graph()
 
@@ -103,12 +121,12 @@ def test_simplified_necker_cube(benchmark, mode):
     # run the model
     res = bp_comp.run(input_dict, num_trials=10, bin_execute=mode)
     np.testing.assert_allclose(res,
-                               # [[3127.65559899], [3610.74194658],  # original:  no seed and
-                               #  [6468.6978669], [-4615.15074428],  #            no_analyze_graph in Composition:3776
-                               #  [-7369.73302025], [-11190.45001744]])
-                               [[-11190.45001744], [3127.65559899],  # no seed, but with with_analyze_graph in
-                                [3610.74194658], [6468.6978669],     #  Composition:3776; passes for Python but not LLVM
-                                [-4615.15074428], [-7369.73302025]])
+                               [[3127.65559899], [3610.74194658],  # original:  no seed and
+                                [6468.6978669], [-4615.15074428],  #            no_analyze_graph in Composition:3776
+                                [-7369.73302025], [-11190.45001744]])
+                               # [[-11190.45001744], [3127.65559899],  # no seed, but with with_analyze_graph in
+                               #  [3610.74194658], [6468.6978669],     #  Composition:3776; passes for Python but not LLVM
+                               #  [-4615.15074428], [-7369.73302025]])
                                # [[4380.19172585], [5056.09548856],   # seed but no _analyze_graph in Composition:3776
                                #  [9058.54210893], [-6465.3497555],   # passes for Python abd LLVM
                                #  [-10322.33734752], [-15673.99046508]])

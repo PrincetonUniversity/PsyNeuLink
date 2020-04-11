@@ -2923,7 +2923,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for node in input_nodes:
 
+            # INPUT CIMS
             for input_port in node.external_input_ports:
+
                 # add it to our set of current input ports
                 current_input_node_input_ports.add(input_port)
 
@@ -2972,6 +2974,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 shadow_projection._activate_for_compositions(self)
 
         sends_to_input_ports = set(self.input_CIM_ports.keys())
+
+        # MODIFIED 4/11/20 NEW:
+        input_CIM_port_names = sorted([p.owner.name + ': ' + p.name for p in self.input_CIM_ports.keys()])
+        current_i_names = sorted([n.owner.name + ': ' + n.name for n in current_input_node_input_ports])
+        diff_names = sorted([n.owner.name + ': ' + n.name for n in sends_to_input_ports.difference(current_input_node_input_ports)])
+        assert True
+        # MODIFIED 4/11/20 END
 
         # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
@@ -3928,7 +3937,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
                 pathway = pathway[0]
             # If singleton (node, required_role), embed in list
-            elif isinstance(pathway[1], NodeRole):
+            elif (isinstance(pathway[1], NodeRole)
+                  or (isinstance(pathway[1], list) and all(isinstance(nr, NodeRole) for nr in pathway[1]))):
                 pathway = convert_to_list(pathway)
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
