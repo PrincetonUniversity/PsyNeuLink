@@ -1500,7 +1500,7 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.ports.port import Port
-from psyneulink.core.components.ports.inputport import InputPort, InputPortError, SHADOW_INPUTS
+from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
@@ -1508,14 +1508,15 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
-    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, EITHER, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, \
+    INPUT, INPUT_CIM_NAME, LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, \
-    PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
-    ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OWNER_VALUE, \
+    PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
+    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -2948,7 +2949,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_input_port = InputPort(owner=self.input_CIM,
                                                      variable=input_port.defaults.value,
                                                      reference_value=input_port.defaults.value,
-                                                     name="INPUT_CIM_" + node.name + "_" + input_port.name,
+                                                     name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
 
                     self.input_CIM.add_ports([interface_input_port],
@@ -2958,7 +2959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        variable=OWNER_VALUE,
                                                        function=InterfacePortMap(
                                                             corresponding_input_port=interface_input_port),
-                                                       name="INPUT_CIM_" + node.name + "_" + input_port.name,
+                                                       name=INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                        context=context)
 
                     self.input_CIM.add_ports([interface_output_port],
@@ -3032,7 +3033,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_input_port = InputPort(owner=self.output_CIM,
                                                      variable=output_port.defaults.value,
                                                      reference_value=output_port.defaults.value,
-                                                     name="OUTPUT_CIM_" + node.name + "_" + output_port.name,
+                                                     name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                                                      context=context)
 
                     self.output_CIM.add_ports([interface_input_port],
@@ -3043,7 +3044,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             variable=OWNER_VALUE,
                             function=InterfacePortMap(corresponding_input_port=interface_input_port),
                             reference_value=output_port.defaults.value,
-                            name="OUTPUT_CIM_" + node.name + "_" + output_port.name,
+                            name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                             context=context)
 
                     self.output_CIM.add_ports([interface_output_port],
@@ -3171,18 +3172,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             context.execution_id = orig_eid
 
-            # # JDC 4/12/20:
+            # JDC 4/12/20:
+            # FIX 4/4/20 [JDC]: THIS PASSES ALL TESTS EXCEPT test_warning_on_custom_cim_ports,
+            #                   IN WHICH AN ATTEMPT IS MADE TO MANUALLY ADD A CIM.  NEED TO RECONCILE ASSERT W/ WARNING
             # assert len(cim.input_ports)==len(cim.output_ports)
-            # if type==INPUT:
-            #     n = len(cim.output_ports)
-            #     e = int(sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])),
-            #     assert n == e, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
-            #                    f"the number of external_input_ports over all INPUT nodes of {self.name} ({e})."
-            #     p = len([p for p in self.projections if 'input_CIM' in p.sender.owner.name])
-            # elif type==OUTPUT:
-            #     pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
-            # elif type==PARAMETER:
-            #     pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
+            if type==INPUT:
+                # FIX 4/4/20 [JDC]: NEED TO ADD ASSERTION FOR NUMBER OF SHADOW PROJECTIONS
+                n = len(cim.output_ports)
+                i = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])
+                p = len([p for p in self.projections if (INPUT_CIM_NAME in p.name and SHADOW_INPUT_NAME not in p.name)])
+                assert n == i, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
+                               f"the number of external_input_ports over all INPUT nodes of {self.name} ({i})."
+                # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
+                # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.input_CIM.name})" \
+                #                f"({p} does not match the number of its OutputPorts ({n})."
+            elif type==OUTPUT:
+                n = len(cim.input_ports)
+                # FIX 4/4/20 [JDC]: NEED TO DETERMINE # OutputPorts on OUTPUT Nodes:
+                # o = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])
+                # assert n == o, f"PROGRAM ERROR:  Number of InputPorts on {self.output_CIM.name} ({n}) does not " \
+                #                f"match the number of OutputPorts over all OUTPUT nodes of {self.name} ({o})."
+                p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
+                # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
+                # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.output_CIM.name} " \
+                #                f"({p}) does not match the number of its InputPorts ({n})."
+            elif type==PARAMETER:
+                pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,

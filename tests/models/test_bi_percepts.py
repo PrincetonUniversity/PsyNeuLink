@@ -16,14 +16,15 @@ from itertools import product
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Simplified Necker Cube")
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=[pytest.mark.llvm]),
-                                  pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-                                  pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                  ])
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
 def test_simplified_necker_cube(benchmark, mode):
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']

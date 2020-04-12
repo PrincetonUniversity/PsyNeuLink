@@ -512,9 +512,9 @@ from psyneulink.core.components.ports.port import PortError, Port_Base, _instant
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
-    PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
-    SENDER, SIZE, PORT_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
+    PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
+    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -537,8 +537,6 @@ WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
-SHADOW_INPUTS = 'shadow_inputs'
-SHADOW_INPUT_NAME = 'Shadowed input of '
 
 class InputPortError(Exception):
     def __init__(self, error_value):
