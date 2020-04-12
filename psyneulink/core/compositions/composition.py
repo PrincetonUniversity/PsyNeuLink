@@ -3171,17 +3171,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             context.execution_id = orig_eid
 
-            # JDC 4/12/20:
-            assert len(cim.input_ports)==len(cim.output_ports)
-            if type==INPUT:
-                n = len(cim.output_ports)
-                e = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)]),
-                assert n == e, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
-                               f"the number of external_input_ports over all INPUT nodes of {self.name} ({e})."
-            elif type==OUTPUT:
-                pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
-            elif type==PARAMETER:
-                pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
+            # # JDC 4/12/20:
+            # assert len(cim.input_ports)==len(cim.output_ports)
+            # if type==INPUT:
+            #     n = len(cim.output_ports)
+            #     e = int(sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])),
+            #     assert n == e, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
+            #                    f"the number of external_input_ports over all INPUT nodes of {self.name} ({e})."
+            #     p = len([p for p in self.projections if 'input_CIM' in p.sender.owner.name])
+            # elif type==OUTPUT:
+            #     pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
+            # elif type==PARAMETER:
+            #     pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
