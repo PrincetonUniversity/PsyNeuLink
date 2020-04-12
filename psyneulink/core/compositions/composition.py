@@ -2266,7 +2266,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Instantiate any deferred init components
         if context.source != ContextFlags.METHOD:  # Prevent recursion in call from add_controller
-            self._check_initialization_status()
+            self._check_projection_initialization_status()
 
         # Call _analzye_graph() for any nested Compositions
         for n in self.nodes:
@@ -2282,6 +2282,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
+        # MODIFIED 4/4/20 NEW: [JDC]
+        index = self.input_CIM.ports.data[8].function.corresponding_input_port.position_in_mechanism
+        # MODIFIED 4/4/20 END
 
     def _update_processing_graph(self):
         """
@@ -2923,7 +2926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.connected_to_composition = True
 
 
-        # INPUT CIMS
+        # INPUT CIM
         current_input_node_input_ports = set()
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in input_nodes:
@@ -2939,7 +2942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # add it to our set of current input ports
                 current_input_node_input_ports.add(input_port)
 
-                # if there is not a corresponding CIM OutputPort, add one
+                # if there is not a corresponding CIM InputPort/OutputPort pair, add them
                 if input_port not in set(self.input_CIM_ports.keys()):
                     interface_input_port = InputPort(owner=self.input_CIM,
                                                      variable=input_port.defaults.value,
@@ -3014,13 +3017,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.input_CIM_ports[input_port]
 
-        # OUTPUT CIMS
+        # OUTPUT CIM
         # loop over all OUTPUT nodes
         current_output_node_output_ports = set()
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             for output_port in node.output_ports:
                 current_output_node_output_ports.add(output_port)
-                # if there is not a corresponding CIM OutputPort, add one
+
+                # if there is not a corresponding CIM InputPort/OutputPort pair, add them
                 if output_port not in set(self.output_CIM_ports.keys()):
 
                     interface_input_port = InputPort(owner=self.output_CIM,
@@ -5575,7 +5579,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
 
-    def _check_initialization_status(self):
+    def _check_projection_initialization_status(self):
         """Checks initialization status of controller (if applicable) and any projections or ports
 
         """
@@ -7445,7 +7449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
         if ContextFlags.SIMULATION not in context.execution_phase:
-            self._check_initialization_status()
+            self._check_projection_initialization_status()
 
         # MODIFIED 8/27/19 OLD:
         # try:
