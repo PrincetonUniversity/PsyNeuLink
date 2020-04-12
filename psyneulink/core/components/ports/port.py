@@ -1814,9 +1814,13 @@ class Port_Base(Port):
 
     def _remove_projection_to_port(self, projection, context=None):
         # FIX 4/4/20 [JDC]:  ASSUMES PORTS VARIABLE IS SHAPE IS 2D
-        new_size = len(self.defaults.variable)-1
-        self.defaults.variable = np.resize(self.defaults.variable, (new_size,1))
-        self.function.defaults.variable = np.resize(self.function.defaults.variable, (new_size,1))
+        if self.defaults.variable.ndim != 2:
+            pass
+        else:
+            shape = self.defaults.variable.shape
+            new_shape = (shape[0]-1, shape[1])
+            self.defaults.variable = np.resize(self.defaults.variable, new_shape)
+            self.function.defaults.variable = np.resize(self.function.defaults.variable, new_shape)
         del self.path_afferents[self.path_afferents.index(projection)]
     # MODIFIED 4/4/20 END
 
