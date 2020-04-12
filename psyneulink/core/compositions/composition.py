@@ -3174,8 +3174,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # JDC 4/12/20:
             assert len(cim.input_ports)==len(cim.output_ports)
             if type==INPUT:
-                assert len(cim.output_ports) == sum([len(n.external_input_ports)
-                                                     for n in self.get_nodes_by_role(NodeRole.INPUT)])
+                n = len(cim.output_ports)
+                e = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)]),
+                assert n == e, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
+                               f"the number of external_input_ports over all INPUT nodes of {self.name} ({e})."
             elif type==OUTPUT:
                 pass # FIX 4/4/20 [JDC]: ADD PROPER ASSERTION HERE
             elif type==PARAMETER:
