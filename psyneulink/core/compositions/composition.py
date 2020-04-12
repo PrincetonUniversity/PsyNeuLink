@@ -3179,10 +3179,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert n == e, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
                                f"the number of external_input_ports over all INPUT nodes of {self.name} ({e})."
             elif type==OUTPUT:
-                pass # FIX 4/4/20 [JDC]: ADD PROPER ASSERTION HERE
+                pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
             elif type==PARAMETER:
-                pass # FIX 4/4/20 [JDC]: ADD PROPER ASSERTION HERE
-
+                pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
