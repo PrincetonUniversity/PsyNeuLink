@@ -1512,10 +1512,10 @@ from psyneulink.core.globals.keywords import \
     LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, \
-    NAME, NO_CLAMP, NODE, \
-    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
-    SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    ONLINE, OUTCOME, OUTPUT, OWNER_VALUE, \
+    PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
+    ROLES, SAMPLE, SIMULATIONS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -2282,10 +2282,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
-        # MODIFIED 4/4/20 NEW: [JDC]
-        for port in [p for p in self.input_CIM.ports if isinstance(p, OutputPort)]:
-            index = port.function.corresponding_input_port.position_in_mechanism
-        # MODIFIED 4/4/20 END
+        # # MODIFIED 4/4/20 NEW: [JDC]
+        # for port in [p for p in self.input_CIM.ports if isinstance(p, OutputPort)]:
+        #     index = port.function.corresponding_input_port.position_in_mechanism
+        # # MODIFIED 4/4/20 END
 
     def _update_processing_graph(self):
         """
@@ -3009,6 +3009,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 for shadow_projection in shadow_input_port.path_afferents:
                                     if shadow_projection.sender == self.input_CIM_ports[input_port][1]:
                                         shadow_input_port.path_afferents.remove(shadow_projection)
+                                        self.remove_projection(shadow_projection)
 
             # remove the CIM input and output ports associated with this INPUT node InputPort
             self.input_CIM.remove_ports(self.input_CIM_ports[input_port][0])
@@ -3088,6 +3089,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 port.path_afferents.remove(afferent)
                             if afferent in port.mod_afferents:
                                 port.mod_afferents.remove(afferent)
+                            self.remove_projection(afferent)
 
             for modulatory_signal in controller.control_signals:
                 for projection in modulatory_signal.projections:
@@ -3122,6 +3124,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for projection in receiver.mod_afferents:
                                 if projection.sender.owner == controller:
                                     receiver.mod_afferents.remove(projection)
+                                    self.remove_projection(projection)
                             pcIM_ports[receiver] = (modulatory_signal, input_port)
 
             for comp in nested_comps:
@@ -3140,7 +3143,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             input_projection._activate_for_compositions(self)
                             input_projection._activate_for_compositions(comp)
 
-        for cim in [self.input_CIM, self.output_CIM, self.parameter_CIM]:
+        for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
             # happening outside of this normal context? This is here as
@@ -3167,6 +3170,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # no input ports in CIM, so assume Composition is blank
 
             context.execution_id = orig_eid
+
+            # JDC 4/12/20:
+            assert len(cim.input_ports)==len(cim.output_ports)
+            if type==INPUT:
+                assert len(cim.output_ports) == sum([len(n.external_input_ports)
+                                                     for n in self.get_nodes_by_role(NodeRole.INPUT)])
+            elif type==OUTPUT:
+                pass # FIX 4/4/20 [JDC]: ADD PROPER ASSERTION HERE
+            elif type==PARAMETER:
+                pass # FIX 4/4/20 [JDC]: ADD PROPER ASSERTION HERE
+
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
