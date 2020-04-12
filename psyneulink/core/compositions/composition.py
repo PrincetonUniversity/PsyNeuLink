@@ -3008,6 +3008,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # remove the CIM input and output ports associated with this INPUT node InputPort
             self.input_CIM.remove_ports(self.input_CIM_ports[input_port][0])
+            for proj in self.input_CIM_ports[input_port][1].efferents:
+                self.remove_projection(proj)
             self.input_CIM.remove_ports(self.input_CIM_ports[input_port][1])
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.input_CIM_ports[input_port]

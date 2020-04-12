@@ -132,4 +132,7 @@ class PathwayProjection_Base(Projection_Base):
         """Delete Projection and its entry in receiver and sender lists"""
         del projection.sender.efferents[projection.sender.efferents.index(projection)]
         del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
+        # remove_instance_from_registry(registry=self._portRegistry,
+        #                               category=PARAMETER_PORT,
+        #                               component=port)
         del projection
