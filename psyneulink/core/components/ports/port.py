@@ -1808,6 +1808,18 @@ class Port_Base(Port):
                 self.owner.aux_components.append((projection, feedback))
             return projection
 
+    # MODIFIED 4/4/20 NEW: [JDC]
+    def _remove_projection_from_port(self, projection, context=None):
+        del self.efferents[self.efferents.index(projection)]
+
+    def _remove_projection_to_port(self, projection, context=None):
+        # FIX 4/4/20 [JDC]: RESHAPE self.defaults.variable ??AND self.function.defaults.variable?? HERE
+        new_size = len(self.defaults.variable)-1
+        self.defaults.variable = np.resize(self.defaults.variable, (new_size,1))
+        self.function.defaults.variable = np.resize(self.function.defaults.variable, (new_size,1))
+        del self.path_afferents[self.path_afferents.index(projection)]
+    # MODIFIED 4/4/20 END
+
     def _get_primary_port(self, mechanism):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
                          format(self.__class__.__name__))
