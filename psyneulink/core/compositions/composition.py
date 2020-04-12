@@ -3062,6 +3062,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         previous_output_node_output_ports = set(self.output_CIM_ports.keys())
         for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
             # remove the CIM input and output ports associated with this Terminal Node OutputPort
+            for proj in self.output_CIM_ports[output_port][0].path_afferents:
+                self.remove_projection(proj)
             self.output_CIM.remove_ports(self.output_CIM_ports[output_port][0])
             self.output_CIM.remove_ports(self.output_CIM_ports[output_port][1])
             # and from the dictionary of CIM OutputPort/InputPort pairs
