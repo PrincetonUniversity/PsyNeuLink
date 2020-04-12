@@ -63,10 +63,10 @@ See `Projection <Projection_Class_Reference>`.
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionRegistry
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, INITIALIZATION_STATUS, NAME, PATHWAY_PROJECTION, RECEIVER, SENDER
 from psyneulink.core.globals.keywords import NAME, PATHWAY_PROJECTION, RECEIVER, SENDER
+from psyneulink.core.globals.registry import remove_instance_from_registry
 
 __all__ = []
 
@@ -132,7 +132,6 @@ class PathwayProjection_Base(Projection_Base):
         """Delete Projection and its entry in receiver and sender lists"""
         del projection.sender.efferents[projection.sender.efferents.index(projection)]
         del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
-        # remove_instance_from_registry(registry=self._portRegistry,
-        #                               category=PARAMETER_PORT,
-        #                               component=port)
+        remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
+                                      component=projection)
         del projection

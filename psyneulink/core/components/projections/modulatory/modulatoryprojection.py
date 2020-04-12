@@ -94,9 +94,10 @@ Class Reference
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionRegistry
+from psyneulink.core.globals.keywords import MODULATORY_PROJECTION, NAME
 from psyneulink.core.globals.log import ContextFlags, LogEntry
+from psyneulink.core.globals.registry import remove_instance_from_registry
 
 
 __all__ = [
@@ -158,4 +159,6 @@ class ModulatoryProjection_Base(Projection_Base):
         """Delete Projection and its entry in receiver and sender lists"""
         del projection.sender.efferents[projection.sender.efferents.index(projection)]
         del projection.receiver.mod_afferents[projection.receiver.mod_afferents.index(projection)]
+        remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
+                                      component=projection)
         del projection
