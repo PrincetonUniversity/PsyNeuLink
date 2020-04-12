@@ -2283,7 +2283,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
         # MODIFIED 4/4/20 NEW: [JDC]
-        index = self.input_CIM.ports.data[8].function.corresponding_input_port.position_in_mechanism
+        for port in [p for p in self.input_CIM.ports if isinstance(p, OutputPort)]:
+            index = port.function.corresponding_input_port.position_in_mechanism
         # MODIFIED 4/4/20 END
 
     def _update_processing_graph(self):
