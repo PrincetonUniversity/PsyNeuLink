@@ -2216,6 +2216,11 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
+        # MODIFIED 4/4/20 NEW: [PER JAN]
+        if len(self.path_afferents) > 0:
+            assert len(func_input_type) == len(self.path_afferents), \
+                "{} shape mismatch: {} vs. {} path_afferents".format(self, func_input_type, len(self.path_afferents))
+        # MODIFIED 4/4/20 END
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
