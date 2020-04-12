@@ -2693,6 +2693,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _determine_node_roles(self, context=None):
 
+        # MODIFIED 4/4/20 NEW:
+        assert True
+        # MODIFIED 4/4/20 END:
+
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
@@ -2751,7 +2755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 4/4/20 OLD:
         # if not self.get_nodes_by_role(NodeRole.OUTPUT):
         # MODIFIED 4/4/20 NEW:
-        # If the only nodes designated as OUTPUT are in a learning pathway
+        # If there are not any OUTPUT nodes (execept ones designated as OUTPUT in a learning pathway)
         if not any([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
                     if not any(n for n in [pathway for pathway in self.pathways
                                  if PathwayRole.LEARNING in pathway.roles])]):
@@ -2769,6 +2773,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if self.get_nodes_by_role(NodeRole.LEARNING):
                 # FIX: ADD COMMENT HERE
+                # FIX 4/4/20 [JDC]: WHY ISN'T THIS REDUNDANT WITH EXCLUSION OF LEARNING OUTPUT NODES ABOVE?
                 # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
                 output_nodes = list([items for items in self.scheduler.consideration_queue
                                      if any([item for item in items
@@ -2917,14 +2922,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.output_ports.remove(self.output_CIM.output_port)
             self.output_CIM.connected_to_composition = True
 
+
+        # INPUT CIMS
         current_input_node_input_ports = set()
-
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-
         for node in input_nodes:
 
-            # INPUT CIMS
             for input_port in node.external_input_ports:
+
+                # MODIFIED 4/4/20 NEW:
+                node_ext_input_port_names = sorted([n.owner.name + ': ' + n.name for n in node.external_input_ports])
+                input_port_name =  input_port.owner.name + ': ' + input_port.name
+                curr_input_port_names = sorted([n.owner.name + ': ' + n.name for n in current_input_node_input_ports])
+                # MODIFIED 4/4/20 END
 
                 # add it to our set of current input ports
                 current_input_node_input_ports.add(input_port)
@@ -2985,10 +2995,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
             for projection in input_port.path_afferents:
-                if projection.sender == self.input_CIM_ports[input_port][1]:
-                    # remove the corresponding projection from the INPUT node's path afferents
-                    input_port.path_afferents.remove(projection)
 
+                if projection.sender == self.input_CIM_ports[input_port][1]:
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
                     if projection.receiver.owner in self.shadows and len(self.shadows[projection.receiver.owner]) > 0:
@@ -2999,9 +3007,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         shadow_input_port.path_afferents.remove(shadow_projection)
 
             # remove the CIM input and output ports associated with this INPUT node InputPort
-            self.input_CIM.input_ports.remove(self.input_CIM_ports[input_port][0])
-            self.input_CIM.output_ports.remove(self.input_CIM_ports[input_port][1])
-
+            self.input_CIM.remove_ports(self.input_CIM_ports[input_port][0])
+            self.input_CIM.remove_ports(self.input_CIM_ports[input_port][1])
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.input_CIM_ports[input_port]
 
@@ -3055,6 +3062,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # remove the CIM input and output ports associated with this Terminal Node OutputPort
             self.output_CIM.remove_ports(self.output_CIM_ports[output_port][0])
             self.output_CIM.remove_ports(self.output_CIM_ports[output_port][1])
+            # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
         # PARAMETER CIMS
@@ -3082,8 +3090,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         pcIM_ports = comp.parameter_CIM_ports
                         if receiver not in pcIM_ports:
                             if not pcim.connected_to_composition:
-                                pcim.input_ports.remove(pcim.input_port)
-                                pcim.output_ports.remove(pcim.output_port)
+                                pcim.remove_ports(pcim.input_port)
+                                pcim.remove_ports(pcim.output_port)
                                 pcim.connected_to_composition = True
                             modulation = modulatory_signal.owner.modulation
                             input_port = InputPort(

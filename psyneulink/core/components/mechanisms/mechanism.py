@@ -3375,19 +3375,22 @@ class Mechanism_Base(Mechanism):
         if not isinstance(ports, (list, ContentAddressableList)):
             ports = [ports]
 
-        def delete_port_Projections(proj_list):
+        def delete_port_Projections(proj_list, port):
             for proj in proj_list:
-                type(proj)._delete_projection(proj)
+                try:
+                    type(proj)._delete_projection(proj)
+                except:
+                    raise MechanismError(f"PROGRAM ERROR: {proj} not found when removing {port} from {self.name}.")
 
         for port in ports:
 
-            delete_port_Projections(port.mod_afferents)
+            delete_port_Projections(port.mod_afferents, port)
 
             if port in self.input_ports:
                 if isinstance(port, str):
                     port = self.input_ports[port]
                 index = self.input_ports.index(port)
-                delete_port_Projections(port.path_afferents)
+                delete_port_Projections(port.path_afferents, port)
                 del self.input_ports[index]
                 # If port is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
@@ -3417,7 +3420,7 @@ class Mechanism_Base(Mechanism):
                     index = self.output_ports.index(port)
                 else:
                     index = self.output_ports.index(self.output_ports[port])
-                delete_port_Projections(port.efferents)
+                delete_port_Projections(port.efferents, port)
                 del self.output_values[index]
                 del self.output_ports[port]
                 # If port is subclass of OutputPort:
