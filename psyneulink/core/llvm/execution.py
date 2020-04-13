@@ -9,11 +9,9 @@
 # ********************************************* Binary Execution Wrappers **************************************************************
 
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.utilities import NodeRole
 
 import copy
 import ctypes
-from collections import defaultdict
 import numpy as np
 from inspect import isgenerator
 from psyneulink.core import llvm as pnlvm
@@ -420,18 +418,17 @@ class CompExecution(CUDAExecution):
         setattr(my_res_struct, node_field_name, _tupleize(data))
 
     def _get_input_struct(self, inputs):
-        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         # Either node or composition execute.
         # All execute functions expect inputs to be 3rd param.
         c_input = self._bin_func.byref_arg_types[2]
 
-        # Read provided input data and separate each InputPort
+        # Read provided input data and parse into an array (generator)
         if len(self._execution_contexts) > 1:
             assert len(self._execution_contexts) == len(inputs)
             c_input = c_input * len(self._execution_contexts)
-            input_data = (([x] for m in origins for x in inp[m]) for inp in inputs)
+            input_data = (([x] for x in self._composition._build_variable_for_input_CIM(inp)) for inp in inputs)
         else:
-            input_data = ([x] for m in origins for x in inputs[m])
+            input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
 
         return c_input(*_tupleize(input_data))
 
@@ -439,18 +436,18 @@ class CompExecution(CUDAExecution):
         self.__frozen_vals = copy.deepcopy(self._data_struct)
 
     def execute_node(self, node, inputs=None):
-        # We need to reconstruct the inputs here if they were not provided.
+        # We need to reconstruct the input dictionary here if it was not provided.
         # This happens during node execution of nested compositions.
         assert len(self._execution_contexts) == 1
         if inputs is None and node is self._composition.input_CIM:
             context = self._execution_contexts[0]
-            # This assumes origin mechanisms are in the same order as
-            # CIM input ports
-            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for iport in n.input_ports)
-            input_data = ([proj.parameters.value._get(context) for proj in port.all_afferents] for port in node.input_ports)
-            inputs = defaultdict(list)
-            for n, d in zip(origins, input_data):
-                inputs[n].append(d[0])
+            port_inputs = {origin_port:[proj.parameters.value._get(context) for proj in p[0].path_afferents] for (origin_port, p) in self._composition.input_CIM_ports.items()}
+            inputs = {}
+            for p, v in port_inputs.items():
+                data = inputs.setdefault(p.owner, [0] * len(p.owner.input_ports))
+                index = p.owner.input_ports.index(p)
+                data[index] = v[0]
+
 
         # Set bin node to make sure self._*struct works as expected
         self._set_bin_node(node)
@@ -516,7 +513,6 @@ class CompExecution(CUDAExecution):
     # Methods used to accelerate "Run"
 
     def _get_run_input_struct(self, inputs, num_input_sets):
-        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
         input_type = self._bin_run_func.byref_arg_types[3]
         c_input = (input_type * num_input_sets) * len(self._execution_contexts)
         if len(self._execution_contexts) == 1:
@@ -524,7 +520,7 @@ class CompExecution(CUDAExecution):
 
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
-        run_inputs = ((([iv] for m in origins for iv in inp[m][i]) for i in range(num_input_sets)) for inp in inputs)
+        run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({m:inp[m][i] for m in inp.keys()})) for i in range(num_input_sets)) for inp in inputs)
         return c_input(*_tupleize(run_inputs))
 
     @property
@@ -545,10 +541,8 @@ class CompExecution(CUDAExecution):
     def run(self, inputs, runs=0, num_input_sets=0):
         if isgenerator(inputs):
             assert len(self._execution_contexts) == 1
-
             # Extract input for each trial
-            origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
-            run_inputs = (([iv] for m in origins for iv in inp[m]) for inp in inputs)
+            run_inputs = (([x] for x in self._composition._build_variable_for_input_CIM(inp)) for inp in inputs)
             run_inputs = _tupleize(run_inputs)
             runs = num_input_sets = len(run_inputs)
             c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
