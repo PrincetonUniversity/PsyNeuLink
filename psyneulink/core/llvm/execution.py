@@ -420,7 +420,7 @@ class CompExecution(CUDAExecution):
         setattr(my_res_struct, node_field_name, _tupleize(data))
 
     def _get_input_struct(self, inputs):
-        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
+        origins = self._composition._get_input_nodes_by_CIM_input_order()
         # Either node or composition execute.
         # All execute functions expect inputs to be 3rd param.
         c_input = self._bin_func.byref_arg_types[2]
@@ -444,7 +444,7 @@ class CompExecution(CUDAExecution):
         if inputs is None and node is self._composition.input_CIM:
             # This assumes origin mechanisms are in the same order as
             # CIM input ports
-            origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for iport in n.input_ports)
+            origins = (n for n in self._composition._get_input_nodes_by_CIM_input_order() for iport in n.input_ports)
             input_data = ([proj.parameters.value._get(context) for proj in port.all_afferents] for port in node.input_ports)
             inputs = defaultdict(list)
             for n, d in zip(origins, input_data):
@@ -514,7 +514,7 @@ class CompExecution(CUDAExecution):
     # Methods used to accelerate "Run"
 
     def _get_run_input_struct(self, inputs, num_input_sets):
-        origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
+        origins = self._composition._get_input_nodes_by_CIM_input_order()
         input_type = self._bin_run_func.byref_arg_types[3]
         c_input = (input_type * num_input_sets) * len(self._execution_contexts)
         if len(self._execution_contexts) == 1:
@@ -545,7 +545,7 @@ class CompExecution(CUDAExecution):
             assert len(self._execution_contexts) == 1
 
             # Extract input for each trial
-            origins = self._composition.get_nodes_by_role(NodeRole.INPUT)
+            origins = self._composition._get_input_nodes_by_CIM_input_order()
             run_inputs = (([iv] for m in origins for iv in inp[m]) for inp in inputs)
             run_inputs = _tupleize(run_inputs)
             runs = num_input_sets = len(run_inputs)
