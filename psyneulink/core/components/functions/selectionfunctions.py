@@ -144,6 +144,9 @@ class OneHot(SelectionFunction):
         determines the nature of the single non-zero value in the array returned by `function <OneHot.function>`
         (see `above <OneHot>` for options).
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -212,8 +215,6 @@ class OneHot(SelectionFunction):
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["random_state"]
 
         reset_default_variable_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:

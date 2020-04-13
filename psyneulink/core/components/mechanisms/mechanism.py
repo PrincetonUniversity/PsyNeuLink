@@ -959,7 +959,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2286,6 +2286,10 @@ class Mechanism_Base(Mechanism):
             else:
                 if context.source & ContextFlags.COMMAND_LINE:
                     context.execution_phase = ContextFlags.PROCESSING
+
+                    if input is not None:
+                        input = convert_all_elements_to_np_array(input)
+
                 if input is None:
                     input = self.defaults.variable
                 #     FIX:  this input value is sent to input CIMs when compositions are nested
@@ -2624,25 +2628,26 @@ class Mechanism_Base(Mechanism):
 
         return ip_output, builder
 
-    def _gen_llvm_param_ports(self, func, f_params_in, ctx, builder,
-                               mech_params, mech_state, mech_input):
+    def _gen_llvm_param_ports_for_obj(self, obj, params_in, ctx, builder,
+                                      mech_params, mech_state, mech_input):
         # Allocate a shadow structure to overload user supplied parameters
-        f_params_out = builder.alloca(f_params_in.type.pointee)
+        params_out = builder.alloca(params_in.type.pointee)
         # Copy original values. This handles params without param ports.
         # Few extra copies will be eliminated by the compiler.
-        builder.store(builder.load(f_params_in), f_params_out)
+        builder.store(builder.load(params_in), params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in func._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in obj._get_param_ids()]
 
         def _get_output_ptr(b, i):
-            ptr = pnlvm.helpers.get_param_ptr(b, func, f_params_out,
+            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
                                               param_ports[i].name)
             return b, ptr
 
         def _fill_input(b, s_input, i):
-            param_in_ptr = pnlvm.helpers.get_param_ptr(b, func, f_params_in,
+            param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
                                                        param_ports[i].name)
+            # get rid of extra dimension
             raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(param_in_ptr), raw_ps_input)
             return b
@@ -2650,7 +2655,7 @@ class Mechanism_Base(Mechanism):
         builder = self._gen_llvm_ports(ctx, builder, param_ports,
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
-        return f_params_out, builder
+        return params_out, builder
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
@@ -2679,7 +2684,7 @@ class Mechanism_Base(Mechanism):
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
-                warnings.warn("Data shape mismatch: Parsed value does not match output port({} spec: {}) input: {} vs. {}".format(port, port._variable_spec, self.defaults.value, port.defaults.variable))
+                warnings.warn("Shape mismatch: {} parsed value does not match output port: mech value: {} spec: {} parsed {}".format(port, self.defaults.value, port._variable_spec, port.defaults.variable))
                 input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)
             return b
@@ -2698,17 +2703,20 @@ class Mechanism_Base(Mechanism):
 
         return fun_out, builder
 
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        return pnlvm.ir.IntType(1)(1)
+
     def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
 
-        is_output, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+        ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
+                                                        params, state, arg_in)
 
-        mf_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        mf_params, builder = self._gen_llvm_param_ports(self.function, mf_params_ptr, ctx, builder, params, state, arg_in)
+        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        f_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, f_params_ptr, ctx, builder, params, state, arg_in)
 
-        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, is_output)
-
-        ppval, builder = self._gen_llvm_function_postprocess(builder, ctx, value)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output)
 
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
@@ -2716,14 +2724,13 @@ class Mechanism_Base(Mechanism):
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, ppval, params, state, arg_in, arg_out)
-        return builder, pnlvm.ir.IntType(1)(1)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
+        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
+                                                           state, value)
+        return builder, is_finished_cond
 
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
-
-    def _gen_llvm_function_postprocess(self, builder, ctx, mf_out):
-        return mf_out, builder
 
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
@@ -2752,8 +2759,8 @@ class Mechanism_Base(Mechanism):
         current_flag = builder.load(is_finished_flag_ptr)
         was_finished = builder.fcmp_ordered("==", current_flag, current_flag.type(1))
         with builder.if_then(was_finished):
-            builder.store(is_finished_count_ptr.type.pointee(0), is_finished_count_ptr)
-            builder.store(current_flag.type(0), is_finished_flag_ptr)
+            builder.store(is_finished_count_ptr.type.pointee(0),
+                          is_finished_count_ptr)
 
         # Enter the loop
         loop_block = builder.append_basic_block(builder.basic_block.name + "_loop")
@@ -2775,6 +2782,7 @@ class Mechanism_Base(Mechanism):
         is_finished_cond = builder.call(internal_f, builder.function.args)
 
         #FIXME: Flag and count should be int instead of float
+        # Check if we reached maximum iteration count
         is_finished_count = builder.load(is_finished_count_ptr)
         is_finished_count = builder.fadd(is_finished_count,
                                          is_finished_count.type(1))
@@ -2782,9 +2790,27 @@ class Mechanism_Base(Mechanism):
         is_finished_max = builder.load(is_finished_max_ptr)
         max_reached = builder.fcmp_ordered(">=", is_finished_count,
                                            is_finished_max)
-        iter_end = builder.or_(is_finished_cond, max_reached)
+
+        # Check if execute until finished mode is enabled
+        exec_until_fin_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                         "execute_until_finished")
+        exec_until_fin = builder.load(exec_until_fin_ptr)
+        exec_until_off = builder.fcmp_ordered("==", exec_until_fin, exec_until_fin.type(0))
+
+        # Combine conditions
+        is_finished = builder.or_(is_finished_cond, max_reached)
+        iter_end = builder.or_(is_finished, exec_until_off)
+
+        # Check if in integrator mode
+        if hasattr(self, "integrator_mode"):
+            int_mode_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                       "integrator_mode")
+            int_mode = builder.load(int_mode_ptr)
+            int_mode_off = builder.fcmp_ordered("==", int_mode, int_mode.type(0))
+            iter_end = builder.or_(iter_end, int_mode_off)
+
         with builder.if_then(iter_end):
-            new_flag = builder.uitofp(iter_end, current_flag.type)
+            new_flag = builder.uitofp(is_finished, current_flag.type)
             builder.store(new_flag, is_finished_flag_ptr)
             builder.branch(end_block)
 
@@ -3233,7 +3259,8 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     @tc.typecheck
-    def add_ports(self, ports):
+    @handle_external_context()
+    def add_ports(self, ports, context=None):
         """
         add_ports(ports)
 

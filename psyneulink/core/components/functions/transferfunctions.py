@@ -241,28 +241,6 @@ class Identity(TransferFunction):  # -------------------------------------------
 
         return variable
 
-    def _get_input_struct_type(self, ctx):
-        #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not udpate its defaults shape
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-        if isinstance(self.owner, CompositionInterfaceMechanism):
-            variable = [port.defaults.value for port in self.owner.input_ports]
-            # Python list does not care about ndarrays of different lengths
-            # we do care, so convert to tuple to create struct
-            if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
-                variable = tuple(variable)
-
-            return ctx.convert_python_struct_to_llvm_ir(variable)
-        default_var = self.defaults.variable
-        return ctx.convert_python_struct_to_llvm_ir(default_var)
-
-    def _get_output_struct_type(self, ctx):
-        #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not update its defaults shape
-        #       Standalone function works OK with defaults as well as this
-        #       workaround.
-        return ctx.get_input_struct_type(self)
-
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:frozenset):
         val = builder.load(arg_in)
         builder.store(val, arg_out)
@@ -1879,7 +1857,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     offset : float
         determines value added to each sample after it is drawn and `scale <GaussianDistort.scale>` is applied
 
-    random_state : numpy.RandomState instance
+    random_state : numpy.RandomState
+        private pseudorandom number generator
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -1956,8 +1935,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["random_state"]
 
         super().__init__(
             default_variable=default_variable,
@@ -2922,10 +2899,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         # Restrict to 1d arrays
         if self.defaults.variable.ndim != 1:
-            warnings.warn("Unexpected data shape: {} got 2D input: {}".format(self, self.defaults.variable))
+            warnings.warn("Shape mismatch: {} (in {}) got 2D input: {}".format(self, self.owner, self.defaults.variable))
             arg_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         if self.defaults.value.ndim != 1:
-            warnings.warn("Unexpected data shape: {} has 2D output: {}".format(self, self.defaults.value))
+            warnings.warn("Shape mismatch: {} (in {}) has 2D output: {}".format(self, self.owner, self.defaults.value))
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         matrix = pnlvm.helpers.get_param_ptr(builder, self, params, MATRIX)
@@ -4164,11 +4141,11 @@ class TransferWithCosts(TransferFunction):
         trans_s = pnlvm.helpers.get_state_ptr(builder, self, state, transfer_f.name)
         trans_in = arg_in
         if trans_in.type != trans_f.args[2].type:
-            warnings.warn("Unexpected data shape: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
+            warnings.warn("Shape mismatch: {} input does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.variable, transfer_f.get().defaults.variable))
             trans_in = builder.gep(trans_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         trans_out = arg_out
         if trans_out.type != trans_f.args[3].type:
-            warnings.warn("Unexpected data shape: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
+            warnings.warn("Shape mismatch: {} output does not match the transfer function ({}): {} vs. {}".format(self, transfer_f.get(), self.defaults.value, transfer_f.get().defaults.value))
             trans_out = builder.gep(trans_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         builder.call(trans_f, [trans_p, trans_s, trans_in, trans_out])
 

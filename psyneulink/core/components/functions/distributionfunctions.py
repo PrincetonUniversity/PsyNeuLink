@@ -100,6 +100,9 @@ class NormalDist(DistributionFunction):
     mean : float : default 0.0
         The mean or center of the normal distribution.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     standard_deviation : float : default 1.0
         Standard deviation of the normal distribution; if it is 0.0, returns `mean <NormalDist.mean>`.
 
@@ -137,6 +140,12 @@ class NormalDist(DistributionFunction):
 
                     :default value: 1.0
                     :type: ``float``
+
+                random_state
+                    see `random_state <NormalDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -277,6 +286,9 @@ class UniformToNormalDist(DistributionFunction):
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
         arguments of the constructor.
 
+    random_state : numpy.RandomState
+      private pseudorandom number generator
+
     owner : Component
         `component <Component>` to which to assign the Function.
 
@@ -302,6 +314,12 @@ class UniformToNormalDist(DistributionFunction):
                     :type: ``numpy.ndarray``
                     :read only: True
 
+                random_state
+                    see `random_state <UniformToNormalDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
                 mean
                     see `mean <UniformToNormalDist.mean>`
 
@@ -314,6 +332,7 @@ class UniformToNormalDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
+        random_state = Parameter(None, stateful=True, loggable=False)
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -325,11 +344,19 @@ class UniformToNormalDist(DistributionFunction):
                  standard_deviation=1.0,
                  params=None,
                  owner=None,
+                 seed=None,
                  prefs: is_pref_set = None):
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
         super().__init__(
             default_variable=default_variable,
             mean=mean,
             standard_deviation=standard_deviation,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -348,8 +375,9 @@ class UniformToNormalDist(DistributionFunction):
 
         mean = self._get_current_function_param(DIST_MEAN, context)
         standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
+        random_state = self._get_current_function_param('random_state', context)
 
-        sample = np.random.rand(1)[0]
+        sample = random_state.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
 
         return self.convert_output_type(result)
@@ -399,6 +427,9 @@ class ExponentialDist(DistributionFunction):
     beta : float : default 1.0
         The scale parameter of the exponential distribution
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -426,19 +457,34 @@ class ExponentialDist(DistributionFunction):
 
                     :default value: 1.0
                     :type: ``float``
+
+                random_state
+                    see `random_state <ExponentialDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        random_state = Parameter(None, stateful=True)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  beta=1.0,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
         super().__init__(
             default_variable=default_variable,
             beta=beta,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -449,9 +495,10 @@ class ExponentialDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-
+        random_state = self._get_current_function_param('random_state', context)
         beta = self._get_current_function_param(BETA, context)
-        result = np.random.exponential(beta)
+
+        result = random_state.exponential(beta)
 
         return self.convert_output_type(result)
 
@@ -502,6 +549,9 @@ class UniformDist(DistributionFunction):
     high : float : default 1.0
         Upper bound of the uniform distribution
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -535,22 +585,37 @@ class UniformDist(DistributionFunction):
 
                     :default value: 0.0
                     :type: ``float``
+
+                random_state
+                    see `random_state <UniformDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  low=0.0,
                  high=1.0,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
         super().__init__(
             default_variable=default_variable,
             low=low,
             high=high,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -562,9 +627,10 @@ class UniformDist(DistributionFunction):
                  params=None,
                  ):
 
+        random_state = self._get_current_function_param('random_state', context)
         low = self._get_current_function_param(LOW, context)
         high = self._get_current_function_param(HIGH, context)
-        result = np.random.uniform(low, high)
+        result = random_state.uniform(low, high)
 
         return self.convert_output_type(result)
 
@@ -621,6 +687,9 @@ class GammaDist(DistributionFunction):
     dist_shape : float : default 1.0
         The shape of the gamma distribution. Should be greater than zero.
 
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
         function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -650,12 +719,19 @@ class GammaDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
 
+                random_state
+                    see `random_state <GammaDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
                 scale
                     see `scale <GammaDist.scale>`
 
                     :default value: 1.0
                     :type: ``float``
         """
+        random_state = Parameter(None, stateful=True, loggable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -664,13 +740,19 @@ class GammaDist(DistributionFunction):
                  default_variable=None,
                  scale=1.0,
                  dist_shape=1.0,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
         super().__init__(
             default_variable=default_variable,
             scale=scale,
             dist_shape=dist_shape,
+            random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -682,10 +764,11 @@ class GammaDist(DistributionFunction):
                  params=None,
                  ):
 
+        random_state = self._get_current_function_param('random_state', context)
         scale = self._get_current_function_param(SCALE, context)
         dist_shape = self._get_current_function_param(DIST_SHAPE, context)
 
-        result = np.random.gamma(dist_shape, scale)
+        result = random_state.gamma(dist_shape, scale)
 
         return self.convert_output_type(result)
 
@@ -735,6 +818,9 @@ class WaldDist(DistributionFunction):
      Attributes
      ----------
 
+      random_state : numpy.RandomState
+          private pseudorandom number generator
+
      scale : float : default 1.0
          Scale parameter of the Wald distribution. Should be greater than zero.
 
@@ -763,6 +849,12 @@ class WaldDist(DistributionFunction):
             Attributes
             ----------
 
+                random_state
+                    see `random_state <WaldDist.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
                 mean
                     see `mean <WaldDist.mean>`
 
@@ -775,6 +867,7 @@ class WaldDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
+        random_state = Parameter(None, stateful=True, loggable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -783,12 +876,18 @@ class WaldDist(DistributionFunction):
                  default_variable=None,
                  scale=1.0,
                  mean=1.0,
+                 seed=None,
                  params=None,
                  owner=None,
                  prefs: is_pref_set = None):
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
         super().__init__(
             default_variable=default_variable,
             scale=scale,
+            random_state=random_state,
             mean=mean,
             params=params,
             owner=owner,
@@ -801,10 +900,11 @@ class WaldDist(DistributionFunction):
                  params=None,
                  ):
 
+        random_state = self._get_current_function_param('random_state', context)
         scale = self._get_current_function_param(SCALE, context)
         mean = self._get_current_function_param(DIST_MEAN, context)
 
-        result = np.random.wald(mean, scale)
+        result = random_state.wald(mean, scale)
 
         return self.convert_output_type(result)
 
@@ -1429,7 +1529,6 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         starting_point = builder.fmul(starting_point, starting_point.type(2))
         starting_point = builder.fmul(starting_point, threshold)
 
-        abs_drift_rate = builder.call(abs_f, [drift_rate])
         drift_rate_limit = abs_drift_rate.type(0.01)
         small_drift = builder.fcmp_ordered("<", abs_drift_rate, drift_rate_limit)
         drift_rate = builder.select(small_drift, drift_rate_limit, drift_rate)
@@ -1443,7 +1542,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         Z = pnlvm.helpers.fclamp(builder, Z, Z.type(-100), Z.type(100))
 
         abs_Z = builder.call(abs_f, [Z])
-        tiny_Z = builder.fcmp_ordered("<", Z, Z.type(0.0001))
+        tiny_Z = builder.fcmp_ordered("<", abs_Z, Z.type(0.0001))
         Z = builder.select(tiny_Z, Z.type(0.0001), Z)
 
         # Mean helpers

@@ -7,9 +7,11 @@ from psyneulink.core.components.functions.transferfunctions import Identity, Lin
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 
 
 class TestExecuteCIM:
@@ -495,6 +497,30 @@ class TestConnectCompositionsViaCIMS:
         # level_2 output = 2.0 * (1.0 + 2.0 + 14.0) = 34.0
         assert np.allclose(level_2.get_output_values(level_2), [34.0])
 
+    def test_warning_on_custom_cim_ports(self):
+
+        comp = Composition()
+        mech = ProcessingMechanism()
+        warning_text = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
+                        'is therefore recommended against. If suitable, you should instead add ports to the mechanism(s) '
+                        'that project to or are projected to from the CIM.')
+        warning_fired = False
+        comp.add_node(mech)
+        with pytest.warns(UserWarning) as w:
+            comp.input_CIM.add_ports(OutputPort())
+            # confirm that warning fired and that its text is correct
+            for warn in w:
+                if warn.message.args[0] == warning_text:
+                    warning_fired = True
+            assert warning_fired
+            warning_fired = False
+            comp._analyze_graph()
+            comp.run({mech: [[1]]})
+            for warn in w[1:]:
+                if warn.message.args[0] == warning_text:
+                    warning_fired = True
+            assert not warning_fired
+
 class TestInputCIMOutputPortToOriginOneToMany:
 
     def test_one_to_two(self):
@@ -808,3 +834,91 @@ class TestSimplifedNestedCompositionSyntax:
 
         for node in [A2, B2, C2]:
             assert np.allclose(node.parameters.value.get(eid), [[6.0]])
+
+@pytest.mark.parametrize(
+    # expected_input_shape: one input per source input_port
+    # expected_output_shape: one output per terminal output_port
+    # TODO: change mechanisms to input_ports and output_ports args?
+    'mechanisms, expected_input_shape, expected_output_shape',
+    [
+        (
+            [TransferMechanism()], [[0]], [[0]]
+        ),
+        (
+            [
+                TransferMechanism(),
+                TransferMechanism(output_ports=['RESULT', 'MEAN']),
+            ],
+            [[0], [0]],
+            [[0], [0], [0]],
+        ),
+        (
+            [
+                TransferMechanism(),
+                TransferMechanism(output_ports=['RESULT', 'MEAN']),
+                TransferMechanism(output_ports=['RESULT', 'MEAN', 'MEDIAN']),
+            ],
+            [[0], [0], [0]],
+            [[0], [0], [0], [0], [0], [0]],
+        ),
+        (
+            [
+                TransferMechanism(input_ports=['Port1', 'Port2']),
+                TransferMechanism(output_ports=['RESULT', 'MEAN']),
+            ],
+            [[0], [0], [0]],
+            # an output_port generated for each custom input_port
+            # overwrites output_ports arg - intentional?
+            [[0], [0], [0], [0]],
+        ),
+        (
+            [
+                TransferMechanism(),
+                TransferMechanism(
+                    input_ports=['Port1', 'Port2'],
+                ),
+                TransferMechanism(
+                    input_ports=['Port1', 'Port2', 'Port3'],
+                ),
+            ],
+            [[0], [0], [0], [0], [0], [0]],
+            [[0], [0], [0], [0], [0], [0]],
+        ),
+    ]
+)
+def test_CIM_shapes(mechanisms, expected_input_shape, expected_output_shape):
+    comp = Composition()
+
+    for i in range(len(mechanisms)):
+        comp.add_node(mechanisms[i])
+
+    comp._analyze_graph()
+
+    for cim, expected_shape in [
+        (comp.input_CIM, expected_input_shape),
+        (comp.output_CIM, expected_output_shape),
+    ]:
+        np.testing.assert_array_equal(
+            cim.defaults.variable.shape,
+            cim.defaults.value.shape,
+            err_msg=f'{cim}:',
+            verbose=True
+        )
+        np.testing.assert_array_equal(
+            cim.defaults.variable.shape,
+            cim.parameters.variable.get().shape,
+            err_msg=f'{cim}:',
+            verbose=True
+        )
+        np.testing.assert_array_equal(
+            cim.defaults.value.shape,
+            cim.parameters.value.get().shape,
+            err_msg=f'{cim}:',
+            verbose=True
+        )
+        np.testing.assert_array_equal(
+            cim.defaults.variable,
+            convert_all_elements_to_np_array(expected_shape),
+            err_msg=f'{cim}:',
+            verbose=True
+        )

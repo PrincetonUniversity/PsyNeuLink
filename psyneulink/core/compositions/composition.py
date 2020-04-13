@@ -1241,7 +1241,7 @@ from psyneulink.core.components.functions.interfacefunctions import InterfacePor
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -1289,7 +1289,8 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 
 __all__ = [
 
-    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS',
+    'get_compositions'
 ]
 
 # show_graph animation options
@@ -1756,6 +1757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+
     class Parameters(ParametersBase):
         """
             Attributes
@@ -1790,12 +1792,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
+
     class _CompilationData(ParametersBase):
         ptx_execution = None
         parameter_struct = None
         state_struct = None
         data_struct = None
         scheduler_conditions = None
+
 
     def __init__(
             self,
@@ -1945,6 +1949,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              GRAPH
     # ******************************************************************************************************************
 
+    @handle_external_context(source=ContextFlags.COMPOSITION)
     def _analyze_graph(self, scheduler=None, context=None):
         """
         Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
@@ -2035,6 +2040,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                               NODES
     # ******************************************************************************************************************
 
+    @handle_external_context(source = ContextFlags.COMPOSITION)
     def add_node(self, node, required_roles=None, context=None):
         """
             Add a Composition Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
@@ -2052,7 +2058,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadows_dict(node)
 
         try:
-            node._analyze_graph()
+            node._analyze_graph(context = context)
         except AttributeError:
             pass
 
@@ -2541,15 +2547,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if there is not a corresponding CIM OutputPort, add one
                 if input_port not in set(self.input_CIM_ports.keys()):
                     interface_input_port = InputPort(owner=self.input_CIM,
-                                                      variable=input_port.defaults.value,
-                                                      reference_value=input_port.defaults.value,
-                                                      name="INPUT_CIM_" + node.name + "_" + input_port.name)
+                                                     variable=input_port.defaults.value,
+                                                     reference_value=input_port.defaults.value,
+                                                     name="INPUT_CIM_" + node.name + "_" + input_port.name,
+                                                     context=context)
+
+                    self.input_CIM.add_ports([interface_input_port],
+                                             context=context)
 
                     interface_output_port = OutputPort(owner=self.input_CIM,
-                                                        variable=OWNER_VALUE,
-                                                        function=InterfacePortMap(
-                                                             corresponding_input_port=interface_input_port),
-                                                        name="INPUT_CIM_" + node.name + "_" + input_port.name)
+                                                       variable=OWNER_VALUE,
+                                                       function=InterfacePortMap(
+                                                            corresponding_input_port=interface_input_port),
+                                                       name="INPUT_CIM_" + node.name + "_" + input_port.name,
+                                                       context=context)
+
+                    self.input_CIM.add_ports([interface_output_port],
+                                             context=context)
 
                     self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
 
@@ -2611,14 +2625,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     interface_input_port = InputPort(owner=self.output_CIM,
                                                      variable=output_port.defaults.value,
                                                      reference_value=output_port.defaults.value,
-                                                     name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
+                                                     name="OUTPUT_CIM_" + node.name + "_" + output_port.name,
+                                                     context=context)
+
+                    self.output_CIM.add_ports([interface_input_port],
+                                              context=context)
 
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
                             variable=OWNER_VALUE,
                             function=InterfacePortMap(corresponding_input_port=interface_input_port),
                             reference_value=output_port.defaults.value,
-                            name="OUTPUT_CIM_" + node.name + "_" + output_port.name)
+                            name="OUTPUT_CIM_" + node.name + "_" + output_port.name,
+                            context=context)
+
+                    self.output_CIM.add_ports([interface_output_port],
+                                              context=context)
 
                     self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
 
@@ -2708,6 +2730,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             )
                             input_projection._activate_for_compositions(self)
                             input_projection._activate_for_compositions(comp)
+
+        for cim in [self.input_CIM, self.output_CIM, self.parameter_CIM]:
+            # KDM 4/3/20: should reevluate this some time - is it
+            # acceptable to consider _update_default_variable as
+            # happening outside of this normal context? This is here as
+            # a fix to the problem that when called within
+            # Composition.run, context has assigned an execution_id but
+            # not initialized yet. This is because _analyze_graph must
+            # be called before _initialize_from_context because
+            # otherwise, CIM ports will not be initialized properly
+            orig_eid = context.execution_id
+            context.execution_id = None
+
+            new_default_variable = [
+                deepcopy(input_port.defaults.value)
+                for input_port in cim.input_ports
+            ]
+
+            try:
+                cim._update_default_variable(new_default_variable, context)
+            except MechanismError as e:
+
+                if 'number of input_ports (0)' not in str(e):
+                    raise
+                # else:
+                # no input ports in CIM, so assume Composition is blank
+
+            context.execution_id = orig_eid
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
@@ -4923,7 +4973,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @tc.typecheck
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
@@ -7883,19 +7933,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      p.receiver.owner is not self.parameter_CIM and
                      p.sender.owner is not self.output_CIM)
 
+    def _get_param_ids(self):
+        return ["nodes", "projections"] + super()._get_param_ids()
+
     def _get_param_struct_type(self, ctx):
         node_param_type_list = (ctx.get_param_struct_type(m) for m in self._all_nodes)
         proj_param_type_list = (ctx.get_param_struct_type(p) for p in self._inner_projections)
+        comp_param_type_list = ctx.get_param_struct_type(super())
+
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(node_param_type_list),
-            pnlvm.ir.LiteralStructType(proj_param_type_list)))
+            pnlvm.ir.LiteralStructType(proj_param_type_list),
+            *comp_param_type_list))
+
+    def _get_state_ids(self):
+        return ["nodes", "projections"] + super()._get_param_ids()
 
     def _get_state_struct_type(self, ctx):
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
         proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
+        comp_state_type_list = ctx.get_state_struct_type(super())
+
         return pnlvm.ir.LiteralStructType((
             pnlvm.ir.LiteralStructType(node_state_type_list),
-            pnlvm.ir.LiteralStructType(proj_state_type_list)))
+            pnlvm.ir.LiteralStructType(proj_state_type_list),
+            *comp_state_type_list))
 
     def _get_input_struct_type(self, ctx):
         pathway = ctx.get_input_struct_type(self.input_CIM)
@@ -7916,12 +7978,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_state_initializer(self, context):
         node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
         proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
-        return (tuple(node_states), tuple(proj_states))
+        comp_states = super()._get_state_initializer(context)
+
+        return (tuple(node_states), tuple(proj_states), *comp_states)
 
     def _get_param_initializer(self, context):
         node_params = (m._get_param_initializer(context) for m in self._all_nodes)
         proj_params = (p._get_param_initializer(context) for p in self._inner_projections)
-        return (tuple(node_params), tuple(proj_params))
+        comp_params = super()._get_param_initializer(context)
+
+        return (tuple(node_params), tuple(proj_params), *comp_params)
 
     def _get_data_initializer(self, context):
         output_data = ((os.parameters.value.get(context) for os in m.output_ports) for m in self._all_nodes)
@@ -8193,3 +8259,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         yield self.parameter_CIM
         if self.controller:
             yield self.controller
+
+
+def get_compositions():
+    """Return list of Compositions in caller's namespace."""
+    import inspect
+    frame = inspect.currentframe()
+    return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]

@@ -1155,9 +1155,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions", "execution_count"}
+                     "num_executions_before_finished", "num_executions",
+                     "execution_count", "value"}
         # mechanism functions are handled separately
-        blacklist = {"function"} if hasattr(self, 'ports') else {}
+        blacklist = {"function"} if hasattr(self, 'ports') else {"value"}
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
@@ -1168,10 +1169,21 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_state_ids(self):
         return [sp.name for sp in self._get_compilation_state()]
 
+    @property
+    def llvm_state_ids(self):
+        ids = getattr(self, "_state_ids", None)
+        if ids is None:
+            ids = self._get_state_ids()
+            setattr(self, "_state_ids", ids)
+        return ids
+
     def _get_state_values(self, context=None):
-        def _state_values(x):
-            return x._get_state_values(context) if isinstance(x, Component) else x
-        return tuple(map(_state_values, (sp.get(context) for sp in self._get_compilation_state())))
+        def _state_values(p):
+            val = p.get(context)
+            if isinstance(val, Component):
+                return val._get_state_values(context)
+            return val
+        return tuple(map(_state_values, self._get_compilation_state()))
 
     def _get_state_initializer(self, context):
         def _convert(x):
@@ -1182,7 +1194,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return [0] * 5
             try:
                 return (_convert(i) for i in x)
-            except:
+            except TypeError:
                 return x
         return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
@@ -1197,7 +1209,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "search_space",
-                     "activation_derivative_fct", "costs"}
+                     "activation_derivative_fct", "costs",
+                     # composition specific FIXME: Move to inherited blacklist on comp.
+                     "input_specification",
+                     # autodiff specific types
+                     "pytorch_representation", "optimizer"}
         # mechanism functions are handled separately
         if hasattr(self, 'ports'):
             blacklist.add("function")
@@ -1214,8 +1230,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return filter(_is_compilation_param, self.parameters)
 
-    def _get_param_ids(self, context=None):
+    def _get_param_ids(self):
         return [p.name for p in self._get_compilation_params()]
+
+    @property
+    def llvm_param_ids(self):
+        ids = getattr(self, "_param_ids", None)
+        if ids is None:
+            ids = self._get_param_ids()
+            setattr(self, "_param_ids", ids)
+        return ids
 
     def _get_param_values(self, context=None):
         def _get_values(p):
@@ -1229,9 +1253,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
             try:
                 # Modulated parameters change shape to array
-                modulations = (p.sender.modulation for p in self.owner.mod_afferents)
-                modulated_params = [getattr(self.parameters, m).source.name for m in modulations]
-                if p.name in modulated_params:
+                modulated_params = (
+                    getattr(self.parameters, p.sender.modulation).source
+                    for p in self.owner.mod_afferents)
+                if p in modulated_params:
                     param = [param]
             except AttributeError:
                 pass

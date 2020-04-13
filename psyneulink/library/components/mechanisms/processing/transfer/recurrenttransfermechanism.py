@@ -1233,30 +1233,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         """
         return self.output_port
 
-    def _get_input_struct_type(self, ctx):
-        input_type_list = []
-        # FIXME: Assume only one input port
-        #        (autoassociative projection connects to primary input port)
-        assert len(self.input_ports) == 1
-        for port in self.input_ports:
-            # Extract the non-modulation portion of InputPort input struct
-            p_type = ctx.get_input_struct_type(port).elements[0]
-            if isinstance(p_type, pnlvm.ir.ArrayType):
-                # Subtract one incoming mapping projections.
-                # Unless it's the only incoming projection (mechanism is standalone)
-                new_count = max(p_type.count - 1, 1)
-                new_type = pnlvm.ir.ArrayType(p_type.element, new_count)
-            else:
-                # FIXME consider other types
-                assert False, "Input struct is not an array!"
-            input_type_list.append(new_type)
-
-        # Add modulatory inputs
-        mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
-        input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
-        
-        return pnlvm.ir.LiteralStructType(input_type_list)
-
     def _get_param_ids(self):
         return super()._get_param_ids() + ["recurrent_projection"]
 
@@ -1285,8 +1261,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         # Initialize to OutputPort defaults.
         # That is what the recurrent projection finds.
-        # FIXME: This should use standard 'previous_value' stateful param
-        retval_init = (tuple(os.defaults.value) if not np.isscalar(os.defaults.value) else os.defaults.value for os in self.output_ports)
+        retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
         return (*transfer_init, tuple(retval_init), projection_init)
 
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
@@ -1324,121 +1299,44 @@ class RecurrentTransferMechanism(TransferMechanism):
         builder.store(prev_val_ptr.type.pointee(None), prev_val_ptr)
         return builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
-        #FIXME: This should really be in TransferMechanism, but those don't
-        #       support 'is_finished' yet
-        # previous_value is appended before AutoProjection in state struct
-        # FIXME: This should use standard "previous_value" param
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
-
-        # preserve the old prev value
-        prev_val = builder.load(prev_val_ptr)
-        # Update previous value to make sure that repeated executions work
-        builder.store(builder.load(current), prev_val_ptr)
-
-        if self.parameters.termination_threshold.get(None) is None or \
-           not self.execute_until_finished:
-            return pnlvm.ir.IntType(1)(1)
-
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                          "termination_threshold")
-        threshold = builder.load(threshold_ptr)
-        cmp_val_ptr = builder.alloca(threshold.type)
-        builder.store(threshold, cmp_val_ptr)
-        if self.termination_measure is max:
-            assert self._termination_measure_num_items_expected == 1
-            # Get inside of the structure
-            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
-            builder.store(first_val, cmp_val_ptr)
-            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
-                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
-                max_val = b.load(cmp_val_ptr)
-                cond = b.fcmp_ordered(">=", test_val, max_val)
-                max_val = b.select(cond, test_val, max_val)
-                b.store(max_val, cmp_val_ptr)
-        elif isinstance(self.termination_measure, Function):
-            # FIXME: HACK the distance function is not initialized
-            self.termination_measure.defaults.variable = np.zeros_like([self.defaults.value[0], self.defaults.value[0]])
-            self.termination_measure.defaults.value = float(0)
-            warnings.warn("Shape mismatch: Termination measure is not initialized")
-
-            func = ctx.import_llvm_function(self.termination_measure)
-            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
-            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
-            func_in = builder.alloca(func.args[2].type.pointee)
-            # Populate input
-            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)])
-            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.store(builder.load(current_ptr), func_in_current_ptr)
-
-            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
-                                                     ctx.int32_ty(1)])
-            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
-
-            builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
-        elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
-            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
-            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
-            builder.store(ptr_val, cmp_val_ptr)
-        else:
-            assert False, "Not Supported: {}".format(self.termination_measure)
-
-        cmp_val = builder.load(cmp_val_ptr)
-        cmp_str = self.parameters.termination_comparison_op.get(None)
-        return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
-
     def _gen_llvm_input_ports(self, ctx, builder, params, state, arg_in):
-        # Allocate space for transfer mechanism.
-        # This includes space for the autoprojection
-        transfer_input_type = ctx.get_input_struct_type(super())
-        transfer_in = builder.alloca(transfer_input_type)
+        recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                      "recurrent_projection")
+        recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                       "recurrent_projection")
+        recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
 
-        # FIXME: Assume only one input port
-        #        (autoassociative projection connects to primary input port)
-        assert len(self.input_ports) == 1
-        for i, port in enumerate(self.input_ports):
-            ip_current_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            ip_trans_input = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(i)])
+        # Extract the correct output port value
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
+        recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
+            ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
 
-            # Copy all inputs to this port
-            for idx in range(len(ip_current_input.type.pointee)):
-                curr_ptr = builder.gep(ip_current_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                real_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(idx)])
-                builder.store(builder.load(curr_ptr), real_ptr)
+        # Get the correct recurrent output location
+        recurrent_out = builder.gep(arg_in, [ctx.int32_ty(0),
+                                             ctx.int32_ty(self.input_ports.index(self.recurrent_projection.receiver)),
+                                             ctx.int32_ty(self.recurrent_projection.receiver.pathway_projections.index(self.recurrent_projection))])
 
-            # FIXME: This is a workaround to find out if we are in a composition
-            #        Standalone mechanisms don't update the recurrent projection
-            if len(port.pathway_projections) == 1:
-                continue
+        # the recurrent projection is not executed in standalone mode
+        if len(self.afferents) == 1:
+            assert self.path_afferents[0] is self.recurrent_projection
+            # NOTE: we should zero the target location here, but in standalone
+            # mode ctypes does it for us when instantiating the input structure
+        else:
+            # Execute the recurrent projection here. This makes it part of the
+            # 'is_finished' inner loop so we always see the most up-to-date
+            # input
+            builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, recurrent_out])
 
-            assert len(ip_trans_input.type.pointee) == len(ip_current_input.type.pointee) + 1
+        return super()._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
-            # Run the autoprojection function to fill in the missing input
-            last_idx = len(ip_trans_input.type.pointee) - 1
-            real_last_ptr = builder.gep(ip_trans_input, [ctx.int32_ty(0), ctx.int32_ty(last_idx)])
+    def _gen_llvm_output_ports(self, ctx, builder, value,
+                               mech_params, mech_state, mech_in, mech_out):
+        ret = super()._gen_llvm_output_ports(ctx, builder, value, mech_params,
+                                             mech_state, mech_in, mech_out)
 
-            recurrent_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                "recurrent_projection")
-            recurrent_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                 "recurrent_projection")
-            recurrent_f = ctx.import_llvm_function(self.recurrent_projection)
-
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "old_val")
-            # Extract the correct output port
-            recurrent_in = builder.gep(prev_val_ptr, [ctx.int32_ty(0),
-                ctx.int32_ty(self.output_ports.index(self.recurrent_projection.sender))])
-            builder.call(recurrent_f, [recurrent_params, recurrent_state, recurrent_in, real_last_ptr])
-
-        # Copy mod afferents. These are not impacted by the recurrent projection
-        if len(self.mod_afferents) > 1:
-            mod_afferent_arg_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
-            mod_afferent_in_ptr = builder.gep(transfer_in, [ctx.int32_ty(0), ctx.int32_ty(len(self.input_ports))])
-            builder.store(builder.load(mod_afferent_arg_ptr), mod_afferent_in_ptr)
-
-        return super()._gen_llvm_input_ports(ctx, builder, params, state, transfer_in)
+        old_val = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "old_val")
+        builder.store(builder.load(mech_out), old_val)
+        return ret
 
     @property
     def _dependent_components(self):

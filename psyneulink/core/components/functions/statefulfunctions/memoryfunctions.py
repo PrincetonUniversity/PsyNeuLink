@@ -562,7 +562,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if storing a memory
         exceeds the number, the oldest memory is deleted.
 
-    random_state: numpy.RandomState instance
+    random_state : numpy.RandomState
+        private pseudorandom number generator
 
     owner : Component
         `component <Component>` to which the Function has been assigned.

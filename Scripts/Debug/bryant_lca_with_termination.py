@@ -46,7 +46,7 @@ comp.add_node(csiController)
 
 
 cueInterval.set_log_conditions([pnl.VALUE])
-activation.set_log_conditions([pnl.RESULT, 'termination_threshold'])
+activation.set_log_conditions([pnl.RESULT, 'mod_termination_threshold'])
 csiController.set_log_conditions([pnl.VALUE])
 taskLayer.set_log_conditions([pnl.VALUE])
 

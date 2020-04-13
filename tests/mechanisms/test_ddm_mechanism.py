@@ -34,7 +34,7 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize function
-        D.function.reinitialize(2.0, 0.1, 0)
+        D.function.reinitialize(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -52,7 +52,7 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
         # reinitialize mechanism
-        D.reinitialize(2.0, 0.1, 0)
+        D.reinitialize(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -642,6 +642,7 @@ def test_WhenFinished_DDM_Analytical():
     c = WhenFinished(D)
     c.is_satisfied()
 
+
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM-comp")
@@ -673,3 +674,42 @@ def test_DDM_in_composition(benchmark, mode):
     assert np.allclose(val[0], [2.0])
     assert np.allclose(val[1], [0.2])
     benchmark(C.run, inputs, num_trials=2, bin_execute=mode)
+
+
+@pytest.mark.ddm_mechanism
+@pytest.mark.mechanism
+@pytest.mark.parametrize("mode", [
+    "Python",
+    pytest.param("LLVM", marks=pytest.mark.llvm),
+    pytest.param("LLVMExec", marks=pytest.mark.llvm),
+    pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    pytest.param("PTXExec", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param("PTXRun", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
+def test_DDM_threshold_modulation(mode):
+    M = pnl.DDM(
+        name='DDM',
+        function=pnl.DriftDiffusionAnalytical(
+            threshold=20.0,
+        ),
+    )
+    monitor = pnl.TransferMechanism(default_variable=[[0.0]],
+                                    size=1,
+                                    function=pnl.Linear(slope=1, intercept=0),
+                                    output_ports=[pnl.RESULT],
+                                    name='monitor')
+
+    control = pnl.ControlMechanism(
+            monitor_for_control=monitor,
+            control_signals=[(pnl.THRESHOLD, M)])
+
+    C = pnl.Composition()
+    C.add_node(M, required_roles=[pnl.NodeRole.ORIGIN, pnl.NodeRole.TERMINAL])
+    C.add_node(monitor)
+    C.add_node(control)
+    inputs = {M:[1], monitor:[3]}
+    val = C.run(inputs, num_trials=1, bin_execute=mode)
+    # FIXME: Python version returns dtype=object
+    val = np.asfarray(val)
+    assert np.allclose(val[0], [60.0])
+    assert np.allclose(val[1], [60.2])

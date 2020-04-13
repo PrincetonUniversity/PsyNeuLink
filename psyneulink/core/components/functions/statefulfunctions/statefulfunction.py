@@ -449,10 +449,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
         for i, attr_name in enumerate(self.stateful_attributes):
-            # FIXME: HACK: Do not reinitialize random_state
-            if attr_name != "random_state":
-                initializer_value = getattr(self, self.initializers[i]).copy()
-                setattr(self, attr_name, initializer_value)
+            initializer_value = getattr(self, self.initializers[i]).copy()
+            setattr(self, attr_name, initializer_value)
 
         self.has_initializers = True
 
@@ -565,12 +563,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" in tags
         for i, a in enumerate(self.stateful_attributes):
-            if a == "random_state":
-                continue
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
-                warnings.warn("Shape mismatch between stateful param and initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
+                warnings.warn("Shape mismatch: stateful param does not match the initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
                 # Take a guess that dest just has an extra dimension
                 assert len(dest_ptr.type.pointee) == 1
                 dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),

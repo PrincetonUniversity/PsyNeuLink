@@ -218,7 +218,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     with pytest.warns(UserWarning) as warning_msg:
         retrieved = em.execute(stimuli[stim])
     warning_txt = warning_msg[0].message.args[0]
-    assert 'More than one item matched key ([1, 2, 3]) in memory for ContentAddressableMemory' in str(warning_txt)
+    assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
@@ -317,7 +317,7 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
         retrieved = em.execute(stimuli[stim])
     warning_txt = warning_msg[0].message.args[0]
 
-    assert 'More than one item matched key ([1, 2, 3]) in memory for ContentAddressableMemory' in str(warning_txt)
+    assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]

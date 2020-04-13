@@ -7,29 +7,21 @@ branches:
     - /ci-.*/
 
 language: shell
-
-os:
-  - linux
-  - osx
+os: linux
 dist: bionic
 
 env:
   jobs:
-    - PYTHON=3.8.2
-    - PYTHON=3.7.7
-    - PYTHON=3.6.8
+    - PYTHON=3.8
+    - PYTHON=3.7
+    - PYTHON=3.6
   global:
     - PYTHONWARNINGS="ignore::DeprecationWarning"
     - PIP_PROGRESS_BAR="off"
     - COVERALLS_PARALLEL=true
 
-# Cache downloaded(built) python packages
-# and homebrew downloads
-cache:
-  directories:
-    - $HOME/.cache/pip
-    - $HOME/Library/Caches/Homebrew
-    - $HOME/Library/Caches/pip
+# Cache downloaded and built python packages
+cache: pip
 
 addons:
   apt:
@@ -38,36 +30,14 @@ addons:
 
 before_install:
   - |
-    # Homebrew doesn't provide older python versions.
-    # Install it manually from python.org
-    if [ "$TRAVIS_OS_NAME" == "osx" ]; then
-      # homebrew plugin is not working correctly
-      # https://travis-ci.community/t/xcode-8-3-homebrew-outdated-error/3798
-      HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
- 
-      FILE=python-$PYTHON-macosx10.9.pkg
-      if [ ! -f $HOME/Library/Caches/$FILE ]; then
-        curl -#  https://www.python.org/ftp/python/$PYTHON/$FILE -o $HOME/Library/Caches/$FILE
-      fi
-      sudo installer -pkg $HOME/Library/Caches/$FILE -target /
-      python3 --version
-      python3 -m pip --version
-
-      # Deploy new virtualenv to match travis setup
-      echo "Deploying new python venv"
-      python3 -m venv $HOME/venv
-    fi
-  - |
     # Install venv on Linux using Ubuntu distributed python
-    if [ "$TRAVIS_OS_NAME" == "linux" ]; then
-      # distutils and lib2to3 are only needed for python3.8
-      # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
-      sudo apt-get install -y python${PYTHON%.*}-dev python${PYTHON%.*}-venv python3-distutils python3-lib2to3
-      python${PYTHON%.*} -m venv $HOME/venv
-      # Provide fake xdg-open
-      echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
-      chmod +x $HOME/venv/bin/xdg-open
-    fi
+    # distutils and lib2to3 are only needed for python3.8
+    # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
+    sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python3-distutils python3-lib2to3
+    python$PYTHON -m venv $HOME/venv
+    # Provide fake xdg-open
+    echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
+    chmod +x $HOME/venv/bin/xdg-open
 
   # The rest of the setup is common for all environments
   - source $HOME/venv/bin/activate
@@ -89,7 +59,7 @@ install:
 
 script:
   - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
-  - pytest -n auto -p no:logging $COV_ARGS
+  - pytest -n auto -p no:logging --verbosity=0 $COV_ARGS
 
 after_script:
   - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi
