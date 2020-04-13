@@ -7960,7 +7960,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             *comp_param_type_list))
 
     def _get_state_ids(self):
-        return ["nodes", "projections"] + super()._get_param_ids()
+        return ["nodes", "projections"] + super()._get_state_ids()
 
     def _get_state_struct_type(self, ctx):
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
