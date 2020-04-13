@@ -1473,6 +1473,7 @@ import typecheck as tc
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
+from enum import Enum
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -1521,7 +1522,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
+    ContentAddressableList, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -1534,7 +1535,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions',
-    'MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS'
+    'MECH_FUNCTION_PARAMS', 'NodeRole', 'PORT_FUNCTION_PARAMS'
 ]
 
 # show_graph animation options
@@ -1554,6 +1555,7 @@ SHOW_LEARNING = 'show_learning'
 
 
 logger = logging.getLogger(__name__)
+
 CompositionRegistry = {}
 
 
@@ -1835,6 +1837,62 @@ class Graph(object):
     @property
     def dependency_dict(self):
         return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
+
+
+class NodeRole(Enum):
+    """
+    COMMENT:
+    Attributes
+    ----------
+    COMMENT
+
+    ORIGIN
+        A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
+
+    INPUT
+        A Node that receives external input. A Composition may have many `INPUT` Nodes.
+
+    TERMINAL
+        A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
+
+    OUTPUT
+        A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
+        Composition may have many `OUTPUT` Nodes.
+
+    INTERNAL
+        A Node that is neither `ORIGIN` nor `TERMINAL`
+
+    CONTROLLER_OBJECTIVE
+        A Node that is the ObjectiveMechanism of a controller.
+
+    FEEDBACK_SENDER
+        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
+        pathway which would otherwise form a cycle.
+
+    FEEDBACK_RECEIVER
+        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
+        pathway which would otherwise form a cycle.
+
+    CYCLE
+        A Node that belongs to a cycle.
+
+    LEARNING
+        A Node that is only executed when learning is enabled.
+
+    TARGET
+        A Node that receives the target for a learning sequence
+    """
+    ORIGIN = 0
+    INPUT = 1
+    TERMINAL = 2
+    OUTPUT = 3
+    INTERNAL = 4
+    CONTROLLER_OBJECTIVE = 5
+    FEEDBACK_SENDER = 6
+    FEEDBACK_RECEIVER = 7
+    CYCLE = 8
+    LEARNING = 9
+    TARGET = 10
 
 
 # Options for show_node_structure argument of show_graph()
@@ -4237,8 +4295,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathways : Pathway or list[Pathway]
             specifies one or more Pathways to add to the Composition.  Each Pathway can be specified using either a
-            standard form of `Pathway specification <Pathway_Specification>`, one of the additonal forms described
-            `above <Multiple_Pathway_Specification>`.
+            standard form of `Pathway specification <Pathway_Specification>`, and/or one of the additonal forms
+            described `above <Multiple_Pathway_Specification>`.
 
         Returns
         -------

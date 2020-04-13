@@ -12,8 +12,7 @@ import numpy as np
 import collections.abc
 import inspect
 
-from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.utilities import NodeRole
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.globals.keywords import TARGET_MECHANISM, COMPARATOR_MECHANISM, LEARNING_MECHANISM, TRAINING_SET
 

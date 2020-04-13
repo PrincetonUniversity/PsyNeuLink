@@ -204,7 +204,6 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import _instantiate_port
 from psyneulink.core.globals.context import handle_external_context
@@ -214,7 +213,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec, NodeRole
+from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
@@ -1125,6 +1124,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         # (via aux_components attr)
+
+        from psyneulink.core.compositions.composition import NodeRole
 
         learning_mechanism.condition = learning_condition
         # # MODIFIED 10/23/19 OLD:

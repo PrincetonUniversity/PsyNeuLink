@@ -9,7 +9,6 @@
 # ********************************************* Binary Execution Wrappers **************************************************************
 
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.utilities import NodeRole
 
 import copy
 import ctypes

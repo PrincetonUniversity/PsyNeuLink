@@ -113,7 +113,7 @@ from psyneulink.core.globals.keywords import \
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'flatten_list',
     'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_spec', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
@@ -1671,62 +1671,6 @@ def call_with_pruned_args(func, *args, **kwargs):
     """
     args, kwargs = prune_unused_args(func, args, kwargs)
     return func(*args, **kwargs)
-
-
-class NodeRole(Enum):
-    """
-    COMMENT:
-    Attributes
-    ----------
-    COMMENT
-
-    ORIGIN
-        A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
-
-    INPUT
-        A Node that receives external input. A Composition may have many `INPUT` Nodes.
-
-    TERMINAL
-        A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
-
-    OUTPUT
-        A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
-        Composition may have many `OUTPUT` Nodes.
-
-    INTERNAL
-        A Node that is neither `ORIGIN` nor `TERMINAL`
-
-    CONTROLLER_OBJECTIVE
-        A Node that is the ObjectiveMechanism of a controller.
-
-    FEEDBACK_SENDER
-        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
-        pathway which would otherwise form a cycle.
-
-    FEEDBACK_RECEIVER
-        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
-        pathway which would otherwise form a cycle.
-
-    CYCLE
-        A Node that belongs to a cycle.
-
-    LEARNING
-        A Node that is only executed when learning is enabled.
-
-    TARGET
-        A Node that receives the target for a learning sequence
-    """
-    ORIGIN = 0
-    INPUT = 1
-    TERMINAL = 2
-    OUTPUT = 3
-    INTERNAL = 4
-    CONTROLLER_OBJECTIVE = 5
-    FEEDBACK_SENDER = 6
-    FEEDBACK_RECEIVER = 7
-    CYCLE = 8
-    LEARNING = 9
-    TARGET = 10
 
 
 def unproxy_weakproxy(proxy):
