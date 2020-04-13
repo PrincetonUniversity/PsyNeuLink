@@ -7187,6 +7187,56 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._initialize_from_context(context, base_context, override=False)
                 context.composition = self
 
+        # Run compiled execution (if compiled execution was requested
+        # NOTE: This should be as high up as possible,
+        # but still after the context has been initialized
+        if bin_execute:
+            is_simulation = (context is not None and
+                             ContextFlags.SIMULATION in context.execution_phase)
+            # Try running in Exec mode first
+            if (bin_execute is True or str(bin_execute).endswith('Exec')):
+                # There's no mode to execute simulations.
+                # Simulations are run as part of the controller node wrapper.
+                assert not is_simulation
+                llvm_inputs = self._adjust_execution_stimuli(inputs)
+                try:
+                    if bin_execute is True or bin_execute.startswith('LLVM'):
+                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                        _comp_ex.execute(llvm_inputs)
+                        return _comp_ex.extract_node_output(self.output_CIM)
+                    elif bin_execute.startswith('PTX'):
+                        self.__ptx_initialize(context)
+                        __execution = self._compilation_data.ptx_execution._get(context)
+                        __execution.cuda_execute(llvm_inputs)
+                        return __execution.extract_node_output(self.output_CIM)
+                except Exception as e:
+                    if bin_execute is not True:
+                        raise e from None
+
+                    warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
+
+            # Exec failed for some reason, we can still try node level bin_execute
+            # Filter out nested compositions. They are not executed in this mode
+            # Filter out controller if running simulation.
+            mechanisms = (n for n in self._all_nodes
+                          if isinstance(n, Mechanism) and
+                             (n is not self.controller or not is_simulation))
+
+            try:
+                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                # Compile all mechanism wrappers
+                for m in mechanisms:
+                    _comp_ex._set_bin_node(m)
+
+                bin_execute = True
+            except Exception as e:
+                if bin_execute is not True:
+                    raise e from None
+
+                warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
+                bin_execute = False
+
+
         # Generate first frame of animation without any active_items
         if self._animate is not False:
             # If context fails, the scheduler has no data for it yet.
@@ -7217,7 +7267,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE INPUT CIM ********************************************************************************************
 
-        # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
+        # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
         # Handles Input CIM and Parameter CIM execution.
         #
         # FIX: 8/21/19
@@ -7252,6 +7302,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for port in comp.input_ports:
                     port._update(context)
 
+        if bin_execute:
+            _comp_ex.execute_node(self.input_CIM, inputs)
+        #              WHY DO BOTH?  WHY NOT if-else?
+
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
 
@@ -7277,53 +7331,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.PROCESSING)
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
-
-        # Compile controller execution (if compilation is specified) --------------------------------
-
-        if bin_execute:
-            is_simulation = (context is not None and
-                             ContextFlags.SIMULATION in context.execution_phase)
-            # Try running in Exec mode first
-            if (bin_execute is True or str(bin_execute).endswith('Exec')):
-                # There's no mode to execute simulations.
-                # Simulations are run as part of the controller node wrapper.
-                assert not is_simulation
-                try:
-                    if bin_execute is True or bin_execute.startswith('LLVM'):
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        _comp_ex.execute(inputs)
-                        return _comp_ex.extract_node_output(self.output_CIM)
-                    elif bin_execute.startswith('PTX'):
-                        self.__ptx_initialize(context)
-                        __execution = self._compilation_data.ptx_execution._get(context)
-                        __execution.cuda_execute(inputs)
-                        return __execution.extract_node_output(self.output_CIM)
-                except Exception as e:
-                    if bin_execute is not True:
-                        raise e from None
-
-                    warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
-
-            # Exec failed for some reason, we can still try node level bin_execute
-            # Filter out nested compositions. They are not executed in this mode
-            # Filter out controller if running simulation.
-            mechanisms = (n for n in self._all_nodes
-                          if isinstance(n, Mechanism) and
-                             (n is not self.controller or not is_simulation))
-
-            try:
-                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                # Compile all mechanism wrappers
-                for m in mechanisms:
-                    _comp_ex._set_bin_node(m)
-
-                bin_execute = True
-            except Exception as e:
-                if bin_execute is not True:
-                    raise e from None
-
-                warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                bin_execute = False
 
         # Execute controller --------------------------------------------------------
 
@@ -7360,10 +7367,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
         context.add_flag(ContextFlags.PROCESSING)
-
-        if bin_execute:
-            _comp_ex.execute_node(self.input_CIM, inputs)
-        #              WHY DO BOTH?  WHY NOT if-else?
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, context=context)
