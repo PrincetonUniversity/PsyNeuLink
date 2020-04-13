@@ -104,9 +104,7 @@ def test_simplified_necker_cube(benchmark, mode):
 
     # turn off report
     reportOutputPref = False
-
-    # MODIFIED 4/11/20 END:
-
+    # MODIFIED 4/11/20 END
 
     # bp_comp.show_graph()
 
