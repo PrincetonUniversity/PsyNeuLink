@@ -253,21 +253,30 @@ class Pathway(object):
             **kwargs
     ):
 
-        self.composition = None
-        self.composition = kwargs.pop('composition',None)
-        if not isinstance(self.composition, Composition):
-            raise Composition(f"'composition' arg of constructor for {self.__class__.__name__} "
-                              f"must be a {Composition.__name__}")
         context = kwargs.pop(CONTEXT, None)
         if kwargs:
             raise Composition(f"Illegal argument(s) provided to {self.name}: {list(kwarg.keys())}")
 
-        # If called from command line, being used as a template, so don't register
+        # Get composition arg (if specified)
+        self.composition = None
+        self.composition = kwargs.pop('composition',None)
+        # composition arg not allowed from command line
+        if self.composition and context.source == ContextFlags.COMMAND_LINE:
+            raise Composition(f"'composition' can not be specified as an arg in constructor for "
+                              f" {self.__class__.__name__}; it is assigned when {self.__class__.__name__} "
+                              f"is added to a {Composition.__name__}.")
+        # composition arg must be a Composition
+        if not isinstance(self.composition, Composition):
+            raise Composition(f"'composition' arg of constructor for {self.__class__.__name__} "
+                              f"must be a {Composition.__name__}.")
+
+        # Register and get name
+        # - if called from command line, being used as a template, so don't register
         if context.source == ContextFlags.COMMAND_LINE:
             # But do pass through name so that it can be used to construct the instance that will be used
             self.name = name
         else:
-            # Sets name
+            # register and set name
             register_category(
                 entry=self,
                 base_class=Pathway,
