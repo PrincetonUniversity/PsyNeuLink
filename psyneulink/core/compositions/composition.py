@@ -2992,13 +2992,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         sends_to_input_ports = set(self.input_CIM_ports.keys())
 
-        # MODIFIED 4/11/20 NEW:
-        input_CIM_port_names = sorted([p.owner.name + ': ' + p.name for p in self.input_CIM_ports.keys()])
-        current_i_names = sorted([n.owner.name + ': ' + n.name for n in current_input_node_input_ports])
-        diff_names = sorted([n.owner.name + ': ' + n.name for n in sends_to_input_ports.difference(current_input_node_input_ports)])
-        assert True
-        # MODIFIED 4/11/20 END
-
         # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
             for projection in input_port.path_afferents:
