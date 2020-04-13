@@ -119,7 +119,7 @@ Class Reference
 
 """
 import warnings
-
+from enum import Enum
 import typecheck as tc
 
 from psyneulink.core.components.functions.learningfunctions import LearningFunction
@@ -129,10 +129,11 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.globals.keywords import \
     ANY, COMPARATOR_MECHANISM, CONTEXT, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import NodeRole, PathwayRole, convert_to_list
+from psyneulink.core.globals.utilities import NodeRole, convert_to_list
+
 
 __all__ = [
-    'Pathway', 'PathwayRegistry'
+    'Pathway', 'PathwayRegistry', 'PathwayRole'
 ]
 
 
@@ -163,6 +164,44 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
 
 def _is_node_spec(value):
     return _is_pathway_entry_spec(value, NODE)
+
+
+
+class PathwayRole(Enum):
+    """
+
+    Attributes
+    ----------
+
+    ORIGIN
+        A `Pathway` that includes an `ORIGIN` node of the `Composition`.
+
+    INPUT
+        A `Pathway` that includes an `INPUT` node of the `Composition`.
+
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` node of the `Composition`.
+
+    OUTPUT
+        A `Pathway` that includes an `OUTPUT` node of the `Composition`.
+
+    INTERNAL
+        A `Pathway` that is not designated as having any other PathwayRole.
+
+    CYCLE
+        A `Pathway` that constitutes a `CYCLE`.
+
+    LEARNING
+        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
+
+    """
+    ORIGIN = 0
+    INPUT = 1
+    TERMINAL = 2
+    OUTPUT = 3
+    INTERNAL = 4
+    CYCLE = 5
+    LEARNING = 6
 
 
 PathwayRegistry= {}

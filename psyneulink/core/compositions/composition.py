@@ -1521,7 +1521,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, NodeRole, PathwayRole, call_with_pruned_args, convert_to_list
+    ContentAddressableList, NodeRole, call_with_pruned_args, convert_to_list
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -2709,6 +2709,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_compositions
 
     def _determine_node_roles(self, context=None):
+        from psyneulink.core.compositions.pathway import PathwayRole
 
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
@@ -2865,6 +2866,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles[node].remove(role)
 
     def _determine_pathway_roles(self, context=None):
+        from psyneulink.core.compositions.pathway import PathwayRole
         for pway in self.pathways:
             for node in pway.pathway:
                 if not isinstance(node, (Mechanism, Composition)):
@@ -4464,7 +4466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If called from add_pathways(), use its pathway_arg_str
 
-        from psyneulink.core.compositions.pathway import Pathway
+        from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
