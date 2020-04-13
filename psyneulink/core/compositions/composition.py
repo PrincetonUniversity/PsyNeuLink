@@ -2634,7 +2634,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             list[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
                 list of `Nodes <Composition_Nodes>` assigned the `NodeRole` specified in **role**
 
-
         """
         if role is None or role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
@@ -2646,20 +2645,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
     def _get_input_nodes_by_CIM_input_order(self):
-        # self.input_CIM.input_ports[port.function.corresponding_input_port.position_in_mechanism
-        # for port in self.input_CIM.output_ports]
-        #
-        # self.
-        #
-        input_nodes = []
-        for i, port in enumerate(self.input_CIM.input_ports):
-            output_port = next((o for o in self.input_CIM.output_ports
-                               if o.function.corresponding_input_port.position_in_mechanism == i), None)
-            assert output_port
-            node = next((p.receiver.owner for p in output_port.efferents if not SHADOW_INPUT_NAME in p.name), None)
-            assert node
-            input_nodes.append(node)
-        return input_nodes
+        """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
+           corresponding InputPorts on Composition's `input_CIM <Composition.input_CIM>`.
+        """
+        # input_nodes = []
+        # for i, port in enumerate(self.input_CIM.input_ports):
+        #     output_port = next((o for o in self.input_CIM.output_ports
+        #                        if o.function.corresponding_input_port.position_in_mechanism == i), None)
+        #     assert output_port
+        #     node = next((p.receiver.owner for p in output_port.efferents if not SHADOW_INPUT_NAME in p.name), None)
+        #     assert node
+        #     input_nodes.append(node)
+        # return input_nodes
+
+        return [{cim[0]:n for n, cim in self.input_CIM_ports.items()}[input_port].owner
+                for input_port in self.input_CIM.input_ports]
 
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
