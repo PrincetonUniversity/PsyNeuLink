@@ -127,11 +127,3 @@ class PathwayProjection_Base(Projection_Base):
                     self, self.initialization_status
                 )
             )
-
-    def _delete_projection(projection):
-        """Delete Projection, its entries in receiver and sender Ports, and in ProjectionRegistry"""
-        projection.sender._remove_projection_from_port(projection)
-        projection.receiver._remove_projection_to_port(projection)
-        remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
-                                      component=projection)
-        del projection

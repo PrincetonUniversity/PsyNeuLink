@@ -154,19 +154,3 @@ class ModulatoryProjection_Base(Projection_Base):
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
                                             format(self, self.initialization_status))
-
-    def _delete_projection(projection):
-        """Delete Projection and its entry in receiver and sender Ports and ProjectionRegistry"""
-        # # MODIFIED 4/4/20 OLD:
-        # del projection.sender.efferents[projection.sender.efferents.index(projection)]
-        # del projection.receiver.mod_afferents[projection.receiver.mod_afferents.index(projection)]
-        # remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
-        #                               component=projection)
-        # del projection
-        # MODIFIED 4/4/20 NEW:
-        projection.sender._remove_projection_from_port(projection)
-        projection.receiver._remove_projection_to_port(projection)
-        remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
-                                      component=projection)
-        del projection
-        # MODIFIED 4/4/20 END

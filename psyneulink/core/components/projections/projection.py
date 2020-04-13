@@ -410,7 +410,7 @@ from psyneulink.core.globals.keywords import \
     PROJECTION_COMPONENT_CATEGORY
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric
 
@@ -949,6 +949,14 @@ class Projection_Base(Projection):
     def _activate_for_all_compositions(self):
         self._activate_for_compositions(ConnectionInfo.ALL)
 
+    def _delete_projection(projection, context=None):
+        """Delete Projection, its entries in receiver and sender Ports, and in ProjectionRegistry"""
+        projection.sender._remove_projection_from_port(projection)
+        projection.receiver._remove_projection_to_port(projection)
+        remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
+                                      component=projection)
+        del projection
+
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property
     def socket_assignments(self):
@@ -994,9 +1002,6 @@ class Projection_Base(Projection):
             super()._dependent_components,
             self.parameter_ports,
         ))
-
-    def _delete_projection(projection):
-        raise ProjectionError(f"{Projection.__name__} class {type(projection)} does not implement _delete method.")
 
     @property
     def _model_spec_parameter_blacklist(self):
@@ -2167,3 +2172,6 @@ def _add_projection_from(sender, port, projection_spec, receiver, context=None):
                                                       name=sender.name + '.output_ports')
 
     output_port._instantiate_projections_to_port(projections=projection_spec, context=context)
+
+
+
