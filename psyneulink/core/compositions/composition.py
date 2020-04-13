@@ -2973,7 +2973,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    receiver=input_port,
                                                    matrix=IDENTITY_MATRIX,
                                                    name="(" + interface_output_port.name + ") to ("
-                                                        + input_port.owner.name + "-" + input_port.name + ")")
+                                                        + input_port.owner.name + "_" + input_port.name + ")")
                     projection._activate_for_compositions(self)
 
                     if isinstance(node, Composition):
@@ -2987,7 +2987,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 shadow_projection = MappingProjection(sender=output_port,
                                                       receiver=input_port,
                                                       name="(" + output_port.name + ") to ("
-                                                           + input_port.owner.name + "-" + input_port.name + ")")
+                                                           + input_port.owner.name + "_" + input_port.name + ")")
                 shadow_projection._activate_for_compositions(self)
 
         sends_to_input_ports = set(self.input_CIM_ports.keys())
