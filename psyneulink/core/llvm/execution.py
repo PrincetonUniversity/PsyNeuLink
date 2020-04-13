@@ -438,10 +438,12 @@ class CompExecution(CUDAExecution):
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self._data_struct)
 
-    def execute_node(self, node, inputs=None, context=None):
+    def execute_node(self, node, inputs=None):
         # We need to reconstruct the inputs here if they were not provided.
         # This happens during node execution of nested compositions.
+        assert len(self._execution_contexts) == 1
         if inputs is None and node is self._composition.input_CIM:
+            context = self._execution_contexts[0]
             # This assumes origin mechanisms are in the same order as
             # CIM input ports
             origins = (n for n in self._composition.get_nodes_by_role(NodeRole.INPUT) for iport in n.input_ports)
