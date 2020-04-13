@@ -7232,17 +7232,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # method to properly validate input for those nodes.
         # -DS
         context.add_flag(ContextFlags.PROCESSING)
+        if inputs is not None:
+            inputs = self._adjust_execution_stimuli(inputs)
+
         if nested:
             # check that inputs are specified - autodiff does not in some cases
             if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
-                inputs = self._adjust_execution_stimuli(inputs)
-                self._assign_values_to_input_CIM(inputs, context=context)
+                build_CIM_input = self._assign_values_to_input_CIM(inputs)
+                self.input_CIM.execute(build_CIM_input, context=context)
             else:
                 self.input_CIM.execute(context=context)
             self.parameter_CIM.execute(context=context)
         else:
-            inputs = self._adjust_execution_stimuli(inputs)
-            self._assign_values_to_input_CIM(inputs, context=context)
+            build_CIM_input = self._assign_values_to_input_CIM(inputs)
+            self.input_CIM.execute(build_CIM_input, context=context)
             for comp in [node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)]:
                 for port in comp.input_ports:
                     port._update(context)
@@ -7839,7 +7842,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    def _assign_values_to_input_CIM(self, inputs, context=None):
+    def _assign_values_to_input_CIM(self, inputs):
         """
             Assign values from input dictionary to the InputPorts of the Input CIM, then execute the Input CIM
 
@@ -7869,7 +7872,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             build_CIM_input.append(value)
 
-        self.input_CIM.execute(build_CIM_input, context=context)
+        return build_CIM_input
 
     def _assign_execution_ids(self, context=None):
         """
