@@ -2645,6 +2645,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
+    def _get_input_nodes_by_CIM_input_order(self):
+        # self.input_CIM.input_ports[port.function.corresponding_input_port.position_in_mechanism
+        # for port in self.input_CIM.output_ports]
+        #
+        # self.
+        #
+        input_nodes = []
+        for i, port in enumerate(self.input_CIM.input_ports):
+            output_port = next((o for o in self.input_CIM.output_ports
+                               if o.function.corresponding_input_port.position_in_mechanism == i), None)
+            assert output_port
+            node = next((p.receiver.owner for p in output_port.efferents if not SHADOW_INPUT_NAME in p.name), None)
+            assert node
+            input_nodes.append(node)
+        return input_nodes
+
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
                           root_composition=NotImplemented,

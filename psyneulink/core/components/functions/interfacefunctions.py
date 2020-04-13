@@ -212,12 +212,13 @@ class InterfacePortMap(InterfaceFunction):
             if len(my_projections) == 1:
                 from psyneulink import NodeRole
                 target_port = my_projections[0].receiver
-                input_nodes = self.owner.owner.composition.get_nodes_by_role(NodeRole.INPUT)
+                # input_nodes = self.owner.owner.composition.get_nodes_by_role(NodeRole.INPUT)
+                input_nodes = self.owner.owner.composition._get_input_nodes_by_CIM_input_order()
                 input_nodes_ports = [p for n in input_nodes for p in n.input_ports]
                 # nested composition ports don't appear here
                 if target_port in input_nodes_ports:
                     input_index = input_nodes_ports.index(target_port)
-                    # assert index == input_index, "{} index mismatch: we select element {}, but the consumer is #{} in input node list".format(self.owner, index, input_index)
+                    assert index == input_index, "{} index mismatch: we select element {}, but the consumer is #{} in input node list".format(self.owner, index, input_index)
         # MODIFIED 4/4/20 END
         val = builder.load(builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(index)]))
         builder.store(val, arg_out)
