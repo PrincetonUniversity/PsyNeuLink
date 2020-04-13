@@ -4176,7 +4176,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
-        pathway = Pathway(pathway=explicit_pathway, composition=self, name=name, context=context)
+        pathway = Pathway(pathway=explicit_pathway,
+                          composition=self,
+                          name=name,
+                          context=Context(source=ContextFlags.METHOD))
         self.pathways.append(pathway)
 
         # # MODIFIED 4/4/20 NEW: THE SOURCE OF ALL THE PROBLEMS!

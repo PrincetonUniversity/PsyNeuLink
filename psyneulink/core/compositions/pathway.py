@@ -254,8 +254,6 @@ class Pathway(object):
     ):
 
         context = kwargs.pop(CONTEXT, None)
-        if kwargs:
-            raise Composition(f"Illegal argument(s) provided to {self.name}: {list(kwarg.keys())}")
 
         # Get composition arg (if specified)
         self.composition = None
@@ -269,6 +267,10 @@ class Pathway(object):
         if not isinstance(self.composition, Composition):
             raise Composition(f"'composition' arg of constructor for {self.__class__.__name__} "
                               f"must be a {Composition.__name__}.")
+
+        # There should be no other arguments in constructor
+        if kwargs:
+            raise Composition(f"Illegal argument(s) provided to {self.name}: {list(kwargs.keys())}")
 
         # Register and get name
         # - if called from command line, being used as a template, so don't register
