@@ -129,14 +129,9 @@ class PathwayProjection_Base(Projection_Base):
             )
 
     def _delete_projection(projection):
-        """Delete Projection and its entry in receiver and sender lists"""
-        # # MODIFIED 4/4/20 OLD:
-        # del projection.sender.efferents[projection.sender.efferents.index(projection)]
-        # del projection.receiver.path_afferents[projection.receiver.path_afferents.index(projection)]
-        # MODIFIED 4/4/20 NEW: [JDC]
+        """Delete Projection, its entries in receiver and sender Ports, and in ProjectionRegistry"""
         projection.sender._remove_projection_from_port(projection)
         projection.receiver._remove_projection_to_port(projection)
-        # MODIFIED 4/4/20 END
         remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
                                       component=projection)
         del projection

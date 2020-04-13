@@ -1808,21 +1808,18 @@ class Port_Base(Port):
                 self.owner.aux_components.append((projection, feedback))
             return projection
 
-    # MODIFIED 4/4/20 NEW: [JDC]
     def _remove_projection_from_port(self, projection, context=None):
+        """Remove Projection entry from Port.efferents."""
         del self.efferents[self.efferents.index(projection)]
 
     def _remove_projection_to_port(self, projection, context=None):
-        # FIX 4/4/20 [JDC]:  ASSUMES PORTS VARIABLE IS SHAPE IS 2D
-        if self.defaults.variable.ndim != 2:
-            pass
-        else:
-            shape = self.defaults.variable.shape
-            new_shape = (shape[0]-1, shape[1])
-            self.defaults.variable = np.resize(self.defaults.variable, new_shape)
-            self.function.defaults.variable = np.resize(self.function.defaults.variable, new_shape)
+        """Remove Projection entry from Port.path_afferents and reshape variable accordingly."""
+        shape = list(self.defaults.variable.shape)
+        # Reduce outer dimension by one
+        shape[0]-=1
+        self.defaults.variable = np.resize(self.defaults.variable, shape)
+        self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
         del self.path_afferents[self.path_afferents.index(projection)]
-    # MODIFIED 4/4/20 END
 
     def _get_primary_port(self, mechanism):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
@@ -2234,8 +2231,6 @@ class Port_Base(Port):
         func_input_type = ctx.get_input_struct_type(self.function)
         # MODIFIED 4/4/20 NEW: [PER JAN]
         if len(self.path_afferents) > 0:
-            if len(func_input_type) != len(self.path_afferents):
-                assert True
             assert len(func_input_type) == len(self.path_afferents), \
                 "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
                     self, func_input_type, self.defaults.variable,
