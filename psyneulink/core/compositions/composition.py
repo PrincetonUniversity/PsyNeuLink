@@ -7223,7 +7223,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: 8/21/19
         # If self is a nested composition, its input CIM will obtain its value in one of two ways,
         # depending on whether or not it is being executed within a simulation.
-        # If it is a simulation, then we need to use the _assign_values_to_input_CIM method, which parses the inputs
+        # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the inputs
         # argument of the execute method into a suitable shape for the input ports of the input_CIM.
         # If it is not a simulation, we can simply execute the input CIM.
         #
@@ -7234,19 +7234,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.add_flag(ContextFlags.PROCESSING)
         if inputs is not None:
             inputs = self._adjust_execution_stimuli(inputs)
+            build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
         if nested:
             # check that inputs are specified - autodiff does not in some cases
             if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
-                build_CIM_input = self._assign_values_to_input_CIM(inputs)
                 self.input_CIM.execute(build_CIM_input, context=context)
             else:
+                assert inputs is None, "Ignoring composition input!"
                 self.input_CIM.execute(context=context)
             self.parameter_CIM.execute(context=context)
         else:
-            build_CIM_input = self._assign_values_to_input_CIM(inputs)
             self.input_CIM.execute(build_CIM_input, context=context)
-            for comp in [node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)]:
+
+            # Update nested compositions
+            for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
                 for port in comp.input_ports:
                     port._update(context)
 
@@ -7842,7 +7844,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    def _assign_values_to_input_CIM(self, inputs):
+    def _build_variable_for_input_CIM(self, inputs):
         """
             Assign values from input dictionary to the InputPorts of the Input CIM, then execute the Input CIM
 
