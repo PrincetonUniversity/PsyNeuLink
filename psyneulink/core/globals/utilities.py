@@ -123,7 +123,7 @@ __all__ = [
     'make_readonly_property', 'merge_param_dicts',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
     'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
-    'parse_valid_identifier', 'parse_string_to_psyneulink_object_string', 'parameter_spec', 'powerset', 'PathwayRole',
+    'parse_valid_identifier', 'parse_string_to_psyneulink_object_string', 'parameter_spec', 'powerset',
     'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
@@ -1728,41 +1728,6 @@ class NodeRole(Enum):
     LEARNING = 9
     TARGET = 10
 
-class PathwayRole(Enum):
-    """
-
-    Attributes
-    ----------
-
-    ORIGIN
-        A `Pathway` that includes an `ORIGIN` node of the `Composition`.
-
-    INPUT
-        A `Pathway` that includes an `INPUT` node of the `Composition`.
-
-    TERMINAL
-        A `Pathway` that includes a `TERMINAL` node of the `Composition`.
-
-    OUTPUT
-        A `Pathway` that includes an `OUTPUT` node of the `Composition`.
-
-    INTERNAL
-        A `Pathway` that is not designated as having any other PathwayRole.
-
-    CYCLE
-        A `Pathway` that constitutes a `CYCLE`.
-
-    LEARNING
-        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
-
-    """
-    ORIGIN = 0
-    INPUT = 1
-    TERMINAL = 2
-    OUTPUT = 3
-    INTERNAL = 4
-    CYCLE = 5
-    LEARNING = 6
 
 def unproxy_weakproxy(proxy):
     """
