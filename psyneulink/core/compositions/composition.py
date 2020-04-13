@@ -3980,22 +3980,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if isinstance(pathway, Pathway):
             pathway = pathway.pathway
         elif isinstance(pathway, tuple):
+            if _is_pathway_entry_spec(pathway, ANY):
+                pathway = convert_to_list(pathway)
             # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
-            if all(_is_pathway_entry_spec(n, ANY) for n in pathway):
+            elif all(_is_pathway_entry_spec(n, ANY) for n in pathway):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
                 pathway = pathway[0]
-            # MODIFIED 4/4/20 OLD:
+            # # MODIFIED 4/4/20 OLD:
             # If singleton (node, required_role), embed in list
             # elif (isinstance(pathway[1], NodeRole)
             #       or (isinstance(pathway[1], list) and all(isinstance(nr, NodeRole) for nr in pathway[1]))):
             #     pathway = convert_to_list(pathway)
-            # MODIFIED 4/4/20 NEW:
-            # FIX 4/4/20 [JDC]: TRY MOVING TO FIRST CONDITION
-            # If singleton (node, required_role), embed in list
-            elif _is_pathway_entry_spec(pathway):
-                pathway = convert_to_list(pathway)
+            # # MODIFIED 4/4/20 NEW:
+            # # FIX 4/4/20 [JDC]: MOVED TO FIRST CONDITION, BUT STILL NEEDS TO BE TESTED
+            # # If singleton (node, required_role), embed in list
+            # elif _is_pathway_entry_spec(pathway):
+            #     pathway = convert_to_list(pathway)
             # MODIFIED 4/4/20 END:
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
@@ -4183,7 +4185,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway = Pathway(pathway=explicit_pathway, composition=self, name=name, context=context)
         self.pathways.append(pathway)
-        # # MODIFIED 4/4/20 NEW:
+
+        # # MODIFIED 4/4/20 NEW: THE SOURCE OF ALL THE PROBLEMS!
         self._analyze_graph(context=context)
         # MODIFIED 4/4/20 END
 
