@@ -2283,10 +2283,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
-        # # MODIFIED 4/4/20 NEW: [JDC]
-        # for port in [p for p in self.input_CIM.ports if isinstance(p, OutputPort)]:
-        #     index = port.function.corresponding_input_port.position_in_mechanism
-        # # MODIFIED 4/4/20 END
 
     def _update_processing_graph(self):
         """
@@ -2714,10 +2710,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _determine_node_roles(self, context=None):
 
-        # MODIFIED 4/4/20 NEW:
-        assert True
-        # MODIFIED 4/4/20 END:
-
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
@@ -2775,12 +2767,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # MODIFIED 4/4/20 OLD:
         # if not self.get_nodes_by_role(NodeRole.OUTPUT):
-        # MODIFIED 4/4/20 NEW:
+        # MODIFIED 4/4/20 NEW:  FIX: ?HOW DOES THIS RELATE TO EXECLUSION BELOW?
         # If there are not any OUTPUT nodes (execept ones designated as OUTPUT in a learning pathway)
         if not any([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
                     if not any(n for n in [pathway for pathway in self.pathways
                                  if PathwayRole.LEARNING in pathway.roles])]):
-        # MODIFIED 4/4/20 END:
+        # MODIFIED 4/4/20 END
 
             # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_controller_objective_mech_not_terminal
             #                 if controller_enabled = False
@@ -2950,12 +2942,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in input_nodes:
 
             for input_port in node.external_input_ports:
-
-                # MODIFIED 4/4/20 NEW:
-                node_ext_input_port_names = sorted([n.owner.name + ': ' + n.name for n in node.external_input_ports])
-                input_port_name =  input_port.owner.name + ': ' + input_port.name
-                curr_input_port_names = sorted([n.owner.name + ': ' + n.name for n in current_input_node_input_ports])
-                # MODIFIED 4/4/20 END
 
                 # add it to our set of current input ports
                 current_input_node_input_ports.add(input_port)
