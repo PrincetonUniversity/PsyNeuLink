@@ -303,13 +303,14 @@ class Pathway(object):
                               f" {self.__class__.__name__}; it is assigned when the {self.__class__.__name__} "
                               f"is added to a {Composition.__name__}.")
         # composition arg must be a Composition
-        if not isinstance(self.composition, Composition):
+        if self.composition and not isinstance(self.composition, Composition):
             raise CompositionError(f"'composition' arg of constructor for {self.__class__.__name__} "
                               f"must be a {Composition.__name__}.")
 
         # There should be no other arguments in constructor
         if kwargs:
-            raise CompositionError(f"Illegal argument(s) provided to {self.name}: {list(kwargs.keys())}")
+            raise CompositionError(f"Illegal argument(s) used in constructor for {self.__class__.__name__}: "
+                                   f"{', '.join(list(kwargs.keys()))}.")
 
         # Register and get name
         # - if called from command line, being used as a template, so don't register
