@@ -185,10 +185,10 @@ class PathwayRole(Enum):
         A `Pathway` that does not include any `ORIGIN` or `TERMINAL` `Nodes <Composition_Nodes>` of the `Composition`.
 
     OUTPUT
-        A `Pathway` that includes an `OUTPUT` `Nodes <Composition_Nodes>` of the `Composition`.
+        A `Pathway` that includes an `OUTPUT` `Node <Composition_Nodes>` of the `Composition`.
 
     TERMINAL
-        A `Pathway` that includes a `TERMINAL` `Nodes <Composition_Nodes>` of the `Composition`.
+        A `Pathway` that includes a `TERMINAL` `Node <Composition_Nodes>` of the `Composition`.
 
     CYCLE
         A `Pathway` that constitutes a `CYCLE` in the `Composition`.
@@ -352,10 +352,12 @@ class Pathway(object):
                 self.roles.add(PathwayRole.ORIGIN)
             if NodeRole.INPUT in roles:
                 self.roles.add(PathwayRole.INPUT)
-            if NodeRole.TERMINAL in roles:
-                self.roles.add(PathwayRole.TERMINAL)
+            if NodeRole.SINGLETON in roles and len(self.pathway)==1:
+                self.roles.add(PathwayRole.SINGLETON)
             if NodeRole.OUTPUT in roles:
                 self.roles.add(PathwayRole.OUTPUT)
+            if NodeRole.TERMINAL in roles:
+                self.roles.add(PathwayRole.TERMINAL)
             if NodeRole.CYCLE in roles:
                 self.roles.add(PathwayRole.CYCLE)
         if not [role in self.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
