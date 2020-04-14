@@ -127,7 +127,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
-    ANY, COMPARATOR_MECHANISM, CONTEXT, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 
 

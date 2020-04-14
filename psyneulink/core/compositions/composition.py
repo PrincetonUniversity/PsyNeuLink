@@ -1510,9 +1510,10 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, BOLD, BOTH, COMPARATOR_MECHANISM, COMPONENT, COMPOSITION, CONDITIONS, \
-    CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, \
-    INPUT, INPUT_CIM_NAME, LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_CIM_NAME, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_OBJECTIVE, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
@@ -4616,7 +4617,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Wrap up and return
         learning_related_components = {TARGET_MECHANISM: target,
-                                       COMPARATOR_MECHANISM: comparator,
+                                       LEARNING_OBJECTIVE: comparator,
                                        LEARNING_MECHANISMS: learning_mechanism,
                                        LEARNED_PROJECTIONS: learned_projection}
         learning_pathway.learning_components = learning_related_components
@@ -5013,7 +5014,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and any([lp for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                              if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-                comparator = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+                comparator = self._terminal_backprop_sequences[output_source][LEARNING_OBJECTIVE]
                 learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
 
             # Otherwise, create new ones
@@ -5085,7 +5086,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    learning_update)
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
-                                                                COMPARATOR_MECHANISM: comparator}
+                                                                LEARNING_OBJECTIVE: comparator}
             self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
 
             sequence_end = path_length - 3
@@ -5127,7 +5128,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    override=True)
 
         learning_related_components = {TARGET_MECHANISM: target,
-                                       COMPARATOR_MECHANISM: comparator,
+                                       LEARNING_OBJECTIVE: comparator,
                                        LEARNING_MECHANISMS: learning_mechanisms,
                                        LEARNED_PROJECTIONS: learned_projections}
 
@@ -5188,7 +5189,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If target and comparator already exist (due to overlapping pathway), use those
         try:
             target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            comparator_mechanism = self._terminal_backprop_sequences[output_source][COMPARATOR_MECHANISM]
+            comparator_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_OBJECTIVE]
 
         # Otherwise, create new ones
         except KeyError:
