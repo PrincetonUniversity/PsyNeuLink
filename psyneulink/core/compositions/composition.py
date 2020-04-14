@@ -1864,6 +1864,9 @@ class NodeRole(Enum):
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
 
+    SINGLETON
+        A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.
+
     CYCLE
         A `Node <Composition_Nodes>` that belongs to a cycle.
 
@@ -1911,13 +1914,14 @@ class NodeRole(Enum):
     TERMINAL = 2
     OUTPUT = 3
     INTERNAL = 4
-    CONTROLLER_OBJECTIVE = 5
-    FEEDBACK_SENDER = 6
-    FEEDBACK_RECEIVER = 7
-    CYCLE = 8
-    LEARNING = 9
-    TARGET = 10
-    LEARNING_OBJECTIVE = 11
+    SINGLETON = 5
+    CYCLE = 6
+    FEEDBACK_SENDER = 7
+    FEEDBACK_RECEIVER = 8
+    CONTROLLER_OBJECTIVE = 9
+    LEARNING = 10
+    TARGET = 11
+    LEARNING_OBJECTIVE = 12
 
 
 # Options for show_node_structure argument of show_graph()
@@ -2922,10 +2926,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
 
-            # Finally, assign TERMINAL nodes
+            # Finally, assign TERMINAL and SINGLETON nodes
             for node in self.nodes:
                 if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
                     self._add_node_role(node, NodeRole.TERMINAL)
+                if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                    self._add_node_role(node, NodeRole.SINGLETON)
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
