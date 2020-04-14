@@ -7198,13 +7198,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # There's no mode to execute simulations.
                 # Simulations are run as part of the controller node wrapper.
                 assert not is_simulation
-                llvm_inputs = self._adjust_execution_stimuli(inputs)
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
+                        llvm_inputs = self._adjust_execution_stimuli(inputs)
                         _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                         _comp_ex.execute(llvm_inputs)
                         return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
+                        llvm_inputs = self._adjust_execution_stimuli(inputs)
                         self.__ptx_initialize(context)
                         __execution = self._compilation_data.ptx_execution._get(context)
                         __execution.cuda_execute(llvm_inputs)
@@ -7539,8 +7540,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         is_simulating = False
 
-
-                    ret = node.execute(context=context)
+                    # Run node-level compiled nested composition
+                    # only if there are no control projections
+                    nested_bin_execute = bin_execute \
+                        if len(node.parameter_CIM.afferents) == 0 else False
+                    ret = node.execute(context=context,
+                                       bin_execute=nested_bin_execute)
 
                     if is_simulating:
                         context.add_flag(ContextFlags.SIMULATION)
