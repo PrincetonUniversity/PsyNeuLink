@@ -82,7 +82,7 @@ __all__ = [
     'MODEL_SPEC_ID_RECEIVER_PORT',
     'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE', 'MSE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
-    'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
+    'NAME', 'NEWEST',  'NODE', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
     'NUM_EXECUTIONS_BEFORE_FINISHED',
     'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST', 'ON',
     'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME',
@@ -117,91 +117,95 @@ __all__ = [
 ]
 
 
-class NodeRoles:
-    """
-    Attributes
-    ----------
-
-    ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Composition`,
-        and that receives the input to the Composition when it is :ref:`executed or run <Run>`.
-        A Composition may have more than one `ORIGIN` Mechanism.
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        For additional details about `ORIGIN` Mechanisms in Processes, see
-        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
-        and for Systems see `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-        COMMENT
-
-    INTERNAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other NodeRole.
-
-    CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-        <Projection>` that closes a recurrent loop in a `Composition`.  If it is an `ORIGIN` Mechanism, then
-        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
-
-    INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Composition`, and that is not an `ORIGIN` Mechanism
-        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Composition when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`.
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-        COMMENT
-
-    TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Composition`.
-        A Composition may have more than one `TERMINAL` Mechanism .
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        Note that the `TERMINAL`
-        Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
-        as it may send projections to other processes in the System (see `example
-        <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
-        its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
-        additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
-        `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
-        COMMENT
-
-    SINGLETON
-        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Composition`.
-        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
-
-    LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Composition`.
-
-    TARGET
-        A `ProcessingMechanism` that receives the target for a learning sequence.
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        A `ComparatorMechanism` of a `Composition` configured for learning that receives a target value
-        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.
-        It is usually (but not necessarily)
-        associated with the `TERMINAL` Mechanism of the Composition. The `TARGET` Mechanisms of a Process or
-        System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
-        `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
-        COMMENT
-
-
-    """
-    def __init__(self):
-        self.ORIGIN = ORIGIN
-        self.INTERNAL = INTERNAL
-        self.CYCLE = CYCLE
-        self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
-        self.TERMINAL = TERMINAL
-        self.SINGLETON = SINGLETON
-        self.LEARNING = LEARNING
-        self.TARGET = TARGET
-
-NODE = 'NODE'
+# MODIFIED 4/4/20 OLD:
+# class NodeRoles:
+#     """
+#     Attributes
+#     ----------
+#
+#     ORIGIN
+#         A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Composition`,
+#         and that receives the input to the Composition when it is :ref:`executed or run <Run>`.
+#         A Composition may have more than one `ORIGIN` Mechanism.
+#         COMMENT:
+#         ADD VERSION FOR COMPOSITION
+#         For additional details about `ORIGIN` Mechanisms in Processes, see
+#         `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
+#         and for Systems see `System Mechanisms <System_Mechanisms>` and
+#         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+#         COMMENT
+#
+#     INTERNAL
+#         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other NodeRole.
+#
+#     CYCLE
+#         A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
+#         <Projection>` that closes a recurrent loop in a `Composition`.  If it is an `ORIGIN` Mechanism, then
+#         it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
+#
+#     INITIALIZE_CYCLE
+#         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
+#         `Projection <Projection>` that closes a loop in a `Composition`, and that is not an `ORIGIN` Mechanism
+#         (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
+#         assigned to such Mechanisms, that will be used to initialize the Composition when it is first run.  For
+#         additional information, see `Run <Run_Initial_Values>`.
+#         COMMENT:
+#         ADD VERSION FOR COMPOSITION
+#         `System Mechanisms <System_Mechanisms>` and
+#         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
+#         COMMENT
+#
+#     TERMINAL
+#         A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Composition`.
+#         A Composition may have more than one `TERMINAL` Mechanism .
+#         COMMENT:
+#         ADD VERSION FOR COMPOSITION
+#         Note that the `TERMINAL`
+#         Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
+#         as it may send projections to other processes in the System (see `example
+#         <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
+#         its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
+#         additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
+#         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
+#         COMMENT
+#
+#     SINGLETON
+#         A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Composition`.
+#         It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
+#
+#     LEARNING
+#         A `LearningMechanism <LearningMechanism>` in a `Composition`.
+#
+#     TARGET
+#         A `ProcessingMechanism` that receives the target for a learning sequence.
+#         COMMENT:
+#         ADD VERSION FOR COMPOSITION
+#         A `ComparatorMechanism` of a `Composition` configured for learning that receives a target value
+#         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
+#         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.
+#         It is usually (but not necessarily)
+#         associated with the `TERMINAL` Mechanism of the Composition. The `TARGET` Mechanisms of a Process or
+#         System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
+#         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
+#         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
+#         COMMENT
+#
+#     LEARNING_OBJECTIVE
+#         An `ObjectiveMechanism` in a `Composition` that is used to compute the error for a `learning Pathway
+#         <Composition_Learning_Pathways>`;  typically a `ComparatorMechanism`.
+#
+#     """
+#     def __init__(self):
+#         self.ORIGIN = ORIGIN
+#         self.INTERNAL = INTERNAL
+#         self.CYCLE = CYCLE
+#         self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
+#         self.TERMINAL = TERMINAL
+#         self.SINGLETON = SINGLETON
+#         self.LEARNING = LEARNING
+#         self.TARGET = TARGET
+#         self.LEARNING_OBJECTIVE = LEARNING_OBJECTIVE
+# MODIFIED 4/4/20 END
 
 
 class PathwayRoles:
@@ -517,6 +521,7 @@ PATHWAY = "pathway"
 PROCESSING_PATHWAY = "processing_pathway"
 CONTROL_PATHWAY = "control_pathway"
 LEARNING_PATHWAY = "learning_pathway"
+NODE = 'NODE'
 
 #endregion
 
@@ -823,6 +828,7 @@ LEARNING = 'LEARNING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 ERROR = 'ERROR'
+LEARNING_OBJECTIVE = 'LEARNING_OBJECTIVE'
 
 RESULTS = 'RESULTS'
 RESULT = 'RESULT'

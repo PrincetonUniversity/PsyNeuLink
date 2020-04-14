@@ -326,17 +326,19 @@ Every `Node <Composition_Nodes>` in a Composition's graph must be either a `Mech
 attribute. Each Node is assigned one or more `NodeRoles <NodeRole>` that designate its status in the graph.  Nodes
 are assigned one or more `NodeRoles <NodeRole>` automatically when a Composition is constructed, and when Nodes or
 `Pathways <Composition_Pathways>` are added to it. However, some of these can be explicitly assigned by specifying
-the desired `NodeRole` using any of the following ways:
+the desired `NodeRole` in any of the following places:
 
-  * in the **required_roles** argument of the Composition's `add_node <Composition.add_node>` or `add_nodes
+.. _Composition_Node_Role_Assignment:
+
+  * the **required_roles** argument of the Composition's `add_node <Composition.add_node>` or `add_nodes
     <Composition.add_nodes>` methods;
 
-  * in a tuple specifying the `Node <Composition_Nodes>` in the **processing_pathways** or **learning_pathways**
+  * a tuple specifying the `Node <Composition_Nodes>` in the **processing_pathways** or **learning_pathways**
     arguments of the Compositon's constructor, in the **pathways** argument of a `Pathway`, or in one of the methods
     used to add a `Pathway <Composition_Pathways>` to the Composition (see `Composition_Creation`);  the Node must be
     the first item of the tuple, and the `NodeRole` its 2nd item.
 
-  * in the **role** argument of the `add_required_node_role <Composition.add_required_node_role>` called for an
+  * the **role** argument of the `add_required_node_role <Composition.add_required_node_role>` called for an
     an existing `Node <Composition_Nodes>`.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
@@ -1140,7 +1142,7 @@ A *learning sequence* is a contiguous sequence of `ProcessingMechanisms <Process
 `MappingProjections <MappingProjection>` between them, in which learning modifies the `matrix
 <MappingProjection.matrix>` parameter of the MappingProjections in the sequence, so that the input to the first
 ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that matches as closely as
-possible the value specified for the `target mechanism <Process_Learning_Components>` in the **inputs** argument of the
+possible the value specified for the target mechanism in the **inputs** argument of the
 Composition's `run <Composition.run>` method. The Mechanisms in the pathway must be compatible with learning (that is,
 their `function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
 `LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
@@ -1156,7 +1158,6 @@ For each `learning sequence <Composition_Learning_Sequence>` specified in a `lea
 <Composition_Learning_Methods>`, it creates the following Components, and assigns to them the `NodeRoles <NodeRole>`
 indicated:
 
-    .. _COMPARATOR_MECHANISM:
     .. _TARGET_MECHANISM:
     * *TARGET_MECHANISM* -- receives the value to be used by the *COMPARATOR_MECHANISM* as the target in
       computing the error signal (see above);  that value must be specified in the **inputs** argument of the
@@ -1169,6 +1170,7 @@ indicated:
     * a MappingProjection that projects from the last ProcessingMechanism in the learning sequence to the *SAMPLE*
       `InputPort  <ComparatorMechanism_Structure>` of the *COMPARATOR_MECHANISM*;
     ..
+    .. _COMPARATOR_MECHANISM:
     * *COMPARATOR_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
       <ComparatorMechanism_Execution>` for the sequence by comparing the value received by the ComparatorMechanism's
       *SAMPLE* `InputPort <ComparatorMechanism_Structure>` (from the `output <LearningMechanism_Activation_Output>` of
@@ -1847,40 +1849,62 @@ class NodeRole(Enum):
     COMMENT
 
     ORIGIN
-        A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
+        A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
+        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
+        receive Projections from the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
+        always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.
 
     INPUT
-        A Node that receives external input. A Composition may have many `INPUT` Nodes.
-
-    TERMINAL
-        A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
-
-    OUTPUT
-        A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
-        Composition may have many `OUTPUT` Nodes.
+        A `Node <Composition_Nodes>` that receives input from outside its `Composition`, either from the Composition's
+        `run <Compositions.run>` method or, if it is in a `nested Composition <Composition_Nested>`, from the outer
+        outer Composition.  By default, the `ORIGIN` Nodes of a Composition are also its `INPUT` Nodes; however this
+        can be modified by `assigning specified NodeRoles <Composition_Node_Role_Assignment>` to Nodes.  A Composition
+        can have many `INPUT` Nodes.
 
     INTERNAL
-        A Node that is neither `ORIGIN` nor `TERMINAL`
-
-    CONTROLLER_OBJECTIVE
-        A Node that is the ObjectiveMechanism of a controller.
-
-    FEEDBACK_SENDER
-        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
-        pathway which would otherwise form a cycle.
-
-    FEEDBACK_RECEIVER
-        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
-        pathway which would otherwise form a cycle.
+        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
 
     CYCLE
-        A Node that belongs to a cycle.
+        A `Node <Composition_Nodes>` that belongs to a cycle.
+
+    TERMINAL
+        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
+        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
+        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
+        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes.
+
+    OUTPUT
+        A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
+        the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
+        Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
+        <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
+
+    CONTROLLER_OBJECTIVE
+        A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
+        <Composition.controller>`.
+
+    FEEDBACK_SENDER
+        A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` the `feedback
+        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway` that
+        would otherwise form a `cycle <Composition_Feedback_Pathways>`.
+
+    FEEDBACK_RECEIVER
+        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>`  the `feedback
+        <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
+        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`.
 
     LEARNING
-        A Node that is only executed when learning is enabled.
+        A `Node <Composition_Nodes>` that is only executed when learning is enabled.
 
     TARGET
-        A Node that receives the target for a learning sequence
+        A `Node <Composition_Nodes>` that receives the target for a `learning pathway
+        <Composition_Learning_Pathways>` specified in the **inputs** argument of the Composition's `run
+        <Composition.run>` method (see `TARGET_MECHANISM`).
+
+    LEARNING_OBJECTIVE
+        A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
+        <Composition_Learning_Pathways>`; typically a `ComparatorMechanism` (see `COMPARATOR_MECHANISM`).
+
     """
     ORIGIN = 0
     INPUT = 1
@@ -1893,6 +1917,7 @@ class NodeRole(Enum):
     CYCLE = 8
     LEARNING = 9
     TARGET = 10
+    LEARNING_OBJECTIVE = 11
 
 
 # Options for show_node_structure argument of show_graph()
@@ -2310,7 +2335,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def _analyze_graph(self, scheduler=None, context=None):
         """
-        Assigns `NodeRoles <NodeRoles>` to nodes based on the structure of the `Graph`.
+        Assigns `NodeRoles <NodeRole>` to nodes based on the structure of the `Graph`.
 
         By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
         `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
@@ -4018,7 +4043,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         nodes = []
 
-        # If called from add_pathways(), use its pathway_arg_str
+        # If called from add_pathways(), use its pathway_arg_str in error messages (in context.string)
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
@@ -5899,7 +5924,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * *PORT_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
               Port of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
 
-            * *ROLES* -- show the `role <Composition.NodeRoles>` of the Mechanism in the Composition
+            * *ROLES* -- show the `role <NodeRole>` of the Mechanism in the Composition
               (but not any of the other information;  use *ALL* to show ROLES with other information).
 
             * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
@@ -6980,7 +7005,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             show the Mechanism, InputPort, ParameterPort and OutputPort headers.
 
         show_roles : bool : default False
-            show the `roles <Composition.NodeRoles>` of each Mechanism in the `Composition`.
+            show the `roles <NodeRole>` of each Mechanism in the `Composition`.
 
         show_conditions : bool : default False
             show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism.

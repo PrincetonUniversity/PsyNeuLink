@@ -324,30 +324,10 @@ class Pathway(object):
                 registry=PathwayRegistry,
                 name=name
             )
+
+        # Initialize attributes
         self.learning_components = {}
-
-        # # Check validity of pathway
-        # for i in range(0, len(pathway)):
-        #     # Odd items must be a node (Mechanism or Composition)
-        #     if not i % 2:
-        #         if not isinstance(pathway[i], (Mechanism, Composition)):
-        #             raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a node "
-        #                                    f"({Mechanism.__name__} or {Composition.__name__}).")
-        #     # Even items must be a Projection
-        #     elif not isinstance(pathway[i], Projection):
-        #             raise CompositionError(f"Item {i} of {self.name} ({pathway[0]}) must be a `{Projection.__name}.")
-        # # If len is not odd, then must be missing a node
-        # if not len(pathway) % 2:
-        #     raise CompositionError(f"'pathway' arg of {self.name} is missing a terminal node.")
-
         self.pathway = pathway
-
-        # # roles = set(convert_to_list(roles or []))
-        # # for role in roles:
-        # #     if not isinstance(role, PathwayRole):
-        # #         raise CompositionError(f"Item ({role}) in 'roles' arg of {self.__class__.__name__} {self.name} "
-        # #                                f"is not a {PathwayRole.__name__}.")
-        # self.roles = roles
         self.roles = set()
 
     @property
