@@ -6,7 +6,6 @@ import psyneulink.core.components.functions.statefulfunctions.integratorfunction
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.utilities
 
-
 class TestModels:
 
     # This implements the model by Cohen, J. D., & Huston, T. A. (1994). Progress in the use of interactive
@@ -221,7 +220,7 @@ class TestModels:
                                         task_layer]
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
-        bidirectional_stroop.add_required_node_role(response_layer, psyneulink.core.globals.utilities.NodeRole.TERMINAL)
+        bidirectional_stroop.add_required_node_role(response_layer, pnl.NodeRole.TERMINAL)
 
         input_dict = {colors_input_layer: [0, 0, 0],
                       words_input_layer: [0, 0, 0],
