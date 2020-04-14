@@ -136,6 +136,9 @@ __all__ = [
 ]
 
 
+PathwayRegistry= {}
+
+
 def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     from psyneulink.core.components.projections.projection import _is_projection_spec
@@ -163,7 +166,6 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
 
 def _is_node_spec(value):
     return _is_pathway_entry_spec(value, NODE)
-
 
 
 class PathwayRole(Enum):
@@ -209,9 +211,6 @@ class PathwayRole(Enum):
     CYCLE = 6
     CONTROL = 7
     LEARNING = 8
-
-
-PathwayRegistry= {}
 
 
 class Pathway(object):
