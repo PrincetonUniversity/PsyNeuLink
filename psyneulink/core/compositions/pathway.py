@@ -400,7 +400,7 @@ class Pathway(object):
     @property
     def comparator(self):
         try:
-            return self.learning_components[COMPARATOR_MECHANISM]
+            return self.learning_components[LEARNING_OBJECTIVE]
         except:
             if PathwayRole.LEARNING not in self.roles:
                 warnings.warn(f"{self.__class__.__name__} {self.name} 'comparator' attribute "

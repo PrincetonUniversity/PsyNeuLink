@@ -536,7 +536,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                           function=error_function,
                                                           output_ports=[OUTCOME, MSE],
                                                           name="{} {}".format(lc.activation_output_mech.name,
-                                                                              COMPARATOR_MECHANISM),
+                                                                              LEARNING_OBJECTIVE),
                                                           context=context)
                 # MODIFIED 10/10/17 END
 
