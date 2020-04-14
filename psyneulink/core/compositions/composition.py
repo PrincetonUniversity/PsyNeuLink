@@ -1516,7 +1516,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OWNER_VALUE, \
+    ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -3266,7 +3266,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # assert len(cim.input_ports)==len(cim.output_ports)
             if type==INPUT:
                 # FIX 4/4/20 [JDC]: NEED TO ADD ASSERTION FOR NUMBER OF SHADOW PROJECTIONS
-                n = len(cim.output_ports)
+                n = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
                 i = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])
                 p = len([p for p in self.projections if (INPUT_CIM_NAME in p.name and SHADOW_INPUT_NAME not in p.name)])
                 assert n == i, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
@@ -9073,7 +9073,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def default_external_input_values(self):
         """Returns the default values of all external InputPorts that belong to the
-        Input CompositionInterfaceMechanism"""
+        Input CompositionInterfaceMechanism
+        """
+
         try:
             return [input_port.defaults.value for input_port in self.input_CIM.input_ports if
                     not input_port.internal_only]
