@@ -7,6 +7,7 @@ from psyneulink.core.components.functions.transferfunctions import Identity, Lin
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError
@@ -506,8 +507,6 @@ class TestConnectCompositionsViaCIMS:
                         'mechanism(s) that project to or are projected to from the CIM.')
         warning_fired = False
         comp.add_node(mech)
-        comp.input_CIM.add_ports(OutputPort())
-
         with pytest.warns(UserWarning) as w:
             comp.input_CIM.add_ports(OutputPort())
             # confirm that warning fired and that its text is correct
@@ -522,6 +521,27 @@ class TestConnectCompositionsViaCIMS:
                 if warn.message.args[0] == warning_text:
                     warning_fired = True
             assert not warning_fired
+
+    def test_user_added_ports(self):
+
+        comp = Composition()
+        mech = ProcessingMechanism()
+        comp.add_node(mech)
+        # instantiate custom input and output ports
+        inp = InputPort()
+        out = OutputPort()
+        # add custom input and output ports to CIM
+        comp.input_CIM.add_ports([inp, out])
+        # verify the ports have been added to the user_added_ports set
+        # and that no extra ports were added
+        assert inp in comp.input_CIM.user_added_ports['input_ports']
+        assert len(comp.input_CIM.user_added_ports['input_ports']) == 1
+        assert out in comp.input_CIM.user_added_ports['output_ports']
+        assert len(comp.input_CIM.user_added_ports['output_ports']) == 1
+        comp.input_CIM.remove_ports([inp, out])
+        # verify that call to remove ports succesfully removed the ports from user_added_ports
+        assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
+        assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
 
 class TestInputCIMOutputPortToOriginOneToMany:
 
