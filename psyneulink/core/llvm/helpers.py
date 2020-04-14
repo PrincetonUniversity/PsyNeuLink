@@ -367,9 +367,14 @@ class ConditionGenerator:
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
         elif isinstance(condition, AllHaveRun):
+            # Extract dependencies
+            dependencies = self.composition.nodes
+            if len(condition.args) > 0:
+                dependencies = condition.args
+
             run_cond = ir.IntType(1)(1)
             array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            for node in self.composition.nodes:
+            for node in dependencies:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
