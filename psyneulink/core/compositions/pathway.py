@@ -263,7 +263,7 @@ class Pathway(object):
         `TARGET` node if if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
-    comparator : `Mechanism <Mechanism>` or None
+    learning_objective : `Mechanism <Mechanism>` or None
         `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
@@ -273,7 +273,7 @@ class Pathway(object):
 
           *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
           ..
-          *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`)
+          *LEARNING_OBJECTIVE*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
           ..
           *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
           ..
@@ -398,14 +398,14 @@ class Pathway(object):
             return None
 
     @property
-    def comparator(self):
+    def learning_objective(self):
         try:
             return self.learning_components[LEARNING_OBJECTIVE]
         except:
             if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.__class__.__name__} {self.name} 'comparator' attribute "
+                warnings.warn(f"{self.__class__.__name__} {self.name} 'learning_objective' attribute "
                               f"is None because it is not a learning_pathway.")
             else:
                 assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
-                              f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
+                              f"has PathwayRole.LEARNING assigned but no 'learning_objective' attribute."
             return None
