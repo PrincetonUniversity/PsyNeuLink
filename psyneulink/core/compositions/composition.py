@@ -1861,14 +1861,11 @@ class NodeRole(Enum):
         can be modified by `assigning specified NodeRoles <Composition_Node_Role_Assignment>` to Nodes.  A Composition
         can have many `INPUT` Nodes.
 
-    INTERNAL
-        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
-
     SINGLETON
         A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.
 
-    CYCLE
-        A `Node <Composition_Nodes>` that belongs to a cycle.
+    INTERNAL
+        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
 
     TERMINAL
         A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
@@ -1882,9 +1879,8 @@ class NodeRole(Enum):
         Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
 
-    CONTROLLER_OBJECTIVE
-        A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
-        <Composition.controller>`.
+    CYCLE
+        A `Node <Composition_Nodes>` that belongs to a cycle.
 
     FEEDBACK_SENDER
         A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` the `feedback
@@ -1895,6 +1891,10 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>`  the `feedback
         <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
         `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`.
+
+    CONTROLLER_OBJECTIVE
+        A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
+        <Composition.controller>`.
 
     LEARNING
         A `Node <Composition_Nodes>` that is only executed when learning is enabled.
@@ -1911,10 +1911,10 @@ class NodeRole(Enum):
     """
     ORIGIN = 0
     INPUT = 1
-    TERMINAL = 2
-    OUTPUT = 3
-    INTERNAL = 4
-    SINGLETON = 5
+    SINGLETON = 2
+    INTERNAL = 3
+    TERMINAL = 4
+    OUTPUT = 5
     CYCLE = 6
     FEEDBACK_SENDER = 7
     FEEDBACK_RECEIVER = 8
@@ -2932,6 +2932,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.TERMINAL)
                 if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.SINGLETON)
+                if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                    self._add_node_role(node, NodeRole.INTERNAL)
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -3827,9 +3829,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
 
-            # If the node does not have any roles, it is internal
-            if len(self.get_roles_by_node(node)) == 0:
-                self._add_node_role(node, NodeRole.INTERNAL)
+            # MODIFIED 4/4/20 OLD:
+            # # If the node does not have any roles, it is internal
+            # if len(self.get_roles_by_node(node)) == 0:
+            #     self._add_node_role(node, NodeRole.INTERNAL)
+            # MODIFIED 4/4/20 END
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
