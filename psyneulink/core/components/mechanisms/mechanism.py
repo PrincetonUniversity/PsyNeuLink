@@ -2637,7 +2637,7 @@ class Mechanism_Base(Mechanism):
         builder.store(builder.load(params_in), params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,

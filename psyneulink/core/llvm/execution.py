@@ -343,7 +343,7 @@ class CompExecution(CUDAExecution):
                 self._copy_params_to_pnl(context=context, component=node, params=node_params)
         elif isinstance(component, MappingProjection):
             # we copy all ids back
-            for idx, attribute in enumerate(component._get_param_ids()):
+            for idx, attribute in enumerate(component.llvm_param_ids):
                 to_set = getattr(component.parameters, attribute)
                 parameter_ctype = getattr(params, params._fields_[idx][0])
                 value = _convert_ctype_to_python(parameter_ctype)
