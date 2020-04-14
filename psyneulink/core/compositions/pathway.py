@@ -202,12 +202,13 @@ class PathwayRole(Enum):
     """
     ORIGIN = 0
     INPUT = 1
-    INTERNAL = 2
-    CYCLE = 3
-    TERMINAL = 4
-    OUTPUT = 5
-    CONTROL = 6
-    LEARNING = 7
+    SINGLETON = 2
+    INTERNAL = 3
+    OUTPUT = 4
+    TERMINAL = 5
+    CYCLE = 6
+    CONTROL = 7
+    LEARNING = 8
 
 
 PathwayRegistry= {}
