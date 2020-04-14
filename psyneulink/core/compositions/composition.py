@@ -2959,25 +2959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _determine_pathway_roles(self, context=None):
         from psyneulink.core.compositions.pathway import PathwayRole
         for pway in self.pathways:
-            for node in pway.pathway:
-                if not isinstance(node, (Mechanism, Composition)):
-                    continue
-                roles = self.get_roles_by_node(node)
-                if NodeRole.ORIGIN in roles:
-                    pway.roles.add(PathwayRole.ORIGIN)
-                if NodeRole.INPUT in roles:
-                    pway.roles.add(PathwayRole.INPUT)
-                if NodeRole.TERMINAL in roles:
-                    pway.roles.add(PathwayRole.TERMINAL)
-                if NodeRole.OUTPUT in roles:
-                    pway.roles.add(PathwayRole.OUTPUT)
-                if NodeRole.CYCLE in roles:
-                    pway.roles.add(PathwayRole.CYCLE)
-            if not [role in pway.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
-                pway.roles.add(PathwayRole.INTERNAL)
-            if pway.learning_components:
-                pway.roles.add(PathwayRole.LEARNING)
-        assert True
+            pway._assign_roles(self)
 
     tc.typecheck
     def _create_CIM_ports(self, context=None):
