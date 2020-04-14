@@ -173,28 +173,31 @@ class PathwayRole(Enum):
     ----------
 
     ORIGIN
-        A `Pathway` that includes an `ORIGIN` node of the `Composition`.
+        A `Pathway` that includes an `ORIGIN` `Node <Composition_Nodes>` of the `Composition`.
 
     INPUT
-        A `Pathway` that includes an `INPUT` node of the `Composition`.
+        A `Pathway` that includes an `INPUT` `Node <Composition_Nodes>` of the `Composition`.
+
+    SINGELTON
+        A `Pathway` with a single `Node <Composition_Nodes>` that is a `SINGLETON` of the `Composition`.
 
     INTERNAL
-        A `Pathway` that is not designated as having any other PathwayRole.
-
-    CYCLE
-        A `Pathway` that constitutes a `CYCLE`.
-
-    TERMINAL
-        A `Pathway` that includes a `TERMINAL` node of the `Composition`.
+        A `Pathway` that does not include any `ORIGIN` or `TERMINAL` `Nodes <Composition_Nodes>` of the `Composition`.
 
     OUTPUT
-        A `Pathway` that includes an `OUTPUT` node of the `Composition`.
+        A `Pathway` that includes an `OUTPUT` `Nodes <Composition_Nodes>` of the `Composition`.
+
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` `Nodes <Composition_Nodes>` of the `Composition`.
+
+    CYCLE
+        A `Pathway` that constitutes a `CYCLE` in the `Composition`.
 
     CONTROL
-        A `Pathway` that constitutes a `control pathway <Composition_Control_Pathways>`.
+        A `Pathway` that constitutes a `control pathway <Composition_Control_Pathways>` of the `Composition`.
 
     LEARNING
-        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Pathways>`.
+        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Pathways>` of the `Composition`.
 
     """
     ORIGIN = 0

@@ -1867,17 +1867,17 @@ class NodeRole(Enum):
     INTERNAL
         A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
 
-    TERMINAL
-        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
-        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
-        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes.
-
     OUTPUT
         A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
         the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
         Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
+
+    TERMINAL
+        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
+        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
+        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
+        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes.
 
     CYCLE
         A `Node <Composition_Nodes>` that belongs to a cycle.
@@ -1913,8 +1913,8 @@ class NodeRole(Enum):
     INPUT = 1
     SINGLETON = 2
     INTERNAL = 3
-    TERMINAL = 4
-    OUTPUT = 5
+    OUTPUT = 4
+    TERMINAL = 5
     CYCLE = 6
     FEEDBACK_SENDER = 7
     FEEDBACK_RECEIVER = 8

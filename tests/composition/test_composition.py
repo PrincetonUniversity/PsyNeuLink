@@ -21,12 +21,11 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, RESULT, OVERRIDE, TARGET_MECHANISM, VARIANCE
-from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
