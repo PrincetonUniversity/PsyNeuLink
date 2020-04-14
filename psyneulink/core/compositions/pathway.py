@@ -178,29 +178,33 @@ class PathwayRole(Enum):
     INPUT
         A `Pathway` that includes an `INPUT` node of the `Composition`.
 
-    TERMINAL
-        A `Pathway` that includes a `TERMINAL` node of the `Composition`.
-
-    OUTPUT
-        A `Pathway` that includes an `OUTPUT` node of the `Composition`.
-
     INTERNAL
         A `Pathway` that is not designated as having any other PathwayRole.
 
     CYCLE
         A `Pathway` that constitutes a `CYCLE`.
 
+    TERMINAL
+        A `Pathway` that includes a `TERMINAL` node of the `Composition`.
+
+    OUTPUT
+        A `Pathway` that includes an `OUTPUT` node of the `Composition`.
+
+    CONTROL
+        A `Pathway` that constitutes a `control pathway <Composition_Control_Pathways>`.
+
     LEARNING
-        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Sequence>`.
+        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Pathways>`.
 
     """
     ORIGIN = 0
     INPUT = 1
-    TERMINAL = 2
-    OUTPUT = 3
-    INTERNAL = 4
-    CYCLE = 5
-    LEARNING = 6
+    INTERNAL = 2
+    CYCLE = 3
+    TERMINAL = 4
+    OUTPUT = 5
+    CONTROL = 6
+    LEARNING = 7
 
 
 PathwayRegistry= {}
