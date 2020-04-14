@@ -506,6 +506,8 @@ class TestConnectCompositionsViaCIMS:
                         'mechanism(s) that project to or are projected to from the CIM.')
         warning_fired = False
         comp.add_node(mech)
+        comp.input_CIM.add_ports(OutputPort())
+
         with pytest.warns(UserWarning) as w:
             comp.input_CIM.add_ports(OutputPort())
             # confirm that warning fired and that its text is correct
