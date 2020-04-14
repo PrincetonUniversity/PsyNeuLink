@@ -154,10 +154,11 @@ try:
     import torch
     from torch import nn
     import torch.optim as optim
-    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
     torch_available = True
 except ImportError:
     torch_available = False
+else:
+    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 logger = logging.getLogger(__name__)
 
