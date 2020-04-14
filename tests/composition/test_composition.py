@@ -4722,7 +4722,12 @@ class TestInputSpecifications:
         assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
                                                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
                                                [np.array([8.])], [np.array([9.])]]
-    def test_generator_as_input(self):
+
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      ])
+    def test_generator_as_input(self, mode):
         c = pnl.Composition()
 
         m1 = pnl.TransferMechanism()
@@ -4738,12 +4743,16 @@ class TestInputSpecifications:
 
         t_g = test_generator()
 
-        c.run(inputs=t_g)
+        c.run(inputs=t_g, bin_execute=mode)
         assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
                                                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
                                                [np.array([8.])], [np.array([9.])]]
 
-    def test_generator_as_input_with_num_trials(self):
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      ])
+    def test_generator_as_input_with_num_trials(self, mode):
         c = pnl.Composition()
 
         m1 = pnl.TransferMechanism()
@@ -4759,8 +4768,7 @@ class TestInputSpecifications:
 
         t_g = test_generator()
 
-        c.run(inputs=t_g,
-              num_trials=1)
+        c.run(inputs=t_g, num_trials=1, bin_execute=mode)
         assert c.parameters.results.get(c) == [[np.array([0.])]]
 
     def test_error_on_malformed_generator(self):
