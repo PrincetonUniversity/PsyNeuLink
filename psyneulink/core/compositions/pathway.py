@@ -99,9 +99,9 @@ A Pathway has the following primary attributes:
   or None if it is a ``template <Pathway_Template>` (i.e., was constructed on its own).
 
 * `roles <Pathway.roles>` and `Node <Composition_Nodes>` attributes - if the Pathway was created by a Composition,
-  the `roles <Pathway.roles>` attribute `this lists the `PathwayRoles` assigned to it by the Compositon that
-  correspond to the `NodeRoles <NodeRole`> of its Components, and the `Nodes <Composition_Nodes>` with each of those
-  `NodeRoles <NodeRole>` is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
+  the `roles <Pathway.roles>` attribute `this lists the `PathwayRoles <PathwayRole>` assigned to it by the Compositon
+  that correspond to the `NodeRoles <NodeRole`> of its Components, and the `Nodes <Composition_Nodes>` with each of
+  those `NodeRoles <NodeRole>` is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
   to a Composition (i.e., it is a `template <Pathway_Template>`), then these attributes return None.
 
 * `learning_function <Pathway.learning_function>` - the LearningFunction assigned to the Pathway if it is a

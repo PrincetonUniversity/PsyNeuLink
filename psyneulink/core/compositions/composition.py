@@ -379,15 +379,15 @@ COMMENT
 ~~~~~~~~~~
 
 A `Pathway` is an alternating sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a Composition,
-that is linear — that is, that has no branches.  Although a Composition is not required to have any Pathways, these are
-useful for constructing Compositions, and are required for implementing `learning <Composition_Learning>` in a
+that is linear — that is, that has no branches.  Although a Composition is not required to have any Pathways, these
+are useful for constructing Compositions, and are required for implementing `learning <Composition_Learning>` in a
 Composition.  Pathways can be continguous, overlapping, intersecting, or disjoint. Each Pathway has a name (that can
 be assigned when it is constructed) and a set of attributes, including a `pathway <Pathway.pathway>` attribute that
-lists the Nodes and Projections in the Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles
-<PathwayRole>` assigned to it (based on the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular
-types of nodes (e.g., `INPUT` and `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles
-<NodeRole>`.  If a Pathway does not have a particular type of `Node <Composition_Nodes>`, then its attribute returns
-None. There are two types of Pathways, `processing Pathways<Composition_Processing_Pathways>` and `learning Pathways
+lists the Nodes and Projections in the Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRole`
+assigned to it (based on the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular types of
+nodes (e.g., `INPUT` and `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`.
+If a Pathway does not have a particular type of `Node <Composition_Nodes>`, then its attribute returns None. There
+are two types of Pathways, `processing Pathways<Composition_Processing_Pathways>` and `learning Pathways
 <Composition_Learning_Pathways>`, each of which is described below.  All of the Pathways in a Composition are listed
 in its `pathways <Composition.pathways>` attribute.
 
