@@ -1105,7 +1105,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
                  noise=0.0,
                  clip=None,
-                 termination_measure=Distance(metric=MAX_ABS_DIFF),
+                 termination_measure=None,
                  termination_threshold:tc.optional(tc.any(int, float))=None,
                  termination_comparison_op:tc.any(str, is_comparison_operator)=LESS_THAN_OR_EQUAL,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
@@ -1121,6 +1121,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_ports is None or output_ports == RESULTS:
             output_ports = [RESULTS]
+
+        if termination_measure is None:
+            Distance(metric=MAX_ABS_DIFF)
 
         initial_value = self._parse_arg_initial_value(initial_value)
 
@@ -1540,6 +1543,74 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
+
+        # preserve the old prev value
+        prev_val = builder.load(prev_val_ptr)
+        # Update previous value to make sure that repeated executions work
+        builder.store(builder.load(current), prev_val_ptr)
+
+        if self.parameters.termination_threshold.get(None) is None:
+            # Threshold is not defined, return the old value of finished flag
+            is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                          "is_finished_flag")
+            is_finished_flag = builder.load(is_finished_ptr)
+            return builder.fcmp_ordered("!=", is_finished_flag,
+                                              is_finished_flag.type(0))
+
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                    "termination_threshold")
+        threshold = builder.load(threshold_ptr)
+        cmp_val_ptr = builder.alloca(threshold.type)
+        builder.store(threshold, cmp_val_ptr)
+        if self.termination_measure is max:
+            assert self._termination_measure_num_items_expected == 1
+            # Get inside of the structure
+            val = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            first_val = builder.load(builder.gep(val, [ctx.int32_ty(0), ctx.int32_ty(0)]))
+            builder.store(first_val, cmp_val_ptr)
+            with pnlvm.helpers.array_ptr_loop(builder, val, "max_loop") as (b, idx):
+                test_val = b.load(b.gep(val, [ctx.int32_ty(0), idx]))
+                max_val = b.load(cmp_val_ptr)
+                cond = b.fcmp_ordered(">=", test_val, max_val)
+                max_val = b.select(cond, test_val, max_val)
+                b.store(max_val, cmp_val_ptr)
+        elif isinstance(self.termination_measure, Function):
+            expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
+            got = np.empty_like(self.termination_measure.defaults.variable)
+            if expected.shape != got.shape:
+                warnings.warn("Shape mismatch: Termination measure input: {} should be {}".format(self.termination_measure.defaults.variable, expected.shape))
+                # FIXME: HACK the distance function is not initialized
+                self.termination_measure.defaults.variable = expected
+
+            func = ctx.import_llvm_function(self.termination_measure)
+            func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
+            func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
+            func_in = builder.alloca(func.args[2].type.pointee)
+            # Populate input
+            func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+            current_ptr = builder.gep(current, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(builder.load(current_ptr), func_in_current_ptr)
+
+            func_in_prev_ptr = builder.gep(func_in, [ctx.int32_ty(0),
+                                                     ctx.int32_ty(1)])
+            builder.store(builder.extract_value(prev_val, 0), func_in_prev_ptr)
+
+            builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
+        elif isinstance(self.termination_measure, TimeScale):
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
+            pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
+            builder.store(ptr_val, cmp_val_ptr)
+        else:
+            assert False, "Not Supported: {}".format(self.termination_measure)
+
+        cmp_val = builder.load(cmp_val_ptr)
+        cmp_str = self.parameters.termination_comparison_op.get(None)
+        return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
+
     def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
         ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
@@ -1593,7 +1664,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state, arg_out)
+                                                           state, mf_out)
 
         return builder, is_finished_cond
 

@@ -40,7 +40,7 @@ cache:
 build: off
 
 test_script:
-  - pytest --junit-xml=tests_out.xml -n auto
+  - pytest --junit-xml=tests_out.xml -n auto --verbosity=0
 
 on_finish:
   # Upload tests to appveyor overview

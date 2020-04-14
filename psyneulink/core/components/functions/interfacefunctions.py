@@ -17,6 +17,7 @@
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.globals.context import ContextFlags
@@ -186,9 +187,12 @@ class InterfacePortMap(InterfaceFunction):
 
     def _get_input_struct_type(self, ctx):
         #FIXME: Workaround for CompositionInterfaceMechanism that
-        #       does not update its defaults shape
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+        #       does not update its default shape
+        from psyneulink import CompositionInterfaceMechanism
         if hasattr(self.owner, 'owner') and isinstance(self.owner.owner, CompositionInterfaceMechanism):
+            warnings.warn("Shape mismatch: {} input: {} vs. ({}, MV:{})".format(
+                self, self.defaults.variable, self.owner._variable_spec,
+                self.owner.owner.function.defaults.value))
             return ctx.get_output_struct_type(self.owner.owner.function)
         return ctx.get_input_struct_type(super())
 
