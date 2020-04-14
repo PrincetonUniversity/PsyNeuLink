@@ -1893,7 +1893,7 @@ class NodeRole(Enum):
         <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
         `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`.
 
-    CONTROLLER_OBJECTIVE_MECHANISM
+    CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
         <Composition.controller>`.
 
@@ -1919,7 +1919,7 @@ class NodeRole(Enum):
     CYCLE = 6
     FEEDBACK_SENDER = 7
     FEEDBACK_RECEIVER = 8
-    CONTROLLER_OBJECTIVE_MECHANISM = 9
+    CONTROLLER_OBJECTIVE = 9
     LEARNING = 10
     TARGET = 11
     LEARNING_OBJECTIVE = 12
@@ -2811,7 +2811,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and self.controller.objective_mechanism
                 and not self.controller.initialization_status == ContextFlags.DEFERRED_INIT):
             objective_mechanism = self.controller.objective_mechanism
-            self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE_MECHANISM)
+            self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
