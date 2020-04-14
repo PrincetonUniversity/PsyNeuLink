@@ -9055,7 +9055,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def default_external_input_values(self):
         """Returns the default values of all external InputPorts that belong to the
-        Input CompositionInterfaceMechanism"""
+        Input CompositionInterfaceMechanism
+        """
+
         try:
             return [input_port.defaults.value for input_port in self.input_CIM.input_ports if
                     not input_port.internal_only]
