@@ -36,8 +36,8 @@ __all__ = [
     'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION', 'CONTEXT',
     'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PATHWAY', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS',
     'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
-    'CONTROLLER', 'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME',
-    'CUSTOM_FUNCTION', 'CYCLE',
+    'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
+    'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
@@ -63,9 +63,10 @@ __all__ = [
     'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT',
     'INTERNAL', 'INTERNAL_ONLY',
     'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
-    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING', 'LEARNED_PARAM',
-    'LEARNED_PROJECTIONS', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PATHWAY', 'LEARNING_PROJECTION',
-    'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
+    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNED_PARAM', 'LEARNED_PROJECTIONS',
+    'LEARNING', 'LEARNING_FUNCTION_TYPE', 'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM', 'LEARNING_PATHWAY',
+    'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS',
+    'LEARNING_SIGNALS',
     'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
     'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
@@ -120,97 +121,6 @@ __all__ = [
 # **********************************************************************************************************************
 # ******************************************  KEYWORD CLASSES **********************************************************
 # **********************************************************************************************************************
-
-# MODIFIED 4/4/20 OLD:
-# class NodeRoles:
-#     """
-#     Attributes
-#     ----------
-#
-#     ORIGIN
-#         A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Composition`,
-#         and that receives the input to the Composition when it is :ref:`executed or run <Run>`.
-#         A Composition may have more than one `ORIGIN` Mechanism.
-#         COMMENT:
-#         ADD VERSION FOR COMPOSITION
-#         For additional details about `ORIGIN` Mechanisms in Processes, see
-#         `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
-#         and for Systems see `System Mechanisms <System_Mechanisms>` and
-#         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-#         COMMENT
-#
-#     INTERNAL
-#         A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other NodeRole.
-#
-#     CYCLE
-#         A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-#         <Projection>` that closes a recurrent loop in a `Composition`.  If it is an `ORIGIN` Mechanism, then
-#         it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
-#
-#     INITIALIZE_CYCLE
-#         A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-#         `Projection <Projection>` that closes a loop in a `Composition`, and that is not an `ORIGIN` Mechanism
-#         (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-#         assigned to such Mechanisms, that will be used to initialize the Composition when it is first run.  For
-#         additional information, see `Run <Run_Initial_Values>`.
-#         COMMENT:
-#         ADD VERSION FOR COMPOSITION
-#         `System Mechanisms <System_Mechanisms>` and
-#         `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-#         COMMENT
-#
-#     TERMINAL
-#         A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Composition`.
-#         A Composition may have more than one `TERMINAL` Mechanism .
-#         COMMENT:
-#         ADD VERSION FOR COMPOSITION
-#         Note that the `TERMINAL`
-#         Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
-#         as it may send projections to other processes in the System (see `example
-#         <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
-#         its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
-#         additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
-#         `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
-#         COMMENT
-#
-#     SINGLETON
-#         A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Composition`.
-#         It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
-#
-#     LEARNING
-#         A `LearningMechanism <LearningMechanism>` in a `Composition`.
-#
-#     TARGET
-#         A `ProcessingMechanism` that receives the target for a learning sequence.
-#         COMMENT:
-#         ADD VERSION FOR COMPOSITION
-#         A `ComparatorMechanism` of a `Composition` configured for learning that receives a target value
-#         from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-#         `run <ComparatorMechanism.ComparatorMechanism.execute>` method.
-#         It is usually (but not necessarily)
-#         associated with the `TERMINAL` Mechanism of the Composition. The `TARGET` Mechanisms of a Process or
-#         System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
-#         :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
-#         `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
-#         COMMENT
-#
-#     LEARNING_OBJECTIVE
-#         An `ObjectiveMechanism` in a `Composition` that is used to compute the error for a `learning Pathway
-#         <Composition_Learning_Pathways>`;  typically a `ComparatorMechanism`.
-#
-#     """
-#     def __init__(self):
-#         self.ORIGIN = ORIGIN
-#         self.INTERNAL = INTERNAL
-#         self.CYCLE = CYCLE
-#         self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
-#         self.TERMINAL = TERMINAL
-#         self.SINGLETON = SINGLETON
-#         self.LEARNING = LEARNING
-#         self.TARGET = TARGET
-#         self.LEARNING_OBJECTIVE = LEARNING_OBJECTIVE
-# MODIFIED 4/4/20 END
-
 
 class MatrixKeywords:
     """
@@ -797,6 +707,7 @@ LEARNING = 'LEARNING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 ERROR = 'ERROR'
+CONTROLLER_OBJECTIVE = 'CONTROLLER_OBJECTIVE'
 LEARNING_OBJECTIVE = 'LEARNING_OBJECTIVE'
 
 RESULTS = 'RESULTS'

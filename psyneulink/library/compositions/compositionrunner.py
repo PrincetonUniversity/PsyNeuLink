@@ -14,7 +14,7 @@ import inspect
 
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, COMPARATOR_MECHANISM, LEARNING_MECHANISM, TRAINING_SET
+from psyneulink.core.globals.keywords import TARGET_MECHANISM, LEARNING_MECHANISM, LEARNING_OBJECTIVE, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
 
@@ -96,7 +96,7 @@ class CompositionRunner():
             return self._composition._get_total_loss(num_trials, context)
         total_loss = 0
         for terminal_sequence in self._composition._terminal_backprop_sequences.values():
-            comparator = terminal_sequence[COMPARATOR_MECHANISM]
+            comparator = terminal_sequence[LEARNING_OBJECTIVE, ]
             total_loss += comparator.value[0][0]
 
         return total_loss

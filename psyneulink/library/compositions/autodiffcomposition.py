@@ -128,27 +128,36 @@ Class Reference
 
 """
 
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SOFT_CLAMP
+from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
+import copy
 import numpy as np
+import ctypes
 import warnings
+from collections.abc import Iterable
+from toposort import toposort
+from inspect import isgenerator
 
 import logging
 try:
     import torch
     from torch import nn
     import torch.optim as optim
-    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
     torch_available = True
 except ImportError:
     torch_available = False
+else:
+    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 logger = logging.getLogger(__name__)
 

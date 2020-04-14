@@ -47,7 +47,7 @@ class TestReinforcement:
             learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
             learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
             target_mechanism = learning_pathway.target
-            comparator_mechanism = learning_pathway.comparator
+            comparator_mechanism = learning_pathway.learning_objective
 
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
@@ -84,7 +84,7 @@ class TestReinforcement:
         pathway = [sample_mechanism, sample_to_action_selection, action_selection]
         learning_pathway = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
-        comparator_mechanism = learning_pathway.comparator
+        comparator_mechanism = learning_pathway.learning_objective
         comparator_mechanism.log.set_log_conditions(pnl.VALUE)
         target_mechanism = learning_pathway.target
 
@@ -151,7 +151,7 @@ class TestReinforcement:
             learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
             learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
             target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
-            comparator_mechanism = learning_pathway.learning_components[pnl.COMPARATOR_MECHANISM]
+            comparator_mechanism = learning_pathway.learning_components[pnl.LEARNING_OBJECTIVE]
 
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
@@ -205,7 +205,7 @@ class TestReinforcement:
         pathway = [sample_mechanism, sample_to_action_selection, action_selection]
         learning_pathway = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
-        comparator_mechanism = learning_pathway.comparator
+        comparator_mechanism = learning_pathway.learning_objective
         comparator_mechanism.log.set_log_conditions(pnl.VALUE)
         target_mechanism = learning_pathway.target
 

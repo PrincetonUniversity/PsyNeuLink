@@ -58,7 +58,7 @@ class TestACConstructor:
         assert comp.input_CIM.reportOutputPref == False
         assert comp.output_CIM.reportOutputPref == False
         # assert comp.target_CIM.reportOutputPref == False
-    
+
     # FIXME: This test for patience doesn't actually test for correctness
     # def test_patience(self):
         # comp = AutodiffComposition()
@@ -134,7 +134,7 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        
+
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
              [0, 1],
@@ -1099,7 +1099,7 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        
+
         mnet.learn(
                 inputs=input_set,
                 minibatch_size=1,
@@ -2516,10 +2516,10 @@ class TestNested:
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(xor_autodiff)
-        
+
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
-        
+
         learning_context = Context()
         result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
         result1 = np.array(result1).flatten()

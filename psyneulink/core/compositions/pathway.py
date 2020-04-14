@@ -127,13 +127,16 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
-    ANY, COMPARATOR_MECHANISM, CONTEXT, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 
 
 __all__ = [
     'Pathway', 'PathwayRegistry', 'PathwayRole'
 ]
+
+
+PathwayRegistry= {}
 
 
 def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
@@ -165,7 +168,6 @@ def _is_node_spec(value):
     return _is_pathway_entry_spec(value, NODE)
 
 
-
 class PathwayRole(Enum):
     """
 
@@ -185,10 +187,10 @@ class PathwayRole(Enum):
         A `Pathway` that does not include any `ORIGIN` or `TERMINAL` `Nodes <Composition_Nodes>` of the `Composition`.
 
     OUTPUT
-        A `Pathway` that includes an `OUTPUT` `Nodes <Composition_Nodes>` of the `Composition`.
+        A `Pathway` that includes an `OUTPUT` `Node <Composition_Nodes>` of the `Composition`.
 
     TERMINAL
-        A `Pathway` that includes a `TERMINAL` `Nodes <Composition_Nodes>` of the `Composition`.
+        A `Pathway` that includes a `TERMINAL` `Node <Composition_Nodes>` of the `Composition`.
 
     CYCLE
         A `Pathway` that constitutes a `CYCLE` in the `Composition`.
@@ -209,9 +211,6 @@ class PathwayRole(Enum):
     CYCLE = 6
     CONTROL = 7
     LEARNING = 8
-
-
-PathwayRegistry= {}
 
 
 class Pathway(object):
@@ -264,7 +263,7 @@ class Pathway(object):
         `TARGET` node if if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
-    comparator : `Mechanism <Mechanism>` or None
+    learning_objective : `Mechanism <Mechanism>` or None
         `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
@@ -274,7 +273,7 @@ class Pathway(object):
 
           *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
           ..
-          *COMPARATOR_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`)
+          *LEARNING_OBJECTIVE*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
           ..
           *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
           ..
@@ -338,6 +337,33 @@ class Pathway(object):
         self.pathway = pathway
         self.roles = set()
 
+    def _assign_roles(self, composition):
+        """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
+        <Composition_Nodes>` by the **composition** to which it belongs.
+        """
+        assert composition, f'_assign_roles() cannot be called for {self.name} ' \
+                            f'because it has not been assigned to a {Composition.__class__.__name__}.'
+        for node in self.pathway:
+            if not isinstance(node, (Mechanism, Composition)):
+                continue
+            roles = composition.get_roles_by_node(node)
+            if NodeRole.ORIGIN in roles:
+                self.roles.add(PathwayRole.ORIGIN)
+            if NodeRole.INPUT in roles:
+                self.roles.add(PathwayRole.INPUT)
+            if NodeRole.SINGLETON in roles and len(self.pathway)==1:
+                self.roles.add(PathwayRole.SINGLETON)
+            if NodeRole.OUTPUT in roles:
+                self.roles.add(PathwayRole.OUTPUT)
+            if NodeRole.TERMINAL in roles:
+                self.roles.add(PathwayRole.TERMINAL)
+            if NodeRole.CYCLE in roles:
+                self.roles.add(PathwayRole.CYCLE)
+        if not [role in self.roles for role in {PathwayRole.ORIGIN, PathwayRole.TERMINAL}]:
+            self.roles.add(PathwayRole.INTERNAL)
+        if self.learning_components:
+            self.roles.add(PathwayRole.LEARNING)
+
     @property
     def input(self):
         if PathwayRole.INPUT in self.roles:
@@ -372,14 +398,14 @@ class Pathway(object):
             return None
 
     @property
-    def comparator(self):
+    def learning_objective(self):
         try:
-            return self.learning_components[COMPARATOR_MECHANISM]
+            return self.learning_components[LEARNING_OBJECTIVE]
         except:
             if PathwayRole.LEARNING not in self.roles:
-                warnings.warn(f"{self.__class__.__name__} {self.name} 'comparator' attribute "
+                warnings.warn(f"{self.__class__.__name__} {self.name} 'learning_objective' attribute "
                               f"is None because it is not a learning_pathway.")
             else:
                 assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
-                              f"has PathwayRole.LEARNING assigned but no 'comparator' attribute."
+                              f"has PathwayRole.LEARNING assigned but no 'learning_objective' attribute."
             return None
