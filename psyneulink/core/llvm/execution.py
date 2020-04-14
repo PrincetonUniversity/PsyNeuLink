@@ -14,6 +14,9 @@ import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
+import sys
+
+
 from psyneulink.core import llvm as pnlvm
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
@@ -542,9 +545,10 @@ class CompExecution(CUDAExecution):
         if isgenerator(inputs):
             assert len(self._execution_contexts) == 1
             # Extract input for each trial
-            run_inputs = (([x] for x in self._composition._build_variable_for_input_CIM(inp)) for inp in inputs)
+            run_inputs = ((np.atleast_2d(x) for x in self._composition._build_variable_for_input_CIM({k:np.atleast_1d(v) for k,v in inp.items()})) for inp in inputs)
             run_inputs = _tupleize(run_inputs)
-            runs = num_input_sets = len(run_inputs)
+            num_input_sets = len(run_inputs)
+            runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs
             c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
             inputs = c_input(*run_inputs)
         else:
