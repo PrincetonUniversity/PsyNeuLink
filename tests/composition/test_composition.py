@@ -3450,7 +3450,7 @@ class TestSchedulerConditions:
                              (pnl.EveryNCalls, [[.25, .25]]),
                              (pnl.WhenFinished, [[1.0, 1.0]]),
                              (pnl.All, [[1.0, 1.0]]),
-                            #  (pnl.AllHaveRun, [[.05, .05]]), #FIXME: Infinite hang
+                             (pnl.AllHaveRun, [[.05, .05]]),
                              (pnl.Always, [[0.05, 0.05]]),
                             #  (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
                              (pnl.AtTrial,[[0.05, 0.05]]),
