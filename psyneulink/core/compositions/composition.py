@@ -8069,6 +8069,57 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._initialize_from_context(context, base_context, override=False)
                 context.composition = self
 
+        # Run compiled execution (if compiled execution was requested
+        # NOTE: This should be as high up as possible,
+        # but still after the context has been initialized
+        if bin_execute:
+            is_simulation = (context is not None and
+                             ContextFlags.SIMULATION in context.execution_phase)
+            # Try running in Exec mode first
+            if (bin_execute is True or str(bin_execute).endswith('Exec')):
+                # There's no mode to execute simulations.
+                # Simulations are run as part of the controller node wrapper.
+                assert not is_simulation
+                try:
+                    if bin_execute is True or bin_execute.startswith('LLVM'):
+                        llvm_inputs = self._adjust_execution_stimuli(inputs)
+                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                        _comp_ex.execute(llvm_inputs)
+                        return _comp_ex.extract_node_output(self.output_CIM)
+                    elif bin_execute.startswith('PTX'):
+                        llvm_inputs = self._adjust_execution_stimuli(inputs)
+                        self.__ptx_initialize(context)
+                        __execution = self._compilation_data.ptx_execution._get(context)
+                        __execution.cuda_execute(llvm_inputs)
+                        return __execution.extract_node_output(self.output_CIM)
+                except Exception as e:
+                    if bin_execute is not True:
+                        raise e from None
+
+                    warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
+
+            # Exec failed for some reason, we can still try node level bin_execute
+            # Filter out nested compositions. They are not executed in this mode
+            # Filter out controller if running simulation.
+            mechanisms = (n for n in self._all_nodes
+                          if isinstance(n, Mechanism) and
+                             (n is not self.controller or not is_simulation))
+
+            try:
+                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                # Compile all mechanism wrappers
+                for m in mechanisms:
+                    _comp_ex._set_bin_node(m)
+
+                bin_execute = True
+            except Exception as e:
+                if bin_execute is not True:
+                    raise e from None
+
+                warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
+                bin_execute = False
+
+
         # Generate first frame of animation without any active_items
         if self._animate is not False:
             # If context fails, the scheduler has no data for it yet.
@@ -8099,13 +8150,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE INPUT CIM ********************************************************************************************
 
-        # FIX: 6/12/19 MOVE TO EXECUTE BELOW? (i.e., with bin_execute / _comp_ex.execute_node(self.input_CIM, inputs))
+        # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
         # Handles Input CIM and Parameter CIM execution.
         #
         # FIX: 8/21/19
         # If self is a nested composition, its input CIM will obtain its value in one of two ways,
         # depending on whether or not it is being executed within a simulation.
-        # If it is a simulation, then we need to use the _assign_values_to_input_CIM method, which parses the inputs
+        # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the inputs
         # argument of the execute method into a suitable shape for the input ports of the input_CIM.
         # If it is not a simulation, we can simply execute the input CIM.
         #
@@ -8114,20 +8165,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # method to properly validate input for those nodes.
         # -DS
         context.add_flag(ContextFlags.PROCESSING)
+        if inputs is not None:
+            inputs = self._adjust_execution_stimuli(inputs)
+            build_CIM_input = self._build_variable_for_input_CIM(inputs)
+
         if nested:
             # check that inputs are specified - autodiff does not in some cases
             if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
-                inputs = self._adjust_execution_stimuli(inputs)
-                self._assign_values_to_input_CIM(inputs, context=context)
+                self.input_CIM.execute(build_CIM_input, context=context)
             else:
+                assert inputs is None, "Ignoring composition input!"
                 self.input_CIM.execute(context=context)
             self.parameter_CIM.execute(context=context)
         else:
-            inputs = self._adjust_execution_stimuli(inputs)
-            self._assign_values_to_input_CIM(inputs, context=context)
-            for comp in [node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)]:
+            self.input_CIM.execute(build_CIM_input, context=context)
+
+            # Update nested compositions
+            for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
                 for port in comp.input_ports:
                     port._update(context)
+
+        if bin_execute:
+            _comp_ex.execute_node(self.input_CIM, inputs)
+        #              WHY DO BOTH?  WHY NOT if-else?
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
@@ -8154,53 +8214,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.PROCESSING)
 
         # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
-
-        # Compile controller execution (if compilation is specified) --------------------------------
-
-        if bin_execute:
-            is_simulation = (context is not None and
-                             ContextFlags.SIMULATION in context.execution_phase)
-            # Try running in Exec mode first
-            if (bin_execute is True or str(bin_execute).endswith('Exec')):
-                # There's no mode to execute simulations.
-                # Simulations are run as part of the controller node wrapper.
-                assert not is_simulation
-                try:
-                    if bin_execute is True or bin_execute.startswith('LLVM'):
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        _comp_ex.execute(inputs)
-                        return _comp_ex.extract_node_output(self.output_CIM)
-                    elif bin_execute.startswith('PTX'):
-                        self.__ptx_initialize(context)
-                        __execution = self._compilation_data.ptx_execution._get(context)
-                        __execution.cuda_execute(inputs)
-                        return __execution.extract_node_output(self.output_CIM)
-                except Exception as e:
-                    if bin_execute is not True:
-                        raise e from None
-
-                    warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
-
-            # Exec failed for some reason, we can still try node level bin_execute
-            # Filter out nested compositions. They are not executed in this mode
-            # Filter out controller if running simulation.
-            mechanisms = (n for n in self._all_nodes
-                          if isinstance(n, Mechanism) and
-                             (n is not self.controller or not is_simulation))
-
-            try:
-                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                # Compile all mechanism wrappers
-                for m in mechanisms:
-                    _comp_ex._set_bin_node(m)
-
-                bin_execute = True
-            except Exception as e:
-                if bin_execute is not True:
-                    raise e from None
-
-                warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                bin_execute = False
 
         # Execute controller --------------------------------------------------------
 
@@ -8237,10 +8250,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
         context.add_flag(ContextFlags.PROCESSING)
-
-        if bin_execute:
-            _comp_ex.execute_node(self.input_CIM, inputs)
-        #              WHY DO BOTH?  WHY NOT if-else?
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, context=context)
@@ -8414,8 +8423,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         is_simulating = False
 
-
-                    ret = node.execute(context=context)
+                    # Run node-level compiled nested composition
+                    # only if there are no control projections
+                    nested_bin_execute = bin_execute \
+                        if len(node.parameter_CIM.afferents) == 0 else False
+                    ret = node.execute(context=context,
+                                       bin_execute=nested_bin_execute)
 
                     if is_simulating:
                         context.add_flag(ContextFlags.SIMULATION)
@@ -8722,7 +8735,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        .format(stimulus, node.name, input_must_match))
         return adjusted_stimuli
 
-    def _assign_values_to_input_CIM(self, inputs, context=None):
+    def _build_variable_for_input_CIM(self, inputs):
         """
             Assign values from input dictionary to the InputPorts of the Input CIM, then execute the Input CIM
 
@@ -8752,7 +8765,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             build_CIM_input.append(value)
 
-        self.input_CIM.execute(build_CIM_input, context=context)
+        return build_CIM_input
 
     def _assign_execution_ids(self, context=None):
         """
