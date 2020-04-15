@@ -1562,6 +1562,12 @@ class TransferMechanism(ProcessingMechanism_Base):
             return builder.fcmp_ordered("!=", is_finished_flag,
                                               is_finished_flag.type(0))
 
+        # If modulated, termination threshold is single element array
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(threshold_ptr.type.pointee) == 1
+            threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
         if self.termination_measure is max:

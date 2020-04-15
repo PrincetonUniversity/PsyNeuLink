@@ -2644,12 +2644,13 @@ class Mechanism_Base(Mechanism):
                                               param_ports[i].name)
             return b, ptr
 
-        def _fill_input(b, s_input, i):
+        def _fill_input(b, p_input, i):
             param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
                                                        param_ports[i].name)
-            # get rid of extra dimension
-            raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(param_in_ptr), raw_ps_input)
+            # Parameter port inputs are {original parameter, [modulations]},
+            # fill in the first one
+            p_input = b.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(param_in_ptr), p_input)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports,
@@ -2746,12 +2747,16 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" not in tags
+
+        params, builder = self._gen_llvm_param_ports_for_obj(
+                self, params, ctx, builder, params, state, arg_in)
+
         is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "is_finished_flag")
+                                                           "is_finished_flag")
         is_finished_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "num_executions_before_finished")
+                                                            "num_executions_before_finished")
         is_finished_max_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                "max_executions_before_finished")
+                                                          "max_executions_before_finished")
 
         # Reset the flag and counter
         # FIXME: Use int for flag
@@ -2780,7 +2785,7 @@ class Mechanism_Base(Mechanism):
 
         # Call Internal Function
         internal_f = internal_builder.function
-        is_finished_cond = builder.call(internal_f, builder.function.args)
+        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, *builder.function.args[4:]])
 
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count

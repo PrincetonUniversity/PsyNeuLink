@@ -1199,7 +1199,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
     def _get_compilation_params(self):
-        # FIXME: MAGIC LIST, Use stateful tag for this
+        # FIXME: MAGIC LIST, detect used parameters automatically
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions", "variable",
@@ -1209,14 +1209,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "search_space",
-                     "activation_derivative_fct", "costs",
-                     # composition specific FIXME: Move to inherited blacklist on comp.
-                     "input_specification",
+                     "activation_derivative_fct", "input_specification",
+                     # Shape mismatch
+                     "costs", "auto", "hetero",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
-        # mechanism functions are handled separately
+        # Mechanism's need few extra entires:
+        # * function -- might overload _get_{param,state}_struct_type
+        # * matrix -- is never used directly, and is flatened below
+        # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
-            blacklist.add("function")
+            blacklist.update(["function", "matrix", "integration_rate"])
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
@@ -1249,6 +1252,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 is_modulated = is_modulated or p.name in self.owner.parameter_ports
             except AttributeError:
                 pass
+            if not is_modulated:
+                try:
+                    is_modulated = is_modulated or p.name in self.parameter_ports
+                except AttributeError:
+                    pass
             if not is_modulated:
                 try:
                     modulated_params = (

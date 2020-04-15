@@ -945,6 +945,28 @@ class TestControlMechanisms:
         assert np.allclose(val[0], [5])
         assert np.allclose(val[1], [0.7573055560600637, 0.4500512583901123])
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_control_of_mech_port(self, mode):
+        mech = pnl.TransferMechanism(termination_threshold=0.1,
+                                     execute_until_finished=True,
+                                     integrator_mode=True)
+        control_mech = pnl.ControlMechanism(
+                control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
+                                                  modulates=(pnl.TERMINATION_THRESHOLD, mech)))
+        comp = pnl.Composition()
+        comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
+        inputs = {mech:[[0.5]], control_mech:[0.2]}
+        results = comp.run(inputs=inputs, num_trials=1, bin_execute=mode)
+        assert np.allclose(comp.results, [[[0.375]]])
+
 class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
