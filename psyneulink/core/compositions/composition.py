@@ -1898,7 +1898,8 @@ class NodeRole(Enum):
         <Composition.controller>`.
 
     LEARNING
-        A `Node <Composition_Nodes>` that is only executed when learning is enabled.
+        A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
+        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`.
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
@@ -1907,7 +1908,7 @@ class NodeRole(Enum):
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
-        <Composition_Learning_Pathways>`; typically a `ComparatorMechanism` (see `COMPARATOR_MECHANISM`).
+        <Composition_Learning_Pathways>`; usually a `ComparatorMechanism` (see `COMPARATOR_MECHANISM`).
 
     """
     ORIGIN = 0
