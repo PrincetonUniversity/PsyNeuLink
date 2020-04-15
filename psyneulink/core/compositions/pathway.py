@@ -64,7 +64,7 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-Pathway, a `Composition`, or any of the Composition's methods used to add a Pathway to it.
+Pathway or a `Composition`, or any of a Composition's methods used to add a Pathway:
 
     * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
     ..
@@ -78,6 +78,14 @@ Pathway, a `Composition`, or any of the Composition's methods used to add a Path
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
       <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
       described above, and the 2nd item be a subclass of `LearningFunction`.
+
+In addition, where multiple Pathways can be specified (e.g., the **pathways** argument of the constructor for a
+`Composition` or its `add_pathways <Composition.add_pathways>` method, the following can used to specify more than
+one Pathway:
+
+     * XXX
+     ..
+     * XXX
 
 Structure
 ---------
@@ -127,7 +135,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
-    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 
 
