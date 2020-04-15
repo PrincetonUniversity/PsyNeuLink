@@ -21,7 +21,10 @@ env:
     - COVERALLS_PARALLEL=true
 
 # Cache downloaded and built python packages
-cache: pip
+# This needs to be explicit, 'cache: pip' only works with 'language: python'
+cache:
+  directories:
+    - $HOME/.cache/pip
 
 addons:
   apt:
