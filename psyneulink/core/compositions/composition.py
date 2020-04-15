@@ -2088,13 +2088,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         contained in `learning_components <Composition.learning_components>` attribute.
     COMMENT
 
-    results : 3d array
-        stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
-        every `trial` executed in a call to `run <Composition.run>`.  Each item in the outermost
-        dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
-        `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
+    results : list[list[list]]
+        stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the Composition for every `trial` executed in a call to `run <Composition.run>`.  Each item in the
+        outermos list is a list of values for a given trial; each item within a trial corresponds to the
+        `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
 
-    simulation_results : 3d array
+    simulation_results : list[list[list]]
         stores the `results <Composition.results>` for executions of the Composition when it is executed using
         its `evaluate <Composition.evaluate>` method.
 
@@ -4271,6 +4271,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_pathways(self, pathways, context=None):
         """Add pathways to the Composition.
 
+        COMMENT
         .. _Multiple_Pathway_Specification:
 
         Multiple Pathways can be specified in a list in the **pathways** argmument;  each item in the list must
@@ -4294,6 +4295,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              **pathway**: [NODE] -> single pathway \n
              **pathway**: [NODE, NODE...] -> single pathway \n
              **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
+        COMMENT
 
         COMMENT:
            If the specificaiton for **pathways** is a standalone `Node <Composition_Nodes>` (i.e., not in a list),
@@ -4314,8 +4316,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathways : Pathway or list[Pathway]
             specifies one or more Pathways to add to the Composition.  Each Pathway can be specified using either a
-            standard form of `Pathway specification <Pathway_Specification>`, and/or one of the additonal forms
-            described `above <Multiple_Pathway_Specification>`.
+            standard form of `specification for a single Pathway <Pathway_Specification>`, and/or one of the additonal
+            forms of specification for `multiple pathways <Multiple_Pathway_Specification>`.
 
         Returns
         -------
@@ -7495,11 +7497,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Returns
         ---------
 
-        XXXXXXXX
-        2d array :
-        output value of the final Node executed in the composition : various
-        """
+        2d list of values of OUTPUT Nodes at end of last trial : list[list]
+          each item in the list is the `output_values <Mechanism_Base.output_values>` for an `OUTPUT` `Node
+          <Composition_Nodes>` of the Composition, listed in the order listed in `get_nodes_by_role
+          <Composition.get_nodes_by_role>`\(`NodeRole`\.OUTPUT).
 
+          .. note::
+            The `results <Composition.results>` attribute of the Compositon contains a list of the outputs for all
+            trials.
+
+        """
         context.source = ContextFlags.COMPOSITION
 
         if scheduler is None:
