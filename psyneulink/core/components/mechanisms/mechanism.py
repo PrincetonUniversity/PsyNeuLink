@@ -2773,8 +2773,9 @@ class Mechanism_Base(Mechanism):
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=pnlvm.ir.IntType(1))
+        iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         params, state, arg_in, arg_out)
+                                                                         iparams, istate, iin, iout)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
