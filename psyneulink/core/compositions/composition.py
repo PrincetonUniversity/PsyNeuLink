@@ -4618,7 +4618,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Wrap up and return
         learning_related_components = {TARGET_MECHANISM: target,
-                                       LEARNING_OBJECTIVE: comparator,
+                                       OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanism,
                                        LEARNED_PROJECTIONS: learned_projection}
         learning_pathway.learning_components = learning_related_components
@@ -5015,7 +5015,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and any([lp for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                              if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-                comparator = self._terminal_backprop_sequences[output_source][LEARNING_OBJECTIVE]
+                comparator = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
                 learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
 
             # Otherwise, create new ones
@@ -5087,7 +5087,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    learning_update)
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
-                                                                LEARNING_OBJECTIVE: comparator}
+                                                                OBJECTIVE_MECHANISM: comparator}
             self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
 
             sequence_end = path_length - 3
@@ -5129,7 +5129,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    override=True)
 
         learning_related_components = {TARGET_MECHANISM: target,
-                                       LEARNING_OBJECTIVE: comparator,
+                                       OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanisms,
                                        LEARNED_PROJECTIONS: learned_projections}
 
@@ -5190,7 +5190,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If target and comparator already exist (due to overlapping pathway), use those
         try:
             target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            comparator_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_OBJECTIVE]
+            comparator_mechanism = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
 
         # Otherwise, create new ones
         except KeyError:

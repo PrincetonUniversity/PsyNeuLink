@@ -88,7 +88,7 @@ def figure_5a():
     learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
     # Unpack Relevant Learning Components
-    prediction_error_mechanism = learning_related_components[pnl.LEARNING_OBJECTIVE, ]
+    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM, ]
     target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
     # Create Log
@@ -149,7 +149,7 @@ def figure_5b():
     learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
     # Unpack Relevant Learning Components
-    prediction_error_mechanism = learning_related_components[pnl.LEARNING_OBJECTIVE, ]
+    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM, ]
     target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
     # Create Log
@@ -212,7 +212,7 @@ def figure_5c():
     learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
 
     # Unpack Relevant Learning Components
-    prediction_error_mechanism = learning_related_components[pnl.LEARNING_OBJECTIVE, ]
+    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM, ]
     target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
     # Create Log

@@ -273,7 +273,7 @@ class Pathway(object):
 
           *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
           ..
-          *LEARNING_OBJECTIVE*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
+          *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
           ..
           *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
           ..
@@ -400,7 +400,7 @@ class Pathway(object):
     @property
     def learning_objective(self):
         try:
-            return self.learning_components[LEARNING_OBJECTIVE]
+            return self.learning_components[OBJECTIVE_MECHANISM]
         except:
             if PathwayRole.LEARNING not in self.roles:
                 warnings.warn(f"{self.__class__.__name__} {self.name} 'learning_objective' attribute "
