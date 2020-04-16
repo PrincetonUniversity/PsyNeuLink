@@ -750,8 +750,8 @@ the input dictionary.
 The same general rules apply when using labels to specify `target values <Run_Targets>` for a pathway with learning.
 With target values, however, the labels must be included in the `output_labels_dict <Mechanism_Base.output_labels_dict>`
 of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms <LearningMechanism_Targets>`), or in
-other words, the last Mechanism in the `learning sequence <Process_Learning_Sequence>`. This is the same Mechanism used
-to specify target values for a particular learning sequence in the `targets dictionary <Run_Targets>`.
+other words, the last Mechanism in a `learning pathway <LearningMechanism_Multilayer_Learning>`. This is the same
+Mechanism used to specify target values for a particular learning pathway in the `targets dictionary <Run_Targets>`.
 
         >>> input_labels_dict_M1 = {"red": [[1]],
         ...                         "green": [[0]]}

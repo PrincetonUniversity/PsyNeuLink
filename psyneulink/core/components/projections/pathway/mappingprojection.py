@@ -18,8 +18,8 @@ Contents
       - `MappingProjection_Learning_Specification`
       - `MappingProjection_Deferred_Initialization`
   * `MappingProjection_Structure`
-      - `MappingProjection_Sender`
-      - `MappingProjection_Receiver`
+      - `MappingProjection_Matrix`
+      - `Mapping_Matrix_ParameterPort`
   * `MappingProjection_Execution`
       - `MappingProjection_Learning`
   * `MappingProjection_Class_Reference`
@@ -37,7 +37,7 @@ A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` 
 value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
 <MappingProjection.receiver>`.
 
-.. _Mapping_Creation_Overview:
+.. _MappingProjection_Creation:
 
 Creating a MappingProjection
 -----------------------------

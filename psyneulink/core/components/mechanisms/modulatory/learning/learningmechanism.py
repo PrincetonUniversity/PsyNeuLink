@@ -15,6 +15,7 @@ Contents
 
   * `LearningMechanism_Overview`
   * `LearningMechanism_Creation`
+      - `LearningMechanism_Automatic_Creation`
       - `LearningMechanism_Explicit_Creation`
   * `LearningMechanism_Structure`
       - `LearningMechanism_InputPorts`
@@ -89,7 +90,7 @@ A LearningMechanism is also created automatically when either the `tuple specifi
 is not advised, and should only used in special circumstances, as properly configuring learning generally requires
 the instantiation of several other closely related Components, as described below.
 
-.. _LearningMechanism_Explicit_Creation
+.. _LearningMechanism_Explicit_Creation:
 
 *Explicit Creation*
 ~~~~~~~~~~~~~~~~~~~
@@ -98,8 +99,9 @@ If a LearningMechanism is created explicitly (using its constructor), then its *
 arguments must be specified.  The **variable** must have at leaset three items that are compatible (in number and type)
 with the `value <InputPort.value>` of the LearningMechanism's `InputPorts <LearningMechanism_InputPorts>`.  Each
 item in **error_sources** must be one of the following: a `ComparatorMechanism`, for `single layer learning
-<LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a learning sequence for `multilayer
-learning <LearningMechanism_Multilayer_Learning>`; or a `LearningMechanism`.
+<LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a `learning Pathway
+<Composition_Learning_Pathways>` for `multilayer learning <LearningMechanism_Multilayer_Learning>`; or a
+`LearningMechanism`.
 
 .. _LearningMechanism_Learning_Signals:
 
@@ -153,7 +155,7 @@ names and roles (shown in the `figure <LearningMechanism_Single_Layer_Learning_F
   to the `TERMINAL` Mechanism of the `Composition` to which it belongs, or is not part of a `multilayer learning
   sequence <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism has a single *ERROR_SIGNAL* InputPort,
   that receives its input from a ComparatorMechanism. If the `primary_learned_projection` is part of a `multilayer
-  learning sequence <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
+  learning pathway <LearningMechanism_Multilayer_Learning>`, then the LearningMechanism will have one or more
   *ERROR_SIGNAL* InputPorts, that receive their input from the next LearningMechanism(s) in the sequence;  that is,
   the one(s) associated with the `efferents <Port.efferents>` (outgoing Projections) of its `output_source`,
   with one *ERROR_SIGNAL* InputPort for each of those Projections.  The `value <InputPort.value>`\\s of the
@@ -238,7 +240,7 @@ They are each described below:
   value of the `error_signal <LearningMechanism.error_signal>` used to calculate the `learning_signal
   <LearningMechanism.learning_signal>`.  Its value is assigned as the first item of the LearningMechanism's
   `output_values <LearningMechanism.output_values>` attribute.  If the LearningMechanism is part of a `multilayer
-  learning sequence <LearningMechanism_Multilayer_Learning>`, the *ERROR_SIGNAL* OutputPort is assigned a Projection
+  learning pathway <LearningMechanism_Multilayer_Learning>`, the *ERROR_SIGNAL* OutputPort is assigned a Projection
   to the LearningMechanism for the preceding MappingProjection in the sequence being learned - see `figure
   <LearningMechanism_Multilayer_Learning_Figure>` below).  Note that the `value <OutputPort.value>` of the
   *ERROR_SIGNAL* OutputPort may not be the same as that of the LearningMechanism's *ERROR_SIGNAL* `InputPorts
@@ -339,7 +341,7 @@ refer to the Components being learned and/or its operation:
   <LearningMechanism.function>`;  doing so supersedes specification of the **learning_rate** for a
   `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` used to implement `unsupervised learning
   <Composition_Learning_Unsupervised>`, or a Composition's `learning method <Composition_Learning_Methods>` used to
-  implement a `supervised learning sequence <Composition_Learning_Supervised>`.  The default value for a
+  implement a `supervised learning pathway <Composition_Learning_Supervised>`.  The default value for a
   LearningMechanism's `learning_rate <LearningMechanism.learning_rate>` attribute is `None`, in which case the
   LearningMechanism (and its `function <LearningMechanism.function>`) inherit the learning_rate from the
   `RecurrentTransferMechanism <RecurrentTransferMechanism_Learning>` or the `learning method
@@ -470,13 +472,13 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 
 .. _LearningMechanism_Targets:
 
-`TARGET` and `COMPARATOR` Mechanisms**. When `supervised learning <Composition_Learning_Supervised>` is
+`TARGET` and `OBJECTIVE` Mechanisms**.  When `supervised learning <Composition_Learning_Supervised>` is
 implemented using one of a Composition's `learning methods <Composition_Learning_Methods>`, it automatically creates a
 number of  `learning-related Components <Composition_Learning_Components>`.  This includes a `TARGET_MECHANISM`, that
 receives the target stimulus specifed in the **inputs** argument of the Composition's `run <Composition.run>` method;
-and a `COMPARATOR_MECHANISM`, that computes the error_signal for the sequence.  The output of the `COMPARATOR_MECHANISM`
-is the `error_source <LearningMechanism.error_sources>` for the last MappingProjection in the learning sequence.  If
-a multitalyer learning sequence is implemented explicitly, it must include these Components.
+and a `OBJECTIVE_MECHANISM`, that computes the error_signal for the sequence.  The output of the `OBJECTIVE_MECHANISM`
+is the `error_source <LearningMechanism.error_sources>` for the last MappingProjection in the learning pathway.  If
+a multitalyer learning pathway is implemented explicitly, it must include these Components.
 
 .. _LearningMechanism_Execution:
 
@@ -485,7 +487,7 @@ Execution
 
 LearningMechanisms that implement `unsupervised learning <Composition_Learning_Unsupervised>`
 (`AutoassociativeLearningMechanisms <AutoAssociativeLearningMechanism>`) execute when the `RecurrentTransferMechanism`
-with which they are associated executes.  LearningMechanisms that are part of a `supervised learning sequence
+with which they are associated executes.  LearningMechanisms that are part of a `supervised learning pathway
 <Composition_Learning_Supervised>` execute after all of the ProcessingMechanisms in the `Composition` to which they
 belong have executed.  When a LearningMechanism is executed, it uses the `value <InputPort.value>`(s) of its
 *ERROR_SIGNAL* `InputPort(s) <LearningMechanism_Input_Error_Signal>` to calculate changes to the weights of the
@@ -731,7 +733,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     error_sources : ComparatorMechanism, LearningMechanism, OutputPort or list of them
         specifies the source(s) of the error signal(s) used by the LearningMechanism's `function
         <LearningMechanism.function>`.  Each must be a `ComparatorMechanism` for `single layer learning
-        <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning sequence in
+        <LearningMechanism_Single_Layer_Learning>`, or for the last `MappingProjection` in a learning pathway in
         `multilayer learning <LearningMechanism_Multilayer_Learning>`;  otherwise they must be a `LearningMechanism`
         or the *ERROR_SIGNAL* OutputPort of one.
 
@@ -812,9 +814,9 @@ class LearningMechanism(ModulatoryMechanism_Base):
     function : LearningFunction or function : default BackPropagation
         specifies the function used to calculate the `learning_signal <LearningMechanism.learning_signal>` (assigned
         to the LearningMechanism's `LearningSignal(s) <LearningMechanism_LearningSignal>`), and the `error_signal
-        <LearningMechanism.error_signal>` (passed to the next LearningMechanism in a learning sequence for
-        `multilayer learning <LearningMechanism_Multilayer_Learning>`).  It takes the following three arguments,
-        each of which must be a list or 1d array: **input**,  **output**, and **error** (see
+        <LearningMechanism.error_signal>` (passed to the LearningMechanism for the preceding `MappingProjection` in a
+        `multilayer learning pathway <LearningMechanism_Multilayer_Learning>`).  It takes the following
+        three arguments, each of which must be a list or 1d array: **input**,  **output**, and **error** (see
         `LearningMechanism_Function` for additional details).
 
     learning_rate : float : None

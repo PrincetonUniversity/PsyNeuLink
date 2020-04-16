@@ -199,7 +199,7 @@ class PathwayRole(Enum):
         A `Pathway` that constitutes a `control pathway <Composition_Control_Pathways>` of the `Composition`.
 
     LEARNING
-        A `Pathway` that constitutes a `learning sequence <Composition_Learning_Pathways>` of the `Composition`.
+        A `Pathway` that constitutes a `learning Pathway <Composition_Learning_Pathways>` of the `Composition`.
 
     """
     ORIGIN = 0
