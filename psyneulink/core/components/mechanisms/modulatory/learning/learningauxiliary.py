@@ -514,7 +514,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                          # WEIGHT:1
             #                                                          }],
             #                                           name="{} {}".format(lc.activation_output_mech.name,
-            #                                                               COMPARATOR_MECHANISM))
+            #                                                               OBJECTIVE_MECHANISM))
             # MODIFIED 10/10/17 NEW:
             if learning_function.componentName == TDLEARNING_FUNCTION:
                 objective_mechanism = PredictionErrorMechanism(
@@ -551,7 +551,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                         {NAME:MSE,
             #                                                          ASSIGN:lambda x: np.sum(x*x)/len(x)}],
             #                                          name="\'{}\' {}".format(lc.activation_output_mech.name,
-            #                                                                  COMPARATOR_MECHANISM))
+            #                                                                  OBJECTIVE_MECHANISM))
 
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET

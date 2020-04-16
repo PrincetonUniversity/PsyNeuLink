@@ -290,7 +290,7 @@ class Pathway(object):
         <Pathway.learning_components>`\\[*TARGET_MECHANISM*].
 
     learning_objective : `Mechanism <Mechanism>` or None
-        `COMPARATOR_MECHANISM` if Pathway contains one; same as `learning_components
+        `OBJECTIVE_MECHANISM` if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
     learning_components : dict

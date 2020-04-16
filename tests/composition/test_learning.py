@@ -505,7 +505,7 @@ class TestBackProp:
         # learned_projection.log.set_log_conditions(pnl.MATRIX)
         learning_mechanism = backprop_pathway.learning_components[pnl.LEARNING_MECHANISMS]
         target_mechanism = backprop_pathway.target
-        # comparator_mechanism = learning_components[pnl.COMPARATOR_MECHANISM]
+        # comparator_mechanism = learning_components[pnl.OBJECTIVE_MECHANISM]
         for node in comp.nodes:
             node.log.set_log_conditions(pnl.VALUE)
         # comp.show_graph(show_node_structure=True)
