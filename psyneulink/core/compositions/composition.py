@@ -307,7 +307,7 @@ the structure of the graph itself.  However if the Composition contains recurren
 is a `cyclic graph <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and the value of some nodes must be initialized
 (i.e., "break" the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
 determinining which nodes need be initialized and initializing them when the Composition is `run <Composition>`,
-and also for allowing the user specify how this is done 
+and also for allowing the user specify how this is done
 COMMENT:
 (see `Composition_Initial_Values_and_Feedback`)
 COMMENT
@@ -1504,7 +1504,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
+    OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -2075,13 +2075,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         contained in `learning_components <Composition.learning_components>` attribute.
     COMMENT
 
-    results : 3d array
-        stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` Mechanisms in the Composition for
-        every `trial` executed in a call to `run <Composition.run>`.  Each item in the outermost
-        dimension (axis 0) of the array corresponds to a trial; each item within a trial corresponds to the
-        `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism.
+    results : list[list[list]]
+        stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the Composition for every `trial` executed in a call to `run <Composition.run>`.  Each item in the
+        outermos list is a list of values for a given trial; each item within a trial corresponds to the
+        `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
 
-    simulation_results : 3d array
+    simulation_results : list[list[list]]
         stores the `results <Composition.results>` for executions of the Composition when it is executed using
         its `evaluate <Composition.evaluate>` method.
 
@@ -4257,6 +4257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_pathways(self, pathways, context=None):
         """Add pathways to the Composition.
 
+        COMMENT
         .. _Multiple_Pathway_Specification:
 
         Multiple Pathways can be specified in a list in the **pathways** argmument;  each item in the list must
@@ -4280,6 +4281,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              **pathway**: [NODE] -> single pathway \n
              **pathway**: [NODE, NODE...] -> single pathway \n
              **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
+        COMMENT
 
         COMMENT:
            If the specificaiton for **pathways** is a standalone `Node <Composition_Nodes>` (i.e., not in a list),
@@ -4602,7 +4604,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Wrap up and return
         learning_related_components = {TARGET_MECHANISM: target,
-                                       LEARNING_OBJECTIVE: comparator,
+                                       OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanism,
                                        LEARNED_PROJECTIONS: learned_projection}
         learning_pathway.learning_components = learning_related_components
@@ -4996,7 +4998,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and any([lp for lp in learned_projection.parameter_ports[MATRIX].mod_afferents
                              if lp in self.projections])):
                 target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-                comparator = self._terminal_backprop_sequences[output_source][LEARNING_OBJECTIVE]
+                comparator = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
                 learning_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_MECHANISM]
 
             # Otherwise, create new ones
@@ -5068,7 +5070,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    learning_update)
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
-                                                                LEARNING_OBJECTIVE: comparator}
+                                                                OBJECTIVE_MECHANISM: comparator}
             self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
 
             sequence_end = path_length - 3
@@ -5110,7 +5112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    override=True)
 
         learning_related_components = {TARGET_MECHANISM: target,
-                                       LEARNING_OBJECTIVE: comparator,
+                                       OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanisms,
                                        LEARNED_PROJECTIONS: learned_projections}
 
@@ -5171,7 +5173,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If target and comparator already exist (due to overlapping pathway), use those
         try:
             target_mechanism = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
-            comparator_mechanism = self._terminal_backprop_sequences[output_source][LEARNING_OBJECTIVE]
+            comparator_mechanism = self._terminal_backprop_sequences[output_source][OBJECTIVE_MECHANISM]
 
         # Otherwise, create new ones
         except KeyError:
@@ -7476,11 +7478,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Returns
         ---------
 
-        XXXXXXXX
-        2d array :
-        output value of the final Node executed in the composition : various
-        """
+        2d list of values of OUTPUT Nodes at end of last trial : list[list]
+          each item in the list is the `output_values <Mechanism_Base.output_values>` for an `OUTPUT` `Node
+          <Composition_Nodes>` of the Composition, listed in the order listed in `get_nodes_by_role
+          <Composition.get_nodes_by_role>`\(`NodeRole`\.OUTPUT).
 
+          .. note::
+            The `results <Composition.results>` attribute of the Compositon contains a list of the outputs for all
+            trials.
+
+        """
         context.source = ContextFlags.COMPOSITION
 
         if scheduler is None:

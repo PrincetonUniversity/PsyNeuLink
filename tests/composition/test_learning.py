@@ -151,7 +151,7 @@ class TestReinforcement:
             learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
             learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
             target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
-            comparator_mechanism = learning_pathway.learning_components[pnl.LEARNING_OBJECTIVE]
+            comparator_mechanism = learning_pathway.learning_components[pnl.OBJECTIVE_MECHANISM]
 
             learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 

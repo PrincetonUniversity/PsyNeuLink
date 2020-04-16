@@ -64,20 +64,46 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-Pathway, a `Composition`, or any of the Composition's methods used to add a Pathway to it.
+Pathway or a `Composition`, or any of a Composition's methods used to add a Pathway:
 
     * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
     ..
     .. _Pathway_Specification_List:
 
     * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
-      each item of the list must be a node (a `Mechanism <Mechanism>`, `Composition <Composition>` or a
-      (Mechanism, `NodeRoles <NodeRole>`) tuple) or, optionally, a `Projection specification
+      each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
+      (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
       <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
       <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
       described above, and the 2nd item be a subclass of `LearningFunction`.
+
+.. _Multiple_Pathway_Specification:
+
+In addition to the forms of single Pathway specification `above <Pathway_Specification>`, where multiple Pathways
+can be specified (e.g., the **pathways** argument of the constructor for a `Composition` or its `add_pathways
+<Composition.add_pathways>` method), they can be specified in a list, in which each item of the list can be any of
+the forms above, or one of the following:
+
+    * **Pathway** object or constructor: Pathway(pathway=\ `Pathway specification <Pathway_Specification>`,...).
+    ..
+    * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a Pathway object or constuctor,
+      or one of the standard `Pathway specifications <Pathway_Specification>` listed above.
+
+    .. note::
+       If any of the following is used to specify the **pathways** argument:
+         * a **standalone** `Node <Composition_Nodes>` (i.e., not in a list), \n
+         * a **single Node** alone in a list, \n
+         * one or more Nodes with any other form of `Pathway specification <Pathway_Specification>` in the list \n
+       then each such Node in the list is treated as its own `SINGLETON` pathway (i.e., one containing a single
+       Node that is both the `ORIGIN` and the`TERMINAL` of the Pathway).  However, if the list contains only
+       Nodes, then it is treated as a single Pathway (i.e., the list form of `Pathway specification
+       <Pathway_Specification>`.  Thus:
+         **pathway**: NODE -> single pathway \n
+         **pathway**: [NODE] -> single pathway \n
+         **pathway**: [NODE, NODE...] -> single pathway \n
+         **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
 
 Structure
 ---------
@@ -127,7 +153,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
-    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 
 
@@ -273,7 +299,7 @@ class Pathway(object):
 
           *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
           ..
-          *LEARNING_OBJECTIVE*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
+          *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`)
           ..
           *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
           ..
@@ -400,7 +426,7 @@ class Pathway(object):
     @property
     def learning_objective(self):
         try:
-            return self.learning_components[LEARNING_OBJECTIVE]
+            return self.learning_components[OBJECTIVE_MECHANISM]
         except:
             if PathwayRole.LEARNING not in self.roles:
                 warnings.warn(f"{self.__class__.__name__} {self.name} 'learning_objective' attribute "
