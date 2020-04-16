@@ -2637,7 +2637,7 @@ class Mechanism_Base(Mechanism):
         builder.store(builder.load(params_in), params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
@@ -2773,8 +2773,9 @@ class Mechanism_Base(Mechanism):
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=pnlvm.ir.IntType(1))
+        iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         params, state, arg_in, arg_out)
+                                                                         iparams, istate, iin, iout)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
