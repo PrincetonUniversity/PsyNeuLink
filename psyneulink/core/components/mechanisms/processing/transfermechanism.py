@@ -1564,7 +1564,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
-        builder.store(threshold, cmp_val_ptr)
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
             # Get inside of the structure
