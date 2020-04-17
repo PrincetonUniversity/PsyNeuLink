@@ -240,7 +240,7 @@ and also for allowing the user specify how this is done
 
 COMMENT:
 XXX (see `Composition_Initial_Values_and_Feedback`)
-XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS
+XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
 COMMENT
 
 .. _Composition_Nodes:
@@ -428,7 +428,7 @@ have been executed, as determined by the Composition's `controller_mode <Composi
 However, the Composition's `controller_condition <Composition.controller_condition>` attribute can be used to
 customize when it is executed.  All three of these attributes can be specified in corresponding arguments of the
 Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
-attribute.
+corresponding attribute.
 
 
 COMMENT:
@@ -678,6 +678,11 @@ attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the
    with `NodeRole` assigned to each `Node <Composition_Nodes>` in the Composition's `graph <Composition.graph>` (in
    italics below Mechanism type) and  the names of the learning components returned by the learning method (capitalized
    and in italics, above each Mechanism).
+
+COMMENT:
+MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGING OF FIRST LINE THAT FOLLOWS IT WITH:
+The description above (and example `below <EXMAPLE>`
+COMMENT
 
 .. _Composition_XOR_Example:
 
