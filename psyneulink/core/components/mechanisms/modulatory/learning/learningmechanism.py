@@ -100,7 +100,7 @@ arguments must be specified.  The **variable** must have at leaset three items t
 with the `value <InputPort.value>` of the LearningMechanism's `InputPorts <LearningMechanism_InputPorts>`.  Each
 item in **error_sources** must be one of the following: a `ComparatorMechanism`, for `single layer learning
 <LearningMechanism_Single_Layer_Learning>` or for the last `MappingProjection` in a `learning Pathway
-<Composition_Learning_Pathways>` for `multilayer learning <LearningMechanism_Multilayer_Learning>`; or a
+<Composition_Learning_Pathway>` for `multilayer learning <LearningMechanism_Multilayer_Learning>`; or a
 `LearningMechanism`.
 
 .. _LearningMechanism_Learning_Signals:

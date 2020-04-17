@@ -96,7 +96,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         adds one or more `Pathways <Component_Pathways>` to the Composition; this is equivalent to constructing the
         Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
         of specification as the **pathways** argument of that method.  If any `learning Pathways
-        <Composition_Learning_Pathways>` are included, then the constructor's **disable_learning** argument can be
+        <Composition_Learning_Pathway>` are included, then the constructor's **disable_learning** argument can be
         used to disable learning on those by default (though it will still allow learning to occur on any other
         Compositions, either nested within the current one, or within which the current one is nested (see
         `Composition_Learning` for a full description).
@@ -274,7 +274,7 @@ However, any other nodes can be specifies as the `INPUT` or `OUTPUT` Nodes using
 the default assignents are ignored
 COMMENT:
 ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
-<Composition_Learning_Pathways>` (see XXX).
+<Composition_Learning_Pathway>` (see XXX).
 COMMENT
 .  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_required_node_role
 <Composition.remove_required_node_role>` method. All of the roles assigned assigned to a particular Node can be
@@ -317,7 +317,7 @@ the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular
 `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have
 a particular type of `Node <Composition_Nodes>`, then its attribute returns None. There are three types of Pathways:
 processing Pathways, `control Pathways <Composition_Control_Pathways>`, and `learning Pathways
-<Composition_Learning_Pathways>`.  Processing Pathways are ones not configured for control or learning.  The latter
+<Composition_Learning_Pathway>`.  Processing Pathways are ones not configured for control or learning.  The latter
 two types are described in the sections on `Composition_Control` and `Composition_Learning`, respectively.  All of the
 Pathways in a Composition are listed in its `pathways <Composition.pathways>` attribute.
 
@@ -327,8 +327,8 @@ Pathways in a Composition are listed in its `pathways <Composition.pathways>` at
 Controlling a Composition
 -------------------------
 
-A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass
-of one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
+A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass of
+one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
 It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
 the Composition, and provides the result to the `controller <Composition.controller>`.
 
@@ -558,12 +558,12 @@ then the `Pathway specification <Pathway_Specification> must be the first item i
 <Composition_Learning_Pathway>` can be added to a Composition by specifying the `Pathway` to be learned in the one
 of the Composition's learning methods, of which there are currently three:
 
-    • `add_reinforcement_learning_pathway`
-    • `add_td_learning_pathway`
-    • `add_backpropagation_learning_pathway`.
+    • `add_reinforcement_learning_pathway` -- uses `Reinforcement`;
+    • `add_td_learning_pathway` -- uses `TDLearning`;
+    • `add_backpropagation_learning_pathway` -- uses `Backpropagation`.
 
-Each uses the Composition's `add_linear_processing_pathway` method to create a  `learning Pathway
-<Composition_Learning_Pathway>` using the corresopnding `LearningFunction`.
+Each uses the Composition's `add_linear_processing_pathway` method to create a `learning Pathway
+<Composition_Learning_Pathway>` using the corresponding `LearningFunction`.
 
 .. _Composition_Learning_Pathway:
 
@@ -571,7 +571,7 @@ Each uses the Composition's `add_linear_processing_pathway` method to create a  
 ===================
 
 A *learning pathway* is a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the
-`MappingProjections <MappingProjection>` between them, in which learning modifies the `matrix
+`MappingProjections <MappingProjection>` between them, in which supervised learning is used to modify the `matrix
 <MappingProjection.matrix>` parameter of the MappingProjections in the sequence, so that the input to the first
 ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that matches as closely as
 possible the value specified for the target mechanism in the **inputs** argument of the Composition's `learn
@@ -638,7 +638,7 @@ from the preceding LearningMechanism, and `LearningProjections <LearningProjecti
 MappingProjections (*LEARNED_PROJECTION*\\s) in the `learning Pathway <Component_Learning_Pathway>`, as shown for an
 example in the figure below. These additional learning components are listed in the *LEARNING_MECHANISMS* and
 *LEARNED_PROJECTIONS* entries of the dictionary assigned to the `learning_components <Pathway.learning_components>`
-attribute of the `learning Pathway <Composition_Learning_Pathways>` return by the learning method.
+attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the learning method.
 
 .. _Composition_MultilayerLearning_Figure:
 
@@ -728,7 +728,7 @@ For learning to occur when a Composition is run, its `learn <Composition.learn>`
 `run <Composition.run>` method, and its `disable_learning <Composition.disable_learning>` attribute must be False.
 When the `learn <Composition.learn>` method is used, all Components *unrelated* to learning are executed in the same
 way as with the `run <Composition.run>` method.  If the Composition has any `nested Composition <Composition_Nested>`
-that have `learning Pathways <Composition_Learning_Pathways>`, then learning also occurs on all of those for which
+that have `learning Pathways <Composition_Learning_Pathway>`, then learning also occurs on all of those for which
 the `disable_learning <Composition.disable_learning>` attribute is False.  This is true even if the `disable_learning
 <Composition.disable_learning>` attribute is True for which the Composition on which the  `learn <Composition.learn>`
 method was called.
@@ -1920,12 +1920,12 @@ class NodeRole(Enum):
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-        <Composition_Learning_Pathways>` specified in the **inputs** argument of the Composition's `run
+        <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `run
         <Composition.run>` method (see `TARGET_MECHANISM`).
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
-        <Composition_Learning_Pathways>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
+        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
 
     """
     ORIGIN = 0
@@ -4036,7 +4036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies the nodes, and optionally Projections, used to construct a processing `Pathway <Pathway>`.
             Any standard form of `Pathway specification <Pathway_Specification>` can be used, however if a 2-item (
             Pathway, LearningFunction) tuple is used the `LearningFunction` will be ignored (this should be used with
-            `add_linear_learning_pathway` if a `learning Pathway <Composition_Learning_Pathways>` is desired).  A
+            `add_linear_learning_pathway` if a `learning Pathway <Composition_Learning_Pathway>` is desired).  A
             `Pathway` object can also be used;  again, however, any learning-related specifications will be ignored,
             as will its `name <Pathway.name>` if the **name** argument of add_linear_processing_pathway is specified.
 
@@ -4516,7 +4516,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Composition_Processing_Pathways>`.  Any standard form of `Pathway specification <Pathway_Specification>`
             can be used, including a 2-item (Pathway, LearningFunction) tuple, but the `LearningFunction` will be
             ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
-            <Composition_Learning_Pathways>` is wanted).  A `Pathway` object can also be used;  again, however,
+            <Composition_Learning_Pathway>` is wanted).  A `Pathway` object can also be used;  again, however,
             any learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
             argument of the method is specified.
         COMMENT
@@ -4553,7 +4553,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         --------
 
         `Pathway` :
-            `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
+            `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
         # FIX 4/8/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
@@ -4676,7 +4676,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         --------
 
         `Pathway` :
-            Reinforcement `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
+            Reinforcement `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
         return self.add_linear_learning_pathway(pathway,
@@ -4716,7 +4716,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         --------
 
         `Pathway` :
-            TD Reinforcement `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
+            TD Reinforcement `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
         return self.add_linear_learning_pathway(pathway,
@@ -4762,7 +4762,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         --------
 
         `Pathway` :
-            BackPropagation `learning Pathway` <Composition_Learning_Pathways>` added to the Composition.
+            BackPropagation `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
         return self.add_linear_learning_pathway(pathway,

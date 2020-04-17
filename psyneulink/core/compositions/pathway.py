@@ -76,7 +76,7 @@ Pathway or a `Composition`, or any of a Composition's methods used to add a Path
       <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
-      <Composition_Learning_Pathways>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
+      <Composition_Learning_Pathway>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
       described above, and the 2nd item be a subclass of `LearningFunction`.
 
 .. _Multiple_Pathway_Specification:
@@ -225,7 +225,7 @@ class PathwayRole(Enum):
         A `Pathway` that constitutes a `control pathway <Composition_Control_Pathways>` of the `Composition`.
 
     LEARNING
-        A `Pathway` that constitutes a `learning Pathway <Composition_Learning_Pathways>` of the `Composition`.
+        A `Pathway` that constitutes a `learning Pathway <Composition_Learning_Pathway>` of the `Composition`.
 
     """
     ORIGIN = 0
@@ -277,7 +277,7 @@ class Pathway(object):
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
-        it is a `learning pathway <Composition_Learning_Pathways>`.
+        it is a `learning pathway <Composition_Learning_Pathway>`.
 
     input : `Mechanism <Mechanism>` or None
         `INPUT` node if Pathway contains one.
@@ -294,7 +294,7 @@ class Pathway(object):
         <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
     learning_components : dict
-        dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathways>`
+        dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathway>`
         (and is assigned `PathwayRole.LEARNING` in `roles <Pathway.roles>`):
 
           *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`)
