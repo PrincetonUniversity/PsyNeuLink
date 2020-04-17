@@ -15,11 +15,11 @@
 Overview
 --------
 
-A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`. Pathways
-are created and added to a `Composition` if the **pathways** argument of the Composition's constructor is specified,
-and/or whenever the Composition's `pathway creation methods <Composition_Pathway_Methods>` are used.  A Pathway can
-also be created on its own, and used in the **pathway** argument of the Composition's constructor or one of its
-`pathway creation methods <Composition_Pathway_Methods>` methods.  Although Pathways are not required in Compositions,
+A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`. Pathways are
+created and added to a `Composition` if the **pathways** argument of the Composition's constructor is specified, and/or
+whenever the Composition's `pathway creation methods <Composition_Pathway_Addition_Methods>` are used.  A Pathway can
+also be created on its own, and used in the **pathway** argument of the Composition's constructor or one of its `pathway
+creation methods <Composition_Pathway_Addition_Methods>` methods.  Although Pathways are not required in Compositions,
 they are useful for constructing them, and are required to implement `learning <Composition_Learning>` in a Composition.
 
 Creating a Pathway
@@ -115,8 +115,8 @@ A Pathway has the following primary attributes:
 * `pathway <Pathway.pathway>` - if the Pathway was created on its own, this contains the specification provided in
   the **pathway** arg of its constructor; that is, depending upon how it was specified, it may or may not contain
   fully constructed `Components <Component>`.  This is passed to the **pathway** argument of a Composition's
-  constructor or one of its `pathway creation methods <Composition_Pathway_Methods>` when the Pathway is used in the
-  specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
+  constructor or one of its `pathway creation methods <Composition_Pathway_Addition_Methods>` when the Pathway is used
+  in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
   `pathways <Composition.pathways>` attribute), then the actual `Mechanism(s) <Mechanism>` and/or `Composition(s)`
   that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are listed in the
   Pathway's `pathway <Pathway.pathway>` attribute.
