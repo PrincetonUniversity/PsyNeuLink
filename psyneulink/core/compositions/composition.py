@@ -72,8 +72,8 @@ either arguments of the constructor and/or methods that allow Components to be a
 
 .. hint::
     Although Components (Nodes and Projections) can be added individually to a Composition, it is often easier to use
-    `Pathways` to construct a Composition, which in many cases can automaticially construct the Projections needed
-    without have to specify those explicitly.
+    `Pathways <Composition_Pathway>` to construct a Composition, which in many cases can automaticially construct the
+    Projections needed without have to specify those explicitly.
 
 .. _Composition_Constructor:
 
@@ -110,8 +110,8 @@ The following arguments of the Composition's constructor can be used to add Comp
 
 .. _Composition_Addition_Methods:
 
-*Adding Components and Pathways
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Adding Components and Pathways*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The methods used for adding individual Components and `Pathways <Composition_Pathways>` to a Composition are described
 briefly below.  Examples of their their use are provided in `Composition_Creation_Examples`.
@@ -185,7 +185,7 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
 
 .. note::
   Only Mechanisms and Projections added to a Composition using the methods above belong to a Composition, even if
-  other Mechanism and/or Projections are constructed in the same script.
+  other Mechanism and/or Projections are constructed in the same Python script.
 
 A `Node <Composition_Nodes>` can be removed from a Composition using the `remove_node <Composition.remove_node>` method.
 
@@ -215,11 +215,11 @@ describe these in greater detail, and how they are used to implement various for
 ~~~~~~~
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
-<Mechanism>` and/or nested Composition(s) that carry out computations, and the edges of which are `Projections
-<Projection>` that transmit the computational results from one `Node <Composition_Nodes>` to another Node.  The
-information about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that is a
-`Graph` object describing its Nodes and the dependencies defined by their edges.  There are no restrictions on the
-structure of the graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e.,
+<Mechanism>` and/or `nested Composition(s) <Composition_Nested>` that carry out computations, and the edges of which
+are `Projections <Projection>` that transmit the computational results from one `Node <Composition_Nodes>` to another
+Node. The information about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that
+is a `Graph` object describing its Nodes and the dependencies defined by their edges.  There are no restrictions on
+the structure of the graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e.,
 contain one or more `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph
 <Composition.graph>` can be displayed  using the `show_graph <Composition.show_graph>` method (see
 `Composition_Visualization`).
@@ -237,11 +237,11 @@ is a `cyclic graph <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and the value
 (i.e., "break" the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
 determinining which nodes need be initialized and initializing them when the Composition is `run <Composition>`,
 and also for allowing the user specify how this is done
-COMMENT:
-(see `Composition_Initial_Values_and_Feedback`)
-COMMENT
-.
 
+COMMENT:
+XXX (see `Composition_Initial_Values_and_Feedback`)
+XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS
+COMMENT
 
 .. _Composition_Nodes:
 
@@ -326,7 +326,7 @@ allowed.
 A `Pathway` is an alternating sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a Composition.
 Although a Composition is not required to have any Pathways, these are useful for constructing Compositions, and are
 required for implementing `learning <Composition_Learning>` in a Composition. Pathways can be specified in the
-**pathways** argument of the Composition's constructor, or using one of its `Pathway Methods
+**pathways** argument of the Composition's constructor, or using one of its `Pathway addition methods
 <Composition_Pathway_Addition_Methods>`.  Pathways must be linear (that is, the cannot have branches), but they can be
 continguous, overlapping, intersecting, or disjoint, and can have one degree of converging and/or diverging branches
 (meaning that their branches can't branch). Each Pathway has a name (that can be assigned when it is constructed) and
@@ -534,8 +534,8 @@ their constructors, or modified by assigning values to their attributes.
 
 .. _Composition_Learning_Unsupervised:
 
-Unsupervised Learning
-^^^^^^^^^^^^^^^^^^^^^
+**Unsupervised Learning**
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
 to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
@@ -555,8 +555,8 @@ COMMENT
 
 .. _Composition_Learning_Supervised:
 
-Supervised Learning
-^^^^^^^^^^^^^^^^^^^
+**Supervised Learning**
+^^^^^^^^^^^^^^^^^^^^^^^
 
 * `Composition_Learning_Methods`
 * `Composition_Learning_Components`
@@ -572,8 +572,8 @@ COMMENT
 
 .. _Composition_Learning_Methods:
 
-*Learning Methods*
-==================
+*Supervised Learning Methods*
+=============================
 
 Supervised learning is implemented in a Composition by specifying a `learning Pathway <Composition_Learning_Pathway>`
 in the **pathways** argumemt of the Composition's constructor, its `add_pathways <Composition.add_pathways>` method,
@@ -592,8 +592,8 @@ Each uses the Composition's `add_linear_processing_pathway` method to create a `
 
 .. _Composition_Learning_Pathway:
 
-*Learning Pathways*
-===================
+*Supervised Learning Pathways*
+==============================
 
 A *learning pathway* is a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the
 `MappingProjections <MappingProjection>` between them, in which supervised learning is used to modify the `matrix
@@ -609,8 +609,8 @@ generated for the Pathway, as described below.
 
 .. _Composition_Learning_Components:
 
-*Learning Components*
-=====================
+*Supervised Learning Components*
+================================
 
 For each `learning pathway <Composition_Learning_Pathway>` specified in the **pathways** argument of a Composition's
 constructor or one of its `learning methods <Composition_Learning_Methods>`, it creates the following Components,
@@ -667,16 +667,17 @@ attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the
 
 .. _Composition_MultilayerLearning_Figure:
 
-**Learning Components**
+**Figure: Supervised Learning Components**
 
 .. figure:: _static/Composition_Multilayer_Learning_fig.svg
    :alt: Schematic of LearningMechanism and LearningProjections in a Process
    :scale: 50 %
 
-   Components for sequence of three Mechanisms generated by a call to a learning method (e.g.,
-   ``add_backpropagation_learning_pathway(pathway=[A,B,C])``), with `NodeRole` assigned to each
-   `Node <Composition_Nodes>` in the Composition's `graph <Composition.graph>` (in italics below Mechanism type)
-   and  the names of the learning components (capitalized in italics) returned by the learning method.
+   *Components for supervised learning Pathway*: the Pathway has three Mechanisms generated by a call to a `supervised
+   learning method <Composition_Learning_Methods>` (e.g., ``add_backpropagation_learning_pathway(pathway=[A,B,C])``),
+   with `NodeRole` assigned to each `Node <Composition_Nodes>` in the Composition's `graph <Composition.graph>` (in
+   italics below Mechanism type) and  the names of the learning components returned by the learning method (capitalized
+   and in italics, above each Mechanism).
 
 .. _Composition_XOR_Example:
 
