@@ -221,7 +221,8 @@ information about this structure is stored in the Composition`s `graph <Composit
 `Graph` object describing its Nodes and the dependencies defined by their edges.  There are no restrictions on the
 structure of the graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e.,
 contain one or more `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph
-<Composition.graph>` can be displayed  using the `show_graph <Composition.show_graph>` method.
+<Composition.graph>` can be displayed  using the `show_graph <Composition.show_graph>` method (see
+`Composition_Visualization`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -584,7 +585,7 @@ of the Composition's learning methods, of which there are currently three:
 
     • `add_reinforcement_learning_pathway` -- uses `Reinforcement`;
     • `add_td_learning_pathway` -- uses `TDLearning`;
-    • `add_backpropagation_learning_pathway` -- uses `Backpropagation`.
+    • `add_backpropagation_learning_pathway` -- uses `BackPropagation`.
 
 Each uses the Composition's `add_linear_processing_pathway` method to create a `learning Pathway
 <Composition_Learning_Pathway>` using the corresponding `LearningFunction`.
