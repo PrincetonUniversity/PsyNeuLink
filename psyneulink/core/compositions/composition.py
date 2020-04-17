@@ -453,15 +453,17 @@ Learning in a Composition
 * `Composition_Learning_UDF`
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
-it modifies the `matrix <MappingProjection.matrix>` parameter of those `MappingProjections <MappingProjection>`,
-which implements the strengths ("weights") of the associations between representations in the Mechanisms they connect.
+it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
+`learning Pathway <Composition_Learning_Pathway>`, which implement the conection weights (i.e., strengths of
+associations between representations in the Mechanisms) within a `Pathway`.
 
-.. _Composition_Learning_Mode:
 
-*Implementing Learning in a Composition*
+.. _Composition_Learning_Configurations:
+
+*Configuring Learning in a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are three ways of implementing learning in a Composition:
+There are three ways of configuring learning in a Composition:
 
 i) using `standard PsyNeuLink Components <Composition_Learning_Standard>`
 
@@ -470,14 +472,14 @@ ii) using the `AutodiffComposition <Composition_Learning_AutodiffComposition>` -
 
 iii) using `UserDefinedFunctions <UserDefinedFunction>`.
 
-The advantage of using standard PsyNeuLink compoments is that it
-assigns each operation involved in learning to a dedicated Component. This helps make clear exactly what those
-operations are, the sequence in which they are carried out, and how they interact with one another.  However,
-this can also make execution inefficient, due to the overhead incurred by distributing the calculations over
-different Components.  If more efficient computation is critical, then the `AutodiffComposition` can be used to
-execute a compatible PsyNeuLink Composition in PyTorch, or one or more `UserDefinedFunctions <UserDefinedFunction>`
-can be assigned to either PyTorch functions or those in any other Python environment that implements learning and
-accepts and returns tensors. Each of these approaches is described in more detail below.
+The advantage of using standard PsyNeuLink compoments is that it assigns each operation involved in learning to a
+dedicated Component. This helps make clear exactly what those operations are, the sequence in which they are carried
+out, and how they interact with one another.  However, this can also make execution inefficient, due to the overhead
+incurred by distributing the calculations over different Components.  If more efficient computation is critical,
+then the `AutodiffComposition` can be used to execute a compatible PsyNeuLink Composition in PyTorch, or one or more
+`UserDefinedFunctions <UserDefinedFunction>` can be assigned to either PyTorch functions or those in any other Python
+environment that implements learning and accepts and returns tensors. Each of these approaches is described in more
+detail below.
 
 .. _Composition_Learning_Standard:
 
@@ -487,22 +489,23 @@ accepts and returns tensors. Each of these approaches is described in more detai
 * `Composition_Learning_Unsupervised`
 * `Composition_Learning_Supervised`
 
-When learning is `implemented using standard PsyNeuLink Components <Composition_Learning_Standard>`, each calculation
-and/or operation involved in learning -- including those responsible for computing errors, and for using those to
-modify the Projections between Mechanisms, is assigned to a different PsyNeuLink `learning-related Component
-<Composition_Learning_Components>`.  These can be used to implement any form of learning.  Learning is generally
-considered to fall into two broad classes:  *unsupervised*, in which associative strenghts are modified
-by mere exposure to the inputs, in order to capture structure and/or relationships among them;  and *supervised*,
-which in which the associative strengths are modified so that each input generates a desired output (see
-`<https://www.geeksforgeeks.org/supervised-unsupervised-learning/>`_ for a useful summary).  Both forms of
+When learning is implemented using standard PsyNeuLink Components, each calculation and/or operation involved in
+learning -- including those responsible for computing errors, and for using those errors to modify the Projections
+between Mechanisms, is assigned to a different PsyNeuLink `learning-related Component
+<Composition_Learning_Components>`.  These can be used to implement all types of learning.  Learning is generally
+considered to fall into two broad classes:  *unsupervised*, in which connections weights are modified
+by mere exposure to the inputs in order to capture structure and/or relationships among them;  and *supervised*,
+which in which the connection weights are modified so that each input generates a desired output (see
+`<https://www.geeksforgeeks.org/supervised-unsupervised-learning/>`_ for a useful summary).  Both types of
 learning can be implemented in a Composition, using `LearningMechanisms <LearningMechanism>` that compute the
 changes to make to the `matrix <MappingProjection.matrix>` parameter of `MappingProjections <MappingProjection>`
-being learned, and `LearningProjections <LearningProjection>` that apply those changes to the MappingProjections).
-In addition, supervised learning uses a `ComparatorMechanism` to compute the error between the response generated by
-the Composition to the input stimulus, and the target stimulus used to designate the desired response.  In most
-cases, the LearningMechanisms, LearningProjections and, where needed, ComparatorMechanism are generated automatically,
-as described for each form of learning below.  However, these can also be configured manually using their constructors,
-or modified by assigning values to their attributes.
+being learned, and `LearningProjections <LearningProjection>` that apply those changes to those MappingProjections.
+In addition, supervised learning uses an `ObjectiveMechanism -- usually a `ComparatorMechanism` -- to compute the error
+between the response generated by the last Mechanism in a `learning Pathway <Composition_Learning_Pathway>` (to the
+input provided to the first Mechanism in the `Pathway`) and the target stimulus used to specify the desired response.
+In most cases, the LearningMechanisms, LearningProjections and, where needed, ObjectiveMechanism are generated
+automatically, as described for each type of learning below.  However, these can also be configured manually using
+their constructors, or modified by assigning values to their attributes.
 
 .. _Composition_Learning_Unsupervised:
 
@@ -547,39 +550,46 @@ COMMENT
 *Learning Methods*
 ==================
 
-Supervised learning is implemented using a Composition's method for the desired type of learning.  There are currently
-three such methods:
+Supervised learning is implemented in a Composition by specifying a `learning Pathway <Composition_Learning_Pathway>`
+in the **pathways** argumemt of the Composition's constructor, its `add_pathways <Composition.add_pathways>` method,
+or one of its learning methods.  If the constructor or `add_pathways <Composition.add_pathways>` method is used,
+then the `Pathway specification <Pathway_Specification> must be the first item in a tuple, followed by a
+`LearningFunction` as its 2nd item that specfies the type of learning.  Alternatively, a `learning Pathway
+<Composition_Learning_Pathway>` can be added to a Composition by specifying the `Pathway` to be learned in the one
+of the Composition's learning methods, of which there are currently three:
 
-    • `add_linear_learning_pathway`
     • `add_reinforcement_learning_pathway`
     • `add_td_learning_pathway`
     • `add_backpropagation_learning_pathway`.
 
-
 Each uses the Composition's `add_linear_processing_pathway` method to create a  `learning Pathway
-<Composition_Learning_Pathways>` specified in their **pathway** argument.
+<Composition_Learning_Pathway>` using the corresopnding `LearningFunction`.
 
 .. _Composition_Learning_Pathway:
+
+*Learning Pathways*
+===================
 
 A *learning pathway* is a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the
 `MappingProjections <MappingProjection>` between them, in which learning modifies the `matrix
 <MappingProjection.matrix>` parameter of the MappingProjections in the sequence, so that the input to the first
 ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that matches as closely as
-possible the value specified for the target mechanism in the **inputs** argument of the
-Composition's `run <Composition.run>` method. The Mechanisms in the pathway must be compatible with learning (that is,
-their `function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
+possible the value specified for the target mechanism in the **inputs** argument of the Composition's `learn
+<Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their `function
+<Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
 `LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
-`learning methods <Composition_Learning_Methods>` return the set of learning components generates for the pathway,
-as described below.
+`learning methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
+<Pathway.learning_components>` attribute is assigned a dict containing the set of the set of learning components
+generated for the Pathway, as described below.
 
 .. _Composition_Learning_Components:
 
 *Learning Components*
 =====================
 
-For each `learning pathway <Composition_Learning_Pathway>` specified in a `learning method
-<Composition_Learning_Methods>`, it creates the following Components, and assigns to them the `NodeRoles <NodeRole>`
-indicated:
+For each `learning pathway <Composition_Learning_Pathway>` specified in the **pathways** argument of a Composition's
+constructor or one of its `learning methods <Composition_Learning_Methods>`, it creates the following Components,
+and assigns to them the `NodeRoles <NodeRole>` indicated:
 
     .. _TARGET_MECHANISM:
     * *TARGET_MECHANISM* -- receives the value to be used by the *OBJECTIVE_MECHANISM* as the target in
@@ -594,34 +604,41 @@ indicated:
       `InputPort  <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*;
     ..
     .. _OBJECTIVE_MECHANISM:
-    * *OBJECTIVE_MECHANISM* `ComparatorMechanism` -- used to `calculate an error signal
+    * *OBJECTIVE_MECHANISM* -- usually a `ComparatorMechanism`, used to `calculate an error signal
       <ComparatorMechanism_Execution>` for the sequence by comparing the value received by the ComparatorMechanism's
       *SAMPLE* `InputPort <ComparatorMechanism_Structure>` (from the `output <LearningMechanism_Activation_Output>` of
       the last Processing Mechanism in the `learning Pathway <Composition_Learning_Pathway>`) with the value received
       in the *OBJECTIVE_MECHANISM*'s *TARGET* `InputPort <ComparatorMechanism_Structure>` (from the *TARGET_MECHANISM*
       generated by the method -- see below); this is assigned the `NodeRole` `LEARNING` in the Composition.
     ..
-    .. _LEARNING_MECHANISM:
-    * a `LearningMechanism` for each MappingProjection in the sequence, each of which calculates the `learning_signal
-      <LearningMechanism.learning_signal>` used to modify the `matrix <MappingProjection.matrix>` parameter for the
-      coresponding MappingProjection, along with a `LearningSignal` and `LearningProjection` that convey the
-      `learning_signal <LearningMechanism.learning_signal>` to the MappingProjection's *MATRIX* `ParameterPort
-      <Mapping_Matrix_ParameterPort>`;  depending on learning method, additional MappingProjections may be created to
-      and/or from the LearningMechanism -- see `LearningMechanism_Learning_Configurations` for details);
-      these are assigned the `NodeRole` `LEARNING` in the Composition.
+    .. _LEARNING_MECHANISMS:
+    * *LEARNING_MECHANISMS* -- a `LearningMechanism` for each MappingProjection in the sequence, each of which
+      calculates the `learning_signal <LearningMechanism.learning_signal>` used to modify the `matrix
+      <MappingProjection.matrix>` parameter for the coresponding MappingProjection, along with a `LearningSignal` and
+      `LearningProjection` that convey the `learning_signal <LearningMechanism.learning_signal>` to the
+      MappingProjection's *MATRIX* `ParameterPort<Mapping_Matrix_ParameterPort>`;  depending on learning method,
+      additional MappingProjections may be created to and/or from the LearningMechanism -- see
+      `LearningMechanism_Learning_Configurations` for details); these are assigned the `NodeRole` `LEARNING` in the
+      Composition.
+      ..
+      .. _LEARNING_PROJECTIONS:
+    * *LEARNING_PROJECTIONS* -- a `LearningProjection` from each `LearningMechanism` to the `MappingProjection`
+      for which it modifies it s`matrix <MappingProjection.matrix>` parameter.
 
-The items with names in the list above are returned by the learning method in a dictionary, in which each name is the
-key of an entry, and the object(s) created of that type are its value.  See `LearningMechanism_Single_Layer_Learning`
-for a more detailed description and figure showing these Components.
+The items with names in the list above are placed in a dict that is assigned to the `learning_components
+<Pathway.learning_components>` attribute of the `Pathway` returned by the learning method used to create the `Pathway`;
+they key for each item in the dict is the name of the item (as listed above), and the object(s) created of that type
+are its value (see `LearningMechanism_Single_Layer_Learning` for a more detailed description and figure showing these
+Components).
 
 If the learning Pathway <Composition_Learning_Pathway>` involves more than two ProcessingMechanisms (e.g. using
-`add_backpropagation_learning_pathway` for a multilayered neural network), then additional LearningMechanisms are
-created, along with MappingProjections that provides them with the `error_signal <LearningMechanism.error_signal>`
-from the preceding LearningMechanism, and `LearningProjections <LearningProjection>` that modify the additional
-MappingProjections (*LEARNED_PROJECTION*\\s) in the sequence, as shown for an example in the figure below.  These
-additional learning components are listed in the *LEARNING_MECHANISMS* and *LEARNED_PROJECTIONS* entries of the
-dictionary assigned to the `learning_components <Pathway.learning_components>` attribute of the `learning Pathway
-<Composition_Learning_Pathways>` return by the learning method.
+`add_backpropagation_learning_pathway` for a multilayered neural network), then multiple LearningMechanisms are
+created, along with MappingProjections that provide them with the `error_signal <LearningMechanism.error_signal>`
+from the preceding LearningMechanism, and `LearningProjections <LearningProjection>` that modify the corresponding
+MappingProjections (*LEARNED_PROJECTION*\\s) in the `learning Pathway <Component_Learning_Pathway>`, as shown for an
+example in the figure below. These additional learning components are listed in the *LEARNING_MECHANISMS* and
+*LEARNED_PROJECTIONS* entries of the dictionary assigned to the `learning_components <Pathway.learning_components>`
+attribute of the `learning Pathway <Composition_Learning_Pathways>` return by the learning method.
 
 .. _Composition_MultilayerLearning_Figure:
 
@@ -1964,7 +1981,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `Composition.add_pathways` for specification format).
 
     disable_learning: bool : default False
-        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when ran in
+        specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
     controller : `OptimizationControlmechanism` : default None

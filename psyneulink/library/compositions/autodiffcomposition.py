@@ -188,7 +188,8 @@ class AutodiffComposition(Composition):
         the learning rate, which is passed to the optimizer.
 
     disable_learning : bool: default False
-        specifies whether the AutodiffComposition should disable learning when ran in `learning mode <Composition_Learning_Mode>`
+        specifies whether the AutodiffComposition should disable learning when run in `learning mode
+        <Composition.learn>`.
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
