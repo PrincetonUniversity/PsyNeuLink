@@ -707,10 +707,10 @@ Composition.
 *Execution of Learning*
 =======================
 
-For learning to occur, the Compositon's `learn <Composition.learn>` method must be used instead of its `run
-<Composition.run>` method, and its `disable_learning <Composition.disable_learning>` attribute must be False.
-When the `learn <Composition.learn>` is used, all Components unrelated to learning are executed in the same way
-as with the `run <Composition.run>` method.  If the Composition has any `nested Composition <Composition_Nested>`
+For learning to occur when a Composition is run, its `learn <Composition.learn>` method must be used instead of the
+`run <Composition.run>` method, and its `disable_learning <Composition.disable_learning>` attribute must be False.
+When the `learn <Composition.learn>` method is used, all Components *unrelated* to learning are executed in the same
+way as with the `run <Composition.run>` method.  If the Composition has any `nested Composition <Composition_Nested>`
 that have `learning Pathways <Composition_Learning_Pathways>`, then learning also occurs on all of those for which
 the `disable_learning <Composition.disable_learning>` attribute is False.  This is true even if the `disable_learning
 <Composition.disable_learning>` attribute is True for which the Composition on which the  `learn <Composition.learn>`
