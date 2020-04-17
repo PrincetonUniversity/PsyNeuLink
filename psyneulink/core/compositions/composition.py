@@ -315,11 +315,17 @@ a set of attributes, including a `pathway <Pathway.pathway>` attribute that list
 Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles <PathwayRoles>` assigned to it (based on
 the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular types of nodes (e.g., `INPUT` and
 `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have
-a particular type of `Node <Composition_Nodes>`, then its attribute returns None. There are three types of Pathways:
-processing Pathways, `control Pathways <Composition_Control_Pathways>`, and `learning Pathways
+a particular type of `Node <Composition_Nodes>`, then its attribute returns None. There are
+COMMENT:
+ADD modulatory Pathways
+three types of Pathways: processing Pathways, `control Pathways <Composition_Control_Pathways>`, and `learning Pathways
 <Composition_Learning_Pathway>`.  Processing Pathways are ones not configured for control or learning.  The latter
 two types are described in the sections on `Composition_Control` and `Composition_Learning`, respectively.  All of the
 Pathways in a Composition are listed in its `pathways <Composition.pathways>` attribute.
+COMMENT
+two types of Pathways: processing Pathways and `learning Pathways <Composition_Learning_Pathway>`.  Processing
+Pathways are ones not configured for learning; learning Pathways are described under `Composition_Learning`. All
+of the Pathways in a Composition are listed in its `pathways <Composition.pathways>` attribute.
 
 
 .. _Composition_Controller:

@@ -221,8 +221,10 @@ class PathwayRole(Enum):
     CYCLE
         A `Pathway` that constitutes a `CYCLE` in the `Composition`.
 
+    COMMENT:
     CONTROL
         A `Pathway` that constitutes a `control pathway <Composition_Control_Pathways>` of the `Composition`.
+    COMMENT
 
     LEARNING
         A `Pathway` that constitutes a `learning Pathway <Composition_Learning_Pathway>` of the `Composition`.
