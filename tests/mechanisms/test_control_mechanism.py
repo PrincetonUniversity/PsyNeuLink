@@ -218,14 +218,21 @@ class TestLCControlMechanism:
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
         np.allclose(results, [[4],[4],[4]])
 
-    def test_control_of_all_output_ports(self):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_control_of_all_output_ports(self, mode):
         mech = pnl.ProcessingMechanism(output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],)
         control_mech = pnl.ControlMechanism(control=mech.output_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2)
+        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, bin_execute=mode)
         np.allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):

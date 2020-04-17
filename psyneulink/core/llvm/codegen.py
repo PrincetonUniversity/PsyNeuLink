@@ -46,7 +46,6 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
     builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
     llvm_func = builder.function
-    llvm_func.attributes.add('alwaysinline')
     for a in llvm_func.args:
         a.attributes.add('nonnull')
 

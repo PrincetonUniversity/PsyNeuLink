@@ -2277,6 +2277,11 @@ class Port_Base(Port):
                 name = None
             elif afferent.sender.modulation == OVERRIDE:
                 # Directly store the value in the output array
+                if f_mod_ptr.type != arg_out.type:
+                    assert len(f_mod_ptr.type.pointee) == 1
+                    warnings.warn("Shape mismatch Overriding modulation should match parameter port output: {} vs. {}".format(
+                                  afferent.defaults.value, self.defaults.value))
+                    f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:

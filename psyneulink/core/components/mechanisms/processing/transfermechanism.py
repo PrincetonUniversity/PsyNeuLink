@@ -1551,19 +1551,25 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update previous value to make sure that repeated executions work
         builder.store(builder.load(current), prev_val_ptr)
 
-        if self.parameters.termination_threshold.get(None) is None:
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                    "termination_threshold")
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
             # Threshold is not defined, return the old value of finished flag
+            assert len(threshold_ptr.type.pointee) == 0
             is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                           "is_finished_flag")
             is_finished_flag = builder.load(is_finished_ptr)
             return builder.fcmp_ordered("!=", is_finished_flag,
                                               is_finished_flag.type(0))
 
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                    "termination_threshold")
+        # If modulated, termination threshold is single element array
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(threshold_ptr.type.pointee) == 1
+            threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
-        builder.store(threshold, cmp_val_ptr)
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
             # Get inside of the structure

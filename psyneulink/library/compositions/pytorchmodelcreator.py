@@ -510,7 +510,6 @@ class PytorchModelCreator(torch.nn.Module):
         args = [float_ptr_ty, ctx.int32_ty, float_ptr_ty]
         builder = ctx.create_llvm_function(args, self,name )
         llvm_func = builder.function
-        llvm_func.attributes.add('alwaysinline')
 
         input_vector, dim, output_vector = llvm_func.args
         def get_fct_param_value(param_name):
