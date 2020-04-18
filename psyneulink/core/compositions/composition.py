@@ -2980,7 +2980,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.TERMINAL)
                 if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.SINGLETON)
-                    self._add_node_role(node, NodeRole.OUTPUT)
+                    # # MODIFIED 4/4/20 NEW: [ACTUALLY, 4/18/20]
+                    # # Enforce SINGLETON as OUTPUT
+                    # self._add_node_role(node, NodeRole.OUTPUT)
+                    # MODIFIED 4/4/20 END
                 if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.INTERNAL)
 

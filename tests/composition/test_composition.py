@@ -754,7 +754,9 @@ class TestCompositionPathwayAdditionMethods:
         assert len(c.pathways) == 7
         assert c.pathways['P'].input == L
         assert c.pathways['DICT PATHWAY'].input == F
-        assert c.pathways['DICT PATHWAY'].output == F
+        # MODIFIED 4/18/20 NEW: [ACTUALLY, 4/18/20]
+        # assert c.pathways['DICT PATHWAY'].output == F
+        # MODIFIED 4/18/20 END
         assert c.pathways['LEARNING PATHWAY'].output == K
         [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
         assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
