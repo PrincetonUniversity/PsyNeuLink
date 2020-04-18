@@ -631,7 +631,7 @@ class TestPathway:
         assert ("The \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_error_pathways_list_and_item_not_list_or_dict_or_node(self):
+    def test_composition_processing_pathway_arg_pathways_list_and_item_not_list_or_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         with pytest.raises(pnl.CompositionError) as error_text:
@@ -639,7 +639,7 @@ class TestPathway:
         assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a Node, list, tuple or dict:" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_error_pathways_dict_and_item_not_list_dict_or_node(self):
+    def test_composition_processing_pathway_arg_pathways_dict_and_item_not_list_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -649,7 +649,7 @@ class TestPathway:
         assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a Node, list, tuple or dict:" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_error_dict_with_more_than_one_entry(self):
+    def test_composition_processing_pathway_arg_dict_with_more_than_one_entry_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -659,7 +659,7 @@ class TestPathway:
         assert ("A dict specified in the \'pathways\' arg of the constructor" in str(error_text.value)
                 and "contains more than one entry:" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_error_dict_with_non_string_key(self):
+    def test_composition_processing_pathway_arg_dict_with_non_string_key_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -669,7 +669,7 @@ class TestPathway:
         assert ("The key in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a str (to be used as its name):" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_error_dict_with_non_list_or_node_value(self):
+    def test_composition_processing_pathway_arg_dict_with_non_list_or_node_value_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -719,7 +719,7 @@ class TestPathway:
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P1'].target == c.nodes['Target']
 
-    def test_composition_learning_pathway_arg_error_dict_and_list(self):
+    def test_composition_learning_pathway_arg_dict_and_list_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -728,7 +728,7 @@ class TestPathway:
             c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation)}, [C,D]])
         assert ("An item" in str(error_text.value) and "is not a dict or tuple." in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_error_dict_and_list(self):
+    def test_composition_learning_pathway_arg_dict_and_list_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -738,7 +738,7 @@ class TestPathway:
                                                 'P2':([C,D], pnl.BackPropagation)}])
         assert ("A dict" in str(error_text.value) and "contains more than one entry" in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_error_dict_with_non_str_key(self):
+    def test_composition_learning_pathway_arg_dict_with_non_str_key_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -746,28 +746,13 @@ class TestPathway:
             c = Composition(pathways={C:([A,B], pnl.BackPropagation)})
         assert ("The key" in str(error_text.value) and "must be a str" in str(error_text.value))
 
-    # def test_composition_learning_pathway_arg_error_dict_with_non_tuple_value(self):
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     with pytest.raises(pnl.CompositionError) as error_text:
-    #         c = Composition(pathways={'P1': [A,B]})
-    #     assert ("The value" in str(error_text.value) and "must be a tuple" in str(error_text.value))
-
-    def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
+    def test_composition_learning_pathway_arg_to_few_mechs_error(self):
         A = ProcessingMechanism(name='A')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
         assert ("Backpropagation pathway specification does not have enough components:" in str(error_text.value))
 
-    # def test_composition_learning_pathway_arg_mech(self):
-    #     A = ProcessingMechanism(name='A')
-    #     c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
-    #     assert all(r in c.pathways['P1'].roles
-    #                for r in {PathwayRole.ORIGIN, PathwayRole.INPUT,
-    #                          PathwayRole.OUTPUT, PathwayRole.TERMINAL, PathwayRole.LEARNING})
-
-
-    def test_composition_learning_pathway_arg_error_dict_with_no_learning_fct_in_tuple(self):
+    def test_composition_learning_pathway_arg_dict_with_no_learning_fct_in_tuple_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
