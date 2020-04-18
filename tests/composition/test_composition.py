@@ -749,7 +749,6 @@ class TestPathwayAddition:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
-
     def test_composition_pathway_args_mech(self):
         A = ProcessingMechanism(name='A')
         c = Composition(pathways=A)

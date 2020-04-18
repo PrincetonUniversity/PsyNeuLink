@@ -4395,6 +4395,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Return pathway type, pathway, and learning_function or None
             """
             learning_function = None
+
+            if isinstance(pway, Pathway):
+                pway = pway.pathway
+
             if _is_node_spec(pway) or isinstance(pway, list):
                 pway_type = PROCESSING_PATHWAY
                 return pway_type, pway, None
@@ -4431,7 +4435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(pway_name, str):
                     raise CompositionError(f"The key in a dict specified in the {pathways_arg_str} must be a str "
                                            f"(to be used as its name): {pway_name}.")
-                if _is_node_spec(pway) or isinstance(pway, (list, tuple)):
+                if _is_node_spec(pway) or isinstance(pway, (list, tuple, Pathway)):
                     pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pway,
                                                                                                 f"the value of a dict")
                 else:

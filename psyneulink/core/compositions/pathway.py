@@ -15,56 +15,55 @@
 Overview
 --------
 
-A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`. Pathways are
-created and added to a `Composition` if the **pathways** argument of the Composition's constructor is specified, and/or
-whenever the Composition's `pathway creation methods <Composition_Pathway_Addition_Methods>` are used.  A Pathway can
-also be created on its own, and used in the **pathway** argument of the Composition's constructor or one of its `pathway
-creation methods <Composition_Pathway_Addition_Methods>` methods.  Although Pathways are not required in Compositions,
-they are useful for constructing them, and are required to implement `learning <Composition_Learning>` in a Composition.
+A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>`. Generally, Pathways are assigned
+to `Compositions <Composition>`, but a Pathway object can be created on its and used as a template for specifying a
+Pathway for a Composition, as described below.  See `Pathways  <Composition_Pathways>` for additional information about
+Pathways in Compositions.
 
 Creating a Pathway
 ------------------
 
-A Pathway can be created as part of a Composition or on its own.  If the **composition** argument of the
-Pathway's constructor is specified, it is added to the specified `Composition`;  if that is not specified,
-then a standalone Pathway is created that can be used as a template for specifiying the pathway of one or
-more Compositions, as described below.
-
-*Assigning to a Pathway to a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-XXX
-If the **composition** argument is specified in the Pathway's
-constructor, then the sequence assigned to its **pathway** argument is added to the specified `Composition`
-using its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method or its
-`add_linear_learning_pathway <Composition.add_linear_processing_pathway>` method, depending on the
-specifiation in the *pathway* argument (see those methods for corresponding specifications).  In this case,
-the Pathway object returned by the constructor is the same as the one added to the Composition.
-
-.. _Pathway_Name_Note:
-.. note::
-    If the Pathway is used in the **pathways** argument of a Composition's `Pathway addition method
-    <Composition_Pathway_Addition_Methods>` or in `dict specification <Pathway_Specification>` for a Pathway,
-    then the name assigned there takes precedence over one specified in the constructor for the Pathway.
-
+Pathway objects are created in one of two ways, either using the constructor to create a `template <Pathway_Template>`,
+or automatically when a Pathway is `assigned to a Composition <Pathway_Assignment_to_Composition>`.
 
 .. _Pathway_Template:
 
 *Pathway as a Template*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-If the **composition** argument is *not* specified in the Pathway's constructor, then
-the Pathway is created on its own.  This can serve as a template for a Pathway assigned to a `Composition`,
-by using it in the **processing_pathways** or **learning_pathways** argument of the constructor for a
-Composition, or in its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
-`add_linear_learning_pathway <Composition.add_linear_processing_pathway>` methods.  In any of these cases,
-a new Pathway object is created and assigned to the Composition, and the template remains unassigned.
+A Pathway created on its own, using its constructor, is a **template**, that can be used to `specifiy a Pathway
+<Pathway_Specification>` for one or more Compositions, as described `below <Pathway_Assignment_to_Composition>`;
+however, it cannot be executed on its own.  When a Pathway object is used to assign a Pathway to a Composition,
+its `pathway <Pathway.pathway>` attribute, and its `name <Pathway.name>` if that is not otherwise specified (see
+`below <Pathway_Name>`), are used as the specification to create a new Pathway that is assigned to the Composition,
+and the template remains unassigned.
 
-COMMENT:
-*Roles*.  If the **roles** agument of the Pathway's constructor is specified, then the `NodeRole(s) <NodeRole>`
-corresponding to the specified `PathwayRoles <PathwayRole>` are assigned to the nodes in the sequence
-specified in the **pathways** argument.
-COMMENT
+.. _Pathway_Assignment_to_Composition:
+
+*Assigning to Pathways to a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Pathways can be assigned to a `Composition` using the **pathways** argument of the Composition's constructor, or one of
+its `Pathway addition methods <Composition_Pathway_Addition_Methods>`.  A Pathway object can be used, along with any
+other form of `Pathway specification <Pathway_Specification>` for those arguments.  However, the Pathway object itself
+is not assigned to the Composition; rather, it serves as a `template  <Pathway_Template>` for a new Pathway object
+that is automatically created and assigned to the Composition.  The Composition's `Pathway addition methods
+<Composition_Pathway_Addition_Methods>` return a Pathway object for each Pathway created and assigned to theComposition.
+All of the Pathways assigned to a Composition are listed in its `pathways <Composition.pathways>` attribute.
+
+.. _Pathway_Name:
+
+*Pathway Name*
+~~~~~~~~~~~~~~
+
+If the **name** argument of the Pathway's constructor is used to assign it a name, this is used as the name of the
+Pathway created when it is assigned to a Composition in its constructor, or using its `add_pathways
+<Composition.add_pathways>` method.  This is also the case if one of the Composition's other `Pathway addition methods
+<Compositiion_Pathway_Addition_Methods>` is used, as long as the **name** argument of those methods is not specified.
+However, if the **name** argument is specified in those methods, or `Pathway specification dictionary
+<Pathway_Specification_Dictionary>` is used to specify the Pathway's name, that takes precedence over, and replaces
+one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name>` attribute.
+
 
 .. _Pathway_Specification:
 
@@ -72,7 +71,8 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
-Pathway or a `Composition`, or any of a Composition's methods used to add a Pathway:
+Pathway, the **pathways** argument of a the constructor for a `Composition`, or the corresponding argument
+of any of a Composition's `Pathway addition methods <Compositoin_Pathway_Addition_Methods>`:
 
     * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
     ..
@@ -96,6 +96,7 @@ the forms above, or one of the following:
 
     * **Pathway** object or constructor: Pathway(pathway=\ `Pathway specification <Pathway_Specification>`,...).
     ..
+    .. _Pathway_Specification_Dictionary:
     * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a Pathway object or constuctor,
       or one of the standard `Pathway specifications <Pathway_Specification>` listed above.
 
@@ -122,8 +123,8 @@ A Pathway has the following primary attributes:
 
 * `pathway <Pathway.pathway>` - if the Pathway was created on its own, this contains the specification provided in
   the **pathway** arg of its constructor; that is, depending upon how it was specified, it may or may not contain
-  fully constructed `Components <Component>`.  This is passed to the **pathway** argument of a Composition's
-  constructor or one of its `pathway creation methods <Composition_Pathway_Addition_Methods>` when the Pathway is used
+  fully constructed `Components <Component>`.  This is passed to the **pathways** argument of a Composition's
+  constructor or one of its `pathway addition methods <Composition_Pathway_Addition_Methods>` when the Pathway is used
   in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
   `pathways <Composition.pathways>` attribute), then the actual `Mechanism(s) <Mechanism>` and/or `Composition(s)`
   that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are listed in the
@@ -274,7 +275,7 @@ class Pathway(object):
 
     pathway : `Node <Component_Nodes>`, list, tuple, or dict.
         if the Pathway is created on its own, this contains the specification provided to the **pathway** argument
-        of its constructor, and take any of the forms permitted for `Pathway specification <Pathway_Specification>`;
+        of its constructor, and can take any of the forms permitted for `Pathway specification <Pathway_Specification>`;
         if the Pathway is created by a Composition, this is a list of the `Nodes <Pathway_Nodes>` and intercolated
         `Projections <Projection>` in the Pathway (see `above <Pathway_Attribute>` for additional details).
 
