@@ -467,6 +467,34 @@ comp.add_node(B)
 
 class TestPathway:
 
+    def test_pathway_standalone_object(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        p = Pathway(pathway=[A,B,C], name='P')
+        assert p.pathway == [A, B, C]
+        assert p.composition == None
+        assert p.name == 'P'
+        assert p.input == None
+        assert p.output == None
+        assert p.target == None
+        assert p.roles == None
+        assert p.learning_components == None
+
+    def test_pathway_assign_composition_arg_error(self):
+        c = Composition()
+        with pytest.raises(pnl.CompositionError) as error_text:
+            p = Pathway(pathway=[], composition='c')
+        assert "\'composition\' can not be specified as an arg in the constructor for a Pathway" in str(
+                error_text.value)
+
+    def test_pathway_illegal_arg_error(self):
+        with pytest.raises(pnl.CompositionError) as error_text:
+            Pathway(pathway=[], foo='bar')
+        assert "Illegal argument(s) used in constructor for Pathway: foo." in str(error_text.value)
+
+class TestPathwayAddition:
+
     def test_pathway_attributes(self):
         c = Composition()
         A = ProcessingMechanism(name='A')
@@ -558,6 +586,42 @@ class TestPathway:
         c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
         c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_add_processing_pathway_arg_mech(self):
+        A = ProcessingMechanism(name='A')
+        c = Composition()
+        c.add_linear_processing_pathway(pathway=A)
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN,
+                             NodeRole.SINGLETON,
+                             NodeRole.OUTPUT,
+                             NodeRole.TERMINAL})
+        assert all(r in c.pathways[0].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.SINGLETON,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
+
+    def test_add_processing_pathway_arg_pathway(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        p = Pathway(pathway=A, name='P')
+        c = Composition()
+        c.add_linear_processing_pathway(pathway=p)
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN,
+                             NodeRole.SINGLETON,
+                             NodeRole.OUTPUT,
+                             NodeRole.TERMINAL})
+        assert all(r in c.pathways['P'].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.SINGLETON,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
 
     def test_composition_processing_pathway_arg_mech(self):
         A = ProcessingMechanism(name='A')

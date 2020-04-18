@@ -4092,8 +4092,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
+            # Give precedence to name specified in call to add_linear_processing_pathway
+            name = name or pathway.name
             pathway = pathway.pathway
-        elif _is_pathway_entry_spec(pathway, ANY):
+        if _is_pathway_entry_spec(pathway, ANY):
             pathway = convert_to_list(pathway)
         elif isinstance(pathway, tuple):
             # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
