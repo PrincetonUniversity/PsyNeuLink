@@ -158,7 +158,7 @@ A LearningProjection cannot be executed directly.  It's execution is determined 
 ParameterPort belongs) is updated. Note that these events occur only when the ProcessingMechanism that receives the
 `learned_projection <LearningProjection.learned_projection>` is executed (see :ref:`Lazy Evaluation <LINK>` for an
 explanation of "lazy" updating).  If `learning_enabled <LearningProjection.learning_enabled>` is *AFTER*, then
-LearningProjection is executed at the end of the `TRIAL` of the Composition to which it belongs.  When the
+LearningProjection is executed at the end of the `TRIAL <TimeScale.TRIAL>` of the Composition to which it belongs.  When the
 LearningProjection is executed, its `function <LearningProjection.function>` gets the `learning_signal
 <LearningProjection.learning_signal>` from its `sender <LearningProjection.sender>` and conveys that to its
 `receiver <LearningProjection.receiver>`, possibly modified by a `learning_rate <LearningProjection.learning_rate>`

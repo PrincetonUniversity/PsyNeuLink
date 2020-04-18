@@ -153,9 +153,9 @@ use (e.g., `OptimizationControlMechanism`);  in those cases, they use each Contr
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute contains the value assigned to it by the ControlMechanism
-at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
-`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
-`last_intensity` attribute.
+at the end of the previous `TRIAL <TimeScale.TRIAL>` (i.e., when the ControlMechanism last executed --  see
+`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL <TimeScale.TRIAL>` is
+assigned to the `last_intensity` attribute.
 
 *Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its `variable
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
@@ -175,8 +175,8 @@ case, the ControlSignal's costs can't be computed and will all be assigned None.
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
 The `intensity` is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter(s) for which the
-ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`;
-its value from the previous `TRIAL` is assigned to the `last_intensity` attribute.
+ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL
+<TimeScale.TRIAL>`; its value from the previous `TRIAL <TimeScale.TRIAL>` is assigned to the `last_intensity` attribute.
 
 .. _ControlSignal_Costs:
 
@@ -238,9 +238,9 @@ Execution
 
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism <ControlMechanism>` to
 which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation
-<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
-that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
-`value <ParameterPort.value>` \\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignal projects.
+<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for that
+`TRIAL <TimeScale.TRIAL>`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to
+set the `value <ParameterPort.value>`\\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignalprojects.
 
 Recall that the ParameterPort value is referenced anywhere that the controlled parameter is used in computation, and
 that it does not update until the component to which the ParameterPort belongs executes. If the distinction between the
@@ -251,7 +251,7 @@ ParameterPort is unfamiliar, see `Parameter Port documentation <ParameterPort>` 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
 attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
 evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
-<ControlSignal.allocation>` for the next `TRIAL`.
+<ControlSignal.allocation>` for the next `TRIAL <TimeScale.TRIAL>`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism

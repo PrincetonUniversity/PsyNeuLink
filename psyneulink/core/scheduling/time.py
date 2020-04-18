@@ -53,7 +53,8 @@ class TimeScale(enum.Enum):
 
     TIME_STEP
         the nuclear unit of time, corresponding to the execution of all `Mechanism <Mechanism>`\\ s allowed to execute
-        from a single `consideration_set` of a `Scheduler`, and which are considered to have executed simultaneously.
+        from a single `consideration_set <consideration_set>` of a `Scheduler`, and which are considered to have
+        executed simultaneously.
 
     PASS
         a full iteration through all of the `consideration_sets <consideration_set>` in a `Scheduler's <Scheduler>`
@@ -61,12 +62,12 @@ class TimeScale(enum.Enum):
         <Component>` `specified to a Scheduler <Scheduler_Creation>` is considered for execution at least once.
 
     TRIAL
-        an open-ended unit of time consisting of all action that occurs within the scope of a single input to a
+        an open-ended unit of time consisting of all actions that occurs within the scope of a single input to a
         `Composition <Composition>`.
 
     RUN
         the scope of a call to the `run <Composition.run>` method of a `Composition <Composition>`,
-        consisting of one or more `TRIALs <TRIAL>`.
+        consisting of one or more `TRIALs <TimeScale.TRIAL>`.
 
     LIFE
         the scope of time since the creation of an object.
@@ -414,7 +415,7 @@ class TimeHistoryTree:
                     base_indices = {TimeScale.RUN: 1, TimeScale.TRIAL: 5}
 
                 gives the number of **query_time_scale**\\ s that have occurred \
-                in the 5th `TRIAL` of the 1st `RUN`. If an entry for a :class:`TimeScale` \
+                in the 5th `TRIAL <TimeScale.TRIAL>` of the 1st `RUN`. If an entry for a :class:`TimeScale` \
                 is not specified but is coarser than **query_time_scale**, the latest \
                 value for that entry will be used
 

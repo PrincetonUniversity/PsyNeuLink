@@ -102,20 +102,21 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 ========
 
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
-`input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
-execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
-executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
-another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
-with `Condition` specifications for individual Components to execute different Components at different time scales.
+`input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a
+`TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`, the Component makes repeated `calls to
+its Scheduler <Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every
+Component has been executed at least once or another `termination condition <Scheduler_Termination_Conditions>` is
+met.  The `Scheduler` can be used in combination with `Condition` specifications for individual Components to execute
+different Components at different time scales.
 
 .. _Composition_Run_Inputs:
 
 *Inputs*
 ========
 
-The :keyword:`run` function presents the inputs for each `TRIAL` to the input_ports of the relevant Mechanisms in
-the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
-:keyword:`execute` or :keyword:`run` method.
+The :keyword:`run` function presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the input_ports of the relevant
+Mechanisms in the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a
+Component's :keyword:`execute` or :keyword:`run` method.
 
 Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists in which
 the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
@@ -469,8 +470,8 @@ COMMENT
 =========
 
 If learning is specified for a `Pathway` (see `learning Pathway <Composition_Learning_Pathway>`), then
-target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
-are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
+target values for each `TRIAL <TimeScale.TRIAL>` must be provided for each `TARGET` Mechanism in the Process or System
+being run.  These are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
 
 Recall that the `TARGET`, or `ComparatorMechanism`, of a `learning Pathway <Composition_Learning_Pathway>` receives a
 TARGET, that is provided by the user at run time, and a SAMPLE, that is received from a projection sent by the last
@@ -487,8 +488,8 @@ always the last Mechanism of the `learning Pathway <Composition_Learning_Pathway
 dictionary, the value is usually a list of 1d lists/arrays.
 
 The number of targets specified for each Mechanism must equal the number specified for the **inputs** argument;  as
-with **inputs**, if the number of `TRIAL` \\s specified is greater than the number of inputs (and targets), then the
-list will be cycled until the number of `TRIAL` \\s specified is completed.
+with **inputs**, if the number of `TRIAL <TimeScale.TRIAL>` \\s specified is greater than the number of inputs
+(and targets), then the list will be cycled until the number of `TRIAL <TimeScale.TRIAL>` \\s specified is completed.
 
 +----------------------------------------------------+--------------+--------------+
 | Trial #                                            |0             |   1          |
@@ -679,7 +680,7 @@ def run(obj,
     Run a sequence of executions for a `Process` or `System`.
 
     COMMENT:
-        First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL`:
+        First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL <TimeScale.TRIAL>`:
             * call call_before_trial if specified;
             * for each time_step in the trial:
                 * call call_before_time_step if specified;
@@ -702,24 +703,25 @@ def run(obj,
    Arguments
    ---------
 
-    inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL`
-        the input for each `TRIAL` in a sequence (see `Composition_Run_Inputs` for detailed description of formatting
-        requirements and options).
+    inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL <TimeScale.TRIAL>`
+        the input for each `TRIAL <TimeScale.TRIAL>` in a sequence (see `Composition_Run_Inputs` for detailed
+        description of formatting requirements and options).
 
     num_trials : int : default None
-        the number of `TRIAL` \\s to run.  If it is `None` (the default), then a number of `TRIAL` \\s run will be equal
-        equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
-        inputs, then the inputs will be cycled until the number of `TRIAL` \\s specified have been run.
+        the number of `TRIAL <TimeScale.TRIAL>` \\s to run.  If it is `None` (the default), then a number of `TRIAL
+        <TimeScale.TRIAL>` \\s run will be equal to the number of items specified in the **inputs** argument.
+        If **num_trials** exceeds the number of inputs, then the inputs will be cycled until the number of
+        `TRIAL <TimeScale.TRIAL>` \\s specified have been run.
 
     initialize : bool default False
-        calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL`.
+        calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL <TimeScale.TRIAL>`.
 
     initial_values : Dict[Mechanism:List[input]], List[input] or np.ndarray(input) : default None
         the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
     targets : dict : default None
         the target values assigned to the `ComparatorMechanism` of each `learning Pathway
-        <Composition_Learning_Pathway>` on each `TRIAL`.
+        <Composition_Learning_Pathway>` on each `TRIAL <TimeScale.TRIAL>`.
 
     learning : bool :  default None
         enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
@@ -727,10 +729,10 @@ def run(obj,
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
     call_before_trial : Function : default `None`
-        called before each `TRIAL` in the sequence is run.
+        called before each `TRIAL <TimeScale.TRIAL>` in the sequence is run.
 
     call_after_trial : Function : default `None`
-        called after each `TRIAL` in the sequence is run.
+        called after each `TRIAL <TimeScale.TRIAL>` in the sequence is run.
 
     call_before_time_step : Function : default ``None`
         called before each `TIME_STEP` is executed.
@@ -765,7 +767,7 @@ def run(obj,
    -------
 
     <obj>.results : List[OutputPort.value]
-        list of the values, for each `TRIAL`, of the OutputPorts for a Mechanism run directly,
+        list of the values, for each `TRIAL <TimeScale.TRIAL>`, of the OutputPorts for a Mechanism run directly,
         or of the OutputPorts of the `TERMINAL` Mechanisms for the Process or System run.
     """
     from psyneulink.core.globals.context import ContextFlags

@@ -47,9 +47,9 @@ an EVCControlMechanism carries out an exhaustive evaluation of allocation polici
 <EVCControlMechanism_Functions>` to calculate the **expected value of control (EVC)** for each `control_allocation`:
 a cost-benefit analysis that weighs the `cost <ControlSignal.cost> of the ControlSignals against the outcome of the
 `system <EVCControlMechanism.system>` \\s performance for a given `control_allocation`. The EVCControlMechanism
-selects the `control_allocation` that generates the maximum EVC, and implements that for the next `TRIAL`. Each step
-of this procedure can be modified, or replaced entirely, by assigning custom functions to corresponding parameters of
-the EVCControlMechanism, as described `below <EVCControlMechanism_Functions>`.
+selects the `control_allocation` that generates the maximum EVC, and implements that for the next `TRIAL
+<TimeScale.TRIAL>`. Each step of this procedure can be modified, or replaced entirely, by assigning custom functions
+to corresponding parameters of the EVCControlMechanism, as described `below <EVCControlMechanism_Functions>`.
 
 .. _EVCControlMechanism_Creation:
 
@@ -215,10 +215,10 @@ Default Configuration of EVC Function and its Auxiliary Functions
 
 In its default configuration, an EVCControlMechanism simulates and evaluates the performance of its `system
 <EVCControlMechanism.system>` under a set of allocation_policies determined by the `allocation_samples
-<ControlSignal.allocation_samples>` attributes of its `ControlSignals <EVCControlMechanism_ControlSignals>`, and
-implements (for the next `TRIAL` of execution) the one that generates the maximum `EVC <EVCControlMechanism_EVC>`.
-This is carried out by the EVCControlMechanism's default `function <EVCControlMechanism.function>` and three
-auxiliary functions, as described below.
+<ControlSignal.allocation_samples>` attributes of its `ControlSignals <EVCControlMechanism_ControlSignals>`,
+and implements (for the next `TRIAL <TimeScale.TRIAL>` of execution) the one that generates the maximum `EVC
+<EVCControlMechanism_EVC>`. This is carried out by the EVCControlMechanism's default `function
+<EVCControlMechanism.function>` and three auxiliary functions, as described below.
 
 The default `function <EVCControlMechanism.function>` of an EVCControlMechanism is `ControlSignalGridSearch`. It
 identifies the `control_allocation` with the maximum `EVC <EVCControlMechanism_EVC>` by a conducting an exhaustive
@@ -291,17 +291,17 @@ The OutputPorts of an EVCControlMechanism (like any `ControlMechanism`) are a se
 its `output_ports <ControlMechanism.output_ports>` attribute).  Each ControlSignal is assigned a  `ControlProjection`
 that projects to the `ParameterPort` for a parameter controlled by the EVCControlMechanism.  Each ControlSignal is
 assigned an item of the EVCControlMechanism's `control_allocation`, that determines its `allocation
-<ControlSignal.allocation>` for a given `TRIAL` of execution.  The `allocation <ControlSignal.allocation>` is used by
-a ControlSignal to determine its `intensity <ControlSignal.intensity>`, which is then assigned as the `value
-<ControlProjection.value>` of the ControlSignal's ControlProjection.   The `value <ControlProjection>` of the
-ControlProjection is used by the `ParameterPort` to which it projects to modify the value of the parameter (see
-`ControlSignal_Modulation` for description of how a ControlSignal modulates the value of a parameter it controls).
-A ControlSignal also calculates a `cost <ControlSignal.cost>`, based on its `intensity <ControlSignal.intensity>`
-and/or its time course. The `cost <ControlSignal.cost>` is included in the evaluation that the EVCControlMechanism
-carries out for a given `control_allocation`, and that it uses to adapt the ControlSignal's `allocation
-<ControlSignal.allocation>` in the future.  When the EVCControlMechanism chooses an `control_allocation` to evaluate,
-it selects an allocation value from the ControlSignal's `allocation_samples <ControlSignal.allocation_samples>`
-attribute.
+<ControlSignal.allocation>` for a given `TRIAL <TimeScale.TRIAL>` of execution.  The `allocation
+<ControlSignal.allocation>` is used by a ControlSignal to determine its `intensity <ControlSignal.intensity>`,
+which is then assigned as the `value <ControlProjection.value>` of the ControlSignal's ControlProjection.   The
+`value <ControlProjection>` of the ControlProjection is used by the `ParameterPort` to which it projects to modify
+the value of the parameter (see `ControlSignal_Modulation` for description of how a ControlSignal modulates the value
+of a parameter it controls). A ControlSignal also calculates a `cost <ControlSignal.cost>`, based on its `intensity
+<ControlSignal.intensity>` and/or its time course. The `cost <ControlSignal.cost>` is included in the evaluation that
+the EVCControlMechanism carries out for a given `control_allocation`, and that it uses to adapt the ControlSignal's
+`allocation <ControlSignal.allocation>` in the future.  When the EVCControlMechanism chooses an `control_allocation`
+to evaluate, it selects an allocation value from the ControlSignal's `allocation_samples
+<ControlSignal.allocation_samples>` attribute.
 
 
 .. _EVCControlMechanism_Execution:

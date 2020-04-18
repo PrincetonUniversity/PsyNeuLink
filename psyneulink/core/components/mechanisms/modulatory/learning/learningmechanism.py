@@ -862,8 +862,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
         to which it belongs, so that the error signals it calculates can be passed to any other LearningMechanism(s)
         to which it projects (see `LearningMechanism_Multilayer_Learning`).  If set to True or `ONLINE`,
         `learning_projections <LearningMechanism.learning_projections>` are updated when the LearningMechanism
-        executes.  If set to `AFTER`, `learning_projections <LearningMechanism.learning_projections>` are updated at
-        the end of each `TRIAL` of execution of the Composition to which the LearningMechanism belongs.
+        executes.  If set to `AFTER`, `learning_projections <LearningMechanism.learning_projections>` are updated at the
+        end of each `TRIAL <TimeScale.TRIAL>` of execution of the Composition to which the LearningMechanism belongs.
 
         .. note::
            the `learning_abled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
