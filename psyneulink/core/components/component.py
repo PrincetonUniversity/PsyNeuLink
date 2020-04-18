@@ -352,8 +352,8 @@ Component_Execution_Termination
 
 .. _Component_Is_Finished:
 
-* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL`;  it is only
-  used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
+* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL
+  <TimeScale.TRIAL>`;  it is only used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
 
 .. _Component_Execute_Until_Finished:
 
@@ -2602,9 +2602,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def is_finished(self, context=None):
         """
-            set by a Component to signal completion of its `execution <Component_Execution>` in a `trial`; used by
-            `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
-            Components on a Component.
+            set by a Component to signal completion of its `execution <Component_Execution>` in a `TRIAL
+            <TimeScale.TRIAL>`; used by `Component-based Conditions <Conditions_Component_Based>` to predicate the
+            execution of one or more other Components on a Component.
         """
         return self.parameters.is_finished_flag._get(context)
 

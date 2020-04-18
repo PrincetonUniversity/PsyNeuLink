@@ -369,11 +369,12 @@ accepts a single argument that is a 2d array with two entries.
     .. _TransferMechanism_Termination_By_Time:
 
     *Termination by time*.  This terminates execution when the Mechanism has executed at least a number of times equal
-    to the **threshold** at a particular TimeScale (e.g., within a `Run` or a `Trial`). This is specified by assigning
-    a `TimeScale` to **termination_measure**;  execution terminates when the number of executions at that TimeScale
-    equals the **termination_threshold**.  Note that, in this case, the **termination_comparison_op** argument is
-    ignored (the `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
-    *GREATER_THAN_OR_EQUAL*).  For example, ``my_mech`` is configured below to execute at least twice per trial::
+    to the **threshold** at a particular TimeScale (e.g., within a `RUN` or a `TRIAL <TimeScale.TRIAL>`). This is
+    specified by assigning a `TimeScale` to **termination_measure**;  execution terminates when the number of
+    executions at that TimeScale equals the **termination_threshold**.  Note that, in this case,
+    the **termination_comparison_op** argument is ignored (the `termination_comparison_op
+    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
+    ``my_mech`` is configured below to execute at least twice per trial::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,

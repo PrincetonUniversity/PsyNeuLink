@@ -437,13 +437,13 @@ Execution
 ---------
 
 If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
-all of the other  `Mechanisms <Mechanism>` executed in a `TRIAL` for that Composition, depending on the
-value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
-`Composition_Controller_Execution`).  If a ControlMechanism is added to a Composition for which it is not a
-`controller <Composition.controller>`, then it executes in the same way as a `ProcessingMechanism
-<ProcessingMechanism>`, based on its place in the Composition's `graph <Composition.graph>`.  Because
-`ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the graph,
-the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL` (see
+all of the other  `Mechanisms <Mechanism>` executed in a `TRIAL <TimeScale.TRIAL>` for that Composition, depending
+on the value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
+`Composition_Controller_Execution`).  If a ControlMechanism is added to a Composition for which it is not a `controller
+<Composition.controller>`, then it executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on
+its place in the Composition's `graph <Composition.graph>`.  Because `ControlProjections <ControlProjection>` are
+likely to introduce cycles (recurrent connection loops) in the graph, the effects of a ControlMechanism and its
+projections will generally not be applied in the first `TRIAL <TimeScale.TRIAL>` (see
 COMMENT:
 FIX 8/27/19 [JDC]:
 `Composition_Initial_Values_and_Feedback` and
@@ -459,7 +459,7 @@ assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlS
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, as well as its `cost
 <ControlSignal.cost>.  The `intensity <ControlSignal.intensity>`is used by its `ControlProjection(s)
 <ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it controls, which are then
-used in the subsequent `TRIAL` of execution.
+used in the subsequent `TRIAL <TimeScale.TRIAL>` of execution.
 
 .. note::
    `Ports <Port>` that receive a `ControlProjection` does not update its value until its owner Mechanism
@@ -483,7 +483,7 @@ attribute.  Finally, the ControlMechanism uses this, together with its `outcome 
 to compute a `net_outcome <ControlMechanism.net_outcome>` using its `compute_net_outcome
 <ControlMechanism.compute_net_outcome>` function.  This is used by some subclasses of ControlMechanism
 (e.g., `OptimizationControlMechanism`) to  compute its `control_allocation <ControlMechanism.control_allocation>`
-for the next `TRIAL` of execution.
+for the next `TRIAL <TimeScale.TRIAL>` of execution.
 
 .. _ControlMechanism_Examples:
 

@@ -239,8 +239,8 @@ determinining which nodes need be initialized and initializing them when the Com
 and also for allowing the user specify how this is done
 
 COMMENT:
-XXX (see `Composition_Initial_Values_and_Feedback`)
-XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
+    XXX (see `Composition_Initial_Values_and_Feedback`)
+    XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
 COMMENT
 
 .. _Composition_Nodes:
@@ -274,8 +274,8 @@ receive its external input when it is `run <Composition.run>`), and similarly it
 However, any other nodes can be specifies as the `INPUT` or `OUTPUT` Nodes using the methods above, in which case
 the default assignents are ignored
 COMMENT:
-??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
-<Composition_Learning_Pathway>` (see XXX).
+    ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
+    <Composition_Learning_Pathway>` (see XXX).
 COMMENT
 .  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_required_node_role
 <Composition.remove_required_node_role>` method. All of the roles assigned assigned to a particular Node can be
@@ -459,12 +459,11 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
 method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run
-<Composition.run>`, which constitutes a `trial` of execution.  For each `trial`, the Component makes repeated calls
-to its `scheduler <Composition.scheduler>`, executing the Components it specifies in each
-`TIME_STEP`, until every Component has been executed at least once or another `termination condition
-<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
-used in combination with `Condition` specifications for individual Components to execute different Components at
-different time scales.
+<Composition.run>`, which constitutes a `trial <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
+the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
+in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
+<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
+`Condition` specifications for individual Components to execute different Components at different time scales.
 
 Runtime Params
 COMMENT
@@ -549,8 +548,8 @@ RecurrentTransferMechanism is executed, its AutoAssociativeLearningMechanism is 
 in response to its input.
 
 COMMENT:
-• DISCUSS LEARNING COMPONENTS RETURNED ONCE add_node AND add_linear_processing_pathway RETURN THEM
-• ADD EXAMPLE HERE
+    • DISCUSS LEARNING COMPONENTS RETURNED ONCE add_node AND add_linear_processing_pathway RETURN THEM
+    • ADD EXAMPLE HERE
 COMMENT
 
 .. _Composition_Learning_Supervised:
@@ -563,11 +562,11 @@ COMMENT
 * `Composition_Learning_Execution`
 
 COMMENT:
-TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
-appropriate `LearningFunction <LearningFunctions>` in its **learning_function** argument.
-XXXMORE HERE ABOUT TYPES OF FUNCTIONS
-• MODIFY REFERENCE TO LEARNING COMPONENT NAMES WHEN THEY ARE IMPLEMENTED AS AN ENUM CLASS
-• ADD EXAMPLES - POINT TO ONES IN BasicsAndPrimer
+    TBI:  Supervised learning is implemented using a Composition's `add_learning_pathway` method, and specifying an
+    appropriate `LearningFunction <LearningFunctions>` in its **learning_function** argument.
+    XXXMORE HERE ABOUT TYPES OF FUNCTIONS
+    • MODIFY REFERENCE TO LEARNING COMPONENT NAMES WHEN THEY ARE IMPLEMENTED AS AN ENUM CLASS
+    • ADD EXAMPLES - POINT TO ONES IN BasicsAndPrimer
 COMMENT
 
 .. _Composition_Learning_Methods:
@@ -680,8 +679,8 @@ attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the
    and in italics, above each Mechanism).
 
 COMMENT:
-MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGING OF FIRST LINE THAT FOLLOWS IT WITH:
-The description above (and example `below <EXMAPLE>`
+    MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGING OF FIRST LINE THAT FOLLOWS IT WITH:
+    The description above (and example `below <EXMAPLE>`
 COMMENT
 
 .. _Composition_XOR_Example:
@@ -792,7 +791,7 @@ they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
-Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
+    Change reference to example below to point to Rumelhart Semantic Network Model Script once implemented
 COMMENT
 
 `AutodiffCompositions <AutodiffComposition>` provide the ability to execute a composition using `PyTorch
@@ -844,8 +843,8 @@ Visualizing a Composition
 -------------------------
 
 COMMENT:
-XXX - ADD EXAMPLE OF NESTED COMPOSITION
-XXX - ADD DISCUSSION OF show_controller AND show_learning
+    XXX - ADD EXAMPLE OF NESTED COMPOSITION
+    XXX - ADD DISCUSSION OF show_controller AND show_learning
 COMMENT
 
 The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
@@ -936,21 +935,24 @@ and nested Compositions in an outer Composition, ``comp``:
 | >>> comp.show_graph(show_nested=True)                |                                                               |
 +------------------------------------------------------+---------------------------------------------------------------+
 
-
 .. _Composition_Run:
 
 Running a Composition
 ---------------------
+
+COMMENT:
+  OVERVIEW HERE, INCLUDING NOTION OF TRIALS
+COMMENT
 
 .. _Composition_Run_Static_Inputs:
 
 *Run with Input Dictionary*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The `run <Composition.run>` method presents the inputs for each `trial` to the `input_ports <InputPort>` of the `INPUT`
-`Nodes <Composition_Nodes>` in the `scope of execution <Composition_Scope_of_Execution>`. These input values are
-specified in the **inputs** argument of a Composition's `execute <Composition.execute>` or `run <Composition.run>`
-methods.
+The `run <Composition.run>` method presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the `input_ports
+<InputPort>` of the `INPUT` `Nodes <Composition_Nodes>` in the `scope of execution <Composition_Scope_of_Execution>`.
+These input values are specified in the **inputs** argument of a Composition's `execute <Composition.execute>` or
+`run <Composition.run>` methods.
 
 COMMENT:
     From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
@@ -960,7 +962,8 @@ COMMENT
 
 The standard way to specificy inputs is a Python dictionary, in which each entry specifies the inputs to a given `INPUT`
 `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
-for each `trial` to be executed (i.e., the i-th item of the list represents the input value to the Node on `trial` i).
+for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents the input value to the
+Node on `TRIAL <TimeScale.TRIAL>` i).
 
 .. _Composition_Run_Inputs_Fig_States:
 
@@ -1349,13 +1352,13 @@ Environment.
 COMMENT
 
 COMMENT:
-.. _Composition_Initial_Values_and_Feedback:
-FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
-MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
-..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-a list or ndarray of **initial_values**[...] The **initial_values** are
-assigned at the start of a `trial` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
-and listed in the Composition's ?? attribute),
+    .. _Composition_Initial_Values_and_Feedback:
+    FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
+    MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
+    ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
+    a list or ndarray of **initial_values**[...] The **initial_values** are assigned at the start of a `TRIAL <TimeScale.TRIAL>` as
+    input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
+    and listed in the Composition's ?? attribute),
 COMMENT
 
 .. _Composition_Scope_of_Execution:
@@ -2128,20 +2131,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         components used for learning; those are contained in `learning_components
         <Composition.learning_components>` attribute.
 
-    COMMENT:
-    learning_pathways : list[list]
-        a list of the `learning pathways <Composition_Learning_Pathway>` specified for the Composition; each
-        item contains a list of the `ProcessingMechanisms <ProcessingMechanism>` and `MappingProjection(s)
-        <MappingProjection>` specified a call to one of the Composition's `add_<*learning_type*>_pathway' methods (see
-        `Composition_Learning` for details).  This does *not* contain the components used for learning; those are
-        contained in `learning_components <Composition.learning_components>` attribute.
-    COMMENT
-
     results : list[list[list]]
         stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
-        in the Composition for every `trial` executed in a call to `run <Composition.run>`.  Each item in the
-        outermos list is a list of values for a given trial; each item within a trial corresponds to the
-        `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
+        in the Composition for every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.
+        Each item in the outermos list is a list of values for a given trial; each item within a trial corresponds
+        to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
 
     simulation_results : list[list[list]]
         stores the `results <Composition.results>` for executions of the Composition when it is executed using
@@ -2944,7 +2938,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
                     #    - do not project to any other nodes.
 
-                    # First, find last consideration_set in scheduler that does not contain only
+                    # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
                     #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
                     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
                     output_nodes = list([items for items in self.scheduler.consideration_queue
@@ -4575,8 +4569,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `trial` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            in each `TRIAL <TimeScale.TRIAL>` when the Composition executes;  it is assigned as the default value for
+            the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
@@ -4698,8 +4692,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `trial` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            in each `TRIAL <TimeScale.TRIAL>` when the Composition executes;  it is assigned as the default value for
+            the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
@@ -4738,8 +4732,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameter of the `learned_projection` is updated
-            in each `trial` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
+            in each `TRIAL <TimeScale.TRIAL>` when the Composition executes;  it is assigned as the default value for
+            the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanism
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
@@ -4784,8 +4778,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         learning_update : Optional[bool|ONLINE|AFTER] : default AFTER
             specifies when the `matrix <MappingProjection.matrix>` parameters of the `learned_projections` are updated
-            in each `trial` when the Composition executes;  it is assigned as the default value for the
-            `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanisms
+            in each `TRIAL <TimeScale.TRIAL>` when the Composition executes;  it is assigned as the default value for
+            the `learning_enabled <LearningMechanism.learning_enabled>` attribute of the `LearningMechanisms
             <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
             (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
 
@@ -7411,7 +7405,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each Node in the composition that receives inputs from
                 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-                list corresponds to a certain `trial`.
+                list corresponds to a certain `TRIAL <TimeScale.TRIAL>`.
 
             scheduler : Scheduler
                 the scheduler object that owns the conditions that will instruct the execution of the Composition.
@@ -7442,10 +7436,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 will be called after each `PASS` is executed.
 
             call_before_trial : callable
-                will be called before each `TRIAL` is executed.
+                will be called before each `TRIAL <TimeScale.TRIAL>` is executed.
 
             call_after_trial : callable
-                will be called after each `TRIAL` is executed.
+                will be called after each `TRIAL <TimeScale.TRIAL>` is executed.
 
             initial_values : Dict[Node: Node Value]
                 sets the values of nodes before the start of the run. This is useful in cases where a node's value is

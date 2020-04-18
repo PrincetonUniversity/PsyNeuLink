@@ -37,7 +37,7 @@ ProcessingMechanism have more specialized features, and often have restrictions 
 The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
-are available to all ProcessingMechanisms in the next `TRIAL`.
+are available to all ProcessingMechanisms in the next `TRIAL <TimeScale.TRIAL>`.
 
 .. _ProcessingMechanism_Creation:
 

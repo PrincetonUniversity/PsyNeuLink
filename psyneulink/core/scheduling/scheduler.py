@@ -64,18 +64,21 @@ ConditionSets can also be added after the  Scheduler has been created, using its
 Algorithm
 ---------
 
+.. _consideration_set:
+
 When a Scheduler is created, it constructs a `consideration_queue`:  a list of `consideration_sets <consideration_set>`
-that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
-among them specified in the Composition, or on the dependencies specified in the graph specification dictionary, whichever
-was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Components that are eligible to
-execute at the same time/`TIME_STEP` (i.e., that appear at the same "depth" in a sequence of dependencies, and
-among which there are no dependencies).  The first `consideration_set` consists of only `ORIGIN` Mechanisms.
-The second consists of all Components that receive `Projections <Projection>` from the Mechanisms in the first
-`consideration_set`. The third consists of Components that receive Projections from Components in the first two
-`consideration_sets <consideration_set>`, and so forth.  When the Scheduler is run, it uses the
-`consideration_queue` to determine which Components are eligible to execute in each `TIME_STEP` of a `PASS`, and then
-evaluates the `Condition <Condition>` associated with each Component in the current `consideration_set`
-to determine which should actually be assigned for execution.
+that defines the order in which `Components <Component>` are eligible to be executed.  This is based on the pattern of
+`Projections <Projection>` among them specified in the `Composition`, or on the dependencies specified in the graph
+specification dictionary, whichever was provided in the Scheduler's constructor.  Each `consideration_set
+<consideration_set>` is a set of Components that are eligible to execute at the same time/`TIME_STEP` (i.e.,
+that appear at the same "depth" in a sequence of dependencies, and among which there are no dependencies).  The first
+`consideration_set <consideration_set>` consists of only `ORIGIN` Mechanisms. The second consists of all Components
+that receive `Projections <Projection>` from the Mechanisms in the first `consideration_set <consideration_set>`.
+The third consists of  Components that receive Projections from Components in the first two `consideration_sets
+<consideration_set>`, and so forth.  When the Scheduler is run, it uses the `consideration_queue` to determine which
+Components are eligible to execute in each `TIME_STEP` of a `PASS`, and then evaluates the `Condition <Condition>`
+associated with each Component in the current `consideration_set <consideration_set>` to determine which should
+actually be assigned for execution.
 
 Pseudocode::
 
@@ -113,21 +116,21 @@ Execution
 ---------
 
 When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
-Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
-For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
+Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's
+constructor. For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
 which Components in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
 been met. Any Component that does not have a `Condition` explicitly specified is assigned a Condition that causes it
-to be executed whenever it is `under consideration <Scheduler_Algorithm>` and all its structural parents have been executed
-at least once since the Component's last execution. All of the Components within a `consideration_set` that
-are allowed to execute comprise a `TIME_STEP` of execution. These Components are
-considered as executing simultaneously.
+to be executed whenever it is `under consideration <Scheduler_Algorithm>` and all its structural parents have been
+executed at least once since the Component's last execution. All of the Components within a `consideration_set
+<consideration_set>` that are allowed to execute comprise a `TIME_STEP` of execution. These Components are considered
+as executing simultaneously.
 
 .. note::
-    The ordering of the Components specified within a `TIME_STEP` is arbitrary
-    (and is irrelevant, as there are no graph dependencies among Components within the same `consideration_set`).
-    However, the execution of a Component within a `time_step` may trigger the execution of another Component within its
-    `consideration_set`, as in the example below::
+    The ordering of the Components specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
+    graph dependencies among Components within the same `consideration_set <consideration_set>`). However,
+    the execution of a Component within a `time_step` may trigger the execution of another Component within its
+    `consideration_set <consideration_set>`, as in the example below::
 
             C
           ↗ ↖
@@ -139,9 +142,9 @@ considered as executing simultaneously.
         time steps: [{A}, {A, B}, {C}, ...]
 
     Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
-    `A` and `B` are in the same `consideration_set`. Since `B` is specified to run every two times `A` runs,
-    `A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`, rather
-    than waiting for the next `PASS`.
+    `A` and `B` are in the same `consideration_set <consideration_set>`. Since `B` is specified to run every two
+    times `A` runs, `A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`,
+    rather than waiting for the next `PASS`.
 
 For each `TIME_STEP`, the Scheduler evaluates  whether any specified
 `termination Conditions <Scheduler_Termination_Conditions>` have been met, and terminates if so.  Otherwise,
@@ -150,30 +153,29 @@ it returns the set of Components that should be executed in the current `TIME_ST
 
 Processing of all of the `consideration_sets <consideration_set>` in the `consideration_queue` constitutes a `PASS` of
 execution, over which every Component in the Composition has been considered for execution. Subsequent calls to the
-`run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the
-`consideration_sets <consideration_set>` in the same order as previously. Different subsets of Components within the
-same `consideration_set` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
+`run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the `consideration_sets
+<consideration_set>` in the same order as previously. Different subsets of Components within the same `consideration_set
+<consideration_set>` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
 
-The Scheduler continues to make `PASS`es through the `consideration_queue` until a
-`termination Condition <Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified,
-the Scheduler terminates a `TRIAL` when every Component has been specified for execution at least once (corresponding
-to the `AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
-to terminate a `TRIAL` earlier  or later (e.g., when the  Condition for a particular Component or set of Components
-is met).  When the Scheduler terminates a `TRIAL`, the `Composition <Composition>` begins processing the next input
-specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of processing
-associated with a given input to the Composition.
-
+The Scheduler continues to make `PASS`es through the `consideration_queue` until a `termination Condition
+<Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified, the Scheduler terminates
+a `TRIAL <TimeScale.TRIAL>` when every Component has been specified for execution at least once (corresponding to the
+`AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler to
+terminate a `TRIAL <TimeScale.TRIAL>` earlier  or later (e.g., when the  Condition for a particular Component or set of
+Components is met).  When the Scheduler terminates a `TRIAL <TimeScale.TRIAL>`, the `Composition <Composition>` begins
+processing the next input specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL
+<TimeScale.TRIAL>` is defined as the scope of processing associated with a given input to the Composition.
 
 .. _Scheduler_Termination_Conditions:
 
 *Termination Conditions*
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL`
-and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is satisfied
-when all Components have run at least once within the trial, and the termination condition for a `RUN` is
-when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
-by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
+Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL
+<TimeScale.TRIAL>` and `RUN` - have ended.  By default, the termination condition for a `TRIAL <TimeScale.TRIAL>` is
+`AllHaveRun`, which is satisfied when all Components have run at least once within the trial, and the termination
+condition for a `RUN` is when all of its constituent trials have terminated. These defaults may be overriden when
+running a Composition, by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing)::
 
     Composition.run(
@@ -339,14 +341,14 @@ class Scheduler(JSONDumpable):
     execution_list : list
         the full history of time steps the Scheduler has produced
 
-    consideration_queue: list
+    consideration_queue : list
         a list form of the Scheduler's toposort ordering of its nodes
 
     termination_conds : Dict[TimeScale: Condition]
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
         of the specified `TimeScale`.
 
-    times: Dict[TimeScale: Dict[TimeScale: int]]
+    times : Dict[TimeScale: Dict[TimeScale: int]]
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed

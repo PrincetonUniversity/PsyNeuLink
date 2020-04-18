@@ -78,23 +78,24 @@ corresponds closely to the distinction between *model-based* and *model-free* op
 
 This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` a Composition other than the
 one to which the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`).
-In each `trial`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to adapt, by adjusting its
-parameters in order to improve its prediction of the `net_outcome <ControlMechanism.net_outcome>` for the Composition
-(or part of one) that is controlled by the OptimizationControlMechanism (based on the `state
-<OptimizationControlMechanism_State>` and `net_outcome <ControlMechanism.net_outcome>` of
-the prior trial).  The `agent_rep <OptimizationControlMechanism.agent_rep>` is then used to predict the `net_outcome
-<ControlMechanism.net_outcome>` for `control_allocation <ControlMechanism.control_allocation>` samples to find the one
-that yields the best predicted `net_outcome <ControlMechanism.net_outcome>` of processing on the upcoming trial,
-based on the current or (expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial.
+In each `TRIAL <TimeScale.TRIAL>`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to
+adapt, by adjusting its parameters in order to improve its prediction of the `net_outcome
+<ControlMechanism.net_outcome>` for the Composition (or part of one) that is controlled by the
+OptimizationControlMechanism (based on the `state <OptimizationControlMechanism_State>` and `net_outcome
+<ControlMechanism.net_outcome>` of the prior trial).  The `agent_rep <OptimizationControlMechanism.agent_rep>` is
+then used to predict the `net_outcome <ControlMechanism.net_outcome>` for `control_allocation
+<ControlMechanism.control_allocation>` samples to find the one that yields the best predicted `net_outcome
+<ControlMechanism.net_outcome>` of processing on the upcoming trial, based on the current or (expected)
+`feature_values <OptimizationControlMechanism.feature_values>` for that trial.
 
 .. _OptimizationControlMechanism_Model_Based:
 
 *Model-Based Optimization*
 
-This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which
-the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`). On each
-`trial`, that Composition itself is used to simulate processing on the upcoming trial, based on the current or
-(expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial, in order to find the
+This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which the
+OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`). On each `TRIAL
+<TimeScale.TRIAL>`, that Composition itself is used to simulate processing on the upcoming trial, based on the current
+or (expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial, in order to find the
 <ControlMechanism.control_allocation>` that yields the best net_outcome <ControlMechanism.net_outcome>` for that trial.
 
 .. _OptimizationControlMechanism_Creation:

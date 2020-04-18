@@ -2207,7 +2207,7 @@ class Mechanism_Base(Mechanism):
 
         Mechanism's output_values : List[value]
             list with the `value <OutputPort.value>` of each of the Mechanism's `OutputPorts
-            <Mechanism_OutputPorts>` after either one `TIME_STEP` or a `TRIAL`.
+            <Mechanism_OutputPorts>` after either one `TIME_STEP` or a `TRIAL <TimeScale.TRIAL>`.
 
         """
 
