@@ -623,6 +623,40 @@ class TestPathwayAddition:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
+    # def test_add_learning_pathway_arg_pathway(self):
+    #     pnl.clear_registry(pnl.PathwayRegistry)
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     p = Pathway(pathway=[A,B], name='P')
+    #     c = Composition()
+    #     c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
+    #     assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
+    #     assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+    #     assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
+    #                                                     PathwayRole.ORIGIN,
+    #                                                     PathwayRole.LEARNING,
+    #                                                     PathwayRole.OUTPUT})
+
+    # def test_add_learning_pathway_arg_pathway(self):
+    #     pnl.clear_registry(pnl.PathwayRegistry)
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     p = Pathway(pathway=([A,B], BackPropagation), name='P')
+    #     c = Composition()
+    #     c.add_linear_learning_pathway(pathway=p)
+    #     assert all(r in c.get_roles_by_node(A)
+    #                for r in {NodeRole.INPUT,
+    #                          NodeRole.ORIGIN})
+    #     assert all(r in c.get_roles_by_node(B)
+    #                for r in {NodeRole.OUTPUT,
+    #                          NodeRole.TERMINAL})
+    #     assert all(r in c.pathways['P'].roles
+    #                for r in {PathwayRole.INPUT,
+    #                          PathwayRole.ORIGIN,
+    #                          PathwayRole.LEARNING,
+    #                          PathwayRole.OUTPUT,
+    #                          PathwayRole.TERMINAL})
+
     def test_composition_processing_pathway_arg_mech(self):
         A = ProcessingMechanism(name='A')
         c = Composition(pathways=A)
