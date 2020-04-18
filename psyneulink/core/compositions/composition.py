@@ -645,8 +645,8 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
       `LearningMechanism_Learning_Configurations` for details); these are assigned the `NodeRole` `LEARNING` in the
       Composition.
       ..
-      .. _LEARNING_PROJECTIONS:
-    * *LEARNING_PROJECTIONS* -- a `LearningProjection` from each `LearningMechanism` to the `MappingProjection`
+      .. _LEARNED_PROJECTIONS:
+    * *LEARNED_PROJECTIONS* -- a `LearningProjection` from each `LearningMechanism` to the `MappingProjection`
       for which it modifies it s`matrix <MappingProjection.matrix>` parameter.
 
 The items with names in the list above are placed in a dict that is assigned to the `learning_components

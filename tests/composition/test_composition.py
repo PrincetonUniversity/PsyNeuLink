@@ -10,7 +10,8 @@ from itertools import product
 
 import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
@@ -19,6 +20,7 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
@@ -26,7 +28,8 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, NAME, PROJECTIONS, RESULT, OVERRIDE, TARGET_MECHANISM, VARIANCE
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -572,7 +575,7 @@ class TestPathway:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
-    def test_composition_processing_pathway_arg_dict_and_list(self):
+    def test_composition_processing_pathway_arg_dict_and_list_and_pathway_roles(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -676,7 +679,7 @@ class TestPathway:
         assert ("The value in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
 
-    def test_composition_processing_and_learning_pathway_args(self):
+    def test_composition_processing_and_learning_pathway_args_pathway_roles_learning_components(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -687,6 +690,23 @@ class TestPathway:
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
         assert c.pathways['P2'].target == c.nodes['Target']
+        assert all(r in c.pathways['P1'].roles
+                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL})
+        assert not any (r in c.pathways['P1'].roles
+                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
+        assert all(r in c.pathways['P2'].roles
+                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL,
+                             PathwayRole.LEARNING})
+        assert not any (r in c.pathways['P2'].roles
+                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL})
+        assert isinstance(c.pathways['P2'].learning_components[OBJECTIVE_MECHANISM], ObjectiveMechanism)
+        assert isinstance(c.pathways['P2'].learning_components[TARGET_MECHANISM], ProcessingMechanism)
+        assert (len(c.pathways['P2'].learning_components[LEARNING_MECHANISMS])
+                and all(isinstance(lm, LearningMechanism)
+                        for lm in c.pathways['P2'].learning_components[LEARNING_MECHANISMS]))
+        assert (len(c.pathways['P2'].learning_components[LEARNED_PROJECTIONS])
+                and all(isinstance(lm, MappingProjection)
+                        for lm in c.pathways['P2'].learning_components[LEARNED_PROJECTIONS]))
 
     def test_composition_learning_pathway_arg_dict_and_tuple(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -735,11 +755,19 @@ class TestPathway:
 
     def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
         A = ProcessingMechanism(name='A')
-        # with pytest.raises(pnl.CompositionError) as error_text:
-        c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
-        # assert ("The 1st item" in str(error_text.value) and "must be a list" in str(error_text.value))
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
+        assert ("Backpropagation pathway specification does not have enough components:" in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
+    # def test_composition_learning_pathway_arg_mech(self):
+    #     A = ProcessingMechanism(name='A')
+    #     c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
+    #     assert all(r in c.pathways['P1'].roles
+    #                for r in {PathwayRole.ORIGIN, PathwayRole.INPUT,
+    #                          PathwayRole.OUTPUT, PathwayRole.TERMINAL, PathwayRole.LEARNING})
+
+
+    def test_composition_learning_pathway_arg_error_dict_with_no_learning_fct_in_tuple(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
