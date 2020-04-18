@@ -623,41 +623,134 @@ class TestPathwayAddition:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
-    # def test_add_learning_pathway_arg_pathway(self):
-    #     pnl.clear_registry(pnl.PathwayRegistry)
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     p = Pathway(pathway=[A,B], name='P')
-    #     c = Composition()
-    #     c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
-    #     assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
-    #     assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-    #     assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
-    #                                                     PathwayRole.ORIGIN,
-    #                                                     PathwayRole.LEARNING,
-    #                                                     PathwayRole.OUTPUT})
+    def test_add_learning_pathway_arg_pathway(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=[A,B], name='P')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
+        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
+                                                        PathwayRole.ORIGIN,
+                                                        PathwayRole.LEARNING,
+                                                        PathwayRole.OUTPUT})
 
-    # def test_add_learning_pathway_arg_pathway(self):
-    #     pnl.clear_registry(pnl.PathwayRegistry)
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     p = Pathway(pathway=([A,B], BackPropagation), name='P')
-    #     c = Composition()
-    #     c.add_linear_learning_pathway(pathway=p)
-    #     assert all(r in c.get_roles_by_node(A)
-    #                for r in {NodeRole.INPUT,
-    #                          NodeRole.ORIGIN})
-    #     assert all(r in c.get_roles_by_node(B)
-    #                for r in {NodeRole.OUTPUT,
-    #                          NodeRole.TERMINAL})
-    #     assert all(r in c.pathways['P'].roles
-    #                for r in {PathwayRole.INPUT,
-    #                          PathwayRole.ORIGIN,
-    #                          PathwayRole.LEARNING,
-    #                          PathwayRole.OUTPUT,
-    #                          PathwayRole.TERMINAL})
+    def test_add_learning_pathway_arg_pathway(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=([A,B], Reinforcement), name='P')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B)
+                   for r in {NodeRole.OUTPUT,
+                             NodeRole.TERMINAL})
+        assert all(r in c.pathways['P'].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.LEARNING,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
 
-    def test_composition_processing_pathway_arg_mech(self):
+    def test_add_bp_learning_pathway_arg_pathway(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=[A,B], name='P')
+        c = Composition()
+        c.add_backpropagation_learning_pathway(pathway=p)
+        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
+                                                        PathwayRole.ORIGIN,
+                                                        PathwayRole.LEARNING,
+                                                        PathwayRole.OUTPUT})
+
+    def test_add_bp_learning_pathway_arg_pathway_name_in_method(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=[A,B], name='P')
+        c = Composition()
+        c.add_backpropagation_learning_pathway(pathway=p, name='BP')
+        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+        assert all(r in c.pathways['BP'].roles for r in {PathwayRole.INPUT,
+                                                        PathwayRole.ORIGIN,
+                                                        PathwayRole.LEARNING,
+                                                        PathwayRole.OUTPUT})
+
+    def test_add_rl_learning_pathway_arg_pathway(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=[A,B], name='P')
+        c = Composition()
+        c.add_reinforcement_learning_pathway(pathway=p)
+        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
+                                                        PathwayRole.ORIGIN,
+                                                        PathwayRole.LEARNING,
+                                                        PathwayRole.OUTPUT})
+
+    def test_add_td_learning_pathway_arg_pathway(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=[A,B], name='P')
+        c = Composition()
+        c.add_td_learning_pathway(pathway=p)
+        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
+                                                        PathwayRole.ORIGIN,
+                                                        PathwayRole.LEARNING,
+                                                        PathwayRole.OUTPUT})
+
+    def test_composition_pathway_args_pathway_object(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        p = Pathway(pathway=A, name='P')
+        c = Composition(pathways=p)
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN,
+                             NodeRole.SINGLETON,
+                             NodeRole.OUTPUT,
+                             NodeRole.TERMINAL})
+        assert all(r in c.pathways['P'].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.SINGLETON,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
+
+    def test_composition_pathway_args_pathway_object_in_dict_with_name(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        p = Pathway(pathway=[A], name='P')
+        c = Composition(pathways={'DICT NAMED':p})
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN,
+                             NodeRole.SINGLETON,
+                             NodeRole.OUTPUT,
+                             NodeRole.TERMINAL})
+        assert all(r in c.pathways['DICT NAMED'].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.SINGLETON,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
+
+
+    def test_composition_pathway_args_mech(self):
         A = ProcessingMechanism(name='A')
         c = Composition(pathways=A)
         assert all(r in c.get_roles_by_node(A)
@@ -673,7 +766,7 @@ class TestPathwayAddition:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
-    def test_composition_processing_pathway_arg_dict_and_list_and_pathway_roles(self):
+    def test_composition_pathway_args_dict_and_list_and_pathway_roles(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -692,7 +785,7 @@ class TestPathwayAddition:
         assert not any (r in c.pathways[1].roles
                    for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
 
-    def test_composition_processing_pathway_arg_dict_and_node(self):
+    def test_composition_pathway_args_dict_and_node(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -701,7 +794,7 @@ class TestPathwayAddition:
         assert all(n in {B, C} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
         assert c.pathways['P1'].name == 'P1'
 
-    def test_composition_processing_pathway_arg_two_dicts(self):
+    def test_composition_pathway_args_two_dicts(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -712,7 +805,7 @@ class TestPathwayAddition:
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
 
-    def test_composition_processing_pathway_arg_two_dicts_one_with_node(self):
+    def test_composition_pathway_args_two_dicts_one_with_node(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -722,14 +815,14 @@ class TestPathwayAddition:
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
 
-    def test_composition_processing_pathway_bad_arg_error(self):
+    def test_composition_pathway_bad_arg_error(self):
         I = InputPort(name='I')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=I)
         assert ("The \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_pathways_list_and_item_not_list_or_dict_or_node_error(self):
+    def test_composition_pathway_args_pathways_list_and_item_not_list_or_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         with pytest.raises(pnl.CompositionError) as error_text:
@@ -737,7 +830,7 @@ class TestPathwayAddition:
         assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a Node, list, tuple or dict:" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_pathways_dict_and_item_not_list_dict_or_node_error(self):
+    def test_composition_pathway_args_pathways_dict_and_item_not_list_dict_or_node_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -747,7 +840,7 @@ class TestPathwayAddition:
         assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a Node, list, tuple or dict:" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_dict_with_more_than_one_entry_error(self):
+    def test_composition_pathway_args_dict_with_more_than_one_entry_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -757,7 +850,7 @@ class TestPathwayAddition:
         assert ("A dict specified in the \'pathways\' arg of the constructor" in str(error_text.value)
                 and "contains more than one entry:" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_dict_with_non_string_key_error(self):
+    def test_composition_pathway_args_dict_with_non_string_key_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -767,7 +860,7 @@ class TestPathwayAddition:
         assert ("The key in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a str (to be used as its name):" in str(error_text.value))
 
-    def test_composition_processing_pathway_arg_dict_with_non_list_or_node_value_error(self):
+    def test_composition_pathway_args_dict_with_non_list_or_node_value_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -777,7 +870,7 @@ class TestPathwayAddition:
         assert ("The value in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
 
-    def test_composition_processing_and_learning_pathway_args_pathway_roles_learning_components(self):
+    def test_composition_processing_and_learning_pathways_pathwayroles_learning_components(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -806,7 +899,7 @@ class TestPathwayAddition:
                 and all(isinstance(lm, MappingProjection)
                         for lm in c.pathways['P2'].learning_components[LEARNED_PROJECTIONS]))
 
-    def test_composition_learning_pathway_arg_dict_and_tuple(self):
+    def test_composition_learning_pathway_dict_and_tuple(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -817,7 +910,7 @@ class TestPathwayAddition:
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P1'].target == c.nodes['Target']
 
-    def test_composition_learning_pathway_arg_dict_and_list_error(self):
+    def test_composition_learning_pathway_dict_and_list_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -826,7 +919,7 @@ class TestPathwayAddition:
             c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation)}, [C,D]])
         assert ("An item" in str(error_text.value) and "is not a dict or tuple." in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_dict_and_list_error(self):
+    def test_composition_learning_pathway_dict_and_list_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -836,7 +929,7 @@ class TestPathwayAddition:
                                                 'P2':([C,D], pnl.BackPropagation)}])
         assert ("A dict" in str(error_text.value) and "contains more than one entry" in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_dict_with_non_str_key_error(self):
+    def test_composition_learning_pathway_args_dict_with_non_str_key_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -844,13 +937,13 @@ class TestPathwayAddition:
             c = Composition(pathways={C:([A,B], pnl.BackPropagation)})
         assert ("The key" in str(error_text.value) and "must be a str" in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_to_few_mechs_error(self):
+    def test_composition_learning_pathway_to_few_mechs_error(self):
         A = ProcessingMechanism(name='A')
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
         assert ("Backpropagation pathway specification does not have enough components:" in str(error_text.value))
 
-    def test_composition_learning_pathway_arg_dict_with_no_learning_fct_in_tuple_error(self):
+    def test_composition_learning_pathway_dict_with_no_learning_fct_in_tuple_error(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')

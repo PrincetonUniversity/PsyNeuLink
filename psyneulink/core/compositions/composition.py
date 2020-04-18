@@ -4065,7 +4065,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             as will its `name <Pathway.name>` if the **name** argument of add_linear_processing_pathway is specified.
 
         name : str
-            species the name used for `Pathway`.
+            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
 
         Returns
         -------
@@ -4093,8 +4093,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
             # Give precedence to name specified in call to add_linear_processing_pathway
-            name = name or pathway.name
+            pathway_name = name or pathway.name
             pathway = pathway.pathway
+        else:
+            pathway_name = name
+
         if _is_pathway_entry_spec(pathway, ANY):
             pathway = convert_to_list(pathway)
         elif isinstance(pathway, tuple):
@@ -4104,48 +4107,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
                 pathway = pathway[0]
-            # # MODIFIED 4/4/20 OLD:
-            # If singleton (node, required_role), embed in list
-            # elif (isinstance(pathway[1], NodeRole)
-            #       or (isinstance(pathway[1], list) and all(isinstance(nr, NodeRole) for nr in pathway[1]))):
-            #     pathway = convert_to_list(pathway)
-            # # MODIFIED 4/4/20 NEW:
-            # # FIX 4/4/20 [JDC]: MOVED TO FIRST CONDITION, BUT STILL NEEDS TO BE TESTED
-            # # If singleton (node, required_role), embed in list
-            # elif _is_pathway_entry_spec(pathway):
-            #     pathway = convert_to_list(pathway)
-            # MODIFIED 4/4/20 END:
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
         else:
             raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
 
-
-
         # Then, verify that the pathway begins with a node
-
-        # # MODIFIED 4/5/20 OLD:
-        # if not isinstance(pathway, (list, tuple)):
-        #     raise CompositionError(f"First argument in add_linear_processing_pathway method of '{self.name}' "
-        #                            f"{Composition.__name__} must be a list of nodes")
-        # MODIFIED 4/5/20 NEW: [JDC]
-        # if isinstance(pathway, dict):
-        #     if len(pathway)!=1:
-        #         raise CompositionError(f"The dict ({pway}) specified as the 'pathway' arg of "
-        #                                f"add_linear_processing_pathway for {self.name}' contains more than one entry.")
-        #     pathway_name, pathway = list(pathway.items())[0]
-        #     if not isinstance(pathway_name, str):
-        #         raise CompositionError(f"The key ({pathway_name}) of the dict specified as the 'pathway' arg of "
-        #                                f"add_linear_processing_pathway for {self.name}' must be a str"
-        #                                f"(used as the name of the Pathway).")
-        #     if not isinstance(pathway, list):
-        #         raise CompositionError(f"The value ({pathway}) of the dict specified as the 'pathway' arg of "
-        #                                f"add_linear_processing_pathway for {self.name}' must be a list.")
-        # else:
-        #     raise CompositionError(f"The 'pathway' arg of add_linear_processing_pathway for {self.name} "
-        #                            f"must be a list or a dict.")
-        # MODIFIED 4/5/20 END
-
         if _is_node_spec(pathway[0]):
             self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
             nodes.append(pathway[0])
@@ -4304,7 +4271,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
-                          name=name,
+                          name=pathway_name,
                           context=Context(source=ContextFlags.METHOD))
         self.pathways.append(pathway)
 
@@ -4496,12 +4463,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context()
     def add_linear_learning_pathway(self,
                                     pathway,
-                                    learning_function,
+                                    learning_function:LearningFunction,
                                     loss_function=None,
-                                    learning_rate=0.05,
+                                    learning_rate:tc.any(int,float) =0.05,
                                     error_function=LinearCombination(),
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
-                                    name=None,
+                                    name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
 
@@ -4536,7 +4503,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        pathwa : List
+        pathway : List
             list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
             specified, that projection is the learned projection. Otherwise, a default MappingProjection is
             automatically generated for the learned projection.
@@ -4580,6 +4547,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        name : str :
+            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+
         Returns
         --------
 
@@ -4606,7 +4576,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
+            pathway_name = name or pathway.name
             pathway = pathway.pathway
+        else:
+            pathway_name = name
 
         # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
@@ -4621,7 +4594,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  learning_rate,
                                                                  error_function,
                                                                  learning_update,
-                                                                 name=name)
+                                                                 name=pathway_name)
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
         #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
@@ -4633,9 +4606,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
 
-        learning_pathway = self.add_linear_processing_pathway([input_source, learned_projection, output_source],
-                                                              name=name, context=context)
-
+        learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
+                                                              name=pathway_name,
+                                                              context=context)
 
         # Learning Components
         target, comparator, learning_mechanism = self._create_learning_related_mechanisms(input_source,
@@ -4677,7 +4650,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
+                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE, name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
         Arguments
@@ -4703,6 +4676,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        name : str :
+            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+
         Returns
         --------
 
@@ -4714,10 +4690,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_rate=learning_rate,
                                                 learning_function=Reinforcement,
                                                 error_function=error_function,
-                                                learning_update=learning_update)
+                                                learning_update=learning_update,
+                                                name=name)
 
     def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE):
+                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE, name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
         Arguments
@@ -4743,6 +4720,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and its `LearningProjection` (see `learning_enabled
             <LearningMechanism.learning_enabled>` for meaning of values).
 
+        name : str :
+            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+
         Returns
         --------
 
@@ -4753,14 +4733,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.add_linear_learning_pathway(pathway,
                                                 learning_rate=learning_rate,
                                                 learning_function=TDLearning,
-                                                learning_update=learning_update)
+                                                learning_update=learning_update,
+                                                name=name)
 
     def add_backpropagation_learning_pathway(self,
                                              pathway,
                                              learning_rate=0.05,
                                              error_function=None,
                                              loss_function:tc.enum(MSE,SSE)=MSE,
-                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER):
+                                             learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=AFTER,
+                                             name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Backpropagation`
 
         Arguments
@@ -4789,6 +4771,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <LearningMechanism>` in the pathway, and their `LearningProjections <LearningProjection>`
             (see `learning_enabled <LearningMechanism.learning_enabled>` for meaning of values).
 
+        name : str :
+            species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
+
         Returns
         --------
 
@@ -4801,7 +4786,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_function=BackPropagation,
                                                 loss_function=loss_function,
                                                 error_function=error_function,
-                                                learning_update=learning_update)
+                                                learning_update=learning_update,
+                                                name=name)
 
     # NOTES:
     # Learning-type-specific creation methods should:

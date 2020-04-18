@@ -33,12 +33,20 @@ more Compositions, as described below.
 *Assigning to a Pathway to a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+XXX
 If the **composition** argument is specified in the Pathway's
 constructor, then the sequence assigned to its **pathway** argument is added to the specified `Composition`
 using its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method or its
 `add_linear_learning_pathway <Composition.add_linear_processing_pathway>` method, depending on the
 specifiation in the *pathway* argument (see those methods for corresponding specifications).  In this case,
 the Pathway object returned by the constructor is the same as the one added to the Composition.
+
+.. _Pathway_Name_Note:
+.. note::
+    If the Pathway is used in the **pathways** argument of a Composition's `Pathway addition method
+    <Composition_Pathway_Addition_Methods>` or in `dict specification <Pathway_Specification>` for a Pathway,
+    then the name assigned there takes precedence over one specified in the constructor for the Pathway.
+
 
 .. _Pathway_Template:
 
@@ -259,7 +267,7 @@ class Pathway(object):
         created for the Pathway.
 
     name : str : default see `name <Pathway.name>`
-        specifies the name of the Pathway.
+        specifies the name of the Pathway;  see `name <Pathway.name>` for additional information.
 
     Attributes
     ----------
@@ -312,6 +320,7 @@ class Pathway(object):
     name : str
         the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
         default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
+        See `note <Pathway_Name_Note>` for additional information.
 
     """
     componentType = 'Pathway'
