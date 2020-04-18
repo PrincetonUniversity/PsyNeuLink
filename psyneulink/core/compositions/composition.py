@@ -1565,7 +1565,7 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
     FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_CIM_NAME, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_OBJECTIVE, LEARNING_PATHWAY, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
@@ -4401,7 +4401,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(pway, Pathway):
                 pway = pway.pathway
 
-            if _is_node_spec(pway) or isinstance(pway, list):
+            if (_is_node_spec(pway) or isinstance(pway, list) or
+                    # Forgive use of tuple to specify a pathway, and treat as if it was a list spec
+                    (isinstance(pway, tuple) and all(_is_pathway_entry_spec(n, ANY) for n in pathway))):
                 pway_type = PROCESSING_PATHWAY
                 return pway_type, pway, None
             elif isinstance(pway, tuple):
@@ -4654,7 +4656,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_related_components = {TARGET_MECHANISM: target,
                                        OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanism,
-                                       LEARNED_PROJECTIONS: learned_projection}
+                                       LEARNED_PROJECTIONS: learned_projection,
+                                       LEARNING_FUNCTION: learning_function}
         learning_pathway.learning_components = learning_related_components
         # Update graph in case method is called again
         self._analyze_graph()
@@ -5175,7 +5178,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_related_components = {TARGET_MECHANISM: target,
                                        OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanisms,
-                                       LEARNED_PROJECTIONS: learned_projections}
+                                       LEARNED_PROJECTIONS: learned_projections,
+                                       LEARNING_FUNCTION: BackPropagation}
 
         learning_pathway.learning_components = learning_related_components
 

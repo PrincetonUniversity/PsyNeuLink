@@ -493,7 +493,7 @@ class TestPathway:
             Pathway(pathway=[], foo='bar')
         assert "Illegal argument(s) used in constructor for Pathway: foo." in str(error_text.value)
 
-class TestAddPathways:
+class TestCompositionPathwayAdditionMethods:
 
     def test_pathway_attributes(self):
         c = Composition()
@@ -727,6 +727,57 @@ class TestAddPathways:
                                                         PathwayRole.LEARNING,
                                                         PathwayRole.OUTPUT})
 
+    def test_add_pathways_with_all_types(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        G = ProcessingMechanism(name='G')
+        H = ProcessingMechanism(name='H')
+        J = ProcessingMechanism(name='J')
+        K = ProcessingMechanism(name='K')
+        L = ProcessingMechanism(name='L')
+        M = ProcessingMechanism(name='M')
+
+        p = Pathway(pathway=[L,M], name='P')
+        c = Composition()
+        c.add_pathways(pathways=[A,
+                                 [B,C],
+                                 (D,E),
+                                 {'DICT PATHWAY': F},
+                                 ([G, H], BackPropagation),
+                                 {'LEARNING PATHWAY': ([L,M], Reinforcement)},
+                                 p])
+        assert len(c.pathways) == 7
+        assert c.pathways['P'].input == L
+        assert c.pathways['DICT PATHWAY'].input == F
+        # assert c.pathways['DICT PATHWAY'].output == F
+        assert c.pathways['LEARNING PATHWAY'].output == M
+        [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
+        assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
+
+    def test_add_pathways_bad_arg_error(self):
+        I = InputPort(name='I')
+        c = Composition()
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c.add_pathways(pathways=I)
+        assert ("The \'pathways\' arg for the add_pathways method" in str(error_text.value)
+                and "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
+
+    def test_add_pathways_arg_pathways_list_and_item_not_list_or_dict_or_node_error(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        c = Composition()
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c.add_pathways(pathways=[[A,B], 'C'])
+        assert ("Every item in the \'pathways\' arg for the add_pathways method" in str(error_text.value)
+                and "must be a Node, list, tuple or dict:" in str(error_text.value))
+
+class TestCompositionPathwaysArg:
+
     def test_composition_pathways_arg_pathway_object(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
@@ -922,6 +973,21 @@ class TestAddPathways:
         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P1'].target == c.nodes['Target']
+
+    def test_composition_pathways_bad_arg_error(self):
+        I = InputPort(name='I')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=I)
+        assert ("The \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
+
+    def test_composition_arg_pathways_list_and_item_not_list_or_dict_or_node_error(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[[A,B], 'C'])
+        assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a Node, list, tuple or dict:" in str(error_text.value))
 
     def test_composition_learning_pathway_dict_and_list_error(self):
         A = ProcessingMechanism(name='A')

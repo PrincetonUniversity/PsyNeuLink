@@ -162,7 +162,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
-    ANY, CONTEXT, LEARNING_OBJECTIVE, MAYBE, NODE, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 
 
@@ -452,4 +452,18 @@ class Pathway(object):
                 else:
                     assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
                                   f"has PathwayRole.LEARNING assigned but no 'learning_objective' attribute."
+                return None
+
+    @property
+    def learning_function(self):
+        if self.composition:
+            try:
+                return self.learning_components[LEARNING_FUNCTION]
+            except:
+                if PathwayRole.LEARNING not in self.roles:
+                    warnings.warn(f"{self.__class__.__name__} {self.name} 'learning_function' attribute "
+                                  f"is None because it is not a learning_pathway.")
+                else:
+                    assert False, f"PROGRAM ERROR: {self.__class__.__name__} {self.name} of {self.composition.name} " \
+                                  f"has PathwayRole.LEARNING assigned but no 'learning_function' attribute."
                 return None
