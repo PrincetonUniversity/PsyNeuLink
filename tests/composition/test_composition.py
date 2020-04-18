@@ -22,6 +22,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
@@ -461,274 +462,290 @@ comp.add_node(B)
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
 
-# class TestPathway:
-#
-#     def test_pathway_attributes(self):
-#         c = Composition()
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         E = ProcessingMechanism(name='E')
-#         F = ProcessingMechanism(name='F')
-#         G = ProcessingMechanism(name='G')
-#         p1 = c.add_linear_processing_pathway(pathway=[A,B,C], name='P')
-#         p2 = c.add_linear_processing_pathway(pathway=[D,B])
-#         p3 = c.add_linear_processing_pathway(pathway=[B,E])
-#         l = c.add_linear_learning_pathway(pathway=[F,G], learning_function=Reinforcement, name='L')
-#         assert p1.name == 'P'
-#         assert p1.input == A
-#         assert p1.output == C
-#         assert p1.target == None
-#         assert p2.input == D
-#         assert p2.output == None
-#         assert p2.target == None
-#         assert p3.input == None
-#         assert p3.output == E
-#         assert p3.target == None
-#         assert l.name == 'L'
-#         assert l.input == F
-#         assert l.output == G
-#         assert l.target == c.nodes['Target']
-#         assert l.learning_components[pnl.LEARNING_MECHANISMS] == \
-#                c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
-#         assert l.comparator == c.nodes['Comparator']
-#         assert all(p in {p1, p2, p3, l} for p in c.pathways)
-#
-#     def test_pathway_order_processing_then_learning_RL(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition()
-#         c.add_linear_processing_pathway(pathway=[A,B])
-#         c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#
-#     def test_pathway_order_processing_then_learning_BP(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition()
-#         c.add_linear_processing_pathway(pathway=[A,B])
-#         c.add_linear_learning_pathway(pathway=[C,D], learning_function=BackPropagation)
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#
-#     def test_pathway_order_learning_RL_then_processing(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition()
-#         c.add_linear_learning_pathway(pathway=[A,B], learning_function=Reinforcement)
-#         c.add_linear_processing_pathway(pathway=[C,D])
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#
-#     def test_pathway_order_learning_BP_then_processing(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition()
-#         c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
-#         c.add_linear_processing_pathway(pathway=[C,D])
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#
-#     def test_pathway_order_learning_RL_then_BP(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition()
-#         c.add_linear_learning_pathway(pathway=[A,B], learning_function=Reinforcement)
-#         c.add_linear_learning_pathway(pathway=[C,D], learning_function=BackPropagation)
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#
-#     def test_pathway_order_learning_BP_then_RL(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition()
-#         c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
-#         c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#
-#     def test_composition_processing_pathway_arg_dict_and_list(self):
-#         pnl.clear_registry(pnl.PathwayRegistry)
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition(processing_pathways=[{'P1':[A,B]}, [C,D]])
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#         assert c.pathways['P1'].name == 'P1'
-#
-#     def test_composition_processing_pathway_arg_dict_and_node(self):
-#         pnl.clear_registry(pnl.PathwayRegistry)
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition(processing_pathways=[{'P1':[A,B]}, C])
-#         assert all(n in {B, C} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#         assert c.pathways['P1'].name == 'P1'
-#
-#     def test_composition_processing_pathway_arg_two_dicts(self):
-#         pnl.clear_registry(pnl.PathwayRegistry)
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition(processing_pathways=[{'P1':[A,B]}, {'P2':[C,D]}])
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#         assert c.pathways['P1'].name == 'P1'
-#         assert c.pathways['P2'].name == 'P2'
-#
-#     def test_composition_processing_pathway_arg_two_dicts_one_with_node(self):
-#         pnl.clear_registry(pnl.PathwayRegistry)
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition(processing_pathways=[{'P1':[A,B]}, {'P2':C}])
-#         assert all(n in {B, C} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#         assert c.pathways['P1'].name == 'P1'
-#         assert c.pathways['P2'].name == 'P2'
-#
-#     def test_composition_processing_pathway_arg_error_pathways_list_and_item_not_list_or_dict_or_node(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(processing_pathways=[[A,B], 'C'])
-#         assert ("An item " in str(error_text.value) and
-#                 "is not a list or dict, or node (Mechanism or Composition)." in str(error_text.value))
-#
-#     def test_composition_processing_pathway_arg_error_pathways_dict_and_item_not_list_dict_or_node(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(processing_pathways=[{'P1':[A,B]}, 'C'])
-#         assert ("An item " in str(error_text.value) and
-#                 "is not a list or dict, or node (Mechanism or Composition)." in str(error_text.value))
-#
-#     def test_composition_processing_pathway_arg_error_pathways_arg_not_list_or_dict(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(processing_pathways=C)
-#         assert ("The 'processing_pathways'" in str(error_text.value) and
-#                 "must be a list, dict, or list containing either or both" in str(error_text.value))
-#
-#     def test_composition_processing_pathway_arg_error_dict_with_more_than_one_entry(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(processing_pathways=[{'P1':[A,B], 'P2':[C,D]}])
-#         assert ("A dict " in str(error_text.value) and "contains more than one entry." in str(error_text.value))
-#
-#     def test_composition_processing_pathway_arg_error_dict_with_non_string_key(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(processing_pathways=[{A:[B,C]}])
-#         assert ("The key " in str(error_text.value) and
-#                 "(to be used as the Pathway's name) must be a str." in str(error_text.value))
-#
-#     def test_composition_processing_pathway_arg_error_dict_with_non_list_or_node_value(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(processing_pathways=[{'P1':'A'}])
-#         assert ("The value" in str(error_text.value) and
-#                 "must be a list or node (Mechanism or Composition)" in str(error_text.value))
-#
-#     def test_composition_processing_and_learning_pathway_args(self):
-#         pnl.clear_registry(pnl.PathwayRegistry)
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition(processing_pathways=[{'P1':[A,B]}],
-#                         learning_pathways=[{'P2':([C,D], pnl.BackPropagation)}])
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#         assert c.pathways['P1'].name == 'P1'
-#         assert c.pathways['P2'].name == 'P2'
-#         assert c.pathways['P2'].target == c.nodes['Target']
-#
-#     def test_composition_learning_pathway_arg_dict_and_tuple(self):
-#         pnl.clear_registry(pnl.PathwayRegistry)
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         c = Composition(learning_pathways=[{'P1':([A,B], pnl.BackPropagation)}, ([C,D], pnl.BackPropagation)])
-#         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
-#         assert c.pathways['P1'].name == 'P1'
-#         assert c.pathways['P1'].target == c.nodes['Target']
-#
-#     def test_composition_learning_pathway_arg_error_dict_and_list(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(learning_pathways=[{'P1':([A,B], pnl.BackPropagation)}, [C,D]])
-#         assert ("An item" in str(error_text.value) and "is not a dict or tuple." in str(error_text.value))
-#
-#     def test_composition_learning_pathway_arg_error_dict_and_list(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         D = ProcessingMechanism(name='D')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(learning_pathways=[{'P1':([A,B], pnl.BackPropagation),
-#                                                 'P2':([C,D], pnl.BackPropagation)}])
-#         assert ("A dict" in str(error_text.value) and "contains more than one entry" in str(error_text.value))
-#
-#     def test_composition_learning_pathway_arg_error_dict_with_non_str_key(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(learning_pathways={C:([A,B], pnl.BackPropagation)})
-#         assert ("The key" in str(error_text.value) and "must be a str" in str(error_text.value))
-#
-#     def test_composition_learning_pathway_arg_error_dict_with_non_tuple_value(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(learning_pathways={'P1': [A,B]})
-#         assert ("The value" in str(error_text.value) and "must be a tuple" in str(error_text.value))
-#
-#     def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(learning_pathways=[{'P1': (A, pnl.BackPropagation)}])
-#         assert ("The 1st item" in str(error_text.value) and "must be a list" in str(error_text.value))
-#
-#     def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
-#         A = ProcessingMechanism(name='A')
-#         B = ProcessingMechanism(name='B')
-#         C = ProcessingMechanism(name='C')
-#         with pytest.raises(pnl.CompositionError) as error_text:
-#             c = Composition(learning_pathways=[{'P1': ([A,B],C)}])
-#         assert ("The 2nd item" in str(error_text.value) and "must be a LearningFunction" in str(error_text.value))
+class TestPathway:
+
+    def test_pathway_attributes(self):
+        c = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        G = ProcessingMechanism(name='G')
+        p1 = c.add_linear_processing_pathway(pathway=[A,B,C], name='P')
+        p2 = c.add_linear_processing_pathway(pathway=[D,B])
+        p3 = c.add_linear_processing_pathway(pathway=[B,E])
+        l = c.add_linear_learning_pathway(pathway=[F,G], learning_function=Reinforcement, name='L')
+        assert p1.name == 'P'
+        assert p1.input == A
+        assert p1.output == C
+        assert p1.target == None
+        assert p2.input == D
+        assert p2.output == None
+        assert p2.target == None
+        assert p3.input == None
+        assert p3.output == E
+        assert p3.target == None
+        assert l.name == 'L'
+        assert l.input == F
+        assert l.output == G
+        assert l.target == c.nodes['Target']
+        assert l.learning_components[pnl.LEARNING_MECHANISMS] == \
+               c.nodes['Learning Mechanism for MappingProjection from F[OutputPort-0] to G[InputPort-0]']
+        assert l.learning_objective == c.nodes['Comparator']
+        assert all(p in {p1, p2, p3, l} for p in c.pathways)
+
+    def test_pathway_order_processing_then_learning_RL(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_processing_pathway(pathway=[A,B])
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_processing_then_learning_BP(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_processing_pathway(pathway=[A,B])
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=BackPropagation)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_learning_RL_then_processing(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=Reinforcement)
+        c.add_linear_processing_pathway(pathway=[C,D])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_learning_BP_then_processing(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
+        c.add_linear_processing_pathway(pathway=[C,D])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_learning_RL_then_BP(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=Reinforcement)
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=BackPropagation)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_pathway_order_learning_BP_then_RL(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition()
+        c.add_linear_learning_pathway(pathway=[A,B], learning_function=BackPropagation)
+        c.add_linear_learning_pathway(pathway=[C,D], learning_function=Reinforcement)
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_composition_processing_pathway_arg_mech(self):
+        A = ProcessingMechanism(name='A')
+        c = Composition(pathways=A)
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN,
+                             NodeRole.SINGLETON,
+                             NodeRole.OUTPUT,
+                             NodeRole.TERMINAL})
+        assert all(r in c.pathways[0].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.SINGLETON,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
+
+    def test_composition_processing_pathway_arg_dict_and_list(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(pathways=[{'P1':[A,B]}, [C,D]])
+        assert all(n in {A, C} for n in c.get_nodes_by_role(NodeRole.INPUT))
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert all(r in c.pathways['P1'].roles
+                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL})
+        assert not any (r in c.pathways['P1'].roles
+                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
+        assert all(r in c.pathways[1].roles
+                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL})
+        assert not any (r in c.pathways[1].roles
+                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
+
+    def test_composition_processing_pathway_arg_dict_and_node(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[{'P1':[A,B]}, C])
+        assert all(n in {B, C} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+
+    def test_composition_processing_pathway_arg_two_dicts(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(pathways=[{'P1':[A,B]}, {'P2':[C,D]}])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P2'].name == 'P2'
+
+    def test_composition_processing_pathway_arg_two_dicts_one_with_node(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[{'P1':[A,B]}, {'P2':C}])
+        assert all(n in {B, C} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P2'].name == 'P2'
+
+    def test_composition_processing_pathway_bad_arg_error(self):
+        I = InputPort(name='I')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=I)
+        assert ("The \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a Node, list, tuple, dict or Pathway object" in str(error_text.value))
+
+    def test_composition_processing_pathway_arg_error_pathways_list_and_item_not_list_or_dict_or_node(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[[A,B], 'C'])
+        assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a Node, list, tuple or dict:" in str(error_text.value))
+
+    def test_composition_processing_pathway_arg_error_pathways_dict_and_item_not_list_dict_or_node(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1':[A,B]}, 'C'])
+        assert ("Every item in the \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a Node, list, tuple or dict:" in str(error_text.value))
+
+    def test_composition_processing_pathway_arg_error_dict_with_more_than_one_entry(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1':[A,B], 'P2':[C,D]}])
+        assert ("A dict specified in the \'pathways\' arg of the constructor" in str(error_text.value)
+                and "contains more than one entry:" in str(error_text.value))
+
+    def test_composition_processing_pathway_arg_error_dict_with_non_string_key(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{A:[B,C]}])
+        assert ("The key in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a str (to be used as its name):" in str(error_text.value))
+
+    def test_composition_processing_pathway_arg_error_dict_with_non_list_or_node_value(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1':'A'}])
+        assert ("The value in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
+                "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
+
+    def test_composition_processing_and_learning_pathway_args(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(pathways=[{'P1':[A,B]}, {'P2':([C,D], pnl.BackPropagation)}])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P2'].name == 'P2'
+        assert c.pathways['P2'].target == c.nodes['Target']
+
+    def test_composition_learning_pathway_arg_dict_and_tuple(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation)}, ([C,D], pnl.BackPropagation)])
+        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P1'].target == c.nodes['Target']
+
+    def test_composition_learning_pathway_arg_error_dict_and_list(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation)}, [C,D]])
+        assert ("An item" in str(error_text.value) and "is not a dict or tuple." in str(error_text.value))
+
+    def test_composition_learning_pathway_arg_error_dict_and_list(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1':([A,B], pnl.BackPropagation),
+                                                'P2':([C,D], pnl.BackPropagation)}])
+        assert ("A dict" in str(error_text.value) and "contains more than one entry" in str(error_text.value))
+
+    def test_composition_learning_pathway_arg_error_dict_with_non_str_key(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways={C:([A,B], pnl.BackPropagation)})
+        assert ("The key" in str(error_text.value) and "must be a str" in str(error_text.value))
+
+    # def test_composition_learning_pathway_arg_error_dict_with_non_tuple_value(self):
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     with pytest.raises(pnl.CompositionError) as error_text:
+    #         c = Composition(pathways={'P1': [A,B]})
+    #     assert ("The value" in str(error_text.value) and "must be a tuple" in str(error_text.value))
+
+    def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
+        A = ProcessingMechanism(name='A')
+        # with pytest.raises(pnl.CompositionError) as error_text:
+        c = Composition(pathways=[{'P1': (A, pnl.BackPropagation)}])
+        # assert ("The 1st item" in str(error_text.value) and "must be a list" in str(error_text.value))
+
+    def test_composition_learning_pathway_arg_error_dict_with_other_than_learning_fct_in_tuple(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c = Composition(pathways=[{'P1': ([A,B],C)}])
+        assert ("The 2nd item" in str(error_text.value) and "must be a LearningFunction" in str(error_text.value))
 
 
 class TestAnalyzeGraph:

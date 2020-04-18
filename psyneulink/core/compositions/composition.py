@@ -260,10 +260,10 @@ the desired `NodeRole` in any of the following places:
   * the **required_roles** argument of the Composition's `add_node <Composition.add_node>` or `add_nodes
     <Composition.add_nodes>` methods;
 
-  * a tuple specifying the `Node <Composition_Nodes>` in the **processing_pathways** or **learning_pathways**
-    arguments of the Compositon's constructor, in the **pathways** argument of a `Pathway`, or in one of the methods
-    used to add a `Pathway <Composition_Pathways>` to the Composition (see `Composition_Creation`);  the Node must be
-    the first item of the tuple, and the `NodeRole` its 2nd item.
+  * a tuple specifying the `Node <Composition_Nodes>` in the **pathways** argument of the Compositon's constructor,
+    a `Pathway`\\'s constructor, or in one of the methods used to add a `Pathway <Composition_Pathways>` to the
+    Composition (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its
+    2nd item.
 
   * the **role** argument of the `add_required_node_role <Composition.add_required_node_role>` called for an
     an existing `Node <Composition_Nodes>`.
@@ -942,6 +942,7 @@ Running a Composition
 
 COMMENT:
   OVERVIEW HERE, INCLUDING NOTION OF TRIALS
+  .run vs. .learn
 COMMENT
 
 .. _Composition_Run_Static_Inputs:
@@ -2052,12 +2053,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the Composition
 
     pathways : list
-        a list of all `Pathways <Pathway>` in the Composition that were specified using either the
-        **processing_pathways** or **learning_pathways** argument of the Composition's constructor,
-        and/or its `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` or
-        `add_linear_learning_pathway <Composition.add_linear_learning_pathway>` methods; each item
-        is a list of nodes (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the
-        `Projection <Projection>` between each pair of nodes.
+        a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
+        argument of the Composition's constructor and/or one of its `Pathway addition methods
+        <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
+        Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
@@ -4094,11 +4093,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
             pathway = pathway.pathway
+        elif _is_pathway_entry_spec(pathway, ANY):
+            pathway = convert_to_list(pathway)
         elif isinstance(pathway, tuple):
-            if _is_pathway_entry_spec(pathway, ANY):
-                pathway = convert_to_list(pathway)
             # If tuple is used to specify a sequence of nodes, convert to list (even though not documented):
-            elif all(_is_pathway_entry_spec(n, ANY) for n in pathway):
+            if all(_is_pathway_entry_spec(n, ANY) for n in pathway):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
@@ -4116,6 +4115,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # MODIFIED 4/4/20 END:
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
+        else:
+            raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
+
 
 
         # Then, verify that the pathway begins with a node
@@ -4398,11 +4400,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not pathways:
             return
+
         # Possibilities 1, 3 or 4 (single NODE, tuple or dict specified, so convert to list
         elif _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
             pathways = convert_to_list(pathways)
+
         # Possibility 2 (list is a single pathway spec):
-        if all(_is_node_spec(p) for p in pathways):
+        if isinstance(pathways, list) and all(_is_node_spec(p) for p in pathways):
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
@@ -4411,6 +4415,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"Node, list, tuple, dict or Pathway object: {pathways}.")
 
         # pathways should now be a list in which each entry should be *some* form of pathway specification
+        #    (including original spec as possibilities 5, 6, or 7)
 
         added_pathways = []
 
@@ -4435,8 +4440,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f" {pathways_arg_str} must be a node or a list: {pway}")
                 if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
                     raise CompositionError(f"The 2nd item in {tuple_or_dict_str} specified in the "
-                                           f"{pathways_arg_str} must be a LearningFunction: "
-                                           f"{learning_function.__name__}")
+                                           f"{pathways_arg_str} must be a LearningFunction: {learning_function}")
                 return pway_type, pway, learning_function
             else:
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
