@@ -4106,9 +4106,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                pathway = pathway[0]
                 warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]} ,"
                               f"it will be ignored")
+                pathway = pathway[0]
             else:
                 raise CompositionError(f"Unrecognized tuple specification in {pathway_arg_str}: {pathway}")
         else:
