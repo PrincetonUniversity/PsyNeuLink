@@ -623,7 +623,7 @@ class TestPathwayAddition:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
-    def test_add_learning_pathway_arg_pathway(self):
+    def test_add_learning_pathway_arg_pathway_without_learning_function(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -637,25 +637,25 @@ class TestPathwayAddition:
                                                         PathwayRole.LEARNING,
                                                         PathwayRole.OUTPUT})
 
-    def test_add_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        p = Pathway(pathway=([A,B], Reinforcement), name='P')
-        c = Composition()
-        c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B)
-                   for r in {NodeRole.OUTPUT,
-                             NodeRole.TERMINAL})
-        assert all(r in c.pathways['P'].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.LEARNING,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+    # def test_add_learning_pathway_arg_pathway_with_learning_function(self):
+    #     pnl.clear_registry(pnl.PathwayRegistry)
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     p = Pathway(pathway=([A,B], Reinforcement), name='P')
+    #     c = Composition()
+    #     c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
+    #     assert all(r in c.get_roles_by_node(A)
+    #                for r in {NodeRole.INPUT,
+    #                          NodeRole.ORIGIN})
+    #     assert all(r in c.get_roles_by_node(B)
+    #                for r in {NodeRole.OUTPUT,
+    #                          NodeRole.TERMINAL})
+    #     assert all(r in c.pathways['P'].roles
+    #                for r in {PathwayRole.INPUT,
+    #                          PathwayRole.ORIGIN,
+    #                          PathwayRole.LEARNING,
+    #                          PathwayRole.OUTPUT,
+    #                          PathwayRole.TERMINAL})
 
     def test_add_bp_learning_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)
