@@ -644,8 +644,11 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
       additional MappingProjections may be created to and/or from the LearningMechanism -- see
       `LearningMechanism_Learning_Configurations` for details); these are assigned the `NodeRole` `LEARNING` in the
       Composition.
-      ..
-      .. _LEARNED_PROJECTIONS:
+    ..
+    .. _LEARNING_FUNCTION:
+    * *LEARNING_FUNCTION* -- the `LearningFunction` used by each of the `LEARNING_MECHANISMS` in the learning pathway.
+    ..
+    .. _LEARNED_PROJECTIONS:
     * *LEARNED_PROJECTIONS* -- a `LearningProjection` from each `LearningMechanism` to the `MappingProjection`
       for which it modifies it s`matrix <MappingProjection.matrix>` parameter.
 
@@ -2977,6 +2980,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.TERMINAL)
                 if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.SINGLETON)
+                    self._add_node_role(node, NodeRole.OUTPUT)
                 if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.INTERNAL)
 

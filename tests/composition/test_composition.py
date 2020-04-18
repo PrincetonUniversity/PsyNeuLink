@@ -749,13 +749,13 @@ class TestCompositionPathwayAdditionMethods:
                                  (D,E),
                                  {'DICT PATHWAY': F},
                                  ([G, H], BackPropagation),
-                                 {'LEARNING PATHWAY': ([L,M], Reinforcement)},
+                                 {'LEARNING PATHWAY': ([J,K], Reinforcement)},
                                  p])
         assert len(c.pathways) == 7
         assert c.pathways['P'].input == L
         assert c.pathways['DICT PATHWAY'].input == F
-        # assert c.pathways['DICT PATHWAY'].output == F
-        assert c.pathways['LEARNING PATHWAY'].output == M
+        assert c.pathways['DICT PATHWAY'].output == F
+        assert c.pathways['LEARNING PATHWAY'].output == K
         [p for p in c.pathways if p.input == G][0].learning_function == BackPropagation
         assert c.pathways['LEARNING PATHWAY'].learning_function == Reinforcement
 
