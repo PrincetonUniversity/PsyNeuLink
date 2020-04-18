@@ -623,7 +623,28 @@ class TestPathwayAddition:
                              PathwayRole.OUTPUT,
                              PathwayRole.TERMINAL})
 
-    def test_add_learning_pathway_arg_pathway_without_learning_function(self):
+    def test_add_linear_processing_pathway_with_errant_learning_function_warning(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=([A,B], Reinforcement), name='P')
+        c = Composition()
+        with pytest.warns(UserWarning) as w:
+            c.add_linear_processing_pathway(pathway=p)
+        assert ("LearningFunction found in specification of 'pathway' arg for " in w[0].message.args[0] and
+                "add_linear_procesing_pathway method" in w[0].message.args[0] and
+                "Reinforcement'> ,it will be ignored" in w[0].message.args[0])
+        assert all(r in c.get_roles_by_node(A)
+                   for r in {NodeRole.INPUT,
+                             NodeRole.ORIGIN})
+        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
+        assert all(r in c.pathways['P'].roles
+                   for r in {PathwayRole.INPUT,
+                             PathwayRole.ORIGIN,
+                             PathwayRole.OUTPUT,
+                             PathwayRole.TERMINAL})
+
+    def test_add_learning_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -637,25 +658,18 @@ class TestPathwayAddition:
                                                         PathwayRole.LEARNING,
                                                         PathwayRole.OUTPUT})
 
-    # def test_add_learning_pathway_arg_pathway_with_learning_function(self):
-    #     pnl.clear_registry(pnl.PathwayRegistry)
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     p = Pathway(pathway=([A,B], Reinforcement), name='P')
-    #     c = Composition()
-    #     c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
-    #     assert all(r in c.get_roles_by_node(A)
-    #                for r in {NodeRole.INPUT,
-    #                          NodeRole.ORIGIN})
-    #     assert all(r in c.get_roles_by_node(B)
-    #                for r in {NodeRole.OUTPUT,
-    #                          NodeRole.TERMINAL})
-    #     assert all(r in c.pathways['P'].roles
-    #                for r in {PathwayRole.INPUT,
-    #                          PathwayRole.ORIGIN,
-    #                          PathwayRole.LEARNING,
-    #                          PathwayRole.OUTPUT,
-    #                          PathwayRole.TERMINAL})
+    def test_add_learning_pathway_arg_pathway_with_errant_learning_function_in_tuple_spec_error(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        p = Pathway(pathway=([A,B], Reinforcement), name='P')
+        c = Composition()
+        with pytest.raises(pnl.CompositionError) as error_text:
+            c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
+        assert ("Specification in 'pathway' arg for " in str(error_text.value) and
+                "add_linear_procesing_pathway method" in str(error_text.value) and
+                "contains a tuple that specifies a different LearningFunction (Reinforcement)" in str(error_text.value)
+                and "than the one specified in its 'learning_function' arg (BackPropagation)" in str(error_text.value))
 
     def test_add_bp_learning_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)

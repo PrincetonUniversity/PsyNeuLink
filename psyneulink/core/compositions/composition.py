@@ -4587,6 +4587,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             pathway_name = name
 
+        # Make sure pathways is not a (<pathway spec>, LearningFunction) tuple that conflicts with learning_function
+        if isinstance(pathway,tuple) and pathway[1] is not learning_function:
+            raise CompositionError(f"Specification in {pathway_arg_str} contains a tuple that specifies a different "
+                                   f"{LearningFunction.__name__} ({pathway[1].__name__}) than the one specified in "
+                                   f"its 'learning_function' arg ({learning_function.__name__}).")
+
         # Preserve existing NodeRole.OUTPUT status for any non-learning-related nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
@@ -5089,7 +5095,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Eliminate existing comparators and targets for Mechanisms now in the pathway that were output_sources
             #   (i.e., ones that belong to previously-created sequences that overlap with the current one)
-            for pathway_mech in [m for m in pathway if isinstance(m, Mechanism)]:
+            for pathway_mech in [m for m in processing_pathway if isinstance(m, Mechanism)]:
 
                 old_comparator = next((p.receiver.owner for p in pathway_mech.efferents
                                        if (isinstance(p.receiver.owner, ComparatorMechanism)
@@ -5126,11 +5132,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self.add_required_node_role(pathway[-1], NodeRole.OUTPUT)
+            self.add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT)
 
             sequence_end = path_length - 3
 
-        # loop backwards through the rest of the pathway to create and connect
+        # loop backwards through the rest of the processing_pathway to create and connect
         # the remaining learning mechanisms
         learning_mechanisms = [learning_mechanism]
         learned_projections = [learned_projection]
