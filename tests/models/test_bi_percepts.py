@@ -58,7 +58,7 @@ def test_simplified_necker_cube(benchmark, mode):
     # init composition
     bp_comp = pnl.Composition()
 
-    # MODIFIED 4/11/20 OLD:  PASSES IN PYTHON, BUT NEEDS RESULTS B BELOW
+    # MODIFIED 4/4/20 OLD:  PASSES IN PYTHON, BUT NEEDS RESULTS B BELOW
     # within-percept excitation
     for percept in ALL_PERCEPTS:
         for node_i, node_j in product(node_dict[percept], node_dict[percept]):
@@ -84,7 +84,7 @@ def test_simplified_necker_cube(benchmark, mode):
         # turn off report
         node.reportOutputPref = reportOutputPref
 
-    # # MODIFIED 4/11/20 NEW:  [PASSES ALL TESTS, BUT NEEDS RSEULTS A BELOW]
+    # # MODIFIED 4/4/20 NEW:  [PASSES ALL TESTS, BUT NEEDS RSEULTS A BELOW]
     # # within-percept excitation
     # for percept in ALL_PERCEPTS:
     #     for node_i, node_j in product(node_dict[percept], node_dict[percept]):
@@ -104,14 +104,10 @@ def test_simplified_necker_cube(benchmark, mode):
 
     # turn off report
     reportOutputPref = False
-    # MODIFIED 4/11/20 END
+    # MODIFIED 4/4/20 END
 
     # bp_comp.show_graph()
 
-    # init the inputs
-    # # MODIFIED 4/4/20 NEW:
-    # np.random.seed(12345)
-    # # MODIFIED 4/4/20 END:
     n_time_steps = 10
     input_dict = {
         node_: np.random.normal(size=(n_time_steps,))
@@ -127,13 +123,6 @@ def test_simplified_necker_cube(benchmark, mode):
                                [[-11190.45001744], [3127.65559899],  # B) no seed, but with with_analyze_graph in
                                 [3610.74194658], [6468.6978669],     #  Composition:3776; passes for Python but not LLVM
                                 [-4615.15074428], [-7369.73302025]])
-                               # [[4380.19172585], [5056.09548856],   # C) seed but no _analyze_graph in Composition:3776
-                               #  [9058.54210893], [-6465.3497555],   # passes for Python abd LLVM
-                               #  [-10322.33734752], [-15673.99046508]])
-                               # [[-15673.99046508], [4380.19172585],  # D) seed + _analyze_graph in Composition:3776
-                               #  [5056.09548856], [9058.54210893],    # passes for Python but not LLVM
-                               #  [-6465.3497555], [-10322.33734752]])
-
 
     benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
 

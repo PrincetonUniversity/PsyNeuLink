@@ -376,7 +376,6 @@ class Pathway(object):
 
         # Initialize attributes
         self.pathway = pathway
-        # # MODIFIED 4/18/20 OLD:
         if self.composition:
             self.learning_components = {}
             self.roles = set()

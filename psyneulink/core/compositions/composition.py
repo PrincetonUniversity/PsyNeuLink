@@ -2992,10 +2992,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.TERMINAL)
                 if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.SINGLETON)
-                    # # MODIFIED 4/4/20 NEW: [ACTUALLY, 4/18/20]
-                    # # Enforce SINGLETON as OUTPUT
-                    # self._add_node_role(node, NodeRole.OUTPUT)
-                    # MODIFIED 4/4/20 END
                 if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                     self._add_node_role(node, NodeRole.INTERNAL)
 
@@ -3306,7 +3302,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             context.execution_id = orig_eid
 
-            # JDC 4/12/20:
             # FIX 4/4/20 [JDC]: THIS PASSES ALL TESTS EXCEPT test_warning_on_custom_cim_ports,
             #                   IN WHICH AN ATTEMPT IS MADE TO MANUALLY ADD A CIM.  NEED TO RECONCILE ASSERT W/ WARNING
             # assert len(cim.input_ports)==len(cim.output_ports)
@@ -4104,7 +4099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/8/20 [JDC]: Reset for to None for now to replicate prior behavior,
+            # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
             #                   but need to implement proper behavior wrt call to analyze_graph()
             #                   _check_initalization_state()
             context = None
@@ -4296,9 +4291,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           context=Context(source=ContextFlags.METHOD))
         self.pathways.append(pathway)
 
-        # # MODIFIED 4/4/20 NEW: THE SOURCE OF ALL THE PROBLEMS!
         self._analyze_graph(context=context)
-        # MODIFIED 4/4/20 END
 
         return pathway
 
@@ -4481,8 +4474,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
        The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
             *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
-            *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `comparator <Pathway.comparator>`
+            *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`
             *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
+            *LEARNING_FUNCTION*: `LearningFunction` used by all LEARNING_MECHSNISMS in the `Pathway`
             *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
         that is assigned to the `learning_components <Pathway.learning_components>` attribute of the `Pathway`
         returned.
@@ -4544,8 +4538,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
-        # FIX 4/8/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
-        # FIX 4/8/20 [JDC]: Assign learning_function to Pathway.learning_function
+        # FIX 4/4/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
 
         # If called from add_pathways(), use its pathway_arg_str
 
@@ -4556,7 +4549,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/8/20 [JDC]: Reset for to None for now to replicate prior behavior,
+            # FIX 4/4/20 [JDC]: Reset for to None for now to replicate prior behavior,
             #                   but need to implement proper behavior wrt call to analyze_graph()
             #                   _check_initalization_state()
             context = None
