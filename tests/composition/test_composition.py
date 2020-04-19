@@ -5856,19 +5856,25 @@ class TestReinitializeValues:
 
 class TestNodeRoles:
 
-    def test_internal(self):
+    def test_INPUT_and_OUTPUT_and_SINGLETON(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        comp = Composition(pathways=[[A],[B,C]], name='comp')
+        assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in [A,B])
+        assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in [A,C])
+        assert all(n in comp.get_nodes_by_role(NodeRole.SINGLETON) for n in [A])
+
+    def test_INTERNAL(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
 
         comp.add_linear_processing_pathway([A, B, C])
-
-        comp._analyze_graph()
-
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
-    def test_feedback(self):
+    def test_FEEDBACK(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -5877,10 +5883,7 @@ class TestNodeRoles:
         comp.add_linear_processing_pathway([A, B, C])
         comp.add_projection(sender=C, receiver=A, feedback=True)
 
-        comp._analyze_graph()
-
         assert comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER) == [C]
-
         assert comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER) == [A]
 
     def test_cycle(self):

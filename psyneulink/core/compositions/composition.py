@@ -2863,11 +2863,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
             self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
-        # Make sure that any nodes that don't have efferent Projections to another node the Composition are
-        #   also considered TERMINAL
-        #  (this is needed since _analyze_consideration_queue assigns TERMINAL to nodes in the last consideration_set,
-        #   which might miss nodes in pathway(s) shorter than the longest one, the last node of which will be assigned
-        #   to a consideration set before the last one).
+        # Also assign TERMINAL to any nodes that don't have efferent Projections other than to Composition's output_CIM
+        # IMPLEMENTATION NOTE:
+        #   This is needed because _analyze_consideration_queue() assigns TERMINAL only to nodes in the *last*
+        #   consideration_set; however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not
+        #   be in the last consideration set, and therefore not assigned as TERMINAL by _analyze_consideration_queue().
+        #   This also assumes that _check_feedback() has already identified cycles and assigned FEEDBACK_SENDER, and
+        #   that _analyze_consideration_queue() assigns those to the last consideration set (which is why it must be
+        #   called here).  A potential alternative would be to not use _analyze_consideration_queue(), and simply
+        #   TERMINAL to all nodes without efferents (other than to output_CIM) or labeled as FEEDBACK_SENDER.
         for node in self.nodes:
             if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
                 self._add_node_role(node, NodeRole.TERMINAL)
@@ -4589,8 +4593,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
 
         # Processing Components
-        input_source, output_source, learned_projection = \
-            self._unpack_processing_components_of_learning_pathway(pathway)
+        try:
+            input_source, output_source, learned_projection = \
+                self._unpack_processing_components_of_learning_pathway(pathway)
+        except CompositionError as e:
+            raise CompositionError(e.error_value.replace('this method',
+                                                         f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
         self.add_required_node_role(output_source, NodeRole.OUTPUT)
@@ -4804,10 +4812,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_source, output_source = processing_pathway
             learned_projection = MappingProjection(sender=input_source, receiver=output_source)
         else:
-            raise CompositionError(f"Too many components in learning pathway: {pathway}. Only single-layer learning "
-                                   f"is supported by this method. See AutodiffComposition for other learning models.")
+            raise CompositionError(f"Too many components in learning pathway: {processing_pathway}. "
+                                   f"Only single-layer learning is supported by this method. "
+                                   f"See AutodiffComposition for other learning models.")
         return input_source, output_source, learned_projection
-
 
     # FIX: NOT CURRENTLY USED; IMPLEMENTED FOR FUTURE USE IN GENERALIZATION OF LEARNING METHODS
     def _create_learning_components(self,
