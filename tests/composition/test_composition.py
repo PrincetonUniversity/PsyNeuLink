@@ -5906,6 +5906,68 @@ class TestNodeRoles:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
+    def test_CYCLE_no_FEEDBACK(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        comp.add_linear_processing_pathway([A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        comp._analyze_graph()
+
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+        assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
+
+    def test_LEARNING_hebbian(self):
+        A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
+        comp = Composition(pathways=A)
+        pathway = comp.pathways[0]
+        pathway.target == None
+        pathway.learning_objective == None
+        pathway.learning_components == {}
+        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT,NodeRole.FEEDBACK_RECEIVER}
+        assert roles.issubset(set(comp.get_roles_by_node(A)))
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == {A.learning_mechanism}
+
+    def test_LEARNING_rl(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp = Composition(pathways=([A,B], Reinforcement))
+        learning_pathway = comp.pathways[0]
+        target = learning_pathway.target
+        objective= learning_pathway.learning_objective
+        learning_mech = learning_pathway.learning_components[LEARNING_MECHANISMS]
+        learning = {learning_mech}
+        learning.add(target)
+        learning.add(objective)
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {B}
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == learning
+        # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
+        (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
+
+    def test_LEARNING_bp(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        comp = Composition(pathways=([A,B,C,D], BackPropagation))
+        learning_pathway = comp.pathways[0]
+        target = learning_pathway.target
+        objective= learning_pathway.learning_objective
+        learning_mechs = learning_pathway.learning_components[LEARNING_MECHANISMS]
+        learning = set(learning_mechs)
+        learning.add(target)
+        learning.add(objective)
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {D}
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == set(learning)
+        # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
+        (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
+
+
 class TestMisc:
 
     def test_disable_all_history(self):

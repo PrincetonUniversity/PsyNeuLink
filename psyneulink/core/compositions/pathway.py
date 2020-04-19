@@ -282,9 +282,11 @@ class Pathway(object):
     composition : `Composition` or None
         `Composition` to which the Pathway belongs;  if None, then Pathway is a `template <Pathway_Template>`.
 
-    roles : list[`PathwayRole`]
+    roles : list[`PathwayRole`] or None
         list of `PathwayRole(s) <PathwayRole>` assigned to the Pathway, based on the `NodeRole(s) <NodeRole>`
         assigned to its `Nodes <Composition>` in the `composition <Pathway.composition>` to which it belongs.
+        Returns an empty list if belongs to a Composition but no `PathwayRoles <PathwayRole>` have been assigned,
+        and None if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
     learning_function : `LearningFunction` or None
         `LearningFunction` used by `LearningMechanism(s) <LearningMechanism>` associated with Pathway if
@@ -304,7 +306,7 @@ class Pathway(object):
         `OBJECTIVE_MECHANISM` if Pathway contains one; same as `learning_components
         <Pathway.learning_components>`\\[*COMPATOR_MECHANISM*].
 
-    learning_components : dict
+    learning_components : dict or None
         dict containing the following entries if the Pathway is a `learning Pathway <Composition_Learning_Pathway>`
         (and is assigned `PathwayRole.LEARNING` in `roles <Pathway.roles>`):
 
@@ -317,6 +319,8 @@ class Pathway(object):
           *LEARNED_PROJECTIONS*: `Projection <Projection>` or list[`Projections <Projection>`]
 
         These are generated automatically and added to the `Composition` when the Pathway is assigned to it.
+        Returns an empty dict if it is not a `learning Pathway <Composition_Learning_Pathway>`, and None
+        if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
     name : str
         the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
@@ -372,6 +376,7 @@ class Pathway(object):
 
         # Initialize attributes
         self.pathway = pathway
+        # # MODIFIED 4/18/20 OLD:
         if self.composition:
             self.learning_components = {}
             self.roles = set()
@@ -385,6 +390,7 @@ class Pathway(object):
         """
         assert composition, f'_assign_roles() cannot be called for {self.name} ' \
                             f'because it has not been assigned to a {Composition.__class__.__name__}.'
+        self.roles = set()
         for node in self.pathway:
             if not isinstance(node, (Mechanism, Composition)):
                 continue
