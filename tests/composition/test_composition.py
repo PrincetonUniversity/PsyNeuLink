@@ -5882,6 +5882,7 @@ class TestNodeRoles:
 
         comp.add_linear_processing_pathway([A, B, C])
         comp.add_projection(sender=C, receiver=A, feedback=True)
+        comp._analyze_graph()
 
         assert comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER) == [C]
         assert comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER) == [A]
