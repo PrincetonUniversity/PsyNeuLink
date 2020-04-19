@@ -388,8 +388,8 @@ class Pathway(object):
         """Assign `PathwayRoles <PathwayRole>` to Pathway based `NodeRoles <NodeRole>` assigned to its `Nodes
         <Composition_Nodes>` by the **composition** to which it belongs.
         """
-        assert composition, f'_assign_roles() cannot be called for {self.name} ' \
-                            f'because it has not been assigned to a {Composition.__class__.__name__}.'
+        assert self.composition, f'_assign_roles() cannot be called for {self.name} ' \
+                                 f'because it has not been assigned to a {Composition.__name__}.'
         self.roles = set()
         for node in self.pathway:
             if not isinstance(node, (Mechanism, Composition)):

@@ -488,6 +488,18 @@ class TestPathway:
         assert "\'composition\' can not be specified as an arg in the constructor for a Pathway" in str(
                 error_text.value)
 
+    def test_pathway_assign_roles_error(self):
+        A = ProcessingMechanism()
+        c = Composition()
+        p = Pathway(pathway=[A])
+        with pytest.raises(AssertionError) as error_text:
+            p._assign_roles(composition=c)
+        assert (f"_assign_roles() cannot be called " in str(error_text.value) and
+                f"because it has not been assigned to a Composition" in str(error_text.value))
+        c.add_linear_processing_pathway(pathway=p)
+        p_c = c.pathways[0]
+        assert p_c._assign_roles(composition=c) == None
+
     def test_pathway_illegal_arg_error(self):
         with pytest.raises(pnl.CompositionError) as error_text:
             Pathway(pathway=[], foo='bar')
@@ -591,18 +603,16 @@ class TestCompositionPathwayAdditionMethods:
         A = ProcessingMechanism(name='A')
         c = Composition()
         c.add_linear_processing_pathway(pathway=A)
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN,
-                             NodeRole.SINGLETON,
-                             NodeRole.OUTPUT,
-                             NodeRole.TERMINAL})
-        assert all(r in c.pathways[0].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.SINGLETON,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT,
+                                               NodeRole.ORIGIN,
+                                               NodeRole.SINGLETON,
+                                               NodeRole.OUTPUT,
+                                               NodeRole.TERMINAL}
+        assert set(c.pathways[0].roles) == {PathwayRole.INPUT,
+                                            PathwayRole.ORIGIN,
+                                            PathwayRole.SINGLETON,
+                                            PathwayRole.OUTPUT,
+                                            PathwayRole.TERMINAL}
 
     def test_add_processing_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -610,18 +620,16 @@ class TestCompositionPathwayAdditionMethods:
         p = Pathway(pathway=A, name='P')
         c = Composition()
         c.add_linear_processing_pathway(pathway=p)
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN,
-                             NodeRole.SINGLETON,
-                             NodeRole.OUTPUT,
-                             NodeRole.TERMINAL})
-        assert all(r in c.pathways['P'].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.SINGLETON,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT,
+                                               NodeRole.ORIGIN,
+                                               NodeRole.SINGLETON,
+                                               NodeRole.OUTPUT,
+                                               NodeRole.TERMINAL}
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.SINGLETON,
+                                              PathwayRole.OUTPUT,
+                                              PathwayRole.TERMINAL}
 
     def test_add_processing_pathway_with_errant_learning_function_warning(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -634,15 +642,12 @@ class TestCompositionPathwayAdditionMethods:
         assert ("LearningFunction found in specification of 'pathway' arg for " in w[0].message.args[0] and
                 "add_linear_procesing_pathway method" in w[0].message.args[0] and
                 "Reinforcement'> ,it will be ignored" in w[0].message.args[0])
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-        assert all(r in c.pathways['P'].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT, NodeRole.ORIGIN}
+        assert set(c.get_roles_by_node(B)) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.OUTPUT,
+                                              PathwayRole.TERMINAL}
 
     def test_add_learning_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -651,12 +656,12 @@ class TestCompositionPathwayAdditionMethods:
         p = Pathway(pathway=[A,B], name='P')
         c = Composition()
         c.add_linear_learning_pathway(pathway=p, learning_function=BackPropagation)
-        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
-                                                        PathwayRole.ORIGIN,
-                                                        PathwayRole.LEARNING,
-                                                        PathwayRole.OUTPUT})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT, NodeRole.ORIGIN}
+        assert {NodeRole.OUTPUT}.issubset(c.get_roles_by_node(B))
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.LEARNING,
+                                              PathwayRole.OUTPUT}
 
     def test_add_learning_pathway_with_errant_learning_function_in_tuple_spec_error(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -678,12 +683,12 @@ class TestCompositionPathwayAdditionMethods:
         p = Pathway(pathway=[A,B], name='P')
         c = Composition()
         c.add_backpropagation_learning_pathway(pathway=p)
-        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
-                                                        PathwayRole.ORIGIN,
-                                                        PathwayRole.LEARNING,
-                                                        PathwayRole.OUTPUT})
+        assert {NodeRole.INPUT, NodeRole.ORIGIN}.issubset(c.get_roles_by_node(A))
+        assert {NodeRole.OUTPUT}.issubset(c.get_roles_by_node(B))
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.LEARNING,
+                                              PathwayRole.OUTPUT}
 
     def test_add_bp_learning_pathway_arg_pathway_name_in_method(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -692,12 +697,12 @@ class TestCompositionPathwayAdditionMethods:
         p = Pathway(pathway=[A,B], name='P')
         c = Composition()
         c.add_backpropagation_learning_pathway(pathway=p, name='BP')
-        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-        assert all(r in c.pathways['BP'].roles for r in {PathwayRole.INPUT,
-                                                        PathwayRole.ORIGIN,
-                                                        PathwayRole.LEARNING,
-                                                        PathwayRole.OUTPUT})
+        assert {NodeRole.INPUT, NodeRole.ORIGIN}.issubset(set(c.get_roles_by_node(A)))
+        assert {NodeRole.OUTPUT}.issubset(set(c.get_roles_by_node(B)))
+        assert set(c.pathways['BP'].roles) == {PathwayRole.INPUT,
+                                               PathwayRole.ORIGIN,
+                                               PathwayRole.LEARNING,
+                                               PathwayRole.OUTPUT}
 
     def test_add_rl_learning_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -706,12 +711,12 @@ class TestCompositionPathwayAdditionMethods:
         p = Pathway(pathway=[A,B], name='P')
         c = Composition()
         c.add_reinforcement_learning_pathway(pathway=p)
-        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
-                                                        PathwayRole.ORIGIN,
-                                                        PathwayRole.LEARNING,
-                                                        PathwayRole.OUTPUT})
+        assert {NodeRole.INPUT, NodeRole.ORIGIN}.issubset(set(c.get_roles_by_node(A)))
+        assert {NodeRole.OUTPUT}.issubset(set(c.get_roles_by_node(B)))
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.LEARNING,
+                                              PathwayRole.OUTPUT}
 
     def test_add_td_learning_pathway_arg_pathway(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -720,12 +725,12 @@ class TestCompositionPathwayAdditionMethods:
         p = Pathway(pathway=[A,B], name='P')
         c = Composition()
         c.add_td_learning_pathway(pathway=p)
-        assert all(r in c.get_roles_by_node(A) for r in {NodeRole.INPUT, NodeRole.ORIGIN})
-        assert all(r in c.get_roles_by_node(B) for r in {NodeRole.OUTPUT})
-        assert all(r in c.pathways['P'].roles for r in {PathwayRole.INPUT,
-                                                        PathwayRole.ORIGIN,
-                                                        PathwayRole.LEARNING,
-                                                        PathwayRole.OUTPUT})
+        assert {NodeRole.INPUT, NodeRole.ORIGIN}.issubset(set(c.get_roles_by_node(A)))
+        assert {NodeRole.OUTPUT}.issubset(set(c.get_roles_by_node(B)))
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.LEARNING,
+                                              PathwayRole.OUTPUT}
 
     def test_add_pathways_with_all_types(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -776,6 +781,7 @@ class TestCompositionPathwayAdditionMethods:
         assert ("Every item in the \'pathways\' arg for the add_pathways method" in str(error_text.value)
                 and "must be a Node, list, tuple or dict:" in str(error_text.value))
 
+
 class TestCompositionPathwaysArg:
 
     def test_composition_pathways_arg_pathway_object(self):
@@ -783,52 +789,46 @@ class TestCompositionPathwaysArg:
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=A, name='P')
         c = Composition(pathways=p)
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN,
-                             NodeRole.SINGLETON,
-                             NodeRole.OUTPUT,
-                             NodeRole.TERMINAL})
-        assert all(r in c.pathways['P'].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.SINGLETON,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT,
+                                               NodeRole.ORIGIN,
+                                               NodeRole.SINGLETON,
+                                               NodeRole.OUTPUT,
+                                               NodeRole.TERMINAL}
+        assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
+                                              PathwayRole.ORIGIN,
+                                              PathwayRole.SINGLETON,
+                                              PathwayRole.OUTPUT,
+                                              PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_pathway_object_in_dict_with_name(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=[A], name='P')
         c = Composition(pathways={'DICT NAMED':p})
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN,
-                             NodeRole.SINGLETON,
-                             NodeRole.OUTPUT,
-                             NodeRole.TERMINAL})
-        assert all(r in c.pathways['DICT NAMED'].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.SINGLETON,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT,
+                                               NodeRole.ORIGIN,
+                                               NodeRole.SINGLETON,
+                                               NodeRole.OUTPUT,
+                                               NodeRole.TERMINAL}
+        assert set(c.pathways['DICT NAMED'].roles) == {PathwayRole.INPUT,
+                                                       PathwayRole.ORIGIN,
+                                                       PathwayRole.SINGLETON,
+                                                       PathwayRole.OUTPUT,
+                                                       PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_mech(self):
         A = ProcessingMechanism(name='A')
         c = Composition(pathways=A)
-        assert all(r in c.get_roles_by_node(A)
-                   for r in {NodeRole.INPUT,
-                             NodeRole.ORIGIN,
-                             NodeRole.SINGLETON,
-                             NodeRole.OUTPUT,
-                             NodeRole.TERMINAL})
-        assert all(r in c.pathways[0].roles
-                   for r in {PathwayRole.INPUT,
-                             PathwayRole.ORIGIN,
-                             PathwayRole.SINGLETON,
-                             PathwayRole.OUTPUT,
-                             PathwayRole.TERMINAL})
+        assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT,
+                                               NodeRole.ORIGIN,
+                                               NodeRole.SINGLETON,
+                                               NodeRole.OUTPUT,
+                                               NodeRole.TERMINAL}
+        assert set(c.pathways[0].roles) == {PathwayRole.INPUT,
+                                            PathwayRole.ORIGIN,
+                                            PathwayRole.SINGLETON,
+                                            PathwayRole.OUTPUT,
+                                            PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -840,14 +840,22 @@ class TestCompositionPathwaysArg:
         assert all(n in {A, C} for n in c.get_nodes_by_role(NodeRole.INPUT))
         assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
         assert c.pathways['P1'].name == 'P1'
-        assert all(r in c.pathways['P1'].roles
-                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL})
-        assert not any (r in c.pathways['P1'].roles
-                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
-        assert all(r in c.pathways[1].roles
-                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL})
-        assert not any (r in c.pathways[1].roles
-                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
+        assert set(c.pathways['P1'].roles) == {PathwayRole.ORIGIN,
+                                               PathwayRole.INPUT,
+                                               PathwayRole.OUTPUT,
+                                               PathwayRole.TERMINAL}
+        assert set(c.pathways['P1'].roles).isdisjoint({PathwayRole.SINGLETON,
+                                                       PathwayRole.CYCLE,
+                                                       PathwayRole.CONTROL,
+                                                       PathwayRole.LEARNING})
+        assert set(c.pathways[1].roles) == {PathwayRole.ORIGIN,
+                                            PathwayRole.INPUT,
+                                            PathwayRole.OUTPUT,
+                                            PathwayRole.TERMINAL}
+        assert set(c.pathways[1].roles).isdisjoint({PathwayRole.SINGLETON,
+                                                    PathwayRole.CYCLE,
+                                                    PathwayRole.CONTROL,
+                                                    PathwayRole.LEARNING})
 
     def test_composition_pathways_arg_dict_and_node(self):
         pnl.clear_registry(pnl.PathwayRegistry)
@@ -941,19 +949,25 @@ class TestCompositionPathwaysArg:
         C = ProcessingMechanism(name='C')
         D = ProcessingMechanism(name='D')
         c = Composition(pathways=[{'P1':[A,B]}, {'P2':([C,D], pnl.BackPropagation)}])
-        assert all(n in {B, D} for n in c.get_nodes_by_role(NodeRole.OUTPUT))
+        assert set(c.get_nodes_by_role(NodeRole.OUTPUT)) == {B, D}
         assert c.pathways['P1'].name == 'P1'
         assert c.pathways['P2'].name == 'P2'
         assert c.pathways['P2'].target == c.nodes['Target']
-        assert all(r in c.pathways['P1'].roles
-                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL})
-        assert not any (r in c.pathways['P1'].roles
-                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL, PathwayRole.LEARNING})
-        assert all(r in c.pathways['P2'].roles
-                   for r in {PathwayRole.ORIGIN, PathwayRole.INPUT, PathwayRole.OUTPUT, PathwayRole.TERMINAL,
-                             PathwayRole.LEARNING})
-        assert not any (r in c.pathways['P2'].roles
-                   for r in {PathwayRole.SINGLETON, PathwayRole.CYCLE, PathwayRole.CONTROL})
+        assert set(c.pathways['P1'].roles) == {PathwayRole.ORIGIN,
+                                               PathwayRole.INPUT,
+                                               PathwayRole.OUTPUT,
+                                               PathwayRole.TERMINAL}
+        assert set(c.pathways['P1'].roles).isdisjoint({PathwayRole.SINGLETON,
+                                                       PathwayRole.CYCLE,
+                                                       PathwayRole.CONTROL,
+                                                       PathwayRole.LEARNING})
+        assert set(c.pathways['P2'].roles)  == {PathwayRole.ORIGIN,
+                                                PathwayRole.INPUT,
+                                                PathwayRole.OUTPUT,
+                                                PathwayRole.LEARNING}
+        assert set(c.pathways['P2'].roles).isdisjoint({PathwayRole.SINGLETON,
+                                                       PathwayRole.CYCLE,
+                                                       PathwayRole.CONTROL})
         assert isinstance(c.pathways['P2'].learning_components[OBJECTIVE_MECHANISM], ObjectiveMechanism)
         assert isinstance(c.pathways['P2'].learning_components[TARGET_MECHANISM], ProcessingMechanism)
         assert (len(c.pathways['P2'].learning_components[LEARNING_MECHANISMS])
