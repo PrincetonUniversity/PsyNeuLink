@@ -5863,9 +5863,9 @@ class TestNodeRoles:
         comp = Composition(pathways=[[A],[B,C]], name='comp')
         comp._analyze_graph()
 
-        assert all(n in comp.get_nodes_by_role(NodeRole.INPUT) for n in [A,B])
-        assert all(n in comp.get_nodes_by_role(NodeRole.OUTPUT) for n in [A,C])
-        assert all(n in comp.get_nodes_by_role(NodeRole.SINGLETON) for n in [A])
+        assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {A,C}
+        assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A}
 
     def test_INTERNAL(self):
         comp = Composition(name='comp')
@@ -5876,7 +5876,7 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
-    def test_FEEDBACK(self):
+    def test_FEEDBACK_no_CYCLE(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -5890,20 +5890,21 @@ class TestNodeRoles:
         assert comp.get_nodes_by_role(NodeRole.INPUT) == [A]
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
         assert comp.get_nodes_by_role(NodeRole.OUTPUT) == [C]
+        assert not comp.get_nodes_by_role(NodeRole.CYCLE)
 
-    def test_cycle(self):
+    def test_CYCLE_no_FEEDBACK(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
-
         comp.add_linear_processing_pathway([A, B, C])
         comp.add_projection(sender=C, receiver=A)
-
         comp._analyze_graph()
 
-        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A, B, C}
-
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+        assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
 class TestMisc:
 
