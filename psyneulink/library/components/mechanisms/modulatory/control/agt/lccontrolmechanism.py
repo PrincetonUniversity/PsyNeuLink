@@ -855,6 +855,16 @@ class LCControlMechanism(ControlMechanism):
                                                          "scaling_factor_gain")
         base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                       "base_level_gain")
+        # If modulated, scaling factor is a single element array
+        if isinstance(scaling_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(scaling_factor_ptr.type.pointee) == 1
+            scaling_factor_ptr = builder.gep(scaling_factor_ptr,
+                                             [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # If modulated, base factor is a single element array
+        if isinstance(base_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(base_factor_ptr.type.pointee) == 1
+            base_factor_ptr = builder.gep(base_factor_ptr,
+                                          [ctx.int32_ty(0), ctx.int32_ty(0)])
         scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)
 

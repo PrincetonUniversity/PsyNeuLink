@@ -8,11 +8,17 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8]
+        python-architecture: ['x64']
         os: [ubuntu-latest, macos-latest, windows-latest]
         exclude:
           # python 3.8 on windows fails to build GPy
           - os: windows-latest
             python-version: 3.8
+        include:
+          # add 32-bit build on windows
+          - python-version: 3.6
+            python-architecture: 'x86'
+            os: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -24,26 +30,27 @@ jobs:
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/.cache/pip/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels
 
     - name: MacOS wheels cache
       uses: actions/cache@v1
       if: startsWith(runner.os, 'macOS')
       with:
         path: ~/Library/Caches/pip/wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels
 
     - name: Windows wheels cache
       uses: actions/cache@v1
       if: startsWith(runner.os, 'Windows')
       with:
         path: ~\AppData\Local\pip\Cache\wheels
-        key: ${{ runner.os }}-python-${{ matrix.python-version }}-pip-wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+        architecture: ${{ matrix.python-architecture }}
 
     - name: MacOS dependencies
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
@@ -54,12 +61,14 @@ jobs:
       if: startsWith(runner.os, 'Linux')
 
     - name: Windows dependencies
-      run: |
-        choco install --no-progress -y graphviz
-        python -m pip install --upgrade pip
-        pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html
+      run: choco install --no-progress -y graphviz
       if: startsWith(runner.os, 'Windows')
 
+    - name: Windows pytorch
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch -f https://download.pytorch.org/whl/cpu/torch_stable.html
+      if: startsWith(runner.os, 'Windows') && matrix.python-architecture != 'x86'
     - name: Shared dependencies
       shell: bash
       run: |
@@ -77,12 +86,12 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
-      run: pytest --junit-xml=tests_out.xml
+      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto
 
     - name: Upload test results
       uses: actions/upload-artifact@v1
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: tests_out.xml
       if: success() || failure()
 
@@ -94,6 +103,6 @@ jobs:
     - name: Upload dist packages
       uses: actions/upload-artifact@v1
       with:
-        name: dist-${{ matrix.os }}-${{ matrix.python-version }}
+        name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
       if: contains(github.ref, 'tags')

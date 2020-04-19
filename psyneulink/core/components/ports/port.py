@@ -2216,6 +2216,11 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
+        if len(self.path_afferents) > 0:
+            assert len(func_input_type) == len(self.path_afferents), \
+              "{} shape mismatch: {}(port: {}, func: {}) vs. {} path_afferents".format(
+              self, func_input_type, self.defaults.variable,
+              self.function.defaults.variable, len(self.path_afferents))
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
@@ -2257,6 +2262,11 @@ class Port_Base(Port):
                 name = None
             elif afferent.sender.modulation == OVERRIDE:
                 # Directly store the value in the output array
+                if f_mod_ptr.type != arg_out.type:
+                    assert len(f_mod_ptr.type.pointee) == 1
+                    warnings.warn("Shape mismatch Overriding modulation should match parameter port output: {} vs. {}".format(
+                                  afferent.defaults.value, self.defaults.value))
+                    f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
                 return builder
             else:

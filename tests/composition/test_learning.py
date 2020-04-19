@@ -1,6 +1,6 @@
-import psyneulink as pnl
 import numpy as np
 import pytest
+import psyneulink as pnl
 
 class TestHebbian:
 
@@ -473,7 +473,7 @@ class TestNestedLearning:
             target_mech: oSs
         }
 
-        outer = Composition("outer-composition")
+        outer = pnl.Composition("outer-composition")
         outer.add_node(mnet)
         mnet.learn(inputs=inputs)
 
@@ -1416,16 +1416,10 @@ class TestBackProp:
 
         assert np.allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225))
 
-import pytest
-import psyneulink as pnl
-import psyneulink.core.components.functions.transferfunctions
-from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.compositions.composition import Composition, NodeRole
-
 def validate_learning_mechs(comp):
 
     def get_learning_mech(name):
-        return next(lm for lm in comp.get_nodes_by_role(NodeRole.LEARNING) if lm.name == name)
+        return next(lm for lm in comp.get_nodes_by_role(pnl.NodeRole.LEARNING) if lm.name == name)
 
     REP_IN_to_REP_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_IN to REP_HIDDEN')
     REP_HIDDEN_to_REL_HIDDEN_LM = get_learning_mech('LearningMechanism for MappingProjection from REP_HIDDEN to REL_HIDDEN')
@@ -1473,16 +1467,14 @@ class TestRumelhartSemanticNetwork:
 
         rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
         rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-        rep_hidden = pnl.TransferMechanism(size=4,
-                                           function=psyneulink.core.components.functions.transferfunctions.Logistic,
-                                           name='REP_HIDDEN')
-        rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
-        rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
-        prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
-        qual_out = pnl.TransferMechanism(size=13, function=Logistic, name='QUAL_OUT')
-        act_out = pnl.TransferMechanism(size=14, function=Logistic, name='ACT_OUT')
+        rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
+        rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
+        rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
+        prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
+        qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
+        act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
 
-        comp = Composition()
+        comp = pnl.Composition()
 
         # comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
         comp.add_backpropagation_learning_pathway(pathway=[rel_in, rel_hidden])
@@ -1510,12 +1502,12 @@ class TestRumelhartSemanticNetwork:
     #
     #     rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
     #     rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-    #     rep_hidden = pnl.TransferMechanism(size=4, function=Logistic, name='REP_HIDDEN')
-    #     rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
-    #     rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
-    #     prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
-    #     qual_out = pnl.TransferMechanism(size=13, function=Logistic, name='QUAL_OUT')
-    #     act_out = pnl.TransferMechanism(size=14, function=Logistic, name='ACT_OUT')
+    #     rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
+    #     rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
+    #     rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
+    #     prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
+    #     qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
+    #     act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
     #
     #     rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
     #                            learning=pnl.LEARNING,
@@ -1553,12 +1545,12 @@ class TestRumelhartSemanticNetwork:
     #
     #     rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
     #     rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-    #     rep_hidden = pnl.TransferMechanism(size=4, function=Logistic, name='REP_HIDDEN')
-    #     rel_hidden = pnl.TransferMechanism(size=5, function=Logistic, name='REL_HIDDEN')
-    #     rep_out = pnl.TransferMechanism(size=10, function=Logistic, name='REP_OUT')
-    #     prop_out = pnl.TransferMechanism(size=12, function=Logistic, name='PROP_OUT')
-    #     qual_out = pnl.TransferMechanism(size=13, function=Logistic, name='QUAL_OUT')
-    #     act_out = pnl.TransferMechanism(size=14, function=Logistic, name='ACT_OUT')
+    #     rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
+    #     rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
+    #     rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
+    #     prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
+    #     qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
+    #     act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
     #
     #     rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
     #                            learning=pnl.LEARNING,

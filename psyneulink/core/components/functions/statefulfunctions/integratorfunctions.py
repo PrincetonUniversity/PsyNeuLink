@@ -4208,7 +4208,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         def _get_state_ptr(x):
             ptr = pnlvm.helpers.get_state_ptr(builder, self, state, x)
             return pnlvm.helpers.unwrap_2d_array(builder, ptr)
-        prev = {s: _get_state_ptr(s) for s in self._get_state_ids()}
+        prev = {s: _get_state_ptr(s) for s in self.llvm_state_ids}
 
         # Output locations
         def _get_out_ptr(i):
@@ -4220,7 +4220,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         def _get_param_val(x):
             ptr = pnlvm.helpers.get_param_ptr(builder, self, params, x)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
-        param_vals = {p: _get_param_val(p) for p in self._get_param_ids()}
+        param_vals = {p: _get_param_val(p) for p in self.llvm_param_ids}
 
         inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
                       "out_v": out['v'], "out_w": out['w'],

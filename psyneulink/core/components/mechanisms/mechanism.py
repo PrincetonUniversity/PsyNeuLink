@@ -2637,19 +2637,20 @@ class Mechanism_Base(Mechanism):
         builder.store(builder.load(params_in), params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
                                               param_ports[i].name)
             return b, ptr
 
-        def _fill_input(b, s_input, i):
+        def _fill_input(b, p_input, i):
             param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
                                                        param_ports[i].name)
-            # get rid of extra dimension
-            raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(param_in_ptr), raw_ps_input)
+            # Parameter port inputs are {original parameter, [modulations]},
+            # fill in the first one
+            p_input = b.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(param_in_ptr), p_input)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports,
@@ -2684,7 +2685,7 @@ class Mechanism_Base(Mechanism):
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
-                warnings.warn("Data shape mismatch: Parsed value does not match output port({} spec: {}) input: {} vs. {}".format(port, port._variable_spec, self.defaults.value, port.defaults.variable))
+                warnings.warn("Shape mismatch: {} parsed value does not match output port: mech value: {} spec: {} parsed {}".format(port, self.defaults.value, port._variable_spec, port.defaults.variable))
                 input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)
             return b
@@ -2746,12 +2747,16 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" not in tags
+
+        params, builder = self._gen_llvm_param_ports_for_obj(
+                self, params, ctx, builder, params, state, arg_in)
+
         is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "is_finished_flag")
+                                                           "is_finished_flag")
         is_finished_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "num_executions_before_finished")
+                                                            "num_executions_before_finished")
         is_finished_max_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                "max_executions_before_finished")
+                                                          "max_executions_before_finished")
 
         # Reset the flag and counter
         # FIXME: Use int for flag
@@ -2773,13 +2778,14 @@ class Mechanism_Base(Mechanism):
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=pnlvm.ir.IntType(1))
+        iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         params, state, arg_in, arg_out)
+                                                                         iparams, istate, iin, iout)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
         internal_f = internal_builder.function
-        is_finished_cond = builder.call(internal_f, builder.function.args)
+        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, *builder.function.args[4:]])
 
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count

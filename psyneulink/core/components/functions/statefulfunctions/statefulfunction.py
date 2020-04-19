@@ -566,7 +566,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
-                warnings.warn("Shape mismatch between stateful param and initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
+                warnings.warn("Shape mismatch: stateful param does not match the initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
                 # Take a guess that dest just has an extra dimension
                 assert len(dest_ptr.type.pointee) == 1
                 dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),
