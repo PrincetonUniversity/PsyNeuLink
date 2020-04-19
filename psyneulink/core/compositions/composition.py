@@ -4302,57 +4302,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def add_pathways(self, pathways, context=None):
         """Add pathways to the Composition.
 
-        COMMENT
-        .. _Multiple_Pathway_Specification:
-
-        Multiple Pathways can be specified in a list in the **pathways** argmument;  each item in the list must
-        specify a Pathway using the standard forms of `Pathway specification <Pathway_Specification` or either
-        of the following two additional forms:
-
-            * **constructor**: Pathway(pathway=`Pathway specification <Pathway_Specification>`, name=str)
-            * **dict**: {name : Pathway) -- in which **name** is a str and **Pathway** is a standard
-              `Pathway specification <Pathway_Specification>`.
-
-        .. note::
-           If any of the following is used to specify the **pathways** argument:
-             * a **standalone** `Node <Composition_Nodes>` (i.e., not in a list), \n
-             * a **single Node** alone in a list, \n
-             * one or more Nodes with **any other form of `Pathway specification <Pathway_Specification>` in the list \n
-           then each such Node in the list is treated as its own `SINGLETON` pathway (i.e., one containing a single
-           Node that is both the `ORIGIN` and the`TERMINAL` of the Pathway).  However, if the list contains only
-           Nodes, then it is treated as a single Pathway (i.e., the list form of `Pathway specification
-           <Pathway_Specification>`.  Thus:
-             **pathway**: NODE -> single pathway \n
-             **pathway**: [NODE] -> single pathway \n
-             **pathway**: [NODE, NODE...] -> single pathway \n
-             **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
-        COMMENT
-
-        COMMENT:
-           If the specificaiton for **pathways** is a standalone `Node <Composition_Nodes>` (i.e., not in a list),
-           a single Node alone in a list, or appears with any other form of `Pathway specification
-           <Pathway_Specification>` other than another Node (i.e., there any lists, tuples or dicts in the list),
-           then each such Node in the list is treated as its own `SINGLETON` pathway (i.e., one containing a single
-           Node that is both the `ORIGIN` and the`TERMINAL` of the Pathway).  However, if the list contains only
-           Nodes, then it is treated as a single Pathway (i.e., the list form of `Pathway specification
-           <Pathway_Specification>`.  Thus:
-               **pathway**: NODE -> single pathway
-               **pathway**: [NODE] -> single pathway
-               **pathway**: [NODE, NODE...] -> single pathway
-               **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
-        COMMENT
-
         Arguments
         ---------
 
         pathways : Pathway or list[Pathway]
-            specifies one or more `Pathways <Pathway>` to add to the Composition (see `Pathway_Specification`)
+            specifies one or more `Pathways <Pathway>` to add to the Composition (see `Pathway_Specification`).
 
         Returns
         -------
 
-        list[`Pathway`] :
-            list of `Pathways <Pathway>` added to the Composition.
+        list[Pathway] :
+            List of `Pathways <Pathway>` added to the Composition.
 
         """
 
