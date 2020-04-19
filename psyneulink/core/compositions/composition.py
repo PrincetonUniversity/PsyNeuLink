@@ -2863,6 +2863,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
             self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
+        # Make sure that any nodes that don't have efferent Projections to another node the Composition are
+        #   also considered TERMINAL
+        #  (this is needed since _analyze_consideration_queue assigns TERMINAL to nodes in the last consideration_set,
+        #   which might miss nodes in pathway(s) shorter than the longest one, the last node of which will be assigned
+        #   to a consideration set before the last one).
+        for node in self.nodes:
+            if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
+                self._add_node_role(node, NodeRole.TERMINAL)
 
         # A ControlMechanism should not be the TERMINAL node of a Composition
         #    (unless it is specifed as a required_role, in which case it is reassigned below)
