@@ -77,7 +77,7 @@ either arguments of the constructor and/or methods that allow Components to be a
 
 .. _Composition_Constructor:
 
-*Using the constructor*
+*Using the Constructor*
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 The following arguments of the Composition's constructor can be used to add Compnents when it is constructed:
@@ -249,11 +249,11 @@ COMMENT
 ~~~~~~~
 
 Every `Node <Composition_Nodes>` in a Composition's graph must be either a `Mechanism` or a `nested Composition
-<Composition_Nested>`. The nodes of a Compositions are graph are listed in the Composition's `nodes <Composition.nodes>`
-attribute. Each Node is assigned one or more `NodeRoles <NodeRole>` that designate its status in the graph.  Nodes
-are assigned one or more `NodeRoles <NodeRole>` automatically when a Composition is constructed, and when Nodes or
-`Pathways <Composition_Pathways>` are added to it. However, some of these can be explicitly assigned by specifying
-the desired `NodeRole` in any of the following places:
+<Composition_Nested>`. The Nodes of a Composition's graph are listed in its `nodes <Composition.nodes>` attribute.
+Each Node is assigned one or more `NodeRoles <NodeRole>` that designate its status in the graph.  Nodes are assigned
+one or more `NodeRoles <NodeRole>` automatically when a Composition is constructed, and when Nodes or `Pathways
+<Composition_Pathways>` are added to it. However, some of these can be explicitly assigned by specifying the desired
+`NodeRole` in any of the following places:
 
 .. _Composition_Node_Role_Assignment:
 
@@ -1898,11 +1898,10 @@ class Graph(object):
 
 
 class NodeRole(Enum):
-    """
-    COMMENT:
+    """Roles assigned to `Nodes <Composition_Nodes>` of a `Composition`.
+
     Attributes
     ----------
-    COMMENT
 
     ORIGIN
         A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
@@ -1988,17 +1987,17 @@ PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
-    Composition(
-        nodes=None,
-        pathways=None,
-        disable_learning=False,
-        controller=None,
-        enable_controller=None,
-        controller_mode=AFTER,
-        controller_condition=Always,
-        retain_old_simulation_data=None,
-        name=None,
-        prefs=Composition.classPreference
+    Composition(                           \
+        nodes=None,                        \
+        pathways=None,                     \
+        disable_learning=False,            \
+        controller=None,                   \
+        enable_controller=None,            \
+        controller_mode=AFTER,             \
+        controller_condition=Always,       \
+        retain_old_simulation_data=None,   \
+        name=None,                         \
+        prefs=Composition.classPreference  \
         )
 
     Base class for Composition.

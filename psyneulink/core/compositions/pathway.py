@@ -10,6 +10,27 @@
 
 """
 
+Related
+-------
+
+* `NodeRoles <NodeRole>`
+* `PathwayRoles <PathwayRole>`
+* `Composition`
+
+Contents
+--------
+
+  * `Pathway_Overview`
+  * `Pathway_Creation`
+      - `Pathway_Template`
+      - `Pathway_Assignment_to_Composition`
+      - `Pathway_Name`
+      - `Pathway_Specification`
+      - `Composition_Add_Nested`
+  * `Pathway_Structure`
+  * `Pathway_Execution`
+  * `Pathway_Class_Reference`
+
 .. _Pathway_Overview:
 
 Overview
@@ -19,6 +40,8 @@ A Pathway is a sequence of `Nodes <Composition_Nodes>` and `Projections <Project
 to `Compositions <Composition>`, but a Pathway object can be created on its and used as a template for specifying a
 Pathway for a Composition, as described below.  See `Pathways  <Composition_Pathways>` for additional information about
 Pathways in Compositions.
+
+.. _Pathway_Creation:
 
 Creating a Pathway
 ------------------
@@ -40,7 +63,7 @@ and the template remains unassigned.
 
 .. _Pathway_Assignment_to_Composition:
 
-*Assigning to Pathways to a Composition*
+*Assigning Pathways to a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Pathways can be assigned to a `Composition` using the **pathways** argument of the Composition's constructor, or one of
@@ -67,8 +90,8 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 
 .. _Pathway_Specification:
 
-*Specification of* **pathway** *argument*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Pathway Specification*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
 Pathway, the **pathways** argument of a the constructor for a `Composition`, or the corresponding argument
@@ -114,6 +137,9 @@ the forms above, or one of the following:
          **pathway**: [NODE, NODE...] -> single pathway \n
          **pathway**: [NODE, NODE, () or {} or `Pathway`...] -> three or more pathways
 
+
+.. _Pathway_Structure:
+
 Structure
 ---------
 
@@ -142,12 +168,17 @@ A Pathway has the following primary attributes:
 * `learning_function <Pathway.learning_function>` - the LearningFunction assigned to the Pathway if it is a
   `learning Pathway <Composition_Learning_Pathway>` that belongs to a Composition; otherwise it is None.
 
+.. _Pathway_Execution:
+
 Execution
 ---------
 
 A Pathway cannot be executed on its own.  Its Components are executed when the Composition to which it belongs is
 executed, by default in the order in which they appear in the `pathway <Pathway.pathway>` attribute;  however, this
 can be modified by `Conditions <Condition>` added to the Composition's `scheduler <Composition.scheduler>`.
+
+.. _Pathway_Class_Reference:
+
 
 Class Reference
 ---------------
@@ -204,7 +235,7 @@ def _is_node_spec(value):
 
 
 class PathwayRole(Enum):
-    """
+    """Roles assigned to the `Pathway` of a `Composition`.
 
     Attributes
     ----------
@@ -252,9 +283,9 @@ class PathwayRole(Enum):
 
 class Pathway(object):
     """
-    Pathway(
-        pathway,
-        name=None,
+    Pathway(      \
+        pathway,  \
+        name=None \
         )
 
     A sequence of `Nodes <Composition_Nodes>` and `Projections <Projection>` in a `Composition`, or a template
