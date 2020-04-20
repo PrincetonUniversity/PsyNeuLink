@@ -38,7 +38,7 @@ Contents
       - `Composition_Learning_AutodiffComposition`
       - `Composition_Learning_UDF`
   * `Composition_Visualization`
-  * `Composition_Run`
+  * `Composition_Execution`
       - `Composition_Run_Static_Inputs`
       - `Composition_Run_Dynamic_Inputs`
       - `Composition_Scope_of_Execution`
@@ -298,9 +298,9 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~
 
 A nested Composition that is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
-Composition is `run <Composition_Run>`, the nested Composition is run when its Node in the outer is called to execute
-by the outer Composition's `scheduler <Composition.scheduler>`.  Any Node within the outer Composition can send a
-`Projection <Projection>` to any `INPUT` Node, and can receive a Projection from any `OUTPUT` Node within the nested
+Composition is `run <Composition_Execution>`, the nested Composition is run when its Node in the outer is called to
+execute by the outer Composition's `scheduler <Composition.scheduler>`.  Any Node within the outer Composition can send
+a`Projection <Projection>` to any `INPUT` Node, and can receive a Projection from any `OUTPUT` Node within the nested
 Composition.  Similarly, a `ControlMechanism` within the outer Composition can modulate the parameter of any `Mechanism
 <Mechanism>` within the nested Composition.
 
@@ -938,15 +938,87 @@ and nested Compositions in an outer Composition, ``comp``:
 | >>> comp.show_graph(show_nested=True)                |                                                               |
 +------------------------------------------------------+---------------------------------------------------------------+
 
-.. _Composition_Run:
+.. _Composition_Execution:
 
-Running a Composition
----------------------
+Executing a Composition
+-----------------------
+
+There are three methods for executing a Composition:
+
+  * `run <Composition.run>` - executes one or more `TRIAL <TRIAL>` \\s without learning;
+  * `learn <Composition.learn>` - executes one or more `TRIALs <TRIAL>` \\s with learning, if the network is
+     configured for `learning <Composition_Learning>`.
+  * `execute <Composition.execute>` - executes a single `TRIAL`` without learning.
+
+The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used, both of which call the
+`execute <Composition.execute>` method for each `TRIAL`.  The `execute <Composition.execute>` method is useful mostly
+for debugging.
+
+All three methods require that their **inputs** argument be specified, which designates the values assigned to the
+`INPUT` `Nodes <Composition_Nodes>` of the network for each `TRIAL`. A `TRIAL` is defined as the opportunity for every
+Nodes in the Composition to execute for a given set of inputs.  At the end of a `TRIAL`, the `output_values
+<Mechanism.output_values>` of all the Composition's `OUTPUT` Nodes are added to the Composition's `results
+<Comopsition>` attribute.
+
+If a Composition is configured for `learning <Composition_Learning>`, then its `learn <Composition.learn>` method
+must be used, and its `disable_learning <Composition.disable_learning>` attribute must be False (the default) for
+learning to occur.  The `run <Composition.run>` and `execute <Composition.execute>` methods can also be used to
+execute the Composition, but no learning will occur, irrespective of the value of the `disable_learning
+<Composition.disable_learning>` attribute.
 
 COMMENT:
-  OVERVIEW HERE, INCLUDING NOTION OF TRIALS
-  .run vs. .learn
+  SCOPE OF EXECUTION HERE:
+  - MECHANISMS CAN BELONG TO DIFFERENT COMPOSITIONS
+  - COMPOSITIONS CAN BE EXECUTED IN DIFFERENT CONTEXTS:
+     - PARALLEL MODEL PARAMETERIZATION
+     - CONTROL SIMULATIONS (OCM)
 COMMENT
+
+.. _Composition_Scope_of_Execution:
+
+*Execution Contexts*
+~~~~~~~~~~~~~~~~~~~~
+
+A Composition is always executed in a designated *execution context*, specified by an `execution_id
+<Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
+Composition. By default, the execution_id is the Composition's `name <Composition.name>`, which is what is used if
+one is not provided.  Execution contexts enable several capabilities:
+
+  * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
+    <Component.value>` and that of its `parameters <Parameters>` independently for each Composition.
+
+  * The same Compostion can be exectued independently in different contexts, that can be used for parallelizing
+    parameter estimation and fitting (see `ParameterEstimationMechanism`), and simulations in model-based control
+    (see `OptimizationControlMechanism`).
+
+An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
+<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
+which often occurs when using multiple or nested Compositions, or running `simulations
+<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
+which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
+unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
+When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
+
+.. _Composition_Compilation:
+
+*Compilation*
+
+By default, Composition's execute using the Python interpreter used to run the script from which it is called.
+However, in many cases, a Composition can be executed in compiled mode, using the **bin_execute** argument of any
+of the `execution methods <Composition_Execution_Methods>`.
+
+COMMENT:
+This can take one of
+
+    USES LLVM, which has the advantage of allowing support for new hardware platforms to easily be easily added
+    CURRUENTLY:  STANDARD CPU, INVIDIA GPU
+    CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanis?  EXCLUDED Conditions?
+COMMENT
+
+.. _Composition_Run_Inputs
+
+The input to a Composition can be specified in a variety of ways.  These are described in the sections that follow;
+examples can be found in `Composition_Examples_Input`.
 
 .. _Composition_Run_Static_Inputs:
 
@@ -2133,13 +2205,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.learning_components>` attribute.
 
     results : list[list[list]]
-        stores the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the Composition for every `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`.
         Each item in the outermos list is a list of values for a given trial; each item within a trial corresponds
         to the `output_values <Mechanism_Base.output_values>` of an `OUTPUT` Mechanism for that trial.
 
+    output_values : list[list]
+        a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the Composition for the last `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`;
+        this is the same as `results <Composition.results>`\\[0], and provides consistency of access to the values
+        `Nodes <Composition_Nodes>` when one or more is a `nested Composition <Composition_Nested>`.
+
     simulation_results : list[list[list]]
-        stores the `results <Composition.results>` for executions of the Composition when it is executed using
+        a list of the `results <Composition.results>` for executions of the Composition when it is executed using
         its `evaluate <Composition.evaluate>` method.
 
     retain_old_simulation_data : bool
@@ -2346,7 +2424,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def scheduler(self):
         """
             A default `Scheduler` automatically generated by the Composition, and used for its execution
-            when it is `run <Composition_Run>`.
+            when it is `run <Composition_Execution>`.
 
             :getter: Returns the default scheduler, and builds it if it needs updating since the last access.
         """
@@ -7379,8 +7457,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             base_context=Context(execution_id=None),
             ):
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
-        conditions are met.  See `Run` for details of formatting input specifications. See `Run` for details of
-        formatting input specifications. Use **animate** to generate a gif of the execution sequence.
+        conditions are met.
+
+        See `Composition_Execution` for details of formatting input specifications.
+        Use **animate** to generate a gif of the execution sequence.
 
             Arguments
             ---------
@@ -7431,7 +7511,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `Run` when the specified `Condition` is met.
+                during this `RUN` when the specified `Condition` is met.
 
                 Outer dictionary:
                     - *key* - Node

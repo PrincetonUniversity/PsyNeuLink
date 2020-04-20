@@ -212,9 +212,9 @@ Execution
 
 An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
 is the `controller <Composition.controller>` for a `Composition`, after all of the other Mechanisms in the Composition
-have `executed <Composition_Run>` in a `TRIAL <TimeScale.TRIAL>`. It's `function <LCControlMechanism.function>` takes
-the `value <InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and
-generates a response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is
+have `executed <Composition_Execution>` in a `TRIAL <TimeScale.TRIAL>`. It's `function <LCControlMechanism.function>`
+takes the `value <InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input,
+and generates a response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is
 assigned as the `allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are
 used by its `ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL <TimeScale.TRIAL>`
 of execution -- of the Mechanisms the LCControlMechanism controls.

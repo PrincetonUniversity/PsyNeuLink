@@ -314,7 +314,7 @@ class Context():
     composition : Composition
       the `Composition <Composition>` in which the `owner <Context.owner>` is currently being executed.
 
-    execution_id
+    execution_id : str
       the execution_id assigned to the Component by the Composition in which it is currently being executed.
 
     execution_time : TimeScale

@@ -291,7 +291,7 @@ Mechanism; if its owner not specified, then its initialization is `deferred <Por
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism>` using the
 owner's `add_ports <Mechanism_Base.add_ports>` method.  If the Port is not assigned to an owner, it will not be
 functional (i.e., used during the execution of `Mechanisms <Mechanism_Execution>` and/or `Compositions
-<Composition_Run>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
+<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 
 .. _Port_Structure:

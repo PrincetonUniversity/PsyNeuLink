@@ -93,8 +93,8 @@ A ProcessingMechanism may be executed by calling its execute method directly:
     >>> my_simple_processing_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
     >>> my_simple_processing_mechanism.execute(1.0)                     #doctest: +SKIP
 
-This option is intended for testing and debugging purposes.  More commonly, a mechanism is executed when the
-`Composition` to which it belongs is `run <Composition_Run>`.
+This option is intended for testing and debugging purposes.  More commonly, a Mechanism is executed when the
+`Composition` to which it belongs is `executed <Composition_Execution>`.
 
 .. _ProcessingMechanism_Class_Reference:
 

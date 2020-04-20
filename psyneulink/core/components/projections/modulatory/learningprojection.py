@@ -428,7 +428,10 @@ class LearningProjection(ModulatoryProjection_Base):
         error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
         learning_rate = Parameter(None, modulable=True)
-        learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter, pnl_internal=True)
+        learning_signal = Parameter(None, read_only=True,
+                                    getter=_learning_signal_getter,
+                                    setter=_learning_signal_setter,
+                                    pnl_internal=True)
         learning_enabled = None
 
 
