@@ -463,7 +463,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PREFS_ARG, \
     REINITIALIZE_WHEN, SIZE, VALUE, VARIABLE
-from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.log import LogCondition, DeliveryCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
@@ -2837,6 +2837,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         method of the Component's `log <Component.log>`.
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
+
+    def set_delivery_conditions(self, items, delivery_condition=DeliveryCondition.EXECUTION):
+        """
+        set_delivery_conditions(          \
+            items                    \
+            delivery_condition=EXECUTION  \
+        )
+
+        Specifies items to be delivered to external application via gRPC; these must be be `loggable_items <Component.loggable_items>`
+        of the Component's `log <Component.log>`. This is a convenience method that calls the `set_delivery_conditions <Log.set_delivery_conditions>`
+        method of the Component's `log <Component.log>`.
+        """
+        self.log.set_delivery_conditions(items=items, delivery_condition=delivery_condition)
 
     def log_values(self, entries):
         """

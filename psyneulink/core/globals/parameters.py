@@ -245,10 +245,11 @@ import typing
 import warnings
 import weakref
 
+from psyneulink.core.globals.graph_pb2 import Entry, DoubleMatrix
 from psyneulink.core.globals.keywords import MULTIPLICATIVE
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
-from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
+from psyneulink.core.globals.log import DeliveryCondition, LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
@@ -598,6 +599,12 @@ class Parameter(types.SimpleNamespace):
             :type: `LogCondition`
             :default: `OFF <LogCondition.OFF>`
 
+        delivery_condition
+            the DeliveryCondition for which the parameter shoud be delivered.
+
+            :type: `DeliveryCondition`
+            :default: `OFF <DeliveryCondition.OFF>`
+
         history
             stores the history of the parameter (previous values). Also see `get_previous`.
 
@@ -667,6 +674,7 @@ class Parameter(types.SimpleNamespace):
         'default_value',
         'history_max_length',
         'log_condition',
+        'delivery_condition',
         'spec',
     }
 
@@ -690,6 +698,7 @@ class Parameter(types.SimpleNamespace):
         loggable=True,
         log=None,
         log_condition=LogCondition.OFF,
+        delivery_condition=DeliveryCondition.OFF,
         history=None,
         history_max_length=1,
         history_min_length=0,
@@ -740,6 +749,7 @@ class Parameter(types.SimpleNamespace):
             loggable=loggable,
             log=log,
             log_condition=log_condition,
+            delivery_condition=delivery_condition,
             history=history,
             history_max_length=history_max_length,
             history_min_length=history_min_length,
@@ -1085,7 +1095,7 @@ class Parameter(types.SimpleNamespace):
 
         self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
 
-    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
+    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False, skip_delivery=False):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -1094,9 +1104,13 @@ class Parameter(types.SimpleNamespace):
                 except KeyError:
                     self.history[execution_id] = collections.deque([self.values[execution_id]], maxlen=self.history_max_length)
 
-        # log value
-        if not skip_log and self.loggable:
-            self._log_value(value, context)
+        if self.loggable:
+            # log value
+            if not skip_log:
+                self._log_value(value, context)
+            # Deliver value to external application
+            if not skip_delivery:
+                self._deliver_value(value, context)
 
         # set value
         self.values[execution_id] = value
@@ -1158,6 +1172,60 @@ class Parameter(types.SimpleNamespace):
             self.log[execution_id].append(
                 LogEntry(time, context_str, value)
             )
+
+    def _deliver_value(self, value, context=None):
+        # if a context is attached and a pipeline is attached to the context
+        if context and context.rpc_pipeline:
+            # manual delivery
+            if context is not None and context.source is ContextFlags.COMMAND_LINE:
+                try:
+                    time = _get_time(self._owner._owner, context)
+                except (AttributeError, ContextError):
+                    time = time_object(None, None, None, None)
+
+                # this branch only ran previously when context was ContextFlags.COMMAND_LINE
+                context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
+                delivery_condition_satisfied = True
+
+            # standard logging
+            else:
+                if self.delivery_condition is None or self.delivery_condition is LogCondition.OFF:
+                    return
+
+                if context is None:
+                    context = self._owner._owner.most_recent_context
+
+                time = _get_time(self._owner._owner, context)
+                context_str = ContextFlags._get_context_string(context.flags)
+                delivery_condition_satisfied = self.delivery_condition & context.flags
+
+            if (
+                not delivery_condition_satisfied
+                and self.delivery_condition & LogCondition.INITIALIZATION
+                and self._owner._owner.initialization_status is ContextFlags.INITIALIZING
+            ):
+                delivery_condition_satisfied = True
+
+            if delivery_condition_satisfied:
+                if not self.stateful:
+                    execution_id = None
+                else:
+                    execution_id = context.execution_id
+
+                ##### ADD TO PIPELINE HERE #####
+                context.rpc_pipeline.put(
+                    Entry(
+                        componentName=self._owner._owner.name,
+                        parameterName=self.name,
+                        time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
+                        context=context.execution_id,
+                        value=DoubleMatrix(
+                            rows=value.shape[0],
+                            cols=value.shape[1],
+                            data=value.flatten().tolist()
+                        )
+                    )
+                )
 
     def clear_log(self, contexts=NotImplemented):
         """

@@ -88,6 +88,7 @@ import inspect
 import warnings
 
 from collections import defaultdict, namedtuple
+from queue import Queue
 
 import typecheck as tc
 
@@ -326,6 +327,10 @@ class Context():
       references it, but it is possible that future uses will involve other messages.  Note that this is *not* the
       same as the `flags_string <Context.flags_string>` attribute (see `note <Context_String_Note>`).
 
+    rpc_pipeline : Queue
+      queue to populate with messages for external environment in cases where execution was triggered via RPC call
+      (e.g. through PsyNeuLinkView).
+      
     """
 
     __name__ = 'Context'
@@ -340,7 +345,9 @@ class Context():
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
                  execution_id=None,
-                 string:str='', time=None):
+                 string:str='', 
+                 time=None,
+                 rpc_pipeline:Queue=None):
 
         self.owner = owner
         self.composition = composition
@@ -362,6 +369,7 @@ class Context():
         self.execution_id = execution_id
         self.execution_time = None
         self.string = string
+        self.rpc_pipeline = rpc_pipeline
 
     __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
 
