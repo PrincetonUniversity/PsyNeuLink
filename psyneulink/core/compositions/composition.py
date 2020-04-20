@@ -943,6 +943,7 @@ and nested Compositions in an outer Composition, ``comp``:
 Executing a Composition
 -----------------------
 
+.. _Composition_Execution_Methods:`
 There are three methods for executing a Composition:
 
   * `run <Composition.run>` - executes one or more `TRIAL <TRIAL>` \\s without learning;
@@ -1045,8 +1046,10 @@ COMMENT
 
 .. _Composition_Run_Inputs
 
-The input to a Composition can be specified in a variety of ways.  These are described in the sections that follow;
-examples can be found in `Composition_Examples_Input`.
+The input to a Composition can be specified either `using a dictionary <Composition_Run_Static_Inputs>`, in which the
+inputs for each `TRIAL` are specified explicity, or `using a function, generator or generator function
+<Composition_Run_Dynamic_Inputs>` to construct the inputs dynamically for each `TRIAL` as it occurs.  These are each
+explained in the following two sections, with `examples <Composition_Examples_Input>` further below.
 
 .. _Composition_Run_Static_Inputs:
 
@@ -1054,9 +1057,8 @@ examples can be found in `Composition_Examples_Input`.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `run <Composition.run>` method presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the `input_ports
-<InputPort>` of the `INPUT` `Nodes <Composition_Nodes>`, which occurs in a specified `execution context
-<Composition_Execution_Context>`. The input values are specified in the **inputs** argument of a Composition's
-`execute <Composition.execute>` or `run <Composition.run>` methods.
+<InputPort>` of the `INPUT` `Nodes <Composition_Nodes>`. The input values are specified in the **inputs** argument
+of a Composition's `execution methods <Composition_Execution_Methods>`.
 
 The standard way to specificy inputs is a Python dictionary, in which each entry specifies the inputs to a given `INPUT`
 `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
