@@ -7434,25 +7434,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def run(
             self,
             inputs=None,
-            scheduler=None,
-            termination_processing=None,
             num_trials=None,
+            initial_values=None,
+            reinitialize_values=None,
+            reinitialize_nodes_when=Never(),
+            skip_initialization=False,
+            clamp_input=SOFT_CLAMP,
+            runtime_params=None,
             call_before_time_step=None,
             call_after_time_step=None,
             call_before_pass=None,
             call_after_pass=None,
             call_before_trial=None,
             call_after_trial=None,
-            clamp_input=SOFT_CLAMP,
-            bin_execute=False,
-            log=False,
-            initial_values=None,
-            reinitialize_values=None,
-            reinitialize_nodes_when=Never(),
-            runtime_params=None,
-            skip_initialization=False,
+            termination_processing=None,
             skip_analyze_graph=False,
             animate=False,
+            log=False,
+            scheduler=None,
+            bin_execute=False,
             context=None,
             base_context=Context(execution_id=None),
             ):
@@ -7465,50 +7465,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list }
+            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list } : default None
                 a dictionary containing a key-value pair for each Node in the composition that receives inputs from
                 the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
                 list corresponds to a certain `TRIAL <TimeScale.TRIAL>`.
 
-            scheduler : Scheduler
-                the scheduler object that owns the conditions that will instruct the execution of the Composition.
-                If not specified, the Composition will use its automatically generated scheduler.
-
-            context
-                context will be set to self.default_execution_id if unspecified
-
-            base_context
-                the context corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **context**
-
-            num_trials : int
+            num_trials : int : default 1
                 typically, the composition will infer the number of trials from the length of its input specification.
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
 
-            call_before_time_step : callable
-                will be called before each `TIME_STEP` is executed.
-
-            call_after_time_step : callable
-                will be called after each `TIME_STEP` is executed.
-
-            call_before_pass : callable
-                will be called before each `PASS` is executed.
-
-            call_after_pass : callable
-                will be called after each `PASS` is executed.
-
-            call_before_trial : callable
-                will be called before each `TRIAL <TimeScale.TRIAL>` is executed.
-
-            call_after_trial : callable
-                will be called after each `TRIAL <TimeScale.TRIAL>` is executed.
-
-            initial_values : Dict[Node: Node Value]
+            initial_values : Dict[Node: Node Value] : default None
                 sets the values of nodes before the start of the run. This is useful in cases where a node's value is
                 used before that node executes for the first time (usually due to recurrence or control).
 
-            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]]
+            reinitialize_values : value : default None
+
+            reinitialize_nodes_when :  Condition : default Never()
+
+            skip_initialization : bool : default False
+
+            clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
+
+            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
                 during this `RUN` when the specified `Condition` is met.
@@ -7524,7 +7503,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
-            animate : dict or bool : False
+            call_before_time_step : callable  : default None
+                will be called before each `TIME_STEP` is executed.
+
+            call_after_time_step : callable  : default None
+                will be called after each `TIME_STEP` is executed.
+
+            call_before_pass : callable  : default None
+                will be called before each `PASS` is executed.
+
+            call_after_pass : callable  : default None
+                will be called after each `PASS` is executed.
+
+            call_before_trial : callable  : default None
+                will be called before each `TRIAL <TimeScale.TRIAL>` is executed.
+
+            call_after_trial : callable  : default None
+                will be called after each `TRIAL <TimeScale.TRIAL>` is executed.
+
+            termination_processing : Condition  : default None
+
+            skip_analyze_graph : bool : default False
+
+            animate : dict or bool : default False
                 specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
                 sequence of Components executed in a run.  A dict can be specified containing options to pass to
                 the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
@@ -7563,13 +7564,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
                   constructed, using the OS's default viewer.
 
-            log : bool, LogCondition
+            log : bool, LogCondition : default False
                 Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
                 `projection <Composition.projections>` in the Composition, if it is not already set.
 
                 .. note::
                    as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
                    correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+
+            scheduler : Scheduler : default None
+                the scheduler object that owns the conditions that will instruct the execution of the Composition.
+                If not specified, the Composition will use its automatically generated scheduler.
+
+            bin_execute : bool or Enum[Python|LLVM|LLVMexec|LLVMRun|PTXExec|PTXRun] : default False
+                specifies whether to run using the Python interpreter or a compiled impementation.  By default,
+                execution uses the Python interpreter;  however, one of the following compiled modes can be specified:
+                * *LLVM* -- [*EXPLAIN*]
+                * *LLVMExec* -- compile only one `TRIAL` \\'s worth of execution;  outer loop runs using the
+                  the Python interpreter; this allows [*EXPLAIN*].
+                * *LLVMRun* --  attempt to compile all of the `TRIAL` \\s in a run;  falls back to LLVMExec if
+                  that is not possible.
+                * *PTXExec* -- [*EXPLAIN*]
+                * *PTXRun* -- [*EXPLAIN*]
+
+            context : `Context.execution_id>` : default `default_execution_id`
+                context in which the `Composition` will be eecuted;  set to self.default_execution_id ifunspecified.
+
+            base_context : `Context.execution_id>` : Context(execution_id=None)
+                the context corresponding to the execution context from which this execution will be initialized,
+                if values currently do not exist for **context**
 
         COMMENT:
         REPLACE WITH EVC/OCM EXAMPLE
