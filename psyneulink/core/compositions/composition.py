@@ -1007,7 +1007,7 @@ By default, Composition's execute using the Python interpreter used to run the s
 However, in many cases, a Composition can be executed in compiled mode, using the **bin_execute** argument of any
 of the `execution methods <Composition_Execution_Methods>`.
 
-COMMENT:
+
 This can take one of
 
     USES LLVM, which has the advantage of allowing support for new hardware platforms to easily be easily added
