@@ -41,7 +41,7 @@ Contents
   * `Composition_Execution`
       - `Composition_Run_Static_Inputs`
       - `Composition_Run_Dynamic_Inputs`
-      - `Composition_Scope_of_Execution`
+      - `Composition_Execution_Context`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -966,38 +966,44 @@ learning to occur.  The `run <Composition.run>` and `execute <Composition.execut
 execute the Composition, but no learning will occur, irrespective of the value of the `disable_learning
 <Composition.disable_learning>` attribute.
 
-COMMENT:
-  SCOPE OF EXECUTION HERE:
-  - MECHANISMS CAN BELONG TO DIFFERENT COMPOSITIONS
-  - COMPOSITIONS CAN BE EXECUTED IN DIFFERENT CONTEXTS:
-     - PARALLEL MODEL PARAMETERIZATION
-     - CONTROL SIMULATIONS (OCM)
-COMMENT
-
-.. _Composition_Scope_of_Execution:
+.. _Composition_Execution_Context:
 
 *Execution Contexts*
 ~~~~~~~~~~~~~~~~~~~~
 
 A Composition is always executed in a designated *execution context*, specified by an `execution_id
 <Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
-Composition. By default, the execution_id is the Composition's `name <Composition.name>`, which is what is used if
-one is not provided.  Execution contexts enable several capabilities:
+Composition. Execution contexts make several capabilities possible:
 
   * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
-    <Component.value>` and that of its `parameters <Parameters>` independently for each Composition.
+    <Component.value>` and that of its `parameters <Parameter_statefulness>` independently for each of
+    the Compositions to which it is assigned.
 
-  * The same Compostion can be exectued independently in different contexts, that can be used for parallelizing
-    parameter estimation and fitting (see `ParameterEstimationMechanism`), and simulations in model-based control
+  * The same Composition can be exectued independently in different contexts; this can be used for
+    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
+    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
     (see `OptimizationControlMechanism`).
 
-An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
-<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
-which often occurs when using multiple or nested Compositions, or running `simulations
-<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
-which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
-unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
-When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
+If no execution_id is specified, the `default execution_id <Composition.default_execution_id>` is used,
+which is generally the Composition's `name <Composition.name>`; however, any `hashable
+<https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
+That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
+Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
+executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
+<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
+is given an execution_id of `None`.
+
+COMMENT:
+   MENTION DEFAULT VALUES HERE?  ?= execution_id NONE?
+COMMENT
+
+  .. note::
+     If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
+     <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
+     value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
+     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
+     to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
+     value.
 
 .. _Composition_Compilation:
 
@@ -1007,12 +1013,12 @@ By default, Composition's execute using the Python interpreter used to run the s
 However, in many cases, a Composition can be executed in compiled mode, using the **bin_execute** argument of any
 of the `execution methods <Composition_Execution_Methods>`.
 
+COMMENT:
+    This can take one of
 
-This can take one of
-
-    USES LLVM, which has the advantage of allowing support for new hardware platforms to easily be easily added
-    CURRUENTLY:  STANDARD CPU, INVIDIA GPU
-    CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanis?  EXCLUDED Conditions?
+        USES LLVM, which has the advantage of allowing support for new hardware platforms to easily be easily added
+        CURRUENTLY:  STANDARD CPU, INVIDIA GPU
+        CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanis?  EXCLUDED Conditions?
 COMMENT
 
 .. _Composition_Run_Inputs
@@ -1026,15 +1032,9 @@ examples can be found in `Composition_Examples_Input`.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The `run <Composition.run>` method presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the `input_ports
-<InputPort>` of the `INPUT` `Nodes <Composition_Nodes>` in the `scope of execution <Composition_Scope_of_Execution>`.
-These input values are specified in the **inputs** argument of a Composition's `execute <Composition.execute>` or
-`run <Composition.run>` methods.
-
-COMMENT:
-    From KAM 2/7/19 - not sure "scope of execution" is the right phrase. To me, it implies that only a subset of the
-    nodes in the Composition belong to the "scope of execution". What we want to convey (I think) is that ALL of the
-    Nodes execute, but they do so in a "state" (history, parameter vals) corresponding to a particular execution id.
-COMMENT
+<InputPort>` of the `INPUT` `Nodes <Composition_Nodes>`, which occurs in a specified `execution context
+<Composition_Execution_Context>`. The input values are specified in the **inputs** argument of a Composition's
+`execute <Composition.execute>` or `run <Composition.run>` methods.
 
 The standard way to specificy inputs is a Python dictionary, in which each entry specifies the inputs to a given `INPUT`
 `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
@@ -1437,49 +1437,6 @@ COMMENT:
     and listed in the Composition's ?? attribute),
 COMMENT
 
-.. _Composition_Scope_of_Execution:
-
-*Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
-
-An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
-<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
-which often occurs when using multiple or nested Compositions, or running `simulations
-<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
-which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
-unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
-When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
-
-::
-
-        >>> import psyneulink as pnl
-        >>> c = pnl.Composition()
-        >>> d = pnl.Composition()
-        >>> t = pnl.TransferMechanism()
-        >>> c.add_node(t)
-        >>> d.add_node(t)
-
-        >>> t.execute(1)
-        array([[1.]])
-        >>> c.run({t: 5})
-        [[array([5.])]]
-        >>> d.run({t: 10})
-        [[array([10.])]]
-        >>> c.run({t: 20}, context='custom execution id')
-        [[array([20.])]]
-
-        # context None
-        >>> print(t.parameters.value.get())
-        [[1.]]
-        >>> print(t.parameters.value.get(c))
-        [[5.]]
-        >>> print(t.parameters.value.get(d))
-        [[10.]]
-        >>> print(t.parameters.value.get('custom execution id'))
-        [[20.]]Composition_Controller
-
-In general, anything that happens outside of a Composition run and without an explicit setting of execution context
-occurs in the `None` execution context.
 
 
 .. _Composition_Examples:
@@ -1580,6 +1537,49 @@ brevity:*
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
 
+.. _Composition_Examples_Execution_Context:
+
+*Execution Contexts*
+~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+  REDUCE REDUNDANCY WITH SECTION ON EXECUTION CONTEXTS ABOVE
+COMMENT
+An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
+<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
+which often occurs when using multiple or nested Compositions, or running `simulations
+<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
+which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
+unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
+When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
+
+::
+
+        >>> import psyneulink as pnl
+        >>> c = pnl.Composition()
+        >>> d = pnl.Composition()
+        >>> t = pnl.TransferMechanism()
+        >>> c.add_node(t)
+        >>> d.add_node(t)
+
+        >>> t.execute(1)
+        array([[1.]])
+        >>> c.run({t: 5})
+        [[array([5.])]]
+        >>> d.run({t: 10})
+        [[array([10.])]]
+        >>> c.run({t: 20}, context='custom execution id')
+        [[array([20.])]]
+
+        # context None
+        >>> print(t.parameters.value.get())
+        [[1.]]
+        >>> print(t.parameters.value.get(c))
+        [[5.]]
+        >>> print(t.parameters.value.get(d))
+        [[10.]]
+        >>> print(t.parameters.value.get('custom execution id'))
+        [[20.]]Composition_Controller
 
 
 .. _Composition_Class_Reference:

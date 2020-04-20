@@ -79,7 +79,7 @@ must become stateful Parameters, or they are at risk of computational errors lik
 
 
 Creating Parameters
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 To create new Parameters, reference this example of a new class *B*
 
@@ -144,7 +144,7 @@ To create new Parameters, reference this example of a new class *B*
 
 
 Using Parameters
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Methods that are called during runtime in general must take *context* as an argument and must pass this *context* along to other
 PNL methods. The most likely place this will come up would be for the *function* method on a PNL `Function` class, or *_execute* method on other
