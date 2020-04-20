@@ -943,7 +943,7 @@ and nested Compositions in an outer Composition, ``comp``:
 Running a Composition
 ---------------------
 
-COMMENT:
+
   OVERVIEW HERE, INCLUDING NOTION OF TRIALS
   .run vs. .learn
 COMMENT
