@@ -1014,20 +1014,33 @@ However, in many cases, a Composition can be executed in compiled mode, using th
 of the `execution methods <Composition_Execution_Methods>`.  This allows the Composition to be run in one of
 the following compiled modes:
 
-    * *LLVM* -- [*EXPLAIN*]
-    * *LLVMExec* -- compile only one `TRIAL` \\'s worth of execution;  outer loop runs using the
-      the Python interpreter; this allows [*EXPLAIN*].
-    * *LLVMRun* --  attempt to compile all of the `TRIAL` \\s in a run;  falls back to LLVMExec if
-      that is not possible.
-    * *PTXExec* -- [*EXPLAIN*]
-    * *PTXRun* -- [*EXPLAIN*]
+    * **Python** (also False) -- use the Python interpreter to execute (the default);
+
+    * *True* -- Try and gracefully fall back using the following methods in order LLVMRun, LLVMExec, LLVM, Python.
+
+    * **LLVM** -- compile execution of all `Nodes <Composition_Nodes>` (including `nested Compositions
+      <Composition_Nested>`) and `Projections <Projection>`; scheduler is called
+
+    * *LLVM* -- Compile and run mechanism nodes (including incoming projections). Nested compositions recurse. Still
+    uses Python scheduler, this scheduling conditions that rely on node parameters won't work.
+
+    * *LLVMExec* -- Compile and run 1 trial in binary form. Trial iterations are still done in Python. The compiled
+    part is semantically equivalent (to the extent supported by compilation) to Composition.execute .
+
+    * *LLVMRun* -- Compile and run multiple trials in binary form. The compiled part is semantically equivalent (to the
+    extent supported by compilation) to Composition.run
 
 COMMENT:
-    This can take one of
+    CUDA IS FOR INVIDIA GPU
+COMMENT
+    * *PTX/PTXExec/PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+    User needs working pycuda package and explicitly enable CUDA execution by setting PNL_LLVM_DEBUG environment variable to cuda .
 
-        USES LLVM, which has the advantage of allowing support for new hardware platforms to easily be easily added
-        CURRUENTLY:  STANDARD CPU, INVIDIA GPU
-        CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?
+    LLVMRun and PTXRun are only accepted as values to bin_execute in Composition.run. All of the others can be passed in
+    bin_execute to Composition.execute as well.
+COMMENT:
+    WHAT IS SUPPORTED BY Composition.learn??
+    CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?
 COMMENT
 
 .. _Composition_Run_Inputs
