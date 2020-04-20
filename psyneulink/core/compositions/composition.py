@@ -1009,16 +1009,25 @@ COMMENT
 
 *Compilation*
 
-By default, Composition's execute using the Python interpreter used to run the script from which it is called.
+By default, a Composition executes using the Python interpreter used to run the script from which it is called.
 However, in many cases, a Composition can be executed in compiled mode, using the **bin_execute** argument of any
-of the `execution methods <Composition_Execution_Methods>`.
+of the `execution methods <Composition_Execution_Methods>`.  This allows the Composition to be run in one of
+the following compiled modes:
+
+    * *LLVM* -- [*EXPLAIN*]
+    * *LLVMExec* -- compile only one `TRIAL` \\'s worth of execution;  outer loop runs using the
+      the Python interpreter; this allows [*EXPLAIN*].
+    * *LLVMRun* --  attempt to compile all of the `TRIAL` \\s in a run;  falls back to LLVMExec if
+      that is not possible.
+    * *PTXExec* -- [*EXPLAIN*]
+    * *PTXRun* -- [*EXPLAIN*]
 
 COMMENT:
     This can take one of
 
         USES LLVM, which has the advantage of allowing support for new hardware platforms to easily be easily added
         CURRUENTLY:  STANDARD CPU, INVIDIA GPU
-        CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanis?  EXCLUDED Conditions?
+        CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?
 COMMENT
 
 .. _Composition_Run_Inputs
