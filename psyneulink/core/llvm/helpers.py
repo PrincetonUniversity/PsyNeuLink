@@ -354,12 +354,15 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flags=None):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, WhenFinished, WhenFinishedAny, WhenFinishedAll
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
         if isinstance(condition, Never):
             return ir.IntType(1)(0)
+        elif isinstance(condition, Not):
+            condition = condition.condition
+            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_flags))
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
