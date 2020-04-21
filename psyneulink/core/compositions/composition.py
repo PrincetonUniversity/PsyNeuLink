@@ -1041,7 +1041,7 @@ used to specify whether to execute in compiled mode, if so, which one:
 
 COMMENT:
     WHAT IS SUPPORTED BY Composition.learn??
-    CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?
+    ??CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?  Other?
 COMMENT
 
 .. _Composition_Compilation_PTX:
