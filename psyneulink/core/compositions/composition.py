@@ -39,9 +39,12 @@ Contents
       - `Composition_Learning_UDF`
   * `Composition_Visualization`
   * `Composition_Execution`
-      - `Composition_Run_Static_Inputs`
-      - `Composition_Run_Dynamic_Inputs`
+      - `Composition_Compilation`
       - `Composition_Execution_Context`
+      - `Composition_Run_Inputs`
+          • `Composition_Run_Static_Inputs`
+          • `Composition_Run_Dynamic_Inputs`
+  * `Composition_Examples`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -1006,46 +1009,63 @@ COMMENT
      to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
      value.
 
+
 .. _Composition_Compilation:
 
 *Compilation*
+~~~~~~~~~~~~~
 
-By default, a Composition executes using the Python interpreter used to run the script from which it is called.
-However, in many cases, a Composition can be executed in compiled mode, which can be several orders of magnitude
-faster than use of the Python interpreter.  The **bin_execute** argument of an `execution method
-<Composition_Execution_Methods>` is used to specify whether execute using compilation and, if so, which of several
-possible modes:
+By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
+many cases, a Composition can also be executed in compiled mode, which can be several orders of magnitude faster than
+using the Python interpreter. The **bin_execute** argument of an `execution method <Composition_Execution_Methods>` is
+used to specify whether to execute in compiled mode, if so, which one:
 
-    * **Python** (also False) -- use the Python interpreter to execute (the default);
+.. _Composition_Compilation_LLVM:
 
-    * *True* -- Try and gracefully fall back using the following methods in order LLVMRun, LLVMExec, LLVM, Python.
+    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less effective
+      but more forgiving modes in the order listed below for each that fails.
 
-    * **LLVM** -- compile execution of all `Nodes <Composition_Nodes>` (including `nested Compositions
-      <Composition_Nested>`) and `Projections <Projection>`; scheduler is called
+    * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>` \\s; if successful, the compiled binary is
+      semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter.
 
-    * *LLVM* -- Compile and run mechanism nodes (including incoming projections). Nested compositions recurse. Still
-    uses Python scheduler, this scheduling conditions that rely on node parameters won't work.
+    * *LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter to iterate over them;
+      if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically equivalent the execution
+      of the `execute <Composition.execute>` method using the Python interpreter.
 
-    * *LLVMExec* -- Compile and run 1 trial in binary form. Trial iterations are still done in Python. The compiled
-    part is semantically equivalent (to the extent supported by compilation) to Composition.execute .
+    * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
+      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
+      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>` \\s; note that, in this mode, scheduling
+      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters <Parameter>` is not supported.
 
-    * *LLVMRun* -- Compile and run multiple trials in binary form. The compiled part is semantically equivalent (to the
-    extent supported by compilation) to Composition.run
+    * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
-COMMENT:
-    CUDA IS FOR INVIDIA GPU
-COMMENT
-    * *PTX/PTXExec/PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
-    User needs working pycuda package and explicitly enable CUDA execution by setting PNL_LLVM_DEBUG environment variable to cuda .
-
-    LLVMRun and PTXRun are only accepted as values to bin_execute in Composition.run. All of the others can be passed in
-    bin_execute to Composition.execute as well.
 COMMENT:
     WHAT IS SUPPORTED BY Composition.learn??
     CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?
 COMMENT
 
+.. _Composition_Compilation_PTX:
+
+The compilation modes listed above are for any standard CPU.
+COMMENT:
+EXPLAIN / CONSTRAIN:  Intel?  Any?
+COMMENT
+In addition, compilation can be specified for
+a `CUDA <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPU
+<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_ using one of the following modes:
+
+    * *PTX/PTXExec/PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+
+This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ be
+`installed <https://wiki.tiker.net/PyCuda/Installation>`_ and that it explicitly enable CUDA execution by setting
+the ``PNL_LLVM_DEBUG`` environment variable to cuda.
+
+
+
 .. _Composition_Run_Inputs
+
+Input formats
+~~~~~~~~~~~~~
 
 The `run <Composition.run>` method presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the `input_ports
 <InputPort>` of the `INPUT` `Nodes <Composition_Nodes>`. The input values are specified in the **inputs** argument
@@ -7609,16 +7629,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of the Composition.
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            bin_execute : bool or Enum[Python|LLVM|LLVMexec|LLVMRun|PTXExec|PTXRun] : default False
-                specifies whether to run using the Python interpreter or a compiled impementation.  By default,
-                execution uses the Python interpreter;  however, one of the following compiled modes can be specified:
-                * *LLVM* -- [*EXPLAIN*]
-                * *LLVMExec* -- compile only one `TRIAL` \\'s worth of execution;  outer loop runs using the
-                  the Python interpreter; this allows [*EXPLAIN*].
-                * *LLVMRun* --  attempt to compile all of the `TRIAL` \\s in a run;  falls back to LLVMExec if
-                  that is not possible.
-                * *PTXExec* -- [*EXPLAIN*]
-                * *PTXRun* -- [*EXPLAIN*]
+            bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+                specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
+                False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
+                reverting less powerful modes (in the order of the options listed), and to Python if no compilation
+                mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
+                CUDA compilation.
 
             context : `Context.execution_id>` : default `default_execution_id`
                 context in which the `Composition` will be eecuted;  set to self.default_execution_id ifunspecified.
