@@ -1011,9 +1011,10 @@ COMMENT
 *Compilation*
 
 By default, a Composition executes using the Python interpreter used to run the script from which it is called.
-However, in many cases, a Composition can be executed in compiled mode, using the **bin_execute** argument of any
-of the `execution methods <Composition_Execution_Methods>`.  This allows the Composition to be run in one of
-the following compiled modes:
+However, in many cases, a Composition can be executed in compiled mode, which can be several orders of magnitude
+faster than use of the Python interpreter.  The **bin_execute** argument of an `execution method
+<Composition_Execution_Methods>` is used to specify whether execute using compilation and, if so, which of several
+possible modes:
 
     * **Python** (also False) -- use the Python interpreter to execute (the default);
 
@@ -1165,6 +1166,7 @@ values from trials 0 and 1 are used again on trials 5 and 6, respectively.
 
         >>> comp.run(inputs=input_dictionary,
         ...          num_trials=7)
+
 
 .. _Composition_Input_Specification_Examples:
 
