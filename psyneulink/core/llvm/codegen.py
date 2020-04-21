@@ -292,9 +292,15 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         # Generate a while not 'end condition' loop
         builder.position_at_end(loop_condition)
+        is_finished_flags = {}
+        for idx, node in enumerate(composition.nodes):
+            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            is_finished_flag_ptr = helpers.get_state_ptr(builder, node, node_state, "is_finished_flag")
+            is_finished_flags[node] = builder.load(is_finished_flag_ptr)
+
         run_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None)
+            cond, None, is_finished_flags)
         run_cond = builder.not_(run_cond, name="not_run_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -306,6 +312,11 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         zero = ctx.int32_ty(0)
         any_cond = ir.IntType(1)(0)
+        is_finished_flags = {}
+        for idx, node in enumerate(composition.nodes):
+            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+            is_finished_flag_ptr = helpers.get_state_ptr(builder, node, node_state, "is_finished_flag")
+            is_finished_flags[node] = builder.load(is_finished_flag_ptr)
 
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
@@ -314,7 +325,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node)
+                cond, node, is_finished_flags)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)
