@@ -354,7 +354,7 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flags=None):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, Never, WhenFinished
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, Never, WhenFinished
 
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
@@ -413,7 +413,27 @@ class ConditionGenerator:
 
             # Return: target.calls % N == 0 AND me.last_time < target.last_time
             return builder.and_(completedNruns, ran_after_me)
-        
+
+        elif isinstance(condition, BeforeNCalls):
+            target, count = condition.args
+
+            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
+
+            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
+            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+
+            # Check number of runs
+            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
+            less_than_call_count = builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
+
+            # Check that we have not run yet
+            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
+            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
+            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
+
+            # Return: target.calls % N == 0 AND me.last_time < target.last_time
+            return builder.and_(less_than_call_count, ran_after_me)
+
         elif isinstance(condition, WhenFinished):
             target = condition.args[0]
             assert target in is_finished_flags
