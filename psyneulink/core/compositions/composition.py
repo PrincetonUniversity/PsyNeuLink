@@ -200,7 +200,7 @@ A `Node <Composition_Nodes>` can be removed from a Composition using the `remove
 
 A Composition can be used as a `Node <Composition_Nodes>` of another Composition, either in the **nodes** argument
 of its consructor, in a `Pathway` specified in its **pathways** argument, or in one of the Composition's `addition
-methods <Composition_Addition_Methods>`.  Projections can be specifed to and from the nested composition (or 
+methods <Composition_Addition_Methods>`.  Projections can be specifed to and from the nested composition (or
 created automatically if specified in a Pathway) just as for any other Node.
 
 
