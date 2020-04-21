@@ -37,13 +37,13 @@ Contents
               - `Composition_Learning_Execution`
       - `Composition_Learning_AutodiffComposition`
       - `Composition_Learning_UDF`
-  * `Composition_Visualization`
   * `Composition_Execution`
-      - `Composition_Compilation`
+      - `Composition_Execution_Inputs`
+          • `Composition_Input_Dictionary`
+          • `Composition_Programmatic_Inputs`
       - `Composition_Execution_Context`
-      - `Composition_Run_Inputs`
-          • `Composition_Run_Static_Inputs`
-          • `Composition_Run_Dynamic_Inputs`
+      - `Composition_Compilation`
+  * `Composition_Visualization`
   * `Composition_Examples`
   * `Composition_Class_Reference`
 
@@ -461,7 +461,7 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 ========
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
-method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run
+method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
 <Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
 the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
 in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
@@ -955,21 +955,25 @@ There are three methods for executing a Composition:
      configured for `learning <Composition_Learning>`.
   * `execute <Composition.execute>` - executes a single `TRIAL <TimeScale.TRIAL>` without learning.
 
-The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used, both of which call the
-`execute <Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
-is useful mostly for debugging.
+The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used.  Both of these can
+execute multiple trials (specified in their **num_trials** argument), calling the Composition's `execute
+<Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method can
+also be called directly, but this is useful mostly for debugging.
 
-All three methods require that their **inputs** argument be specified, which designates the values assigned to the
-`INPUT` `Nodes <Composition_Nodes>` of the network for each `TRIAL <TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>`
-is defined as the opportunity for every Nodes in the Composition to execute for a given set of inputs.  At the end
-of a `TRIAL <TimeScale.TRIAL>`, the `output_values <Mechanism.output_values>` of all the Composition's `OUTPUT`
-Nodes are added to the Composition's `results <Comopsition.results>` attribute.
+*Inputs*. All three methods require specification of their **inputs** argument, which designates the values assigned
+to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`. A `TRIAL
+<TimeScale.TRIAL>` is defined as the opportunity for every `Node <Composition_Nodes>` in the Composition to execute
+for a given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
+<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they can also
+be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`). At the end of
+a `TRIAL <TimeScale.TRIAL>`, the `output_values <Mechanism.output_values>` of all the Composition's `OUTPUT` Nodes are
+added to the Composition's `results <Comopsition.results>` attribute.
 
-If a Composition is configured for `learning <Composition_Learning>`, then its `learn <Composition.learn>` method
-must be used, and its `disable_learning <Composition.disable_learning>` attribute must be False (the default) for
-learning to occur.  The `run <Composition.run>` and `execute <Composition.execute>` methods can also be used to
-execute the Composition, but no learning will occur, irrespective of the value of the `disable_learning
-<Composition.disable_learning>` attribute.
+*Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur, its
+`learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
+`disable_learning <Composition.disable_learning>` attribute must be False (the default). The `run <Composition.run>`
+and `execute <Composition.execute>` methods can also be used to execute the Composition, but no learning will occur,
+irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
 
 .. _Composition_Execution_Context:
 
@@ -989,8 +993,8 @@ Composition. Execution contexts make several capabilities possible:
     for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
     (see `OptimizationControlMechanism`).
 
-If no execution_id is specified, the `default execution_id <Composition.default_execution_id>` is used,
-which is generally the Composition's `name <Composition.name>`; however, any `hashable
+If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
+is used, which is generally the Composition's `name <Composition.name>`; however, any `hashable
 <https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
 That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
 Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
@@ -1058,13 +1062,13 @@ in order of their power, are:
     * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
       using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
       <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters <Parameter>` is not supported;
+      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters` is not supported;
 
     * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
 .. _Composition_Compilation_PTX:
 
-In addition to compilation for CPUs, support is being developed for `CUDA
+*GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
 <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
 <https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by specifying one
 of the following modes in the **bin_execute** argument of a `Composition execution method
@@ -1074,43 +1078,68 @@ of the following modes in the **bin_execute** argument of a `Composition executi
 
 This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
 `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
-the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes run on a single
-GPU thread, and therefore do not produce any performance benefits over running in compiled mode on a CPU (see
+the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes runs on a single
+GPU thread, and therefore does not produce any performance benefits over running in compiled mode on a CPU;  (see
+`this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
+in compiled modes).
+
 COMMENT:
-    LINK TO ISSUE ON COMPILATION OF CUDA
+    *******************************************************************************************************************
+    ****************************************** INPUT STUFF ************************************************************
+    *******************************************************************************************************************
 COMMENT
-for plans for and status of further support for GPU compilation).
 
+.. _Composition_Execution_Inputs
 
-.. _Composition_Run_Inputs
+*Input formats*
+~~~~~~~~~~~~~~~
 
-Input formats
-~~~~~~~~~~~~~
+The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` is used to specify
+the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's `INPUT`
+`Nodes  <Composition_Nodes>` each time it is executed. There are two ways to specify inputs:
 
-The `run <Composition.run>` method presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the `input_ports
-<InputPort>` of the `INPUT` `Nodes <Composition_Nodes>`. The input values are specified in the **inputs** argument
-of a Composition's `execution methods <Composition_Execution_Methods>`.  The inputs to a Composition can be specified
-in one of two ways:
-
-  * `using a dictionary <Composition_Run_Static_Inputs>`, in which the inputs are specified or each `TRIAL
+  * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
 
-  * `using a function, generator or generator function <Composition_Run_Dynamic_Inputs>` that constructs the inputs
-    dynamically for each `TRIAL <TimeScale.TRIAL>` as it occurs.
+  * `programmtically <Composition_Programmatic_Inputs>`, using a function, generator or generator function
+    that constructs the inputs dynamically on a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` basis.
 
-These are each explained in the following two , with `examples <Composition_Examples_Input>` further below.
+The **inputs** argument of the `run <Composition.run>` and  `learn <Composition.learn>` methods can be specified in
+either way;  however, only the dictionary format can be used for the `execute <Composition.execute>` method, since it
+executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
+<TimeScale.TRIAL>`.
 
-.. _Composition_Run_Static_Inputs:
+*Inputs and input_ports*. Both formats must specify the inputs to be assigned to the `input_ports <InputPort>` of the
+Composition's `INPUT` `Nodes <Component_Nodes>` on each `TRIAL <TimeScale.TRIAL>`. An input must be specified for every
+`input_port  <Mechanism.input_ports>` of an `INPUT` `Mechanism <Mechanism>` that accepts inputs (including those of a
+`nested Composition<Composition_Nested>` if it is an `INPUT` Node of the outer Composition).  Most Mechanisms have
+only a single `input_port <Mechanism_Base.input_port>`, and so only a single input needs to be specified for that
+Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more than one input_port (for example, a
+`ComparatorMechanisms`), in which case an input must be specified for each input_port of that Mechanism. Conversely,
+some Mechanisms have input_ports that are marked as `internal_only <InputPort.internal_only>` (for example, the
+input_port for a `RecurrentTransferMechanism`, if its `has_recurrent_input_port
+<RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input should be specified for
+that input_port.  These factors determines the format of each entry in an `inputs dictionary
+<Composition_Input_Dictionary>, or the return value of the function or generator used for `programmatic specification
+<Composition_Programmatic_Inputs>`.  These are described in detail in the following sections (also see
+`examples <Composition_Examples_Input>`).
 
-*Input Dictionary*
-~~~~~~~~~~~~~~~~~~
+COMMENT:
+    ****************************************** INPUT DICT ************************************************************
+COMMENT
+
+
+.. _Composition_Input_Dictionary:
+
+Input Dictionary
+^^^^^^^^^^^^^^^^
 
 The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given `INPUT`
 `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
 for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents the input value to the
 Node on `TRIAL <TimeScale.TRIAL>` i).
 
-.. _Composition_Run_Inputs_Fig_States:
+.. _Composition_Execution_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
@@ -1359,12 +1388,17 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `I
         >>> comp.run(inputs=input_list)
 ..
 
-.. _Composition_Run_Dynamic_Inputs:
+COMMENT:
+    ****************************************** INPUT FUNCTIONS ********************************************************
+COMMENT
 
-*Run with Function, Generator, or Generator Function*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _Composition_Programmatic_Inputs:
 
-Inputs can also be specified with a function, generator, or generator function.
+Specifying Inputs Programmatically
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Inputs can also be specified programmticaly, in a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` manner,
+using a function, generator, or generator function.
 
 A function used as input must take as its sole argument the current `TRIAL <TimeScale.TRIAL>` number and return a
 value that satisfies all rules above for standard input specification. The only difference is that on each execution,
@@ -1613,6 +1647,16 @@ brevity:*
     >>> outer_comp.add_linear_processing_pathway([outer_A, inner_comp, outer_B])
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
+
+
+.. _Composition_Examples_Input:
+
+*Input Formats*
+~~~~~~~~~~~~~~~
+
+COMMENT:
+    INPUT EXAMPLES HERE
+COMMENT
 
 .. _Composition_Examples_Execution_Context:
 

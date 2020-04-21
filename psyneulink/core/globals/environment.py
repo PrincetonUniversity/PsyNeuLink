@@ -24,7 +24,7 @@ directly, using its :keyword:`run` method is easier because it:
     * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of a Component
       runs only a single execution of the object;
     ..
-    * uses simpler formats for specifying `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>`;
+    * uses simpler formats for specifying `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>`;
     ..
     * automatically aggregates results across executions and stores them in the results attribute of the object.
 
@@ -102,14 +102,14 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 ========
 
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
-`input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a
+`input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a
 `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`, the Component makes repeated `calls to
 its Scheduler <Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every
 Component has been executed at least once or another `termination condition <Scheduler_Termination_Conditions>` is
 met.  The `Scheduler` can be used in combination with `Condition` specifications for individual Components to execute
 different Components at different time scales.
 
-.. _Composition_Run_Inputs:
+.. _Composition_Execution_Inputs:
 
 *Inputs*
 ========
@@ -148,13 +148,13 @@ an origin mechanism are usually specified by a list of 2d lists/arrays, though `
         >>> s.run(inputs=input_dictionary)
 
 COMMENT:
-    .. _Composition_Run_Inputs_Fig:
+    .. _Composition_Execution_Inputs_Fig:
 
     .. figure:: _static/input_spec_variables.svg
        :alt: Example input specifications with variable
 COMMENT
 
-.. _Composition_Run_Inputs_Fig_States:
+.. _Composition_Execution_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
@@ -704,7 +704,7 @@ def run(obj,
    ---------
 
     inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL <TimeScale.TRIAL>`
-        the input for each `TRIAL <TimeScale.TRIAL>` in a sequence (see `Composition_Run_Inputs` for detailed
+        the input for each `TRIAL <TimeScale.TRIAL>` in a sequence (see `Composition_Execution_Inputs` for detailed
         description of formatting requirements and options).
 
     num_trials : int : default None

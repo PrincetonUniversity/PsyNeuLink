@@ -686,7 +686,7 @@ OutputPort(s):
 
 The labels specified in these dictionaries can be used to:
 
-    - specify items in the `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>` arguments of the
+    - specify items in the `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>` arguments of the
       `run <System.run>` method of a `System`
     - report the values of the InputPort(s) and OutputPort(s) of a Mechanism
     - visualize the inputs and outputs of the System's Mechanisms
@@ -729,7 +729,7 @@ applied to a Mechanism with multiple InputPort, only the index zero InputPort wo
 
 *Using Label Dictionaries*
 
-When using labels to specify items in the `inputs <Composition_Run_Inputs>` arguments of the `run <System.run>` method, labels may
+When using labels to specify items in the `inputs <Composition_Execution_Inputs>` arguments of the `run <System.run>` method, labels may
 directly replace any or all of the `InputPort values <InputPort.value>` in an input specification dictionary. Keep in
 mind that each label must be specified in the `input_labels_dict <Mechanism_Base.input_labels_dict>` of the Origin
 Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
@@ -2190,7 +2190,7 @@ class Mechanism_Base(Mechanism):
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
             of the Mechanism's `input_ports  <Mechanism_Base.input_ports>`, and each item must be compatible with the
             format (number and type of elements) of the `variable <InputPort.InputPort.variable>` of the
-            corresponding InputPort (see `Run Inputs <Composition_Run_Inputs>` for details of input
+            corresponding InputPort (see `Run Inputs <Composition_Execution_Inputs>` for details of input
             specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
@@ -2382,7 +2382,7 @@ class Mechanism_Base(Mechanism):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Run_Inputs` for a detailed
+            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Execution_Inputs` for a detailed
             description of formatting requirements and options).
 
         num_trials: int
