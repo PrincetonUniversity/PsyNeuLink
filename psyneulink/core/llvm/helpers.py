@@ -354,7 +354,7 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flags=None):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, WhenFinished, WhenFinishedAny
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
@@ -496,4 +496,19 @@ class ConditionGenerator:
 
             return run_cond
         
+        elif isinstance(condition, WhenFinishedAll):
+            dependencies = self.composition.nodes
+            if len(condition.args) > 0:
+                dependencies = condition.args
+
+            run_cond = ir.IntType(1)(1)
+            for node in dependencies:
+                assert node in is_finished_flags
+                node_is_finished = is_finished_flags[node]
+                node_is_finished = builder.fcmp_ordered("==", node_is_finished, node_is_finished.type(1))
+
+                run_cond = builder.and_(run_cond, node_is_finished)
+
+            return run_cond
+
         assert False, "Unsupported scheduling condition: {}".format(condition)
