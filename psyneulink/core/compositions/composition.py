@@ -462,7 +462,7 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
 method once for each `input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to `run
-<Composition.run>`, which constitutes a `trial <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
+<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
 the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
 in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
 <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
@@ -946,23 +946,24 @@ and nested Compositions in an outer Composition, ``comp``:
 Executing a Composition
 -----------------------
 
-.. _Composition_Execution_Methods:`
+.. _Composition_Execution_Methods:
+
 There are three methods for executing a Composition:
 
-  * `run <Composition.run>` - executes one or more `TRIAL <TRIAL>` \\s without learning;
-  * `learn <Composition.learn>` - executes one or more `TRIALs <TRIAL>` \\s with learning, if the network is
+  * `run <Composition.run>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s without learning;
+  * `learn <Composition.learn>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s with learning, if the network is
      configured for `learning <Composition_Learning>`.
-  * `execute <Composition.execute>` - executes a single `TRIAL`` without learning.
+  * `execute <Composition.execute>` - executes a single `TRIAL <TimeScale.TRIAL>` without learning.
 
 The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used, both of which call the
-`execute <Composition.execute>` method for each `TRIAL`.  The `execute <Composition.execute>` method is useful mostly
-for debugging.
+`execute <Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
+is useful mostly for debugging.
 
 All three methods require that their **inputs** argument be specified, which designates the values assigned to the
-`INPUT` `Nodes <Composition_Nodes>` of the network for each `TRIAL`. A `TRIAL` is defined as the opportunity for every
-Nodes in the Composition to execute for a given set of inputs.  At the end of a `TRIAL`, the `output_values
-<Mechanism.output_values>` of all the Composition's `OUTPUT` Nodes are added to the Composition's `results
-<Comopsition>` attribute.
+`INPUT` `Nodes <Composition_Nodes>` of the network for each `TRIAL <TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>`
+is defined as the opportunity for every Nodes in the Composition to execute for a given set of inputs.  At the end
+of a `TRIAL <TimeScale.TRIAL>`, the `output_values <Mechanism.output_values>` of all the Composition's `OUTPUT`
+Nodes are added to the Composition's `results <Comopsition.results>` attribute.
 
 If a Composition is configured for `learning <Composition_Learning>`, then its `learn <Composition.learn>` method
 must be used, and its `disable_learning <Composition.disable_learning>` attribute must be False (the default) for
@@ -1018,20 +1019,16 @@ COMMENT
 By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
 many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
 execution itself can be several orders of magnitude faster than using the Python interpreter.  Thus, using a compiled
-mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIALs <TimeScale.TRIAL>`.
+mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIAL <TimeScale.TRIAL>`\\s.
 Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
 that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
 `Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
 (e.g., used to specify the `function <Component.function>` of a Component) are not supported at present, including
 their use in a `UserDefinedFunction`.  Users are strongly urged to report any other compilation failures to
-psyneulinkhelp@princeton.edu, or as an issue at  `https://github.com/PrincetonUniversity/PsyNeuLink/issues`_.
-Known failure conditions are listed at
-COMMENT:
-    LINK TO COMPILATION FAILURE ISSUE HERE
-COMMENT
-.
+psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
+Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
-.. _warning:
+.. warning::
    Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
    bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
    advised that if compilation is used, suitable tests are conducted that the results generated are identical to
@@ -1051,7 +1048,7 @@ in order of their power, are:
     * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
       but more forgiving modes, in the order listed below, for each that fails;
 
-    * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>` \\s; if successful, the compiled binary is
+    * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful, the compiled binary is
       semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter;
 
     * *LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter to iterate over them;
@@ -1060,7 +1057,7 @@ in order of their power, are:
 
     * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
       using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
-      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>` \\s; note that, in this mode, scheduling
+      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
       `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters <Parameter>` is not supported;
 
     * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
@@ -1076,7 +1073,7 @@ of the following modes in the **bin_execute** argument of a `Composition executi
     * *PTX|PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
 
 This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
-`installed <https://wiki.tiker.net/PyCuda/Installation>`_ and that CUDA execution is explicitly enabled by setting
+`installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
 the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes run on a single
 GPU thread, and therefore do not produce any performance benefits over running in compiled mode on a CPU (see
 COMMENT:
@@ -1099,7 +1096,7 @@ in one of two ways:
     <TimeScale.TRIAL>` explicitly;
 
   * `using a function, generator or generator function <Composition_Run_Dynamic_Inputs>` that constructs the inputs
-    dynamically for each `TRIAL` as it occurs.
+    dynamically for each `TRIAL <TimeScale.TRIAL>` as it occurs.
 
 These are each explained in the following two , with `examples <Composition_Examples_Input>` further below.
 
@@ -1154,9 +1151,9 @@ XXX FIRST INPUT EXAMPLE:
     excluded from `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified
     input values.
 
-If num_trials is not in use, the number of inputs provided determines the number of trials in the run. For example, if
-five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition
-executes five times.
+If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
+the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
+specified, the Composition executes five times.
 
 +----------------------+-------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |
@@ -1185,8 +1182,8 @@ as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
-five times., and num_trials = 7, the system executes seven times. The input
-values from trials 0 and 1 are used again on trials 5 and 6, respectively.
+five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
+0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |5     |6     |
@@ -1278,13 +1275,14 @@ Complete input specification:
 
         >>> comp.run(inputs=input_dictionary)
 
-Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one trial:
+Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one
+`TRIAL <TimeScale.TRIAL>`:
 
         >>> input_dictionary = {a: [[1.0], [2.0]]}
 
         >>> comp.run(inputs=input_dictionary)
 
-* **Case 3: The same input is used on all trials**
+* **Case 3: The same input is used on all** `TRIAL <TimeScale.TRIAL>`\\s
 
 +--------------------------+----------------+-----------------+----------------+----------------+----------------+
 | Trial #                  |0               |1                |2               |3               |4               |
@@ -1368,13 +1366,15 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `I
 
 Inputs can also be specified with a function, generator, or generator function.
 
-A function used as input must take as its sole argument the current trial number and return a value that satisfies
-all rules above for standard input specification. The only difference is that on each execution, the function must
-return the input values for each `INPUT` `Node <Composition_Nodes>` for a single trial.
+A function used as input must take as its sole argument the current `TRIAL <TimeScale.TRIAL>` number and return a
+value that satisfies all rules above for standard input specification. The only difference is that on each execution,
+the function must return the input values for each `INPUT` `Node <Composition_Nodes>` for a single `TRIAL
+<TimeScale.TRIAL>`.
 
 .. note::
-    Default behavior when passing a function as input to a Composition is to execute for only one trial. Remember to
-    set the num_trials argument of Composition.run if you intend to cycle through multiple trials.
+    Default behavior when passing a function as input to a Composition is to execute for only one `TRIAL
+    <TimeScale.TRIAL>`. Remember to set the num_trials argument of Composition.run if you intend to cycle through
+    multiple `TRIAL <TimeScale.TRIAL>`\\s.
 
 Complete input specification:
 
@@ -1406,7 +1406,7 @@ Complete input specification:
 
 A generator can also be used as input. On each yield, it should return a value that satisfies all rules above for
 standard input specification. The only difference is that on each execution, the generator must yield the input values
-for each `INPUT` `Node <Composition_Nodes>` for a single trial.
+for each `INPUT` `Node <Composition_Nodes>` for a single `TRIAL <TimeScale.TRIAL>`.
 
 .. note::
     Default behavior when passing a generator is to execute until the generator is exhausted. If the num_trials
@@ -1494,7 +1494,8 @@ Environment.
         observation = env_step[0]
         done = env_step[2]
         if not done:
-            # NEW: This function MUST return a dictionary of input values for a single trial for each INPUT node
+            # NEW: This function MUST return a dictionary of input values for a single `TRIAL <TimeScale.TRIAL>`
+            for each INPUT node
             return {player: [observation[player_coord_idx]],
                     prey: [observation[prey_coord_idx]]}
         return done
@@ -1508,8 +1509,8 @@ COMMENT:
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-    a list or ndarray of **initial_values**[...] The **initial_values** are assigned at the start of a `TRIAL <TimeScale.TRIAL>` as
-    input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
+    a list or ndarray of **initial_values**[...] The **initial_values** are assigned at the start of a `TRIAL
+    <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
     and listed in the Composition's ?? attribute),
 COMMENT
 
