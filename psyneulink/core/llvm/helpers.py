@@ -358,17 +358,21 @@ class ConditionGenerator:
 
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
+
         if isinstance(condition, Never):
             return ir.IntType(1)(0)
+
         elif isinstance(condition, Not):
             condition = condition.condition
             return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_flags))
+
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
                 cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_flags)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
+
         elif isinstance(condition, AllHaveRun):
             # Extract dependencies
             dependencies = self.composition.nodes
@@ -381,12 +385,14 @@ class ConditionGenerator:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
+
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
             ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
             ts = builder.load(ts_ptr)
             trial = builder.extract_value(ts, 0)
             return builder.icmp_unsigned("==", trial, trial.type(trial_num))
+
         elif isinstance(condition, AtPass):
             pass_num = condition.args[0]
             ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
@@ -394,6 +400,7 @@ class ConditionGenerator:
             current_pass = builder.extract_value(ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
+                                         
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
