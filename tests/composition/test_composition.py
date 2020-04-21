@@ -3449,6 +3449,7 @@ class TestSchedulerConditions:
     @pytest.mark.parametrize(["condition", "expected_result"],[
                              (pnl.EveryNCalls, [[.25, .25]]),
                              (pnl.BeforeNCalls, [[.05, .05]]),
+                             (pnl.AtNCalls, [[.25, .25]]),
                              (pnl.WhenFinished, [[1.0, 1.0]]),
                              (pnl.All, [[1.0, 1.0]]),
                              (pnl.AllHaveRun, [[.05, .05]]),
@@ -3477,6 +3478,8 @@ class TestSchedulerConditions:
         if condition is pnl.EveryNCalls:
             comp.scheduler.add_condition(response, condition(decisionMaker, 5))
         elif condition is pnl.BeforeNCalls:
+            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
+        elif condition is pnl.AtNCalls:
             comp.scheduler.add_condition(response, condition(decisionMaker, 5))
         elif condition is pnl.WhenFinished:
             comp.scheduler.add_condition(response, condition(decisionMaker))
