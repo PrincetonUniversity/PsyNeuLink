@@ -1016,50 +1016,73 @@ COMMENT
 ~~~~~~~~~~~~~
 
 By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
-many cases, a Composition can also be executed in compiled mode, which can be several orders of magnitude faster than
-using the Python interpreter. The **bin_execute** argument of an `execution method <Composition_Execution_Methods>` is
-used to specify whether to execute in compiled mode, if so, which one:
+many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
+execution itself can be several orders of magnitude faster than using the Python interpreter.  Thus, using a compiled
+mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIALs <TimeScale.TRIAL>`.
+Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
+that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
+`Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
+(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present, including
+their use in a `UserDefinedFunction`.  Users are strongly urged to report any other compilation failures to
+psyneulinkhelp@princeton.edu, or as an issue at  `https://github.com/PrincetonUniversity/PsyNeuLink/issues`_.
+Known failure conditions are listed at
+COMMENT:
+    LINK TO COMPILATION FAILURE ISSUE HERE
+COMMENT
+.
+
+.. _warning:
+   Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
+   bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
+   advised that if compilation is used, suitable tests are conducted that the results generated are identical to
+   those generated when the Composition is executed using the Python interpreter.
+
+.. _Composition_Compiled_Modes:
+
+The **bin_execute** argument of an `execution method <Composition_Execution_Methods>` specifies whether to use a
+compiled mode and, if so,  which.  If True is specified, an attempt is made to use the most powerful mode (LLVMRun)
+and, if that fails, to try progressively less powerful modes (issueing a warning indicating the unsupported feature
+that caused the failure), reverting to the Python interpreter if all compiled modes fail.  If a particular mode is
+specified and fails, an error is generated indicating the unsupported feature that failed. The compiled modes,
+in order of their power, are:
 
 .. _Composition_Compilation_LLVM:
 
-    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less effective
-      but more forgiving modes in the order listed below for each that fails.
+    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
+      but more forgiving modes, in the order listed below, for each that fails;
 
     * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>` \\s; if successful, the compiled binary is
-      semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter.
+      semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter;
 
     * *LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter to iterate over them;
       if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically equivalent the execution
-      of the `execute <Composition.execute>` method using the Python interpreter.
+      of the `execute <Composition.execute>` method using the Python interpreter;
 
     * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
       using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
       <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>` \\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters <Parameter>` is not supported.
+      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters <Parameter>` is not supported;
 
     * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
-COMMENT:
-    WHAT IS SUPPORTED BY Composition.learn??
-    ??CONSTRAINTS:  NO UDF's OR PYTHON NATIVE FUNCTIONS;  EXCLUDED Mechanisms?  EXCLUDED Conditions?  Other?
-COMMENT
-
 .. _Composition_Compilation_PTX:
 
-The compilation modes listed above are for any standard CPU.
+In addition to compilation for CPUs, support is being developed for `CUDA
+<https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
+<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by specifying one
+of the following modes in the **bin_execute** argument of a `Composition execution method
+<Composition_Execution_Methods>`:
+
+    * *PTX|PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+
+This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
+`installed <https://wiki.tiker.net/PyCuda/Installation>`_ and that CUDA execution is explicitly enabled by setting
+the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes run on a single
+GPU thread, and therefore do not produce any performance benefits over running in compiled mode on a CPU (see
 COMMENT:
-EXPLAIN / CONSTRAIN:  Intel?  Any?
+    LINK TO ISSUE ON COMPILATION OF CUDA
 COMMENT
-In addition, compilation can be specified for
-a `CUDA <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPU
-<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_ using one of the following modes:
-
-    * *PTX/PTXExec/PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
-
-This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ be
-`installed <https://wiki.tiker.net/PyCuda/Installation>`_ and that it explicitly enable CUDA execution by setting
-the ``PNL_LLVM_DEBUG`` environment variable to cuda.
-
+for plans for and status of further support for GPU compilation).
 
 
 .. _Composition_Run_Inputs
