@@ -3505,6 +3505,7 @@ class TestSchedulerConditions:
             comp.scheduler.add_condition(response, condition(5))
         elif condition is pnl.AtTrial:
             comp.scheduler.add_condition(response, condition(0))
+
         result = comp.run([0.05], bin_execute=mode)
         result = [x for x in np.array(result).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
         assert np.allclose(result, np.array(expected_result).flatten())
