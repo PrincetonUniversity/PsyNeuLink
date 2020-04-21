@@ -8138,8 +8138,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def output_values(self):
-        """Returns values of all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
-        return self.get_output_values()
+        """Returns values of all OutputPorts that belong to the Output CompositionInterfaceMechanism in the most recently executed context"""
+        return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
