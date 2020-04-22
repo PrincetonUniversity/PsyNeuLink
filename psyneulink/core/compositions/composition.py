@@ -921,19 +921,19 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the C
 <Composition_Nested_External_Input_Ports>`)
 
 .. note:
-   Most Mechanisms have only a single InputPort `input_port <Mechanism_Base.input_port>`, and so only a single input
-   needs to be specified for that Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more
+   Most Mechanisms have only a single InputPort `input_port <Mechanism_Base.input_port>`, and thus require only
+   a single input to be specified for them for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more
    than one InputPort (for example, a `ComparatorMechanisms`), in which case an input must be specified for each
    InputPort of that Mechanism. Conversely, some Mechanisms have input_ports that are marked as `internal_only
    <InputPort.internal_only>` (for example, the input_port for a `RecurrentTransferMechanism`, if its
-   `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input
-   should be specified for that input_port.  Similar considerations extend to the `external_input_ports
+   `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no
+   input should be specified for that input_port.  Similar considerations extend to the `external_input_ports
    <Composition.external_input_ports>` of a `nested Composition <Composition_Nested>`, based on the Mechanisms
-   (and/or further nested Compositions) that constitute its `INPUT` `Nodes <Composition_Nodes>`.
+   (and/or additionally nested Compositions) that comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
 
 These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>, or the
 return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
-of inputs.  These are described in detail in the following sections (also see `examples <Composition_Examples_Input>`).
+of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
 
 COMMENT:
     ****************************************** INPUT DICT ************************************************************
