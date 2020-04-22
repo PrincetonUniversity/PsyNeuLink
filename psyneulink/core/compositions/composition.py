@@ -944,10 +944,10 @@ COMMENT
 Input Dictionary
 ^^^^^^^^^^^^^^^^
 
-The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given `INPUT`
-`Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
-for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents the input to the
-Node on `TRIAL <TimeScale.TRIAL>` i).
+The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given
+`INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs
+to that Node, one for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list
+represents the input to the Node on `TRIAL <TimeScale.TRIAL>` i).
 
 .. _Composition_Execution_Inputs_Fig_States:
 
