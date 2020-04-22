@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -260,10 +260,10 @@ projections.</p>
 <span id="outputport-creation"></span><h2>Creating an OutputPort<a class="headerlink" href="#creating-an-outputport" title="Permalink to this headline">¶</a></h2>
 <p>An OutputPort can be created by calling its constructor. However, in general this is not necessary, as a Mechanism
 automatically creates a default OutputPort if none is explicitly specified, that contains the primary result of its
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For example, if the Mechanism is created within the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For example, if the Mechanism is created within the <a class="reference internal" href="Pathway.html#module-psyneulink.core.compositions.pathway" title="psyneulink.core.compositions.pathway"><code class="xref any py py-mod docutils literal"><span class="pre">pathway</span></code></a> of a
 <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, an OutputPort is created and assigned as the <code class="xref any docutils literal"><span class="pre">sender</span></code>
 of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to the next Mechanism in the pathway, or to the Process’ <a class="reference internal" href="Process.html#process-input-and-output"><span class="std std-ref">output</span></a>
-if the Mechanism is a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for that Process. Other configurations can also easily be specified using
+if the Mechanism is a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for that Process. Other configurations can also easily be specified using
 a Mechanism’s <strong>output_ports</strong> argument (see <a class="reference internal" href="#outputport-specification"><span class="std std-ref">OutputPort Specification</span></a> below).  If it is created using its
 constructor, and a Mechanism is specified in the <strong>owner</strong> argument, it is automatically assigned to that Mechanism.
 If its <a href="#id1"><span class="problematic" id="id2">**</span></a>owner* is not specified, <a href="#id3"><span class="problematic" id="id4">`</span></a>initialization is deferred.</p>
@@ -614,7 +614,7 @@ belonging to one Mechanism can’t be added to another.</p>
 </div>
 <div class="section" id="structure">
 <span id="outputport-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>Every OutputPort is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It can send one or more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> to other Mechanisms.  If its owner is a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and/or System, then the
+<p>Every OutputPort is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>. It can send one or more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> to other Mechanisms.  If its owner is a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism of a Process and/or System, then the
 OutputPort will also be treated as the output of that <a class="reference internal" href="Process.html#process-input-and-output"><span class="std std-ref">Process</span></a> and/or of a System.  It has
 the following attributes, some of which can be specified in ways that are specific to, and that can be used to
 <a class="reference internal" href="#outputport-customization"><span class="std std-ref">customize, the OutputPort</span></a>:</p>
@@ -932,7 +932,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -466,8 +466,7 @@ Components do not reinitialize.</p>
 <em>Termniation</em>
 ~~~~~~~~~~~~~</p>
 <ul class="simple" id="component-is-finished">
-<li><strong>is_finished</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  it is only
-used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</li>
+<li><strong>is_finished</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</li>
 </ul>
 <ul class="simple" id="component-execute-until-finished">
 <li><strong>execute_until_finished</strong> – determines whether Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method returns True.  If
@@ -665,9 +664,8 @@ one and only one of the following flags is always set:</p>
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.is_finished">
 <code class="descname">is_finished</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.is_finished" title="Permalink to this definition">¶</a></dt>
-<dd><p>set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.trial" title="psyneulink.core.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>; used by
-<a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the execution of one or more other
-Components on a Component.</p>
+<dd><p>set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>; used by <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the
+execution of one or more other Components on a Component.</p>
 </dd></dl>
 
 <dl class="method">
@@ -897,7 +895,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

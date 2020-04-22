@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -623,7 +623,7 @@ Mechanism is created, no MappingProjection is assigned to the InputPort, and thi
 any specifications in the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> attribute that are not
 associated with an instantiated OutputPort at the time the Mechanism is executed are ignored.</p>
 <p>The <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> (e.g., <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>) it receives are listed
-in its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute.  If the Mechanism is an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism of a
+in its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute.  If the Mechanism is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism of a
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, this includes a Projection from the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">input_CIM</span></code></a>.  Any
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> it receives are listed in its
 <code class="xref any docutils literal"><span class="pre">mod_afferents</span></code> attribute.</p>
@@ -741,7 +741,7 @@ the dictionary is contained in the Mechanism’s <a class="reference internal" h
 <p>The labels specified in these dictionaries can be used to:</p>
 <blockquote>
 <div><ul class="simple">
-<li>specify items in the <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a> arguments of the
+<li>specify items in the <a class="reference internal" href="Run.html#composition-execution-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets</span></a> arguments of the
 <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method of a <a class="reference internal" href="System.html"><span class="doc">System</span></a></li>
 <li>report the values of the InputPort(s) and OutputPort(s) of a Mechanism</li>
 <li>visualize the inputs and outputs of the System’s Mechanisms</li>
@@ -792,7 +792,7 @@ applied to a Mechanism with multiple InputPort, only the index zero InputPort wo
 </pre></div>
 </div>
 <p><em>Using Label Dictionaries</em></p>
-<p>When using labels to specify items in the <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">inputs</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, labels may
+<p>When using labels to specify items in the <a class="reference internal" href="Run.html#composition-execution-inputs"><span class="std std-ref">inputs</span></a> arguments of the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method, labels may
 directly replace any or all of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span> <span class="pre">values</span></code></a> in an input specification dictionary. Keep in
 mind that each label must be specified in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">input_labels_dict</span></code></a> of the Origin
 Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
@@ -812,9 +812,9 @@ the input dictionary.</p>
 </div>
 <p>The same general rules apply when using labels to specify <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">target values</span></a> for a pathway with learning.
 With target values, however, the labels must be included in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict"><code class="xref any py py-attr docutils literal"><span class="pre">output_labels_dict</span></code></a>
-of the Mechanism that projects to the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>), or in
-other words, the last Mechanism in the <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">learning sequence</span></a>. This is the same Mechanism used
-to specify target values for a particular learning sequence in the <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets dictionary</span></a>.</p>
+of the Mechanism that projects to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-targets"><span class="std std-ref">TARGET Mechanisms</span></a>), or in
+other words, the last Mechanism in a <a class="reference internal" href="LearningMechanism.html#learningmechanism-multilayer-learning"><span class="std std-ref">learning pathway</span></a>. This is the same
+Mechanism used to specify target values for a particular learning pathway in the <a class="reference internal" href="Run.html#run-targets"><span class="std std-ref">targets dictionary</span></a>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_labels_dict_M1</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">]],</span>
 <span class="gp">... </span>                        <span class="s2">&quot;green&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">]]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">output_labels_dict_M2</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span>
@@ -878,13 +878,13 @@ of the same Mechanism, and on different Mechanisms of a System.</p>
 <p>Mechanisms that are part of one or more <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are assigned designations that indicate the
 <a class="reference internal" href="Process.html#process-mechanisms"><span class="std std-ref">role</span></a> they play in those Processes, and similarly for <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">role</span></a> they play in
 any <a class="reference internal" href="System.html"><span class="doc">Systems</span></a> to which they belong. These designations are listed in the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.processes" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.processes"><code class="xref any py py-attr docutils literal"><span class="pre">processes</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.systems" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.systems"><code class="xref any py py-attr docutils literal"><span class="pre">systems</span></code></a> attributes, respectively.  Any Mechanism
-designated as <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to its <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> from the
+designated as <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to its <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> from the
 Process(es) to which it belongs.  Accordingly, when the Process (or System of which the Process is a part) is
-executed, those Mechanisms receive the input provided to the Process (or System).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> of any Mechanism designated as the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for a Process is assigned as
+executed, those Mechanisms receive the input provided to the Process (or System).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> of any Mechanism designated as the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for a Process is assigned as
 the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.output" title="psyneulink.core.components.process.Process.output"><code class="xref any py py-attr docutils literal"><span class="pre">output</span></code></a> of that Process, and similarly for any System to which it belongs.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A Mechanism that is the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> or <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of a Process does not necessarily have the same role in the
+<p class="last">A Mechanism that is the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> of a Process does not necessarily have the same role in the
 System(s) to which the Mechanism or Process belongs (see <code class="xref any docutils literal"><span class="pre">example</span></code>).</p>
 </div>
 </div>
@@ -904,7 +904,7 @@ tuple that also has an optional set of <a class="reference internal" href="#mech
 </div>
 <p>The parameters of a Mechanism are usually specified when the Mechanism is <a class="reference internal" href="#mechanism-creation"><span class="std std-ref">created</span></a>.  However,
 these can be overridden when it <code class="xref any docutils literal"><span class="pre">executed</span></code>.  This can be done in a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification
-dictionary</span></a> assigned to the <strong>runtime_param</strong> argument of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method, or in a <a class="reference internal" href="Process.html#process-mechanism-specification"><span class="std std-ref">tuple with the Mechanism</span></a> in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>
+dictionary</span></a> assigned to the <strong>runtime_param</strong> argument of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method, or in a <a class="reference internal" href="Process.html#process-mechanism-specification"><span class="std std-ref">tuple with the Mechanism</span></a> in the <a class="reference internal" href="Pathway.html#module-psyneulink.core.compositions.pathway" title="psyneulink.core.compositions.pathway"><code class="xref any py py-mod docutils literal"><span class="pre">pathway</span></code></a>
 of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>.  Any value assigned to a parameter in a <strong>runtime_params</strong> dictionary will override the current value of
 the parameter for that (and <em>only</em> that) execution of the Mechanism; the value will return to its previous value
 following that execution.</p>
@@ -1296,7 +1296,7 @@ This must be consistent with the format of the Mechanism’s <a class="reference
 the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
 of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a>, and each item must be compatible with the
 format (number and type of elements) of the <code class="xref any docutils literal"><span class="pre">variable</span></code> of the
-corresponding InputPort (see <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
+corresponding InputPort (see <a class="reference internal" href="Run.html#composition-execution-inputs"><span class="std std-ref">Run Inputs</span></a> for details of input
 specification formats).</li>
 <li><strong>runtime_params</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>]</em><em>]</em><em>]</em><em>]</em><em>:</em>) – a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
 its function. Any value assigned to a parameter will override the current value of that parameter for <em>only
@@ -1490,7 +1490,7 @@ Port specification(s) can be an Port object or the name of one.</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (<em>List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>] or </em><em>ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>) </em><em>: default default_variable</em>) – the inputs used for each in a sequence of executions of the Mechanism (see <a class="reference internal" href="Run.html#composition-run-inputs"><span class="std std-ref">Inputs</span></a> for a detailed
+<li><strong>inputs</strong> (<em>List</em><em>[</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.input" title="psyneulink.core.compositions.pathway.Pathway.input"><em>input</em></a><em>] or </em><em>ndarray</em><em>(</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.input" title="psyneulink.core.compositions.pathway.Pathway.input"><em>input</em></a><em>) </em><em>: default default_variable</em>) – the inputs used for each in a sequence of executions of the Mechanism (see <a class="reference internal" href="Run.html#composition-execution-inputs"><span class="std std-ref">Inputs</span></a> for a detailed
 description of formatting requirements and options).</li>
 <li><strong>num_trials</strong> (<em>int</em>) – number of trials to execute.</li>
 <li><strong>call_before_execution</strong> (<em>function : default None</em>) – called before each execution of the Mechanism.</li>
@@ -1615,7 +1615,7 @@ description of formatting requirements and options).</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -504,11 +504,11 @@ as in the following example:</p>
 the string “&gt;=”, which is a key in the <code class="xref any docutils literal"><span class="pre">comparison_operators</span></code> dict for the Python <code class="docutils literal"><span class="pre">operator.ge</span></code>; any of these
 can be used to specify <strong>termination_comparison_op</strong>).</p>
 <p id="transfermechanism-termination-by-time"><em>Termination by time</em>.  This terminates execution when the Mechanism has executed at least a number of times equal
-to the <strong>threshold</strong> at a particular TimeScale (e.g., within a <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> or a <code class="xref any docutils literal"><span class="pre">Trial</span></code>). This is specified by assigning
-a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> to <strong>termination_measure</strong>;  execution terminates when the number of executions at that TimeScale
-equals the <strong>termination_threshold</strong>.  Note that, in this case, the <strong>termination_comparison_op</strong> argument is
-ignored (the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> is automatically set to
-<em>GREATER_THAN_OR_EQUAL</em>).  For example, <code class="docutils literal"><span class="pre">my_mech</span></code> is configured below to execute at least twice per trial:</p>
+to the <strong>threshold</strong> at a particular TimeScale (e.g., within a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> or a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>). This is
+specified by assigning a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> to <strong>termination_measure</strong>;  execution terminates when the number of
+executions at that TimeScale equals the <strong>termination_threshold</strong>.  Note that, in this case,
+the <strong>termination_comparison_op</strong> argument is ignored (the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> is automatically set to <em>GREATER_THAN_OR_EQUAL</em>).  For example,
+<code class="docutils literal"><span class="pre">my_mech</span></code> is configured below to execute at least twice per trial:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">termination_measure</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">,</span>
@@ -1024,7 +1024,7 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

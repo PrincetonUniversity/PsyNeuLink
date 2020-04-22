@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -566,80 +566,6 @@ items of type/dtype <strong>cast_from</strong> to type/dtype <strong>cast_to</st
 </table>
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.core.globals.utilities.NodeRole">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">NodeRole</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.ORIGIN">
-<code class="descname">ORIGIN</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that does not receive any projections. A Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Nodes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.INPUT">
-<code class="descname">INPUT</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.INPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that receives external input. A Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> Nodes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.TERMINAL">
-<code class="descname">TERMINAL</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that does not send any projections. A Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Nodes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.OUTPUT">
-<code class="descname">OUTPUT</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node whose <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> are returned as output of the Composition. A
-Composition may have many <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Nodes.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.INTERNAL">
-<code class="descname">INTERNAL</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.INTERNAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that is neither <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> nor <a class="reference internal" href="#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.CONTROLLER_OBJECTIVE">
-<code class="descname">CONTROLLER_OBJECTIVE</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.CONTROLLER_OBJECTIVE" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that is the ObjectiveMechanism of a controller.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.FEEDBACK_SENDER">
-<code class="descname">FEEDBACK_SENDER</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.FEEDBACK_SENDER" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node with one or more outgoing projections marked as “feedback”. This means that the Node is at the end of a
-pathway which would otherwise form a cycle.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.FEEDBACK_RECEIVER">
-<code class="descname">FEEDBACK_RECEIVER</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.FEEDBACK_RECEIVER" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node with one or more incoming projections marked as “feedback”. This means that the Node is at the start of a
-pathway which would otherwise form a cycle.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.CYCLE">
-<code class="descname">CYCLE</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.CYCLE" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that belongs to a cycle.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.LEARNING">
-<code class="descname">LEARNING</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.LEARNING" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that is only executed when learning is enabled.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.utilities.NodeRole.TARGET">
-<code class="descname">TARGET</code><a class="headerlink" href="#psyneulink.core.globals.utilities.NodeRole.TARGET" title="Permalink to this definition">¶</a></dt>
-<dd><p>A Node that receives the target for a learning sequence</p>
-</dd></dl>
-
-</dd></dl>
-
 <dl class="function">
 <dt id="psyneulink.core.globals.utilities.get_all_explicit_arguments">
 <code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">get_all_explicit_arguments</code><span class="sig-paren">(</span><em>cls_</em>, <em>func_str</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.get_all_explicit_arguments" title="Permalink to this definition">¶</a></dt>
@@ -668,6 +594,12 @@ pathway which would otherwise form a cycle.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="psyneulink.core.globals.utilities.insert_list">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">insert_list</code><span class="sig-paren">(</span><em>list1</em>, <em>position</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.insert_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insert list2 into list1 at position</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="psyneulink.core.globals.utilities.is_comparison_operator">
 <code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_comparison_operator</code><span class="sig-paren">(</span><em>o</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_comparison_operator" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -680,43 +612,6 @@ pathway which would otherwise form a cycle.</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="psyneulink.core.globals.utilities.is_component">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_component</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_component" title="Permalink to this definition">¶</a></dt>
-<dd><p>This allows type-checking for Component definitions where Component module can’t be imported</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="psyneulink.core.globals.utilities.insert_list">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">insert_list</code><span class="sig-paren">(</span><em>list1</em>, <em>position</em>, <em>list2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.insert_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Insert list2 into list1 at position</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="psyneulink.core.globals.utilities.is_iterable">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_iterable</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_iterable" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
-<li><em>True - if **x*</em> can be iterated on*</li>
-<li><em>False - otherwise</em></li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="psyneulink.core.globals.utilities.is_same_function_spec">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_same_function_spec</code><span class="sig-paren">(</span><em>fct_spec_1</em>, <em>fct_spec_2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_same_function_spec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compare two function specs and return True if both are for the same class of Function</p>
-<p>Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
-Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False</p>
 </dd></dl>
 
 <dl class="function">
@@ -809,6 +704,37 @@ Note: if the candidate is a dict, the number of entries (lengths) are compared, 
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.is_component">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_component</code><span class="sig-paren">(</span><em>val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_component" title="Permalink to this definition">¶</a></dt>
+<dd><p>This allows type-checking for Component definitions where Component module can’t be imported</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.is_iterable">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_iterable</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_iterable" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>True - if **x*</em> can be iterated on*</li>
+<li><em>False - otherwise</em></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.is_same_function_spec">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">is_same_function_spec</code><span class="sig-paren">(</span><em>fct_spec_1</em>, <em>fct_spec_2</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.is_same_function_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare two function specs and return True if both are for the same class of Function</p>
+<p>Arguments can be either a class or instance of a PsyNeuLink Function, or any other callable method or function
+Return True only if both are instances or classes of a PsyNeuLink Function;  otherwise, return False</p>
 </dd></dl>
 
 <dl class="function">
@@ -1104,7 +1030,7 @@ Much like</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

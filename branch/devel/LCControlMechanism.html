@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -364,11 +364,12 @@ in its <a class="reference internal" href="#psyneulink.library.components.mechan
 <span id="lccontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An LCControlMechanism executes within a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> at a point specified in the Composition’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> or, if it
 is the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, after all of the other Mechanisms in the Composition
-have <a class="reference internal" href="Composition.html#composition-run"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> takes the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LCControlMechanism’s <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> as its input, and generates a
-response – under the influence of its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter – that is assigned as the
-<code class="xref any docutils literal"><span class="pre">allocation</span></code> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  The latter are used by its
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution –  of the
-Mechanisms the LCControlMechanism controls.</p>
+have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
+takes the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LCControlMechanism’s <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> as its input,
+and generates a response – under the influence of its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter – that is
+assigned as the <code class="xref any docutils literal"><span class="pre">allocation</span></code> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  The latter are
+used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
+of execution – of the Mechanisms the LCControlMechanism controls.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
@@ -757,7 +758,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

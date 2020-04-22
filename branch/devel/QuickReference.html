@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Reference &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>Quick Reference &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -453,7 +453,7 @@ complete description of the model implemented by this Composition).</span></p>
 <div class="section" id="scheduling">
 <span id="quick-reference-scheduling"></span><h2><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduling</span></a><a class="headerlink" href="#scheduling" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink Mechanisms can be executed on their own.  However, usually they are executed as part of a Composition to
-which they belong, when that is executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.  When a Composition is <a class="reference internal" href="Composition.html#composition-run"><span class="std std-ref">run</span></a>, its Components are executed under the control of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a>.  This
+which they belong, when that is executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.  When a Composition is <code class="xref any docutils literal"><span class="pre">run</span></code>, its Components are executed under the control of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal"><span class="pre">scheduler</span></code></a>.  This
 is a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>, that executes the Composition iteratively in rounds of execution referred to as a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, in which
 each node (Mechanism and/or nested Composition) in the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph" title="psyneulink.core.compositions.composition.Composition.graph"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a> is given an
 opportunity to execute.  By default, each node executes exactly once per <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a>, in the order determined by the edges
@@ -575,7 +575,7 @@ debugging, but suppressible for efficiency of execution).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

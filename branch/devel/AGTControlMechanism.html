@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -283,13 +283,12 @@ ControlSignal’s <a class="reference internal" href="ControlProjection.html"><s
 </div>
 <div class="section" id="execution">
 <span id="agtcontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-its <em>OUTCOME</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
-its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it
-receives from its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to all of its ControlSignals.  Each
-ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is used by its
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterPort(s) for the parameter(s) it
-controls, which are then used in the subsequent <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
+<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of its <em>OUTCOME</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
+its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it receives from its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to
+all of its ControlSignals.  Each ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>,
+which is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterPort(s) for the
+parameter(s) it controls, which are then used in the subsequent <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">A <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
@@ -432,7 +431,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

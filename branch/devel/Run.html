@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Run &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>Run &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -211,7 +211,7 @@ directly, using its <code class="xref std std-keyword docutils literal"><span cl
 runs only a single execution of the object;</li>
 </ul>
 <ul class="simple">
-<li>uses simpler formats for specifying <a class="reference internal" href="#composition-run-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="#run-targets"><span class="std std-ref">targets</span></a>;</li>
+<li>uses simpler formats for specifying <a class="reference internal" href="#composition-execution-inputs"><span class="std std-ref">inputs</span></a> and <a class="reference internal" href="#run-targets"><span class="std std-ref">targets</span></a>;</li>
 </ul>
 <ul class="simple">
 <li>automatically aggregates results across executions and stores them in the results attribute of the object.</li>
@@ -279,18 +279,19 @@ occurs in the <code class="xref any docutils literal"><span class="pre">None</sp
 <div class="section" id="timing">
 <span id="run-timing"></span><h2><em>Timing</em><a class="headerlink" href="#timing" title="Permalink to this headline">¶</a></h2>
 <p>When <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> is called by a Component, it calls that Component’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method once for each
-<a class="reference internal" href="#composition-run-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
-execution.  For each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to its Scheduler</span></a>,
-executing the Components it specifies in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every Component has been executed at least once or
-another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination
-with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute different Components at different time scales.</p>
+<a class="reference internal" href="#composition-execution-inputs"><span class="std std-ref">input</span></a>  (or set of inputs) specified in the call to <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code>, which constitutes a
+<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.  For each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, the Component makes repeated <a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">calls to
+its Scheduler</span></a>, executing the Components it specifies in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a>, until every
+Component has been executed at least once or another <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination condition</span></a> is
+met.  The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used in combination with <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifications for individual Components to execute
+different Components at different time scales.</p>
 </div>
 <div class="section" id="inputs">
-<span id="composition-run-inputs"></span><h2><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_ports of the relevant Mechanisms in
-the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a Component’s
-<code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
-<p>Inputs are specified in a Python dictionary where the keys are <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms, and the values are lists in which
+<span id="composition-execution-inputs"></span><h2><em>Inputs</em><a class="headerlink" href="#inputs" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> function presents the inputs for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> to the input_ports of the relevant
+Mechanisms in the <a class="reference internal" href="#run-scope-of-execution"><span class="std std-ref">scope of execution</span></a>. These are specified in the <strong>inputs</strong> argument of a
+Component’s <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
+<p>Inputs are specified in a Python dictionary where the keys are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms, and the values are lists in which
 the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
 shape of the mechanism’s <code class="xref any docutils literal"><span class="pre">external_input_values</span></code>. This means that the inputs to
 an origin mechanism are usually specified by a list of 2d lists/arrays, though <a class="reference internal" href="#input-specification-examples"><span class="std std-ref">some shorthand notations are allowed</span></a>. Any InputPorts that are not represented in <code class="xref any docutils literal"><span class="pre">external_input_values</span></code> will not receive a user-specified input value.</p>
@@ -315,7 +316,7 @@ an origin mechanism are usually specified by a list of 2d lists/arrays, though <
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="figure" id="composition-run-inputs-fig-states">
+<div class="figure" id="composition-execution-inputs-fig-states">
 <img alt="Example input specifications with input ports" src="_images/input_spec_states.svg" /></div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -370,7 +371,7 @@ five inputs are provided for each origin mechanism, and num_trials is not specif
 </pre></div>
 </div>
 <p>If num_trials is in use, <a class="reference internal" href="#psyneulink.core.globals.environment.run" title="psyneulink.core.globals.environment.run"><code class="xref any py py-func docutils literal"><span class="pre">run</span></code></a> will iterate over the inputs until num_trials is reached. For example, if five inputs
-are provided for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.ORIGIN" title="psyneulink.core.globals.utilities.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and num_trials = 7, the system will execute seven times. The first two
+are provided for each <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> mechanism, and num_trials = 7, the system will execute seven times. The first two
 items in the list of inputs will be used on trial 5 and trial 6, respectively.</p>
 <table border="1" class="docutils">
 <colgroup>
@@ -723,37 +724,42 @@ value.</p>
 </div>
 <div class="section" id="targets">
 <span id="run-targets"></span><h2><em>Targets</em><a class="headerlink" href="#targets" title="Permalink to this headline">¶</a></h2>
-<p>If learning is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>, then
-target values for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the Process or System being run.  These
-are specified in the <strong>targets</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
-<p>Recall that the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>, or <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>, of a learning sequence receives a TARGET, which is provided by the
-user at run time, and a SAMPLE, which is received from a projection sent by the last mechanism of the learning sequence.
-The TARGET and SAMPLE values for a particular <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism must have the same shape. See <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">learning sequence</span></a> for more details on how these components relate to each other.</p>
+<p>If learning is specified for a <a class="reference internal" href="Pathway.html"><span class="doc">Pathway</span></a> (see <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>), then
+target values for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> must be provided for each <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism in the Process or System
+being run.  These are specified in the <strong>targets</strong> argument of the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">run</span></code> method.</p>
+<p>Recall that the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a>, or <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>, of a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> receives a
+TARGET, that is provided by the user at run time, and a SAMPLE, that is received from a projection sent by the last
+Mechanism of the <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>. The TARGET and SAMPLE values for a particular
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanism must have the same shape. See <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> for more details on
+how these components relate to each other.</p>
 <p>The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
-sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
-trial i. There must be the same number of keys in the target specification dictionary as there are <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms
-in the system. Each target value must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span></code></a>. This means that for a given key (which is always the last mechanism of the
-learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.</p>
+sequence, and the values are lists in which the i-th element represents the target value for that <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> on trial i. There must be the same number of keys in the target specification
+dictionary as there are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms in the system. Each target value must be compatible with the shape of the
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span></code></a>. This means that for a given key (which is
+always the last Mechanism of the <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>) in the target specification
+dictionary, the value is usually a list of 1d lists/arrays.</p>
 <p>The number of targets specified for each Mechanism must equal the number specified for the <strong>inputs</strong> argument;  as
-with <strong>inputs</strong>, if the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified is greater than the number of inputs (and targets), then the
-list will be cycled until the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified is completed.</p>
+with <strong>inputs</strong>, if the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified is greater than the number of inputs
+(and targets), then the list will be cycled until the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified is completed.</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="60%" />
-<col width="20%" />
-<col width="20%" />
+<col width="65%" />
+<col width="18%" />
+<col width="18%" />
 </colgroup>
 <tbody valign="top">
 <tr class="row-odd"><td>Trial #</td>
 <td>0</td>
 <td>1</td>
 </tr>
-<tr class="row-even"><td>Target value for the learning sequence
+<tr class="row-even"><td>TARGET value for the
+<a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>
 containing <strong>Mechanism b</strong></td>
 <td>[1.0, 1.0]</td>
 <td>[2.0, 2.0]</td>
 </tr>
-<tr class="row-odd"><td>Target value for the learning sequence
+<tr class="row-odd"><td>TARGET value for the
+<a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>
 containing <strong>Mechanism c</strong></td>
 <td>[1.0]</td>
 <td>[2.0]</td>
@@ -789,11 +795,11 @@ containing <strong>Mechanism c</strong></td>
 </div>
 <div class="figure" id="run-targets-fig">
 <img alt="Example of dictionary format of target specification" src="_images/target_spec_dictionary.svg" /></div>
-<p>Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
-dictionary may be a function. The output of that function must be compatible with the shape of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TARGET" title="psyneulink.core.globals.utilities.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s
-TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span></code></a>. The function will be executed at the start of the learning
-portion of each trial. This format allows targets to be constructed programmatically, in response
-to computations made during the run.</p>
+<p>Alternatively, the value for a given key (last mechanism in the <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>) in
+the target specification dictionary may be a function. The output of that function must be compatible with the shape
+of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> mechanism’s TARGET <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPort</span></code></a>. The function will be executed at
+the start of the learning portion of each trial. This format allows targets to be constructed programmatically,
+in response to computations made during the run.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;a&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">b</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;b&quot;</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]]))</span>
@@ -817,11 +823,11 @@ to computations made during the run.</p>
 </div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Target specification dictionaries that provide values for multiple learning sequences may contain functions for some
-learning sequences and lists of values for others.</p>
+<p class="last">Target specification dictionaries that provide values for multiple <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathways</span></a> may contain functions for some <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathways</span></a>
+and lists of values for others.</p>
 </div>
-<p>Finally, for convenience, if there is only one learning sequence in a system, the targets may be specified in a list,
-rather than a dictionary.</p>
+<p>Finally, for convenience, if there is only one <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> in a system, the
+targets may be specified in a list, rather than a dictionary.</p>
 <table border="1" class="docutils">
 <colgroup>
 <col width="58%" />
@@ -865,7 +871,7 @@ rather than a dictionary.</p>
 <span class="gp">... </span>      <span class="n">targets</span><span class="o">=</span><span class="n">target_dictionary</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Shorthand - specify the targets in a list because there is only one learning sequence:</p>
+<p>Shorthand - specify the targets in a list because there is only one <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">target_list</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]]</span>
 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">s</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">,</span>
@@ -885,14 +891,14 @@ rather than a dictionary.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>inputs</strong> (List[input] or ndarray(input) : default default_variable for a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>) – the input for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence (see <a class="reference internal" href="#composition-run-inputs"><span class="std std-ref">Inputs</span></a> for detailed description of formatting
-requirements and options).</li>
-<li><strong>num_trials</strong> (<em>int : default None</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s to run.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code> (the default), then a number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s run will be equal
-equal to the number of items specified in the <strong>inputs</strong> argument.  If <strong>num_trials</strong> exceeds the number of
-inputs, then the inputs will be cycled until the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified have been run.</li>
+<li><strong>inputs</strong> (List[input] or ndarray(input) : default default_variable for a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>) – the input for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> in a sequence (see <a class="reference internal" href="#composition-execution-inputs"><span class="std std-ref">Inputs</span></a> for detailed
+description of formatting requirements and options).</li>
+<li><strong>num_trials</strong> (<em>int : default None</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s to run.  If it is <code class="xref any docutils literal"><span class="pre">None</span></code> (the default), then a number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s run will be equal to the number of items specified in the <strong>inputs</strong> argument.
+If <strong>num_trials</strong> exceeds the number of inputs, then the inputs will be cycled until the number of
+<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> s specified have been run.</li>
 <li><strong>initialize</strong> (<em>bool default False</em>) – calls the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.initialize" title="psyneulink.core.components.system.System.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initialize</span></code></a> method of the System prior to the first <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
-<li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Mechanism:List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>]</em><em>]</em><em>, </em><em>List</em><em>[</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>] or </em><em>np.ndarray</em><em>(</em><a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.input" title="psyneulink.core.components.process.Process.input"><em>input</em></a><em>) </em><em>: default None</em>) – the initial values assigned to Mechanisms designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>.</li>
-<li><strong>targets</strong> (<em>dict : default None</em>) – the target values assigned to the <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> of each learning sequence on each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
+<li><strong>initial_values</strong> (<em>Dict</em><em>[</em><em>Mechanism:List</em><em>[</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.input" title="psyneulink.core.compositions.pathway.Pathway.input"><em>input</em></a><em>]</em><em>]</em><em>, </em><em>List</em><em>[</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.input" title="psyneulink.core.compositions.pathway.Pathway.input"><em>input</em></a><em>] or </em><em>np.ndarray</em><em>(</em><a class="reference internal" href="Pathway.html#psyneulink.core.compositions.pathway.Pathway.input" title="psyneulink.core.compositions.pathway.Pathway.input"><em>input</em></a><em>) </em><em>: default None</em>) – the initial values assigned to Mechanisms designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>.</li>
+<li><strong>targets</strong> (<em>dict : default None</em>) – the target values assigned to the <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> of each <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> on each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</li>
 <li><strong>learning</strong> (<em>bool :  default None</em>) – enables or disables learning during execution for a <a class="reference internal" href="Process.html#process-execution-learning"><span class="std std-ref">Process</span></a> or
 <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.  If it is not specified, the current state of learning is left intact.
 If it is <code class="xref any docutils literal"><span class="pre">True</span></code>, learning is forced on; if it is <code class="xref any docutils literal"><span class="pre">False</span></code>, learning is forced off.</li>
@@ -927,7 +933,7 @@ alternate parameter values to be used only during this <a class="reference inter
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>&lt;obj&gt;.results</strong> – list of the values, for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, of the OutputPorts for a Mechanism run directly,
-or of the OutputPorts of the <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms for the Process or System run.</p>
+or of the OutputPorts of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms for the Process or System run.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value">OutputPort.value</a>]</p>
@@ -1016,7 +1022,7 @@ or of the OutputPorts of the <a class="reference internal" href="Utilities.html#
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

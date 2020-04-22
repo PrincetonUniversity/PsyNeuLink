@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+39.g4db8f98 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+40.g16eaf09 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+39
+                  0.7.5.4+40
                 </div>
               
             
@@ -293,8 +293,8 @@ with an appropriately-sized input array, for example:</p>
 <div class="figure" id="id3">
 <span id="basicsandprimer-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndPrimer_SimplePathway_fig.svg"><img alt="_static/BasicsAndPrimer_SimplePathway_fig.svg" src="_static/BasicsAndPrimer_SimplePathway_fig.svg" width="30%" /></a>
 <p class="caption"><span class="caption-text"><strong>Composition Graph.</strong>  Representation of the graph of the simple Composition in the example above.  Note that the
-Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> node), and its output
-Mechanism is colored Red (to designate it at a <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> node).</span></p>
+Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> node), and its output
+Mechanism is colored Red (to designate it at a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> node).</span></p>
 </div>
 <p>As the name of the <code class="docutils literal"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a
 standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
@@ -393,7 +393,7 @@ Composition’s <a class="reference internal" href="Composition.html#psyneulink.
 <p class="caption"><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span></p>
 </div>
 <p>Running the model is as simple as generating some inputs and then providing them to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>
-method.  Inputs are specified in a dictionary, with one entry for each of the Composition’s <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.INPUT" title="psyneulink.core.globals.utilities.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a>
+method.  Inputs are specified in a dictionary, with one entry for each of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a>
 Mechanisms;  each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
 The following defines two stimuli to use as the color and word inputs (<code class="docutils literal"><span class="pre">red</span></code> and <code class="docutils literal"><span class="pre">green</span></code>), and two for use as the
 task input (<code class="docutils literal"><span class="pre">color</span></code> and <code class="docutils literal"><span class="pre">word</span></code>), and then uses them to run the model for a color naming congruent trial, followed
@@ -410,8 +410,8 @@ by a color naming incongruent trial:</p>
 <span class="o">&gt;&gt;</span> <span class="p">[[</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">]),</span> <span class="n">array</span><span class="p">([</span><span class="mf">2.80488344</span><span class="p">])],</span> <span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">]),</span> <span class="n">array</span><span class="p">([</span><span class="mf">3.94471513</span><span class="p">])]]</span>
 </pre></div>
 </div>
-<p>When a Composition is run, its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal"><span class="pre">results</span></code></a> attribute stores the values of its <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanisms
-at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>. In this case, the <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism is the only <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism, and it
+<p>When a Composition is run, its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal"><span class="pre">results</span></code></a> attribute stores the values of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanisms
+at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>. In this case, the <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism is the only <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism, and it
 has two output values by default: the outcome of the decision (1 or -1, in this case corresponding to <code class="docutils literal"><span class="pre">red</span></code> or
 <code class="docutils literal"><span class="pre">green</span></code>), and the estimated mean decision time for the decision (in seconds).  So, the value returned by the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal"><span class="pre">results</span></code></a> attribute is a 3d array containing two 2d arrays, each of which has the two outputs of the DDM
 for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a> (notice that the estimated response time for the second, incongruent trial was
@@ -447,7 +447,7 @@ Mechanism has completed its execution, as follows:</p>
 </div>
 <p>The output is now the result of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionIntegrator</span></code></a>, which is the value of the decision variable when it
 crosses threshold (which is, by definition, equal to either the postive or negative value of the <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a> attribute), and the number of executions it took to do so.  Since the <code class="docutils literal"><span class="pre">decision</span></code>
-Mechanism is the last (<a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.TERMINAL" title="psyneulink.core.globals.utilities.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>) Mechanism of the Composition, it is also its <a class="reference internal" href="Utilities.html#psyneulink.core.globals.utilities.NodeRole.OUTPUT" title="psyneulink.core.globals.utilities.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism.  Therefore, its
+Mechanism is the last (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>) Mechanism of the Composition, it is also its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Mechanism.  Therefore, its
 output is recorded in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal"><span class="pre">results</span></code></a> attribute of the Stroop model, as shown above (note: because
 there is noise in the integration process, running the model several times produces varying response times).</p>
 <p>This version of the model includes Mechanisms that execute over different time-scales. The ProcessingMechanisms
@@ -662,7 +662,7 @@ accessed by using the <a class="reference internal" href="Parameters.html#psyneu
 </pre></div>
 </div>
 <p>Notice that, here, the name of the Composition in which the Mechanism was executed is used as the context; see
-<a class="reference internal" href="Composition.html#composition-scope-of-execution"><span class="std std-ref">Execution Contexts</span></a> for additional information about how to specify contexts.  If no context is specified,
+<code class="xref any docutils literal"><span class="pre">Composition_Scope_of_Execution</span></code> for additional information about how to specify contexts.  If no context is specified,
 then the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get" title="psyneulink.core.globals.parameters.Parameter.get"><code class="xref any py py-meth docutils literal"><span class="pre">get</span></code></a> method returns the most recently assigned value of the parameter, just like dot
 notation.</p>
 <p>If a parameter is <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a>, then its previous value can also be accessed, using the
@@ -1043,7 +1043,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+39.g4db8f98',
+               VERSION:'0.7.5.4+40.g16eaf09',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
