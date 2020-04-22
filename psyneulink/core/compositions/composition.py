@@ -954,16 +954,18 @@ Node on `TRIAL <TimeScale.TRIAL>` i).
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
 
-Each input value must be compatible with the number of InputPorts that receive external input for that Node. These are
-listed in its `external_input_ports` attribute (`here <Mechanism_Base.external_input_ports>` if it is Mechanism, or
-`here <Composition.external_input_ports>` if it is a Composition).  More specifically, the shape of the input value must
-be compatible with the shape of the `extrernal_input_values` of the Node (`here <Mechanism_Base.external_input_values>`
-if it is Mechanism, or `here <Composition.external_input_values>` if it is a Composition).  While these are always 2d
-arrays, the number and size of the items (corresponding to each InputPort) may vary;  in some case shorthand notations
-are allowed, as described in the `examples <Composition_Input_Specification_Examples>` below.
+Each input value must be compatible with the number of InputPorts that receive external input for that Node.
+These are listed in its `external_input_ports` attribute (`here <Mechanism_Base.external_input_ports>` if it
+is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
+shape of the input value must be compatible with the shape of the Node's `extrernal_input_values` attribute
+(`here  <Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>`
+if it is a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to
+each InputPort) may vary;  in some case shorthand notations are allowed, as described in the `examples
+<Composition_Input_Specification_Examples>` below.
 
-XXX FIRST INPUT EXAMPLE:
-
+COMMENT:
+    FIRST INPUT EXAMPLE:
+COMMENT
         >>> import psyneulink as pnl
 
         >>> a = pnl.TransferMechanism(name='a',
