@@ -5572,6 +5572,12 @@ class TestProperties:
         res = comp.run(inputs=inputs, bin_execute=mode)
         assert np.allclose(res, [[20.0, 40.0], [60.0, 80.0]])
 
+    def test_get_output_values_prop(self):
+        A = pnl.ProcessingMechanism()
+        c = pnl.Composition()
+        c.add_node(A)
+        result = c.run(inputs={A: [1]}, num_trials=2)
+        assert result == c.output_values == [np.array([1])]
 
 class TestAuxComponents:
     def test_two_transfer_mechanisms(self):
