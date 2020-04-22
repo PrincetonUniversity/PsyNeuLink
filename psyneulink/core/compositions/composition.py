@@ -303,23 +303,24 @@ COMMENT
 *Nested Compositions*
 ~~~~~~~~~~~~~~~~~~~~~
 
-A nested Composition that is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
-Composition is `run <Composition_Execution>`, the nested Composition is run when its Node in the outer is called to
-execute by the outer Composition's `scheduler <Composition.scheduler>`.  Any Node within the outer Composition can send
-a`Projection <Projection>` to any `INPUT` Node, and can receive a Projection from any `OUTPUT` Node within the nested
-Composition.  Similarly, a `ControlMechanism` within the outer Composition can modulate the parameter of any `Mechanism
-<Mechanism>` within the nested Composition.
+A nested Composition is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
+Composition is `executed <Composition_Execution>`, the nested Composition is executed when its Node in the outer is
+called to execute by the outer Composition's `scheduler <Composition.scheduler>`.  Any Node within the outer
+Composition can send a`Projection <Projection>` to any `INPUT` Node, and can receive a Projection from any `OUTPUT`
+Node within the nested Composition.  Similarly, a `ControlMechanism` within the outer Composition can modulate the
+parameter of any `Mechanism <Mechanism>` within the nested Composition.
 
-COMMENT:
-.. _Composition_Nested_External_Input_Ports
-    ADD EXPLANATION HERE OF EXTERNAL_INPUT_PORTS
-COMMENT
+.. _Composition_Nested_External_Input_Ports:
+If a nested Composition is an `INPUT` Node of the outermost Composition then, when the latter is `executed
+<Composition_Execution>`, the `inputs specified <Composition_Execution_Inputs>` to its `execution method
+<Composition_Execution_Methods>` must include the InputPorts of the nested Composition.  These can be accessed
+using the Composition's `exernal_input_ports <Composition.external_input_ports>` attribute.
 
 COMMENT:
 FOR DEVELOPERS:
-Note that although Projections can be specified to and from Nodes within a nested Composition, these are implemented
-by Projections to or from the nested Compositions `input_CIM <Composition.input_CIM>`,`parameter_CIM
-<Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; these, in turn, send or receive
+Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
+as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
+<Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
 Projections to the specified Nodes within the nested Composition.
 COMMENT
 
@@ -892,7 +893,7 @@ COMMENT:
     *******************************************************************************************************************
 COMMENT
 
-.. _Composition_Execution_Inputs
+.. _Composition_Execution_Inputs:
 
 *Input formats*
 ~~~~~~~~~~~~~~~
@@ -912,41 +913,28 @@ either way;  however, only the dictionary format can be used for the `execute <C
 executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
 <TimeScale.TRIAL>`.
 
-COMMENT:
-REWORK AROUND 'external_input_ports`
 *Inputs and input_ports*. Both formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
-the InputPorts of the Composition's `INPUT` `Nodes <Component_Nodes>`. These are listed in the `external_input_ports`
-attribute of the node
-<Mechanism_Base.external_input_ports>`
-<Composition.external_input_ports>` -- NOTE THAT THIS IS OF THE input_CIM
+the InputPorts of the Composition's `INPUT` `Nodes <Component_Nodes>` that require external inputs. These are listed
+in the `external_input_ports  <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
+`Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
+of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the Composition being being executed
+<Composition_Nested_External_Input_Ports>`)
 
- attribute.
+.. note:
+   Most Mechanisms have only a single InputPort `input_port <Mechanism_Base.input_port>`, and so only a single input
+   needs to be specified for that Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more
+   than one InputPort (for example, a `ComparatorMechanisms`), in which case an input must be specified for each
+   InputPort of that Mechanism. Conversely, some Mechanisms have input_ports that are marked as `internal_only
+   <InputPort.internal_only>` (for example, the input_port for a `RecurrentTransferMechanism`, if its
+   `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input
+   should be specified for that input_port.  Similar considerations extend to the `external_input_ports
+   <Composition.external_input_ports>` of a `nested Composition <Composition_Nested>`, based on the Mechanisms
+   (and/or further nested Compositions) that constitute its `INPUT` `Nodes <Composition_Nodes>`.
 
-NOTE SOMWEHWERE:  for a node that is a composition, this is the external_input_ports of its input_CIM
-
-that are designated for external input.  For
-`Mechanisms
-. An input must be specified for every InputPort
-`input_port  <Mechanism.input_ports>` of an `INPUT` `Mechanism <Mechanism>` that accepts inputs (including those of a
-`nested Composition<Composition_Nested>` if it is an `INPUT` Node of the outer Composition).  Most Mechanisms have
-only a single InputPort
-`input_port <Mechanism_Base.input_port>`, and so only a single input needs to be specified for that
-Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more than one InputPort (for example, a
-`ComparatorMechanisms`), in which case an input must be specified for each InputPort of that Mechanism. Conversely,
-some Mechanisms have input_ports that are marked as `internal_only <InputPort.internal_only>` (for example, the
-input_port for a `RecurrentTransferMechanism`, if its `has_recurrent_input_port
-<RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input should be specified for
-that input_port.  The inut_ports that receive
-
-
-`external_input_port
-    <Mechanism_Base.external_input_ports>`
-
-These factors determines the format of each entry in an `inputs dictionary
-<Composition_Input_Dictionary>, or the return value of the function or generator used for `programmatic specification
+These factors determines the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>,
+or the return value of the function or generator used for `programmatic specification
 <Composition_Programmatic_Inputs>`.  These are described in detail in the following sections (also see
 `examples <Composition_Examples_Input>`).
-COMENT
 
 COMMENT:
     ****************************************** INPUT DICT ************************************************************
@@ -2305,6 +2293,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     afferents : ContentAddressableList
         a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
+
+    external_input_ports : list[InputPort]
+        a list of the InputPorts of the Composition's `input_CIM <Composition.input_CIM>`;  these receive input
+        provided to the Composition when it is `executed <Composition_Execution>`, either from the **inputs** argument
+        of one of its `execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
+        <Composition_Nested>`, then from any `Nodes <Composition_Nodes>` in the outer composition that project to the
+        nested Composition (either itself, as a Node in the outer Composition, or to any of its own Nodes).
 
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
