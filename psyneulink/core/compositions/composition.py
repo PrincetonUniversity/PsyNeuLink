@@ -41,6 +41,9 @@ Contents
       - `Composition_Execution_Inputs`
           • `Composition_Input_Dictionary`
           • `Composition_Programmatic_Inputs`
+      COMMENT:
+      - `Composition_Initial_Values_and_Feedback`
+      COMMENT
       - `Composition_Execution_Context`
       - `Composition_Compilation`
   * `Composition_Visualization`
@@ -843,103 +846,6 @@ that each function is called at the appropriate times during execution.  Further
 the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
 other Components in the Composition (e.g., as a source of information or for modulation).
 
-.. _Composition_Visualization:
-
-Visualizing a Composition
--------------------------
-
-COMMENT:
-    XXX - ADD EXAMPLE OF NESTED COMPOSITION
-    XXX - ADD DISCUSSION OF show_controller AND show_learning
-COMMENT
-
-The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
-Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
-<Composition.processing_graph>`).
-
-By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
-<NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
-shown as unlabeled arrows, as illustrated for the Composition in the example below:
-
-.. _Composition_show_graph_basic_figure:
-
-+-----------------------------------------------------------+----------------------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
-| >>> a = ProcessingMechanism(                              |                                                          |
-|               name='A',                                   |                                                          |
-| ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULT, MEAN]                 |                                                          |
-| ...           )                                           |                                                          |
-| >>> b = ProcessingMechanism(                              |                                                          |
-| ...           name='B',                                   |                                                          |
-| ...           size=5                                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> c = ProcessingMechanism(                              |                                                          |
-| ...           name='C',                                   |                                                          |
-| ...           size=2,                                     |                                                          |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp = Composition(                                   |                                                          |
-| ...           name='Comp',                                |                                                          |
-| ...           enable_controller=True                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
-| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
-| ...            name='Controller',                         |                                                          |
-| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
-| ...            control_signals=(GAIN, c),                 |                                                          |
-| ...            agent_rep=comp                             |                                                          |
-| ...            )                                          |                                                          |
-| >>> comp.add_controller(ctlr)                             |                                                          |
-+-----------------------------------------------------------+----------------------------------------------------------+
-
-Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
-can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
-method.  The figure below shows several examples.
-
-.. _Composition_show_graph_options_figure:
-
-**Output of show_graph using different options**
-
-.. figure:: _static/Composition_show_graph_options_fig.svg
-   :alt: Composition graph examples
-   :scale: 150 %
-
-   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
-   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
-   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
-   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
-   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
-   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
-
-If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
-**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
-and nested Compositions in an outer Composition, ``comp``:
-
-.. _Composition_show_graph_show_nested_figure:
-
-+------------------------------------------------------+---------------------------------------------------------------+
-| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
-| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
-| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
-| >>> comp1 = Composition(name='comp1')                |                                                               |
-| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
-| ...                                      mech_B1])   |                                                               |
-| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
-| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
-| >>> comp2 = Composition(name='comp2')                |                                                               |
-| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
-| ...                                      mech_B2])   |                                                               |
-| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
-| >>> comp = Composition()                             |                                                               |
-| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
-| ...                                     comp1, comp2,|                                                               |
-| ...                                     mech_resp])  |                                                               |
-| >>> comp.show_graph(show_nested=True)                |                                                               |
-+------------------------------------------------------+---------------------------------------------------------------+
 
 .. _Composition_Execution:
 
@@ -975,113 +881,6 @@ added to the Composition's `results <Comopsition.results>` attribute.
 and `execute <Composition.execute>` methods can also be used to execute the Composition, but no learning will occur,
 irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
 
-.. _Composition_Execution_Context:
-
-*Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
-
-A Composition is always executed in a designated *execution context*, specified by an `execution_id
-<Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
-Composition. Execution contexts make several capabilities possible:
-
-  * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
-    <Component.value>` and that of its `parameters <Parameter_statefulness>` independently for each of
-    the Compositions to which it is assigned.
-
-  * The same Composition can be exectued independently in different contexts; this can be used for
-    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
-    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
-    (see `OptimizationControlMechanism`).
-
-If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
-is used, which is generally the Composition's `name <Composition.name>`; however, any `hashable
-<https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
-That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
-Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
-executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
-<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
-is given an execution_id of `None`.
-
-COMMENT:
-   MENTION DEFAULT VALUES HERE?  ?= execution_id NONE?
-COMMENT
-
-  .. note::
-     If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
-     <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
-     value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
-     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
-     to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
-     value.
-
-
-.. _Composition_Compilation:
-
-*Compilation*
-~~~~~~~~~~~~~
-
-By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
-many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
-execution itself can be several orders of magnitude faster than using the Python interpreter.  Thus, using a compiled
-mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIAL <TimeScale.TRIAL>`\\s.
-Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
-that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
-`Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
-(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present, including
-their use in a `UserDefinedFunction`.  Users are strongly urged to report any other compilation failures to
-psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
-Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
-
-.. warning::
-   Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
-   bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
-   advised that if compilation is used, suitable tests are conducted that the results generated are identical to
-   those generated when the Composition is executed using the Python interpreter.
-
-.. _Composition_Compiled_Modes:
-
-The **bin_execute** argument of an `execution method <Composition_Execution_Methods>` specifies whether to use a
-compiled mode and, if so,  which.  If True is specified, an attempt is made to use the most powerful mode (LLVMRun)
-and, if that fails, to try progressively less powerful modes (issueing a warning indicating the unsupported feature
-that caused the failure), reverting to the Python interpreter if all compiled modes fail.  If a particular mode is
-specified and fails, an error is generated indicating the unsupported feature that failed. The compiled modes,
-in order of their power, are:
-
-.. _Composition_Compilation_LLVM:
-
-    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
-      but more forgiving modes, in the order listed below, for each that fails;
-
-    * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful, the compiled binary is
-      semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter;
-
-    * *LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter to iterate over them;
-      if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically equivalent the execution
-      of the `execute <Composition.execute>` method using the Python interpreter;
-
-    * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
-      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
-      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters` is not supported;
-
-    * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
-
-.. _Composition_Compilation_PTX:
-
-*GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
-<https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
-<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by specifying one
-of the following modes in the **bin_execute** argument of a `Composition execution method
-<Composition_Execution_Methods>`:
-
-    * *PTX|PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
-
-This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
-`installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
-the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes runs on a single
-GPU thread, and therefore does not produce any performance benefits over running in compiled mode on a CPU;  (see
-`this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
-in compiled modes).
 
 COMMENT:
     *******************************************************************************************************************
@@ -1539,15 +1338,233 @@ Environment.
 COMMENT
 
 COMMENT:
-    .. _Composition_Initial_Values_and_Feedback:
+    *************************************************************************************************************
+    ****************************************** END INPUT ********************************************************
+    *************************************************************************************************************
+COMMENT
+
+
+COMMENT:
+.. _Composition_Initial_Values_and_Feedback:
+
+*Cycles, Feedback, and Initialization*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
     a list or ndarray of **initial_values**[...] The **initial_values** are assigned at the start of a `TRIAL
     <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
     and listed in the Composition's ?? attribute),
+
 COMMENT
 
+
+.. _Composition_Execution_Context:
+
+*Execution Contexts*
+~~~~~~~~~~~~~~~~~~~~
+
+A Composition is always executed in a designated *execution context*, specified by an `execution_id
+<Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
+Composition. Execution contexts make several capabilities possible:
+
+  * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
+    <Component.value>` and that of its `parameters <Parameter_statefulness>` independently for each of
+    the Compositions to which it is assigned.
+
+  * The same Composition can be exectued independently in different contexts; this can be used for
+    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
+    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
+    (see `OptimizationControlMechanism`).
+
+If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
+is used, which is generally the Composition's `name <Composition.name>`; however, any `hashable
+<https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
+That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
+Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
+executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
+<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
+is given an execution_id of `None`.
+
+COMMENT:
+   MENTION DEFAULT VALUES HERE?  ?= execution_id NONE?
+COMMENT
+
+  .. note::
+     If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
+     <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
+     value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
+     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
+     to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
+     value.
+
+
+.. _Composition_Compilation:
+
+*Compilation*
+~~~~~~~~~~~~~
+
+By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
+many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
+execution itself can be several orders of magnitude faster than using the Python interpreter.  Thus, using a compiled
+mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIAL <TimeScale.TRIAL>`\\s.
+Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
+that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
+`Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
+(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present, including
+their use in a `UserDefinedFunction`.  Users are strongly urged to report any other compilation failures to
+psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
+Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
+
+.. warning::
+   Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
+   bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
+   advised that if compilation is used, suitable tests are conducted that the results generated are identical to
+   those generated when the Composition is executed using the Python interpreter.
+
+.. _Composition_Compiled_Modes:
+
+The **bin_execute** argument of an `execution method <Composition_Execution_Methods>` specifies whether to use a
+compiled mode and, if so,  which.  If True is specified, an attempt is made to use the most powerful mode (LLVMRun)
+and, if that fails, to try progressively less powerful modes (issueing a warning indicating the unsupported feature
+that caused the failure), reverting to the Python interpreter if all compiled modes fail.  If a particular mode is
+specified and fails, an error is generated indicating the unsupported feature that failed. The compiled modes,
+in order of their power, are:
+
+.. _Composition_Compilation_LLVM:
+
+    * *True* -- try to use the one that yields the greatesst improvement, progressively reverting to less powerful
+      but more forgiving modes, in the order listed below, for each that fails;
+
+    * *LLVMRun* -- compile and run multiple `TRIAL <TimeScale.TRIAL>`\\s; if successful, the compiled binary is
+      semantically equivalent to the execution of the `run <Composition.run>` method using the Python interpreter;
+
+    * *LLVMExec* -- compile and run each `TRIAL <TimeScale.TRIAL>`, using the Python interpreter to iterate over them;
+      if successful, the compiled binary for each `TRIAL <TimeScale.TRIAL>` is semantically equivalent the execution
+      of the `execute <Composition.execute>` method using the Python interpreter;
+
+    * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
+      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
+      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
+      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters` is not supported;
+
+    * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
+
+.. _Composition_Compilation_PTX:
+
+*GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
+<https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
+<https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by specifying one
+of the following modes in the **bin_execute** argument of a `Composition execution method
+<Composition_Execution_Methods>`:
+
+    * *PTX|PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+
+This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
+`installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
+the ``PNL_LLVM_DEBUG`` environment variable to ``cuda``.  At present compilation using these modes runs on a single
+GPU thread, and therefore does not produce any performance benefits over running in compiled mode on a CPU;  (see
+`this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
+in compiled modes).
+
+.. _Composition_Visualization:
+
+Visualizing a Composition
+-------------------------
+
+COMMENT:
+    XXX - ADD EXAMPLE OF NESTED COMPOSITION
+    XXX - ADD DISCUSSION OF show_controller AND show_learning
+COMMENT
+
+The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
+Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
+<Composition.processing_graph>`).
+
+By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
+<NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
+shown as unlabeled arrows, as illustrated for the Composition in the example below:
+
+.. _Composition_show_graph_basic_figure:
+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULT, MEAN]                 |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
+
+Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
+can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
+method.  The figure below shows several examples.
+
+.. _Composition_show_graph_options_figure:
+
+**Output of show_graph using different options**
+
+.. figure:: _static/Composition_show_graph_options_fig.svg
+   :alt: Composition graph examples
+   :scale: 150 %
+
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
+   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
+   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
+   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
+   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
+
+If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and nested Compositions in an outer Composition, ``comp``:
+
+.. _Composition_show_graph_show_nested_figure:
+
++------------------------------------------------------+---------------------------------------------------------------+
+| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
+| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
+| >>> comp1 = Composition(name='comp1')                |                                                               |
+| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
+| ...                                      mech_B1])   |                                                               |
+| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
+| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
+| >>> comp2 = Composition(name='comp2')                |                                                               |
+| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
+| ...                                      mech_B2])   |                                                               |
+| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
+| >>> comp = Composition()                             |                                                               |
+| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
+| ...                                     comp1, comp2,|                                                               |
+| ...                                     mech_resp])  |                                                               |
+| >>> comp.show_graph(show_nested=True)                |                                                               |
++------------------------------------------------------+---------------------------------------------------------------+
 
 
 .. _Composition_Examples:
