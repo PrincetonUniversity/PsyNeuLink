@@ -78,6 +78,7 @@ primary_registries = [
     FunctionRegistry,
     GatingMechanismRegistry,
     MechanismRegistry,
+    PathwayRegistry,
     PortRegistry,
     PreferenceSetRegistry,
     ProcessRegistry,
