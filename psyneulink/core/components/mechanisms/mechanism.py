@@ -3448,7 +3448,6 @@ class Mechanism_Base(Mechanism):
         # del mechanism.function
         remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
                                       component=mechanism)
-        del mechanism
 
     def get_input_port_position(self, port):
         if port in self.input_ports:

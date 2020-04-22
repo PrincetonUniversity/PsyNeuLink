@@ -955,7 +955,6 @@ class Projection_Base(Projection):
         projection.receiver._remove_projection_to_port(projection)
         remove_instance_from_registry(ProjectionRegistry, projection.__class__.__name__,
                                       component=projection)
-        del projection
 
     # FIX: 10/3/17 - replace with @property on Projection for receiver and sender
     @property
