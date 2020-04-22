@@ -311,6 +311,11 @@ Composition.  Similarly, a `ControlMechanism` within the outer Composition can m
 <Mechanism>` within the nested Composition.
 
 COMMENT:
+.. _Composition_Nested_External_Input_Ports
+    ADD EXPLANATION HERE OF EXTERNAL_INPUT_PORTS
+COMMENT
+
+COMMENT:
 FOR DEVELOPERS:
 Note that although Projections can be specified to and from Nodes within a nested Composition, these are implemented
 by Projections to or from the nested Compositions `input_CIM <Composition.input_CIM>`,`parameter_CIM
@@ -318,11 +323,10 @@ by Projections to or from the nested Compositions `input_CIM <Composition.input_
 Projections to the specified Nodes within the nested Composition.
 COMMENT
 
-A nested Composition can also contain one or more `learning Pathways
-<Composition_Learning_Pathway>`, however a learning Pathway may not extend from an outer Composition to a nested
-Composition or vice versa.  The learning Pathways within a nested Composition are executed when that Composition is
-run, just like any other (see `Composition_Learning_Execution`).  Any level of nesting of Compositions within others is
-allowed.
+A nested Composition can also contain one or more `learning Pathways <Composition_Learning_Pathway>`,
+however a learning Pathway may not extend from an outer Composition to a nested Composition or vice versa.  The
+learning Pathways within a nested Composition are executed when that Composition is run, just like any other (see
+`Composition_Learning_Execution`).  Any level of nesting of Compositions within others is allowed.
 
 .. _Composition_Pathways:
 
@@ -908,20 +912,41 @@ either way;  however, only the dictionary format can be used for the `execute <C
 executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
 <TimeScale.TRIAL>`.
 
-*Inputs and input_ports*. Both formats must specify the inputs to be assigned to the `input_ports <InputPort>` of the
-Composition's `INPUT` `Nodes <Component_Nodes>` on each `TRIAL <TimeScale.TRIAL>`. An input must be specified for every
+COMMENT:
+REWORK AROUND 'external_input_ports`
+*Inputs and input_ports*. Both formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
+the InputPorts of the Composition's `INPUT` `Nodes <Component_Nodes>`. These are listed in the `external_input_ports`
+attribute of the node
+<Mechanism_Base.external_input_ports>`
+<Composition.external_input_ports>` -- NOTE THAT THIS IS OF THE input_CIM
+
+ attribute.
+
+NOTE SOMWEHWERE:  for a node that is a composition, this is the external_input_ports of its input_CIM
+
+that are designated for external input.  For
+`Mechanisms
+. An input must be specified for every InputPort
 `input_port  <Mechanism.input_ports>` of an `INPUT` `Mechanism <Mechanism>` that accepts inputs (including those of a
 `nested Composition<Composition_Nested>` if it is an `INPUT` Node of the outer Composition).  Most Mechanisms have
-only a single `input_port <Mechanism_Base.input_port>`, and so only a single input needs to be specified for that
-Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more than one input_port (for example, a
-`ComparatorMechanisms`), in which case an input must be specified for each input_port of that Mechanism. Conversely,
+only a single InputPort
+`input_port <Mechanism_Base.input_port>`, and so only a single input needs to be specified for that
+Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more than one InputPort (for example, a
+`ComparatorMechanisms`), in which case an input must be specified for each InputPort of that Mechanism. Conversely,
 some Mechanisms have input_ports that are marked as `internal_only <InputPort.internal_only>` (for example, the
 input_port for a `RecurrentTransferMechanism`, if its `has_recurrent_input_port
 <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input should be specified for
-that input_port.  These factors determines the format of each entry in an `inputs dictionary
+that input_port.  The inut_ports that receive
+
+
+`external_input_port
+    <Mechanism_Base.external_input_ports>`
+
+These factors determines the format of each entry in an `inputs dictionary
 <Composition_Input_Dictionary>, or the return value of the function or generator used for `programmatic specification
 <Composition_Programmatic_Inputs>`.  These are described in detail in the following sections (also see
 `examples <Composition_Examples_Input>`).
+COMENT
 
 COMMENT:
     ****************************************** INPUT DICT ************************************************************
@@ -972,12 +997,12 @@ XXX FIRST INPUT EXAMPLE:
         >>> comp.run(inputs=input_dictionary)
 
 .. note::
-    A `Node's <Composition_Nodes>` `external_input_values <MechanismBase.external_input_values>` attribute
+    A `Node's <Composition_Nodes>` `external_input_values <Mechanism_Base.external_input_values>` attribute
     is always a 2d list in which the index i element is the value of the Node's index i `external_input_port
-    <MechanismBase.external_input_ports>`. In many cases, `external_input_values <MechanismBase.external_input_values>`
-    is the same as `variable <MechanismBase.variable>`. Keep in mind that any InputPorts marked as "internal" are
-    excluded from `external_input_values <MechanismBase.external_input_values>`, and do not receive user-specified
-    input values.
+    <Mechanism_Base.external_input_ports>`. In many cases, `external_input_values
+    <Mechanism_Base.external_input_values>` is the same as `variable <Mechanism_Base.variable>`. Keep in mind that
+    any InputPorts marked as "internal_only <InputPort.internal_only>" are excluded from `external_input_values
+    <Mechanism_Base.external_input_values>`, and do not receive user-specified input values.
 
 If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
 the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
