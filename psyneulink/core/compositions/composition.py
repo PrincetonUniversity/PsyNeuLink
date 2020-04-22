@@ -898,9 +898,9 @@ COMMENT
 *Input formats*
 ~~~~~~~~~~~~~~~
 
-The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` is used to specify
-the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's `INPUT`
-`Nodes  <Composition_Nodes>` each time it is executed. There are two ways to specify inputs:
+The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` is used to
+specify the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's
+`INPUT` `Nodes  <Composition_Nodes>` each time it is executed. There are two ways to specify inputs:
 
   * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
@@ -909,8 +909,8 @@ the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are pro
     that constructs the inputs dynamically on a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` basis.
 
 The **inputs** argument of the `run <Composition.run>` and  `learn <Composition.learn>` methods can be specified in
-either way;  however, only the dictionary format can be used for the `execute <Composition.execute>` method, since it
-executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
+either way;  however, only the dictionary format can be used for the `execute <Composition.execute>` method, since
+it executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
 <TimeScale.TRIAL>`.
 
 *Inputs and input_ports*. Both formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
