@@ -946,7 +946,7 @@ Input Dictionary
 
 The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given `INPUT`
 `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
-for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents the input value to the
+for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents the input to the
 Node on `TRIAL <TimeScale.TRIAL>` i).
 
 .. _Composition_Execution_Inputs_Fig_States:
@@ -954,10 +954,13 @@ Node on `TRIAL <TimeScale.TRIAL>` i).
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
 
-Each input value must be compatible with the shape of the `INPUT` `Node's <Composition_Nodes>` `external_input_values
-<MechanismBase.external_input_values>`. Accordingly, each item in the list of inputs is typically a 2d list or array,
-though `some shorthand notations <Composition_Input_Specification_Examples>` are allowed.
-
+Each input value must be compatible with the number of InputPorts that receive external input for that Node. These are
+listed in its `external_input_ports` attribute (`here <Mechanism_Base.external_input_ports>` if it is Mechanism, or
+`here <Composition.external_input_ports>` if it is a Composition).  More specifically, the shape of the input value must
+be compatible with the shape of the `extrernal_input_values` of the Node (`here <Mechanism_Base.external_input_values>`
+if it is Mechanism, or `here <Composition.external_input_values>` if it is a Composition).  While these are always 2d
+arrays, the number and size of the items (corresponding to each InputPort) may vary;  in some case shorthand notations
+are allowed, as described in the `examples <Composition_Input_Specification_Examples>` below.
 
 XXX FIRST INPUT EXAMPLE:
 
@@ -2298,6 +2301,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         of one of its `execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
         <Composition_Nested>`, then from any `Nodes <Composition_Nodes>` in the outer composition that project to the
         nested Composition (either itself, as a Node in the outer Composition, or to any of its own Nodes).
+
+    external_input_values : list[InputPort]
+        a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
+        <Composition.external_input_ports>`;  any input to the Composition must be compatible with the shape of this,
+        whether received from the **input_ports** argument of oneo f the Composition's`execution methods
+        <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
+        Compostion.
 
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
