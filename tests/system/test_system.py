@@ -24,6 +24,7 @@ class TestInputSpecsExternalInputPortsOnly:
         S.run(inputs={R: [[1.0], [2.0], [3.0]]})
         print(S.results)
 
+
 class TestInputSpecsHeterogeneousVariables:
 
     def test_heterogeneous_variables_drop_outer_list(self):
@@ -53,6 +54,7 @@ class TestInputSpecsHeterogeneousVariables:
         inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
 
         s.run(inputs)
+
 
 class TestGraphAndInput:
 
@@ -270,6 +272,7 @@ class TestGraphAndInput:
         assert d.systems[s] == TERMINAL
         assert e.systems[s] == ORIGIN
         assert f.systems[s] == INITIALIZE_CYCLE
+
 
 class TestConvergentLearning:
 
@@ -535,51 +538,51 @@ class TestRuntimeParams:
                                        [np.array([12.])],     # Trial 4 - NOT condition 0, condition 1
                                        [np.array([2.])]])     # New run (runtime param no longer applies)
 
-from psyneulink.core.components.process import proc
-from psyneulink.core.components.system import sys
-class TestFactoryMethods:
-
-    def test_process_factory_method(self):
-
-        T1 = TransferMechanism()
-        T2 = TransferMechanism()
-        T3 = TransferMechanism()
-        p = proc(T1, T2, T3, learning_rate = 0.55)
-        assert p.learning_rate == 0.55
-        assert T1 in p.origin_mechanisms
-        assert not T2 in p.origin_mechanisms
-        assert T3 in p.terminal_mechanisms
-
-    def test_system_factory_method_solo_mechs(self):
-
-        T1 = TransferMechanism()
-        T2 = TransferMechanism()
-        T3 = TransferMechanism()
-        s = sys(T1, T2, T3, learning_rate = 0.65)
-        assert s.learning_rate == 0.65
-        assert T1 in s.origin_mechanisms
-        assert not T2 in s.origin_mechanisms
-        assert T3 in s.terminal_mechanisms
-
-
-    def test_system_factory_method_solo_mech_and_list(self):
-
-        T1 = TransferMechanism()
-        T2 = TransferMechanism()
-        T3 = TransferMechanism()
-        s = sys(T1, [T2, T3], learning_rate = 0.75)
-        assert s.learning_rate == 0.75
-        assert T1 in s.origin_mechanisms
-        assert T2 in s.origin_mechanisms
-        assert T3 in s.terminal_mechanisms
-
-    def test_system_factory_method_mech_list(self):
-
-        T1 = TransferMechanism()
-        T2 = TransferMechanism()
-        T3 = TransferMechanism()
-        s = sys([T1, T2, T3], learning_rate = 0.85)
-        assert s.learning_rate == 0.85
-        assert T1 in s.origin_mechanisms
-        assert not T2 in s.origin_mechanisms
-        assert T3 in s.terminal_mechanisms
+# from psyneulink.core.components.process import proc
+# from psyneulink.core.components.system import sys
+# class TestFactoryMethods:
+#
+#     def test_process_factory_method(self):
+#
+#         T1 = TransferMechanism()
+#         T2 = TransferMechanism()
+#         T3 = TransferMechanism()
+#         p = proc(T1, T2, T3, learning_rate = 0.55)
+#         assert p.learning_rate == 0.55
+#         assert T1 in p.origin_mechanisms
+#         assert not T2 in p.origin_mechanisms
+#         assert T3 in p.terminal_mechanisms
+#
+#     def test_system_factory_method_solo_mechs(self):
+#
+#         T1 = TransferMechanism()
+#         T2 = TransferMechanism()
+#         T3 = TransferMechanism()
+#         s = sys(T1, T2, T3, learning_rate = 0.65)
+#         assert s.learning_rate == 0.65
+#         assert T1 in s.origin_mechanisms
+#         assert not T2 in s.origin_mechanisms
+#         assert T3 in s.terminal_mechanisms
+#
+#
+#     def test_system_factory_method_solo_mech_and_list(self):
+#
+#         T1 = TransferMechanism()
+#         T2 = TransferMechanism()
+#         T3 = TransferMechanism()
+#         s = sys(T1, [T2, T3], learning_rate = 0.75)
+#         assert s.learning_rate == 0.75
+#         assert T1 in s.origin_mechanisms
+#         assert T2 in s.origin_mechanisms
+#         assert T3 in s.terminal_mechanisms
+#
+#     def test_system_factory_method_mech_list(self):
+#
+#         T1 = TransferMechanism()
+#         T2 = TransferMechanism()
+#         T3 = TransferMechanism()
+#         s = sys([T1, T2, T3], learning_rate = 0.85)
+#         assert s.learning_rate == 0.85
+#         assert T1 in s.origin_mechanisms
+#         assert not T2 in s.origin_mechanisms
+#         assert T3 in s.terminal_mechanisms
