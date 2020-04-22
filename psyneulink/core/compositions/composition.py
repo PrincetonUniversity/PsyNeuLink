@@ -2816,7 +2816,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-        # self._check_feedback(scheduler=scheduler, context=context)
         self._determine_node_roles(context=context)
         self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
@@ -2837,16 +2836,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             logger.debug('Removing', vertex)
             for parent in vertex.parents:
                 for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
                     child.source_types[parent] = vertex.feedback
                     self._graph_processing.connect_vertices(parent, child)
-            # ensure that children get handled
-            if len(vertex.parents) == 0:
-                for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
-                    child.source_types[parent] = vertex.feedback
 
             for node in cur_vertex.parents + cur_vertex.children:
                 logger.debug(
@@ -4364,73 +4355,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections and not existing_projections_in_composition:
                 return existing_projections
         return False
-
-    def _check_feedback(self, scheduler, context=None):
-        # FIX: 10/2/19 - SHOULD REALLY HANDLE THIS BY DETECTING LOOPS DIRECTLY
-        """Check that feedback specification is required for projections to which it has been assigned
-        Rationale:
-            if, after removing the feedback designation of a Projection, structural and functional dependencies
-            are the same, then the designation is not needed so remove it.
-        Note:
-        - graph_processing.dependency_dict is used as indication of structural dependencies
-        - scheduler.dependency_dict is used as indication of functional (execution) dependencies
-        """
-
-        if scheduler:
-            # If an external scheduler is provided, update it with current processing graph
-            try:
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            # Ignore any cycles at this point
-            except ValueError:
-                pass
-        else:
-            scheduler = self.scheduler
-
-        already_tested = []
-        for vertex in [v for v in self.graph.vertices if v.feedback is EdgeType.FLEXIBLE]:
-            # projection = vertex.component
-            # assert isinstance(projection, Projection), \
-            #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
-            if vertex in already_tested:
-                continue
-
-            v_set = [v for v in self.graph.vertices
-                     if (v.feedback is EdgeType.FLEXIBLE
-                         and v.component.sender.owner is vertex.component.sender.owner)]
-
-            for v in v_set:
-                v.feedback = False
-
-            # Update Composition's graph_processing
-            self._update_processing_graph()
-
-            # Update scheduler's consideration_queue based on update of graph_processing to detect any new cycles
-            try:
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            except ValueError:
-                # If a cycle is detected, leave feedback alone
-                feedback = 'leave'
-
-            # If, when feedback is False, the dependency_dicts for the structural and execution are the same,
-            #    then no need for feedback specification, so remove it
-            #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
-            if self.graph_processing.dependency_dict == scheduler.dependency_dict:
-                feedback = 'remove'
-            else:
-                feedback = 'leave'
-
-            # Remove nodes that send and receive feedback Projection from feedback_senders and feedback_receivers lists
-            if feedback == 'remove':
-                self.feedback_senders.remove(v.component.sender.owner)
-                self.feedback_receivers.remove(v.component.receiver.owner)
-            # Otherwise, restore feedback assignment and scheduler's consideration_queue
-            else:
-                for v in v_set:
-                    v.feedback = True
-                self._update_processing_graph()
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            already_tested.extend(v_set)
-
 
     # ******************************************************************************************************************
     #                                            PATHWAYS
