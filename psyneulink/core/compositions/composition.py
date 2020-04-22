@@ -931,10 +931,9 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the C
    <Composition.external_input_ports>` of a `nested Composition <Composition_Nested>`, based on the Mechanisms
    (and/or further nested Compositions) that constitute its `INPUT` `Nodes <Composition_Nodes>`.
 
-These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>,
-or the return value of the function or generator used for `programmatic specification
-<Composition_Programmatic_Inputs>`.  These are described in detail in the following sections (also see
-`examples <Composition_Examples_Input>`).
+These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>, or the
+return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
+of inputs.  These are described in detail in the following sections (also see `examples <Composition_Examples_Input>`).
 
 COMMENT:
     ****************************************** INPUT DICT ************************************************************
