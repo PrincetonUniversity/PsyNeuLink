@@ -1,10 +1,9 @@
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import Projection
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
-from psyneulink.core.globals.utilities import NodeRole
 
 """To be deprecated
 """

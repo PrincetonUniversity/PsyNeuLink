@@ -290,13 +290,13 @@ class TestConvergentLearning:
         lm = mech_2.efferents[0].learning_mechanism
         assert 'LearningMechanism for MappingProjection from M3 to M4' in [m.name for m in S.learningGraph[lm]]
         lm = mech_3.efferents[0].learning_mechanism
-        assert 'M4 ComparatorMechanism' in [m.name for m in S.learningGraph[lm]]
+        assert 'M4 LEARNING_OBJECTIVE' in [m.name for m in S.learningGraph[lm]]
         cm = mech_4.efferents[0].receiver.owner
         assert cm in S.learningGraph.keys()
         lm = mech_5.efferents[0].learning_mechanism
         assert 'LearningMechanism for MappingProjection from M6 to M4' in [m.name for m in S.learningGraph[lm]]
         lm = mech_6.efferents[0].learning_mechanism
-        assert 'M4 ComparatorMechanism' in [m.name for m in S.learningGraph[lm]]
+        assert 'M4 LEARNING_OBJECTIVE' in [m.name for m in S.learningGraph[lm]]
 
 
 class TestInitialize:

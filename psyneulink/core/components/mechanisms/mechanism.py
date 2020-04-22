@@ -686,7 +686,7 @@ OutputPort(s):
 
 The labels specified in these dictionaries can be used to:
 
-    - specify items in the `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>` arguments of the
+    - specify items in the `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>` arguments of the
       `run <System.run>` method of a `System`
     - report the values of the InputPort(s) and OutputPort(s) of a Mechanism
     - visualize the inputs and outputs of the System's Mechanisms
@@ -729,7 +729,7 @@ applied to a Mechanism with multiple InputPort, only the index zero InputPort wo
 
 *Using Label Dictionaries*
 
-When using labels to specify items in the `inputs <Composition_Run_Inputs>` arguments of the `run <System.run>` method, labels may
+When using labels to specify items in the `inputs <Composition_Execution_Inputs>` arguments of the `run <System.run>` method, labels may
 directly replace any or all of the `InputPort values <InputPort.value>` in an input specification dictionary. Keep in
 mind that each label must be specified in the `input_labels_dict <Mechanism_Base.input_labels_dict>` of the Origin
 Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
@@ -750,8 +750,8 @@ the input dictionary.
 The same general rules apply when using labels to specify `target values <Run_Targets>` for a pathway with learning.
 With target values, however, the labels must be included in the `output_labels_dict <Mechanism_Base.output_labels_dict>`
 of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms <LearningMechanism_Targets>`), or in
-other words, the last Mechanism in the `learning sequence <Process_Learning_Sequence>`. This is the same Mechanism used
-to specify target values for a particular learning sequence in the `targets dictionary <Run_Targets>`.
+other words, the last Mechanism in a `learning pathway <LearningMechanism_Multilayer_Learning>`. This is the same
+Mechanism used to specify target values for a particular learning pathway in the `targets dictionary <Run_Targets>`.
 
         >>> input_labels_dict_M1 = {"red": [[1]],
         ...                         "green": [[0]]}
@@ -2190,7 +2190,7 @@ class Mechanism_Base(Mechanism):
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
             of the Mechanism's `input_ports  <Mechanism_Base.input_ports>`, and each item must be compatible with the
             format (number and type of elements) of the `variable <InputPort.InputPort.variable>` of the
-            corresponding InputPort (see `Run Inputs <Composition_Run_Inputs>` for details of input
+            corresponding InputPort (see `Run Inputs <Composition_Execution_Inputs>` for details of input
             specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
@@ -2207,7 +2207,7 @@ class Mechanism_Base(Mechanism):
 
         Mechanism's output_values : List[value]
             list with the `value <OutputPort.value>` of each of the Mechanism's `OutputPorts
-            <Mechanism_OutputPorts>` after either one `TIME_STEP` or a `TRIAL`.
+            <Mechanism_OutputPorts>` after either one `TIME_STEP` or a `TRIAL <TimeScale.TRIAL>`.
 
         """
 
@@ -2382,7 +2382,7 @@ class Mechanism_Base(Mechanism):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Run_Inputs` for a detailed
+            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Execution_Inputs` for a detailed
             description of formatting requirements and options).
 
         num_trials: int
@@ -3381,19 +3381,22 @@ class Mechanism_Base(Mechanism):
         if not isinstance(ports, (list, ContentAddressableList)):
             ports = [ports]
 
-        def delete_port_Projections(proj_list):
+        def delete_port_Projections(proj_list, port):
             for proj in proj_list:
-                type(proj)._delete_projection(proj)
+                try:
+                    type(proj)._delete_projection(proj)
+                except:
+                    raise MechanismError(f"PROGRAM ERROR: {proj} not found when removing {port} from {self.name}.")
 
         for port in ports:
 
-            delete_port_Projections(port.mod_afferents)
+            delete_port_Projections(port.mod_afferents, port)
 
             if port in self.input_ports:
                 if isinstance(port, str):
                     port = self.input_ports[port]
                 index = self.input_ports.index(port)
-                delete_port_Projections(port.path_afferents)
+                delete_port_Projections(port.path_afferents, port)
                 del self.input_ports[index]
                 # If port is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
@@ -3423,7 +3426,7 @@ class Mechanism_Base(Mechanism):
                     index = self.output_ports.index(port)
                 else:
                     index = self.output_ports.index(self.output_ports[port])
-                delete_port_Projections(port.efferents)
+                delete_port_Projections(port.efferents, port)
                 del self.output_values[index]
                 del self.output_ports[port]
                 # If port is subclass of OutputPort:

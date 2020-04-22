@@ -8,15 +8,17 @@ import typecheck as tc
 
 # Semantic Network:
 
-#  Represention  Property  Quality  Action
-#           \________\_______/_______/
+#    (REP_OUT)  (PROP_OUT) (QUAL_OUT) (ACT_OUT)
+#  Represention  Property    Quality   Action
+#           \________\_________/________/
 #                        |
 #                 Relations_Hidden
 #                   _____|_____
 #                  /           \
 #   Representation_Hidden  Relations_Input
+#                /           (REL_IN)
 #               /
-#   Representation_Input
+#   Representation_Input (REP_IN)
 
 # Construct Mechanisms
 rep_in = TransferMechanism(size=10, name='REP_IN')

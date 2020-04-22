@@ -153,9 +153,9 @@ use (e.g., `OptimizationControlMechanism`);  in those cases, they use each Contr
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute contains the value assigned to it by the ControlMechanism
-at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
-`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
-`last_intensity` attribute.
+at the end of the previous `TRIAL <TimeScale.TRIAL>` (i.e., when the ControlMechanism last executed --  see
+`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL <TimeScale.TRIAL>` is
+assigned to the `last_intensity` attribute.
 
 *Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its `variable
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
@@ -175,8 +175,8 @@ case, the ControlSignal's costs can't be computed and will all be assigned None.
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
 The `intensity` is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter(s) for which the
-ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`;
-its value from the previous `TRIAL` is assigned to the `last_intensity` attribute.
+ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL
+<TimeScale.TRIAL>`; its value from the previous `TRIAL <TimeScale.TRIAL>` is assigned to the `last_intensity` attribute.
 
 .. _ControlSignal_Costs:
 
@@ -238,9 +238,9 @@ Execution
 
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism <ControlMechanism>` to
 which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation
-<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
-that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
-`value <ParameterPort.value>` \\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignal projects.
+<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for that
+`TRIAL <TimeScale.TRIAL>`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to
+set the `value <ParameterPort.value>`\\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignalprojects.
 
 Recall that the ParameterPort value is referenced anywhere that the controlled parameter is used in computation, and
 that it does not update until the component to which the ParameterPort belongs executes. If the distinction between the
@@ -251,7 +251,7 @@ ParameterPort is unfamiliar, see `Parameter Port documentation <ParameterPort>` 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
 attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
 evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
-<ControlSignal.allocation>` for the next `TRIAL`.
+<ControlSignal.allocation>` for the next `TRIAL <TimeScale.TRIAL>`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
@@ -353,10 +353,11 @@ function <ControlSignal_Costs>` can be modulated by another ControlSignal::
   ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
   ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
   >>> comp = Composition()
-  >>> comp.add_linear_processing_pathway(pathway=[mech,
-  ...                                             ctl_mech_A,
-  ...                                             ctl_mech_B
-  ...                                             ])
+  >>> pway = comp.add_linear_processing_pathway(pathway=[mech,
+  ...                                              ctl_mech_A,
+  ...                                              ctl_mech_B
+  ...                                              ])
+  >>> pway.pathway
   [(ProcessingMechanism my_mech)]
 
 Here, the `ControlSignal` of ``ctl_mech_A`` is configured to monitor the output of ``mech``, modulate the
@@ -366,7 +367,9 @@ default), and to implement its `intensity_cost_fct <TransferWithCosts.intensity_
 ``mech``, but to modulate the `multiplicative_param <Function_Modulatory_Params>` of the `intensity_cost_fct
 <TransferWithCosts.intensity_cost_fct>` of ``ctl_mech_A``\\s ControlSignal.  The default for the `intensity_cost_fct
 <TransferWithCosts.intensity_cost_fct>` is `Exponential`, the `multiplicative_param <Function_Modulatory_Params>`
-of which is `rate <Exponential>`.  When the ``comp`` is run with an input of ``3``, since the default `function
+of which is `rate <Exponential>`.  (Note that the pathway returned from the call to `add_linear_processing_pathway
+<Composition.add_linear_processing_pathway>` contains only ``my_mech``, since that is the only `ProcessingMechanism`
+in the `Pathway`. When the ``comp`` is run with an input of ``3``, since the default `function
 <Mechanism_Base.function>` for ``mech`` is `Linear` with a `slope <Linear.slope>` of 1 and an `intercept <Linear>`
 of 0, its output is also ``3``, which is used by both ``ctl_mech_A`` and ``ctl_mech_B`` as their `allocation
 <ControlSignal.allocation>`.  Since the ControlSignals of both use their default `function <ControlSignal>` ——

@@ -181,7 +181,7 @@ class TestLCControlMechanism:
     
         pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
         comp = pnl.Composition()
-        learning_components = comp.add_backpropagation_learning_pathway(
+        backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=pathway,
             loss_function=None
         )
@@ -191,7 +191,7 @@ class TestLCControlMechanism:
         stim_list = {
             Input_Layer: [[-1, 30]],
             Control_Mechanism: [1.0],
-            learning_components[pnl.TARGET_MECHANISM]: [[0, 0, 1]]}
+            backprop_pathway.target: [[0, 0, 1]]}
     
         comp.learn(num_trials=3, inputs=stim_list)
     

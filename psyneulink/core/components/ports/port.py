@@ -291,7 +291,7 @@ Mechanism; if its owner not specified, then its initialization is `deferred <Por
 Its initialization is completed automatically when it is assigned to an owner `Mechanism <Mechanism>` using the
 owner's `add_ports <Mechanism_Base.add_ports>` method.  If the Port is not assigned to an owner, it will not be
 functional (i.e., used during the execution of `Mechanisms <Mechanism_Execution>` and/or `Compositions
-<Composition_Run>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
+<Composition_Execution>`, irrespective of whether it has any `Projections <Projection>` assigned to it.
 
 
 .. _Port_Structure:
@@ -1808,6 +1808,19 @@ class Port_Base(Port):
                 self.owner.aux_components.append((projection, feedback))
             return projection
 
+    def _remove_projection_from_port(self, projection, context=None):
+        """Remove Projection entry from Port.efferents."""
+        del self.efferents[self.efferents.index(projection)]
+
+    def _remove_projection_to_port(self, projection, context=None):
+        """Remove Projection entry from Port.path_afferents and reshape variable accordingly."""
+        shape = list(self.defaults.variable.shape)
+        # Reduce outer dimension by one
+        shape[0]-=1
+        self.defaults.variable = np.resize(self.defaults.variable, shape)
+        self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
+        del self.path_afferents[self.path_afferents.index(projection)]
+
     def _get_primary_port(self, mechanism):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
                          format(self.__class__.__name__))
@@ -2216,11 +2229,13 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
+        # MODIFIED 4/4/20 NEW: [PER JAN]
         if len(self.path_afferents) > 0:
             assert len(func_input_type) == len(self.path_afferents), \
-              "{} shape mismatch: {}(port: {}, func: {}) vs. {} path_afferents".format(
-              self, func_input_type, self.defaults.variable,
-              self.function.defaults.variable, len(self.path_afferents))
+                "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
+                    self, func_input_type, self.defaults.variable,
+                    self.function.defaults.variable, len(self.path_afferents))
+        # MODIFIED 4/4/20 END
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:

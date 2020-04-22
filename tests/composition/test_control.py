@@ -143,7 +143,7 @@ class TestControlSpecification:
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
-        ### add the controller to the Composition before we add the relevant mechanisms
+        ### add the controller to the Composition before adding the relevant Mechanisms
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 features=[Input.input_port, reward.input_port],

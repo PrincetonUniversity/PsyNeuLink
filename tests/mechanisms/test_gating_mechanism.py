@@ -42,7 +42,7 @@ def test_gating_with_composition():
 
     pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
     comp = Composition()
-    learning_components = comp.add_backpropagation_learning_pathway(pathway=pathway,
+    backprop_pathway = comp.add_backpropagation_learning_pathway(pathway=pathway,
                                                                     loss_function=None)
     # c.add_linear_processing_pathway(pathway=z)
     comp.add_node(Gating_Mechanism)
@@ -50,7 +50,7 @@ def test_gating_with_composition():
     stim_list = {
         Input_Layer: [[-1, 30]],
         Gating_Mechanism: [1.0],
-        learning_components[TARGET_MECHANISM]: [[0, 0, 1]]}
+        backprop_pathway.target: [[0, 0, 1]]}
 
     comp.learn(num_trials=3, inputs=stim_list)
 

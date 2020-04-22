@@ -26,24 +26,25 @@ https://princetonuniversity.github.io/PsyNeuLink/Keywords.html
 __all__ = [
     'ACCUMULATOR_INTEGRATOR', 'ACCUMULATOR_INTEGRATOR_FUNCTION',
     'ADAPTIVE', 'ADAPTIVE_INTEGRATOR_FUNCTION', 'ADAPTIVE_MECHANISM', 'ADD_INPUT_PORT', 'ADD_OUTPUT_PORT',
-    'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE',
+    'ADDITIVE', 'ADDITIVE_PARAM', 'AFTER', 'ALL', 'ALLOCATION_SAMPLES', 'ANGLE', 'ANY',
     'ARGUMENT_THERAPY_FUNCTION', 'ARRANGEMENT', 'ASSERT', 'ASSIGN', 'ASSIGN_VALUE', 'AUTO','AUTO_ASSIGN_MATRIX',
-    'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM',
+    'AUTO_ASSOCIATIVE_PROJECTION', 'HAS_INITIALIZERS', 'AUTOASSOCIATIVE_LEARNING_MECHANISM', 'LEARNING_MECHANISMS',
     'BACKPROPAGATION_FUNCTION', 'BEFORE', 'BETA', 'BIAS', 'BOLD', 'BOTH', 'BOUNDS', 'BUFFER_FUNCTION',
     'CHANGED', 'CLAMP_INPUT', 'COMBINATION_FUNCTION_TYPE', 'COMBINE', 'COMBINE_MEANS_FUNCTION',
     'COMBINE_OUTCOME_AND_COST_FUNCTION', 'COMMAND_LINE', 'comparison_operators', 'COMPARATOR_MECHANISM', 'COMPONENT',
     'COMPONENT_INIT', 'COMPONENT_PREFERENCE_SET', 'COMPOSITION', 'COMPOSITION_INTERFACE_MECHANISM',
     'CONCATENATE_FUNCTION', 'CONDITION', 'CONDITIONS', 'CONSTANT', 'ContentAddressableMemory_FUNCTION', 'CONTEXT',
-    'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS', 'CONTROL_PROJECTIONS',
-    'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS', 'CONTROLLER', 'CORRELATION',
-    'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY', 'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
+    'CONTROL', 'CONTROL_MECHANISM', 'CONTROL_PATHWAY', 'CONTROL_PROJECTION',  'CONTROL_PROJECTION_PARAMS',
+    'CONTROL_PROJECTIONS', 'CONTROL_SIGNAL', 'CONTROL_SIGNAL_SPECS', 'CONTROL_SIGNALS', 'CONTROLLED_PARAMS',
+    'CONTROLLER', 'CONTROLLER_OBJECTIVE', 'CORRELATION', 'COSINE', 'COST_FUNCTION', 'COUNT', 'CROSS_ENTROPY',
+    'CURRENT_EXECUTION_TIME', 'CUSTOM_FUNCTION', 'CYCLE',
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_SYSTEM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
     'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
     'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
     'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
-    'EID_SIMULATION', 'EID_FROZEN', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'EQUAL',
+    'EID_SIMULATION', 'EID_FROZEN', 'EITHER', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'EQUAL',
     'ERROR_DERIVATIVE_FUNCTION', 'EUCLIDEAN', 'EVC_MECHANISM', 'EVC_SIMULATION', 'EXAMPLE_FUNCTION_TYPE',
     'EXECUTE_UNTIL_FINISHED', 'EXECUTING', 'EXECUTION', 'EXECUTION_COUNT', 'EXECUTION_ID', 'EXECUTION_PHASE',
     'EXPONENTIAL', 'EXPONENT', 'EXPONENTIAL_DIST_FUNCTION', 'EXPONENTIAL_FUNCTION', 'EXPONENTS',
@@ -57,13 +58,15 @@ __all__ = [
     'HARD_CLAMP', 'HEBBIAN_FUNCTION', 'HETERO', 'HIGH', 'HOLLOW_MATRIX', 'IDENTITY_MATRIX', 'INCREMENT', 'INDEX',
     'INIT_EXECUTE_METHOD_ONLY', 'INIT_FULL_EXECUTE_METHOD', 'INIT_FUNCTION_METHOD_ONLY', 'INITIAL_VALUES',
     'INITIALIZE_CYCLE', 'INITIALIZATION', 'INITIALIZED', 'INITIALIZER', 'INITIALIZING', 'INITIALIZATION_STATUS',
-    'INPUT', 'INPUT_LABELS_DICT', 'INPUT_PORT', 'INPUT_PORTS', 'INPUT_PORT_PARAMS', 'INPUT_PORT_VARIABLES',
-    'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION',
-    'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT', 'INTERNAL',
-    'INTERNAL_ONLY', 'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
-    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNING', 'LEARNED_PARAM',
-    'LEARNED_PROJECTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_MECHANISM', 'LEARNING_PROJECTION',
-    'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL', 'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
+    'INPUT', 'INPUT_CIM_NAME', 'INPUT_LABELS_DICT', 'INPUT_PORT', 'INPUT_PORTS', 'INPUT_PORT_PARAMS',
+    'INPUT_PORT_VARIABLES', 'INPUTS_DIM', 'INSTANTANEOUS_MODE_VALUE', 'INTEGRATION_TYPE', 'INTEGRATOR_FUNCTION',
+    'INTEGRATOR_FUNCTION', 'INTEGRATOR_FUNCTION_TYPE', 'INTEGRATOR_MECHANISM', 'INTEGRATOR_MODE_VALUE', 'INTERCEPT',
+    'INTERNAL', 'INTERNAL_ONLY',
+    'K_VALUE', 'KOHONEN_FUNCTION', 'KOHONEN_MECHANISM', 'KOHONEN_LEARNING_MECHANISM', 'KWTA_MECHANISM',
+    'LABELS', 'LCA_MECHANISM', 'LEAKY_COMPETING_INTEGRATOR_FUNCTION', 'LEAK', 'LEARNED_PARAM', 'LEARNED_PROJECTIONS',
+    'LEARNING', 'LEARNING_FUNCTION', 'LEARNING_FUNCTION_TYPE', 'LEARNING_OBJECTIVE', 'LEARNING_MECHANISM',
+    'LEARNING_PATHWAY', 'LEARNING_PROJECTION', 'LEARNING_PROJECTION_PARAMS', 'LEARNING_RATE', 'LEARNING_SIGNAL',
+    'LEARNING_SIGNAL_SPECS', 'LEARNING_SIGNALS',
     'LESS_THAN', 'LESS_THAN_OR_EQUAL', 'LINEAR', 'LINEAR_COMBINATION_FUNCTION', 'LINEAR_FUNCTION',
     'LINEAR_MATRIX_FUNCTION', 'LOG_ENTRIES', 'LOGISTIC_FUNCTION', 'LOW', 'LVOC_CONTROL_MECHANISM', 'L0', 'L1',
     'MAPPING_PROJECTION', 'MAPPING_PROJECTION_PARAMS', 'MASKED_MAPPING_PROJECTION',
@@ -80,29 +83,29 @@ __all__ = [
     'MODEL_SPEC_ID_RECEIVER_PORT',
     'MODEL_SPEC_ID_PARAMETER_SOURCE', 'MODEL_SPEC_ID_PARAMETER_VALUE', 'MODEL_SPEC_ID_TYPE', 'MSE',
     'MULTIPLICATIVE', 'MULTIPLICATIVE_PARAM', 'MUTUAL_ENTROPY',
-    'NAME', 'NEWEST',  'NODE', 'NodeRoles', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
+    'NAME', 'NEWEST',  'NODE', 'NOISE', 'NORMAL_DIST_FUNCTION', 'NORMED_L0_SIMILARITY', 'NOT_EQUAL',
     'NUM_EXECUTIONS_BEFORE_FINISHED',
-    'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST',
-    'ON',  'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION',
-    'OUTCOME', 'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_LABELS_DICT',
-    'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS', 'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE',
-    'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
+    'OBJECTIVE_FUNCTION_TYPE', 'OBJECTIVE_MECHANISM', 'OBJECTIVE_MECHANISM_OBJECT', 'OFF', 'OFFSET', 'OLDEST', 'ON',
+    'ONLINE', 'OPERATION', 'OPTIMIZATION_FUNCTION_TYPE', 'ORIGIN','ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION', 'OUTCOME',
+    'OUTCOME_FUNCTION', 'OUTPUT', 'OUTPUT_CIM_NAME', 'OUTPUT_LABELS_DICT', 'OUTPUT_PORT', 'OUTPUT_PORT_PARAMS',
+    'output_port_spec_to_parameter_name', 'OUTPUT_PORTS', 'OUTPUT_TYPE', 'OVERRIDE', 'OVERRIDE_PARAM', 'OVERWRITE',
     'OWNER', 'OWNER_EXECUTION_COUNT', 'OWNER_EXECUTION_TIME', 'OWNER_VALUE', 'OWNER_VARIABLE',
-    'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS',
-    'PARAMETER_PORTS', 'PARAMS', 'PARAMS_DICT', 'PATHWAY', 'PATHWAY_PROJECTION', 'PEARSON',
+    'PARAMETER', 'PARAMETER_CIM_NAME', 'PARAMETER_PORT', 'PARAMETER_PORT_PARAMS', 'PARAMETER_PORTS', 'PARAMS',
+    'PARAMS_DICT', 'PATHWAY',  'PATHWAY_PROJECTION', 'PEARSON',
     'PREDICTION_MECHANISM', 'PREDICTION_MECHANISMS', 'PREDICTION_MECHANISM_OUTPUT', 'PREDICTION_MECHANISM_PARAMS',
     'PREDICTION_MECHANISM_TYPE', 'PREFS_ARG', 'PREF_BASE_VALUE', 'PREF_CURRENT_VALUE', 'PREFERENCE_SET',
     'PREFERENCE_SET_NAME', 'PREF_LEVEL', 'PREFS', 'PREFS_OWNER', 'PREVIOUS_VALUE', 'PRIMARY', 'PROB', 'PROB_INDICATOR',
     'PROCESS', 'PROCESS_COMPONENT_CATEGORY', 'PROCESS_DEFAULT_MECHANISM', 'PROCESS_DEFAULT_PROJECTION_FUNCTION',
     'PROCESS_EXECUTE', 'PROCESS_INIT', 'PROCESSES', 'PROCESSES_DIM', 'PROCESSING', 'PROCESSING_MECHANISM',
-    'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS', 'PROJECTION_SENDER',
-    'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY', 'QUOTIENT',
+    'PROCESSING_PATHWAY', 'PRODUCT', 'PROGRESS_BAR_CHAR', 'PROJECTION', 'PROJECTION_DIRECTION', 'PROJECTION_PARAMS',
+    'PROJECTION_SENDER', 'PROJECTION_TYPE', 'PROJECTIONS', 'PROJECTION_COMPONENT_CATEGORY', 'QUOTIENT',
     'RANDOM', 'RANDOM_CONNECTIVITY_MATRIX', 'RATE', 'RATIO', 'REARRANGE_FUNCTION', 'RECEIVER', 'RECEIVER_ARG',
     'RECURRENT_TRANSFER_MECHANISM', 'REDUCE_FUNCTION', 'REFERENCE_VALUE', 'REINITIALIZE', 'REINITIALIZE_WHEN',
     'RELU_FUNCTION', 'REST', 'RESULT', 'RESULT', 'ROLES', 'RL_FUNCTION', 'RUN',
-    'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER',
-    'SEPARATOR_BAR', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE', 'SOFT_CLAMP',
-    'SOFTMAX_FUNCTION', 'SOURCE', 'SSE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION', 'STANDARD_OUTPUT_PORTS',
+    'SAMPLE', 'SAVE_ALL_VALUES_AND_POLICIES', 'SCALAR', 'SCALE', 'SCHEDULER', 'SELF', 'SENDER', 'SEPARATOR_BAR',
+    'SHADOW_INPUT_NAME', 'SHADOW_INPUTS', 'SIMPLE', 'SIMPLE_INTEGRATOR_FUNCTION', 'SINGLETON', 'SIZE', 'SLOPE',
+    'SOFT_CLAMP', 'SOFTMAX_FUNCTION', 'SOURCE', 'SSE', 'STABILITY_FUNCTION', 'STANDARD_ARGS', 'STANDARD_DEVIATION',
+    'STANDARD_OUTPUT_PORTS',
     'PORT', 'PORT_COMPONENT_CATEGORY', 'PORT_CONTEXT', 'Port_Name', 'port_params', 'PORT_PREFS', 'PORT_TYPE',
     'port_value', 'PORTS', 'STANDARD_DEVIATION', 'SUBTRACTION', 'SUM',
     'SYSTEM', 'SYSTEM_COMPONENT_CATEGORY', 'SYSTEM_DEFAULT_CONTROLLER', 'SYSTEM_INIT',
@@ -115,91 +118,9 @@ __all__ = [
 ]
 
 
-class NodeRoles:
-    """
-    Attributes
-    ----------
-
-    ORIGIN
-        A `ProcessingMechanism <ProcessingMechanism>` that is the first Mechanism of a `Composition`,
-        and that receives the input to the Composition when it is :ref:`executed or run <Run>`.
-        A Composition may have more than one `ORIGIN` Mechanism.
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        For additional details about `ORIGIN` Mechanisms in Processes, see
-        `Process Mechanisms <Process_Mechanisms>` and `Process Input and Output <Process_Input_And_Output>`;
-        and for Systems see `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-        COMMENT
-
-    INTERNAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is not designated as having any other status.
-
-    CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is *not* an `ORIGIN` Mechanism, and receives a `Projection
-        <Projection>` that closes a recurrent loop in a `Composition`.  If it is an `ORIGIN` Mechanism, then
-        it is simply designated as such (since it will be assigned input and therefore be initialized in any event).
-
-    INITIALIZE_CYCLE
-        A `ProcessingMechanism <ProcessingMechanism>` that is the `sender <Projection_Base.sender>` of a
-        `Projection <Projection>` that closes a loop in a `Composition`, and that is not an `ORIGIN` Mechanism
-        (since in that case it will be initialized in any event). An `initial value  <Run_InitialValues>` can be
-        assigned to such Mechanisms, that will be used to initialize the Composition when it is first run.  For
-        additional information, see `Run <Run_Initial_Values>`.
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        `System Mechanisms <System_Mechanisms>` and
-        `System Input and Initialization <System_Execution_Input_And_Initialization>`.
-        COMMENT
-
-    TERMINAL
-        A `ProcessingMechanism <ProcessingMechanism>` that is the last Mechanism of a `Composition`.
-        A Composition may have more than one `TERMINAL` Mechanism .
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        Note that the `TERMINAL`
-        Mechanism of a process is not necessarily a `TERMINAL` Mechanism of the System to which it belongs,
-        as it may send projections to other processes in the System (see `example
-        <LearningProjection_Output_vs_Terminal_Figure>`).  The `TERMINAL` Mechanisms of a Process or System are listed in
-        its :keyword:`terminalMechanisms` attribute, and can be displayed using its :keyword:`show` method.  For
-        additional details about `TERMINAL` Mechanisms in Processes, see `Process_Mechanisms` and
-        `Process_Input_And_Output`; and for Systems see `System_Mechanisms`.
-        COMMENT
-
-    SINGLETON
-        A `ProcessingMechanism <ProcessingMechanism>` that is the only Mechanism in a `Composition`.
-        It can serve the functions of an `ORIGIN` and/or a `TERMINAL` Mechanism.
-
-    LEARNING
-        A `LearningMechanism <LearningMechanism>` in a `Composition`.
-
-    TARGET
-        A `ProcessingMechanism` that receives the target for a learning sequence.
-        COMMENT:
-        ADD VERSION FOR COMPOSITION
-        A `ComparatorMechanism` of a `Composition` configured for learning that receives a target value
-        from its `execute <ComparatorMechanism.ComparatorMechanism.execute>` or
-        `run <ComparatorMechanism.ComparatorMechanism.execute>` method.
-        It is usually (but not necessarily)
-        associated with the `TERMINAL` Mechanism of the Composition. The `TARGET` Mechanisms of a Process or
-        System are listed in its :keyword:`target_nodes` attribute, and can be displayed using its
-        :keyword:`show` method.  For additional details, see `TARGET Mechanisms <LearningMechanism_Targets>`,
-        `learning sequence <Process_Learning_Sequence>`, and specifying `target values <Run_Targets>`.
-        COMMENT
-
-
-    """
-    def __init__(self):
-        self.ORIGIN = ORIGIN
-        self.INTERNAL = INTERNAL
-        self.CYCLE = CYCLE
-        self.INITIALIZE_CYCLE = INITIALIZE_CYCLE
-        self.TERMINAL = TERMINAL
-        self.SINGLETON = SINGLETON
-        self.LEARNING = LEARNING
-        self.TARGET = TARGET
-
-NODE = 'NODE'
+# **********************************************************************************************************************
+# ******************************************  KEYWORD CLASSES **********************************************************
+# **********************************************************************************************************************
 
 class MatrixKeywords:
     """
@@ -380,6 +301,8 @@ INIT_FUNCTION_METHOD_ONLY = 'init using only the subclass __function__ method'
 # General
 
 ALL = 'all'
+ANY = 'any'
+EITHER = 'either'
 BOTH = 'both'
 MAYBE = 0.5
 
@@ -406,6 +329,7 @@ ONLINE = 'online'
 COUNT = 'COUNT'
 INPUT = 'input'
 OUTPUT = 'output'
+PARAMETER = 'parameter'
 RANDOM = 'random'
 BEFORE = 'before'
 AFTER = 'after'
@@ -464,9 +388,19 @@ FINAL = 'FINAL'
 
 #endregion
 
-#region ----------------------------------------------   COMPONENT   ---------------------------------------------------
+#region ----------------------------------------------   COMPOSITION   -------------------------------------------------
 
 COMPOSITION = 'COMPOSITION'
+INPUT_CIM_NAME = 'INPUT_CIM'
+OUTPUT_CIM_NAME = 'OUTPUT_CIM'
+PARAMETER_CIM_NAME = 'PARAMETER_CIM'
+SHADOW_INPUTS = 'shadow_inputs'
+SHADOW_INPUT_NAME = 'Shadowed input of '
+PATHWAY = "pathway"
+PROCESSING_PATHWAY = "processing_pathway"
+CONTROL_PATHWAY = "control_pathway"
+LEARNING_PATHWAY = "learning_pathway"
+NODE = 'NODE'
 
 #endregion
 
@@ -530,7 +464,6 @@ PROCESSING_MECHANISM = "ProcessingMechanism"
 ADAPTIVE_MECHANISM = "ModulatoryMechanism"
 LEARNING_MECHANISM = "LearningMechanism"
 CONTROL_MECHANISM = "ControlMechanism"
-TARGET_MECHANISM = "TargetMechanism"
 GATING_MECHANISM = 'GatingMechanism'
 AUTOASSOCIATIVE_LEARNING_MECHANISM = 'AutoAssociativeLearningMechanism'
 KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
@@ -712,7 +645,6 @@ TRAINING_SET = 'training set'
 PROCESS = "PROCESS"
 PROCESSES = "processes"
 PROCESS_INIT = 'Process.__init__'
-PATHWAY = "pathway"
 CLAMP_INPUT = "clamp_input"
 SOFT_CLAMP = "soft_clamp"
 HARD_CLAMP = "hard_clamp"
@@ -775,6 +707,8 @@ LEARNING = 'LEARNING'
 SAMPLE = 'SAMPLE'
 TARGET = 'TARGET'
 ERROR = 'ERROR'
+CONTROLLER_OBJECTIVE = 'CONTROLLER_OBJECTIVE'
+LEARNING_OBJECTIVE = 'LEARNING_OBJECTIVE'
 
 RESULTS = 'RESULTS'
 RESULT = 'RESULT'
@@ -800,8 +734,11 @@ port_params = "Port params" # Used in Port specification dict to specify Port pa
 # LearningMechanism:
 LEARNING_SIGNALS = 'learning_signals'
 LEARNING_SIGNAL_SPECS = 'LEARNING_SIGNAL_SPECS'
+LEARNING_FUNCTION = 'learning_function'
 LEARNED_PARAM = 'learned_param'
-LEARNED_PROJECTION = 'learned_projection'
+LEARNED_PROJECTIONS = 'LEARNED_PROJECTIONS'
+LEARNING_MECHANISMS = "LEARNING_MECHANISMS"
+TARGET_MECHANISM = "TARGET_MECHANISM"
 
 # ControlMechanism / EVCControlMechanism / ObjectiveMechanism
 SIMULATIONS = 'simulations'

@@ -18,8 +18,8 @@ Contents
       - `MappingProjection_Learning_Specification`
       - `MappingProjection_Deferred_Initialization`
   * `MappingProjection_Structure`
-      - `MappingProjection_Sender`
-      - `MappingProjection_Receiver`
+      - `MappingProjection_Matrix`
+      - `Mapping_Matrix_ParameterPort`
   * `MappingProjection_Execution`
       - `MappingProjection_Learning`
   * `MappingProjection_Class_Reference`
@@ -37,7 +37,7 @@ A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` 
 value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
 <MappingProjection.receiver>`.
 
-.. _Mapping_Creation_Overview:
+.. _MappingProjection_Creation:
 
 Creating a MappingProjection
 -----------------------------
@@ -244,8 +244,8 @@ the ParameterPort's `mod_afferents <ParameterPort.mod_afferents>` attribute). Th
 occurred due to `learning <MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives
 the MappingProjection is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not
 take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or
-the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
-for an explanation of "lazy" updating).
+the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL <TimeScale.TRIAL>` of execution
+(see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
 
@@ -272,10 +272,10 @@ LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and n
 is, its unmodulated value, conforming to the general protocol for `modulation <ModulatorySignal_Modulation>` in
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the `value
 <ParameterPort.value>` of its *MATRIX* ParameterPort. As noted `above <MappingProjection_Execution>`, however, this does
-not reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterPort's
-`value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
-the MappingProjection is executed in the next `TRIAL` of execution (see :ref:`Lazy Evaluation <LINK>` for an explanation
-of "lazy" updating)
+not reflect any changes due to learning on the current `TRIAL <TimeScale.TRIAL>` of execution; those are assigned to the
+ParameterPort's `value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism
+<Mechanism>` that receives the MappingProjection is executed in the next `TRIAL <TimeScale.TRIAL>` of execution
+(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating)
 
 .. _MappingProjection_Class_Reference:
 
@@ -322,8 +322,8 @@ def _mapping_projection_matrix_getter(owning_component=None, context=None):
 
 def _mapping_projection_matrix_setter(value, owning_component=None, context=None):
     owning_component.function.parameters.matrix.set(value, context)
-    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
-    # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
+    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type
+    # method but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
     owning_component.parameter_ports["matrix"].function.parameters.previous_value.set(value, context)
 
     return value
@@ -418,7 +418,10 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
         """
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True, function_parameter=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        matrix = Parameter(DEFAULT_MATRIX, modulable=True,
+                           function_parameter=True,
+                           getter=_mapping_projection_matrix_getter,
+                           setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -439,7 +442,7 @@ class MappingProjection(PathwayProjection_Base):
 
     projection_sender = OutputPort
 
-    @tc.typecheck
+    # @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,

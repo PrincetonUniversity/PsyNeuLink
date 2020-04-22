@@ -114,12 +114,12 @@ subtypes of ModulatoryMechanism for more specific information about their struct
 Execution
 ---------
 
-LearningMechanism and ControlMechanism are always executed at the end of a `TRIAL`, after all `ProcessingMechanisms
-<ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed; all LearningMechanism
-executed first, and then ControlMechanism.  All modifications made are available during the next `TRIAL`.
-GatingMechanism are executed in the same manner as ProcessingMechanisms;  however, because they almost invariably
-introduce recurrent connections, care must be given to their `initialization and/or scheduling
-<GatingMechanism_Execution>`).
+LearningMechanism and ControlMechanism are always executed at the end of a `TRIAL <TimeScale.TRIAL>`, after all
+`ProcessingMechanisms <ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed;
+all LearningMechanism executed first, and then ControlMechanism.  All modifications made are available during the
+next `TRIAL <TimeScale.TRIAL>`. GatingMechanism are executed in the same manner as ProcessingMechanisms;  however,
+because they almost invariably introduce recurrent connections, care must be given to their `initialization and/or
+scheduling <GatingMechanism_Execution>`).
 
 
 .. _ModulatoryMechanism_Class_Reference:

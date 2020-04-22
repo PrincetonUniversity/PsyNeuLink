@@ -563,8 +563,8 @@ class DDM(ProcessingMechanism):
             or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
             solution calculated by the `function <DDM.function>`); \n
           • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began
-            to execute in the current `TRIAL` or, if it has reached the positive or negative value of the DDM `function
-            <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
+            to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative value of
+            the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
           Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
 
         .. _DDM_PROBABILITY_UPPER_THRESHOLD:

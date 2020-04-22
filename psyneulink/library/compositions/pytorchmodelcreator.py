@@ -1,6 +1,6 @@
 import numpy as np
 from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.core.globals.utilities import NodeRole
+from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm

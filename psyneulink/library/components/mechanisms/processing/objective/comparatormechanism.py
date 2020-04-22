@@ -152,11 +152,13 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.keywords import COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
+from psyneulink.core.globals.keywords import \
+    COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
+from psyneulink.core.globals.utilities import \
+    is_numeric, is_value_spec, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, recursive_update
 from psyneulink.core.globals.utilities import safe_len
 
 __all__ = [
