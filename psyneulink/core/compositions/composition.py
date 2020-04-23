@@ -1818,7 +1818,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_CIM_NAME, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUTS, INPUT_CIM_NAME, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -8852,6 +8852,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         return output_values
+
+    def __call__(self, *args, **kwargs):
+        if not args and not kwargs:
+            return self.results
+        elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
+            if any(PathwayRole.LEARNING in p.roles and p.target in kwargs[INPUTS] for p in self.pathways):
+                self.learn(*args, **kwargs)
+            else:
+                self.run(*args, **kwargs)
+        else:
+            errant_args_str = ", ".join(repr(args) + repr(kwargs))
+            raise CompositionError(f"Composition ({self.name}) called with illegal arguments: {errant_args_str}")
 
     def _update_learning_parameters(self, context):
         pass
