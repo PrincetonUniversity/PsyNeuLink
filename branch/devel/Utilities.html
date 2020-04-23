@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.7.5.4+45.g53cc388 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.7.5.4+53.gaffec75 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+45
+                  0.7.5.4+53
                 </div>
               
             
@@ -964,6 +964,48 @@ Much like</p>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.create_union_set">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">create_union_set</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.create_union_set" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">set</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a <code class="docutils literal"><span class="pre">set</span></code> containing all items in <strong>args</strong>, expanding
+iterables</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="psyneulink.core.globals.utilities.merge_dictionaries">
+<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">merge_dictionaries</code><span class="sig-paren">(</span><em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.merge_dictionaries" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns: a tuple containing:</dt>
+<dd><ul class="first simple">
+<li>a <code class="docutils literal"><span class="pre">dict</span></code> containing each key-value pair in <strong>a</strong> and</li>
+</ul>
+<p><strong>b</strong> where the values of shared keys are sets of their
+original values</p>
+<ul class="simple">
+<li>a <code class="docutils literal"><span class="pre">bool</span></code> indicating if <strong>a</strong> and <strong>b</strong> have any shared</li>
+</ul>
+<p class="last">keys</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal"><span class="pre">dict</span></code>, <code class="xref py py-class docutils literal"><span class="pre">bool</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 </div>
 </div>
@@ -1030,7 +1072,7 @@ Much like</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+45.g53cc388',
+               VERSION:'0.7.5.4+53.gaffec75',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
