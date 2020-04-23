@@ -127,7 +127,7 @@ __all__ = [
     'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
-    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
+    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1756,3 +1756,19 @@ def get_all_explicit_arguments(cls_, func_str):
             break
 
     return all_arguments
+
+
+def create_union_set(*args) -> set:
+    """
+        Returns:
+            a ``set`` containing all items in **args**, expanding
+            iterables
+    """
+    result = set()
+    for item in args:
+        if hasattr(item, '__iter__') and not isinstance(item, str):
+            result = result.union(item)
+        else:
+            result = result.union([item])
+
+    return result
