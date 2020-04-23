@@ -900,12 +900,6 @@ must also specify an input for the Composition's `TARGET_MECHANISM <Composition_
 learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
 
 
-COMMENT:
-    *******************************************************************************************************************
-    ****************************************** INPUT STUFF ************************************************************
-    *******************************************************************************************************************
-COMMENT
-
 .. _Composition_Execution_Inputs:
 
 *Input formats*
@@ -949,11 +943,6 @@ return value of the function or generator used for `programmatic specification <
 of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
 
 
-
-COMMENT:
-    ****************************************** INPUT DICT ************************************************************
-COMMENT
-
 .. _Composition_Input_Dictionary:
 
 Input Dictionary
@@ -967,18 +956,18 @@ entry, unless only a single input value is specified is in an entry, in which ca
 corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
 
 
-.. _Composition_Execution_Inputs_Fig_States:
+.. _Composition_Execution_Input_Dict_Fig:
 
 .. figure:: _static/Composition_input_dict_spec.svg
-   :alt: Example input specifications with input ports
+   :alt: Example input dict specification showing inputs specified for each Node and its InputPorts
 
-   Exaxmple input dict, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
-   an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>``s of input are specified
-   (``[1.0, 2.0]`` and ``[3,0, 4.0]``);  the second entry is for Mechanism ``b`` with two InputPorts, one of
-   which takes an array of length 1 as its input and the other an array of length 2, and for which two `TRIAL
-   <TimesScale.TRIAL>``s of input are also specified (``[[1.0], [2.0, 3.0]]`` and ``[[4.0], [5.0, 6.0]]``);
-   and, finaly, the third entry is for Mechanism ``c`` that has only one InputPort that takes an array of
-   length 1, and for which only one input is specified (``[1.0]``), so this is provided as the input to
+   Exaxmple input dict specification, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
+   an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>``s worth of input are specified
+   (``[1.0, 2.0]`` and ``[3,0, 4.0]``);  the second entry is for Mechanism ``b`` with two InputPorts, one of which
+   takes an array of length 1 as its input and the other an array of length 2, and for which two `TRIAL
+   <TimesScale.TRIAL>``s worth of input are also specified (``[[1.0], [2.0, 3.0]]`` and ``[[4.0], [5.0, 6.0]]``);
+   and, finaly, a third entry is for Mechanism ``c`` with only one InputPort that takes an array of length 1 as its
+   input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
    Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
 
 Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
@@ -988,251 +977,8 @@ shape of the input value must be compatible with the shape of the Node's `extrer
 <Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
 a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
 may vary;  in some case shorthand notations are allowed, as described in the `examples
-<Composition_Input_Specification_Examples>` below.
+<Composition_Examples_Input_Dictionary>` below.
 
-COMMENT:
-    FIRST INPUT EXAMPLE:
-COMMENT
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-        ...                           default_variable=[[0.0, 0.0]])
-        >>> b = pnl.TransferMechanism(name='b',
-        ...                           default_variable=[[0.0], [0.0]])
-        >>> c = pnl.TransferMechanism(name='c')
-
-        >>> pathway1 = [a, c]
-        >>> pathway2 = [b, c]
-
-        >>> comp = Composition(name='comp', pathways=[patway1, pathway2])
-
-        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
-        ...                     b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-.. note::
-    A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
-    element is the value of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
-    the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
-    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
-    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
-    and therefore its `external_input_values <Mechanism_Base.external_input_values>`, and so should not receive an
-    input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
-    and `external_input_values <Composition.external_input_values>` of a Composition, based on the Mechanisms and/or
-    `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
-
-If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
-the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
-specified, the Composition executes five times.
-
-+----------------------+-------+------+------+------+------+
-| Trial #              |0      |1     |2     |3     |4     |
-+----------------------+-------+------+------+------+------+
-| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
-+----------------------+-------+------+------+------+------+
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a')
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-The number of inputs specified **must** be the same for all Nodes in the input dictionary (except for any Nodes for
-which only one input is specified). In other words, all of the values in the input dictionary must have the same length
-as each other (or length 1).
-
-If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
-are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
-five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
-0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
-
-+----------------------+-------+------+------+------+------+------+------+
-| Trial #              |0      |1     |2     |3     |4     |5     |6     |
-+----------------------+-------+------+------+------+------+------+------+
-| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
-+----------------------+-------+------+------+------+------+------+------+
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a')
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
-
-        >>> comp.run(inputs=input_dictionary,
-        ...          num_trials=7)
-
-
-.. _Composition_Input_Specification_Examples:
-
-For convenience, condensed versions of the input specification described above are also accepted in the following
-situations:
-
-* **Case 1:** `INPUT` `Node <Composition_Nodes>` **has only one InputPort**
-+--------------------------+-------+------+------+------+------+
-| Trial #                  |0      |1     |2     |3     |4     |
-+--------------------------+-------+------+------+------+------+
-| Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
-+--------------------------+-------+------+------+------+------+
-
-Complete input specification:
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a')
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
-
-        >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
-
-        >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-* **Case 2: Only one input is provided for the** `INPUT` `Node <Composition_Nodes>`
-
-+--------------------------+------------------+
-| Trial #                  |0                 |
-+--------------------------+------------------+
-| Input to **Mechanism a** |[[1.0], [2.0]]    |
-+--------------------------+------------------+
-
-Complete input specification:
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-                                      default_variable=[[0.0], [0.0]])
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0], [2.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one
-`TRIAL <TimeScale.TRIAL>`:
-
-        >>> input_dictionary = {a: [[1.0], [2.0]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-* **Case 3: The same input is used on all** `TRIAL <TimeScale.TRIAL>`\\s
-
-+--------------------------+----------------+-----------------+----------------+----------------+----------------+
-| Trial #                  |0               |1                |2               |3               |4               |
-+--------------------------+----------------+-----------------+----------------+----------------+----------------+
-| Input to **Mechanism a** | [[1.0], [2.0]] | [[1.0], [2.0]]  | [[1.0], [2.0]] | [[1.0], [2.0]] | [[1.0], [2.0]] |
-+--------------------------+----------------+-----------------+----------------+----------------+----------------+
-
-Complete input specification:
-
-::
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-        ...                           default_variable=[[0.0], [0.0]])
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-..
-
-Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
-
-::
-
-        >>> input_dictionary = {a: [[1.0], [2.0]]}
-
-        >>> comp.run(inputs=input_dictionary,
-        ...          num_trials=5)
-..
-
-* **Case 4: There is only one** `INPUT` `Node <Composition_Nodes>`
-
-+--------------------------+-------------------+-------------------+
-| Trial #                  |0                  |1                  |
-+--------------------------+-------------------+-------------------+
-| Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
-+--------------------------+-------------------+-------------------+
-
-Complete input specification:
-
-::
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-        ...                           default_variable=[[1.0, 2.0, 3.0]])
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
-
-        >>> comp.run(inputs=input_dictionary)
-..
-
-Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
-
-::
-
-        >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
-
-        >>> comp.run(inputs=input_list)
-..
-
-COMMENT:
-    ****************************************** INPUT FUNCTIONS ********************************************************
-COMMENT
 
 .. _Composition_Programmatic_Inputs:
 
@@ -1378,12 +1124,6 @@ Environment.
         return {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
 
     comp.run(inputs=input_dictionary)
-COMMENT
-
-COMMENT:
-    *************************************************************************************************************
-    ****************************************** END INPUT ********************************************************
-    *************************************************************************************************************
 COMMENT
 
 
@@ -1660,7 +1400,6 @@ Examples
     >>> comp_1_output = comp_1.run(inputs=input_dict)
     >>> comp_2_output = comp_2.run(inputs=input_dict)
 
-00000000
 
 *Create outer Composition:*
 
@@ -1714,9 +1453,268 @@ brevity:*
 *Input Formats*
 ~~~~~~~~~~~~~~~
 
+.. _Composition_Examples_Input_Dictionary:
+
+Examples of Input Dictionary Specifications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following is an example in which the **inputs** argument of the `run <Composition.run>` method is specified
+as an `input dictionary <Composition_Input_Dictionary>`, with entries for the two `INPUT` `Nodes <Composition_Nodes>`
+of the `Composition`::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[0.0, 0.0]])
+        >>> b = pnl.TransferMechanism(name='b',
+        ...                           default_variable=[[0.0], [0.0]])
+        >>> c = pnl.TransferMechanism(name='c')
+
+        >>> pathway1 = [a, c]
+        >>> pathway2 = [b, c]
+
+        >>> comp = Composition(name='comp', pathways=[patway1, pathway2])
+
+        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+        ...                     b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Since the specification of the `default_variable <Component_Variable>` for Mechanism ``a`` is a single array of
+length 2, it is constructed with a single `InputPort` (see `Mechanism_InputPorts`) that takes an array of that
+shape as its input; therefore, the input value specified for each `TRIAL <TimeScale.TRIAL>` is a length 2 array
+(``[1.0, 1.0]``).  In contrast, since the `default_variable <Component_Variable>` for Mechanism ``b`` is two
+length 1 arrays, so it is constructed with two InputPorts, each of which takes a length 1 array as its input;
+therefore, the input specified for each `TRIAL <TimeScale.TRIAL>` must be two length 1 arrays.  See `figure
+<Composition_Execution_Input_Dict_Fig>` for a graphic depiction of the format for an input dictionary.
+
+.. note::
+    A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
+    element is the value of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+    the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
+    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
+    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
+    and therefore its `external_input_values <Mechanism_Base.external_input_values>`, and so should not receive an
+    input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
+    and `external_input_values <Composition.external_input_values>` of a Composition, based on the Mechanisms and/or
+    `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
+
+If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
+the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
+specified, the Composition executes five times.
+
++----------------------+-------+------+------+------+------+
+| Trial #              |0      |1     |2     |3     |4     |
++----------------------+-------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
++----------------------+-------+------+------+------+------+
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+The number of inputs specified **must** be the same for all Nodes in the input dictionary (except for any Nodes for
+which only one input is specified). In other words, all of the values in the input dictionary must have the same length
+as each other (or length 1).
+
+If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
+are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
+five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
+0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
+
++----------------------+-------+------+------+------+------+------+------+
+| Trial #              |0      |1     |2     |3     |4     |5     |6     |
++----------------------+-------+------+------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
++----------------------+-------+------+------+------+------+------+------+
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary,
+        ...          num_trials=7)
+
+
+
+For convenience, condensed versions of the input specification described above are also accepted in the following
+situations:
+
+* **Case 1:** `INPUT` `Node <Composition_Nodes>` **has only one InputPort**
++--------------------------+-------+------+------+------+------+
+| Trial #                  |0      |1     |2     |3     |4     |
++--------------------------+-------+------+------+------+------+
+| Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
++--------------------------+-------+------+------+------+------+
+
+Complete input specification:
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
+
+        >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
+
+        >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+* **Case 2: Only one input is provided for the** `INPUT` `Node <Composition_Nodes>`
+
++--------------------------+------------------+
+| Trial #                  |0                 |
++--------------------------+------------------+
+| Input to **Mechanism a** |[[1.0], [2.0]]    |
++--------------------------+------------------+
+
+Complete input specification:
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+                                      default_variable=[[0.0], [0.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0], [2.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one
+`TRIAL <TimeScale.TRIAL>`:
+
+        >>> input_dictionary = {a: [[1.0], [2.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+* **Case 3: The same input is used on all** `TRIAL <TimeScale.TRIAL>`\\s
+
++--------------------------+----------------+-----------------+----------------+----------------+----------------+
+| Trial #                  |0               |1                |2               |3               |4               |
++--------------------------+----------------+-----------------+----------------+----------------+----------------+
+| Input to **Mechanism a** | [[1.0], [2.0]] | [[1.0], [2.0]]  | [[1.0], [2.0]] | [[1.0], [2.0]] | [[1.0], [2.0]] |
++--------------------------+----------------+-----------------+----------------+----------------+----------------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[0.0], [0.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
+
+::
+
+        >>> input_dictionary = {a: [[1.0], [2.0]]}
+
+        >>> comp.run(inputs=input_dictionary,
+        ...          num_trials=5)
+..
+
+* **Case 4: There is only one** `INPUT` `Node <Composition_Nodes>`
+
++--------------------------+-------------------+-------------------+
+| Trial #                  |0                  |1                  |
++--------------------------+-------------------+-------------------+
+| Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
++--------------------------+-------------------+-------------------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[1.0, 2.0, 3.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+..
+
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
+
+::
+
+        >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        >>> comp.run(inputs=input_list)
+..
+
+.. _Composition_Examples_Programmatic_Input:
+
+Examples of Programmatic Input Specification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 COMMENT:
-    INPUT EXAMPLES HERE
+    EXAMPLES HERE
 COMMENT
+
 
 .. _Composition_Examples_Execution_Context:
 
@@ -6239,8 +6237,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
 
         show_learning : bool or ALL : default False
-            specifies whether or not to show the learning components of the Compositoin;
-            they will all be displayed in the color specified for **learning_color**.
+            specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
+            `Composition`; they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
             If set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`

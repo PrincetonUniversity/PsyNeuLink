@@ -95,7 +95,7 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
 Pathway, the **pathways** argument of a the constructor for a `Composition`, or the corresponding argument
-of any of a Composition's `Pathway addition methods <Compositoin_Pathway_Addition_Methods>`:
+of any of a Composition's `Pathway addition methods <Composition_Pathway_Addition_Methods>`:
 
     * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
     ..
