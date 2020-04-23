@@ -222,13 +222,12 @@ describe these in greater detail, and how they are used to implement various for
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
 <Mechanism>` and/or `nested Composition(s) <Composition_Nested>` that carry out computations, and the edges of which
-are `Projections <Projection>` that transmit the computational results from one `Node <Composition_Nodes>` to another
-Node. The information about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that
-is a `Graph` object describing its Nodes and the dependencies defined by their edges.  There are no restrictions on
-the structure of the graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e.,
-contain one or more `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph
-<Composition.graph>` can be displayed  using the `show_graph <Composition.show_graph>` method (see
-`Composition_Visualization`).
+are `Projections <Projection>` that transmit the computational results from one Node to another Node. The information
+about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that is a `Graph` object
+describing its Nodes and the dependencies defined by their edges.  There are no restrictions on the structure of the
+graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
+`nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
+displayed  using the `show_graph <Composition.show_graph>` method (see `Composition_Visualization`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -345,7 +344,7 @@ a set of attributes, including a `pathway <Pathway.pathway>` attribute that list
 Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles <PathwayRoles>` assigned to it (based on
 the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular types of nodes (e.g., `INPUT` and
 `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have
-a particular type of `Node <Composition_Nodes>`, then its attribute returns None. There are
+a particular type of Node, then its attribute returns None. There are
 COMMENT:
 ADD modulatory Pathways
 three types of Pathways: processing Pathways, `control Pathways <Composition_Control_Pathways>`, and `learning Pathways
@@ -629,7 +628,7 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
     .. _TARGET_MECHANISM:
     * *TARGET_MECHANISM* -- receives the value to be used by the *OBJECTIVE_MECHANISM* as the target in
       computing the error signal (see above);  that value must be specified in the **inputs** argument of the
-      Composition's `run <Composition.run>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
+      Composition's `learn <Composition.learn>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
       `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition;
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
@@ -741,9 +740,8 @@ conversely, even though the last Mechanism of a `learning Pathway <Composition_L
 *OBJECTIVE_MECHANISM*, and thus is not the `TERMINAL` `Node <Composition_Nodes>` of a Composition, if it does not
 project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.
 That is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as
-an `OUTPUT` `Node <Composition_Nodes>` of the Composition if they are part of a `learning Pathway
-<Composition_Learning_Pathway>` even though  they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the
-Composition.
+an `OUTPUT` Node of the Composition if they are part of a `learning Pathway <Composition_Learning_Pathway>` even
+though  they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -759,9 +757,8 @@ Composition.
        specified for the first pathway, and so would project to a `ComparatorMechanism`, and would be assigned as an
        `OUTPUT` `Node <Composition_Nodes>` of the Composition, if that pathway was created on its own. However, since
        Mechanims B is also in the middle of the sequence specified for the second pathway, it does not project to a
-       ComparatorMechanism, and is relegated to being an `INTERNAL` `Node <Composition_Nodes>` of the Composition
-       Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT`
-       `Node <Composition_Nodes>`.
+       ComparatorMechanism, and is relegated to being an `INTERNAL` Node of the Composition Mechanism C is now the
+       one that projects to the ComparatorMechanism and assigned as the `OUTPUT` Node.
 
 .. _Composition_Learning_Execution:
 
@@ -873,18 +870,31 @@ also be called directly, but this is useful mostly for debugging.
 
 *Inputs*. All three methods require specification of their **inputs** argument, which designates the values assigned
 to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`. A `TRIAL
-<TimeScale.TRIAL>` is defined as the opportunity for every `Node <Composition_Nodes>` in the Composition to execute
-for a given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
+<TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given set of
+inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
 <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they can also
-be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`). At the end of
-a `TRIAL <TimeScale.TRIAL>`, the `output_values <Mechanism.output_values>` of all the Composition's `OUTPUT` Nodes are
-added to the Composition's `results <Comopsition.results>` attribute.
+be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).  The same
+number of inputs must be specified for every `INPUT` Node. At the end ofa `TRIAL <TimeScale.TRIAL>`, the Composition's
+`output_values <Composition.output_values>` (a list of the `output_values <Mechanism_Base.output_values>` for all of
+its `OUTPUT` Nodes) are added to the Composition's `results <Composition.results>` attribute, and the `output_values
+<Mechanism.output_values>` for the last `TRIAL <TimeScale.TRIAL>` executed is returned by the `execution method
+<Composition_Execution_Methods>`.
+
+*Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
+executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
+For the `run <Composition.run>` and `learn <Composition.learn>`, the **num_trials** argument can be used to specify
+the number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for each
+Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number of
+`TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
+then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of inputs provided for each `Node
+<Composition_Nodes>` in **inputs** argument.
 
 *Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur, its
 `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
-`disable_learning <Composition.disable_learning>` attribute must be False (the default). The `run <Composition.run>`
-and `execute <Composition.execute>` methods can also be used to execute the Composition, but no learning will occur,
-irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
+`disable_learning <Composition.disable_learning>` attribute must be False (the default).  The **inputs** argument
+must also specify an input for the Composition's `TARGET_MECHANISM <Composition_Learning_Components>`.  The `run
+<Composition.run>` and `execute <Composition.execute>` methods can also be used to execute the Composition, but no
+learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
 
 
 COMMENT:
@@ -914,7 +924,7 @@ it executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only
 <TimeScale.TRIAL>`.
 
 *Inputs and input_ports*. Both formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
-the InputPorts of the Composition's `INPUT` `Nodes <Component_Nodes>` that require external inputs. These are listed
+the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that require external inputs. These are listed
 in the `external_input_ports  <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
 `Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
 of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the Composition being being executed
@@ -934,6 +944,8 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the C
 These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>, or the
 return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
 of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
+
+
 
 COMMENT:
     ****************************************** INPUT DICT ************************************************************
@@ -977,10 +989,7 @@ COMMENT
         >>> pathway1 = [a, c]
         >>> pathway2 = [b, c]
 
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-        >>> comp.add_linear_processing_pathway(pathway2)
+        >>> comp = Composition(name='comp', pathways=[patway1, pathway2])
 
         >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
         ...                     b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
@@ -988,12 +997,15 @@ COMMENT
         >>> comp.run(inputs=input_dictionary)
 
 .. note::
-    A `Node's <Composition_Nodes>` `external_input_values <Mechanism_Base.external_input_values>` attribute
-    is always a 2d list in which the index i element is the value of the Node's index i `external_input_port
-    <Mechanism_Base.external_input_ports>`. In many cases, `external_input_values
-    <Mechanism_Base.external_input_values>` is the same as `variable <Mechanism_Base.variable>`. Keep in mind that
-    any InputPorts marked as "internal_only <InputPort.internal_only>" are excluded from `external_input_values
-    <Mechanism_Base.external_input_values>`, and do not receive user-specified input values.
+    A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
+    element is the value of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+    the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
+    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
+    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
+    and therefore its `external_input_values <Mechanism_Base.external_input_values>`, and so should not receive an
+    input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
+    and `external_input_values <Composition.external_input_values>` of a Composition, based on the Mechanisms and/or
+    `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
 
 If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
 the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
@@ -1461,9 +1473,9 @@ in order of their power, are:
       of the `execute <Composition.execute>` method using the Python interpreter;
 
     * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
-      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
-      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters` is not supported;
+      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each Node
+      and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling `Conditions <Condition>`
+      that rely on Node `Parameters` is not supported;
 
     * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
@@ -2183,8 +2195,8 @@ class NodeRole(Enum):
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-        <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `run
-        <Composition.run>` method (see `TARGET_MECHANISM`).
+        <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `learn
+        <Composition.learn>` method (see `TARGET_MECHANISM <Composition_Learning_Components>`).
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
@@ -2231,7 +2243,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     Arguments
     ---------
 
-    nodes : `Node <Composition_Nodes>` or list[`Node <Composition_Nodes>`] : default None
+    nodes : Node or list[Node] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
         `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
 
@@ -2380,9 +2392,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     output_values : list[list]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
-        in the Composition for the last `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`;
-        this is the same as `results <Composition.results>`\\[0], and provides consistency of access to the values
-        `Nodes <Composition_Nodes>` when one or more is a `nested Composition <Composition_Nested>`.
+        in the Composition for the last `TRIAL <TimeScale.TRIAL>` executed in a call to one of the Composition's
+        `execution methods <Composition_Execution_Methods>`, and the value returned by that method; this is the
+        same as `results <Composition.results>`\\[0], and provides consistency of access to the values of a
+        Composition's Nodes when one or more is a `nested Composition <Composition_Nested>`.
 
     simulation_results : list[list[list]]
         a list of the `results <Composition.results>` for executions of the Composition when it is executed using

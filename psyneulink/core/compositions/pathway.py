@@ -304,7 +304,7 @@ class Pathway(object):
     Attributes
     ----------
 
-    pathway : `Node <Component_Nodes>`, list, tuple, or dict.
+    pathway : `Node <Composition_Nodes>`, list, tuple, or dict.
         if the Pathway is created on its own, this contains the specification provided to the **pathway** argument
         of its constructor, and can take any of the forms permitted for `Pathway specification <Pathway_Specification>`;
         if the Pathway is created by a Composition, this is a list of the `Nodes <Pathway_Nodes>` and intercolated

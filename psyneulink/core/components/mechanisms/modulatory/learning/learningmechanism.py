@@ -387,8 +387,8 @@ for the Projection between them).  In this case, a single `ComparatorMechanism` 
   `output_source` is used; however, this can be modified by specifying its *MONITOR_FOR_LEARNING* parameter
   (see `above <LearningMechanism_Activation_Output>`).
 ..
-* from the `TARGET_MECHANISM` in the Composition to the ComparatorMechanism's *TARGET* `InputPort
-  <ComparatorMechanism_Structure>`;
+* from the `TARGET_MECHANISM <Composition_Learning_Components>` in the Composition to the ComparatorMechanism's
+  *TARGET* `InputPort <ComparatorMechanism_Structure>`;
 ..
 * from the ComparatorMechanism's *OUTCOME* `OutputPort <ComparatorMechanism_Structure>` to the
   LearningMechanism's *ERROR_SIGNAL* `InputPort <LearningMechanism_Activation_Input>`.
@@ -475,10 +475,10 @@ the sequence, then *no* Projection is created or assigned to its LearningMechani
 `TARGET` and `OBJECTIVE` Mechanisms**.  When `supervised learning <Composition_Learning_Supervised>` is
 implemented using one of a Composition's `learning methods <Composition_Learning_Methods>`, it automatically creates a
 number of  `learning-related Components <Composition_Learning_Components>`.  This includes a `TARGET_MECHANISM`, that
-receives the target stimulus specifed in the **inputs** argument of the Composition's `run <Composition.run>` method;
-and a `OBJECTIVE_MECHANISM`, that computes the error_signal for the sequence.  The output of the `OBJECTIVE_MECHANISM`
-is the `error_source <LearningMechanism.error_sources>` for the last MappingProjection in the learning pathway.  If
-a multitalyer learning pathway is implemented explicitly, it must include these Components.
+receives the target stimulus specifed in the **inputs** argument of the Composition's `learn <Composition.learn>`
+method; and a `OBJECTIVE_MECHANISM`, that computes the error_signal for the sequence.  The output of the
+`OBJECTIVE_MECHANISM` is the `error_source <LearningMechanism.error_sources>` for the last MappingProjection in the
+learning pathway.  If a multilayer learning pathway is implemented explicitly, it must include these Components.
 
 .. _LearningMechanism_Execution:
 
