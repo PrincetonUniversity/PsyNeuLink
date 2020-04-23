@@ -834,19 +834,19 @@ can execute multiple trials (specified in their **num_trials** argument), callin
 can also be called directly, but this is useful mostly for debugging.
 
 .. hint:
-   Once constructed, a Composition can be called directly. If it is called with no arguments, and has been
-   executed previously, it returns the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
-   execution, otherwise it returns None.  If it is called with arguments, either `run <Composition.run>` or
-   `learn <Composition.learn>` is called, based on the arguments provided:  if the Composition has any
-   `learning_pathways <Composition_Learning_Pathways>`, and the relevant `TARGET_MECHANISM
+   Once a Composition has been constructed, it can be called directly. If it is called with no arguments, and
+   has executed previously, the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
+   of execution is returned; otherwise it None is returned.  If it is called with arguments, then either `run
+   <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
+   Composition has any `learning_pathways <Composition_Learning_Pathways>`, and the relevant `TARGET_MECHANISM
    <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
-   the return value of the corresponding methods is returned.
+   the return value of the corresponding method is returned.
 
-*Inputs*. All three methods require specification of their **inputs** argument, which designates the values
-assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
-A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a
-given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
+*Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
+the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
+A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
+set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
 <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
 can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
 The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
@@ -8876,9 +8876,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
             from psyneulink.core.compositions.pathway import PathwayRole
             if any(PathwayRole.LEARNING in p.roles and p.target in kwargs[INPUTS] for p in self.pathways):
-                self.learn(*args, **kwargs)
+                return self.learn(*args, **kwargs)
             else:
-                self.run(*args, **kwargs)
+                return self.run(*args, **kwargs)
         else:
             errant_args_str = ", ".join(repr(args) + repr(kwargs))
             raise CompositionError(f"Composition ({self.name}) called with illegal arguments: {errant_args_str}")
