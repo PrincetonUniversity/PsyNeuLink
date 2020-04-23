@@ -84,6 +84,37 @@ class TestConstructor:
         print()
         logger.info('completed {0} creation{2} of Composition() in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
+    def test_call_after_construction_with_no_arg_then_run_then_illegal_args_error(self):
+        A = ProcessingMechanism()
+        B = ProcessingMechanism(function=Linear(slope=2))
+        C = ProcessingMechanism(function=Logistic)
+        c = Composition(pathways=[[A],[B],[C]])
+        assert c() == None
+        result = c(inputs={A:[[1],[100]],B:[[2],[200]],C:[[3],[1]]})
+        assert np.allclose(result, [[100],[400],[0.73105858]])
+        assert np.allclose(c(), [[100],[400],[0.73105858]])
+        with pytest.raises(CompositionError) as err:
+            c(23, 'bad_arg', bad_kwarg=1)
+        assert f" called with illegal argument(s): 23, bad_arg, bad_kwarg" in str(err.value)
+
+    def test_call_after_construction_with_learning_pathway(self):
+        A = ProcessingMechanism()
+        B = ProcessingMechanism(function=Linear(slope=0.5))
+        C = ProcessingMechanism(function=Logistic)
+        c = Composition(pathways=[[A],{'LEARNING_PATHWAY':([B,C], BackPropagation)}])
+        assert c() == None
+
+        # Run without learning
+        result = c(inputs={A:[[1],[100]],B:[[2],[1]]})
+        print(result)
+        assert np.allclose(result, [[100.],[0.62245933]])
+        assert np.allclose(c(), [[100.],[0.62245933]])
+
+        # Run with learning
+        target = c.pathways['LEARNING_PATHWAY'].target
+        result = c(inputs={A:[[1],[100]],B:[[2],[1]],target:[[3],[300]]})
+        np.allclose(result, [[[1.], [0.73105858]], [[100.], [0.62507661]]])
+
 
 class TestAddMechanism:
 
@@ -504,6 +535,7 @@ class TestPathway:
         with pytest.raises(pnl.CompositionError) as error_text:
             Pathway(pathway=[], foo='bar')
         assert "Illegal argument(s) used in constructor for Pathway: foo." in str(error_text.value)
+
 
 class TestCompositionPathwayAdditionMethods:
 

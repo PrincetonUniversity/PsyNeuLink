@@ -8880,21 +8880,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 return self.run(*args, **kwargs)
         else:
-            # bad_args_str = ""
-            # if args:
-            #     bad_args_str = f"{args}"
-            # if kwargs:
-            #     bad_args_str = ", ".join([bad_args_str] + list(kwargs.keys()))
-
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
-
-            # if args:
-            #     bad_args_str = f"{args}"
-            #     if kwargs:
-            #         bad_args_str = bad_args_str + ", " + f"{list(kwargs.keys())}"
-            # elif kwargs:
-            #     bad_args_str = f"{list(kwargs.keys())}"
-
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
     def _update_learning_parameters(self, context):

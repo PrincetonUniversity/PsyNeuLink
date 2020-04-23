@@ -613,9 +613,8 @@ class InputPort(Port_Base):
         specifies the value of the `exponent <InputPort.exponent>` attribute of the InputPort.
 
     internal_only : bool : False
-        specifies whether external input is required by the InputPort's `owner <Port.owner>` if its `role
-        <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputPort.internal_only>`
-        for details).
+        specifies whether the InputPort requires external input when its `owner <Port.owner>` is the `INPUT`
+        `Node <Composition_Nodes>` of a `Composition (see `internal_only <InputPort.internal_only>` for details).
 
     Attributes
     ----------
@@ -658,10 +657,10 @@ class InputPort(Port_Base):
         see `weight and exponent <InputPort_Weights_And_Exponents>` for description.
 
     internal_only : bool
-        determines whether input is required for this InputPort from `Run` or another `Composition` when the
-        InputPort's `owner <Port.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
-        is designated as *EXTERNAL_INPUT*;  if `True`, external input is *not* required or allowed;  otherwise,
-        external input is required.
+        determines whether `input from a Composition <Composition_Execution_Input>` must be specified for this
+        InputPort from a Composition's `execution method <Composition_Execution_Method>` if the InputPort's `owner
+        <Port.owner>` is an `INPUT` `Node <Composition_Nodes>` of that Composition; if `True`, external input is
+        *not* required or allowed.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is
