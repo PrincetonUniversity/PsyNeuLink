@@ -962,21 +962,21 @@ corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
    :alt: Example input dict specification showing inputs specified for each Node and its InputPorts
 
    Exaxmple input dict specification, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
-   an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>``s worth of input are specified
+   an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>`\\s worth of input are specified
    (``[1.0, 2.0]`` and ``[3,0, 4.0]``);  the second entry is for Mechanism ``b`` with two InputPorts, one of which
    takes an array of length 1 as its input and the other an array of length 2, and for which two `TRIAL
-   <TimesScale.TRIAL>``s worth of input are also specified (``[[1.0], [2.0, 3.0]]`` and ``[[4.0], [5.0, 6.0]]``);
+   <TimesScale.TRIAL>`\\s worth of input are also specified (``[[1.0], [2.0, 3.0]]`` and ``[[4.0], [5.0, 6.0]]``);
    and, finaly, a third entry is for Mechanism ``c`` with only one InputPort that takes an array of length 1 as its
    input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
    Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
 
 Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
-that Node.  These are listed in its `external_input_ports` attribute (`here <Mechanism_Base.external_input_ports>`
+that Node.  These are listed in its ``external_input_ports`` attribute (`here <Mechanism_Base.external_input_ports>`
 if it is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
 shape of the input value must be compatible with the shape of the Node's `extrernal_input_values` attribute (`here
 <Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
 a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
-may vary;  in some case shorthand notations are allowed, as described in the `examples
+may vary;  in some case shorthand notations are allowed, as illustrated in the `examples
 <Composition_Examples_Input_Dictionary>` below.
 
 
@@ -1486,7 +1486,7 @@ shape as its input; therefore, the input value specified for each `TRIAL <TimeSc
 (``[1.0, 1.0]``).  In contrast, since the `default_variable <Component_Variable>` for Mechanism ``b`` is two
 length 1 arrays, so it is constructed with two InputPorts, each of which takes a length 1 array as its input;
 therefore, the input specified for each `TRIAL <TimeScale.TRIAL>` must be two length 1 arrays.  See `figure
-<Composition_Execution_Input_Dict_Fig>` for a graphic depiction of the format for an input dictionary.
+<Composition_Execution_Input_Dict_Fig>` for an illustration of the format for an input dictionary.
 
 .. note::
     A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
