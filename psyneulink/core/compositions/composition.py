@@ -969,16 +969,25 @@ corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
 
 .. _Composition_Execution_Inputs_Fig_States:
 
-.. figure:: _static/input_spec_states.svg
+.. figure:: _static/Composition_input_dict_spec.svg
    :alt: Example input specifications with input ports
 
-Each input value must be compatible with the number of InputPorts that receive external input for that Node.
-These are listed in its `external_input_ports` attribute (`here <Mechanism_Base.external_input_ports>` if it
-is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
-shape of the input value must be compatible with the shape of the Node's `extrernal_input_values` attribute
-(`here  <Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>`
-if it is a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to
-each InputPort) may vary;  in some case shorthand notations are allowed, as described in the `examples
+   Exaxmple input dict, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
+   an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>``s of input are specified
+   (``[1.0, 2.0]`` and ``[3,0, 4.0]``);  the second entry is for Mechanism ``b`` with two InputPorts, one of
+   which takes an array of length 1 as its input and the other an array of length 2, and for which two `TRIAL
+   <TimesScale.TRIAL>``s of input are also specified (``[[1.0], [2.0, 3.0]]`` and ``[[4.0], [5.0, 6.0]]``);
+   and, finaly, the third entry is for Mechanism ``c`` that has only one InputPort that takes an array of
+   length 1, and for which only one input is specified (``[1.0]``), so this is provided as the input to
+   Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
+
+Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
+that Node.  These are listed in its `external_input_ports` attribute (`here <Mechanism_Base.external_input_ports>`
+if it is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
+shape of the input value must be compatible with the shape of the Node's `extrernal_input_values` attribute (`here
+<Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
+a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
+may vary;  in some case shorthand notations are allowed, as described in the `examples
 <Composition_Input_Specification_Examples>` below.
 
 COMMENT:
