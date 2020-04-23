@@ -859,26 +859,29 @@ Executing a Composition
 There are three methods for executing a Composition:
 
   * `run <Composition.run>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s without learning;
-  * `learn <Composition.learn>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s with learning, if the network is
-     configured for `learning <Composition_Learning>`.
+
+  * `learn <Composition.learn>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s with learning,
+    if the network is configured for `learning <Composition_Learning>`.
+
   * `execute <Composition.execute>` - executes a single `TRIAL <TimeScale.TRIAL>` without learning.
 
-The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used.  Both of these can
-execute multiple trials (specified in their **num_trials** argument), calling the Composition's `execute
-<Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method can
-also be called directly, but this is useful mostly for debugging.
+The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used.  Both of these
+can execute multiple trials (specified in their **num_trials** argument), calling the Composition's `execute
+<Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
+can also be called directly, but this is useful mostly for debugging.
 
-*Inputs*. All three methods require specification of their **inputs** argument, which designates the values assigned
-to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`. A `TRIAL
-<TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given set of
-inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
-<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they can also
-be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).  The same
-number of inputs must be specified for every `INPUT` Node. At the end ofa `TRIAL <TimeScale.TRIAL>`, the Composition's
-`output_values <Composition.output_values>` (a list of the `output_values <Mechanism_Base.output_values>` for all of
-its `OUTPUT` Nodes) are added to the Composition's `results <Composition.results>` attribute, and the `output_values
-<Mechanism.output_values>` for the last `TRIAL <TimeScale.TRIAL>` executed is returned by the `execution method
-<Composition_Execution_Methods>`.
+*Inputs*. All three methods require specification of their **inputs** argument, which designates the values
+assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
+A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a
+given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
+<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
+can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
+The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
+(in which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed).
+At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of the
+`output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
+`results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
+<TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
 
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
 executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
@@ -958,8 +961,11 @@ Input Dictionary
 
 The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given
 `INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs
-to that Node, one for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list
-represents the input to the Node on `TRIAL <TimeScale.TRIAL>` i).
+to that Node, one for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents
+the  input to the Node on `TRIAL <TimeScale.TRIAL>` i).  The same number of input values must be specified in each
+entry, unless only a single input value is specified is in an entry, in which case that input is presented to the
+corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
+
 
 .. _Composition_Execution_Inputs_Fig_States:
 
