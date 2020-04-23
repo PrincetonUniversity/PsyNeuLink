@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.7.5.4+44.g0814f7f documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.7.5.4+45.g53cc388 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+44
+                  0.7.5.4+45
                 </div>
               
             
@@ -634,8 +634,8 @@ or their <a class="reference internal" href="Projection.html#psyneulink.core.com
 InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>weight</strong> (<em>number : default 1</em>) – specifies the value of the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.weight" title="psyneulink.core.components.ports.inputport.InputPort.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> attribute of the InputPort.</li>
 <li><strong>exponent</strong> (<em>number : default 1</em>) – specifies the value of the <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.exponent" title="psyneulink.core.components.ports.inputport.InputPort.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute of the InputPort.</li>
-<li><strong>internal_only</strong> (<em>bool : False</em>) – specifies whether external input is required by the InputPort’s <code class="xref any docutils literal"><span class="pre">owner</span></code> if its <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role</span></a> is <em>EXTERNAL_INPUT</em>  (see <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="psyneulink.core.components.ports.inputport.InputPort.internal_only"><code class="xref any py py-attr docutils literal"><span class="pre">internal_only</span></code></a>
-for details).</li>
+<li><strong>internal_only</strong> (<em>bool : False</em>) – specifies whether the InputPort requires external input when its <code class="xref any docutils literal"><span class="pre">owner</span></code> is the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a>
+<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of a <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="psyneulink.core.components.ports.inputport.InputPort.internal_only"><code class="xref any py py-attr docutils literal"><span class="pre">Composition</span> <span class="pre">(see</span> <span class="pre">`internal_only</span></code></a> for details).</li>
 </ul>
 </td>
 </tr>
@@ -696,10 +696,9 @@ of the InputPort does not have a corresponding label, then the numeric <a class=
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.inputport.InputPort.internal_only">
 <code class="descname">internal_only</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool</em> – determines whether input is required for this InputPort from <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> or another <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when the
-InputPort’s <code class="xref any docutils literal"><span class="pre">owner</span></code> is executed, and its <a class="reference internal" href="Mechanism.html#mechanism-role-in-processes-and-systems"><span class="std std-ref">role</span></a>
-is designated as <em>EXTERNAL_INPUT</em>;  if <code class="xref any docutils literal"><span class="pre">True</span></code>, external input is <em>not</em> required or allowed;  otherwise,
-external input is required.</p>
+<dd><p><em>bool</em> – determines whether <code class="xref any docutils literal"><span class="pre">input</span> <span class="pre">from</span> <span class="pre">a</span> <span class="pre">Composition</span></code> must be specified for this
+InputPort from a Composition’s <code class="xref any docutils literal"><span class="pre">execution</span> <span class="pre">method</span></code> if the InputPort’s <code class="xref any docutils literal"><span class="pre">owner</span></code> is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of that Composition; if <code class="xref any docutils literal"><span class="pre">True</span></code>, external input is
+<em>not</em> required or allowed.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -808,7 +807,7 @@ apply to the InputPorts specified, as well as any that are added to the Mechanis
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+44.g0814f7f',
+               VERSION:'0.7.5.4+45.g53cc388',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

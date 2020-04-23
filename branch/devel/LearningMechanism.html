@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Learning Mechanism &mdash; PsyNeuLink 0.7.5.4+44.g0814f7f documentation</title>
+  <title>Learning Mechanism &mdash; PsyNeuLink 0.7.5.4+45.g53cc388 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+44
+                  0.7.5.4+45
                 </div>
               
             
@@ -506,7 +506,8 @@ for the Projection between them).  In this case, a single <a class="reference in
 (see <a class="reference internal" href="#learningmechanism-activation-output"><span class="std std-ref">above</span></a>).</li>
 </ul>
 <ul class="simple">
-<li>from the <code class="xref any docutils literal"><span class="pre">TARGET_MECHANISM</span></code> in the Composition to the ComparatorMechanism’s <em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a>;</li>
+<li>from the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">TARGET_MECHANISM</span></a> in the Composition to the ComparatorMechanism’s
+<em>TARGET</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">InputPort</span></a>;</li>
 </ul>
 <ul class="simple">
 <li>from the ComparatorMechanism’s <em>OUTCOME</em> <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-structure"><span class="std std-ref">OutputPort</span></a> to the
@@ -579,10 +580,10 @@ and functions diagrammed.</span></p>
 <p id="learningmechanism-targets"><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> and <code class="xref any docutils literal"><span class="pre">OBJECTIVE</span></code> Mechanisms**.  When <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> is
 implemented using one of a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a>, it automatically creates a
 number of  <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning-related Components</span></a>.  This includes a <code class="xref any docutils literal"><span class="pre">TARGET_MECHANISM</span></code>, that
-receives the target stimulus specifed in the <strong>inputs</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method;
-and a <code class="xref any docutils literal"><span class="pre">OBJECTIVE_MECHANISM</span></code>, that computes the error_signal for the sequence.  The output of the <code class="xref any docutils literal"><span class="pre">OBJECTIVE_MECHANISM</span></code>
-is the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal"><span class="pre">error_source</span></code></a> for the last MappingProjection in the learning pathway.  If
-a multitalyer learning pathway is implemented explicitly, it must include these Components.</p>
+receives the target stimulus specifed in the <strong>inputs</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a>
+method; and a <code class="xref any docutils literal"><span class="pre">OBJECTIVE_MECHANISM</span></code>, that computes the error_signal for the sequence.  The output of the
+<code class="xref any docutils literal"><span class="pre">OBJECTIVE_MECHANISM</span></code> is the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal"><span class="pre">error_source</span></code></a> for the last MappingProjection in the
+learning pathway.  If a multilayer learning pathway is implemented explicitly, it must include these Components.</p>
 </div>
 </div>
 </div>
@@ -922,7 +923,7 @@ can be overridden for individual <a class="reference internal" href="LearningPro
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+44.g0814f7f',
+               VERSION:'0.7.5.4+45.g53cc388',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
