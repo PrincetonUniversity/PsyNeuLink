@@ -8880,8 +8880,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 return self.run(*args, **kwargs)
         else:
-            errant_args_str = ", ".join(repr(args) + repr(kwargs))
-            raise CompositionError(f"Composition ({self.name}) called with illegal arguments: {errant_args_str}")
+            errant_args_str = ", ".join(str(args) + str(kwargs))
+            raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {errant_args_str}")
 
     def _update_learning_parameters(self, context):
         pass
