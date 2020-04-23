@@ -222,13 +222,12 @@ describe these in greater detail, and how they are used to implement various for
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
 <Mechanism>` and/or `nested Composition(s) <Composition_Nested>` that carry out computations, and the edges of which
-are `Projections <Projection>` that transmit the computational results from one `Node <Composition_Nodes>` to another
-Node. The information about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that
-is a `Graph` object describing its Nodes and the dependencies defined by their edges.  There are no restrictions on
-the structure of the graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e.,
-contain one or more `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph
-<Composition.graph>` can be displayed  using the `show_graph <Composition.show_graph>` method (see
-`Composition_Visualization`).
+are `Projections <Projection>` that transmit the computational results from one Node to another Node. The information
+about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that is a `Graph` object
+describing its Nodes and the dependencies defined by their edges.  There are no restrictions on the structure of the
+graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
+`nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
+displayed  using the `show_graph <Composition.show_graph>` method (see `Composition_Visualization`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -303,23 +302,24 @@ COMMENT
 *Nested Compositions*
 ~~~~~~~~~~~~~~~~~~~~~
 
-A nested Composition that is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
-Composition is `run <Composition_Execution>`, the nested Composition is run when its Node in the outer is called to
-execute by the outer Composition's `scheduler <Composition.scheduler>`.  Any Node within the outer Composition can send
-a`Projection <Projection>` to any `INPUT` Node, and can receive a Projection from any `OUTPUT` Node within the nested
-Composition.  Similarly, a `ControlMechanism` within the outer Composition can modulate the parameter of any `Mechanism
-<Mechanism>` within the nested Composition.
+A nested Composition is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
+Composition is `executed <Composition_Execution>`, the nested Composition is executed when its Node in the outer is
+called to execute by the outer Composition's `scheduler <Composition.scheduler>`.  Any Node within the outer
+Composition can send a`Projection <Projection>` to any `INPUT` Node, and can receive a Projection from any `OUTPUT`
+Node within the nested Composition.  Similarly, a `ControlMechanism` within the outer Composition can modulate the
+parameter of any `Mechanism <Mechanism>` within the nested Composition.
 
-COMMENT:
-.. _Composition_Nested_External_Input_Ports
-    ADD EXPLANATION HERE OF EXTERNAL_INPUT_PORTS
-COMMENT
+.. _Composition_Nested_External_Input_Ports:
+If a nested Composition is an `INPUT` Node of the outermost Composition then, when the latter is `executed
+<Composition_Execution>`, the `inputs specified <Composition_Execution_Inputs>` to its `execution method
+<Composition_Execution_Methods>` must include the InputPorts of the nested Composition.  These can be accessed
+using the Composition's `exernal_input_ports <Composition.external_input_ports>` attribute.
 
 COMMENT:
 FOR DEVELOPERS:
-Note that although Projections can be specified to and from Nodes within a nested Composition, these are implemented
-by Projections to or from the nested Compositions `input_CIM <Composition.input_CIM>`,`parameter_CIM
-<Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; these, in turn, send or receive
+Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
+as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
+<Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
 Projections to the specified Nodes within the nested Composition.
 COMMENT
 
@@ -344,7 +344,7 @@ a set of attributes, including a `pathway <Pathway.pathway>` attribute that list
 Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles <PathwayRoles>` assigned to it (based on
 the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular types of nodes (e.g., `INPUT` and
 `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have
-a particular type of `Node <Composition_Nodes>`, then its attribute returns None. There are
+a particular type of Node, then its attribute returns None. There are
 COMMENT:
 ADD modulatory Pathways
 three types of Pathways: processing Pathways, `control Pathways <Composition_Control_Pathways>`, and `learning Pathways
@@ -440,43 +440,6 @@ customize when it is executed.  All three of these attributes can be specified i
 Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
 corresponding attribute.
 
-
-COMMENT:
-For Developers
---------------
-
-.. _Composition_Execution_Contexts_Init:
-
-Initialization of Execution Contexts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- The parameter values for any execution context can be copied into another execution context by using \
-Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
-and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
-
-- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-other Components to function properly (beyond "standard" things like Component.function, \
-or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
-    - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
-    under **new_context**
-    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
-
-.. _Composition_TIming:
-
-*Timing*
-========
-
-When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
-method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
-<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
-the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
-in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
-<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
-`Condition` specifications for individual Components to execute different Components at different time scales.
-
-Runtime Params
-COMMENT
 
 .. _Composition_Learning:
 
@@ -628,7 +591,7 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
     .. _TARGET_MECHANISM:
     * *TARGET_MECHANISM* -- receives the value to be used by the *OBJECTIVE_MECHANISM* as the target in
       computing the error signal (see above);  that value must be specified in the **inputs** argument of the
-      Composition's `run <Composition.run>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
+      Composition's `learn <Composition.learn>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
       `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition;
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
@@ -740,9 +703,8 @@ conversely, even though the last Mechanism of a `learning Pathway <Composition_L
 *OBJECTIVE_MECHANISM*, and thus is not the `TERMINAL` `Node <Composition_Nodes>` of a Composition, if it does not
 project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.
 That is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as
-an `OUTPUT` `Node <Composition_Nodes>` of the Composition if they are part of a `learning Pathway
-<Composition_Learning_Pathway>` even though  they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the
-Composition.
+an `OUTPUT` Node of the Composition if they are part of a `learning Pathway <Composition_Learning_Pathway>` even
+though  they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -758,9 +720,8 @@ Composition.
        specified for the first pathway, and so would project to a `ComparatorMechanism`, and would be assigned as an
        `OUTPUT` `Node <Composition_Nodes>` of the Composition, if that pathway was created on its own. However, since
        Mechanims B is also in the middle of the sequence specified for the second pathway, it does not project to a
-       ComparatorMechanism, and is relegated to being an `INTERNAL` `Node <Composition_Nodes>` of the Composition
-       Mechanism C is now the one that projects to the ComparatorMechanism and assigned as the `OUTPUT`
-       `Node <Composition_Nodes>`.
+       ComparatorMechanism, and is relegated to being an `INTERNAL` Node of the Composition Mechanism C is now the
+       one that projects to the ComparatorMechanism and assigned as the `OUTPUT` Node.
 
 .. _Composition_Learning_Execution:
 
@@ -861,45 +822,68 @@ Executing a Composition
 There are three methods for executing a Composition:
 
   * `run <Composition.run>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s without learning;
-  * `learn <Composition.learn>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s with learning, if the network is
-     configured for `learning <Composition_Learning>`.
+
+  * `learn <Composition.learn>` - executes one or more `TRIAL <TimeScale.TRIAL>`\\s with learning,
+    if the network is configured for `learning <Composition_Learning>`.
+
   * `execute <Composition.execute>` - executes a single `TRIAL <TimeScale.TRIAL>` without learning.
 
-The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used.  Both of these can
-execute multiple trials (specified in their **num_trials** argument), calling the Composition's `execute
-<Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method can
-also be called directly, but this is useful mostly for debugging.
+The `run <Composition.run>` and `learn <Composition.learn>` methods are the most commonly used.  Both of these
+can execute multiple trials (specified in their **num_trials** argument), calling the Composition's `execute
+<Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
+can also be called directly, but this is useful mostly for debugging.
 
-*Inputs*. All three methods require specification of their **inputs** argument, which designates the values assigned
-to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`. A `TRIAL
-<TimeScale.TRIAL>` is defined as the opportunity for every `Node <Composition_Nodes>` in the Composition to execute
-for a given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
-<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they can also
-be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`). At the end of
-a `TRIAL <TimeScale.TRIAL>`, the `output_values <Mechanism.output_values>` of all the Composition's `OUTPUT` Nodes are
-added to the Composition's `results <Comopsition.results>` attribute.
+.. hint:
+   Once a Composition has been constructed, it can be called directly. If it is called with no arguments, and
+   has executed previously, the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
+   of execution is returned; otherwise it None is returned.  If it is called with arguments, then either `run
+   <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
+   Composition has any `learning_pathways <Composition_Learning_Pathways>`, and the relevant `TARGET_MECHANISM
+   <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
+   then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
+   the return value of the corresponding method is returned.
+
+*Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
+the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
+A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
+set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
+<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
+can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
+The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
+(in which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed).
+
+.. _Composition_Execution_Results:
+
+*Results*. At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of
+the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
+`results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
+<TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
+
+*Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
+executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
+For the `run <Composition.run>` and `learn <Composition.learn>`, the **num_trials** argument can be used to specify
+the number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for each
+Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number of
+`TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
+then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of inputs provided for each `Node
+<Composition_Nodes>` in **inputs** argument.
 
 *Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur, its
 `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
-`disable_learning <Composition.disable_learning>` attribute must be False (the default). The `run <Composition.run>`
-and `execute <Composition.execute>` methods can also be used to execute the Composition, but no learning will occur,
-irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
+`disable_learning <Composition.disable_learning>` attribute must be False (the default).  The **inputs** argument
+must also specify an input for the Composition's `TARGET_MECHANISM <Composition_Learning_Components>`.  The `run
+<Composition.run>` and `execute <Composition.execute>` methods can also be used to execute the Composition, but no
+learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
 
 
-COMMENT:
-    *******************************************************************************************************************
-    ****************************************** INPUT STUFF ************************************************************
-    *******************************************************************************************************************
-COMMENT
-
-.. _Composition_Execution_Inputs
+.. _Composition_Execution_Inputs:
 
 *Input formats*
 ~~~~~~~~~~~~~~~
 
-The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` is used to specify
-the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's `INPUT`
-`Nodes  <Composition_Nodes>` each time it is executed. There are two ways to specify inputs:
+The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` is used to
+specify the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's
+`INPUT` `Nodes  <Composition_Nodes>` each time it is executed. There are two ways to specify inputs:
 
   * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
@@ -908,49 +892,31 @@ the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are pro
     that constructs the inputs dynamically on a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` basis.
 
 The **inputs** argument of the `run <Composition.run>` and  `learn <Composition.learn>` methods can be specified in
-either way;  however, only the dictionary format can be used for the `execute <Composition.execute>` method, since it
-executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
+either way;  however, only the dictionary format can be used for the `execute <Composition.execute>` method, since
+it executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
 <TimeScale.TRIAL>`.
 
-COMMENT:
-REWORK AROUND 'external_input_ports`
 *Inputs and input_ports*. Both formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
-the InputPorts of the Composition's `INPUT` `Nodes <Component_Nodes>`. These are listed in the `external_input_ports`
-attribute of the node
-<Mechanism_Base.external_input_ports>`
-<Composition.external_input_ports>` -- NOTE THAT THIS IS OF THE input_CIM
+the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that require external inputs. These are listed
+in the `external_input_ports  <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
+`Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
+of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the Composition being being executed
+<Composition_Nested_External_Input_Ports>`)
 
- attribute.
+.. note:
+   Most Mechanisms have only a single InputPort `input_port <Mechanism_Base.input_port>`, and thus require only
+   a single input to be specified for them for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more
+   than one InputPort (for example, a `ComparatorMechanisms`), in which case an input must be specified for each
+   InputPort of that Mechanism. Conversely, some Mechanisms have input_ports that are marked as `internal_only
+   <InputPort.internal_only>` (for example, the input_port for a `RecurrentTransferMechanism`, if its
+   `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no
+   input should be specified for that input_port.  Similar considerations extend to the `external_input_ports
+   <Composition.external_input_ports>` of a `nested Composition <Composition_Nested>`, based on the Mechanisms
+   (and/or additionally nested Compositions) that comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
 
-NOTE SOMWEHWERE:  for a node that is a composition, this is the external_input_ports of its input_CIM
-
-that are designated for external input.  For
-`Mechanisms
-. An input must be specified for every InputPort
-`input_port  <Mechanism.input_ports>` of an `INPUT` `Mechanism <Mechanism>` that accepts inputs (including those of a
-`nested Composition<Composition_Nested>` if it is an `INPUT` Node of the outer Composition).  Most Mechanisms have
-only a single InputPort
-`input_port <Mechanism_Base.input_port>`, and so only a single input needs to be specified for that
-Mechanism for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more than one InputPort (for example, a
-`ComparatorMechanisms`), in which case an input must be specified for each InputPort of that Mechanism. Conversely,
-some Mechanisms have input_ports that are marked as `internal_only <InputPort.internal_only>` (for example, the
-input_port for a `RecurrentTransferMechanism`, if its `has_recurrent_input_port
-<RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input should be specified for
-that input_port.  The inut_ports that receive
-
-
-`external_input_port
-    <Mechanism_Base.external_input_ports>`
-
-These factors determines the format of each entry in an `inputs dictionary
-<Composition_Input_Dictionary>, or the return value of the function or generator used for `programmatic specification
-<Composition_Programmatic_Inputs>`.  These are described in detail in the following sections (also see
-`examples <Composition_Examples_Input>`).
-COMENT
-
-COMMENT:
-    ****************************************** INPUT DICT ************************************************************
-COMMENT
+These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>, or the
+return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
+of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
 
 
 .. _Composition_Input_Dictionary:
@@ -958,263 +924,37 @@ COMMENT
 Input Dictionary
 ^^^^^^^^^^^^^^^^
 
-The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given `INPUT`
-`Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs to that Node, one
-for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents the input value to the
-Node on `TRIAL <TimeScale.TRIAL>` i).
+The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given
+`INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs
+to that Node, one for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents
+the  input to the Node on `TRIAL <TimeScale.TRIAL>` i).  The same number of input values must be specified in each
+entry, unless only a single input value is specified is in an entry, in which case that input is presented to the
+corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
+
+
+.. _Composition_Execution_Input_Dict_Fig:
+
+.. figure:: _static/Composition_input_dict_spec.svg
+   :alt: Example input dict specification showing inputs specified for each Node and its InputPorts
+
+   Exaxmple input dict specification, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
+   an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>`\\s worth of input are specified
+   (``[1.0, 2.0]`` and ``[3,0, 4.0]``);  the second entry is for Mechanism ``b`` with two InputPorts, one of which
+   takes an array of length 1 as its input and the other an array of length 2, and for which two `TRIAL
+   <TimesScale.TRIAL>`\\s worth of input are also specified (``[[1.0], [2.0, 3.0]]`` and ``[[4.0], [5.0, 6.0]]``);
+   and, finaly, a third entry is for Mechanism ``c`` with only one InputPort that takes an array of length 1 as its
+   input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
+   Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
+
+Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
+that Node.  These are listed in its ``external_input_ports`` attribute (`here <Mechanism_Base.external_input_ports>`
+if it is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
+shape of the input value must be compatible with the shape of the Node's `extrernal_input_values` attribute (`here
+<Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
+a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
+may vary;  in some case shorthand notations are allowed, as illustrated in the `examples
+<Composition_Examples_Input_Dictionary>` below.
 
-.. _Composition_Execution_Inputs_Fig_States:
-
-.. figure:: _static/input_spec_states.svg
-   :alt: Example input specifications with input ports
-
-Each input value must be compatible with the shape of the `INPUT` `Node's <Composition_Nodes>` `external_input_values
-<MechanismBase.external_input_values>`. Accordingly, each item in the list of inputs is typically a 2d list or array,
-though `some shorthand notations <Composition_Input_Specification_Examples>` are allowed.
-
-
-XXX FIRST INPUT EXAMPLE:
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-        ...                           default_variable=[[0.0, 0.0]])
-        >>> b = pnl.TransferMechanism(name='b',
-        ...                           default_variable=[[0.0], [0.0]])
-        >>> c = pnl.TransferMechanism(name='c')
-
-        >>> pathway1 = [a, c]
-        >>> pathway2 = [b, c]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-        >>> comp.add_linear_processing_pathway(pathway2)
-
-        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
-        ...                     b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-.. note::
-    A `Node's <Composition_Nodes>` `external_input_values <Mechanism_Base.external_input_values>` attribute
-    is always a 2d list in which the index i element is the value of the Node's index i `external_input_port
-    <Mechanism_Base.external_input_ports>`. In many cases, `external_input_values
-    <Mechanism_Base.external_input_values>` is the same as `variable <Mechanism_Base.variable>`. Keep in mind that
-    any InputPorts marked as "internal_only <InputPort.internal_only>" are excluded from `external_input_values
-    <Mechanism_Base.external_input_values>`, and do not receive user-specified input values.
-
-If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
-the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
-specified, the Composition executes five times.
-
-+----------------------+-------+------+------+------+------+
-| Trial #              |0      |1     |2     |3     |4     |
-+----------------------+-------+------+------+------+------+
-| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
-+----------------------+-------+------+------+------+------+
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a')
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-The number of inputs specified **must** be the same for all Nodes in the input dictionary (except for any Nodes for
-which only one input is specified). In other words, all of the values in the input dictionary must have the same length
-as each other (or length 1).
-
-If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
-are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
-five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
-0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
-
-+----------------------+-------+------+------+------+------+------+------+
-| Trial #              |0      |1     |2     |3     |4     |5     |6     |
-+----------------------+-------+------+------+------+------+------+------+
-| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
-+----------------------+-------+------+------+------+------+------+------+
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a')
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
-
-        >>> comp.run(inputs=input_dictionary,
-        ...          num_trials=7)
-
-
-.. _Composition_Input_Specification_Examples:
-
-For convenience, condensed versions of the input specification described above are also accepted in the following
-situations:
-
-* **Case 1:** `INPUT` `Node <Composition_Nodes>` **has only one InputPort**
-+--------------------------+-------+------+------+------+------+
-| Trial #                  |0      |1     |2     |3     |4     |
-+--------------------------+-------+------+------+------+------+
-| Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
-+--------------------------+-------+------+------+------+------+
-
-Complete input specification:
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a')
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
-
-        >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
-
-        >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-* **Case 2: Only one input is provided for the** `INPUT` `Node <Composition_Nodes>`
-
-+--------------------------+------------------+
-| Trial #                  |0                 |
-+--------------------------+------------------+
-| Input to **Mechanism a** |[[1.0], [2.0]]    |
-+--------------------------+------------------+
-
-Complete input specification:
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-                                      default_variable=[[0.0], [0.0]])
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0], [2.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one
-`TRIAL <TimeScale.TRIAL>`:
-
-        >>> input_dictionary = {a: [[1.0], [2.0]]}
-
-        >>> comp.run(inputs=input_dictionary)
-
-* **Case 3: The same input is used on all** `TRIAL <TimeScale.TRIAL>`\\s
-
-+--------------------------+----------------+-----------------+----------------+----------------+----------------+
-| Trial #                  |0               |1                |2               |3               |4               |
-+--------------------------+----------------+-----------------+----------------+----------------+----------------+
-| Input to **Mechanism a** | [[1.0], [2.0]] | [[1.0], [2.0]]  | [[1.0], [2.0]] | [[1.0], [2.0]] | [[1.0], [2.0]] |
-+--------------------------+----------------+-----------------+----------------+----------------+----------------+
-
-Complete input specification:
-
-::
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-        ...                           default_variable=[[0.0], [0.0]])
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
-
-        >>> comp.run(inputs=input_dictionary)
-..
-
-Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
-
-::
-
-        >>> input_dictionary = {a: [[1.0], [2.0]]}
-
-        >>> comp.run(inputs=input_dictionary,
-        ...          num_trials=5)
-..
-
-* **Case 4: There is only one** `INPUT` `Node <Composition_Nodes>`
-
-+--------------------------+-------------------+-------------------+
-| Trial #                  |0                  |1                  |
-+--------------------------+-------------------+-------------------+
-| Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
-+--------------------------+-------------------+-------------------+
-
-Complete input specification:
-
-::
-
-        >>> import psyneulink as pnl
-
-        >>> a = pnl.TransferMechanism(name='a',
-        ...                           default_variable=[[1.0, 2.0, 3.0]])
-        >>> b = pnl.TransferMechanism(name='b')
-
-        >>> pathway1 = [a, b]
-
-        >>> comp = Composition(name='comp')
-
-        >>> comp.add_linear_processing_pathway(pathway1)
-
-        >>> input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
-
-        >>> comp.run(inputs=input_dictionary)
-..
-
-Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
-
-::
-
-        >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
-
-        >>> comp.run(inputs=input_list)
-..
-
-COMMENT:
-    ****************************************** INPUT FUNCTIONS ********************************************************
-COMMENT
 
 .. _Composition_Programmatic_Inputs:
 
@@ -1362,12 +1102,6 @@ Environment.
     comp.run(inputs=input_dictionary)
 COMMENT
 
-COMMENT:
-    *************************************************************************************************************
-    ****************************************** END INPUT ********************************************************
-    *************************************************************************************************************
-COMMENT
-
 
 COMMENT:
 .. _Composition_Initial_Values_and_Feedback:
@@ -1425,6 +1159,44 @@ COMMENT
      value.
 
 
+COMMENT:
+For Developers
+--------------
+
+.. _Composition_Execution_Contexts_Init:
+
+Initialization of Execution Contexts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The parameter values for any execution context can be copied into another execution context by using \
+Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
+and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+
+- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
+other Components to function properly (beyond "standard" things like Component.function, \
+or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
+    - the intent is that with ``_dependent_components`` set properly, calling \
+    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+    under **new_context**
+    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+
+.. _Composition_Timing:
+
+*Timing*
+~~~~~~~~
+
+When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
+method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
+<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
+the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
+in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
+<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
+`Condition` specifications for individual Components to execute different Components at different time scales.
+
+Runtime Params
+COMMENT
+
+
 .. _Composition_Compilation:
 
 *Compilation*
@@ -1470,9 +1242,9 @@ in order of their power, are:
       of the `execute <Composition.execute>` method using the Python interpreter;
 
     * *LLVM* -- compile and run `Node <Composition_Nodes>` of the `Composition` and their `Projections <Projection>`,
-      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each `Node
-      <Composition_Nodes>`, and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling
-      `Conditions <Condition>` that rely on `Node <Composition_Nodes>` `Parameters` is not supported;
+      using the Python interpreter to call the Composition's `scheduler <Composition.scheduler>`, execute each Node
+      and iterate over `TRIAL <TimeScale.TRIAL>`\\s; note that, in this mode, scheduling `Conditions <Condition>`
+      that rely on Node `Parameters` is not supported;
 
     * *Python* (same as *False*; the default) -- use the Python interpreter to execute the `Composition`.
 
@@ -1642,7 +1414,6 @@ Examples
     >>> comp_1_output = comp_1.run(inputs=input_dict)
     >>> comp_2_output = comp_2.run(inputs=input_dict)
 
-00000000
 
 *Create outer Composition:*
 
@@ -1696,9 +1467,268 @@ brevity:*
 *Input Formats*
 ~~~~~~~~~~~~~~~
 
+.. _Composition_Examples_Input_Dictionary:
+
+Examples of Input Dictionary Specifications
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The following is an example in which the **inputs** argument of the `run <Composition.run>` method is specified
+as an `input dictionary <Composition_Input_Dictionary>`, with entries for the two `INPUT` `Nodes <Composition_Nodes>`
+of the `Composition`::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[0.0, 0.0]])
+        >>> b = pnl.TransferMechanism(name='b',
+        ...                           default_variable=[[0.0], [0.0]])
+        >>> c = pnl.TransferMechanism(name='c')
+
+        >>> pathway1 = [a, c]
+        >>> pathway2 = [b, c]
+
+        >>> comp = Composition(name='comp', pathways=[patway1, pathway2])
+
+        >>> input_dictionary = {a: [[[1.0, 1.0]], [[1.0, 1.0]]],
+        ...                     b: [[[2.0], [3.0]], [[2.0], [3.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Since the specification of the `default_variable <Component_Variable>` for Mechanism ``a`` is a single array of
+length 2, it is constructed with a single `InputPort` (see `Mechanism_InputPorts`) that takes an array of that
+shape as its input; therefore, the input value specified for each `TRIAL <TimeScale.TRIAL>` is a length 2 array
+(``[1.0, 1.0]``).  In contrast, since the `default_variable <Component_Variable>` for Mechanism ``b`` is two
+length 1 arrays, so it is constructed with two InputPorts, each of which takes a length 1 array as its input;
+therefore, the input specified for each `TRIAL <TimeScale.TRIAL>` must be two length 1 arrays.  See `figure
+<Composition_Execution_Input_Dict_Fig>` for an illustration of the format for an input dictionary.
+
+.. note::
+    A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
+    element is the value of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+    the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
+    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
+    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
+    and therefore its `external_input_values <Mechanism_Base.external_input_values>`, and so should not receive an
+    input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
+    and `external_input_values <Composition.external_input_values>` of a Composition, based on the Mechanisms and/or
+    `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
+
+If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
+the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
+specified, the Composition executes five times.
+
++----------------------+-------+------+------+------+------+
+| Trial #              |0      |1     |2     |3     |4     |
++----------------------+-------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |
++----------------------+-------+------+------+------+------+
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+The number of inputs specified **must** be the same for all Nodes in the input dictionary (except for any Nodes for
+which only one input is specified). In other words, all of the values in the input dictionary must have the same length
+as each other (or length 1).
+
+If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
+are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
+five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
+0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
+
++----------------------+-------+------+------+------+------+------+------+
+| Trial #              |0      |1     |2     |3     |4     |5     |6     |
++----------------------+-------+------+------+------+------+------+------+
+| Input to Mechanism a |1.0    |2.0   |3.0   |4.0   |5.0   |1.0   |2.0   |
++----------------------+-------+------+------+------+------+------+------+
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary,
+        ...          num_trials=7)
+
+
+
+For convenience, condensed versions of the input specification described above are also accepted in the following
+situations:
+
+* **Case 1:** `INPUT` `Node <Composition_Nodes>` **has only one InputPort**
++--------------------------+-------+------+------+------+------+
+| Trial #                  |0      |1     |2     |3     |4     |
++--------------------------+-------+------+------+------+------+
+| Input to **Mechanism a** |1.0    |2.0   |3.0   |4.0   |5.0   |
++--------------------------+-------+------+------+------+------+
+
+Complete input specification:
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a')
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the outer list on each input because **Mechanism a** only has one InputPort:
+
+        >>> input_dictionary = {a: [[1.0], [2.0], [3.0], [4.0], [5.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the remaining list on each input because **Mechanism a**'s one InputPort's value is length 1:
+
+        >>> input_dictionary = {a: [1.0, 2.0, 3.0, 4.0, 5.0]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+* **Case 2: Only one input is provided for the** `INPUT` `Node <Composition_Nodes>`
+
++--------------------------+------------------+
+| Trial #                  |0                 |
++--------------------------+------------------+
+| Input to **Mechanism a** |[[1.0], [2.0]]    |
++--------------------------+------------------+
+
+Complete input specification:
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+                                      default_variable=[[0.0], [0.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0], [2.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification because there is only one
+`TRIAL <TimeScale.TRIAL>`:
+
+        >>> input_dictionary = {a: [[1.0], [2.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+
+* **Case 3: The same input is used on all** `TRIAL <TimeScale.TRIAL>`\\s
+
++--------------------------+----------------+-----------------+----------------+----------------+----------------+
+| Trial #                  |0               |1                |2               |3               |4               |
++--------------------------+----------------+-----------------+----------------+----------------+----------------+
+| Input to **Mechanism a** | [[1.0], [2.0]] | [[1.0], [2.0]]  | [[1.0], [2.0]] | [[1.0], [2.0]] | [[1.0], [2.0]] |
++--------------------------+----------------+-----------------+----------------+----------------+----------------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[0.0], [0.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = {a: [[[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]], [[1.0], [2.0]]]}
+
+        >>> comp.run(inputs=input_dictionary)
+..
+
+Shorthand - drop the outer list on **Mechanism a**'s input specification and use `num_trials` to repeat the input value
+
+::
+
+        >>> input_dictionary = {a: [[1.0], [2.0]]}
+
+        >>> comp.run(inputs=input_dictionary,
+        ...          num_trials=5)
+..
+
+* **Case 4: There is only one** `INPUT` `Node <Composition_Nodes>`
+
++--------------------------+-------------------+-------------------+
+| Trial #                  |0                  |1                  |
++--------------------------+-------------------+-------------------+
+| Input to **Mechanism a** | [1.0, 2.0, 3.0]   |  [1.0, 2.0, 3.0]  |
++--------------------------+-------------------+-------------------+
+
+Complete input specification:
+
+::
+
+        >>> import psyneulink as pnl
+
+        >>> a = pnl.TransferMechanism(name='a',
+        ...                           default_variable=[[1.0, 2.0, 3.0]])
+        >>> b = pnl.TransferMechanism(name='b')
+
+        >>> pathway1 = [a, b]
+
+        >>> comp = Composition(name='comp')
+
+        >>> comp.add_linear_processing_pathway(pathway1)
+
+        >>> input_dictionary = input_dictionary = {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
+
+        >>> comp.run(inputs=input_dictionary)
+..
+
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
+
+::
+
+        >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
+
+        >>> comp.run(inputs=input_list)
+..
+
+.. _Composition_Examples_Programmatic_Input:
+
+Examples of Programmatic Input Specification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 COMMENT:
-    INPUT EXAMPLES HERE
+    EXAMPLES HERE
 COMMENT
+
 
 .. _Composition_Examples_Execution_Context:
 
@@ -1802,7 +1832,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_CIM_NAME, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUTS, INPUT_CIM_NAME, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -2192,8 +2222,8 @@ class NodeRole(Enum):
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-        <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `run
-        <Composition.run>` method (see `TARGET_MECHANISM`).
+        <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `learn
+        <Composition.learn>` method (see `TARGET_MECHANISM <Composition_Learning_Components>`).
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
@@ -2240,7 +2270,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     Arguments
     ---------
 
-    nodes : `Node <Composition_Nodes>` or list[`Node <Composition_Nodes>`] : default None
+    nodes : Node or list[Node] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
         `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
 
@@ -2305,6 +2335,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     afferents : ContentAddressableList
         a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
+
+    external_input_ports : list[InputPort]
+        a list of the InputPorts of the Composition's `input_CIM <Composition.input_CIM>`;  these receive input
+        provided to the Composition when it is `executed <Composition_Execution>`, either from the **inputs** argument
+        of one of its `execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
+        <Composition_Nested>`, then from any `Nodes <Composition_Nodes>` in the outer composition that project to the
+        nested Composition (either itself, as a Node in the outer Composition, or to any of its own Nodes).
+
+    external_input_values : list[InputPort]
+        a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
+        <Composition.external_input_ports>`;  any input to the Composition must be compatible with the shape of this,
+        whether received from the **input_ports** argument of oneo f the Composition's`execution methods
+        <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
+        Compostion.
 
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
@@ -2375,9 +2419,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     output_values : list[list]
         a list of the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
-        in the Composition for the last `TRIAL <TimeScale.TRIAL>` executed in a call to `run <Composition.run>`;
-        this is the same as `results <Composition.results>`\\[0], and provides consistency of access to the values
-        `Nodes <Composition_Nodes>` when one or more is a `nested Composition <Composition_Nested>`.
+        in the Composition for the last `TRIAL <TimeScale.TRIAL>` executed in a call to one of the Composition's
+        `execution methods <Composition_Execution_Methods>`, and the value returned by that method; this is the
+        same as `results <Composition.results>`\\[0], and provides consistency of access to the values of a
+        Composition's Nodes when one or more is a `nested Composition <Composition_Nested>`.
 
     simulation_results : list[list[list]]
         a list of the `results <Composition.results>` for executions of the Composition when it is executed using
@@ -6206,8 +6251,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether or not to show the Composition's input and out CompositionInterfaceMechanisms (CIMs)
 
         show_learning : bool or ALL : default False
-            specifies whether or not to show the learning components of the Compositoin;
-            they will all be displayed in the color specified for **learning_color**.
+            specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
+            `Composition`; they will all be displayed in the color specified for **learning_color**.
             Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
             If set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
             as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
@@ -8821,6 +8866,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         return output_values
+
+    def __call__(self, *args, **kwargs):
+        if not args and not kwargs:
+            if self.results:
+                return self.results[-1]
+            else:
+                return None
+        elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
+            from psyneulink.core.compositions.pathway import PathwayRole
+            if any(PathwayRole.LEARNING in p.roles and p.target in kwargs[INPUTS] for p in self.pathways):
+                return self.learn(*args, **kwargs)
+            else:
+                return self.run(*args, **kwargs)
+        else:
+            bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
+            raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
     def _update_learning_parameters(self, context):
         pass

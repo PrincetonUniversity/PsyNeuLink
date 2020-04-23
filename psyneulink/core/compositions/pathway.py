@@ -95,7 +95,7 @@ one specified in the Pathway `template's <Pathway_Template>` `name <Pathway.name
 
 The following formats can be used to specify a Pathway in the **pathway** argument of the constructor for the
 Pathway, the **pathways** argument of a the constructor for a `Composition`, or the corresponding argument
-of any of a Composition's `Pathway addition methods <Compositoin_Pathway_Addition_Methods>`:
+of any of a Composition's `Pathway addition methods <Composition_Pathway_Addition_Methods>`:
 
     * `Node <Composition_Nodes>`: -- assigns the Node to a `SINGLETON` Pathway.
     ..
@@ -304,7 +304,7 @@ class Pathway(object):
     Attributes
     ----------
 
-    pathway : `Node <Component_Nodes>`, list, tuple, or dict.
+    pathway : `Node <Composition_Nodes>`, list, tuple, or dict.
         if the Pathway is created on its own, this contains the specification provided to the **pathway** argument
         of its constructor, and can take any of the forms permitted for `Pathway specification <Pathway_Specification>`;
         if the Pathway is created by a Composition, this is a list of the `Nodes <Pathway_Nodes>` and intercolated
