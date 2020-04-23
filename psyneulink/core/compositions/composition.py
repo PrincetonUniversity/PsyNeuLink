@@ -441,43 +441,6 @@ Composition's constructor, or programmatically after it is constructed by assign
 corresponding attribute.
 
 
-COMMENT:
-For Developers
---------------
-
-.. _Composition_Execution_Contexts_Init:
-
-Initialization of Execution Contexts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- The parameter values for any execution context can be copied into another execution context by using \
-Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
-and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
-
-- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-other Components to function properly (beyond "standard" things like Component.function, \
-or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
-    - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
-    under **new_context**
-    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
-
-.. _Composition_TIming:
-
-*Timing*
-========
-
-When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
-method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
-<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
-the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
-in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
-<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
-`Condition` specifications for individual Components to execute different Components at different time scales.
-
-Runtime Params
-COMMENT
-
 .. _Composition_Learning:
 
 Learning in a Composition
@@ -870,16 +833,29 @@ can execute multiple trials (specified in their **num_trials** argument), callin
 <Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
 can also be called directly, but this is useful mostly for debugging.
 
-*Inputs*. All three methods require specification of their **inputs** argument, which designates the values
-assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
-A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a
-given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
+.. hint:
+   Once a Composition has been constructed, it can be called directly. If it is called with no arguments, and
+   has executed previously, the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
+   of execution is returned; otherwise it None is returned.  If it is called with arguments, then either `run
+   <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
+   Composition has any `learning_pathways <Composition_Learning_Pathways>`, and the relevant `TARGET_MECHANISM
+   <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
+   then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
+   the return value of the corresponding method is returned.
+
+*Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
+the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
+A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
+set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
 <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
 can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
 The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
 (in which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed).
-At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of the
-`output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
+
+.. _Composition_Execution_Results:
+
+*Results*. At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of
+the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
 `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
 <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
 
@@ -1181,6 +1157,44 @@ COMMENT
      ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
      to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
      value.
+
+
+COMMENT:
+For Developers
+--------------
+
+.. _Composition_Execution_Contexts_Init:
+
+Initialization of Execution Contexts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The parameter values for any execution context can be copied into another execution context by using \
+Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
+and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+
+- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
+other Components to function properly (beyond "standard" things like Component.function, \
+or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
+    - the intent is that with ``_dependent_components`` set properly, calling \
+    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+    under **new_context**
+    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+
+.. _Composition_Timing:
+
+*Timing*
+~~~~~~~~
+
+When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
+method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
+<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
+the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
+in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
+<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
+`Condition` specifications for individual Components to execute different Components at different time scales.
+
+Runtime Params
+COMMENT
 
 
 .. _Composition_Compilation:
@@ -1818,7 +1832,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_CIM_NAME, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUTS, INPUT_CIM_NAME, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -8852,6 +8866,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         return output_values
+
+    def __call__(self, *args, **kwargs):
+        if not args and not kwargs:
+            if self.results:
+                return self.results[-1]
+            else:
+                return None
+        elif (args and isinstance(args[0],dict)) or INPUTS in kwargs:
+            from psyneulink.core.compositions.pathway import PathwayRole
+            if any(PathwayRole.LEARNING in p.roles and p.target in kwargs[INPUTS] for p in self.pathways):
+                return self.learn(*args, **kwargs)
+            else:
+                return self.run(*args, **kwargs)
+        else:
+            bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
+            raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
     def _update_learning_parameters(self, context):
         pass
