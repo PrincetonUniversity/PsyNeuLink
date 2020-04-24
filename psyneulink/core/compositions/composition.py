@@ -3232,6 +3232,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if output_nodes:
                 remove_learning_and_control_nodes(output_nodes)
+            # MODIFIED 4/23/20 OLD:
             else:
                 try:
                     # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
@@ -3270,6 +3271,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             output_nodes.add(node)
                 except IndexError:
                     output_nodes = []
+            # # MODIFIED 4/23/20 NEW:
+            # try:
+            #     # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
+            #     #    - not used for Learning;
+            #     #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
+            #     #    - do not project to any other nodes.
+            #
+            #     # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
+            #     #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
+            #     #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
+            #     output_nodes = list([items for items in self.scheduler.consideration_queue
+            #                            if any([item for item in items if
+            #                                    (not NodeRole.LEARNING in self.nodes_to_roles[item]
+            #                                     and not isinstance(item, ControlMechanism)
+            #                                     and not (isinstance(item, ObjectiveMechanism)
+            #                                              and item._role == CONTROL))
+            #                                    ])]
+            #                           )[-1].copy()
+            #
+            #     # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
+            #     #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
+            #     remove_learning_and_control_nodes(output_nodes)
+            #
+            #     # Then, add any nodes that are not learning-related or a ControlMechanism,
+            #     #    and that have *no* efferent Projections
+            #     # IMPLEMENTATION NOTE:
+            #     #  Do this here, as the list considers entire sets in the consideration queue,
+            #     #    and a node with no efferents may be in the same set as one with efferents
+            #     #    if they have the same dependencies.
+            #     for node in self.nodes:
+            #         if (not node.efferents
+            #                 and not NodeRole.LEARNING in self.nodes_to_roles[node]
+            #                 and not isinstance(node, ControlMechanism)
+            #                 and not (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)
+            #         ):
+            #             output_nodes.add(node)
+            # except IndexError:
+            #     output_nodes = []
+            # MODIFIED 4/23/20 END
             for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
 
