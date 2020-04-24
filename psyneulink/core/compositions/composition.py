@@ -3116,7 +3116,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if (context.source == ContextFlags.COMMAND_LINE and
                 role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
                          NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
-            raise CompositionError(f"{role} cannot be assigned by user.")
+            raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
+                                   f"that cannot be assigned by user.")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
