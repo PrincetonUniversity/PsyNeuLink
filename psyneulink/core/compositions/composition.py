@@ -3115,7 +3115,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
         if (context.source == ContextFlags.COMMAND_LINE and
                 role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                         NodeRole.CYCLE, NodelRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
+                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
             raise CompositionError(f"{role} cannot be assigned by user.")
 
         node_role_pair = (node, role)
