@@ -2291,7 +2291,8 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
         receive Projections from the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.
+        always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.  This role cannot be
+        modified programmatically.
 
     INPUT
         A `Node <Composition_Nodes>` that receives input from outside its `Composition`, either from the Composition's
@@ -2301,10 +2302,12 @@ class NodeRole(Enum):
         can have many `INPUT` Nodes.
 
     SINGLETON
-        A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.
+        A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.  This role cannot be modified
+        programmatically.
 
     INTERNAL
-        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
+        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`.  This role cannot be modified
+        programmatically.
 
     OUTPUT
         A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
@@ -2316,20 +2319,25 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
         send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes.
+        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes. This role cannot be
+        modified programmatically.
 
     CYCLE
-        A `Node <Composition_Nodes>` that belongs to a cycle.
+        A `Node <Composition_Nodes>` that belongs to a cycle. This role cannot be modified programmatically.
 
     FEEDBACK_SENDER
         A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` the `feedback
-        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway` that
-        would otherwise form a `cycle <Composition_Feedback_Pathways>`.
+        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway`
+        that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be  modified directly,
+        but will be modified if the `feedback <Projection.feedback>` attribute of the relelvant `Projection
+        <Projection>`\\(s) is modified.
 
     FEEDBACK_RECEIVER
         A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>`  the `feedback
         <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
-        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`.
+        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be
+        modified directly, but will be modified if the `feedback <Projection.feedback>` attribute of the
+        relelvant `Projection <Projection>`\\(s) is modified.
 
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
@@ -2337,7 +2345,8 @@ class NodeRole(Enum):
 
     LEARNING
         A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
-        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`.
+        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role cannot be modified
+        programmatically.
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
@@ -2997,7 +3006,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
-                self.add_required_node_role(node, required_role)
+                self.add_required_node_role(node, required_role, context)
 
         # Add projections to node from sender of any shadowed InputPorts
         for input_port in node.input_ports:
@@ -3083,7 +3092,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.nodes[node]
             self.node_ordering.remove(node)
 
-    def add_required_node_role(self, node, role):
+    @handle_external_context()
+    def add_required_node_role(self, node, role, context=None):
         """
             Assign the `NodeRole` specified by **role** to **node**.
 
@@ -3099,6 +3109,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
+
+        # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+        if (context.source == ContextFlags.COMMAND_LINE and
+                role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
+                         NodeRole.CYCLE, NodelRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
+            raise CompositionError(f"{role} cannot be assigned by user.")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
@@ -4971,7 +4987,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self.add_required_node_role(node, NodeRole.OUTPUT)
+                self.add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
@@ -4994,7 +5010,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-        self.add_required_node_role(output_source, NodeRole.OUTPUT)
+        self.add_required_node_role(output_source, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
                                                               name=pathway_name,
@@ -5511,7 +5527,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self.add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT)
+            self.add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
             sequence_end = path_length - 3
 
