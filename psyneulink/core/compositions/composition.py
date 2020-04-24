@@ -2857,6 +2857,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not cur_vertex.component.is_processing:
                 remove_vertex(cur_vertex)
 
+        # this determines CYCLE nodes and final FEEDBACK nodes
+        self._graph_processing.prune_feedback_edges()
         self.needs_update_graph_processing = False
 
     def _analyze_consideration_queue(self, q, objective_mechanism):
