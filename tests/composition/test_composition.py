@@ -6091,7 +6091,7 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {D}
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == set(learning)
-        # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
+        # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
 

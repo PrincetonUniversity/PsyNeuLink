@@ -3191,6 +3191,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in origin_nodes:
                 self._add_node_role(node, NodeRole.INPUT)
 
+        # FIX 4/23/20 [JDC]: SOMETHING IN HERE IS FAILING (SEE SCRATCH PAD)
+
         # If no OUTPUT nodes were explicitly specified as required_roles by *user* , assign them:
         # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
         # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
@@ -3271,14 +3273,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in output_nodes:
                 self._add_node_role(node, NodeRole.OUTPUT)
 
-            # Finally, assign TERMINAL and SINGLETON nodes
-            for node in self.nodes:
-                if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
-                    self._add_node_role(node, NodeRole.TERMINAL)
-                if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-                    self._add_node_role(node, NodeRole.SINGLETON)
-                if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-                    self._add_node_role(node, NodeRole.INTERNAL)
+        # FIX 4/23/20 [JDC]:  SHOULD THIS BE AT THIS LEVEL OF INDENT?
+        # Finally, assign TERMINAL and SINGLETON nodes
+        for node in self.nodes:
+            # # MODIFIED 4/23/20 OLD:
+            # if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
+            # MODIFIED 4/23/20 NEW:
+            if (not node.efferents
+                    or (NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]
+                    and not NodeRole.LEARNING in self.get_roles_by_node(node))):
+            # MODIFIED 4/23/20 END
+                self._add_node_role(node, NodeRole.TERMINAL)
+            if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                self._add_node_role(node, NodeRole.SINGLETON)
+            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                self._add_node_role(node, NodeRole.INTERNAL)
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -3363,7 +3372,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             for input_port in node.external_input_ports:
 
-                # add it to our set of current input ports
+                # add it to set of current input ports
                 current_input_node_input_ports.add(input_port)
 
                 # if there is not a corresponding CIM InputPort/OutputPort pair, add them
