@@ -5660,22 +5660,6 @@ class TestAuxComponents:
 
         assert np.allclose(B.parameters.value.get(comp), [[3.0]])
 
-    def test_required_node_roles(self):
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B',
-                              function=Linear(slope=2.0))
-
-        comp = Composition(name='composition')
-        comp.add_node(A, required_roles=[NodeRole.TERMINAL])
-        comp.add_linear_processing_pathway([A, B])
-
-        result = comp.run(inputs={A: [[1.0]]})
-
-        terminal_mechanisms = comp.get_nodes_by_role(NodeRole.TERMINAL)
-
-        assert A in terminal_mechanisms and B in terminal_mechanisms
-        assert np.allclose(result, [[1.0], [2.0]])
-
     def test_aux_component_with_required_role(self):
         A = TransferMechanism(name='A')
         B = TransferMechanism(name='B')
@@ -6094,6 +6078,41 @@ class TestNodeRoles:
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
+    def test_OUTPUT_asymmetric_with_learning_short_first(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[[A], {'LEARNING_PATHWAY':([B,C], BackPropagation)}])
+        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_OUTPUT_asymmetric_with_learning_short_last(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[{'LEARNING_PATHWAY':([B,C], BackPropagation)},[A]])
+        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_OUTPUT_required_node_roles_override(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B', function=Linear(slope=2.0))
+        comp = Composition(name='composition')
+        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
+        comp.add_linear_processing_pathway([A, B])
+        result = comp.run(inputs={A: [[1.0]]})
+        output_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert A in output_mechanisms
+        assert np.allclose(result, [[1.0]])
+
+    def test_OUTPUT_required_node_roles_both(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B', function=Linear(slope=2.0))
+        comp = Composition(name='composition')
+        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
+        comp.add_linear_processing_pathway([A, (B, NodeRole.OUTPUT)])
+        result = comp.run(inputs={A: [[1.0]]})
+        terminal_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert A in terminal_mechanisms and B in terminal_mechanisms
+        assert np.allclose(result, [[1.0],[2.0]])
 
 class TestMisc:
 
