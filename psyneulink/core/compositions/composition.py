@@ -276,14 +276,14 @@ one or more `NodeRoles <NodeRole>` automatically when a Composition is construct
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
 receive its external input when it is `run <Composition.run>`), and similarly its `TERMINAL` Nodes are assigned as its
 `OUTPUT` Nodes (the values of which are reported as the `results <Composition.results>` of running the Composition).
-However, any other nodes can be specifies as the `INPUT` or `OUTPUT` Nodes using the methods above, in which case
-the default assignents are ignored
+However, any other nodes can be specified as the `INPUT` or `OUTPUT` Nodes using the methods above, in which case
+the default assignents are ignored.
 COMMENT:
     ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
     <Composition_Learning_Pathway>` (see XXX).
 COMMENT
-.  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_required_node_role
-<Composition.remove_required_node_role>` method. All of the roles assigned assigned to a particular Node can be
+.  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_node_role
+<Composition.remove_node_role>` method. All of the roles assigned assigned to a particular Node can be
 listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the nodes assigned a
 particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
 
@@ -3123,7 +3123,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
 
-    def remove_required_node_role(self, node, role):
+    def remove_node_role(self, node, role):
         """
             Remove `NodeRole` specified by **role** from **node** if it was been assigned.
 
