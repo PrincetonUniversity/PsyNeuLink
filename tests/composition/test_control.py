@@ -933,8 +933,9 @@ class TestControlMechanisms:
             control_signals=[(pnl.NOISE, rtm)])
         
         comp = pnl.Composition()
-        comp.add_node(monitor)
-        comp.add_node(rtm)
+        roles = [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]
+        comp.add_node(monitor, required_roles=roles)
+        comp.add_node(rtm, required_roles=roles)
         comp.add_node(controller)
         val = comp.run(inputs = {
                     monitor: [[1], [5], [1], [5]],

@@ -1783,9 +1783,11 @@ Class Reference
 """
 
 import collections
+import enum
 import inspect
 import itertools
 import logging
+import networkx
 import warnings
 import sys
 
@@ -1845,7 +1847,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list
+    ContentAddressableList, call_with_pruned_args, convert_to_list, merge_dictionaries
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -1857,7 +1859,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
     PredictionErrorMechanism
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'get_compositions',
+    'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions',
     'MECH_FUNCTION_PARAMS', 'NodeRole', 'PORT_FUNCTION_PARAMS'
 ]
 
@@ -1898,6 +1900,25 @@ class RunError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+class EdgeType(enum.Enum):
+    """
+        Attributes:
+            NON_FEEDBACK
+                A standard edge that if it exists in a cycle will only
+                be flattened, not pruned
+
+            FEEDBACK
+                A "feedbacK" edge that will be immediately pruned to
+                create an acyclic graph
+
+            FLEXIBLE
+                An edge that will be pruned only if it exists in a cycle
+    """
+    NON_FEEDBACK = 0
+    FEEDBACK = 1
+    FLEXIBLE = 2
 
 
 class Vertex(object):
@@ -1941,10 +1962,31 @@ class Vertex(object):
             self.children = []
 
         self.feedback = feedback
-        self.backward_sources = set()
+
+        # when pruning a vertex for a processing graph, we store the
+        # connection type (the vertex.feedback) to the new child or
+        # parent here
+        # self.source_types = collections.defaultdict(EdgeType.NORMAL)
+        self.source_types = {}
 
     def __repr__(self):
         return '(Vertex {0} {1})'.format(id(self), self.component)
+
+    @property
+    def feedback(self):
+        return self._feedback
+
+    @feedback.setter
+    def feedback(self, value: EdgeType):
+        mapping = {
+            False: EdgeType.NON_FEEDBACK,
+            True: EdgeType.FEEDBACK,
+            MAYBE: EdgeType.FLEXIBLE
+        }
+        try:
+            self._feedback = mapping[value]
+        except KeyError:
+            self._feedback = value
 
 
 class Graph(object):
@@ -1968,6 +2010,8 @@ class Graph(object):
     def __init__(self):
         self.comp_to_vertex = collections.OrderedDict()  # Translate from PNL Mech, Comp or Proj to corresponding vertex
         self.vertices = []  # List of vertices within graph
+
+        self.cycle_vertices = set()
 
     def copy(self):
         """
@@ -2076,86 +2120,161 @@ class Graph(object):
         """
         return self.comp_to_vertex[component].children
 
-    def get_forward_children_from_component(self, component):
+    def prune_feedback_edges(self):
         """
-            Arguments
-            ---------
+            Produces an acyclic graph from this Graph. `Feedback
+            <EdgeType.FEEDBACK>` edges are pruned, as well as any edges
+            that are `potentially feedback <EdgeType.FLEXIBLE>` that are
+            in cycles. After these edges are removed, if cycles still
+            remain, they are "flattened." That is, each edge in the
+            cycle is pruned, and each the dependencies of each node in
+            the cycle are set to the pre-flattened union of all cyclic
+            nodes' parents that are themselves not in a cycle.
 
-            component : Component
-                the Component whose parents will be returned
-
-            Returns
-            -------
-
-            # FIX 8/12/19:  MODIFIED FEEDBACK -
-            #  IS THIS A CORRECT DESCRIPTION? (SAME AS get_forward_parents_from_component)
-            A list[Vertex] of the parent `Vertices <Vertex>` of the Vertex associated with **component**: list[`Vertex`]
-        """
-        forward_children = []
-        for child in self.comp_to_vertex[component].children:
-            if component not in self.comp_to_vertex[child.component].backward_sources:
-                forward_children.append(child)
-        return forward_children
-
-    def get_forward_parents_from_component(self, component):
-        """
-            Arguments
-            ---------
-
-            component : Component
-                the Component whose parents will be returned
-
-            Returns
-            -------
-            COMMENT:
-            # FIX 8/12/19:  MODIFIED FEEDBACK -
-            #  IS THIS A CORRECT DESCRIPTION? (SAME AS get_forward_children_from_component)
-            COMMENT
-            list[`Vertex`] :
-                list of the parent `Vertices <Vertex>` of the Vertex associated with **component**.
-        """
-        forward_parents = []
-        for parent in self.comp_to_vertex[component].parents:
-            if parent.component not in self.comp_to_vertex[component].backward_sources:
-                forward_parents.append(parent)
-        return forward_parents
-
-    def get_backward_children_from_component(self, component):
-        """
-            Arguments
-            ---------
-
-            component : Component
-                the Component whose children will be returned
-
-            Returns
-            -------
-
-            list[`Vertex`] :
-                list of the child `Vertices <Vertex>` of the Vertex associated with **component** .
-        """
-        backward_children = []
-        for child in self.comp_to_vertex[component].children:
-            if component in self.comp_to_vertex[child.component].backward_sources:
-                backward_children.append(child)
-        return backward_children
-
-    def get_backward_parents_from_component(self, component):
-        """
-            Arguments
-            ---------
-
-            component : Component
-                the Component whose children will be returned
-
-            Returns
-            -------
-
-            list[`Vertex`] :
-                list of the child `Vertices <Vertex>` of the Vertex associated with **component**.
+            Returns:
+                a tuple containing
+                - the acyclic dependency dictionary produced from this
+                Graph
+                - a dependency dictionary containing only the edges
+                removed to create the acyclic graph
+                - the unmodified cyclic dependency dictionary of this
+                Graph
         """
 
-        return list(self.comp_to_vertex[component].backward_sources)
+        # stores a modified version of the self in which cycles are "flattened"
+        execution_dependencies = self.dependency_dict
+        # stores the original unmodified dependencies
+        structural_dependencies = self.dependency_dict
+        # wipe and reconstruct list of vertices in cycles
+        self.cycle_vertices = set()
+
+        # prune all feedback projections
+        for node in execution_dependencies:
+            # recurrent edges
+            try:
+                execution_dependencies[node].remove(node)
+                self.cycle_vertices.add(node)
+            except KeyError:
+                pass
+
+            # standard edges labeled as feedback
+            vert = self.comp_to_vertex[node]
+            execution_dependencies[node] = {
+                dep for dep in execution_dependencies[node]
+                if (
+                    self.comp_to_vertex[dep] not in vert.source_types
+                    or vert.source_types[self.comp_to_vertex[dep]] is not EdgeType.FEEDBACK
+                )
+            }
+
+        # construct a parallel networkx graph to use its cycle algorithms
+        nx_graph = networkx.DiGraph()
+        nx_graph.add_nodes_from(list(execution_dependencies.keys()))
+        for child in execution_dependencies:
+            for parent in execution_dependencies[child]:
+                nx_graph.add_edge(parent, child)
+
+        # prune only one flexible edge per attempt, to remove as few
+        # edges as possible
+        # For now, just prune the first flexible edge each time. Maybe
+        # look for "best" edges to prune in future by frequency in
+        # cycles, if that occurs
+        cycles_changed = True
+        while cycles_changed:
+            cycles_changed = False
+
+            # recompute cycles after each prune
+            for cycle in networkx.simple_cycles(nx_graph):
+                len_cycle = len(cycle)
+
+                for i in range(len_cycle):
+                    parent = self.comp_to_vertex[cycle[i]]
+                    child = self.comp_to_vertex[cycle[(i + 1) % len_cycle]]
+
+                    if (
+                        parent in child.source_types
+                        and child.source_types[parent] is EdgeType.FLEXIBLE
+                    ):
+                        execution_dependencies[child.component].remove(parent.component)
+                        child.source_types[parent] = EdgeType.FEEDBACK
+                        nx_graph.remove_edge(parent.component, child.component)
+                        cycles_changed = True
+                        break
+
+        def merge_intersecting_cycles(cycle_list: list) -> dict:
+            # transforms a cycle represented as a list [c_0, ... c_n]
+            # to a dependency dictionary {c_0: c_n, c_1: c_0, ..., c_n: c_{n-1}}
+            cycle_dicts = [
+                {
+                    cycle[i]: cycle[(i - 1) % len(cycle)]
+                    for i in range(len(cycle))
+                }
+                for cycle in cycle_list
+            ]
+
+            new_cycles = cycle_dicts
+            cycles_changed = True
+
+            # repeatedly join cycles that have a node in common
+            while cycles_changed:
+                cycles_changed = False
+                i = 0
+                j = 1
+
+                while i < len(new_cycles):
+                    while j < len(new_cycles):
+                        merged, has_shared_keys = merge_dictionaries(
+                            new_cycles[i],
+                            new_cycles[j]
+                        )
+                        if has_shared_keys:
+                            cycles_changed = True
+                            new_cycles[i] = merged
+                            new_cycles.remove(new_cycles[j])
+                        else:
+                            j += 1
+                    i += 1
+
+            return new_cycles
+
+        cycles = list(networkx.simple_cycles(nx_graph))
+        # create the longest possible cycles using any smaller, connected cycles
+        cycles = merge_intersecting_cycles(cycles)
+
+        # find all the parent nodes for each node in a cycle, excluding
+        # parents that are part of the cycle
+        for cycle in cycles:
+            len_cycle = len(cycle)
+            acyclic_dependencies = set()
+
+            for node in cycle:
+                acyclic_dependencies = acyclic_dependencies.union({
+                    parent for parent in execution_dependencies[node]
+                    if parent not in cycle
+                })
+
+            # replace the dependencies of each node in the cycle with
+            # each of the above parents outside of the cycle. This
+            # ensures that they all share the same parents and will then
+            # exist in the same consideration set
+
+            # NOTE: it is unnecessary to change any childrens'
+            # dependencies because any child dependent on a node n_i in
+            # a cycle will still depend on n_i when it is part of a
+            # flattened cycle. The flattened cycle will simply add more
+            # nodes to the consideration set in which n_i exists
+            for child in cycle:
+                self.cycle_vertices.add(child)
+                execution_dependencies[child] = acyclic_dependencies
+
+        return (
+            execution_dependencies,
+            {
+                node: structural_dependencies[node] - execution_dependencies[node]
+                for node in execution_dependencies
+            },
+            structural_dependencies
+        )
 
     @property
     def dependency_dict(self):
@@ -2564,6 +2683,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.nodes_to_roles = collections.OrderedDict()
 
+        self.cycle_vertices = set()
         self.feedback_senders = set()
         self.feedback_receivers = set()
 
@@ -2696,7 +2816,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-        self._check_feedback(scheduler=scheduler, context=context)
         self._determine_node_roles(context=context)
         self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
@@ -2717,14 +2836,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             logger.debug('Removing', vertex)
             for parent in vertex.parents:
                 for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
+                    child.source_types[parent] = vertex.feedback
                     self._graph_processing.connect_vertices(parent, child)
-            # ensure that children get handled
-            if len(vertex.parents) == 0:
-                for child in vertex.children:
-                    if vertex.feedback:
-                        child.backward_sources.add(parent.component)
 
             for node in cur_vertex.parents + cur_vertex.children:
                 logger.debug(
@@ -2824,7 +2937,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
                     if isinstance(component[0], Projection):
-                        if isinstance(component[1], bool) or component[1]==MAYBE:
+                        if isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}:
                             projections.append(component)
                         else:
                             raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
@@ -3171,15 +3284,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
 
         # Cycles
-        for node in self.scheduler.cycle_nodes:
+        for node in self.graph_processing.cycle_vertices:
             self._add_node_role(node, NodeRole.CYCLE)
 
         # "Feedback" projections
-        for node in self.feedback_senders:
-            self._add_node_role(node, NodeRole.FEEDBACK_SENDER)
+        for receiver in self.graph_processing.vertices:
+            for sender, typ in receiver.source_types.items():
+                if typ is EdgeType.FEEDBACK:
+                    self._add_node_role(
+                        sender.component,
+                        NodeRole.FEEDBACK_SENDER
+                    )
+                    self._add_node_role(
+                        receiver.component,
+                        NodeRole.FEEDBACK_RECEIVER
+                    )
 
-        for node in self.feedback_receivers:
-            self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
+        # due to test_LEARNING_hebbian, all recurrent projections cause
+        # their senders to be FEEDBACK_RECEIVER
+        # REVIEW: but not FEEDBACK_SENDER - why?
+        for node in self.nodes:
+            if node in {eff.receiver.owner for eff in node.efferents}:
+                self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
 
         # Required Roles
         for node_role_pair in self.required_node_roles:
@@ -3986,7 +4112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
                             self.add_projection(MappingProjection(sender=sender, receiver=input_port),
                                                 sender_mechanism, shadow)
-        if feedback:
+        if feedback in {True, EdgeType.FEEDBACK}:
             self.feedback_senders.add(sender_mechanism)
             self.feedback_receivers.add(receiver_mechanism)
 
@@ -4285,73 +4411,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections and not existing_projections_in_composition:
                 return existing_projections
         return False
-
-    def _check_feedback(self, scheduler, context=None):
-        # FIX: 10/2/19 - SHOULD REALLY HANDLE THIS BY DETECTING LOOPS DIRECTLY
-        """Check that feedback specification is required for projections to which it has been assigned
-        Rationale:
-            if, after removing the feedback designation of a Projection, structural and functional dependencies
-            are the same, then the designation is not needed so remove it.
-        Note:
-        - graph_processing.dependency_dict is used as indication of structural dependencies
-        - scheduler.dependency_dict is used as indication of functional (execution) dependencies
-        """
-
-        if scheduler:
-            # If an external scheduler is provided, update it with current processing graph
-            try:
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            # Ignore any cycles at this point
-            except ValueError:
-                pass
-        else:
-            scheduler = self.scheduler
-
-        already_tested = []
-        for vertex in [v for v in self.graph.vertices if v.feedback==MAYBE]:
-            # projection = vertex.component
-            # assert isinstance(projection, Projection), \
-            #     f'PROGRAM ERROR: vertex identified with feedback=True that is not a Projection'
-            if vertex in already_tested:
-                continue
-
-            v_set = [v for v in self.graph.vertices
-                     if (v.feedback==MAYBE
-                         and v.component.sender.owner is vertex.component.sender.owner)]
-
-            for v in v_set:
-                v.feedback = False
-
-            # Update Composition's graph_processing
-            self._update_processing_graph()
-
-            # Update scheduler's consideration_queue based on update of graph_processing to detect any new cycles
-            try:
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            except ValueError:
-                # If a cycle is detected, leave feedback alone
-                feedback = 'leave'
-
-            # If, when feedback is False, the dependency_dicts for the structural and execution are the same,
-            #    then no need for feedback specification, so remove it
-            #       and remove assignments of sender and receiver to corresponding feedback entries of Composition
-            if self.graph_processing.dependency_dict == scheduler.dependency_dict:
-                feedback = 'remove'
-            else:
-                feedback = 'leave'
-
-            # Remove nodes that send and receive feedback Projection from feedback_senders and feedback_receivers lists
-            if feedback == 'remove':
-                self.feedback_senders.remove(v.component.sender.owner)
-                self.feedback_receivers.remove(v.component.receiver.owner)
-            # Otherwise, restore feedback assignment and scheduler's consideration_queue
-            else:
-                for v in v_set:
-                    v.feedback = True
-                self._update_processing_graph()
-                scheduler._init_consideration_queue_from_graph(self.graph_processing)
-            already_tested.extend(v_set)
-
 
     # ******************************************************************************************************************
     #                                            PATHWAYS

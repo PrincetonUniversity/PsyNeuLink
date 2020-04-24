@@ -1545,6 +1545,28 @@ class TestExecutionOrder:
         assert comp.scheduler.consideration_queue[1] == {B, C, D, C2, C3}
         assert comp.scheduler.consideration_queue[2] == {E}
 
+    def test_three_overlapping_loops(self):
+        A = ProcessingMechanism(name="A")
+        B = ProcessingMechanism(name="B")
+        C = ProcessingMechanism(name="C")
+        C2 = ProcessingMechanism(name="C2")
+        C3 = ProcessingMechanism(name="C3")
+        C4 = ProcessingMechanism(name="C4")
+        D = ProcessingMechanism(name="D")
+        E = ProcessingMechanism(name="E")
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([A, B, C, D, E])
+        comp.add_linear_processing_pathway([D, C2, B])
+        comp.add_linear_processing_pathway([D, C3, B])
+        comp.add_linear_processing_pathway([D, C4, B])
+
+        comp.run(inputs={A: [1.0]})
+
+        assert comp.scheduler.consideration_queue[0] == {A}
+        assert comp.scheduler.consideration_queue[1] == {B, C, D, C2, C3, C4}
+        assert comp.scheduler.consideration_queue[2] == {E}
+
     def test_two_separate_loops(self):
         A = ProcessingMechanism(name="A")
         B = ProcessingMechanism(name="B")
