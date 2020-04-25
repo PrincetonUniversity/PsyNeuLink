@@ -6066,10 +6066,10 @@ class TestNodeRoles:
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
         comp = Composition(pathways=A)
         pathway = comp.pathways[0]
-        pathway.target == None
-        pathway.learning_objective == None
-        pathway.learning_components == {}
-        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT,NodeRole.FEEDBACK_RECEIVER}
+        assert pathway.target == None
+        assert pathway.learning_objective == None
+        assert pathway.learning_components == {}
+        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT, NodeRole.FEEDBACK_RECEIVER}
         assert roles.issubset(set(comp.get_roles_by_node(A)))
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == {A.learning_mechanism}
 
