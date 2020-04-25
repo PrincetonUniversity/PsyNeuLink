@@ -3117,13 +3117,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
                          NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
             raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
-                                   f"that cannot be assigned by user.")
+                                   f"that cannot be modified by user.")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
 
-    def remove_node_role(self, node, role):
+    @handle_external_context()
+    def remove_node_role(self, node, role, context):
         """
             Remove `NodeRole` specified by **role** from **node** if it was been assigned.
 
@@ -3139,6 +3140,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
+
+        # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+        if (context.source == ContextFlags.COMMAND_LINE and
+                role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
+                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
+            raise CompositionError(f"Attempt to remove {role} (from {node} of {self.name})"
+                                   f"that cannot be modified by user.")
+
 
         node_role_pair = (node, role)
         if node_role_pair in self.required_node_roles:
