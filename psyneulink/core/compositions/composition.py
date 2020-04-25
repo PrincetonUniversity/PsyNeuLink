@@ -3128,6 +3128,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
             Remove `NodeRole` specified by **role** from **node** if it was been assigned.
 
+            Removes role whether it was assigned as a `required_node_role <Composition_Node_Role_Assignment>`
+            or by default.
+
             Arguments
             _________
 
@@ -3152,7 +3155,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair in self.required_node_roles:
             self.required_node_roles.remove(node_role_pair)
-        xxx
+        self._remove_node_role(node, role, context)
 
     def get_roles_by_node(self, node):
         """
