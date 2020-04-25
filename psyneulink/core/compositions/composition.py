@@ -2309,19 +2309,6 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`.  This role cannot be modified
         programmatically.
 
-    OUTPUT
-        A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
-        the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
-        Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
-        <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
-
-    TERMINAL
-        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
-        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
-        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes. This role cannot be
-        modified programmatically.
-
     CYCLE
         A `Node <Composition_Nodes>` that belongs to a cycle. This role cannot be modified programmatically.
 
@@ -2357,21 +2344,33 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
         <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
 
+    OUTPUT
+        A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
+        the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
+        Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
+        <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
+
+    TERMINAL
+        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
+        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
+        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
+        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes. This role cannot be
+        modified programmatically.
+
     """
     ORIGIN = 0
     INPUT = 1
     SINGLETON = 2
     INTERNAL = 3
-    OUTPUT = 4
-    TERMINAL = 5
-    CYCLE = 6
-    FEEDBACK_SENDER = 7
-    FEEDBACK_RECEIVER = 8
-    CONTROLLER_OBJECTIVE = 9
-    LEARNING = 10
-    TARGET = 11
-    LEARNING_OBJECTIVE = 12
-
+    CYCLE = 4
+    FEEDBACK_SENDER = 5
+    FEEDBACK_RECEIVER = 6
+    CONTROLLER_OBJECTIVE = 7
+    LEARNING = 8
+    TARGET = 9
+    LEARNING_OBJECTIVE = 10
+    OUTPUT = 11
+    TERMINAL = 12
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -2870,22 +2869,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing.prune_feedback_edges()
         self.needs_update_graph_processing = False
 
-    def _analyze_consideration_queue(self, q, objective_mechanism):
-        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
-            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
-            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
-        """
-        for node in q[0]:
-            self._add_node_role(node, NodeRole.ORIGIN)
-
-        for node in list(q)[-1]:
-            if node != objective_mechanism:
-                self._add_node_role(node, NodeRole.TERMINAL)
-            elif len(q[-1]) < 2:
-                for previous_node in q[-2]:
-                    self._add_node_role(previous_node, NodeRole.TERMINAL)
-
 
     # ******************************************************************************************************************
     #                                               NODES
@@ -3273,28 +3256,102 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
-    def _determine_node_roles(self, context=None):
+    def _determine_origin_and_terminal_nodes_from_consideration_queue(self, q, objective_mechanism):
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
+            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
+            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
+            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
         """
-        Procedures/Rules for assignment of TERMINAL and OUTPUT NodeRoles:
-        - Call _analyze_consideration_queue to get FEEDBACK assignments
-          (or directly call _check_feedback or some new method for that?)
-        - Assign TERMINAL to node if:
-          - it has no efferent projections except to output_CIM
-          - OR it is FEEDBACK_SENDER of *outermost* loop in which node participates
-            (e.g., last LearningMech in BP pathway)
-            determined as FEEDBACK_SENDER with no efferent Projections except
-              - one(s) marked feedback
-              - OR project to output_CIM
-        - Assign OUTPUT to node if:
-          - assigned by user as required_role
-          - AND/OR it has been assigned as TERMINAL *unless* it is:
+        for node in q[0]:
+            self._add_node_role(node, NodeRole.ORIGIN)
+
+        for node in list(q)[-1]:
+            if node != objective_mechanism:
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(q[-1]) < 2:
+                for previous_node in q[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+
+    def _determine_node_roles(self, context=None):
+        """Assign NodeRoles to Nodes in Compositoin
+
+        Assignment criteria:
+
+        ORIGIN:
+          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0])
+            .. _note:
+               - this takes account of any Projections designated as feedback by graph_processing
+                 (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
+               - these will all be assigined afferent Projections from Composition.input_CIM
+
+        INPUT:
+          - all ORIGIN Nodes for which INPUT has not been removed by remove_node_role()
+          - all Nodes for which INPUT is designated as a required_node_role
+            (i.e., in self.required_node_roles[NodeRole.INPUT]
+
+        SINGLETON:
+          - all Nodes that are *both* ORIGIN and TERMINAL
+
+        INTERNAL:
+          - all Nodes that are *neither* ORIGIN nor TERMINAL
+
+        CYCLE:
+          - all nodes that identified as being in a cycle by self.graph_processing
+            (i.e., in self.graph_processing.cycle_vertices)
+
+        FEEDBACK_SENDER:
+          - all nodes that send a Projection designated as feedback by self.graph_processing
+
+        FEEDBACK_RECEIVER:
+          - all nodes that receive a Projection designated as feedback by self.graph_processing
+
+        CONTROLLER_OBJECTIVE
+          [TBI]:
+            A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
+            <Composition.controller>`.
+
+        LEARNING
+          [TBI]:
+            A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
+            `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role cannot be modified
+            programmatically.
+
+        TARGET
+          [TBI]:
+            A `Node <Composition_Nodes>` that receives the target for a `learning pathway
+            <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `learn
+            <Composition.learn>` method (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+
+        LEARNING_OBJECTIVE
+          [TBI]:
+            A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
+            <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
+
+        OUTPUT:
+          - all TERMINAL Nodes *unless* they are:
             - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
             - an ObjectiveMechanisms associated with ModulatoryMechanism
             - the ??TARGET_MECHANISM for a Learning pathway -
               this is currently the case, but is inconsistent with the analog in Control,
               where monitored Mechanisms *are* allowed to be OUTPUT;
               therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
-        """
+          - all Nodes for which OUTPUT is designated as a required_node_role
+            (i.e., in self.required_node_roles[NodeRole.OUTPUT]
+
+        TERMINAL:
+          - all Nodes that either have *no* efferent projections (i.e., not specified as OUTPUT) OR
+            for which all efferent projections are either:
+            - to output_CIM OR
+            - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
+            .. _note:
+               this insures that for cases in which there are nested CYCLES
+               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
+               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
+               is assigned as a TERMINAL Node
+               (i.e., the LearningMechanism responsible for the *first* `learned Projection
+               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+
+       """
         from psyneulink.core.compositions.pathway import PathwayRole
 
         # Clear old roles
@@ -3314,17 +3371,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
-            self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
+            self._determine_origin_and_terminal_nodes_from_consideration_queue(self.scheduler.consideration_queue,
+                                                                               objective_mechanism)
+
+        # # Identify ORIGIN and TERMINAL nodes
+        # origin_nodes = set()
+        # for node in self.nodes:
+        #     # No afferent Projections except from input_CIM or marked as feedback
+        #     # if not any([afferent for afferent in node.path_afferents
+        #     #             if not (afferent.sender.owner is self.input_CIM
+        #     #                     or self.graph.comp_to_vertex[afferent].feedback.value
+        #     #     )]):
+        #     if any([afferent for afferent in node.path_afferents
+        #                 if afferent.sender.owner is self.input_CIM]):
+        #         origin_nodes.add(node)
+        # if origin_nodes != set(self.get_nodes_by_role(NodeRole.ORIGIN)):
+        #     assert False, 'PROGRAM ERROR: ORIGIN nodes '
+        # terminal_nodes = set()
+        # for node in self.nodes:
+        #     # No efferent Projections except to output_CIM or marked as feedback
+        #     if not any([efferent for efferent in node.efferents
+        #                 if not (efferent.receiver.owner is self.output_CIM
+        #                         or self.graph.comp_to_vertex[efferent].feedback.value)]):
+        #         terminal_nodes.add(node)
+        # if terminal_nodes != set(self.get_nodes_by_role(NodeRole.TERMINAL)):
+        #     assert False, 'PROGRAM ERROR:  TERMINAL nodes'
 
         # Also assign TERMINAL to any nodes that don't have efferent Projections other than to Composition's output_CIM
         # IMPLEMENTATION NOTE:
-        #   This is needed because _analyze_consideration_queue() assigns TERMINAL only to nodes in the *last*
-        #   consideration_set; however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not
-        #   be in the last consideration set, and therefore not assigned as TERMINAL by _analyze_consideration_queue().
-        #   This also assumes that _check_feedback() has already identified cycles and assigned FEEDBACK_SENDER, and
-        #   that _analyze_consideration_queue() assigns those to the last consideration set (which is why it must be
-        #   called here).  A potential alternative would be to not use _analyze_consideration_queue(), and simply
-        #   TERMINAL to all nodes without efferents (other than to output_CIM) or labeled as FEEDBACK_SENDER.
+        #   This is needed because _determine_origin_and_terminal_nodes_from_consideration_queue() assigns TERMINAL
+        #   only to nodes in the *last* consideration_set; however, the TERMINAL node(s) of a pathway with fewer nodes
+        #   than the longest one may not be in the last consideration set, and therefore not assigned as TERMINAL by
+        #   _determine_origin_and_terminal_nodes_from_consideration_queue(). This also assumes that _check_feedback()
+        #   has already identified cycles and assigned FEEDBACK_SENDER, and that
+        #   _determine_origin_and_terminal_nodes_from_consideration_queue() assigns those to the last consideration
+        #   set (which is why it must be called here).  A potential alternative would be to not use
+        #   _determine_origin_and_terminal_nodes_from_consideration_queue(), and simply TERMINAL to all nodes without
+        #   efferents (other than to output_CIM) or labeled as FEEDBACK_SENDER.
         for node in self.nodes:
             if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
                 self._add_node_role(node, NodeRole.TERMINAL)
@@ -3342,7 +3425,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.graph_processing.cycle_vertices:
             self._add_node_role(node, NodeRole.CYCLE)
 
-        # "Feedback" projections
+        # "Feedback" Nodes
         for receiver in self.graph_processing.vertices:
             for sender, typ in receiver.source_types.items():
                 if typ is EdgeType.FEEDBACK:
@@ -3354,30 +3437,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver.component,
                         NodeRole.FEEDBACK_RECEIVER
                     )
-
-        # Identify ORIGIN and TERMINAL nodes
-        origin_nodes = set()
-        for node in self.nodes:
-            # No afferent Projections except from input_CIM or marked as feedback
-            # if not any([afferent for afferent in node.path_afferents
-            #             if not (afferent.sender.owner is self.input_CIM
-            #                     or self.graph.comp_to_vertex[afferent].feedback.value
-            #     )]):
-            if any([afferent for afferent in node.path_afferents
-                        if afferent.sender.owner is self.input_CIM]):
-                origin_nodes.add(node)
-        if origin_nodes != set(self.get_nodes_by_role(NodeRole.ORIGIN)):
-            assert False, 'PROGRAM ERROR: ORIGIN nodes '
-        terminal_nodes = set()
-        for node in self.nodes:
-            # No efferent Projections except to output_CIM or marked as feedback
-            if not any([efferent for efferent in node.efferents
-                        if not (efferent.receiver.owner is self.output_CIM
-                                or self.graph.comp_to_vertex[efferent].feedback.value)]):
-                terminal_nodes.add(node)
-        if terminal_nodes != set(self.get_nodes_by_role(NodeRole.TERMINAL)):
-            assert False, 'PROGRAM ERROR:  TERMINAL nodes'
-
 
         # due to test_LEARNING_hebbian, all recurrent projections cause
         # their senders to be FEEDBACK_RECEIVER
