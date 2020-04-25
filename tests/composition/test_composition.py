@@ -6139,8 +6139,8 @@ class TestNodeRoles:
         comp.add_linear_processing_pathway([A, B])
         result = comp.run(inputs={A: [[1.0]]})
         output_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
-        assert A in output_mechanisms
-        assert np.allclose(result, [[1.0]])
+        assert set(output_mechanisms) == {A,B}
+        assert np.allclose(result, [[1.0],[2.0]])
 
     def test_OUTPUT_required_node_roles_both(self):
         A = TransferMechanism(name='A')

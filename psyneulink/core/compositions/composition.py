@@ -1807,17 +1807,14 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism, AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -1854,10 +1851,14 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
-from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions',
@@ -3624,39 +3625,57 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Assign OUTPUT
         # - Any designated as OUTPUT by required_node_role have already been assigned
         for node in self.nodes:
+
+            assign_as_output = False
+
             # Assign OUTPUT if node is TERMINAL...
             if NodeRole.TERMINAL in self.get_roles_by_node(node):
                 # unless it is a ModulatoryMechanism
-                #     or an ObjectiveMechanism associated with ControlMechanism or LearningMechanism
                 if (isinstance(node, ModulatoryMechanism_Base)
-                        or any(role in self.get_roles_by_node(node) for role in {NodeRole.CONTROL_OBJECTIVE,
-                                                                                 NodeRole.CONTROLLER_OBJECTIVE,
-                                                                                 NodeRole.LEARNING_OBJECTIVE})):
+                    # # FIX: WHY WOULD SUCH AN ObjectiveMechanism BE TERMINAL IF IT PROJECTS TO A MODULATORY_MECHANISM
+                    # #      (IS THIS BECAUSE MODULATORY MECH GETS DISCOUNTED FROM BEING TERMINAL IN graph_processing?)
+                    # # or an ObjectiveMechanism associated with ControlMechanism or LearningMechanism
+                    #     or any(role in self.get_roles_by_node(node) for role in {NodeRole.CONTROL_OBJECTIVE,
+                    #                                                              NodeRole.CONTROLLER_OBJECTIVE,
+                    #                                                              NodeRole.LEARNING_OBJECTIVE})
+                ):
+                    continue
+                else:
+                    self._add_node_role(node, NodeRole.OUTPUT)
+
+            else:
+
+                # IMPLEMENTATION NOTE:
+                #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
+                #   The alternate version below restricts OUTPUT only to RecurrentTransferMechasnism
+                # # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
+                # #     (i.e., it is either a RecurrentTransferMechanism configured for learning
+                # #      or the LEARNING_OBJECTIVE of a `learning pathway <Composition_Learning_Pathway>`
+                # if all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism)
+                #        for p in node.efferents):
+                #     self._add_node_role(node, NodeRole.OUTPUT)
+                #     continue
+
+                # Assign OUTPUT if it is an `RecurrentTransferMechanism` configured for learning
+                #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
+                #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
+                if all(p.receiver.owner is node or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+                       for p in node.efferents):
+                    self._add_node_role(node, NodeRole.OUTPUT)
                     continue
 
-            # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
-            #     (i.e., it is either a RecurrentTransferMechanism configured for learning
-            #      or the TARGET_MECHANISM of a `learning pathway <Composition_Learning_Pathway>`
-            elif all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism) for p in
-                node.efferents):
-                pass
-            # else:
-            #     continue
+                # Assign OUTPUT if node projects only to an ObjectiveMechanism designated
+                #     as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                # unless it is the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
+                if NodeRole.TARGET in self.get_roles_by_node(node):
+                    continue
+                if all(any(p.receiver.owner in self.get_nodes_by_role(role)
+                           for role in {NodeRole.CONTROL_OBJECTIVE,
+                                        NodeRole.CONTROLLER_OBJECTIVE,
+                                        NodeRole.LEARNING_OBJECTIVE})
+                       for p in node.efferents):
+                    self._add_node_role(node, NodeRole.OUTPUT)
 
-            # Assign OUTPUT if node projects only to an ObjectiveMechanism designated
-            #     as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-            # elif all(role in self.get_roles_by_node(p.receiver.owner) for role in {NodeRole.CONTROL_OBJECTIVE,
-            #                                                                        NodeRole.CONTROLLER_OBJECTIVE,
-            #                                                                        NodeRole.LEARNING_OBJECTIVE}
-            elif all(any(p.receiver.owner in self.get_nodes_by_role(role) for role in {NodeRole.CONTROL_OBJECTIVE,
-                                                                                       NodeRole.CONTROLLER_OBJECTIVE,
-                                                                                       NodeRole.LEARNING_OBJECTIVE})
-                     for p in node.efferents):
-                pass
-            else:
-                continue
-
-            self._add_node_role(node, NodeRole.OUTPUT)
 
 
 
