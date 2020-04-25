@@ -3152,6 +3152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair in self.required_node_roles:
             self.required_node_roles.remove(node_role_pair)
+        xxx
 
     def get_roles_by_node(self, node):
         """
@@ -3502,13 +3503,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _add_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
         self.nodes_to_roles[node].add(role)
 
     def _remove_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
         self.nodes_to_roles[node].remove(role)
 
     def _determine_pathway_roles(self, context=None):
