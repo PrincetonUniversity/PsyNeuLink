@@ -3271,6 +3271,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_compositions
 
     def _determine_node_roles(self, context=None):
+        """
+        Procedures/Rules for assignment of TERMINAL and OUTPUT NodeRoles:
+        - Call _analyze_consideration_queue to get FEEDBACK assignments
+          (or directly call _check_feedback or some new method for that?)
+        - Assign TERMINAL to node if:
+          - it has no efferent projections except to output_CIM
+          - OR it is FEEDBACK_SENDER of *outermost* loop in which node participates
+            (e.g., last LearningMech in BP pathway)
+            determine as FEEDBACK_SENDER with no efferent Projections except
+              - one(s) marked feedback
+              - to output_CIM
+        - Assign OUTPUT to node if:
+          - assigned by user as required_role
+          - AND/OR it has been assigned as TERMINAL *unless* it is:
+            - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
+            - an ObjectiveMechanisms associated with ModulatoryMechanism
+            - the ??TARGET_MECHANISM for a Learning pathway -
+              this is currently the case, but is inconsistent with the analog in Control,
+              where monitored Mechanisms *are* allowed to be OUTPUT;
+              therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
+        """
         from psyneulink.core.compositions.pathway import PathwayRole
 
         # Clear old roles
@@ -3280,6 +3301,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
+        # Assign CONTROLLER_OBJECTIVE
         objective_mechanism = None
         if (self.controller
                 and self.controller.objective_mechanism
@@ -3287,9 +3309,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
 
+        # Assign ORIGIN and TERMINAL
+
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
             self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
+
         # Also assign TERMINAL to any nodes that don't have efferent Projections other than to Composition's output_CIM
         # IMPLEMENTATION NOTE:
         #   This is needed because _analyze_consideration_queue() assigns TERMINAL only to nodes in the *last*
