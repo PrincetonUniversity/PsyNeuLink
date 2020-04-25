@@ -1041,7 +1041,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             self.reinitialize_when = Never()
 
-        self._role = None
+        # # MODIFIED 4/25/20 OLD:
+        # self._role = None
+        # MODIFIED 4/25/20 NEW:
+        if not hasattr(self, '_role'):
+            self._role = None
+        # MODIFIED 4/25/20 END
 
         # self.componentName = self.componentType
         try:

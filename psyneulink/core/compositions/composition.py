@@ -3350,7 +3350,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           .. note::
              - also assigned LEARNING
              - ObjectiveMechanism._role == LEARNING
-             - all project to a LearningMechanism
+             - must project to a LearningMechanism
 
         OUTPUT:
           - all TERMINAL Nodes *unless* they are:
