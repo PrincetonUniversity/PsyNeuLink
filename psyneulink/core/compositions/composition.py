@@ -1834,8 +1834,8 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUTS, INPUT_CIM_NAME, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUTS, INPUT_CIM_NAME, LABELS, \
+    LEARNING, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
@@ -3323,22 +3323,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         CONTROL_OBJECTIVE
           - all ObjectiveMechanisms for which ObjectiveMechanism._role == CONTROL
           .. note::
+             - *not the same as* CONTROLLER_OBJECTIVE
              - all project to a ControlMechanism
 
         CONTROLLER_OBJECTIVE
           - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a reqiured_node_role in add_controller()
+          .. note::
+             - also assigned CONTROL_OBJECTIVE
+             - *not the same as* CONTROL_OBJECTIVE
 
         LEARNING
-          - all Nodes for which LEARNING is assigned as a required_noded_role in add_linear_learning_pathway()
+          - all Nodes for which LEARNING is assigned as a required_noded_role in
+            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
 
         TARGET
-          - all Nodes for which TARGET has been assigned as a required_noded_role in add_linear_learning_pathway()
+          - all Nodes for which TARGET has been assigned as a required_noded_role in
+            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
           .. note::
              - receive a Projection from input_CIM, and project to LEARNING_OBJECTIVE and output_CIM
              - also assigned ORIGIN, INPUT, LEARNING, OUTPUT, and TERMINAL
 
         LEARNING_OBJECTIVE
-          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in add_linear_learning_pathway()
+          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in
+            add_linear_learning_pathway(), _create_non_terminal_backprop_learning_components,
+            or _create_terminal_backprop_learning_components()
           .. note::
              - also assigned LEARNING
              - ObjectiveMechanism._role == LEARNING
@@ -5428,12 +5436,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif is_function_type(learning_function):
             target_mechanism = ProcessingMechanism(name='Target')
             objective_mechanism = ComparatorMechanism(name='Comparator',
-                                                       sample={NAME: SAMPLE,
-                                                               VARIABLE: [0.], WEIGHT: -1},
-                                                       target={NAME: TARGET,
-                                                               VARIABLE: [0.]},
-                                                       function=error_function,
-                                                       output_ports=[OUTCOME, MSE])
+                                                      sample={NAME: SAMPLE,
+                                                              VARIABLE: [0.], WEIGHT: -1},
+                                                      target={NAME: TARGET,
+                                                              VARIABLE: [0.]},
+                                                      function=error_function,
+                                                      output_ports=[OUTCOME, MSE],
+                                                      role=LEARNING)
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
                                                          default_variable=[input_source.output_ports[0].value,
@@ -5501,12 +5510,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_mechanism = ProcessingMechanism(name='Target')
 
         objective_mechanism = ComparatorMechanism(name='Comparator',
-                                                   sample={NAME: SAMPLE,
-                                                           VARIABLE: [0.], WEIGHT: -1},
-                                                   target={NAME: TARGET,
-                                                           VARIABLE: [0.]},
-                                                   function=error_function,
-                                                   output_ports=[OUTCOME, MSE])
+                                                  sample={NAME: SAMPLE,
+                                                          VARIABLE: [0.], WEIGHT: -1},
+                                                  target={NAME: TARGET,
+                                                          VARIABLE: [0.]},
+                                                  function=error_function,
+                                                  output_ports=[OUTCOME, MSE],
+                                                  role=LEARNING)
 
         learning_mechanism = \
             LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
@@ -5783,13 +5793,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_mechanism = ProcessingMechanism(name='Target',
                                                    default_variable=output_source.output_ports[0].value)
             objective_mechanism = ComparatorMechanism(name='Comparator',
-                                                       target={NAME: TARGET,
-                                                               VARIABLE: target_mechanism.output_ports[0].value},
-                                                       sample={NAME: SAMPLE,
-                                                               VARIABLE: output_source.output_ports[0].value,
-                                                               WEIGHT: -1},
-                                                       function=error_function,
-                                                       output_ports=[OUTCOME, MSE])
+                                                      target={NAME: TARGET,
+                                                              VARIABLE: target_mechanism.output_ports[0].value},
+                                                      sample={NAME: SAMPLE,
+                                                              VARIABLE: output_source.output_ports[0].value,
+                                                              WEIGHT: -1},
+                                                      function=error_function,
+                                                      output_ports=[OUTCOME, MSE],
+                                                      role=LEARNING)
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                               output_source.output_ports[0].value,
@@ -5808,7 +5819,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                name="Learning Mechanism for " + learned_projection.name)
 
         self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
-                              objective_mechanism,
+                              (objective_mechanism, NodeRole.LEARNING_OBJECTIVE),
                               learning_mechanism],
                        required_roles=NodeRole.LEARNING)
 

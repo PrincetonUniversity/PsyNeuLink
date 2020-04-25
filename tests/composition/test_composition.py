@@ -28,7 +28,7 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, CONTROL, DISABLE, INPUT_PORT, LEARNING, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -5633,6 +5633,7 @@ class TestProperties:
         result = c.run(inputs={A: [1]}, num_trials=2)
         assert result == c.output_values == [np.array([1])]
 
+
 class TestAuxComponents:
     def test_two_transfer_mechanisms(self):
         A = TransferMechanism(name='A')
@@ -6053,6 +6054,12 @@ class TestNodeRoles:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
+    # def test_CONTROL_OBJECTIVE(self):
+    #     pass
+    #
+    # def test_CONTROLLER_OBJECTIVE(self):
+    #     pass
+
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
         comp = Composition(pathways=A)
@@ -6078,6 +6085,7 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == learning
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)) == {objective}
         # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
@@ -6090,6 +6098,7 @@ class TestNodeRoles:
         learning_pathway = comp.pathways[0]
         target = learning_pathway.target
         objective= learning_pathway.learning_objective
+        assert objective._role == LEARNING
         learning_mechs = learning_pathway.learning_components[LEARNING_MECHANISMS]
         learning = set(learning_mechs)
         learning.add(target)
@@ -6097,6 +6106,9 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {D}
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == set(learning)
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)) == {objective}
+        # Validate that objective projects only to LearningMechanisms
+        assert all([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
@@ -6135,6 +6147,7 @@ class TestNodeRoles:
         terminal_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert A in terminal_mechanisms and B in terminal_mechanisms
         assert np.allclose(result, [[1.0],[2.0]])
+
 
 class TestMisc:
 
