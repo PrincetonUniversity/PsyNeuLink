@@ -3626,8 +3626,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             # Assign OUTPUT if node is TERMINAL...
             if NodeRole.TERMINAL in self.get_roles_by_node(node):
-                # unless it is a ModulatoryMechanism or an ObjectiveMechanism associated with
-                #   ControlMechanism or LearningMechanism
+                # unless it is a ModulatoryMechanism
+                #     or an ObjectiveMechanism associated with ControlMechanism or LearningMechanism
                 if (isinstance(node, ModulatoryMechanism_Base)
                         or any(role in self.get_roles_by_node(node) for role in {NodeRole.CONTROL_OBJECTIVE,
                                                                                  NodeRole.CONTROLLER_OBJECTIVE,
@@ -3637,23 +3637,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
             #     (i.e., it is either a RecurrentTransferMechanism configured for learning
             #      or the TARGET_MECHANISM of a `learning pathway <Composition_Learning_Pathway>`
-            if all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism) for p in node.efferents):
+            elif all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism) for p in
+                node.efferents):
                 pass
             # else:
             #     continue
 
             # Assign OUTPUT if node projects only to an ObjectiveMechanism designated
             #     as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-            elif all(role in self.get_roles_by_node(p.receiver.owner) for role in {NodeRole.CONTROL_OBJECTIVE,
-                                                                                   NodeRole.CONTROLLER_OBJECTIVE,
-                                                                                   NodeRole.LEARNING_OBJECTIVE}
+            # elif all(role in self.get_roles_by_node(p.receiver.owner) for role in {NodeRole.CONTROL_OBJECTIVE,
+            #                                                                        NodeRole.CONTROLLER_OBJECTIVE,
+            #                                                                        NodeRole.LEARNING_OBJECTIVE}
+            elif all(any(p.receiver.owner in self.get_nodes_by_role(role) for role in {NodeRole.CONTROL_OBJECTIVE,
+                                                                                       NodeRole.CONTROLLER_OBJECTIVE,
+                                                                                       NodeRole.LEARNING_OBJECTIVE})
                      for p in node.efferents):
                 pass
             else:
                 continue
 
             self._add_node_role(node, NodeRole.OUTPUT)
-
 
 
 

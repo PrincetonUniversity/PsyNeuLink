@@ -6012,7 +6012,7 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
-    def test_FEEDBACK_no_CYCLE(self):
+    def  test_FEEDBACK_no_CYCLE(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
