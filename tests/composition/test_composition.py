@@ -1173,7 +1173,9 @@ class TestAnalyzeGraph:
                                                                                                           0.3)}]
                                                                         )
                                        )
-        comp._analyze_graph()
+        # # MODIFIED 4/25/20 OLD:
+        # comp._analyze_graph()
+        # MODIFIED 4/25/20 END
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
         # disable controller

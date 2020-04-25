@@ -3396,7 +3396,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # # MODIFIED 4/25/20 OLD:
             # self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
             # MODIFIED 4/25/20 NEW:
-            if not NodeRole.CONTROLER_OBJECTIVE in self.required_node_roles[objective_mechanism]:
+            if not all(np[1] is NodeRole.CONTROLLER_OBJECTIVE
+                       for np in self.required_node_roles if np[0] is objective_mechanism):
                 assert False, 'PROGRAM ERROR: Problem with CONTROLLER_OBJECTIVE assignment'
             # MODIFIED 4/25/20 END
 
@@ -6080,7 +6081,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not invalid_aux_components:
             if self.controller.objective_mechanism:
+                # # MODIFIED 4/25/20 OLD:
+                # self.add_node(self.controller.objective_mechanism)
+                # MODIFIED 4/25/20 NEW:
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+                # MODIFIED 4/25/20 END
 
             self.node_ordering.append(controller)
 
@@ -6161,8 +6166,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
                 controller._activate_projections_for_compositions(self)
             controller.initialization_status = ContextFlags.INITIALIZED
+            # MODIFIED 4/25/20 NEW:
+            # self._analyze_graph()
+            self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+            # MODIFIED 4/25/20 END
         else:
             controller.initialization_status = ContextFlags.DEFERRED_INIT
+
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by nodes in the Composition
