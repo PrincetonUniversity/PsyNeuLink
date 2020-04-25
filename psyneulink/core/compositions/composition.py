@@ -2326,6 +2326,10 @@ class NodeRole(Enum):
         modified directly, but will be modified if the `feedback <Projection.feedback>` attribute of the
         relelvant `Projection <Projection>`\\(s) is modified.
 
+    CONTROL_OBJECTIVE
+        A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
+        than the Composition's `controller <Composition.controller>` (if it has one).
+
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
         <Composition.controller>`.
@@ -2365,12 +2369,13 @@ class NodeRole(Enum):
     CYCLE = 4
     FEEDBACK_SENDER = 5
     FEEDBACK_RECEIVER = 6
-    CONTROLLER_OBJECTIVE = 7
-    LEARNING = 8
-    TARGET = 9
-    LEARNING_OBJECTIVE = 10
-    OUTPUT = 11
-    TERMINAL = 12
+    CONTROL_OBJECTIVE = 7
+    CONTROLLER_OBJECTIVE = 8
+    LEARNING = 9
+    TARGET = 10
+    LEARNING_OBJECTIVE = 11
+    OUTPUT = 12
+    TERMINAL = 13
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -3096,11 +3101,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
-        if (context.source == ContextFlags.COMMAND_LINE and
-                role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
-            raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
-                                   f"that cannot be modified by user.")
+        if context.source == ContextFlags.COMMAND_LINE:
+            if role is NodeRole.CONTROL_OBJECTIVE:
+                raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
+                                       f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
+            if role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
+                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER,
+                         NodeRole.LEARNING_OBJECTIVE, NodeRole.LEARNING}:
+                raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
+                                       f"that cannot be modified by user.")
 
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
@@ -3130,7 +3139,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
         if (context.source == ContextFlags.COMMAND_LINE and
                 role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}):
+                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
             raise CompositionError(f"Attempt to remove {role} (from {node} of {self.name})"
                                    f"that cannot be modified by user.")
 
@@ -3275,19 +3284,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Compositoin
 
+        .. note::
+           Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
+           unless otherwise noted.
+
         Assignment criteria:
 
         ORIGIN:
-          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0])
-            .. _note:
-               - this takes account of any Projections designated as feedback by graph_processing
-                 (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
-               - these will all be assigined afferent Projections from Composition.input_CIM
+          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
+          .. _note::
+             - this takes account of any Projections designated as feedback by graph_processing
+               (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
+             - these will all be assigined afferent Projections from Composition.input_CIM
 
         INPUT:
-          - all ORIGIN Nodes for which INPUT has not been removed by remove_node_role()
-          - all Nodes for which INPUT is designated as a required_node_role
-            (i.e., in self.required_node_roles[NodeRole.INPUT]
+          - all ORIGIN Nodes for which INPUT has not been removed by remove_node_role();
+          - all Nodes for which INPUT has been assigned as a required_node_role by user
+            (i.e., in self.required_node_roles[NodeRole.INPUT].
 
         SINGLETON:
           - all Nodes that are *both* ORIGIN and TERMINAL
@@ -3296,36 +3309,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - all Nodes that are *neither* ORIGIN nor TERMINAL
 
         CYCLE:
-          - all nodes that identified as being in a cycle by self.graph_processing
+          - all Nodes that identified as being in a cycle by self.graph_processing
             (i.e., in self.graph_processing.cycle_vertices)
 
         FEEDBACK_SENDER:
-          - all nodes that send a Projection designated as feedback by self.graph_processing
+          - all Nodes that send a Projection designated as feedback by self.graph_processing OR
+            specified as feedback by user
 
         FEEDBACK_RECEIVER:
-          - all nodes that receive a Projection designated as feedback by self.graph_processing
+          - all Nodes that receive a Projection designated as feedback by self.graph_processing OR
+            specified as feedback by user
+
+        CONTROL_OBJECTIVE
+          - all ObjectiveMechanisms for which ObjectiveMechanism._role == CONTROL
+          .. note::
+             - all project to a ControlMechanism
 
         CONTROLLER_OBJECTIVE
-          [TBI]:
-            A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
-            <Composition.controller>`.
+          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a reqiured_node_role in add_controller()
 
         LEARNING
-          [TBI]:
-            A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
-            `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role cannot be modified
-            programmatically.
+          - all Nodes for which LEARNING is assigned as a required_noded_role in add_linear_learning_pathway()
 
         TARGET
-          [TBI]:
-            A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-            <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `learn
-            <Composition.learn>` method (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+          - all Nodes for which TARGET has been assigned as a required_noded_role in add_linear_learning_pathway()
+          .. note::
+             - receive a Projection from input_CIM, and project to LEARNING_OBJECTIVE and output_CIM
+             - also assigned ORIGIN, INPUT, LEARNING, OUTPUT, and TERMINAL
 
         LEARNING_OBJECTIVE
-          [TBI]:
-            A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
-            <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
+          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in add_linear_learning_pathway()
+          .. note::
+             - also assigned LEARNING
+             - ObjectiveMechanism._role == LEARNING
+             - all project to a LearningMechanism
 
         OUTPUT:
           - all TERMINAL Nodes *unless* they are:
@@ -3335,7 +3352,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               this is currently the case, but is inconsistent with the analog in Control,
               where monitored Mechanisms *are* allowed to be OUTPUT;
               therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
-          - all Nodes for which OUTPUT is designated as a required_node_role
+          - all Nodes for which OUTPUT has been assigned as a required_node_role, inculding by user
             (i.e., in self.required_node_roles[NodeRole.OUTPUT]
 
         TERMINAL:
@@ -3343,13 +3360,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for which all efferent projections are either:
             - to output_CIM OR
             - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
-            .. _note:
-               this insures that for cases in which there are nested CYCLES
-               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
-               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
-               is assigned as a TERMINAL Node
-               (i.e., the LearningMechanism responsible for the *first* `learned Projection
-               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+          .. _note::
+             this insures that for cases in which there are nested CYCLES
+             (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
+             only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
+             is assigned as a TERMINAL Node
+             (i.e., the LearningMechanism responsible for the *first* `learned Projection
+             <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
 
        """
         from psyneulink.core.compositions.pathway import PathwayRole
@@ -3361,13 +3378,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
+        # FIX 4/25/20 [JDC]:  REMOVE THIS BLOCK IF ASSERT BELOW PASSES IN ALL TESTS
         # Assign CONTROLLER_OBJECTIVE
         objective_mechanism = None
         if (self.controller
                 and self.controller.objective_mechanism
                 and not self.controller.initialization_status == ContextFlags.DEFERRED_INIT):
             objective_mechanism = self.controller.objective_mechanism
-            self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
+            # # MODIFIED 4/25/20 OLD:
+            # self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
+            # MODIFIED 4/25/20 NEW:
+            if not NodeRole.CONTROLER_OBJECTIVE in self.required_node_roles[objective_mechanism]:
+                assert False, 'PROGRAM ERROR: Problem with CONTROLLER_OBJECTIVE assignment'
+            # MODIFIED 4/25/20 END
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
@@ -5150,7 +5173,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             s.parameters.require_projection_in_composition.set(False,
                                                                override=True)
         # Add nodes to Composition
-        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+        self.add_nodes([(target, NodeRole.TARGET),
+                        (comparator, NodeRole.LEARNING_OBJECTIVE),
+                         learning_mechanism],
+                       required_roles=NodeRole.LEARNING)
 
         # Create Projections to and among learning-related Mechanisms and add to Composition
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -6043,7 +6069,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not invalid_aux_components:
             if self.controller.objective_mechanism:
-                self.add_node(self.controller.objective_mechanism)
+                self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
 
             self.node_ordering.append(controller)
 
