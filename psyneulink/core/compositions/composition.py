@@ -3282,9 +3282,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - it has no efferent projections except to output_CIM
           - OR it is FEEDBACK_SENDER of *outermost* loop in which node participates
             (e.g., last LearningMech in BP pathway)
-            determine as FEEDBACK_SENDER with no efferent Projections except
+            determined as FEEDBACK_SENDER with no efferent Projections except
               - one(s) marked feedback
-              - to output_CIM
+              - OR project to output_CIM
         - Assign OUTPUT to node if:
           - assigned by user as required_role
           - AND/OR it has been assigned as TERMINAL *unless* it is:
@@ -3311,8 +3311,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not self.controller.initialization_status == ContextFlags.DEFERRED_INIT):
             objective_mechanism = self.controller.objective_mechanism
             self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
-
-        # Assign ORIGIN and TERMINAL
 
         # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
         if self.scheduler.consideration_queue:
@@ -3356,6 +3354,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver.component,
                         NodeRole.FEEDBACK_RECEIVER
                     )
+
+        # Identify ORIGIN and TERMINAL nodes
+        origin_nodes = set()
+        for node in self.nodes:
+            # No afferent Projections except from input_CIM or marked as feedback
+            # if not any([afferent for afferent in node.path_afferents
+            #             if not (afferent.sender.owner is self.input_CIM
+            #                     or self.graph.comp_to_vertex[afferent].feedback.value
+            #     )]):
+            if any([afferent for afferent in node.path_afferents
+                        if afferent.sender.owner is self.input_CIM]):
+                origin_nodes.add(node)
+        if origin_nodes != set(self.get_nodes_by_role(NodeRole.ORIGIN)):
+            assert False, 'PROGRAM ERROR: ORIGIN nodes '
+        terminal_nodes = set()
+        for node in self.nodes:
+            # No efferent Projections except to output_CIM or marked as feedback
+            if not any([efferent for efferent in node.efferents
+                        if not (efferent.receiver.owner is self.output_CIM
+                                or self.graph.comp_to_vertex[efferent].feedback.value)]):
+                terminal_nodes.add(node)
+        if terminal_nodes != set(self.get_nodes_by_role(NodeRole.TERMINAL)):
+            assert False, 'PROGRAM ERROR:  TERMINAL nodes'
+
 
         # due to test_LEARNING_hebbian, all recurrent projections cause
         # their senders to be FEEDBACK_RECEIVER
