@@ -3476,6 +3476,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         NodeRole.FEEDBACK_RECEIVER
                     )
 
+        # FIX 4/25/20 [JDC]: STILL NEEDED AFTER KDM's REFACTORING?
         # due to test_LEARNING_hebbian, all recurrent projections cause
         # their senders to be FEEDBACK_RECEIVER
         # REVIEW: but not FEEDBACK_SENDER - why?
@@ -3487,6 +3488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
+        # FIX 4/25/20 [JDC]: TREAT IN SAME WAY AS OUTPUT - ALLOW USER TO ADD, BUT NOT REPLACE (USE REMOVE FOR THAT))
         # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
         if not self.get_nodes_by_role(NodeRole.INPUT):
             origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
@@ -3658,22 +3660,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Assign OUTPUT if it is an `RecurrentTransferMechanism` configured for learning
                 #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
                 #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
-                if all(p.receiver.owner is node or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+                #    but can (or already does) project to an output_CIM
+                if all((p.receiver.owner is node
+                        or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+                        or p.receiver.owner is self.output_CIM)
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
                     continue
 
-                # Assign OUTPUT if node projects only to an ObjectiveMechanism designated
-                #     as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-                #     or already projects to output_CIM
-                # unless it is the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
+                # Assign OUTPUT if the node projects only:
+                #    to an ObjectiveMechanism designatedas CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #    and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #    and/or (already projects) to output_CIM
+                # and it is not the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
                 if NodeRole.TARGET in self.get_roles_by_node(node):
                     continue
                 if all((any(p.receiver.owner in self.get_nodes_by_role(role)
                            for role in {NodeRole.CONTROL_OBJECTIVE,
                                         NodeRole.CONTROLLER_OBJECTIVE,
                                         NodeRole.LEARNING_OBJECTIVE})
-                        or p.receiver.owner is self.output_CIM)
+                        or p.receiver.owner is self.output_CIM
+                       or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
 

@@ -860,8 +860,10 @@ class OptimizationControlMechanism(ControlMechanism):
         # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
         for input_port in self.objective_mechanism.input_ports:
             input_port.internal_only = True
+
         # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
-        self.aux_components.append(self.objective_mechanism)
+        from psyneulink.core.compositions.composition import NodeRole
+        self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
         self.aux_components.append(projection_from_objective)
 
         # ASSIGN ATTRIBUTES
