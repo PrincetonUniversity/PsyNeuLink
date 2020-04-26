@@ -3492,12 +3492,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
         # FIX 4/25/20 [JDC]: IS REMOVAL OF OUTPUT NECESSARY?  REDUNDANT WITH OUTPUT ASSIGNMENT BELOW?
-        # A ControlMechanism should not be the TERMINAL node of a Composition
+        # A ControlMechanism should not be the OUTPUT node of a Composition
         #    (unless it is specifed as a required_role, in which case it is reassigned below)
         for node in self.nodes:
             if isinstance(node, ControlMechanism):
-                if NodeRole.TERMINAL in self.nodes_to_roles[node]:
-                    self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
+                # if NodeRole.TERMINAL in self.nodes_to_roles[node]:
+                #     self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
                 if NodeRole.OUTPUT in self.nodes_to_roles[node]:
                     self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
 
