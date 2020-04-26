@@ -78,9 +78,14 @@ def test_simplified_necker_cube(benchmark, mode):
     reportOutputPref = False
 
     # make sure all nodes are both input and outputs
+    # # MODIFIED 4/25/20 OLD:
+    # for node in bp_comp.nodes:
+    #     bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
+    #     bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+    # MODIFIED 4/25/20 NEW:
     for node in bp_comp.nodes:
-        bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
-        bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+        bp_comp.require_node_roles(node, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
+    # MODIFIED 4/25/20 END
         # turn off report
         node.reportOutputPref = reportOutputPref
 

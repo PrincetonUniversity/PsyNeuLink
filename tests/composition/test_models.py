@@ -220,7 +220,11 @@ class TestModels:
                                         task_layer]
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
-        bidirectional_stroop.add_required_node_role(response_layer, pnl.NodeRole.OUTPUT)
+        # # MODIFIED 4/25/20 OLD:
+        # bidirectional_stroop.add_required_node_role(response_layer, pnl.NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 NEW:
+        bidirectional_stroop.require_node_roles(response_layer, pnl.NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 END
 
         input_dict = {colors_input_layer: [0, 0, 0],
                       words_input_layer: [0, 0, 0],

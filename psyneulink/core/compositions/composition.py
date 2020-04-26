@@ -270,7 +270,7 @@ one or more `NodeRoles <NodeRole>` automatically when a Composition is construct
     Composition (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its
     2nd item.
 
-  * the **role** argument of the `add_required_node_role <Composition.add_required_node_role>` called for an
+  * the **roles** argument of the `require_node_roles <Composition.add_required_node_role>` called for an
     an existing `Node <Composition_Nodes>`.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
@@ -2355,13 +2355,18 @@ class NodeRole(Enum):
         the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
         Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
+        COMMENT:
+        .. technical_note::
+           TEST
+        COMMENT
 
     TERMINAL
-        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
-        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
-        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes. This role cannot be
-        modified programmatically.
+        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
+        its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
+        to the outer Composition. A Composition may have many `TERMINAL` Nodes. `Execution of a `Composition
+        <Compostion_Execution>` always ends with a `TERMINAL` Node, although some `TERMINAL` Nodes may execute
+        earlier (i.e., if they belong to a `Pathway` that is shorter than the longest one in the Composition).
+        This role cannot be modified programmatically.
 
     """
     ORIGIN = 0
@@ -2661,6 +2666,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.required_node_roles = []
+        self.excluded_node_roles = []
         self.node_ordering = []
         from psyneulink.core.compositions.pathway import Pathway
         self.pathways = ContentAddressableList(component_type=Pathway)
@@ -2998,7 +3004,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
-                self.add_required_node_role(node, required_role, context)
+                self._add_required_node_role(node, required_role, context)
 
         # Add projections to node from sender of any shadowed InputPorts
         for input_port in node.input_ports:
@@ -3078,16 +3084,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             self.graph.remove_component(node)
             del self.nodes_to_roles[node]
+
+            # Remove any entries for node in required_node_roles or excluded_node_roles
             node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
             for item in node_role_pairs:
                 self.required_node_roles.remove(item)
+            node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node]
+            for item in node_role_pairs:
+                self.excluded_node_roles.remove(item)
+
             del self.nodes[node]
             self.node_ordering.remove(node)
 
     @handle_external_context()
-    def add_required_node_role(self, node, role, context=None):
+    def _add_required_node_role(self, node, role, context=None):
         """
-            Assign the `NodeRole` specified by **role** to **node**.
+            Assign the `NodeRole` specified by **role** to **node**.  Remove exclusion of that `NodeRole` if
+            it had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
 
             Arguments
             _________
@@ -3116,6 +3129,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
+        for item in node_role_pairs:
+            self.excluded_node_roles.remove(item)
+
+    @handle_external_context()
+    def require_node_roles(self, node, roles, context=None):
+        """
+            Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
+            it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
+
+            Arguments
+            _________
+
+            node : `Node <Composition_Nodes>`
+                `Node <Composition_Nodes>` to which **role** should be assigned.
+
+            roles : `NodeRole` or list[`NodeRole`]
+                `NodeRole`\\(s) to assign to **node**.
+        """
+        roles = convert_to_list(roles)
+        for role in roles:
+            self._add_required_node_role(node, role, context)
 
     @handle_external_context()
     def remove_node_role(self, node, role, context):
@@ -3374,12 +3409,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - to output_CIM OR
             - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
           .. _note::
-             this insures that for cases in which there are nested CYCLES
-             (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
-             only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
-             is assigned as a TERMINAL Node
-             (i.e., the LearningMechanism responsible for the *first* `learned Projection
-             <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+             - this insures that for cases in which there are nested CYCLES
+               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
+               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
+               is assigned as a TERMINAL Node
+               (i.e., the LearningMechanism responsible for the *first* `learned Projection
+               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+             - `Execution of a `Composition <Compostion_Execution>` always ends with a `TERMINAL` Node,
+               although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
+               is shorter than the longest one in the Composition).
 
        """
         from psyneulink.core.compositions.pathway import PathwayRole
@@ -3406,7 +3444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert False, 'PROGRAM ERROR: Problem with CONTROLLER_OBJECTIVE assignment'
             # MODIFIED 4/25/20 END
 
-        # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
+        # Get ORIGIN and TERMINAL Nodes using Scheduler.consideration_queue
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue(self.scheduler.consideration_queue,
                                                                                objective_mechanism)
@@ -3484,6 +3522,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node in {eff.receiver.owner for eff in node.efferents}:
                 self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
 
+        # FIX 4/25/20 [JDC]: REDUNDANT WITH IDENTICAL CODE ABOVE
         # Required Roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
@@ -3698,6 +3737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # # MODIFIED 4/23/20 OLD:
             # if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
             # MODIFIED 4/23/20 NEW:
+            assert True
             if (not node.efferents
                     or (NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]
                     and not NodeRole.LEARNING in self.get_roles_by_node(node))):
@@ -5217,7 +5257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self.add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+                self_add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
@@ -5240,7 +5280,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-        self.add_required_node_role(output_source, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+        self._add_required_node_role(output_source, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
                                                               name=pathway_name,
@@ -5682,7 +5722,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
             #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_learning_components
             #  ** NEED TO CHECK WHETHER LAST NODE IN THE SEQUENCE IS TERMINAL AND IF SO:
-            #     ASSIGN USING: self.add_required_node_role(output_source, NodeRole.OUTPUT)
+            #     ASSIGN USING: self._add_required_node_role(output_source, NodeRole.OUTPUT)
             # If learned_projection already has a LearningProjection (due to pathway overlap),
             #    use those terminal sequence components
             if (learned_projection.has_learning_projection
@@ -5762,7 +5802,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self.add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
             sequence_end = path_length - 3
 
