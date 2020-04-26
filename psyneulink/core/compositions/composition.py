@@ -3188,7 +3188,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.excluded_node_roles.append(node_role_pair)
             if node_role_pair in self.required_node_roles:
                 self.required_node_roles.remove(node_role_pair)
-                self._remove_node_role(node, role)
+            self._remove_node_role(node, role)
 
     def get_roles_by_node(self, node):
         """
@@ -3756,11 +3756,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 4/25/20 NEW:
         # Remove any NodeRole assignments specified in excluded_node_roles
         for node in self.nodes:
-            for node, role in self.exclude_node_roles:
+            for node, role in self.excluded_node_roles:
                 if role in self.get_roles_by_node(node):
                     self._remove_node_role(node, role)
         # MODIFIED 4/25/20 END
-
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -3779,7 +3778,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _remove_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-        self.nodes_to_roles[node].remove(role)
+        try:
+            self.nodes_to_roles[node].remove(role)
+        except KeyError as e:
+            pass
+            # if e.args[0] is node:
+            #     assert False, f"PROGRAM ERROR in _remove_node_role: {node} not found in {self.name}.nodes_to_role."
+            # elif e.args[0] is role:
+            #     assert False, f"PROGRAM ERROR in _remove_node_role: " \
+            #                   f"{role} not found for {node} in {self.name}.nodes_to_role."
+            # else:
+            #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
+
 
     def _determine_pathway_roles(self, context=None):
         from psyneulink.core.compositions.pathway import PathwayRole
