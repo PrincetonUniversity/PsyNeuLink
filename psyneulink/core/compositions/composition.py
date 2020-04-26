@@ -3188,7 +3188,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.excluded_node_roles.append(node_role_pair)
             if node_role_pair in self.required_node_roles:
                 self.required_node_roles.remove(node_role_pair)
-            self._remove_node_role(node, role)
+                self._remove_node_role(node, role)
 
     def get_roles_by_node(self, node):
         """
