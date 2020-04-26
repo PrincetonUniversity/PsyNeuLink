@@ -282,8 +282,8 @@ COMMENT:
     ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
     <Composition_Learning_Pathway>` (see XXX).
 COMMENT
-.  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_node_role
-<Composition.remove_node_role>` method. All of the roles assigned assigned to a particular Node can be
+.  A NodeRole can also be excluded from being assinged to a `Node <Composition_Nodes>` using the `exclude_node_roles
+<Composition.exclude_node_roles>` method.  All of the roles assigned assigned to a particular Node can be
 listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the nodes assigned a
 particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
 
@@ -3147,18 +3147,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             roles : `NodeRole` or list[`NodeRole`]
                 `NodeRole`\\(s) to assign to **node**.
+
         """
         roles = convert_to_list(roles)
         for role in roles:
             self._add_required_node_role(node, role, context)
 
     @handle_external_context()
-    def remove_node_role(self, node, role, context):
+    def exclude_node_roles(self, node, roles, context):
         """
-            Remove `NodeRole` specified by **role** from **node** if it was been assigned.
+            Excludes the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
 
-            Removes role whether it was assigned as a `required_node_role <Composition_Node_Role_Assignment>`
-            or by default.
+            Removes specified roles if they had been previous assigned either by default as a `required_node_role
+            <Composition_Node_Role_Assignment>` or using the `required_node_roles <Composition.required_node_roles>`
+            method.
 
             Arguments
             _________
@@ -3166,25 +3168,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node : `Node <Composition_Nodes>`
                 `Node <Composition_Nodes>` from which **role** should be removed.
 
-            role : `NodeRole`
-                `NodeRole` to remove from **node**.
+            roles : `NodeRole` or list[`NodeRole`]
+                `NodeRole`\\(s) to remove and/or exclude from **node**.
 
         """
-        if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
+        roles = convert_to_list(roles)
 
-        # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
-        if (context.source == ContextFlags.COMMAND_LINE and
-                role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
-            raise CompositionError(f"Attempt to remove {role} (from {node} of {self.name})"
-                                   f"that cannot be modified by user.")
+        for role in roles:
+            if role not in NodeRole:
+                raise CompositionError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
 
-
-        node_role_pair = (node, role)
-        if node_role_pair in self.required_node_roles:
-            self.required_node_roles.remove(node_role_pair)
-        self._remove_node_role(node, role, context)
+            # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+            if (context.source == ContextFlags.COMMAND_LINE and
+                    role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
+                             NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
+                raise CompositionError(f"Attempt to exclude {role} (from {node} of {self.name})"
+                                       f"that cannot be modified by user.")
+            node_role_pair = (node, role)
+            self.excluded_node_roles.append(node_role_pair)
+            if node_role_pair in self.required_node_roles:
+                self.required_node_roles.remove(node_role_pair)
+            self._remove_node_role(node, role)
 
     def get_roles_by_node(self, node):
         """
@@ -3335,7 +3339,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - these will all be assigined afferent Projections from Composition.input_CIM
 
         INPUT:
-          - all ORIGIN Nodes for which INPUT has not been removed by remove_node_role();
+          - all ORIGIN Nodes for which INPUT has not been removed and/or excluded using exclude_node_roles();
           - all Nodes for which INPUT has been assigned as a required_node_role by user
             (i.e., in self.required_node_roles[NodeRole.INPUT].
 
@@ -3664,7 +3668,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #         self._add_node_role(node, NodeRole.OUTPUT)
         # MODIFIED 4/25/20 NEW:
 
-        # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY remove_node_role
+        # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
         #     - Simply execulde any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
         #     - NOTE IN PROGERAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
         # Assign OUTPUT
@@ -3748,6 +3752,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.INTERNAL)
         # MODIFIED 4/23/20 END
+
+        # MODIFIED 4/25/20 NEW:
+        # Remove any NodeRole assignments specified in excluded_node_roles
+        for node in self.nodes:
+            for node, role in self.exclude_node_roles:
+                if role in self.get_roles_by_node(node):
+                    self._remove_node_role(node, role)
+        # MODIFIED 4/25/20 END
 
 
     def _set_node_roles(self, node, roles):
@@ -5257,7 +5269,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self_add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+                self._add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
