@@ -3624,7 +3624,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     for node in output_nodes:
         #         self._add_node_role(node, NodeRole.OUTPUT)
         # MODIFIED 4/25/20 NEW:
+
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY remove_node_role
+        #     - Simply execulde any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
+        #     - NOTE IN PROGERAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
         # Assign OUTPUT
         # - Any designated as OUTPUT by required_node_role have already been assigned
         for node in self.nodes:
