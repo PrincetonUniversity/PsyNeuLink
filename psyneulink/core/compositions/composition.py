@@ -3307,14 +3307,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return nested_compositions
 
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
-        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
-            all nodes in the last entry of the consideration queue.
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
+           to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
+           controller may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry
+           of the consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
         """
-        for node in list(self.scheduler.consideration_queue)[0]:
+        queue = self.scheduler.consideration_queue
+
+        for node in list(queue)[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
 
-        for node in list(self.scheduler.consideration_queue)[-1]:
-            self._add_node_role(node, NodeRole.TERMINAL)
+        for node in list(queue)[-1]:
+            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(queue[-1]) < 2:
+                for previous_node in queue[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Compositoin
