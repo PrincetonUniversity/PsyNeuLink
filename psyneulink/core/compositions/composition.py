@@ -3449,6 +3449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
+        # FIX 4/25/20 [JDC]: IS REMOVAL OF OUTPUT NECESSARY?  REDUNDANT WITH OUTPUT ASSIGNMENT BELOW?
         # A ControlMechanism should not be the TERMINAL node of a Composition
         #    (unless it is specifed as a required_role, in which case it is reassigned below)
         for node in self.nodes:
@@ -3626,8 +3627,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # - Any designated as OUTPUT by required_node_role have already been assigned
         for node in self.nodes:
 
-            assign_as_output = False
-
             # Assign OUTPUT if node is TERMINAL...
             if NodeRole.TERMINAL in self.get_roles_by_node(node):
                 # unless it is a ModulatoryMechanism
@@ -3666,13 +3665,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Assign OUTPUT if node projects only to an ObjectiveMechanism designated
                 #     as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #     or already projects to output_CIM
                 # unless it is the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
                 if NodeRole.TARGET in self.get_roles_by_node(node):
                     continue
-                if all(any(p.receiver.owner in self.get_nodes_by_role(role)
+                if all((any(p.receiver.owner in self.get_nodes_by_role(role)
                            for role in {NodeRole.CONTROL_OBJECTIVE,
                                         NodeRole.CONTROLLER_OBJECTIVE,
                                         NodeRole.LEARNING_OBJECTIVE})
+                        or p.receiver.owner is self.output_CIM)
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
 
