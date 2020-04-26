@@ -6069,7 +6069,9 @@ class TestNodeRoles:
         assert pathway.target == None
         assert pathway.learning_objective == None
         assert pathway.learning_components == {}
-        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT, NodeRole.FEEDBACK_RECEIVER}
+        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT
+            # , NodeRole.FEEDBACK_RECEIVER
+                 }
         assert roles.issubset(set(comp.get_roles_by_node(A)))
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == {A.learning_mechanism}
 
@@ -6091,7 +6093,7 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)) == {objective}
         # Validate that objective projects to LearningMechanism (allowed to have other user-assigned Projections)
         assert any([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
-        # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
+        # Validate that TERMINAL is LearningMechanism that projects to first MappingProjection in learning pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
     def test_LEARNING_bp(self):

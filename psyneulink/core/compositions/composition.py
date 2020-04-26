@@ -2363,9 +2363,12 @@ class NodeRole(Enum):
     TERMINAL
         A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
         its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
-        to the outer Composition. A Composition may have many `TERMINAL` Nodes. `Execution of a `Composition
-        <Compostion_Execution>` always ends with a `TERMINAL` Node, although some `TERMINAL` Nodes may execute
-        earlier (i.e., if they belong to a `Pathway` that is shorter than the longest one in the Composition).
+        to the outer Composition. A Composition may have many `TERMINAL` Nodes. The `ObjectiveMechanism` associated
+        with the Composition's `controller <Composition.controller>` (assigned the role `CONTROLLER_OBJECTIVE`)
+        cannot be a `TERMINAL` Node of a Composition.  `Execution of a Composition <Compostion_Execution>` itself
+        always ends with a `TERMINAL` Node, although the `controller <Composition.controller>` and its associated
+        `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
+        belong to a `Pathway` that is shorter than the longest one in the Composition).
         This role cannot be modified programmatically.
 
     """
@@ -3324,6 +3327,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for previous_node in queue[-2]:
                     self._add_node_role(previous_node, NodeRole.TERMINAL)
 
+        # IMPLEMENTATION NOTE:
+        #   The following is needed because the assignments above only identify nodes in the *last* consideration_set;
+        #   however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not be in the last
+        #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
+        #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
+        for node in self.nodes:
+            if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
+                self._add_node_role(node, NodeRole.TERMINAL)
+
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Compositoin
 
@@ -3410,17 +3422,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             (i.e., in self.required_node_roles[NodeRole.OUTPUT]
 
         TERMINAL:
-          - all Nodes that either have *no* efferent projections (i.e., not specified as OUTPUT) OR
-            for which all efferent projections are either:
-            - to output_CIM OR
-            - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
+          - all Nodes that
+            - are not an ObjectiveMechanism assigned the role CONTROLLER_OBJECTIVE
+            - or have *no* efferent projections OR
+            - or for for which any efferent projections are either:
+                - to output_CIM OR
+                - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
           .. _note::
              - this insures that for cases in which there are nested CYCLES
                (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
                only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
                is assigned as a TERMINAL Node
-               (i.e., the LearningMechanism responsible for the *first* `learned Projection
+               (i.e., the LearningMechanism responsible for the *first* `learned Projection;
                <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+             - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
+               `controller <Composition.controller>` are executed outside of (either before or after)
+               all of the other Components of the Composition, as managed directly by the scheduler;
              - `Execution of a `Composition <Compostion_Execution>` always ends with a `TERMINAL` Node,
                although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
                is shorter than the longest one in the Composition).
@@ -3439,36 +3456,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
-        # Also assign TERMINAL to any nodes that don't have efferent Projections other than to Composition's output_CIM
-        # IMPLEMENTATION NOTE:
-        #   This is needed because _determine_origin_and_terminal_nodes_from_consideration_queue() assigns TERMINAL
-        #   only to nodes in the *last* consideration_set; however, the TERMINAL node(s) of a pathway with fewer nodes
-        #   than the longest one may not be in the last consideration set, and therefore not assigned as TERMINAL by
-        #   _determine_origin_and_terminal_nodes_from_consideration_queue(). This also assumes that _check_feedback()
-        #   has already identified cycles and assigned FEEDBACK_SENDER, and that
-        #   _determine_origin_and_terminal_nodes_from_consideration_queue() assigns those to the last consideration
-        #   set (which is why it must be called here).  A potential alternative would be to not use
-        #   _determine_origin_and_terminal_nodes_from_consideration_queue(), and simply TERMINAL to all nodes without
-        #   efferents (other than to output_CIM) or labeled as FEEDBACK_SENDER.
-        for node in self.nodes:
-            if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
-                self._add_node_role(node, NodeRole.TERMINAL)
+        # INPUT
+        for node in self.get_nodes_by_role(NodeRole.ORIGIN):
+            self._add_node_role(node, NodeRole.INPUT)
 
-        # FIX 4/25/20 [JDC]: IS REMOVAL OF OUTPUT NECESSARY?  REDUNDANT WITH OUTPUT ASSIGNMENT BELOW?
-        # A ControlMechanism should not be the OUTPUT node of a Composition
-        #    (unless it is specifed as a required_role, in which case it is reassigned below)
-        for node in self.nodes:
-            if isinstance(node, ControlMechanism):
-                # if NodeRole.TERMINAL in self.nodes_to_roles[node]:
-                #     self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
-                if NodeRole.OUTPUT in self.nodes_to_roles[node]:
-                    self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
-
-        # Cycles
+        # CYCLE
         for node in self.graph_processing.cycle_vertices:
             self._add_node_role(node, NodeRole.CYCLE)
 
-        # "Feedback" Nodes
+        # FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
             for sender, typ in receiver.source_types.items():
                 if typ is EdgeType.FEEDBACK:
@@ -3481,26 +3477,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         NodeRole.FEEDBACK_RECEIVER
                     )
 
-        # FIX 4/25/20 [JDC]: STILL NEEDED AFTER KDM's REFACTORING?
-        # due to test_LEARNING_hebbian, all recurrent projections cause
-        # their senders to be FEEDBACK_RECEIVER
-        # REVIEW: but not FEEDBACK_SENDER - why?
-        for node in self.nodes:
-            if node in {eff.receiver.owner for eff in node.efferents}:
-                self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
-
-        # FIX 4/25/20 [JDC]: REDUNDANT WITH IDENTICAL CODE ABOVE
-        # Required Roles
-        for node_role_pair in self.required_node_roles:
-            self._add_node_role(node_role_pair[0], node_role_pair[1])
-
-        # FIX 4/25/20 [JDC]: TREAT IN SAME WAY AS OUTPUT - ALLOW USER TO ADD, BUT NOT REPLACE (USE REMOVE FOR THAT))
-        # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
-        if not self.get_nodes_by_role(NodeRole.INPUT):
-            origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
-            for node in origin_nodes:
-                self._add_node_role(node, NodeRole.INPUT)
-
+        # region
         # # MODIFIED 4/25/20 OLD:
         # # FIX 4/23/20 [JDC]: SOMETHING IN HERE IS FAILING (SEE SCRATCH PAD)
         #
@@ -3629,8 +3606,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #
         #     for node in output_nodes:
         #         self._add_node_role(node, NodeRole.OUTPUT)
-        # MODIFIED 4/25/20 NEW:
+        # endregion
 
+        # MODIFIED 4/25/20 NEW:
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
         #     - Simply execulde any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
         #     - NOTE IN PROGERAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
@@ -3692,24 +3670,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
-
-
-
-
         # MODIFIED 4/25/20 END
 
         # MODIFIED 4/23/20 NEW: FIX [JDC]: MOVED THIS TO OUTER LEVEL OF INDENTING
         # Finally, assign TERMINAL and SINGLETON nodes
         for node in self.nodes:
+
             # # MODIFIED 4/23/20 OLD:
             # if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
-            # MODIFIED 4/23/20 NEW:
-            assert True
-            if (not node.efferents
-                    or (NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]
-                    and not NodeRole.LEARNING in self.get_roles_by_node(node))):
-            # MODIFIED 4/23/20 END
-                self._add_node_role(node, NodeRole.TERMINAL)
+
+            # # MODIFIED 4/23/20 NEW: XXX
+            # if (not node.efferents
+            #         or (NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]
+            #         and not NodeRole.LEARNING in self.get_roles_by_node(node))):
+            # # MODIFIED 4/23/20 END
+            # # FIX 4/25/20 [JDC]: REDUNDANT WITH TERMINAL ASSSIGNMENT ABOVE?
+            #     self._add_node_role(node, NodeRole.TERMINAL)
+
             if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
                 self._add_node_role(node, NodeRole.SINGLETON)
             if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
@@ -6565,7 +6542,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    control_projection_arrow='box',
                    feedback_shape = 'septagon',
                    cim_shape='square',
-                   output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
+                   output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
                    context=None,
                    **kwargs):
         """
@@ -6727,11 +6704,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
-        output_fmt : keyword : default 'pdf'
+        output_fmt : keyword or None : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
             'jupyter': return the object (for working in jupyter/ipython notebooks);
             'gv': return graphviz object
             'gif': return gif used for animation
+            None : return None
 
         Returns
         -------
@@ -7655,6 +7633,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             elif output_fmt == 'gv':
                 return G
+
+            elif not output_fmt:
+                return None
+
+            else:
+                raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
+
         except:
             raise CompositionError(f"Problem displaying graph for {self.name}")
 
