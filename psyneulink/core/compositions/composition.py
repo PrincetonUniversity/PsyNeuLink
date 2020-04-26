@@ -3435,49 +3435,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        # region
-        # # FIX 4/25/20 [JDC]:  REMOVE THIS BLOCK IF ASSERT BELOW PASSES IN ALL TESTS
-        # # Assign CONTROLLER_OBJECTIVE
-        # objective_mechanism = None
-        # if (self.controller
-        #         and self.controller.objective_mechanism
-        #         and not self.controller.initialization_status == ContextFlags.DEFERRED_INIT):
-        #     objective_mechanism = self.controller.objective_mechanism
-        #     # # MODIFIED 4/25/20 OLD:
-        #     # self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
-        #     # MODIFIED 4/25/20 NEW:
-        #     if not all(np[1] is NodeRole.CONTROLLER_OBJECTIVE
-        #                for np in self.required_node_roles if np[0] is objective_mechanism):
-        #         assert False, 'PROGRAM ERROR: Problem with CONTROLLER_OBJECTIVE assignment'
-        #     # MODIFIED 4/25/20 END
-        # endregion
-
         # Get ORIGIN and TERMINAL Nodes using Scheduler.consideration_queue
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
-
-        # # Identify ORIGIN and TERMINAL nodes
-        # origin_nodes = set()
-        # for node in self.nodes:
-        #     # No afferent Projections except from input_CIM or marked as feedback
-        #     # if not any([afferent for afferent in node.path_afferents
-        #     #             if not (afferent.sender.owner is self.input_CIM
-        #     #                     or self.graph.comp_to_vertex[afferent].feedback.value
-        #     #     )]):
-        #     if any([afferent for afferent in node.path_afferents
-        #                 if afferent.sender.owner is self.input_CIM]):
-        #         origin_nodes.add(node)
-        # if origin_nodes != set(self.get_nodes_by_role(NodeRole.ORIGIN)):
-        #     assert False, 'PROGRAM ERROR: ORIGIN nodes '
-        # terminal_nodes = set()
-        # for node in self.nodes:
-        #     # No efferent Projections except to output_CIM or marked as feedback
-        #     if not any([efferent for efferent in node.efferents
-        #                 if not (efferent.receiver.owner is self.output_CIM
-        #                         or self.graph.comp_to_vertex[efferent].feedback.value)]):
-        #         terminal_nodes.add(node)
-        # if terminal_nodes != set(self.get_nodes_by_role(NodeRole.TERMINAL)):
-        #     assert False, 'PROGRAM ERROR:  TERMINAL nodes'
 
         # Also assign TERMINAL to any nodes that don't have efferent Projections other than to Composition's output_CIM
         # IMPLEMENTATION NOTE:
