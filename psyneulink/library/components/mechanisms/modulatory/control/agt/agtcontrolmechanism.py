@@ -271,8 +271,6 @@ class AGTControlMechanism(ControlMechanism):
         )
 
         self.objective_mechanism.name = self.name + '_ObjectiveMechanism'
-        # # FIX 4/27/20 _role: DELETE:
-        # self.objective_mechanism._role = CONTROL
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

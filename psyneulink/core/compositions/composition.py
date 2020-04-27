@@ -5431,8 +5431,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               VARIABLE: [0.]},
                                                       function=error_function,
                                                       output_ports=[OUTCOME, MSE],
-                                                      # # FIX 4/27/20 _role: DELETE:
-                                                      # role=LEARNING
                                                       )
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
@@ -5507,8 +5505,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           VARIABLE: [0.]},
                                                   function=error_function,
                                                   output_ports=[OUTCOME, MSE],
-                                                  # # FIX 4/27/20 _role: DELETE:
-                                                  # role=LEARNING
                                                   )
 
         learning_mechanism = \
@@ -5793,8 +5789,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               WEIGHT: -1},
                                                       function=error_function,
                                                       output_ports=[OUTCOME, MSE],
-                                                      # # FIX 4/27/20 _role: DELETE:
-                                                      # role=LEARNING
                                                       )
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
