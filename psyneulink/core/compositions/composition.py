@@ -3393,13 +3393,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specified as feedback by user
 
         CONTROL_OBJECTIVE
-          - all ObjectiveMechanisms for which ObjectiveMechanism._role == CONTROL
+          - ObjectiveMechanism assigned CONTROL_OBJECTIVE as a required_node_role in ControlMechanism's
+            _instantiate_objective_mechanism()
           .. note::
              - *not the same as* CONTROLLER_OBJECTIVE
              - all project to a ControlMechanism
 
         CONTROLLER_OBJECTIVE
-          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a reqiured_node_role in add_controller()
+          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a required_node_role in add_controller()
           .. note::
              - also assigned CONTROL_OBJECTIVE
              - *not the same as* CONTROL_OBJECTIVE
@@ -5430,7 +5431,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               VARIABLE: [0.]},
                                                       function=error_function,
                                                       output_ports=[OUTCOME, MSE],
-                                                      role=LEARNING)
+                                                      # # FIX 4/27/20 _role: DELETE:
+                                                      # role=LEARNING
+                                                      )
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
                                                          default_variable=[input_source.output_ports[0].value,
@@ -5504,7 +5507,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           VARIABLE: [0.]},
                                                   function=error_function,
                                                   output_ports=[OUTCOME, MSE],
-                                                  role=LEARNING)
+                                                  # # FIX 4/27/20 _role: DELETE:
+                                                  # role=LEARNING
+                                                  )
 
         learning_mechanism = \
             LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
@@ -5788,7 +5793,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                               WEIGHT: -1},
                                                       function=error_function,
                                                       output_ports=[OUTCOME, MSE],
-                                                      role=LEARNING)
+                                                      # # FIX 4/27/20 _role: DELETE:
+                                                      # role=LEARNING
+                                                      )
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                               output_source.output_ports[0].value,
