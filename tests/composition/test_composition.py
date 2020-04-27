@@ -5266,13 +5266,6 @@ class TestInputPortSpecifications:
         assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-    def test_recurrent_transfer_origin(self):
-        R = RecurrentTransferMechanism(has_recurrent_input_port=True)
-        C = Composition(pathways=[R])
-
-        result =  C.run(inputs={R: [[1.0], [2.0], [3.0]]})
-        assert True
-
 class TestInputSpecifications:
 
     # def test_2_mechanisms_default_input_1(self):
