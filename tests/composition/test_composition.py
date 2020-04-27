@@ -6081,7 +6081,6 @@ class TestNodeRoles:
         learning_pathway = comp.pathways[0]
         target = learning_pathway.target
         objective= learning_pathway.learning_objective
-        assert objective._role == LEARNING
         learning_mech = learning_pathway.learning_components[LEARNING_MECHANISMS]
         learning = {learning_mech}
         learning.add(target)
@@ -6104,7 +6103,6 @@ class TestNodeRoles:
         learning_pathway = comp.pathways[0]
         target = learning_pathway.target
         objective= learning_pathway.learning_objective
-        assert objective._role == LEARNING
         learning_mechs = learning_pathway.learning_components[LEARNING_MECHANISMS]
         learning = set(learning_mechs)
         learning.add(target)
