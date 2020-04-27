@@ -3134,7 +3134,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
                                        f"that cannot be modified by user.")
 
-    node_role_pair = (node, role)
+        node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
         node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
