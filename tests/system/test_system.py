@@ -14,45 +14,45 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import D
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import RecurrentTransferMechanism
 
 
-class TestInputSpecsExternalInputPortsOnly:
-
-    def test_recurrent_transfer_origin(self):
-        R = RecurrentTransferMechanism(has_recurrent_input_port=True)
-        P = Process(pathway=[R])
-        S = System(processes=[P])
-
-        S.run(inputs={R: [[1.0], [2.0], [3.0]]})
-        print(S.results)
-
-# class TestInputSpecsHeterogeneousVariables:
+# class TestInputSpecsExternalInputPortsOnly:
 #
-#     def test_heterogeneous_variables_drop_outer_list(self):
-#         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-#         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+#     def test_recurrent_transfer_origin(self):
+#         R = RecurrentTransferMechanism(has_recurrent_input_port=True)
+#         P = Process(pathway=[R])
+#         S = System(processes=[P])
 #
-#         p1 = Process(pathway=[a])
-#
-#         s = System(
-#             processes=[p1]
-#         )
-#
-#         inputs = {a: [[1.0], [2.0, 2.0]]}
-#
-#         s.run(inputs)
-#
-    def test_heterogeneous_variables(self):
-        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+#         S.run(inputs={R: [[1.0], [2.0], [3.0]]})
+#         print(S.results)
 
-        p1 = Process(pathway=[a])
+class TestInputSpecsHeterogeneousVariables:
 
-        s = System(
-            processes=[p1]
-        )
+    # def test_heterogeneous_variables_drop_outer_list(self):
+    #     # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+    #     a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+    #
+    #     p1 = Process(pathway=[a])
+    #
+    #     s = System(
+    #         processes=[p1]
+    #     )
+    #
+    #     inputs = {a: [[1.0], [2.0, 2.0]]}
+    #
+    #     s.run(inputs)
 
-        inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
-
-        s.run(inputs)
+    # def test_heterogeneous_variables(self):
+    #     # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+    #     a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+    #
+    #     p1 = Process(pathway=[a])
+    #
+    #     s = System(
+    #         processes=[p1]
+    #     )
+    #
+    #     inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
+    #
+    #     s.run(inputs)
 
 class TestGraphAndInput:
 

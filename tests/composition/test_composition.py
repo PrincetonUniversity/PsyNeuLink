@@ -5287,6 +5287,23 @@ class TestInputSpecifications:
     #     )
     #     assert 25 == output[0][0]
 
+    def test_heterogeneous_variables_drop_outer_list(self):
+        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+        C = Composition(pathways=[A])
+        output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
+        for i,j in zip(output,[[1.0],[2.0,2.0]]):
+            np.allclose(i,j)
+
+    def test_heterogeneous_variables_two_trials(self):
+        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+        C = Composition(pathways=[A])
+        C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
+        for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
+            for k,l in zip(i,j):
+                np.allclose(k,l)
+
     def test_3_origins(self):
         comp = Composition()
         I1 = InputPort(
@@ -5639,6 +5656,7 @@ class TestProperties:
         c.add_node(A)
         result = c.run(inputs={A: [1]}, num_trials=2)
         assert result == c.output_values == [np.array([1])]
+
 
 class TestAuxComponents:
     def test_two_transfer_mechanisms(self):
