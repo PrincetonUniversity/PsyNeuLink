@@ -3122,14 +3122,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context.source == ContextFlags.COMMAND_LINE:
             if role is NodeRole.CONTROL_OBJECTIVE:
                 raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
-                                       f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
+                                       # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
+                                       f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
+                                       f"the constructor for the desired {ControlMechanism.__name__}.")
+            if role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE}:
+                warnings.warn(f"{role} should be assigned with caution to {self.name}. Learning Components are "
+                              f"generally constructed automatically as part of a learning Pathway. "
+                              f"Doing so otherwise can cause unexpected results.")
             if role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER,
-                         NodeRole.LEARNING_OBJECTIVE, NodeRole.LEARNING}:
+                        NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}:
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
                                        f"that cannot be modified by user.")
 
-        node_role_pair = (node, role)
+    node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
         node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
