@@ -3119,6 +3119,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+        # FIX 4/25/20 [JDC]: CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
         if context.source == ContextFlags.COMMAND_LINE:
             if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE}:
                 # raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
@@ -3127,14 +3128,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                        f"the constructor for the desired {ControlMechanism.__name__}.")
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
-                              f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' " 
+                              f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
                               f"argument of its constructor.  Doing so otherwise may cause unexpected results.")
-            if role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE}:
+            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE}:
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"Learning Components are generally constructed automatically as part of "
                               f"a learning Pathway. Doing so otherwise may cause unexpected results.")
-            if role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
-                        NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}:
+            elif role in {NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}:
+                to_from = 'from'
+                if role is NodeRole.FEEDBACK_RECEIVER:
+                    to_from = 'to'
+                from psyneulink.core.components.projections.projection import Projection
+                warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
+                              f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
+                              f"where it is addd to the {self.name};  assignment will be ignored.")
+            elif role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL, NodeRole.CYCLE}:
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
                                        f"that cannot be modified by user.")
 
