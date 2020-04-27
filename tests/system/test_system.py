@@ -24,22 +24,22 @@ class TestInputSpecsExternalInputPortsOnly:
         S.run(inputs={R: [[1.0], [2.0], [3.0]]})
         print(S.results)
 
-class TestInputSpecsHeterogeneousVariables:
-
-    def test_heterogeneous_variables_drop_outer_list(self):
-        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
-
-        p1 = Process(pathway=[a])
-
-        s = System(
-            processes=[p1]
-        )
-
-        inputs = {a: [[1.0], [2.0, 2.0]]}
-
-        s.run(inputs)
-
+# class TestInputSpecsHeterogeneousVariables:
+#
+#     def test_heterogeneous_variables_drop_outer_list(self):
+#         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+#         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+#
+#         p1 = Process(pathway=[a])
+#
+#         s = System(
+#             processes=[p1]
+#         )
+#
+#         inputs = {a: [[1.0], [2.0, 2.0]]}
+#
+#         s.run(inputs)
+#
     def test_heterogeneous_variables(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
