@@ -3120,15 +3120,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
         if context.source == ContextFlags.COMMAND_LINE:
-            if role is NodeRole.CONTROL_OBJECTIVE:
-                raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
-                                       # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
-                                       f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
-                                       f"the constructor for the desired {ControlMechanism.__name__}.")
+            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE}:
+                # raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
+                #                        # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
+                #                        f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
+                #                        f"the constructor for the desired {ControlMechanism.__name__}.")
+                warnings.warn(f"{role} should be assigned with caution to {self.name}. "
+                              f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
+                              f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' " 
+                              f"argument of its constructor.  Doing so otherwise may cause unexpected results.")
             if role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE}:
-                warnings.warn(f"{role} should be assigned with caution to {self.name}. Learning Components are "
-                              f"generally constructed automatically as part of a learning Pathway. "
-                              f"Doing so otherwise can cause unexpected results.")
+                warnings.warn(f"{role} should be assigned with caution to {self.name}. "
+                              f"Learning Components are generally constructed automatically as part of "
+                              f"a learning Pathway. Doing so otherwise may cause unexpected results.")
             if role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
                         NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}:
                 raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
