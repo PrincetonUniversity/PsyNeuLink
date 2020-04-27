@@ -270,7 +270,7 @@ one or more `NodeRoles <NodeRole>` automatically when a Composition is construct
     Composition (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its
     2nd item.
 
-  * the **roles** argument of the `require_node_roles <Composition.add_required_node_role>` called for an
+  * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an
     an existing `Node <Composition_Nodes>`.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
@@ -2950,7 +2950,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}:
                             projections.append(component)
                         else:
-                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
                                                    "tuple is used to specify a Projection, then the index 0 item must "
                                                    "be the Projection, and the index 1 item must be the feedback "
                                                    "specification (True or False).".format(component, node.name))
@@ -2961,22 +2961,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if isinstance(component[1][0], NodeRole):
                                 self.add_node(node=component[0], required_roles=component[1])
                             else:
-                                raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
+                                raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
-                                                       "the index 0 item must be the node, and the index 1 item must "
+                                                       "the index 0 item must be the Node, and the index 1 item must "
                                                        "be the required_roles".format(component, node.name))
 
                         else:
-                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
                                                    "tuple is used to specify a Mechanism or Composition, then the "
-                                                   "index 0 item must be the node, and the index 1 item must be the "
+                                                   "index 0 item must be the Node, and the index 1 item must be the "
                                                    "required_roles".format(component, node.name))
                     else:
-                        raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a tuple"
+                        raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a tuple"
                                                " is specified, then the index 0 item must be a Projection, Mechanism, "
                                                "or Composition.".format(component, node.name))
                 else:
-                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                    raise CompositionError("Invalid Component ({}) in {}'s aux_components. Must be a Mechanism, "
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
@@ -3448,11 +3448,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
-        # Required Roles
+        # Assign required_node_roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        # Get ORIGIN and TERMINAL Nodes using Scheduler.consideration_queue
+        # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
         if self.scheduler.consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
@@ -3516,8 +3516,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
         #     - Simply execlude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
         #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
-        # Assign OUTPUT
-        # - Any designated as OUTPUT by required_node_role have already been assigned
+
+        # OUTPUT
+
         for node in self.nodes:
 
             # Assign OUTPUT if node is TERMINAL...
@@ -3535,6 +3536,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     self._add_node_role(node, NodeRole.OUTPUT)
 
+            # Assign OUTPUT to any non-TERMINAL Nodes
             else:
 
                 # IMPLEMENTATION NOTE:
@@ -4680,8 +4682,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
-        # FIX 8/27/19 [JDC]:  GENERALIZE TO ControlMechanism
-        # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
         #    as well as any projections to them specified in the pathway;
@@ -4690,7 +4690,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         items_to_delete = []
         for i, item in enumerate(pathway):
             if ((isinstance(item, ControlMechanism) and item.monitor_for_control)
-                    or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
+                    or (isinstance(item, ObjectiveMechanism) and
+                        set(self.get_roles_by_node(item)).intersection({NodeRole.CONTROL_OBJECTIVE,
+                                                                          NodeRole.CONTROLLER_OBJECTIVE}))):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
                 if i>0 and _is_pathway_entry_spec(pathway[i - 1],PROJECTION):
