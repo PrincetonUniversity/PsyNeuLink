@@ -5,8 +5,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear, Logis
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing import TransferMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
 
 class TestUserDefFunc:
 
@@ -34,20 +33,18 @@ class TestUserDefFunc:
             return [variable[0][1], variable[0][0]]
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
         T = TransferMechanism(size=2, function=Linear)
-        p = Process(pathway=[myMech, T])
-        s = System(processes=[p])
-        s.run(inputs = {myMech: [[1, 3, 5]]})
-        assert np.allclose(s.results[0][0], [3, 1])
+        c = Composition(pathways=[myMech, T])
+        c.run(inputs = {myMech: [[1, 3, 5]]})
+        assert np.allclose(c.results[0][0], [3, 1])
 
     def test_udf_system_terminal(self):
         def myFunction(variable, params, context):
             return [variable[0][2], variable[0][0]]
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
         T2 = TransferMechanism(size=3, function=Linear)
-        p2 = Process(pathway=[T2, myMech])
-        s2 = System(processes=[p2])
-        s2.run(inputs = {T2: [[1, 2, 3]]})
-        assert(np.allclose(s2.results[0][0], [3, 1]))
+        c2 = Composition(pathways=[[T2, myMech]])
+        c2.run(inputs = {T2: [[1, 2, 3]]})
+        assert(np.allclose(c2.results[0][0], [3, 1]))
 
     def test_udf_with_pnl_func(self):
         L = Logistic(gain=2)

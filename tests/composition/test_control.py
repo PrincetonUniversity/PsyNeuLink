@@ -968,6 +968,7 @@ class TestControlMechanisms:
         results = comp.run(inputs=inputs, num_trials=1, bin_execute=mode)
         assert np.allclose(comp.results, [[[0.375]]])
 
+
 class TestModelBasedOptimizationControlMechanisms:
 
     def test_evc(self):
@@ -1995,6 +1996,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # Thus, in the correct case, the output of the model is 7 ((5*1)+(-2*-1)) and in the errant case the output of the model is
         # -7 ((5*-1)+(-2*1))
         assert np.allclose(results, [[7]])
+
 
 class TestSampleIterator:
 

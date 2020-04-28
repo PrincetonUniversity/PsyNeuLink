@@ -13,8 +13,11 @@ def test_matrix_spec_and_learning():
                                function =psyneulink.core.components.functions.transferfunctions.Logistic,
                                name = 'OUTPUT LAYER')
     W = np.array([[0.1],[0.2]])
-    P = pnl.Process(pathway=[T1, W, T2], learning = pnl.ENABLED, target= 1.0)
-    S = pnl.System(processes = [P])
-    IN = {T1:[1,0]}
-    TARG = {T2:[[1]]}
-    S.run(IN, targets=TARG, num_trials= 2, learning = True)
+
+    C = pnl.Composition()
+    learning_pathway = C.add_backpropagation_learning_pathway(pathway=[T1, W, T2])
+    target = learning_pathway.target
+    inputs = {T1:[1,0], target:[1]}
+    result = C.learn(inputs=inputs, num_trials=2)
+    assert np.allclose(result, [[[0.52497919]], [[0.52793236]]])
+
