@@ -1,0 +1,62 @@
+/*!**/
+/*Sets bottom-margin size for list elements in the main body of the document to 12px.*/
+/*Because Sphinx includes the table of contents in the main section, we then reset just the list elements*/
+/*in that section to 0px.*/
+/* *!*/
+
+h1, h2{
+    margin-bottom:12px;
+}
+
+li{
+    margin-top:12px;
+}
+
+ul.simple{
+    margin-bottom:12px!important;
+}
+
+ol.simple{
+    margin-bottom:12px!important;
+}
+
+.section #overview {
+    margin-top: 24px;
+}
+
+#sections p,
+#sections .simple,
+#sections li{
+    margin-top:0px;
+    margin-bottom:0px!important;
+}
+
+.toctree-wrapper.compound li, div#sections li{
+    margin-top: 0px !important;
+}
+
+.toctree-wrapper.compound ul.simple{
+    display: none
+}
+
+#welcome-to-psyneulink-logo .simple li,
+#welcome-to-logo .simple li,
+#basics-and-sampler .simple li,
+#basics-and-sampler .simple p,
+#quick-reference #sections li,
+#core li,
+#contributors li,
+#table-of-contents li,
+#indices-and-tables li,
+.wy-menu-vertical li,
+.section #contents li,
+.section #contents p,
+.section #contents dd,
+.section #contents dt,
+.section #contents dl,
+.section #contents ul,
+.section #contents ol
+{
+    margin-top:0px;
+    margin-bottom:0px!important;
+}
