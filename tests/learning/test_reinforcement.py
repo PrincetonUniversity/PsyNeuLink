@@ -126,28 +126,12 @@ def test_reinforcement_fixed_targets():
                                function=pnl.DriftDiffusionAnalytical(),
                                output_ports=[pnl.SELECTED_INPUT_ARRAY],
                                name='DDM')
-
-    p = Process(pathway=[input_layer, action_selection],
-                learning=LearningProjection(learning_function=Reinforcement(learning_rate=0.05)))
-
-    input_list = {input_layer: [[1, 1], [1, 1]]}
-    s = System(
-        processes=[p],
-        # learning_rate=0.05,
-    )
-    targets = [[10.], [10.]]
-
-    # logged_mechanisms = [input_layer, action_selection]
-    # for mech in s.learning_mechanisms:
-    #     logged_mechanisms.append(mech)
-    #
-    # for mech in logged_mechanisms:
-    #     mech.log.set_log_conditions(items=[pnl.VALUE])
-
-    results = s.run(
-        inputs=input_list,
-        targets=targets
-    )
+    c = pnl.Composition()
+    learning_components = c.add_reinforcement_learning_pathway([input_layer, action_selection], learning_rate=0.05)
+    inputs = {input_layer: [[1, 1], [1, 1]],
+              learning_components.target: [[10.], [10.]]}
+    np.random.seed(100)
+    results = c.run(inputs=inputs)
 
     assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
                                                 [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])
