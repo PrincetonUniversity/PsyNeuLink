@@ -3920,6 +3920,7 @@ class TestCallBeforeAfterTimescale:
     #
     #     np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
 
+
 # Waiting to reintroduce ClampInput tests until we decide how this feature interacts with input specification
 
 # class TestClampInput:
@@ -5900,6 +5901,41 @@ class TestShadowInputs:
 
 class TestReinitializeValues:
 
+    def test_initialize_all_mechanisms(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = RecurrentTransferMechanism(name='C',
+                                       auto=1.0)
+        comp = Composition(pathways=[A,B,C])
+        C.log.set_log_conditions('value')
+
+        result1 = comp.run(inputs={A: [1.0, 2.0, 3.0]},
+                           initial_values={A: 1.0,
+                                           B: 1.5,
+                                           C: 2.0},
+                           reinitialize_nodes_when=AtTimeStep(0)
+                           )
+
+        result2 = comp.run(inputs={A: [1.0, 2.0, 3.0]},
+                           initial_values={A: 1.0,
+                                           B: 1.5,
+                                           C: 2.0},
+                           reinitialize_nodes_when=Never()
+                           )
+
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            #                      Value of C:
+            # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
+            # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
+            # [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+            # FIX 4/27/20 [JDC]:  VALUE OF Node C IS NOT GETTING INITIALIZED TO 2 ON FIRST TIME STEP:
+            #                      Value of C:
+            # Run 1 --> Execution 1: 1 + 0 = 1    |    Execution 2: 1 + 2 = 3    |    Execution 3: 3 + 3 = 6
+            # Run 2 --> Execution 1: 6 + 1 = 7    |    Execution 2: 7 + 2 = 9    |    Execution 3: 9 + 3 = 12
+            [[[1]], [[3]], [[6]], [[7]], [[9]], [[12]]]
+        )
+
     def test_reinitialize_one_mechanism_through_run(self):
         A = TransferMechanism(name='A')
         B = TransferMechanism(
@@ -6151,12 +6187,46 @@ class TestNodeRoles:
         # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={a}
         # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={b}
 
+    def test_two_node_cycle(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        comp = Composition(pathways=[A, B, A])
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={A,B}
+        # # THE FOLLOWING FAIL:
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={A}
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={B}
+
+    def test_three_node_cycle(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        comp._analyze_graph()
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        # THE FOLLOWING PASS:
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+
+    def test_three_node_cycle_with_FEEDBACK(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+        comp._analyze_graph()
+        assert not set(comp.get_nodes_by_role(NodeRole.CYCLE))
+        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
+        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+
     def test_FEEDBACK_no_CYCLE(self):
-        comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
-        comp.add_linear_processing_pathway([A, B, C])
+        comp = Composition(pathways=[A, B, C])
         comp.add_projection(sender=C, receiver=A, feedback=True)
         comp._analyze_graph()
 
@@ -6168,11 +6238,10 @@ class TestNodeRoles:
         assert not comp.get_nodes_by_role(NodeRole.CYCLE)
 
     def test_CYCLE_no_FEEDBACK(self):
-        comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
-        comp.add_linear_processing_pathway([A, B, C])
+        comp = Composition(pathways=[A, B, C])
         comp.add_projection(sender=C, receiver=A)
         comp._analyze_graph()
 
