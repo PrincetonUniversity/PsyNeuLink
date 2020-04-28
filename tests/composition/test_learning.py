@@ -29,6 +29,7 @@ class TestHebbian:
 
         assert np.allclose(activity, [[1.86643089, 0., 0., 1.86643089, 0., 0., 1.86643089, 0., 0.]])
 
+
 class TestReinforcement:
 
     def test_rl(self):
@@ -480,6 +481,7 @@ class TestNestedLearning:
         del inputs[target_mech]
         # This run should not error, as we are no longer in learning mode (and hence, we shouldn't need the target mech inputs)
         outer.run(inputs={mnet: inputs})
+
 
 class TestBackProp:
 
@@ -1444,6 +1446,7 @@ class TestBackProp:
 
         assert np.allclose(comparator, np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225))
 
+
 def validate_learning_mechs(comp):
 
     def get_learning_mech(name):
@@ -1608,6 +1611,7 @@ class TestRumelhartSemanticNetwork:
     #           #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
     #           #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
     #           )
+
 
 class TestLearningPathwayMethods:
     def test_multiple_of_same_learning_pathway(self):
