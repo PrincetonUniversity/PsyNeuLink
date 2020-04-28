@@ -18,6 +18,6 @@ def test_matrix_spec_and_learning():
     learning_pathway = C.add_backpropagation_learning_pathway(pathway=[T1, W, T2])
     target = learning_pathway.target
     inputs = {T1:[1,0], target:[1]}
-    result = C.learn(inputs=inputs, num_trials=2)
+    result = C.learn(inputs=inputs, num_trials=3)
     assert np.allclose(result, [[[0.52497919]], [[0.52793236]]])
 

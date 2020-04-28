@@ -6208,9 +6208,9 @@ class TestNodeRoles:
         comp.add_projection(sender=C, receiver=A)
         comp._analyze_graph()
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
-        # THE FOLLOWING PASS:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
-        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+        result = comp.run(inputs={A:[3]})
+        assert True
 
     def test_three_node_cycle_with_FEEDBACK(self):
         A = TransferMechanism()
@@ -6223,6 +6223,8 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+        result = comp.run(inputs={A:[3]})
+        assert True
 
     def test_FEEDBACK_no_CYCLE(self):
         A = ProcessingMechanism(name='A')
