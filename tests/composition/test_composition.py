@@ -1220,6 +1220,214 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
 
+class TestGraph:
+
+    class TestProcessingGraph:
+
+        def test_all_mechanisms(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            mechs = [A, B, C]
+            for m in mechs:
+                comp.add_node(m)
+
+            assert len(comp.graph_processing.vertices) == 3
+            assert len(comp.graph_processing.comp_to_vertex) == 3
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph_processing.get_parents_from_component(A) == []
+            assert comp.graph_processing.get_parents_from_component(B) == []
+            assert comp.graph_processing.get_parents_from_component(C) == []
+
+            assert comp.graph_processing.get_children_from_component(A) == []
+            assert comp.graph_processing.get_children_from_component(B) == []
+            assert comp.graph_processing.get_children_from_component(C) == []
+
+        def test_triangle(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            mechs = [A, B, C]
+            for m in mechs:
+                comp.add_node(m)
+            comp.add_projection(MappingProjection(), A, B)
+            comp.add_projection(MappingProjection(), B, C)
+
+            assert len(comp.graph_processing.vertices) == 3
+            assert len(comp.graph_processing.comp_to_vertex) == 3
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph_processing.get_parents_from_component(A) == []
+            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[A]]
+            assert comp.graph_processing.get_parents_from_component(C) == [comp.graph_processing.comp_to_vertex[B]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[B]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(C) == []
+
+        def test_x(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
+            mechs = [A, B, C, D, E]
+            for m in mechs:
+                comp.add_node(m)
+            comp.add_projection(MappingProjection(), A, C)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, D)
+            comp.add_projection(MappingProjection(), C, E)
+
+            assert len(comp.graph_processing.vertices) == 5
+            assert len(comp.graph_processing.comp_to_vertex) == 5
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph_processing.get_parents_from_component(A) == []
+            assert comp.graph_processing.get_parents_from_component(B) == []
+            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert set(comp.graph_processing.get_children_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert comp.graph_processing.get_children_from_component(D) == []
+            assert comp.graph_processing.get_children_from_component(E) == []
+
+        def test_cycle_linear(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            mechs = [A, B, C]
+            for m in mechs:
+                comp.add_node(m)
+            comp.add_projection(MappingProjection(), A, B)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, A)
+
+            assert len(comp.graph_processing.vertices) == 3
+            assert len(comp.graph_processing.comp_to_vertex) == 3
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph_processing.get_parents_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[A]]
+            assert comp.graph_processing.get_parents_from_component(C) == [comp.graph_processing.comp_to_vertex[B]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[B]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(C) == [comp.graph_processing.comp_to_vertex[A]]
+
+        def test_cycle_x(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
+            mechs = [A, B, C, D, E]
+            for m in mechs:
+                comp.add_node(m)
+            comp.add_projection(MappingProjection(), A, C)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, D)
+            comp.add_projection(MappingProjection(), C, E)
+            comp.add_projection(MappingProjection(), D, A)
+            comp.add_projection(MappingProjection(), E, B)
+
+            assert len(comp.graph_processing.vertices) == 5
+            assert len(comp.graph_processing.comp_to_vertex) == 5
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert comp.graph_processing.get_parents_from_component(A) == [comp.graph_processing.comp_to_vertex[D]]
+            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[E]]
+            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert set(comp.graph_processing.get_children_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert comp.graph_processing.get_children_from_component(D) == [comp.graph_processing.comp_to_vertex[A]]
+            assert comp.graph_processing.get_children_from_component(E) == [comp.graph_processing.comp_to_vertex[B]]
+
+        def test_cycle_x_multiple_incoming(self):
+            comp = Composition()
+            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
+            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
+            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
+            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
+            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
+            mechs = [A, B, C, D, E]
+            for m in mechs:
+                comp.add_node(m)
+            comp.add_projection(MappingProjection(), A, C)
+            comp.add_projection(MappingProjection(), B, C)
+            comp.add_projection(MappingProjection(), C, D)
+            comp.add_projection(MappingProjection(), C, E)
+            comp.add_projection(MappingProjection(), D, A)
+            comp.add_projection(MappingProjection(), D, B)
+            comp.add_projection(MappingProjection(), E, A)
+            comp.add_projection(MappingProjection(), E, B)
+
+            assert len(comp.graph_processing.vertices) == 5
+            assert len(comp.graph_processing.comp_to_vertex) == 5
+            for m in mechs:
+                assert m in comp.graph_processing.comp_to_vertex
+
+            assert set(comp.graph_processing.get_parents_from_component(A)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert set(comp.graph_processing.get_parents_from_component(B)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+
+            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
+            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
+            assert set(comp.graph_processing.get_children_from_component(C)) == set([
+                comp.graph_processing.comp_to_vertex[D],
+                comp.graph_processing.comp_to_vertex[E],
+            ])
+            assert set(comp.graph_processing.get_children_from_component(D)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+            assert set(comp.graph_processing.get_children_from_component(E)) == set([
+                comp.graph_processing.comp_to_vertex[A],
+                comp.graph_processing.comp_to_vertex[B],
+            ])
+
+
 class TestGraphCycles:
 
     def test_recurrent_transfer_mechanisms(self):
@@ -1442,7 +1650,6 @@ class TestExecutionOrder:
         comp._analyze_graph()
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL)) == expected_consideration_queue[-1]
 
-
     def test_simple_loop(self):
         A = ProcessingMechanism(name="A")
         B = ProcessingMechanism(name="B")
@@ -1479,8 +1686,6 @@ class TestExecutionOrder:
         print(D.log.nparray_dictionary(["OutputPort-0"]))
         for node in expected_values:
             assert np.allclose(expected_values_2[node], node.parameters.value.get(comp))
-
-
 
     def test_loop_with_extra_node(self):
         A = ProcessingMechanism(name="A")
@@ -2020,212 +2225,514 @@ class TestGetMechanismsByRole:
         comp.get_nodes_by_role(None)
 
 
-class TestGraph:
+class TestInputPortSpecifications:
 
-    class TestProcessingGraph:
+    def test_two_input_ports_created_with_dictionaries(self):
 
-        def test_all_mechanisms(self):
-            comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
-            mechs = [A, B, C]
-            for m in mechs:
-                comp.add_node(m)
+        comp = Composition()
+        A = ProcessingMechanism(
+            name="composition-pytests-A",
+            default_variable=[[0], [0]],
+            # input_ports=[
+            #     {NAME: "Input Port 1", },
+            #     {NAME: "Input Port 2", }
+            # ],
+            function=Linear(slope=1.0)
+            # specifying default_variable on the function doesn't seem to matter?
+        )
 
-            assert len(comp.graph_processing.vertices) == 3
-            assert len(comp.graph_processing.comp_to_vertex) == 3
-            for m in mechs:
-                assert m in comp.graph_processing.comp_to_vertex
+        comp.add_node(A)
 
-            assert comp.graph_processing.get_parents_from_component(A) == []
-            assert comp.graph_processing.get_parents_from_component(B) == []
-            assert comp.graph_processing.get_parents_from_component(C) == []
 
-            assert comp.graph_processing.get_children_from_component(A) == []
-            assert comp.graph_processing.get_children_from_component(B) == []
-            assert comp.graph_processing.get_children_from_component(C) == []
+        inputs_dict = {A: [[2.], [4.]]}
+        sched = Scheduler(composition=comp)
+        comp.run(inputs=inputs_dict, scheduler=sched)
 
-        def test_triangle(self):
-            comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
-            mechs = [A, B, C]
-            for m in mechs:
-                comp.add_node(m)
-            comp.add_projection(MappingProjection(), A, B)
-            comp.add_projection(MappingProjection(), B, C)
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-            assert len(comp.graph_processing.vertices) == 3
-            assert len(comp.graph_processing.comp_to_vertex) == 3
-            for m in mechs:
-                assert m in comp.graph_processing.comp_to_vertex
+    def test_recurrent_transfer_origin(self):
+        R = RecurrentTransferMechanism(has_recurrent_input_port=True)
+        C = Composition(pathways=[R])
 
-            assert comp.graph_processing.get_parents_from_component(A) == []
-            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[A]]
-            assert comp.graph_processing.get_parents_from_component(C) == [comp.graph_processing.comp_to_vertex[B]]
+        result = C.run(inputs={R: [[1.0], [2.0], [3.0]]})
+        assert np.allclose(result, [[3.0]])
 
-            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[B]]
-            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_children_from_component(C) == []
+    def test_two_input_ports_created_first_with_deferred_init(self):
+        comp = Composition()
 
-        def test_x(self):
-            comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
-            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
-            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
-            mechs = [A, B, C, D, E]
-            for m in mechs:
-                comp.add_node(m)
-            comp.add_projection(MappingProjection(), A, C)
-            comp.add_projection(MappingProjection(), B, C)
-            comp.add_projection(MappingProjection(), C, D)
-            comp.add_projection(MappingProjection(), C, E)
+        # create mechanism A
+        I1 = InputPort(
+            name="Input Port 1",
+            reference_value=[0]
+        )
+        I2 = InputPort(
+            name="Input Port 2",
+            reference_value=[0]
+        )
+        A = TransferMechanism(
+            name="composition-pytests-A",
+            default_variable=[[0], [0]],
+            input_ports=[I1, I2],
+            function=Linear(slope=1.0)
+        )
 
-            assert len(comp.graph_processing.vertices) == 5
-            assert len(comp.graph_processing.comp_to_vertex) == 5
-            for m in mechs:
-                assert m in comp.graph_processing.comp_to_vertex
+        # add mech A to composition
+        comp.add_node(A)
 
-            assert comp.graph_processing.get_parents_from_component(A) == []
-            assert comp.graph_processing.get_parents_from_component(B) == []
-            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
-                comp.graph_processing.comp_to_vertex[A],
-                comp.graph_processing.comp_to_vertex[B],
-            ])
-            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+        # get comp ready to run (identify roles, create sched, assign inputs)
+        inputs_dict = { A: [[2.],[4.]]}
 
-            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
-            assert set(comp.graph_processing.get_children_from_component(C)) == set([
-                comp.graph_processing.comp_to_vertex[D],
-                comp.graph_processing.comp_to_vertex[E],
-            ])
-            assert comp.graph_processing.get_children_from_component(D) == []
-            assert comp.graph_processing.get_children_from_component(E) == []
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-        def test_cycle_linear(self):
-            comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
-            mechs = [A, B, C]
-            for m in mechs:
-                comp.add_node(m)
-            comp.add_projection(MappingProjection(), A, B)
-            comp.add_projection(MappingProjection(), B, C)
-            comp.add_projection(MappingProjection(), C, A)
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-            assert len(comp.graph_processing.vertices) == 3
-            assert len(comp.graph_processing.comp_to_vertex) == 3
-            for m in mechs:
-                assert m in comp.graph_processing.comp_to_vertex
+    def test_two_input_ports_created_with_keyword(self):
+        comp = Composition()
 
-            assert comp.graph_processing.get_parents_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[A]]
-            assert comp.graph_processing.get_parents_from_component(C) == [comp.graph_processing.comp_to_vertex[B]]
+        # create mechanism A
 
-            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[B]]
-            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_children_from_component(C) == [comp.graph_processing.comp_to_vertex[A]]
+        A = TransferMechanism(
+            name="composition-pytests-A",
+            default_variable=[[0], [0]],
+            input_ports=[INPUT_PORT, INPUT_PORT],
+            function=Linear(slope=1.0)
+        )
 
-        def test_cycle_x(self):
-            comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
-            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
-            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
-            mechs = [A, B, C, D, E]
-            for m in mechs:
-                comp.add_node(m)
-            comp.add_projection(MappingProjection(), A, C)
-            comp.add_projection(MappingProjection(), B, C)
-            comp.add_projection(MappingProjection(), C, D)
-            comp.add_projection(MappingProjection(), C, E)
-            comp.add_projection(MappingProjection(), D, A)
-            comp.add_projection(MappingProjection(), E, B)
+        # add mech A to composition
+        comp.add_node(A)
 
-            assert len(comp.graph_processing.vertices) == 5
-            assert len(comp.graph_processing.comp_to_vertex) == 5
-            for m in mechs:
-                assert m in comp.graph_processing.comp_to_vertex
+        # get comp ready to run (identify roles, create sched, assign inputs)
+        inputs_dict = {A: [[2.], [4.]]}
 
-            assert comp.graph_processing.get_parents_from_component(A) == [comp.graph_processing.comp_to_vertex[D]]
-            assert comp.graph_processing.get_parents_from_component(B) == [comp.graph_processing.comp_to_vertex[E]]
-            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
-                comp.graph_processing.comp_to_vertex[A],
-                comp.graph_processing.comp_to_vertex[B],
-            ])
-            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler=sched)
 
-            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
-            assert set(comp.graph_processing.get_children_from_component(C)) == set([
-                comp.graph_processing.comp_to_vertex[D],
-                comp.graph_processing.comp_to_vertex[E],
-            ])
-            assert comp.graph_processing.get_children_from_component(D) == [comp.graph_processing.comp_to_vertex[A]]
-            assert comp.graph_processing.get_children_from_component(E) == [comp.graph_processing.comp_to_vertex[B]]
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
-        def test_cycle_x_multiple_incoming(self):
-            comp = Composition()
-            A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='composition-pytests-A')
-            B = TransferMechanism(function=Linear(intercept=4.0), name='composition-pytests-B')
-            C = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-C')
-            D = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-D')
-            E = TransferMechanism(function=Linear(intercept=1.5), name='composition-pytests-E')
-            mechs = [A, B, C, D, E]
-            for m in mechs:
-                comp.add_node(m)
-            comp.add_projection(MappingProjection(), A, C)
-            comp.add_projection(MappingProjection(), B, C)
-            comp.add_projection(MappingProjection(), C, D)
-            comp.add_projection(MappingProjection(), C, E)
-            comp.add_projection(MappingProjection(), D, A)
-            comp.add_projection(MappingProjection(), D, B)
-            comp.add_projection(MappingProjection(), E, A)
-            comp.add_projection(MappingProjection(), E, B)
+        assert np.allclose([[2], [4]], output)
 
-            assert len(comp.graph_processing.vertices) == 5
-            assert len(comp.graph_processing.comp_to_vertex) == 5
-            for m in mechs:
-                assert m in comp.graph_processing.comp_to_vertex
+    def test_two_input_ports_created_with_strings(self):
+        comp = Composition()
 
-            assert set(comp.graph_processing.get_parents_from_component(A)) == set([
-                comp.graph_processing.comp_to_vertex[D],
-                comp.graph_processing.comp_to_vertex[E],
-            ])
-            assert set(comp.graph_processing.get_parents_from_component(B)) == set([
-                comp.graph_processing.comp_to_vertex[D],
-                comp.graph_processing.comp_to_vertex[E],
-            ])
-            assert set(comp.graph_processing.get_parents_from_component(C)) == set([
-                comp.graph_processing.comp_to_vertex[A],
-                comp.graph_processing.comp_to_vertex[B],
-            ])
-            assert comp.graph_processing.get_parents_from_component(D) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_parents_from_component(E) == [comp.graph_processing.comp_to_vertex[C]]
+        # create mechanism A
 
-            assert comp.graph_processing.get_children_from_component(A) == [comp.graph_processing.comp_to_vertex[C]]
-            assert comp.graph_processing.get_children_from_component(B) == [comp.graph_processing.comp_to_vertex[C]]
-            assert set(comp.graph_processing.get_children_from_component(C)) == set([
-                comp.graph_processing.comp_to_vertex[D],
-                comp.graph_processing.comp_to_vertex[E],
-            ])
-            assert set(comp.graph_processing.get_children_from_component(D)) == set([
-                comp.graph_processing.comp_to_vertex[A],
-                comp.graph_processing.comp_to_vertex[B],
-            ])
-            assert set(comp.graph_processing.get_children_from_component(E)) == set([
-                comp.graph_processing.comp_to_vertex[A],
-                comp.graph_processing.comp_to_vertex[B],
-            ])
+        A = TransferMechanism(
+            name="composition-pytests-A",
+            default_variable=[[0], [0]],
+            input_ports=["Input Port 1", "Input Port 2"],
+            function=Linear(slope=1.0)
+        )
+
+        # add mech A to composition
+        comp.add_node(A)
+
+        # get comp ready to run (identify roles, create sched, assign inputs)
+
+        inputs_dict = {A: [[2.], [4.]]}
+
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler=sched)
+
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+
+    def test_two_input_ports_created_with_values(self):
+        comp = Composition()
+
+        # create mechanism A
+
+        A = TransferMechanism(
+            name="composition-pytests-A",
+            default_variable=[[0], [0]],
+            input_ports=[[0.], [0.]],
+            function=Linear(slope=1.0)
+        )
+
+        # add mech A to composition
+        comp.add_node(A)
+
+        # get comp ready to run (identify roles, create sched, assign inputs)
+        inputs_dict = {A: [[2.], [4.]]}
+
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler=sched)
+
+        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
+        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
+        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
+
+
+class TestRunInputSpecifications:
+
+    # def test_2_mechanisms_default_input_1(self):
+    #     comp = Composition()
+    #     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
+    #     B = TransferMechanism(function=Linear(slope=5.0))
+    #     comp.add_node(A)
+    #     comp.add_node(B)
+    #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
+    #     sched = Scheduler(composition=comp)
+    #     output = comp.run(
+    #         scheduler=sched
+    #     )
+    #     assert 25 == output[0][0]
+
+    def test_input_not_provided_to_run(self):
+        T = TransferMechanism(name='T',
+                              default_variable=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        T2 = TransferMechanism(name='T2',
+                               function=Linear(slope=2.0),
+                               default_variable=[[0.0, 0.0]])
+        C = Composition(pathways=[T, T2])
+        run_result = C.run(inputs={})
+        assert np.allclose(T.parameters.value.get(C), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+        assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+
+    def test_some_inputs_not_specified(self):
+        comp = Composition()
+
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
+                              function=Linear(slope=2.0))
+        B = TransferMechanism(name="composition-pytests-B",
+                              default_variable=[[0.0, 0.0, 0.0]],
+                              function=Linear(slope=3.0))
+        C = TransferMechanism(name="composition-pytests-C")
+        D = TransferMechanism(name="composition-pytests-D")
+
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_node(C)
+        comp.add_node(D)
+
+        inputs = {B: [[1., 2., 3.]],
+                  D: [[4.]]}
+        sched = Scheduler(composition=comp)
+        comp.run(inputs=inputs, scheduler=sched)[0]
+
+        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        assert np.allclose(C.get_output_values(comp), [[0.]])
+        assert np.allclose(D.get_output_values(comp), [[4.]])
+        for i,j in zip(comp.results[0], [[2., 4.], [6., 8.], [3., 6., 9.],[0.], [4.]]):
+            assert np.allclose(i,j)
+
+    def test_some_inputs_not_specified_origin_node_is_composition(self):
+
+        compA = Composition()
+        A = TransferMechanism(name="composition-pytests-A",
+                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
+                              function=Linear(slope=2.0))
+        compA.add_node(A)
+
+        comp = Composition()
+
+        B = TransferMechanism(name="composition-pytests-B",
+                              default_variable=[[0.0, 0.0, 0.0]],
+                              function=Linear(slope=3.0))
+
+        C = TransferMechanism(name="composition-pytests-C")
+
+        D = TransferMechanism(name="composition-pytests-D")
+
+        comp.add_node(compA)
+        comp.add_node(B)
+        comp.add_node(C)
+        comp.add_node(D)
+
+
+        inputs = {B: [[1., 2., 3.]],
+                  D: [[4.]]}
+
+        sched = Scheduler(composition=comp)
+        comp.run(inputs=inputs, scheduler=sched)[0]
+
+        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        assert np.allclose(C.get_output_values(comp), [[0.]])
+        assert np.allclose(D.get_output_values(comp), [[4.]])
+
+    def test_heterogeneous_variables_drop_outer_list(self):
+        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+        C = Composition(pathways=[A])
+        output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
+        for i,j in zip(output,[[1.0],[2.0,2.0]]):
+            np.allclose(i,j)
+
+    def test_heterogeneous_variables_two_trials(self):
+        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+        A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+        C = Composition(pathways=[A])
+        C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
+        for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
+            for k,l in zip(i,j):
+                np.allclose(k,l)
+
+    def test_3_origins(self):
+        comp = Composition()
+        I1 = InputPort(
+                        name="Input Port 1",
+                        reference_value=[0]
+        )
+        I2 = InputPort(
+                        name="Input Port 2",
+                        reference_value=[0]
+        )
+        A = TransferMechanism(
+                            name="composition-pytests-A",
+                            default_variable=[[0], [0]],
+                            input_ports=[I1, I2],
+                            function=Linear(slope=1.0)
+        )
+        B = TransferMechanism(
+                            name="composition-pytests-B",
+                            default_variable=[0,0],
+                            function=Linear(slope=1.0))
+        C = TransferMechanism(
+                            name="composition-pytests-C",
+                            default_variable=[0, 0, 0],
+                            function=Linear(slope=1.0))
+        D = TransferMechanism(
+                            name="composition-pytests-D",
+                            default_variable=[0],
+                            function=Linear(slope=1.0))
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_node(C)
+        comp.add_node(D)
+        comp.add_projection(MappingProjection(sender=A, receiver=D), A, D)
+        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
+        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
+        inputs = {A: [[[0], [0]], [[1], [1]], [[2], [2]]],
+                  B: [[0, 0], [1, 1], [2, 2]],
+                  C: [[0, 0, 0], [1, 1, 1], [2, 2, 2]]
+        }
+
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs, scheduler=sched)
+
+        assert np.allclose(np.array([[12.]]), output)
+
+    def test_2_mechanisms_input_5(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        inputs_dict = {A: [[5]]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler=sched)
+        assert np.allclose([125], output)
+
+    def test_run_2_mechanisms_reuse_input(self):
+        comp = Composition()
+        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
+        B = TransferMechanism(function=Linear(slope=5.0))
+        comp.add_node(A)
+        comp.add_node(B)
+        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
+        inputs_dict = {A: [[5]]}
+        sched = Scheduler(composition=comp)
+        output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5)
+        assert np.allclose([125], output)
+
+    def test_function_as_input(self):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_function(trial_num):
+            stimuli = list(range(10))
+            return {
+                m1: stimuli[trial_num]
+            }
+
+        c.run(inputs=test_function,
+              num_trials=10)
+        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                                               [np.array([8.])], [np.array([9.])]]
+
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      ])
+    def test_generator_as_input(self, mode):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_generator():
+            for i in range(10):
+                yield {
+                    m1: i
+                }
+
+        t_g = test_generator()
+
+        c.run(inputs=t_g, bin_execute=mode)
+        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
+                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
+                                               [np.array([8.])], [np.array([9.])]]
+
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      ])
+    def test_generator_as_input_with_num_trials(self, mode):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_generator():
+            for i in range(10):
+                yield {
+                    m1: i
+                }
+
+        t_g = test_generator()
+
+        c.run(inputs=t_g, num_trials=1, bin_execute=mode)
+        assert c.parameters.results.get(c) == [[np.array([0.])]]
+
+    def test_error_on_malformed_generator(self):
+        c = pnl.Composition()
+
+        m1 = pnl.TransferMechanism()
+        m2 = pnl.TransferMechanism()
+
+        c.add_linear_processing_pathway([m1, m2])
+
+        def test_generator():
+            yield {
+                m1: [[1],[2]]
+            }
+
+        t_g = test_generator()
+
+        try:
+            c.run(inputs=t_g)
+        except Exception as e:
+            assert isinstance(e, pnl.CompositionError)
+
+    @pytest.mark.parametrize(
+            "with_outer_controller,with_inner_controller",
+            [(True, True), (True, False), (False, True), (False, False)]
+    )
+    def test_input_type_equivalence(self, with_outer_controller, with_inner_controller):
+        # instantiate mechanisms and inner comp
+        ia = pnl.TransferMechanism(name='ia')
+        ib = pnl.TransferMechanism(name='ib')
+        icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
+
+        # set up structure of inner comp
+        icomp.add_node(ia, required_roles=pnl.NodeRole.INPUT)
+        icomp.add_node(ib, required_roles=pnl.NodeRole.OUTPUT)
+        icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
+
+        # add controller to inner comp
+        if with_inner_controller:
+            icomp.add_controller(
+                    pnl.OptimizationControlMechanism(
+                            agent_rep=icomp,
+                            features=[ia.input_port],
+                            name="iController",
+                            objective_mechanism=pnl.ObjectiveMechanism(
+                                    monitor=ib.output_port,
+                                    function=pnl.SimpleIntegrator,
+                                    name="oController Objective Mechanism"
+                            ),
+                            function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                            control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                               variable=1.0,
+                                                               intensity_cost_function=pnl.Linear(slope=0.0),
+                                                               allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                                 stop=10.0,
+                                                                                                 num=2))])
+            )
+
+        # instantiate outer comp
+        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
+
+        # setup structure of outer comp
+        ocomp.add_node(icomp)
+
+        # add controller to outer comp
+        if with_outer_controller:
+            ocomp.add_controller(
+                    pnl.OptimizationControlMechanism(
+                            agent_rep=ocomp,
+                            features=[ia.input_port],
+                            name="oController",
+                            objective_mechanism=pnl.ObjectiveMechanism(
+                                    monitor=ib.output_port,
+                                    function=pnl.SimpleIntegrator,
+                                    name="oController Objective Mechanism"
+                            ),
+                            function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                            control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
+                                                               variable=1.0,
+                                                               intensity_cost_function=pnl.Linear(slope=0.0),
+                                                               allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                                 stop=10.0,
+                                                                                                 num=2))])
+            )
+
+        # set up input using three different formats:
+        #  1) generator function
+        #  2) instance of generator function
+        #  3) inputs dict
+        inputs_dict = {
+            icomp:
+                {
+                    ia: [[-2], [1]]
+                }
+        }
+
+        def inputs_generator_function():
+            for i in range(2):
+                yield {
+                    icomp:
+                        {
+                            ia: inputs_dict[icomp][ia][i]
+                        }
+                }
+
+        inputs_generator_instance = inputs_generator_function()
+
+        # run Composition with all three input types and assert that results are as expected.
+        ocomp.run(inputs=inputs_generator_function)
+        ocomp.run(inputs=inputs_generator_instance)
+        ocomp.run(inputs=inputs_dict)
+
+        # assert results are as expected
+        if not with_inner_controller and not with_outer_controller:
+            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [1]]
+        elif with_inner_controller and not with_outer_controller or \
+                with_outer_controller and not with_inner_controller:
+            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [10]]
+        else:
+            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
 
 
 class TestRun:
@@ -5127,508 +5634,6 @@ class TestCompositionInterface:
         assert len(outer_comp.results[0]) == 1
 
 
-class TestInputPortSpecifications:
-
-    def test_two_input_ports_created_with_dictionaries(self):
-
-        comp = Composition()
-        A = ProcessingMechanism(
-            name="composition-pytests-A",
-            default_variable=[[0], [0]],
-            # input_ports=[
-            #     {NAME: "Input Port 1", },
-            #     {NAME: "Input Port 2", }
-            # ],
-            function=Linear(slope=1.0)
-            # specifying default_variable on the function doesn't seem to matter?
-        )
-
-        comp.add_node(A)
-
-
-        inputs_dict = {A: [[2.], [4.]]}
-        sched = Scheduler(composition=comp)
-        comp.run(inputs=inputs_dict, scheduler=sched)
-
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
-
-    def test_recurrent_transfer_origin(self):
-        R = RecurrentTransferMechanism(has_recurrent_input_port=True)
-        C = Composition(pathways=[R])
-
-        result = C.run(inputs={R: [[1.0], [2.0], [3.0]]})
-        assert np.allclose(result, [[3.0]])
-
-    def test_two_input_ports_created_first_with_deferred_init(self):
-        comp = Composition()
-
-        # create mechanism A
-        I1 = InputPort(
-            name="Input Port 1",
-            reference_value=[0]
-        )
-        I2 = InputPort(
-            name="Input Port 2",
-            reference_value=[0]
-        )
-        A = TransferMechanism(
-            name="composition-pytests-A",
-            default_variable=[[0], [0]],
-            input_ports=[I1, I2],
-            function=Linear(slope=1.0)
-        )
-
-        # add mech A to composition
-        comp.add_node(A)
-
-        # get comp ready to run (identify roles, create sched, assign inputs)
-        inputs_dict = { A: [[2.],[4.]]}
-
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched)
-
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
-
-    def test_two_input_ports_created_with_keyword(self):
-        comp = Composition()
-
-        # create mechanism A
-
-        A = TransferMechanism(
-            name="composition-pytests-A",
-            default_variable=[[0], [0]],
-            input_ports=[INPUT_PORT, INPUT_PORT],
-            function=Linear(slope=1.0)
-        )
-
-        # add mech A to composition
-        comp.add_node(A)
-
-        # get comp ready to run (identify roles, create sched, assign inputs)
-        inputs_dict = {A: [[2.], [4.]]}
-
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched)
-
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
-
-        assert np.allclose([[2], [4]], output)
-
-    def test_two_input_ports_created_with_strings(self):
-        comp = Composition()
-
-        # create mechanism A
-
-        A = TransferMechanism(
-            name="composition-pytests-A",
-            default_variable=[[0], [0]],
-            input_ports=["Input Port 1", "Input Port 2"],
-            function=Linear(slope=1.0)
-        )
-
-        # add mech A to composition
-        comp.add_node(A)
-
-        # get comp ready to run (identify roles, create sched, assign inputs)
-
-        inputs_dict = {A: [[2.], [4.]]}
-
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched)
-
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
-
-    def test_two_input_ports_created_with_values(self):
-        comp = Composition()
-
-        # create mechanism A
-
-        A = TransferMechanism(
-            name="composition-pytests-A",
-            default_variable=[[0], [0]],
-            input_ports=[[0.], [0.]],
-            function=Linear(slope=1.0)
-        )
-
-        # add mech A to composition
-        comp.add_node(A)
-
-        # get comp ready to run (identify roles, create sched, assign inputs)
-        inputs_dict = {A: [[2.], [4.]]}
-
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched)
-
-        assert np.allclose(A.input_ports[0].parameters.value.get(comp), [2.0])
-        assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
-        assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
-
-
-class TestInputSpecifications:
-
-    # def test_2_mechanisms_default_input_1(self):
-    #     comp = Composition()
-    #     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-    #     B = TransferMechanism(function=Linear(slope=5.0))
-    #     comp.add_node(A)
-    #     comp.add_node(B)
-    #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     sched = Scheduler(composition=comp)
-    #     output = comp.run(
-    #         scheduler=sched
-    #     )
-    #     assert 25 == output[0][0]
-
-    def test_heterogeneous_variables_drop_outer_list(self):
-        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
-        C = Composition(pathways=[A])
-        output = C.run(inputs={A: [[1.0], [2.0, 2.0]]})
-        for i,j in zip(output,[[1.0],[2.0,2.0]]):
-            np.allclose(i,j)
-
-    def test_heterogeneous_variables_two_trials(self):
-        # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-        A = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
-        C = Composition(pathways=[A])
-        C.run(inputs={A: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]})
-        for i,j in zip(C.results,[[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]):
-            for k,l in zip(i,j):
-                np.allclose(k,l)
-
-    def test_3_origins(self):
-        comp = Composition()
-        I1 = InputPort(
-                        name="Input Port 1",
-                        reference_value=[0]
-        )
-        I2 = InputPort(
-                        name="Input Port 2",
-                        reference_value=[0]
-        )
-        A = TransferMechanism(
-                            name="composition-pytests-A",
-                            default_variable=[[0], [0]],
-                            input_ports=[I1, I2],
-                            function=Linear(slope=1.0)
-        )
-        B = TransferMechanism(
-                            name="composition-pytests-B",
-                            default_variable=[0,0],
-                            function=Linear(slope=1.0))
-        C = TransferMechanism(
-                            name="composition-pytests-C",
-                            default_variable=[0, 0, 0],
-                            function=Linear(slope=1.0))
-        D = TransferMechanism(
-                            name="composition-pytests-D",
-                            default_variable=[0],
-                            function=Linear(slope=1.0))
-        comp.add_node(A)
-        comp.add_node(B)
-        comp.add_node(C)
-        comp.add_node(D)
-        comp.add_projection(MappingProjection(sender=A, receiver=D), A, D)
-        comp.add_projection(MappingProjection(sender=B, receiver=D), B, D)
-        comp.add_projection(MappingProjection(sender=C, receiver=D), C, D)
-        inputs = {A: [[[0], [0]], [[1], [1]], [[2], [2]]],
-                  B: [[0, 0], [1, 1], [2, 2]],
-                  C: [[0, 0, 0], [1, 1, 1], [2, 2, 2]]
-        }
-
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs, scheduler=sched)
-
-        assert np.allclose(np.array([[12.]]), output)
-
-    def test_2_mechanisms_input_5(self):
-        comp = Composition()
-        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-        B = TransferMechanism(function=Linear(slope=5.0))
-        comp.add_node(A)
-        comp.add_node(B)
-        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        inputs_dict = {A: [[5]]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose([125], output)
-
-    def test_run_2_mechanisms_reuse_input(self):
-        comp = Composition()
-        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-        B = TransferMechanism(function=Linear(slope=5.0))
-        comp.add_node(A)
-        comp.add_node(B)
-        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        inputs_dict = {A: [[5]]}
-        sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict, scheduler=sched, num_trials=5)
-        assert np.allclose([125], output)
-
-    def test_some_inputs_not_specified(self):
-        comp = Composition()
-
-        A = TransferMechanism(name="composition-pytests-A",
-                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
-                              function=Linear(slope=2.0))
-
-        B = TransferMechanism(name="composition-pytests-B",
-                              default_variable=[[0.0, 0.0, 0.0]],
-                              function=Linear(slope=3.0))
-
-        C = TransferMechanism(name="composition-pytests-C")
-
-        D = TransferMechanism(name="composition-pytests-D")
-
-        comp.add_node(A)
-        comp.add_node(B)
-        comp.add_node(C)
-        comp.add_node(D)
-
-
-        inputs = {B: [[1., 2., 3.]],
-                  D: [[4.]]}
-
-        sched = Scheduler(composition=comp)
-        comp.run(inputs=inputs, scheduler=sched)[0]
-
-        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
-        assert np.allclose(C.get_output_values(comp), [[0.]])
-        assert np.allclose(D.get_output_values(comp), [[4.]])
-
-    def test_some_inputs_not_specified_origin_node_is_composition(self):
-
-        compA = Composition()
-        A = TransferMechanism(name="composition-pytests-A",
-                              default_variable=[[1.0, 2.0], [3.0, 4.0]],
-                              function=Linear(slope=2.0))
-        compA.add_node(A)
-
-        comp = Composition()
-
-        B = TransferMechanism(name="composition-pytests-B",
-                              default_variable=[[0.0, 0.0, 0.0]],
-                              function=Linear(slope=3.0))
-
-        C = TransferMechanism(name="composition-pytests-C")
-
-        D = TransferMechanism(name="composition-pytests-D")
-
-        comp.add_node(compA)
-        comp.add_node(B)
-        comp.add_node(C)
-        comp.add_node(D)
-
-
-        inputs = {B: [[1., 2., 3.]],
-                  D: [[4.]]}
-
-        sched = Scheduler(composition=comp)
-        comp.run(inputs=inputs, scheduler=sched)[0]
-
-        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
-        assert np.allclose(C.get_output_values(comp), [[0.]])
-        assert np.allclose(D.get_output_values(comp), [[4.]])
-
-    def test_function_as_input(self):
-        c = pnl.Composition()
-
-        m1 = pnl.TransferMechanism()
-        m2 = pnl.TransferMechanism()
-
-        c.add_linear_processing_pathway([m1, m2])
-
-        def test_function(trial_num):
-            stimuli = list(range(10))
-            return {
-                m1: stimuli[trial_num]
-            }
-
-        c.run(inputs=test_function,
-              num_trials=10)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
-
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      ])
-    def test_generator_as_input(self, mode):
-        c = pnl.Composition()
-
-        m1 = pnl.TransferMechanism()
-        m2 = pnl.TransferMechanism()
-
-        c.add_linear_processing_pathway([m1, m2])
-
-        def test_generator():
-            for i in range(10):
-                yield {
-                    m1: i
-                }
-
-        t_g = test_generator()
-
-        c.run(inputs=t_g, bin_execute=mode)
-        assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
-                                               [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
-                                               [np.array([8.])], [np.array([9.])]]
-
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      ])
-    def test_generator_as_input_with_num_trials(self, mode):
-        c = pnl.Composition()
-
-        m1 = pnl.TransferMechanism()
-        m2 = pnl.TransferMechanism()
-
-        c.add_linear_processing_pathway([m1, m2])
-
-        def test_generator():
-            for i in range(10):
-                yield {
-                    m1: i
-                }
-
-        t_g = test_generator()
-
-        c.run(inputs=t_g, num_trials=1, bin_execute=mode)
-        assert c.parameters.results.get(c) == [[np.array([0.])]]
-
-    def test_error_on_malformed_generator(self):
-        c = pnl.Composition()
-
-        m1 = pnl.TransferMechanism()
-        m2 = pnl.TransferMechanism()
-
-        c.add_linear_processing_pathway([m1, m2])
-
-        def test_generator():
-            yield {
-                m1: [[1],[2]]
-            }
-
-        t_g = test_generator()
-
-        try:
-            c.run(inputs=t_g)
-        except Exception as e:
-            assert isinstance(e, pnl.CompositionError)
-
-    @pytest.mark.parametrize(
-            "with_outer_controller,with_inner_controller",
-            [(True, True), (True, False), (False, True), (False, False)]
-    )
-    def test_input_type_equivalence(self, with_outer_controller, with_inner_controller):
-        # instantiate mechanisms and inner comp
-        ia = pnl.TransferMechanism(name='ia')
-        ib = pnl.TransferMechanism(name='ib')
-        icomp = pnl.Composition(name='icomp', controller_mode=pnl.BEFORE)
-
-        # set up structure of inner comp
-        icomp.add_node(ia, required_roles=pnl.NodeRole.INPUT)
-        icomp.add_node(ib, required_roles=pnl.NodeRole.OUTPUT)
-        icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
-
-        # add controller to inner comp
-        if with_inner_controller:
-            icomp.add_controller(
-                    pnl.OptimizationControlMechanism(
-                            agent_rep=icomp,
-                            features=[ia.input_port],
-                            name="iController",
-                            objective_mechanism=pnl.ObjectiveMechanism(
-                                    monitor=ib.output_port,
-                                    function=pnl.SimpleIntegrator,
-                                    name="oController Objective Mechanism"
-                            ),
-                            function=pnl.GridSearch(direction=pnl.MAXIMIZE),
-                            control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                               variable=1.0,
-                                                               intensity_cost_function=pnl.Linear(slope=0.0),
-                                                               allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                                 stop=10.0,
-                                                                                                 num=2))])
-            )
-
-        # instantiate outer comp
-        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
-
-        # setup structure of outer comp
-        ocomp.add_node(icomp)
-
-        # add controller to outer comp
-        if with_outer_controller:
-            ocomp.add_controller(
-                    pnl.OptimizationControlMechanism(
-                            agent_rep=ocomp,
-                            features=[ia.input_port],
-                            name="oController",
-                            objective_mechanism=pnl.ObjectiveMechanism(
-                                    monitor=ib.output_port,
-                                    function=pnl.SimpleIntegrator,
-                                    name="oController Objective Mechanism"
-                            ),
-                            function=pnl.GridSearch(direction=pnl.MAXIMIZE),
-                            control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
-                                                               variable=1.0,
-                                                               intensity_cost_function=pnl.Linear(slope=0.0),
-                                                               allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                                 stop=10.0,
-                                                                                                 num=2))])
-            )
-
-        # set up input using three different formats:
-        #  1) generator function
-        #  2) instance of generator function
-        #  3) inputs dict
-        inputs_dict = {
-            icomp:
-                {
-                    ia: [[-2], [1]]
-                }
-        }
-
-        def inputs_generator_function():
-            for i in range(2):
-                yield {
-                    icomp:
-                        {
-                            ia: inputs_dict[icomp][ia][i]
-                        }
-                }
-
-        inputs_generator_instance = inputs_generator_function()
-
-        # run Composition with all three input types and assert that results are as expected.
-        ocomp.run(inputs=inputs_generator_function)
-        ocomp.run(inputs=inputs_generator_instance)
-        ocomp.run(inputs=inputs_dict)
-
-        # assert results are as expected
-        if not with_inner_controller and not with_outer_controller:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [1]]
-        elif with_inner_controller and not with_outer_controller or \
-                with_outer_controller and not with_inner_controller:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [10]]
-        else:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
-
-
 class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', True,
@@ -6050,6 +6055,101 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
+    def test_branch(self):
+        a = TransferMechanism(default_variable=[0, 0])
+        b = TransferMechanism()
+        c = TransferMechanism()
+        d = TransferMechanism()
+        comp = Composition(pathways=[[a, b, c], [a, b, d]],
+                           initial_values={a: [1, 1]})
+        comp.run(inputs={a: [[2, 2]]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={c,d}
+
+    def test_bypass(self):
+        a = TransferMechanism(default_variable=[0, 0])
+        b = TransferMechanism(default_variable=[0, 0])
+        c = TransferMechanism()
+        d = TransferMechanism()
+        comp = Composition(pathways=[[a, b, c, d],[a, b, d]],
+                           initial_values={a: [1, 1]})
+        comp.run(inputs = {a: [[2, 2], [0, 0]]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b,c}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={d}
+
+    def test_chain(self):
+        a = TransferMechanism(default_variable=[0, 0, 0])
+        b = TransferMechanism()
+        c = TransferMechanism()
+        d = TransferMechanism()
+        e = TransferMechanism()
+        comp = Composition(pathways=[[a, b, c],[c, d, e]],
+                           initial_values={a: [1, 1, 1]})
+        comp.run(inputs = {a: [[2, 2, 2], [0, 0, 0]]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b,c,d}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={e}
+
+    def test_convergent(self):
+        a = TransferMechanism(default_variable=[0, 0])
+        b = TransferMechanism()
+        c = TransferMechanism()
+        c = TransferMechanism(default_variable=[0])
+        d = TransferMechanism()
+        e = TransferMechanism()
+        comp = Composition(pathways=[[a, b, e],[c, d, e]],
+                           initial_values={a: [1, 1]})
+        comp.run(inputs = {a: [[2, 2]], c: [[0]]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,c}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b,d}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={e}
+
+    def test_one_pathway_cycle(self):
+        a = TransferMechanism(default_variable=[0, 0])
+        b = TransferMechanism(default_variable=[0, 0])
+        comp = Composition(pathways=[a, b, a],
+                           initial_values={a: [1, 1]})
+        comp.run(inputs={a: [1, 1]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,b}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={a,b}
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={a,b}
+        # FIX 4/25/20 [JDC]: THESE SHOULD BE OK:
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={a}
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={b}
+
+    def test_two_pathway_cycle(self):
+        a = TransferMechanism(default_variable=[0, 0])
+        b = TransferMechanism(default_variable=[0, 0])
+        c = TransferMechanism(default_variable=[0, 0])
+        comp = Composition(pathways=[[a, b, a],[a, c, a]],
+                           initial_values={a: [1, 1]})
+        comp.run(inputs={a: [1, 1]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,b,c}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={a,b,c}
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={a,b,c}
+        # FIX 4/25/20 [JDC]: THESE SHOULD BE OK:
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={a}
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={b}
+
+    def test_extended_loop(self):
+        a = TransferMechanism(default_variable=[0, 0])
+        b = TransferMechanism()
+        c = TransferMechanism()
+        d = TransferMechanism()
+        e = TransferMechanism(default_variable=[0])
+        f = TransferMechanism()
+        comp = Composition(pathways=[[a, b, c, d],[e, c, f, b, d]],
+                           initial_values={a: [1, 1]})
+        comp.run(inputs={a: [2, 2], e: [0]})
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,e}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={d}
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={b,c,f}
+        # FIX 4/25/20 [JDC]: THESE SHOULD BE OK:
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={a}
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={b}
+
     def test_FEEDBACK_no_CYCLE(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
@@ -6065,20 +6165,6 @@ class TestNodeRoles:
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
         assert comp.get_nodes_by_role(NodeRole.OUTPUT) == [C]
         assert not comp.get_nodes_by_role(NodeRole.CYCLE)
-
-    def test_CYCLE_no_FEEDBACK(self):
-        comp = Composition(name='comp')
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        comp.add_linear_processing_pathway([A, B, C])
-        comp.add_projection(sender=C, receiver=A)
-        comp._analyze_graph()
-
-        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
-        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
-        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
-        assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
     def test_CYCLE_no_FEEDBACK(self):
         comp = Composition(name='comp')
@@ -6140,6 +6226,7 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == set(learning)
         # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
+
 
 
 class TestMisc:

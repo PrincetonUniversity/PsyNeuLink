@@ -24,252 +24,252 @@ from psyneulink.library.components.mechanisms.processing.transfer.recurrenttrans
 #         S.run(inputs={R: [[1.0], [2.0], [3.0]]})
 #         print(S.results)
 
-class TestInputSpecsHeterogeneousVariables:
-
-    # def test_heterogeneous_variables_drop_outer_list(self):
-    #     # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-    #     a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
-    #
-    #     p1 = Process(pathway=[a])
-    #
-    #     s = System(
-    #         processes=[p1]
-    #     )
-    #
-    #     inputs = {a: [[1.0], [2.0, 2.0]]}
-    #
-    #     s.run(inputs)
-
-    # def test_heterogeneous_variables(self):
-    #     # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-    #     a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
-    #
-    #     p1 = Process(pathway=[a])
-    #
-    #     s = System(
-    #         processes=[p1]
-    #     )
-    #
-    #     inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
-    #
-    #     s.run(inputs)
+# class TestInputSpecsHeterogeneousVariables:
+#
+#     def test_heterogeneous_variables_drop_outer_list(self):
+#         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+#         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+#
+#         p1 = Process(pathway=[a])
+#
+#         s = System(
+#             processes=[p1]
+#         )
+#
+#         inputs = {a: [[1.0], [2.0, 2.0]]}
+#
+#         s.run(inputs)
+#
+#     def test_heterogeneous_variables(self):
+#         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+#         a = TransferMechanism(name='a', default_variable=[[0.0], [0.0,0.0]])
+#
+#         p1 = Process(pathway=[a])
+#
+#         s = System(
+#             processes=[p1]
+#         )
+#
+#         inputs = {a: [[[1.1], [2.1, 2.1]], [[1.2], [2.2, 2.2]]]}
+#
+#         s.run(inputs)
 
 class TestGraphAndInput:
 
-    def test_input_not_provided_to_run(self):
-        T = TransferMechanism(name='T',
-                              default_variable=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+    # def test_input_not_provided_to_run(self):
+    #     T = TransferMechanism(name='T',
+    #                           default_variable=[[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+    #
+    #     T2 = TransferMechanism(name='T2',
+    #                            function=Linear(slope=2.0),
+    #                            default_variable=[[0.0, 0.0]])
+    #     P = Process(pathway=[T, T2])
+    #     S = System(processes=[P])
+    #     run_result = S.run()
+    #
+    #     assert np.allclose(T.parameters.value.get(S), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
+    #     assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+    #
+    # def test_some_inputs_not_provided_to_run(self):
+    #     Origin1 = TransferMechanism(name='Origin1',
+    #                                 default_variable=[[1.0, 2.0]])
+    #     Origin2 = TransferMechanism(name='Origin2',
+    #                                 default_variable=[[3.0, 4.0]])
+    #     Terminal = TransferMechanism(name='Terminal')
+    #
+    #     P1 = Process(pathway=[Origin1, Terminal])
+    #     P2 = Process(pathway=[Origin2, Terminal])
+    #     S = System(processes=[P1, P2])
+    #     run_result = S.run(inputs={Origin1: [[5.0, 6.0]]})
+    #     # inputs={Origin1: [[5.0, 6.0], [7.0, 8.0]]}) # NOT currently allowed because inputs would be different lengths
+    #
+    #     assert np.allclose(Origin1.parameters.value.get(S), [[5.0, 6.0]])
+    #     assert np.allclose(Origin2.parameters.value.get(S), [[3.0, 4.0]])
+    #     assert np.allclose(run_result, [[np.array([18.0])]])
 
-        T2 = TransferMechanism(name='T2',
-                               function=Linear(slope=2.0),
-                               default_variable=[[0.0, 0.0]])
-        P = Process(pathway=[T, T2])
-        S = System(processes=[P])
-        run_result = S.run()
+    # def test_branch(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0])
+    #     b = TransferMechanism(name='b')
+    #     c = TransferMechanism(name='c')
+    #     d = TransferMechanism(name='d')
+    #
+    #     p1 = Process(pathway=[a, b, c], name='p1')
+    #     p2 = Process(pathway=[a, b, d], name='p2')
+    #
+    #     s = System(
+    #         processes=[p1, p2],
+    #         name='Branch System',
+    #         initial_values={a: [1, 1]},
+    #     )
+    #
+    #     inputs = {a: [[2, 2]]}
+    #     s.run(inputs)
+    #
+    #     assert [a] == s.origin_mechanisms.mechanisms
+    #     assert set([c, d]) == set(s.terminal_mechanisms.mechanisms)
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == INTERNAL
+    #     assert c.systems[s] == TERMINAL
+    #     assert d.systems[s] == TERMINAL
+    #
+    # def test_bypass(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0])
+    #     b = TransferMechanism(name='b', default_variable=[0, 0])
+    #     c = TransferMechanism(name='c')
+    #     d = TransferMechanism(name='d')
+    #
+    #     p1 = Process(pathway=[a, b, c, d], name='p1')
+    #     p2 = Process(pathway=[a, b, d], name='p2')
+    #
+    #     s = System(
+    #         processes=[p1, p2],
+    #         name='Bypass System',
+    #         initial_values={a: [1, 1]},
+    #     )
+    #
+    #     inputs = {a: [[2, 2], [0, 0]]}
+    #     s.run(inputs=inputs)
+    #
+    #     assert [a] == s.origin_mechanisms.mechanisms
+    #     assert [d] == s.terminal_mechanisms.mechanisms
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == INTERNAL
+    #     assert c.systems[s] == INTERNAL
+    #     assert d.systems[s] == TERMINAL
 
-        assert np.allclose(T.parameters.value.get(S), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
-        assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+    # def test_chain(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0, 0])
+    #     b = TransferMechanism(name='b')
+    #     c = TransferMechanism(name='c')
+    #     d = TransferMechanism(name='d')
+    #     e = TransferMechanism(name='e')
+    #
+    #     p1 = Process(pathway=[a, b, c], name='p1')
+    #     p2 = Process(pathway=[c, d, e], name='p2')
+    #
+    #     s = System(
+    #         processes=[p1, p2],
+    #         name='Chain System',
+    #         initial_values={a: [1, 1, 1]},
+    #     )
+    #
+    #     inputs = {a: [[2, 2, 2], [0, 0, 0]]}
+    #     s.run(inputs=inputs)
+    #
+    #     assert [a] == s.origin_mechanisms.mechanisms
+    #     assert [e] == s.terminal_mechanisms.mechanisms
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == INTERNAL
+    #     assert c.systems[s] == INTERNAL
+    #     assert d.systems[s] == INTERNAL
+    #     assert e.systems[s] == TERMINAL
 
-    def test_some_inputs_not_provided_to_run(self):
-        Origin1 = TransferMechanism(name='Origin1',
-                                    default_variable=[[1.0, 2.0]])
-        Origin2 = TransferMechanism(name='Origin2',
-                                    default_variable=[[3.0, 4.0]])
-        Terminal = TransferMechanism(name='Terminal')
+    # def test_convergent(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0])
+    #     b = TransferMechanism(name='b')
+    #     c = TransferMechanism(name='c')
+    #     c = TransferMechanism(name='c', default_variable=[0])
+    #     d = TransferMechanism(name='d')
+    #     e = TransferMechanism(name='e')
+    #
+    #     p1 = Process(pathway=[a, b, e], name='p1')
+    #     p2 = Process(pathway=[c, d, e], name='p2')
+    #
+    #     s = System(
+    #         processes=[p1, p2],
+    #         name='Convergent System',
+    #         initial_values={a: [1, 1]},
+    #     )
+    #
+    #     inputs = {a: [[2, 2]], c: [[0]]}
+    #     s.run(inputs=inputs)
+    #
+    #     assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
+    #     assert [e] == s.terminal_mechanisms.mechanisms
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == INTERNAL
+    #     assert c.systems[s] == ORIGIN
+    #     assert d.systems[s] == INTERNAL
+    #     assert e.systems[s] == TERMINAL
 
-        P1 = Process(pathway=[Origin1, Terminal])
-        P2 = Process(pathway=[Origin2, Terminal])
-        S = System(processes=[P1, P2])
-        run_result = S.run(inputs={Origin1: [[5.0, 6.0]]})
-        # inputs={Origin1: [[5.0, 6.0], [7.0, 8.0]]}) # NOT currently allowed because inputs would be different lengths
+    # def cyclic_one_process(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0])
+    #     b = TransferMechanism(name='b', default_variable=[0, 0])
+    #
+    #     p1 = Process(pathway=[a, b, a], name='p1')
+    #
+    #     s = System(
+    #         processes=[p1],
+    #         name='Cyclic System with one Process',
+    #         initial_values={a: [1, 1]},
+    #     )
+    #
+    #     inputs = {a: [1, 1]}
+    #     s.run(inputs=inputs)
+    #
+    #     assert [a] == s.origin_mechanisms.mechanisms
+    #     assert [] == s.terminal_mechanisms.mechanisms
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == INITIALIZE_CYCLE
 
-        assert np.allclose(Origin1.parameters.value.get(S), [[5.0, 6.0]])
-        assert np.allclose(Origin2.parameters.value.get(S), [[3.0, 4.0]])
-        assert np.allclose(run_result, [[np.array([18.0])]])
+    # def cyclic_two_processes(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0])
+    #     b = TransferMechanism(name='b', default_variable=[0, 0])
+    #     c = TransferMechanism(name='c', default_variable=[0, 0])
+    #
+    #     p1 = Process(pathway=[a, b, a], name='p1')
+    #     p2 = Process(pathway=[a, c, a], name='p2')
+    #
+    #     s = System(
+    #         processes=[p1, p2],
+    #         name='Cyclic System with two Processes',
+    #         initial_values={a: [1, 1]},
+    #     )
+    #
+    #     inputs = {a: [1, 1]}
+    #     s.run(inputs=inputs)
+    #
+    #     assert [a] == s.origin_mechanisms.mechanisms
+    #     assert [] == s.terminal_mechanisms.mechanisms
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == INITIALIZE_CYCLE
+    #     assert c.systems[s] == INITIALIZE_CYCLE
 
-    def test_branch(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0])
-        b = TransferMechanism(name='b')
-        c = TransferMechanism(name='c')
-        d = TransferMechanism(name='d')
-
-        p1 = Process(pathway=[a, b, c], name='p1')
-        p2 = Process(pathway=[a, b, d], name='p2')
-
-        s = System(
-            processes=[p1, p2],
-            name='Branch System',
-            initial_values={a: [1, 1]},
-        )
-
-        inputs = {a: [[2, 2]]}
-        s.run(inputs)
-
-        assert [a] == s.origin_mechanisms.mechanisms
-        assert set([c, d]) == set(s.terminal_mechanisms.mechanisms)
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == INTERNAL
-        assert c.systems[s] == TERMINAL
-        assert d.systems[s] == TERMINAL
-
-    def test_bypass(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0])
-        b = TransferMechanism(name='b', default_variable=[0, 0])
-        c = TransferMechanism(name='c')
-        d = TransferMechanism(name='d')
-
-        p1 = Process(pathway=[a, b, c, d], name='p1')
-        p2 = Process(pathway=[a, b, d], name='p2')
-
-        s = System(
-            processes=[p1, p2],
-            name='Bypass System',
-            initial_values={a: [1, 1]},
-        )
-
-        inputs = {a: [[2, 2], [0, 0]]}
-        s.run(inputs=inputs)
-
-        assert [a] == s.origin_mechanisms.mechanisms
-        assert [d] == s.terminal_mechanisms.mechanisms
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == INTERNAL
-        assert c.systems[s] == INTERNAL
-        assert d.systems[s] == TERMINAL
-
-    def test_chain(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0, 0])
-        b = TransferMechanism(name='b')
-        c = TransferMechanism(name='c')
-        d = TransferMechanism(name='d')
-        e = TransferMechanism(name='e')
-
-        p1 = Process(pathway=[a, b, c], name='p1')
-        p2 = Process(pathway=[c, d, e], name='p2')
-
-        s = System(
-            processes=[p1, p2],
-            name='Chain System',
-            initial_values={a: [1, 1, 1]},
-        )
-
-        inputs = {a: [[2, 2, 2], [0, 0, 0]]}
-        s.run(inputs=inputs)
-
-        assert [a] == s.origin_mechanisms.mechanisms
-        assert [e] == s.terminal_mechanisms.mechanisms
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == INTERNAL
-        assert c.systems[s] == INTERNAL
-        assert d.systems[s] == INTERNAL
-        assert e.systems[s] == TERMINAL
-
-    def test_convergent(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0])
-        b = TransferMechanism(name='b')
-        c = TransferMechanism(name='c')
-        c = TransferMechanism(name='c', default_variable=[0])
-        d = TransferMechanism(name='d')
-        e = TransferMechanism(name='e')
-
-        p1 = Process(pathway=[a, b, e], name='p1')
-        p2 = Process(pathway=[c, d, e], name='p2')
-
-        s = System(
-            processes=[p1, p2],
-            name='Convergent System',
-            initial_values={a: [1, 1]},
-        )
-
-        inputs = {a: [[2, 2]], c: [[0]]}
-        s.run(inputs=inputs)
-
-        assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
-        assert [e] == s.terminal_mechanisms.mechanisms
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == INTERNAL
-        assert c.systems[s] == ORIGIN
-        assert d.systems[s] == INTERNAL
-        assert e.systems[s] == TERMINAL
-
-    def cyclic_one_process(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0])
-        b = TransferMechanism(name='b', default_variable=[0, 0])
-
-        p1 = Process(pathway=[a, b, a], name='p1')
-
-        s = System(
-            processes=[p1],
-            name='Cyclic System with one Process',
-            initial_values={a: [1, 1]},
-        )
-
-        inputs = {a: [1, 1]}
-        s.run(inputs=inputs)
-
-        assert [a] == s.origin_mechanisms.mechanisms
-        assert [] == s.terminal_mechanisms.mechanisms
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == INITIALIZE_CYCLE
-
-    def cyclic_two_processes(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0])
-        b = TransferMechanism(name='b', default_variable=[0, 0])
-        c = TransferMechanism(name='c', default_variable=[0, 0])
-
-        p1 = Process(pathway=[a, b, a], name='p1')
-        p2 = Process(pathway=[a, c, a], name='p2')
-
-        s = System(
-            processes=[p1, p2],
-            name='Cyclic System with two Processes',
-            initial_values={a: [1, 1]},
-        )
-
-        inputs = {a: [1, 1]}
-        s.run(inputs=inputs)
-
-        assert [a] == s.origin_mechanisms.mechanisms
-        assert [] == s.terminal_mechanisms.mechanisms
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == INITIALIZE_CYCLE
-        assert c.systems[s] == INITIALIZE_CYCLE
-
-    def cyclic_extended_loop(self):
-        a = TransferMechanism(name='a', default_variable=[0, 0])
-        b = TransferMechanism(name='b')
-        c = TransferMechanism(name='c')
-        d = TransferMechanism(name='d')
-        e = TransferMechanism(name='e', default_variable=[0])
-        f = TransferMechanism(name='f')
-
-        p1 = Process(pathway=[a, b, c, d], name='p1')
-        p2 = Process(pathway=[e, c, f, b, d], name='p2')
-
-        s = System(
-            processes=[p1, p2],
-            name='Cyclic System with Extended Loop',
-            initial_values={a: [1, 1]},
-        )
-
-        inputs = {a: [2, 2], e: [0]}
-        s.run(inputs=inputs)
-
-        assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
-        assert [d] == s.terminal_mechanisms.mechanisms
-
-        assert a.systems[s] == ORIGIN
-        assert b.systems[s] == CYCLE
-        assert c.systems[s] == INTERNAL
-        assert d.systems[s] == TERMINAL
-        assert e.systems[s] == ORIGIN
-        assert f.systems[s] == INITIALIZE_CYCLE
+    # def cyclic_extended_loop(self):
+    #     a = TransferMechanism(name='a', default_variable=[0, 0])
+    #     b = TransferMechanism(name='b')
+    #     c = TransferMechanism(name='c')
+    #     d = TransferMechanism(name='d')
+    #     e = TransferMechanism(name='e', default_variable=[0])
+    #     f = TransferMechanism(name='f')
+    #
+    #     p1 = Process(pathway=[a, b, c, d], name='p1')
+    #     p2 = Process(pathway=[e, c, f, b, d], name='p2')
+    #
+    #     s = System(
+    #         processes=[p1, p2],
+    #         name='Cyclic System with Extended Loop',
+    #         initial_values={a: [1, 1]},
+    #     )
+    #
+    #     inputs = {a: [2, 2], e: [0]}
+    #     s.run(inputs=inputs)
+    #
+    #     assert set([a, c]) == set(s.origin_mechanisms.mechanisms)
+    #     assert [d] == s.terminal_mechanisms.mechanisms
+    #
+    #     assert a.systems[s] == ORIGIN
+    #     assert b.systems[s] == CYCLE
+    #     assert c.systems[s] == INTERNAL
+    #     assert d.systems[s] == TERMINAL
+    #     assert e.systems[s] == ORIGIN
+    #     assert f.systems[s] == INITIALIZE_CYCLE
 
 class TestConvergentLearning:
 
