@@ -5925,11 +5925,13 @@ class TestReinitializeValues:
 
         assert np.allclose(
             C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            # FIX 4/27/20 [JDC]:  VALUE OF Node C *WAS* GETTING INITIALIZED TO 2 ON FIRST TIME STEP:
+            # FROM test_system:
             #                      Value of C:
             # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
             # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
             # [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
-            # FIX 4/27/20 [JDC]:  VALUE OF Node C IS NOT GETTING INITIALIZED TO 2 ON FIRST TIME STEP:
+            # FIX 4/27/20 [JDC]:  VALUE OF Node C *NOT* GETTING INITIALIZED TO 2 ON FIRST TIME STEP:
             #                      Value of C:
             # Run 1 --> Execution 1: 1 + 0 = 1    |    Execution 2: 1 + 2 = 3    |    Execution 3: 3 + 3 = 6
             # Run 2 --> Execution 1: 6 + 1 = 7    |    Execution 2: 7 + 2 = 9    |    Execution 3: 9 + 3 = 12
