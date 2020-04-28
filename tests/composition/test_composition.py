@@ -5910,16 +5910,12 @@ class TestReinitializeValues:
         C.log.set_log_conditions('value')
 
         result1 = comp.run(inputs={A: [1.0, 2.0, 3.0]},
-                           initial_values={A: 1.0,
-                                           B: 1.5,
-                                           C: 2.0},
+                           reinitialize_values={C: [2.0]},
                            reinitialize_nodes_when=AtTimeStep(0)
                            )
 
         result2 = comp.run(inputs={A: [1.0, 2.0, 3.0]},
-                           initial_values={A: 1.0,
-                                           B: 1.5,
-                                           C: 2.0},
+                           reinitialize_values={C: [2.0]},
                            reinitialize_nodes_when=Never()
                            )
 
