@@ -271,32 +271,32 @@ class TestGraphAndInput:
     #     assert e.systems[s] == ORIGIN
     #     assert f.systems[s] == INITIALIZE_CYCLE
 
-class TestConvergentLearning:
-
-    def test_branch(self):
-        from psyneulink.core.globals.keywords import ENABLED
-        mech_1 = TransferMechanism(name='M1', size=1)
-        mech_2 = TransferMechanism(name='M2', size=2)
-        mech_3 = TransferMechanism(name='M3', size=3)
-        mech_4 = TransferMechanism(name='M4', size=4)
-        mech_5 = TransferMechanism(name='M5', size=5)
-        mech_6 = TransferMechanism(name='M6', size=6)
-        process_A = Process(pathway=[mech_1, mech_2, mech_3, mech_4], learning=ENABLED, name='Process A')
-        process_B = Process(pathway=[mech_5, mech_6, mech_4], learning=ENABLED, name='Process B')
-        S = System(processes=[process_A, process_B])
-
-        lm = mech_1.efferents[0].learning_mechanism
-        assert 'LearningMechanism for MappingProjection from M2 to M3' in [m.name for m in S.learningGraph[lm]]
-        lm = mech_2.efferents[0].learning_mechanism
-        assert 'LearningMechanism for MappingProjection from M3 to M4' in [m.name for m in S.learningGraph[lm]]
-        lm = mech_3.efferents[0].learning_mechanism
-        assert 'M4 LEARNING_OBJECTIVE' in [m.name for m in S.learningGraph[lm]]
-        cm = mech_4.efferents[0].receiver.owner
-        assert cm in S.learningGraph.keys()
-        lm = mech_5.efferents[0].learning_mechanism
-        assert 'LearningMechanism for MappingProjection from M6 to M4' in [m.name for m in S.learningGraph[lm]]
-        lm = mech_6.efferents[0].learning_mechanism
-        assert 'M4 LEARNING_OBJECTIVE' in [m.name for m in S.learningGraph[lm]]
+# class TestConvergentLearning:
+#
+#     def test_branch(self):
+#         from psyneulink.core.globals.keywords import ENABLED
+#         mech_1 = TransferMechanism(name='M1', size=1)
+#         mech_2 = TransferMechanism(name='M2', size=2)
+#         mech_3 = TransferMechanism(name='M3', size=3)
+#         mech_4 = TransferMechanism(name='M4', size=4)
+#         mech_5 = TransferMechanism(name='M5', size=5)
+#         mech_6 = TransferMechanism(name='M6', size=6)
+#         process_A = Process(pathway=[mech_1, mech_2, mech_3, mech_4], learning=ENABLED, name='Process A')
+#         process_B = Process(pathway=[mech_5, mech_6, mech_4], learning=ENABLED, name='Process B')
+#         S = System(processes=[process_A, process_B])
+#
+#         lm = mech_1.efferents[0].learning_mechanism
+#         assert 'LearningMechanism for MappingProjection from M2 to M3' in [m.name for m in S.learningGraph[lm]]
+#         lm = mech_2.efferents[0].learning_mechanism
+#         assert 'LearningMechanism for MappingProjection from M3 to M4' in [m.name for m in S.learningGraph[lm]]
+#         lm = mech_3.efferents[0].learning_mechanism
+#         assert 'M4 LEARNING_OBJECTIVE' in [m.name for m in S.learningGraph[lm]]
+#         cm = mech_4.efferents[0].receiver.owner
+#         assert cm in S.learningGraph.keys()
+#         lm = mech_5.efferents[0].learning_mechanism
+#         assert 'LearningMechanism for MappingProjection from M6 to M4' in [m.name for m in S.learningGraph[lm]]
+#         lm = mech_6.efferents[0].learning_mechanism
+#         assert 'M4 LEARNING_OBJECTIVE' in [m.name for m in S.learningGraph[lm]]
 
 
 class TestInitialize:

@@ -6060,9 +6060,10 @@ class TestNodeRoles:
         b = TransferMechanism()
         c = TransferMechanism()
         d = TransferMechanism()
-        comp = Composition(pathways=[[a, b, c], [a, b, d]],
-                           initial_values={a: [1, 1]})
-        comp.run(inputs={a: [[2, 2]]})
+        comp = Composition(pathways=[[a, b, c], [a, b, d]])
+        comp.run(inputs={a: [[2, 2]]},
+                 initial_values={a: [1, 1]})
+        # FIX 4/25/20 [JDC]: ADD ASSERT FOR RETURN FROM RUN HERE AND BELOW
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={c,d}
@@ -6072,9 +6073,9 @@ class TestNodeRoles:
         b = TransferMechanism(default_variable=[0, 0])
         c = TransferMechanism()
         d = TransferMechanism()
-        comp = Composition(pathways=[[a, b, c, d],[a, b, d]],
-                           initial_values={a: [1, 1]})
-        comp.run(inputs = {a: [[2, 2], [0, 0]]})
+        comp = Composition(pathways=[[a, b, c, d],[a, b, d]])
+        comp.run(inputs = {a: [[2, 2], [0, 0]]},
+                 initial_values={a: [1, 1]})
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b,c}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={d}
@@ -6085,9 +6086,9 @@ class TestNodeRoles:
         c = TransferMechanism()
         d = TransferMechanism()
         e = TransferMechanism()
-        comp = Composition(pathways=[[a, b, c],[c, d, e]],
-                           initial_values={a: [1, 1, 1]})
-        comp.run(inputs = {a: [[2, 2, 2], [0, 0, 0]]})
+        comp = Composition(pathways=[[a, b, c],[c, d, e]])
+        comp.run(inputs = {a: [[2, 2, 2], [0, 0, 0]]},
+                 initial_values={a: [1, 1, 1]})
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b,c,d}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={e}
@@ -6099,9 +6100,9 @@ class TestNodeRoles:
         c = TransferMechanism(default_variable=[0])
         d = TransferMechanism()
         e = TransferMechanism()
-        comp = Composition(pathways=[[a, b, e],[c, d, e]],
-                           initial_values={a: [1, 1]})
-        comp.run(inputs = {a: [[2, 2]], c: [[0]]})
+        comp = Composition(pathways=[[a, b, e],[c, d, e]])
+        comp.run(inputs = {a: [[2, 2]], c: [[0]]},
+                 initial_values={a: [1, 1]})
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,c}
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL))=={b,d}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={e}
@@ -6109,9 +6110,9 @@ class TestNodeRoles:
     def test_one_pathway_cycle(self):
         a = TransferMechanism(default_variable=[0, 0])
         b = TransferMechanism(default_variable=[0, 0])
-        comp = Composition(pathways=[a, b, a],
-                           initial_values={a: [1, 1]})
-        comp.run(inputs={a: [1, 1]})
+        comp = Composition(pathways=[a, b, a])
+        comp.run(inputs={a: [1, 1]},
+                 initial_values={a: [1, 1]})
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,b}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={a,b}
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={a,b}
@@ -6123,9 +6124,9 @@ class TestNodeRoles:
         a = TransferMechanism(default_variable=[0, 0])
         b = TransferMechanism(default_variable=[0, 0])
         c = TransferMechanism(default_variable=[0, 0])
-        comp = Composition(pathways=[[a, b, a],[a, c, a]],
-                           initial_values={a: [1, 1]})
-        comp.run(inputs={a: [1, 1]})
+        comp = Composition(pathways=[[a, b, a],[a, c, a]])
+        comp.run(inputs={a: [1, 1]},
+                 initial_values={a: [1, 1]})
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,b,c}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={a,b,c}
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={a,b,c}
@@ -6140,9 +6141,9 @@ class TestNodeRoles:
         d = TransferMechanism()
         e = TransferMechanism(default_variable=[0])
         f = TransferMechanism()
-        comp = Composition(pathways=[[a, b, c, d],[e, c, f, b, d]],
-                           initial_values={a: [1, 1]})
-        comp.run(inputs={a: [2, 2], e: [0]})
+        comp = Composition(pathways=[[a, b, c, d],[e, c, f, b, d]])
+        comp.run(inputs={a: [2, 2], e: [0]},
+                 initial_values={a: [1, 1]})
         assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={a,e}
         assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={d}
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={b,c,f}
