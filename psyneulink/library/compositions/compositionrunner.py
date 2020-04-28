@@ -192,6 +192,9 @@ class CompositionRunner():
             if minibatch_size == TRAINING_SET:
                 minibatch_size = num_trials
 
+            if minibatch_size > num_trials:
+                raise Exception("The minibatch size cannot be greater than the number of trials.")
+
             early_stopper = None
             if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
