@@ -67,6 +67,24 @@ class TestReinforcement:
                                                         [2.08614798], [1.85006765], [2.30401336], [2.08614798],
                                                         [1.85006765]])
 
+    def test_reinforcement_fixed_targets(self):
+        input_layer = pnl.TransferMechanism(size=2,
+                                        name='Input Layer',
+        )
+
+        action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                                   function=pnl.DriftDiffusionAnalytical(),
+                                   output_ports=[pnl.SELECTED_INPUT_ARRAY],
+                                   name='DDM')
+        c = pnl.Composition()
+        learning_components = c.add_reinforcement_learning_pathway([input_layer, action_selection], learning_rate=0.05)
+        inputs = {input_layer: [[1, 1], [1, 1]],
+                  learning_components.target: [[10.], [10.]]}
+        results = c.learn(inputs=inputs)
+
+        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])
+
     def test_td_montague_et_al_figure_a(self):
 
         # create processing mechanisms
@@ -1545,6 +1563,8 @@ class TestRumelhartSemanticNetwork:
               )
         print(comp.results)
 
+    # FIX 4/28/20 [JDC]: ELIMINATE SYSTEM
+    #   THESE ARE INHERITED FROM SYSTEM AND NEED TO BE CONVERTED TO COMPOSITION
     # def test_rumelhart_semantic_network_convergent(self):
     #
     #     rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
