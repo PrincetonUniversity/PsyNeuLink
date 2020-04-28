@@ -666,41 +666,43 @@ class TestBackProp:
         hidden_to_out_matrix = np.random.rand(10,1)
     
         # SET UP MODELS --------------------------------------------------------------------------------
-    
-        # System
-        if pnl.SYSTEM in models:
-    
-            input_sys = pnl.TransferMechanism(name='input_sys',
-                                           default_variable=np.zeros(2))
-    
-            hidden_sys = pnl.TransferMechanism(name='hidden_sys',
-                                            default_variable=np.zeros(10),
-                                            function=pnl.Logistic())
-    
-            output_sys = pnl.TransferMechanism(name='output_sys',
-                                            default_variable=np.zeros(1),
-                                            function=pnl.Logistic())
-    
-            in_to_hidden_sys = pnl.MappingProjection(name='in_to_hidden_sys',
-                                        matrix=in_to_hidden_matrix.copy(),
-                                        sender=input_sys,
-                                        receiver=hidden_sys)
-    
-            hidden_to_out_sys = pnl.MappingProjection(name='hidden_to_out_sys',
-                                        matrix=hidden_to_out_matrix.copy(),
-                                        sender=hidden_sys,
-                                        receiver=output_sys)
-    
-            xor_process = pnl.Process(pathway=[input_sys,
-                                           in_to_hidden_sys,
-                                           hidden_sys,
-                                           hidden_to_out_sys,
-                                           output_sys],
-                                  learning=pnl.LEARNING)
 
-            xor_sys = pnl.System(processes=[xor_process],
-                             learning_rate=10)
-    
+        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
+        # # System
+        # if pnl.SYSTEM in models:
+        #
+        #     input_sys = pnl.TransferMechanism(name='input_sys',
+        #                                    default_variable=np.zeros(2))
+        #
+        #     hidden_sys = pnl.TransferMechanism(name='hidden_sys',
+        #                                     default_variable=np.zeros(10),
+        #                                     function=pnl.Logistic())
+        #
+        #     output_sys = pnl.TransferMechanism(name='output_sys',
+        #                                     default_variable=np.zeros(1),
+        #                                     function=pnl.Logistic())
+        #
+        #     in_to_hidden_sys = pnl.MappingProjection(name='in_to_hidden_sys',
+        #                                 matrix=in_to_hidden_matrix.copy(),
+        #                                 sender=input_sys,
+        #                                 receiver=hidden_sys)
+        #
+        #     hidden_to_out_sys = pnl.MappingProjection(name='hidden_to_out_sys',
+        #                                 matrix=hidden_to_out_matrix.copy(),
+        #                                 sender=hidden_sys,
+        #                                 receiver=output_sys)
+        #
+        #     xor_process = pnl.Process(pathway=[input_sys,
+        #                                    in_to_hidden_sys,
+        #                                    hidden_sys,
+        #                                    hidden_to_out_sys,
+        #                                    output_sys],
+        #                           learning=pnl.LEARNING)
+        #
+        #     xor_sys = pnl.System(processes=[xor_process],
+        #                      learning_rate=10)
+        # # MODIFIED 4/28/20 END
+
         # STANDARD Composition
         if pnl.COMPOSITION in models:
     
@@ -776,11 +778,15 @@ class TestBackProp:
                            "epochs": num_epochs}
         # RUN MODELS -----------------------------------------------------------------------------------
     
-        if pnl.SYSTEM in models:
-            results_sys = xor_sys.run(inputs={input_sys:xor_inputs},
-                                      targets={output_sys:xor_targets},
-                                      num_trials=(num_epochs * xor_inputs.shape[0]),
-                                      )
+        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
+        # if pnl.SYSTEM in models:
+        #     results_sys = xor_sys.run(inputs={input_sys:xor_inputs},
+        #                               targets={output_sys:xor_targets},
+        #                               num_trials=(num_epochs * xor_inputs.shape[0]),
+        #                               )
+        # MODIFIED 4/28/20 END
+
+
         if pnl.COMPOSITION in models:
             result = xor_comp.learn(inputs={input_comp:xor_inputs,
                                           target_mech:xor_targets},
@@ -792,14 +798,16 @@ class TestBackProp:
     
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
     
-        if all(m in models for m in {pnl.SYSTEM, 'AUTODIFF'}):
-            assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_sys.get_mod_matrix(xor_sys))
-            assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_sys.get_mod_matrix(xor_sys))
-    
-        if all(m in models for m in {pnl.SYSTEM, pnl.COMPOSITION}):
-            assert np.allclose(in_to_hidden_comp.get_mod_matrix(xor_comp), in_to_hidden_sys.get_mod_matrix(xor_sys))
-            assert np.allclose(hidden_to_out_comp.get_mod_matrix(xor_comp), hidden_to_out_sys.get_mod_matrix(xor_sys))
-    
+        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
+        # if all(m in models for m in {pnl.SYSTEM, 'AUTODIFF'}):
+        #     assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_sys.get_mod_matrix(xor_sys))
+        #     assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_sys.get_mod_matrix(xor_sys))
+        #
+        # if all(m in models for m in {pnl.SYSTEM, pnl.COMPOSITION}):
+        #     assert np.allclose(in_to_hidden_comp.get_mod_matrix(xor_comp), in_to_hidden_sys.get_mod_matrix(xor_sys))
+        #     assert np.allclose(hidden_to_out_comp.get_mod_matrix(xor_comp), hidden_to_out_sys.get_mod_matrix(xor_sys))
+        # MODIFIED 4/28/20 END
+
         if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
             assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))

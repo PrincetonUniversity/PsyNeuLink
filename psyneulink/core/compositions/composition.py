@@ -7334,7 +7334,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         output_fmt:tc.enum('pdf','struct')='pdf',
                         context=None
                         ):
-        """Generate a detailed display of a the structure of a Mechanism.
+        """Generate a detailed display of the structure of a Mechanism.
 
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
@@ -7392,6 +7392,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for use in a GraphViz node specification.
 
         """
+        assert False, 'PROGRAM ERROR: Compositon._show_structure not supported;  should use Mechanism._show_structure.'
         if composition:
             system = composition
         open_bracket = r'{'

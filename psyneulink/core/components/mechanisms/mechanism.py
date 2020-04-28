@@ -1529,8 +1529,11 @@ class Mechanism_Base(Mechanism):
 
         # IMPLEMENT **kwargs (PER Port)
 
-        self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
-        self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
+        # # MODIFIED 4/28/20 OLD: ELIMINATE SYSTEM
+        # self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
+        # self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
+        # MODIFIED 4/28/20 END
+
         self.aux_components = []
         self.monitor_for_learning = None
         # Register with MechanismRegistry or create one
@@ -3051,30 +3054,40 @@ class Mechanism_Base(Mechanism):
 
             mech_roles = ''
             if composition and show_roles:
-                from psyneulink.core.components.system import System
-                if isinstance(composition, System):
-                    try:
-                        mech_roles = f'<br/>[{self.systems[composition]}]'
-                    except KeyError:
-                        # # mech_roles = r'\n[{}]'.format(self.system)
-                        # mech_roles = r'\n[CONTROLLER]'
-                        from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-                        from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-                        if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
-                            mech_roles = r'\n[CONTROLLER]'
-                        elif isinstance(self, ObjectiveMechanism) and hasattr(self, '_role'):
-                            mech_roles = f'\n[{self._role}]'
-                        else:
-                            mech_roles = ""
-                else:
-                    from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
-                    if self is composition.controller:
-                        # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
-                        mech_roles = f'<br/><i>CONTROLLER</i>'
-                    elif not isinstance(self, CompositionInterfaceMechanism):
-                        roles = [role.name for role in list(composition.nodes_to_roles[self])]
-                        mech_roles = f'<br/><i>{",".join(roles)}</i>'
-                    assert True
+                # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
+                # from psyneulink.core.components.system import System
+                # if isinstance(composition, System):
+                #     try:
+                #         mech_roles = f'<br/>[{self.systems[composition]}]'
+                #     except KeyError:
+                #         # # mech_roles = r'\n[{}]'.format(self.system)
+                #         # mech_roles = r'\n[CONTROLLER]'
+                #         from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+                #         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+                #         if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
+                #             mech_roles = r'\n[CONTROLLER]'
+                #         elif isinstance(self, ObjectiveMechanism) and hasattr(self, '_role'):
+                #             mech_roles = f'\n[{self._role}]'
+                #         else:
+                #             mech_roles = ""
+                # else:
+                #     from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
+                #     if self is composition.controller:
+                #         # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                #         mech_roles = f'<br/><i>CONTROLLER</i>'
+                #     elif not isinstance(self, CompositionInterfaceMechanism):
+                #         roles = [role.name for role in list(composition.nodes_to_roles[self])]
+                #         mech_roles = f'<br/><i>{",".join(roles)}</i>'
+                #     assert True
+                # MODIFIED 4/28/20 NEW:
+                from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
+                if self is composition.controller:
+                    # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
+                    mech_roles = f'<br/><i>CONTROLLER</i>'
+                elif not isinstance(self, CompositionInterfaceMechanism):
+                    roles = [role.name for role in list(composition.nodes_to_roles[self])]
+                    mech_roles = f'<br/><i>{",".join(roles)}</i>'
+                # MODIFIED 4/28/20 END
 
             mech_condition = ''
             if composition and show_conditions and condition:
@@ -3478,21 +3491,23 @@ class Mechanism_Base(Mechanism):
             labels.append(port.get_label(context))
         return labels
 
-    @tc.typecheck
-    def _add_process(self, process, role:str):
-        from psyneulink.core.components.process import Process
-        if not isinstance(process, Process):
-            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
-                                 format(Mechanism.__name__, process, Process.__name__))
-        self.processes.__additem__(process, role)
-
-    @tc.typecheck
-    def _add_system(self, system, role:str):
-        from psyneulink.core.components.system import System
-        if not isinstance(system, System):
-            raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
-                                 format(Mechanism.__name__, system, System.__name__))
-        self.systems.__additem__(system, role)
+    # # MODIFIED 4/28/20 OLD: ELIMINATE SYSTEM
+    # @tc.typecheck
+    # def _add_process(self, process, role:str):
+    #     from psyneulink.core.components.process import Process
+    #     if not isinstance(process, Process):
+    #         raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
+    #                              format(Mechanism.__name__, process, Process.__name__))
+    #     self.processes.__additem__(process, role)
+    #
+    # @tc.typecheck
+    # def _add_system(self, system, role:str):
+    #     from psyneulink.core.components.system import System
+    #     if not isinstance(system, System):
+    #         raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
+    #                              format(Mechanism.__name__, system, System.__name__))
+    #     self.systems.__additem__(system, role)
+    # MODIFIED 4/28/20 END
 
     @property
     def input_port(self):
