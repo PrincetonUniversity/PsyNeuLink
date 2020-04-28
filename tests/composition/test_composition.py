@@ -6011,6 +6011,41 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
+    def test_two_node_cycle(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        comp = Composition(pathways=[A, B, A])
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={A,B}
+        # # THE FOLLOWING FAIL:
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={A}
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={B}
+
+    def test_three_node_cycle(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        comp._analyze_graph()
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        # THE FOLLOWING PASS:
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+
+    def test_three_node_cycle_with_FEEDBACK(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+        comp._analyze_graph()
+        assert not set(comp.get_nodes_by_role(NodeRole.CYCLE))
+        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
+        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+
     def  test_FEEDBACK_no_CYCLE(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
