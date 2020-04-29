@@ -99,52 +99,6 @@ class TestSimpleLearningPathway:
         S.run(inputs={A: 1.0},
               targets=[[2.0, 3.0]])
 
-    def test_function_target_spec(self):
-
-        # # SYSTEM
-        #
-        # A = TransferMechanism(name="learning-process-mech-A")
-        # B = TransferMechanism(name="learning-process-mech-B",
-        #                       default_variable=np.array([[0.0, 0.0]]))
-        #
-        # LP = Process(name="learning-process",
-        #              pathway=[A, B],
-        #              learning=ENABLED)
-        #
-        # S = System(name="learning-system",
-        #            processes=[LP])
-        #
-        # def target_function():
-        #     np.random.seed(0)
-        #     val_1 = NormalDist(mean=3.0)()
-        #     val_2 = NormalDist(mean=3.0)()
-        #     target_value = np.array([val_1, val_2])
-        #     return target_value
-        #
-        # S_result = S.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]]]},
-        #       targets={B: target_function})
-        #
-        # COMPOSITION
-        from psyneulink.core.compositions.composition import Composition
-        C = TransferMechanism(name="learning-process-mech-C")
-        D = TransferMechanism(name="learning-process-mech-D",
-                              default_variable=np.array([[0.0, 0.0]]))
-
-        comp = Composition()
-        learning_components = comp.add_backpropagation_learning_pathway(pathway=[C,D])
-
-        def target_function():
-            np.random.seed(0)
-            val_1 = NormalDist(mean=3.0)()
-            val_2 = NormalDist(mean=3.0)()
-            target_value = np.array([val_1, val_2])
-            return target_value
-
-        comp_result = comp.learn(inputs={C: [[[1.0]], [[2.0]], [[3.0]]],
-                               learning_components.target: target_function()})
-
-        assert True
-
 class TestMultilayerLearning:
 
     def test_dict_target_spec(self):

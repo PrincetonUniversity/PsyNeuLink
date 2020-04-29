@@ -1299,6 +1299,27 @@ class TestBackProp:
         result = C.learn(inputs=inputs, num_trials=2)
         assert np.allclose(result, [[[0.52497919]], [[0.55439853]]])
 
+    def test_function_target_spec(self):
+
+        from psyneulink.core.compositions.composition import Composition
+        C = pnl.TransferMechanism(name="learning-process-mech-C")
+        D = pnl.TransferMechanism(name="learning-process-mech-D",
+                              default_variable=np.array([[0.0, 0.0]]))
+        comp = Composition()
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[C,D], learning_rate=0.05)
+        global x
+        x = 1
+        def input_function():
+            global x
+            x = x + 1
+            y = 2 * x
+            z = 3 * x
+            target_value = {C:[x], learning_pathway.target:[y,z]}
+            return target_value
+
+        comp.learn(inputs=input_function, num_trials=3)
+        assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
+
     @pytest.mark.pytorch
     def test_back_prop(self):
 
