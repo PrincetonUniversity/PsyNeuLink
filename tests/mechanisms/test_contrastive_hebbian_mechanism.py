@@ -142,7 +142,7 @@ class TestContrastiveHebbian:
                                    [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.parameters.plus_phase_activity.get(C), [1.14142296, 0.0, 1.14142296, 0.0])
         np.testing.assert_allclose(R.parameters.minus_phase_activity.get(C), [0.0, 0.0, 0.0, 0.0])
-        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY].parameters.value.get(C),
                                    [1.1414229612568625, 0.0, 1.1414229612568625, 0.0])
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(C),
