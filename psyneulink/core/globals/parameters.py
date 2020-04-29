@@ -707,6 +707,10 @@ class Parameter(types.SimpleNamespace):
         valid_types=None,
         _owner=None,
         _inherited=False,
+        # this stores a reference to the Parameter object that is the
+        # closest non-inherited parent. This parent is where the
+        # attributes will be taken from
+        _inherited_source=None,
         _user_specified=False,
     ):
         if isinstance(aliases, str):
@@ -756,12 +760,15 @@ class Parameter(types.SimpleNamespace):
             parse_spec=parse_spec,
             valid_types=valid_types,
             _inherited=_inherited,
+            _inherited_source=_inherited_source,
             _user_specified=_user_specified,
         )
 
         self._owner = _owner
         self._param_attrs = [k for k in self.__dict__ if k[0] != '_'] \
             + [k for k in self.__class__.__dict__ if k in self._additional_param_attr_properties]
+
+        self._is_invalid_source = False
         self._inherited_attrs_cache = {}
         self.__inherited = False
         self._inherited = _inherited
@@ -801,8 +808,30 @@ class Parameter(types.SimpleNamespace):
     def __getattr__(self, attr):
         # runs when the object doesn't have an attr attribute itself
         # attempt to get from its parent, which is also a Parameter
+
+        # this is only called when self._inherited is True. We know
+        # there must be a source if attr exists at all. So, find it this
+        # time and only recompute lazily when the current source becomes
+        # inherited itself, or a closer parent becomes uninherited. Both
+        # will be indicated by the following conditional
+        if (
+            self._parent is not None
+            and (
+                self._inherited_source is None
+                # this condition indicates the cache was invalidated
+                # since it was set
+                or self._inherited_source._is_invalid_source
+            )
+        ):
+            next_parent = self._parent
+            while next_parent is not None:
+                if not next_parent._is_invalid_source:
+                    self._inherit_from(next_parent)
+                    break
+                next_parent = next_parent._parent
+
         try:
-            return getattr(self._parent, attr)
+            return getattr(self._inherited_source, attr)
         except AttributeError:
             raise AttributeError("Parameter '%s' has no attribute '%s'" % (self.name, attr)) from None
 
@@ -848,12 +877,34 @@ class Parameter(types.SimpleNamespace):
     @_inherited.setter
     def _inherited(self, value):
         if value is not self._inherited:
+            # invalid if set to inherited
+            self._is_invalid_source = value
+
             if value:
                 for attr in self._param_attrs:
                     if attr not in self._uninherited_attrs:
                         self._inherited_attrs_cache[attr] = getattr(self, attr)
                         delattr(self, attr)
             else:
+                # This is a rare operation, so we can just immediately
+                # trickle down sources without performance issues.
+                # Children are stored as weakref.ref, so call to deref
+                children = [*self._owner._children]
+                while len(children) > 0:
+                    next_child_ref = children.pop()
+                    next_child = next_child_ref()
+
+                    if next_child is None:
+                        # child must have been garbage collected, remove
+                        # here optionally
+                        pass
+                    else:
+                        next_child = getattr(next_child, self.name)
+
+                        if next_child._inherited:
+                            next_child._inherit_from(self)
+                            children.extend(next_child._owner._children)
+
                 for attr in self._param_attrs:
                     if (
                         attr not in self._uninherited_attrs
@@ -862,6 +913,9 @@ class Parameter(types.SimpleNamespace):
                         setattr(self, attr, self._inherited_attrs_cache[attr])
 
             self.__inherited = value
+
+    def _inherit_from(self, parent):
+        self._inherited_source = parent
 
     def _cache_inherited_attrs(self):
         for attr in self._param_attrs:
@@ -1453,15 +1507,23 @@ class ParametersBase(ParametersTemplate):
                         )
                 super().__setattr__(attr, value)
             else:
+                try:
+                    current_value = getattr(self, attr)
+                except AttributeError:
+                    current_value = None
+
                 # assign value to default_value
-                if hasattr(self, attr) and isinstance(getattr(self, attr), Parameter):
-                    current_param = getattr(self, attr)
+                if isinstance(current_value, (Parameter, ParameterAlias)):
                     # construct a copy because the original may be used as a base for reset()
-                    new_param = copy.deepcopy(current_param)
+                    new_param = copy.deepcopy(current_value)
                     # set _inherited before default_value because it will
                     # restore from cache
                     new_param._inherited = False
                     new_param.default_value = value
+
+                    # the old/replaced Parameter should be discarded
+                    current_value._is_invalid_source = True
+
                 else:
                     new_param = Parameter(name=attr, default_value=value, _owner=self)
 
