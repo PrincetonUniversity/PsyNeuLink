@@ -1302,20 +1302,32 @@ class TestBackProp:
     def test_function_target_spec(self):
 
         from psyneulink.core.compositions.composition import Composition
-        C = pnl.TransferMechanism(name="learning-process-mech-C")
-        D = pnl.TransferMechanism(name="learning-process-mech-D",
+        A = pnl.TransferMechanism(name="learning-process-mech-A")
+        B = pnl.TransferMechanism(name="learning-process-mech-B",
                               default_variable=np.array([[0.0, 0.0]]))
         comp = Composition()
-        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[C,D], learning_rate=0.05)
-        global x
-        x = 1
-        def input_function():
-            global x
-            x = x + 1
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B], learning_rate=0.05)
+        target = learning_pathway.target
+        # global x
+        # x = 1
+
+        # def input_function(a,b):
+        #     global x
+        #     x = x + 1
+        #     y = 2 * x
+        #     z = 3 * x
+        #     target_value = {A:[x], target:[y,z]}
+        #     print('trial')
+        #     return target_value
+        def input_function(trial):
+            x = trial
             y = 2 * x
-            z = 3 * x
-            target_value = {C:[x], learning_pathway.target:[y,z]}
+            z = y + 2
+            target_value = {A:[x], target:[y,z]}
+            print(target_value)
             return target_value
+
+        target.log.set_log_conditions('variable')
 
         comp.learn(inputs=input_function, num_trials=3)
         assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])

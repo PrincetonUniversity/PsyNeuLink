@@ -481,19 +481,23 @@ class TestLog:
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
-        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+        COMP = pnl.Composition(name='COMP', pathways=[T1, T2])
         T1.set_log_conditions('mod_slope')
-        T2.set_log_conditions('mod_slope')
-        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+        T2.set_log_conditions('value')
+        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
 
         log_array_T1 = T1.log.nparray()
         log_array_T2 = T2.log.nparray()
+        assert log_array_T1.shape == log_array_T1.shape == (2,2)
+        assert log_array_T1[0][0] == log_array_T2[0][0] == 'Execution Context'
+        assert log_array_T1[0][1] == log_array_T1[0][1] == 'COMP'
+        assert log_array_T2[1][1][4][1:4] == [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
 
-        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
 
         log_array_T1_second_run = T1.log.nparray()
         log_array_T2_second_run = T2.log.nparray()
+        assert log_array_T2_second_run[1][1][4][1:4] == [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
 
     def test_log_dictionary_with_time(self):
 
@@ -502,8 +506,7 @@ class TestLog:
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=psyneulink.core.components.functions.transferfunctions.Linear(slope=2.0),
                                    size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
-        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+        COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
         assert T1.loggable_items == {
             'InputPort-0': 'OFF',
@@ -650,7 +653,7 @@ class TestLog:
 
         # RUN ZERO  |  TRIALS ZERO, ONE, TWO ----------------------------------
 
-        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
 
         assert T1.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
@@ -670,8 +673,8 @@ class TestLog:
         expected_slopes_T1 = [[1.0], [1.0], [1.0]]
         expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
 
-        assert list(log_dict_T1.keys()) == [SYS.default_execution_id]
-        sys_log_dict = log_dict_T1[SYS.default_execution_id]
+        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
+        sys_log_dict = log_dict_T1[COMP.default_execution_id]
 
         assert np.allclose(expected_run_T1, sys_log_dict['Run'])
         assert np.allclose(expected_trial_T1, sys_log_dict['Trial'])
@@ -691,8 +694,8 @@ class TestLog:
         expected_slopes_T2 = [[2.0], [2.0], [2.0]]
         expected_results_T2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]]
 
-        assert list(log_dict_T2.keys()) == [SYS.default_execution_id]
-        sys_log_dict = log_dict_T2[SYS.default_execution_id]
+        assert list(log_dict_T2.keys()) == [COMP.default_execution_id]
+        sys_log_dict = log_dict_T2[COMP.default_execution_id]
 
         assert np.allclose(expected_run_T2, sys_log_dict['Run'])
         assert np.allclose(expected_trial_T2, sys_log_dict['Trial'])
@@ -703,14 +706,14 @@ class TestLog:
 
         # RUN ONE  |  TRIALS ZERO, ONE, TWO -------------------------------------
 
-        SYS.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
 
         # T1 log after first run -------------------------------------------
 
         log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
-        assert list(log_dict_T1.keys()) == [SYS.default_execution_id]
-        sys_log_dict = log_dict_T1[SYS.default_execution_id]
+        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
+        sys_log_dict = log_dict_T1[COMP.default_execution_id]
 
         # expected_run_T1_2 = [[1], [1], [1]]
         expected_run_T1_2 = [[0], [0], [0]] + expected_run_T1
@@ -731,8 +734,8 @@ class TestLog:
 
         log_dict_T2_2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
 
-        assert list(log_dict_T2_2.keys()) == [SYS.default_execution_id]
-        sys_log_dict = log_dict_T2_2[SYS.default_execution_id]
+        assert list(log_dict_T2_2.keys()) == [COMP.default_execution_id]
+        sys_log_dict = log_dict_T2_2[COMP.default_execution_id]
 
         expected_run_T2_2 = [[0], [0], [0]] + expected_run_T2
         expected_trial_T2_2 = [[0], [1], [2]] + expected_trial_T2
@@ -754,11 +757,10 @@ class TestLog:
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
-        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
-        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+        COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
         def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(SYS)
+            results = mech.output_ports[0].parameters.value.get(COMP)
             for val in results:
                 if abs(val) >= thresh:
                     return True
@@ -774,17 +776,18 @@ class TestLog:
         T2.set_log_conditions(pnl.VALUE)
         T2.set_log_conditions('mod_slope')
 
-        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
 
         log_dict_T1 = T1.log.nparray_dictionary(entries=['RESULT', 'mod_slope', 'value'])
         log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope'])
 
-        assert list(log_dict_T1.keys()) == [SYS.default_execution_id]
-        sys_log_dict = log_dict_T1[SYS.default_execution_id]
+        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
+        sys_log_dict = log_dict_T1[COMP.default_execution_id]
 
         # Check order of keys (must match order of specification)
         assert list(sys_log_dict.keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'RESULT', 'mod_slope', 'value']
-        assert list(log_dict_T2[SYS.default_execution_id].keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'value', 'mod_slope']
+        assert list(log_dict_T2[COMP.default_execution_id].keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'value',
+                                                                    'mod_slope']
 
         # Check values T1
         assert np.allclose(sys_log_dict["Run"], [[0], [0], [0]])
@@ -795,11 +798,11 @@ class TestLog:
         assert np.allclose(sys_log_dict["mod_slope"], [[1], [1], [1]])
 
         # Check values T2
-        assert np.allclose(log_dict_T2[SYS.default_execution_id]["Run"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2[SYS.default_execution_id]["Trial"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2[SYS.default_execution_id]["Time_step"], [[1], [1], [1]])
-        assert np.allclose(log_dict_T2[SYS.default_execution_id]["value"], [[[3]], [[4.5]], [[5.25]]])
-        assert np.allclose(log_dict_T2[SYS.default_execution_id]["mod_slope"], [[6], [6], [6]])
+        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Run"], [[0], [0], [0]])
+        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Trial"], [[0], [0], [0]])
+        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Time_step"], [[1], [1], [1]])
+        assert np.allclose(log_dict_T2[COMP.default_execution_id]["value"], [[[3]], [[4.5]], [[5.25]]])
+        assert np.allclose(log_dict_T2[COMP.default_execution_id]["mod_slope"], [[6], [6], [6]])
 
     def test_log_array_with_scheduler(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -807,11 +810,10 @@ class TestLog:
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
-        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
-        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+        COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
         def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(SYS)
+            results = mech.output_ports[0].parameters.value.get(COMP)
             for val in results:
                 if abs(val) >= thresh:
                     return True
@@ -827,12 +829,12 @@ class TestLog:
         T2.set_log_conditions(pnl.VALUE)
         T2.set_log_conditions('mod_slope')
 
-        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
 
         log_array_T1 = T1.log.nparray(entries=['RESULT', 'mod_slope', 'value'])
         log_array_T2 = T2.log.nparray(entries=['value', 'mod_slope'])
 
-        context_results = [pnl.Log.context_header, SYS.default_execution_id]
+        context_results = [pnl.Log.context_header, COMP.default_execution_id]
         # Check values
         run_results = [["Run"], [0], [0], [0]]
         trial_results = [["Trial"], [0], [0], [0]]
@@ -883,11 +885,10 @@ class TestLog:
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
                                    integration_rate=0.05)
-        PS = pnl.Process(name='log_test_PS', pathway=[T1])
-        SYS = pnl.System(name='log_test_SYS', processes=[PS])
+        COMP = pnl.Composition(name='log_test_COMP', pathways=[T1])
 
         def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(SYS)
+            results = mech.output_ports[0].parameters.value.get(COMP)
             for val in results:
                 if abs(val) >= thresh:
                     return True
@@ -899,12 +900,12 @@ class TestLog:
 
         T1.set_log_conditions(pnl.VALUE)
 
-        SYS.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
 
         log_dict_T1 = T1.log.nparray_dictionary(entries=['value'])
 
-        assert list(log_dict_T1.keys()) == [SYS.default_execution_id]
-        sys_log_dict = log_dict_T1[SYS.default_execution_id]
+        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
+        sys_log_dict = log_dict_T1[COMP.default_execution_id]
 
         # Check order of keys (must match order of specification)
         assert list(sys_log_dict.keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'value']
@@ -988,9 +989,8 @@ class TestClearLog:
         # Create System
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
         T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
+        COMP = pnl.Composition(name="log_test_COMP", pathways=[T_1, T_2])
         PJ = T_2.path_afferents[0]
-        SYS = pnl.System(name="log_test_SYS", processes=[PS])
 
         # Set log conditions on each component
         T_1.set_log_conditions('mod_noise')
@@ -1000,27 +1000,27 @@ class TestClearLog:
         PJ.set_log_conditions('mod_matrix')
 
         # Run system
-        SYS.run(inputs={T_1: [1.0, 1.0]})
+        COMP.run(inputs={T_1: [1.0, 1.0]})
 
         # Create log dict for each component
         log_dict_T_1 = T_1.log.nparray_dictionary()
         log_dict_T_2 = T_2.log.nparray_dictionary()
         log_dict_PJ = PJ.log.nparray_dictionary()
 
-        assert list(log_dict_T_1.keys()) == [SYS.default_execution_id]
-        assert list(log_dict_T_2.keys()) == [SYS.default_execution_id]
-        assert list(log_dict_PJ.keys()) == [SYS.default_execution_id]
+        assert list(log_dict_T_1.keys()) == [COMP.default_execution_id]
+        assert list(log_dict_T_2.keys()) == [COMP.default_execution_id]
+        assert list(log_dict_PJ.keys()) == [COMP.default_execution_id]
 
         # Confirm that values were logged correctly
-        sys_log_dict = log_dict_T_1[SYS.default_execution_id]
+        sys_log_dict = log_dict_T_1[COMP.default_execution_id]
         assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
         assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
 
-        sys_log_dict = log_dict_T_2[SYS.default_execution_id]
+        sys_log_dict = log_dict_T_2[COMP.default_execution_id]
         assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
 
-        sys_log_dict = log_dict_PJ[SYS.default_execution_id]
+        sys_log_dict = log_dict_PJ[COMP.default_execution_id]
         assert np.allclose(sys_log_dict['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
 
         # KDM 10/3/18: below was changed to delete_entry=True because it's not implemented in Parameter logs,
@@ -1044,10 +1044,10 @@ class TestClearLog:
         assert log_dict_T_2 == OrderedDict()
 
         # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
-        assert np.allclose(log_dict_PJ[SYS.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
+        assert np.allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
 
         # Run system again
-        SYS.run(inputs={T_1: [2.0, 2.0]})
+        COMP.run(inputs={T_1: [2.0, 2.0]})
 
         # Create new log dict for each component
         log_dict_T_1 = T_1.log.nparray_dictionary()
@@ -1055,20 +1055,20 @@ class TestClearLog:
         log_dict_PJ = PJ.log.nparray_dictionary()
 
         # Confirm that T_1 log values only include most recent run
-        sys_log_dict = log_dict_T_1[SYS.default_execution_id]
+        sys_log_dict = log_dict_T_1[COMP.default_execution_id]
         assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
         assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
         # NOTE: "Run" value still incremented, but only the most recent one is returned (# runs does not reset to zero)
         assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that T_2 log values only include most recent run
-        sys_log_dict = log_dict_T_2[SYS.default_execution_id]
+        sys_log_dict = log_dict_T_2[COMP.default_execution_id]
         assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
         assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
 
         # Confirm that PJ log values include all runs
-        sys_log_dict = log_dict_PJ[SYS.default_execution_id]
+        sys_log_dict = log_dict_PJ[COMP.default_execution_id]
         assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
         assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
 

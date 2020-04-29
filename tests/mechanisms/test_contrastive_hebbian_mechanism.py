@@ -128,23 +128,24 @@ class TestContrastiveHebbian:
                 hetero=np.full((size,size),0.0)
         )
 
-        P=pnl.Process(pathway=[R])
-        S=pnl.System(processes=[P])
+        # P=pnl.Process(pathway=[R])
+        # S=pnl.System(processes=[P])
+        C = pnl.Composition(pathways=[R])
         inputs_dict = {R:[1,0,1,0]}
-        S.run(num_trials=4,
-              inputs=inputs_dict)
+        C.learn(num_trials=4,
+                inputs=inputs_dict)
         # KDM 10/2/18: removing this test from here, as it's kind of unimportant to this specific test
         #   and the behavior of the scheduler's time can be a bit odd - should hopefully fix that in future
         #   and test in its own module
         # assert S.scheduler.get_clock(S).previous_time.pass_ == 19
-        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE].parameters.value.get(C),
                                    [1.14142296, 0.0, 1.14142296, 0.0])
-        np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [1.14142296, 0.0, 1.14142296, 0.0])
-        np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
+        np.testing.assert_allclose(R.parameters.plus_phase_activity.get(C), [1.14142296, 0.0, 1.14142296, 0.0])
+        np.testing.assert_allclose(R.parameters.minus_phase_activity.get(C), [0.0, 0.0, 0.0, 0.0])
         np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY].parameters.value.get(S),
                                    [1.1414229612568625, 0.0, 1.1414229612568625, 0.0])
         np.testing.assert_allclose(
-            R.recurrent_projection.get_mod_matrix(S),
+            R.recurrent_projection.get_mod_matrix(C),
             [
                 [0.0,         0.0,         0.22035998,  0.0        ],
                 [0.0,         0.0,         0.0,         0.0        ],
@@ -153,12 +154,12 @@ class TestContrastiveHebbian:
             ]
         )
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
-        R.output_port.parameters.value.set([0, 0, 0, 0], S, override=True)
+        R.output_port.parameters.value.set([0, 0, 0, 0], C, override=True)
         inputs_dict = {R:[0,1,0,1]}
-        S.run(num_trials=4,
+        C.run(num_trials=4,
               inputs=inputs_dict)
         np.testing.assert_allclose(
-            R.recurrent_projection.get_mod_matrix(S),
+            R.recurrent_projection.get_mod_matrix(C),
             [
                 [0.0,        0.0,        0.22035998, 0.0       ],
                 [0.0,        0.0,        0.0,        0.22035998],
@@ -166,12 +167,12 @@ class TestContrastiveHebbian:
                 [0.0,        0.22035998, 0.0,        0.        ]
             ]
         )
-        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.CURRENT_ACTIVITY].parameters.value.get(C),
                                    [0.0, 1.1414229612568625, 0.0, 1.1414229612568625])
-        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE].parameters.value.get(S),
+        np.testing.assert_allclose(R.output_ports[pnl.ACTIVITY_DIFFERENCE].parameters.value.get(C),
                                    [ 0.0, 1.14142296, 0.0, 1.14142296])
-        np.testing.assert_allclose(R.parameters.plus_phase_activity.get(S), [0.0, 1.14142296, 0.0, 1.14142296])
-        np.testing.assert_allclose(R.parameters.minus_phase_activity.get(S), [0.0, 0.0, 0.0, 0.0])
+        np.testing.assert_allclose(R.parameters.plus_phase_activity.get(C), [0.0, 1.14142296, 0.0, 1.14142296])
+        np.testing.assert_allclose(R.parameters.minus_phase_activity.get(C), [0.0, 0.0, 0.0, 0.0])
 
     def test_additional_output_ports(self):
         CHL1 = pnl.ContrastiveHebbianMechanism(

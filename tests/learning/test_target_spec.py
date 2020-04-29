@@ -8,28 +8,28 @@ from psyneulink.core.components.system import System
 from psyneulink.core.globals.environment import RunError
 from psyneulink.core.globals.keywords import ENABLED
 
-class TestSimpleLearningPathway:
-
-    def test_dict_target_spec(self):
-        A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B")
-
-        LP = Process(name="learning-process",
-                     pathway=[A, B],
-                     learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[LP],
-                   )
-
-        # S.run(inputs={A: 1.0},
-        #       targets={B: 2.0})
-
-        S.run(inputs={A: 1.0},
-              targets={B: [2.0]})
-
-        S.run(inputs={A: 1.0},
-              targets={B: [[2.0]]})
+# class TestSimpleLearningPathway:
+#
+#     def test_dict_target_spec(self):
+#         A = TransferMechanism(name="learning-process-mech-A")
+#         B = TransferMechanism(name="learning-process-mech-B")
+#
+#         LP = Process(name="learning-process",
+#                      pathway=[A, B],
+#                      learning=ENABLED)
+#
+#         S = System(name="learning-system",
+#                    processes=[LP],
+#                    )
+#
+#         # S.run(inputs={A: 1.0},
+#         #       targets={B: 2.0})
+#
+#         S.run(inputs={A: 1.0},
+#               targets={B: [2.0]})
+#
+#         S.run(inputs={A: 1.0},
+#               targets={B: [[2.0]]})
 
     def test_dict_target_spec_length2(self):
         A = TransferMechanism(name="learning-process-mech-A")

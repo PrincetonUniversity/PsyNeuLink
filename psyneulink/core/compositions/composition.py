@@ -8114,12 +8114,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
-                next_inputs = inputs(trial_num)
+                try:
+                    next_inputs = inputs(trial_num)
+                except TypeError as e:
+                    error_text = e.args[0]
+                    if f" takes 0 positional arguments but 1 was given" in error_text:
+                        raise CompositionError(f"{error_text}: requires arg for trial number")
+                    else:
+                        raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
             elif isgenerator(inputs):
                 try:
                     next_inputs = inputs.__next__()
                 except StopIteration:
                     break
+            # else:
+            #     raise <ClassTypeError>(f"<message>")
 
             if callable(inputs) or isgenerator(inputs):
                 next_inputs, num_inputs_sets = self._adjust_stimulus_dict(next_inputs)
