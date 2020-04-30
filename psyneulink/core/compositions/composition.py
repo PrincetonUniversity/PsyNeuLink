@@ -3910,6 +3910,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             input_projection._activate_for_compositions(comp)
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
+
+            # Enforce order of ports to same as node_order
+            # XYZ
+
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
             # happening outside of this normal context? This is here as
@@ -3962,6 +3966,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                f"({p}) does not match the number of its InputPorts ({n})."
             elif type==PARAMETER:
                 pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
+
+
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
