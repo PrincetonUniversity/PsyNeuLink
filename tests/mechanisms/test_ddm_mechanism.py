@@ -10,8 +10,6 @@ from psyneulink.core.components.functions.distributionfunctions import DriftDiff
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
@@ -163,7 +161,7 @@ class TestThreshold:
     #     assert np.allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
 
 
-    def test_is_finished_stops_system(self):
+    def test_is_finished_stops_composition(self):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
         C = Composition(pathways=[D], reinitialize_when=Never())
