@@ -2412,7 +2412,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     Arguments
     ---------
 
-    nodes : Node or list[Node] : default None
+    nodes : `Mechanism <Mechanism>`, `Composition` or list[`Mechanism <Mechanism>`, `Composition`] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
         `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
 
@@ -2457,11 +2457,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the full `Graph` associated with the Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
         `Compositions <Composition>`) and `Projections <Projection>`
 
-    nodes : list[`Mechanism(s) <Mechanism>` and/or `Composition(s) <Composition>`]
-        a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
-        the Composition
+    nodes : ContentAddressableList[`Mechanism <Mechanism>` or `Composition`]
+        a list of all `Nodes <Composition_Nodes>` in the Composition.
 
-    pathways : list
+    node_ordering : list[`Mechanism <Mechanism>` or `Composition`]
+        a list of all `Nodes <Composition_Nodes>` in the order in which they were added to the Composition.
+        COMENT:
+            FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
+        COMMENT
+
+    required_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
+        a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` assigned to it.
+
+    excluded_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
+        a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` that is excluded from
+        being assigned to it.
+
+    pathways : ContentAddressableList
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
         <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
@@ -2668,9 +2680,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
+        self.node_ordering = []
         self.required_node_roles = []
         self.excluded_node_roles = []
-        self.node_ordering = []
         from psyneulink.core.compositions.pathway import Pathway
         self.pathways = ContentAddressableList(component_type=Pathway)
 

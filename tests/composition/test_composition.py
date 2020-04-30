@@ -6042,19 +6042,19 @@ class TestNodeRoles:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
-    def test_CYCLE_no_FEEDBACK(self):
-        comp = Composition(name='comp')
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        comp.add_linear_processing_pathway([A, B, C])
-        comp.add_projection(sender=C, receiver=A)
-        comp._analyze_graph()
-
-        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
-        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
-        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
-        assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
+    # def test_CYCLE_no_FEEDBACK(self):
+    #     comp = Composition(name='comp')
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     C = ProcessingMechanism(name='C')
+    #     comp.add_linear_processing_pathway([A, B, C])
+    #     comp.add_projection(sender=C, receiver=A)
+    #     comp._analyze_graph()
+    #
+    #     assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+    #     assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+    #     assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+    #     assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
     # def test_CONTROL_OBJECTIVE(self):
     #     pass
