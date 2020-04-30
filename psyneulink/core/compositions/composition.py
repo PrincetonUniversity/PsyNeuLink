@@ -3737,7 +3737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.input_CIM.add_ports([interface_output_port],
                                              context=context)
 
-                    self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
+                    self.input_CIM_ports[input_port] = (interface_input_port, interface_output_port)
 
                     projection = MappingProjection(sender=interface_output_port,
                                                    receiver=input_port,
@@ -3815,7 +3815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.output_CIM.add_ports([interface_output_port],
                                               context=context)
 
-                    self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
+                    self.output_CIM_ports[output_port] = (interface_input_port, interface_output_port)
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
@@ -3912,7 +3912,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
             # Enforce order of ports to same as node_order
-            # XYZ
+
+            # comp.cim.input_ports.sort(key=lambda x: x.name)
+            # comp.cim.output_ports.sort(key=lambda x: x.name)
+            # comp.nodes.index(comp.output_CIM.input_ports[0].path_afferents[0].sender.owner)
+            node_port_to_cim_ports_mapping = self.__getattribute__(f'{type}_CIM_ports')
+            nodes = [key.owner for key in self.__getattribute__(f'{type}_CIM_ports').keys()]
+            node_indices = [self.nodes.index(node) for node in self.nodes]
+            cim_ports_to_node_ports_mapping = {value: key for key, value in node_port_to_cim_ports_mapping.items()}
+
+            if type in {INPUT}:
+                # cim.input_ports.sort(key=lambda x: self.nodes.index(x.efferents[0].sender.owner))
+                cim.output_ports.sort(key=lambda x: self.nodes.index(x.efferents[0].receiver.owner))
+            elif type in {OUTPUT}:
+                cim.input_ports.sort(key=lambda x: self.nodes.index(x.path_afferents[0].sender.owner))
+                # cim.output_ports.sort(key=lambda x: self.nodes.index(x.path_afferents[0].sender.owner))
+
 
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
