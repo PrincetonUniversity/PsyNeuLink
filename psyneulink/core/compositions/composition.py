@@ -3912,15 +3912,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
             # Enforce order of ports to same as node_order
-            # Get port mappings for cim
-            node_port_to_cim_port_tuples_mapping = self.__getattribute__(f'{type}_CIM_ports')
-            # Create list of (cim.input_port[i], cim.output_port[i], comp_node_index) tuples
-            cim_port_tuple_node_indices = [(cim_ports[0], cim_ports[1], self.nodes.index(node_port.owner))
-                                      for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items()]
-            # Sort cim input_ports and output_ports according to the order of Nodes in self.nodes
-            if node_port_to_cim_port_tuples_mapping:
-                cim.input_ports.sort(key=lambda x: [t[2] for t in cim_port_tuple_node_indices if x in t][0])
-                cim.output_ports.sort(key=lambda x: [t[2] for t in cim_port_tuple_node_indices if x in t][0])
+            # Get node port mappings for cim
+            if type != PARAMETER:
+                node_port_to_cim_port_tuples_mapping = self.__getattribute__(f'{type}_CIM_ports')
+                # Create list of (cim.input_port[i], cim.output_port[i], comp_node_index) tuples
+                cim_port_tuple_node_indices = []
+                for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
+                    node = node_port.owner
+                    if isinstance(node, CompositionInterfaceMechanism):
+                        node = node.composition
+                    cim_port_tuple_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
+                # Sort cim input_ports and output_ports according to the order of their corresponding Nodes in self.nodes
+                if node_port_to_cim_port_tuples_mapping:
+                    # Note:  put any extra (i.e., user-assigned, despite warning!) ports at end of list
+                    cim.output_ports.sort(key=lambda x: next((t[2] for t in cim_port_tuple_node_indices if x in t),
+                                                             len(self.nodes)))
 
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
