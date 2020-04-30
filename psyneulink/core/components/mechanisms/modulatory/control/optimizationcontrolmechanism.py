@@ -846,9 +846,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # differs from parent because it should not use add_to_monitor on its
         # input_states (formerly monitor_for_control)
 
-        # Assign ObjectiveMechanism's role as CONTROL
-        self.objective_mechanism._role = CONTROL
-
         # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,

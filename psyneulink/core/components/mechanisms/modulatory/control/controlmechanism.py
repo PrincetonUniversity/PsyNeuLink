@@ -1397,9 +1397,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                          self.monitored_output_ports.index(port)][EXPONENT_INDEX]
                 print(f"\t{weight} (exp: {weight}; wt: {exponent})")
 
-        # Assign ObjectiveMechanism's role as CONTROL
-        self.objective_mechanism._role = CONTROL
-
         # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,

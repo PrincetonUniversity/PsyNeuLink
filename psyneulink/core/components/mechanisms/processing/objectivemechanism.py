@@ -588,9 +588,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         if output_ports is None or output_ports == OUTCOME:
             output_ports = [OUTCOME]
 
-        # # MODIFIED 4/25/20 OLD:
-        # self._learning_role = None
-        # MODIFIED 4/25/20 NEW:
+        # FIX 4/27/20 _role: DELETE:
         if ROLE in kwargs:
             self._role = kwargs.pop(ROLE,None)
         # MODIFIED 4/25/20 END
