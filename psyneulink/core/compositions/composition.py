@@ -3924,7 +3924,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     cim_port_tuple_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
                 # Sort cim input_ports and output_ports according to the order of their corresponding Nodes in self.nodes
                 if node_port_to_cim_port_tuples_mapping:
-                    # Note:  put any extra (i.e., user-assigned, despite warning!) ports at end of list
+                    # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
                     cim.output_ports.sort(key=lambda x: next((t[2] for t in cim_port_tuple_node_indices if x in t),
                                                              len(self.nodes)))
 
