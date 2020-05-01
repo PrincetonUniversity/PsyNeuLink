@@ -3967,11 +3967,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Enforce order of ports to same as node_order
             # Get node port mappings for cim
-            # if type != PARAMETER:
             node_port_to_cim_port_tuples_mapping = getattr(self, f'{type}_CIM_ports')
-            # Create lists of:
-            #    (cim.input_port[i], cim.output_port[i], comp_node_index) tuples
-            #    (cim.input_port[i], cim.output_port[i], comp_port_within_node_index) tuples
+            # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
+            # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
             cim_node_indices = []
             cim_port_within_node_indices = []
             for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
@@ -3979,15 +3977,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, CompositionInterfaceMechanism):
                     node = node.composition
                 cim_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
-                # FIX: ASSIGN INDICES FOR PORTS WITHIN NODE:
-                #  NEED TO USE TO type TO PICK RELEVANT CIM PORT AND CONDITIONALIZE PORT LIST TO SEARCH IN ON NODE
                 node_port_list = getattr(node, f'{type}_ports')
                 cim_port_within_node_indices.append((cim_ports[0], cim_ports[1], node_port_list.index(node_port)))
-            # Sort cim input_ports and output_ports according to the order in self.nodes
-            #    of the Nodes to which they  correspond.
+            # Sort cim input_ports and output_ports...
+            # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
+            #        by assigning len(self.nodes) as the default
             if node_port_to_cim_port_tuples_mapping:
-                # FIX 4/28/20 [JDC]:
-                #      FIRST SORT BY PORT WITHIN NODE BASED ON ORDER IN NODE;
+                # FIX 4/28/20 [JDC]: ALSO SORT parameter_ports FOR cim??  DOES IT EVEN HAVE ANY?
+                # First sort according to the order in which ports for the same Node are listed on that node
                 cim.input_ports.sort(key=lambda x: next((cim_prt_tpl[2]
                                                          for cim_prt_tpl in cim_port_within_node_indices
                                                          if x in cim_prt_tpl),
@@ -3996,9 +3993,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           for cim_prt_tpl in cim_port_within_node_indices
                                                           if x in cim_prt_tpl),
                                                          len(node_port_list)))
-
-                # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
-                #        by assigning len(self.nodes) as the default
+                # Then sort according to the order in which the Nodes appear in self.nodes
                 cim.input_ports.sort(key=lambda x: next((cim_prt_tpl[2]
                                                          for cim_prt_tpl in cim_node_indices
                                                           if x in cim_prt_tpl),
