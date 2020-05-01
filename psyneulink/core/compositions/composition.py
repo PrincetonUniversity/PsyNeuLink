@@ -1834,7 +1834,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUTS, INPUT_CIM_NAME, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -3434,6 +3434,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for pway in self.pathways:
             pway._assign_roles(self)
 
+    def _get_external_modulatory_projections(self):
+        """
+
+            Returns
+            -------
+
+            list[`Modulatory Projections <ModulatoryProjection>`] :
+                list of `Modulatory Projections <ModulatoryProjection>` that originate from enclosing
+                `Compositions <Composition>` and that modulate a parameter of a `Node` of the current `Composition`
+
+        """
+        external_modulators = []
+        for node in [i for i in self.nodes if not i.componentType == 'Composition']:
+            for comp_projection in node.mod_afferents:
+                sender = comp_projection.sender.owner
+                receiver = comp_projection.receiver
+                route_projection_through_pcim = False
+                if not sender in self.nodes \
+                        and not (hasattr(sender, 'composition') and sender.composition == self):
+                    connections = [v for k, v in receiver._afferents_info.items()]
+                    for i in connections:
+                        if i.compositions:
+                            for j in i.compositions:
+                                if self in [v for k, v in dict(j._get_nested_nodes()).items()]:
+                                    route_projection_through_pcim = True
+                                    referring_composition = j
+                                    external_modulators.append((comp_projection, referring_composition))
+                                    break
+                        if route_projection_through_pcim:
+                            break
+        return external_modulators
+
     tc.typecheck
     def _create_CIM_ports(self, context=None):
         """
@@ -3448,47 +3480,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               OutputPort of each OUTPUT node. Connect the OUTPUT node's OutputPort to the output_CIM's corresponding
               InputPort via a standard MappingProjection.
 
-            - build two dictionaries:
+            - create a corresponding InputPort and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for each
+              InputPort of each node in the Composition that receives a modulatory projection from an enclosing
+              Composition. Connect the original ControlSignal to the parameter_CIM's corresponding InputPort via a
+              standard MappingProjection, then activate the projections that are created automatically during
+              instantiation of the ControlSignals to carry that signal to the target ParameterPort.
+
+            - build three dictionaries:
 
                 (1) input_CIM_ports = { INPUT Node InputPort: (InputCIM InputPort, InputCIM OutputPort) }
 
                 (2) output_CIM_ports = { OUTPUT Node OutputPort: (OutputCIM InputPort, OutputCIM OutputPort) }
 
+                (3) parameter_CIM_ports = { ( Signal Owner, Signal Receiver ): (ParameterCIM InputPort, ParameterCIM OutputPort) }
+
             - if the Node has any shadows, create the appropriate projections as needed.
 
             - delete all of the above for any node Ports which were previously, but are no longer, classified as
               INPUT/OUTPUT
-
-            - if composition has a controller, remove default InputPort and OutputPort of all nested compositions'
-              `parameter CIMs <Composition.parameter_CIM>` which contain nodes that will be modulated and whose default
-              ports have not already been removed
-
-            - delete afferents of compositions' parameter CIMs if their sender is no longer the controller of any of
-              the composition's parent compositions
-
-            - create a corresponding InputPort and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for
-              each parameter modulated by the controller
-
-            - instantiate and activate projections from ControlSignals of controller to corresponding InputPorts
-              of nested compositions' `parameter_CIMs <Composition.parameter_CIM>`
         """
 
+        # Composition's CIMs need to be set up from scratch, so we remove their default input and output ports
         if not self.input_CIM.connected_to_composition:
             self.input_CIM.input_ports.remove(self.input_CIM.input_port)
             self.input_CIM.output_ports.remove(self.input_CIM.output_port)
+            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.input_CIM.connected_to_composition = True
 
         if not self.output_CIM.connected_to_composition:
             self.output_CIM.input_ports.remove(self.output_CIM.input_port)
             self.output_CIM.output_ports.remove(self.output_CIM.output_port)
+            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.output_CIM.connected_to_composition = True
-
 
         # INPUT CIM
         current_input_node_input_ports = set()
+
+        # we're going to set up ports on the input CIM for all input nodes in the Composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in input_nodes:
 
+            # loop through all external input ports on input nodes (i.e. ports that are projected to from other nodes)
             for input_port in node.external_input_ports:
 
                 # add it to our set of current input ports
@@ -3496,15 +3528,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # if there is not a corresponding CIM InputPort/OutputPort pair, add them
                 if input_port not in set(self.input_CIM_ports.keys()):
+                    # instantiate the input port on the input CIM to correspond to the node's input port
                     interface_input_port = InputPort(owner=self.input_CIM,
                                                      variable=input_port.defaults.value,
                                                      reference_value=input_port.defaults.value,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
 
+                    # add port to the input CIM
                     self.input_CIM.add_ports([interface_input_port],
                                              context=context)
 
+                    # instantiate the output port on the input CIM to correspond to the node's input port
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                        variable=OWNER_VALUE,
                                                        function=InterfacePortMap(
@@ -3512,32 +3547,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        name=INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                        context=context)
 
+                    # add port to the input CIM
                     self.input_CIM.add_ports([interface_output_port],
                                              context=context)
 
+                    # add entry to input_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
+                    # input node's input port
                     self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
 
+                    # create projection from the output port on the input CIM to the input port on the input node
                     projection = MappingProjection(sender=interface_output_port,
                                                    receiver=input_port,
                                                    matrix=IDENTITY_MATRIX,
                                                    name="(" + interface_output_port.name + ") to ("
-                                                        + input_port.owner.name + "_" + input_port.name + ")")
+                                                        + input_port.owner.name + "-" + input_port.name + ")")
+
+                    # activate the projection
                     projection._activate_for_compositions(self)
 
+                    # if the node is a nested Composition, activate the projection for the nested Composition as well
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
-        new_shadow_projections = {}
-
-        # for any entirely new shadow_projections, create a MappingProjection object and add to projections
-        for output_port, input_port in new_shadow_projections:
-            if new_shadow_projections[(output_port, input_port)] is None:
-                shadow_projection = MappingProjection(sender=output_port,
-                                                      receiver=input_port,
-                                                      name="(" + output_port.name + ") to ("
-                                                           + input_port.owner.name + "_" + input_port.name + ")")
-                shadow_projection._activate_for_compositions(self)
-
+        # compare the set of ports in input_CIM_ports to the set of input ports of input nodes that currently exist in
+        # the composition, so that we can remove ports on the input CIM that correspond to nodes that no longer should
+        # connect to the CIM
         sends_to_input_ports = set(self.input_CIM_ports.keys())
 
         # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
@@ -3547,6 +3581,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if projection.sender == self.input_CIM_ports[input_port][1]:
                     # projection.receiver.efferents.remove(projection)
                     # Bug? ^^ projection is not in receiver.efferents??
+
+                    # if the project is a shadow projection, we also need to remove it from the Composition's shadows
+                    # attribute
                     if projection.receiver.owner in self.shadows and len(self.shadows[projection.receiver.owner]) > 0:
                         for shadow in self.shadows[projection.receiver.owner]:
                             for shadow_input_port in shadow.input_ports:
@@ -3565,7 +3602,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # OUTPUT CIM
         # loop over all OUTPUT nodes
+        # Set up ports on the output CIM for all output nodes in the Composition
         current_output_node_output_ports = set()
+
+        # loop through all output ports on output nodes
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             for output_port in node.output_ports:
                 current_output_node_output_ports.add(output_port)
@@ -3573,15 +3613,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # if there is not a corresponding CIM InputPort/OutputPort pair, add them
                 if output_port not in set(self.output_CIM_ports.keys()):
 
+                    # instantiate the input port on the output CIM to correspond to the node's output port
                     interface_input_port = InputPort(owner=self.output_CIM,
                                                      variable=output_port.defaults.value,
                                                      reference_value=output_port.defaults.value,
                                                      name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                                                      context=context)
 
+                    # add port to the output CIM
                     self.output_CIM.add_ports([interface_input_port],
                                               context=context)
 
+                    # instantiate the output port on the output CIM to correspond to the node's output port
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
                             variable=OWNER_VALUE,
@@ -3590,13 +3633,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                             context=context)
 
+                    # add port to the output CIM
                     self.output_CIM.add_ports([interface_output_port],
                                               context=context)
 
+                    # add entry to output_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
+                    # output node's output port
                     self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
+                    # create projection from the output port on the input CIM to the input port on the input node
                     proj = MappingProjection(
                         sender=output_port,
                         receiver=interface_input_port,
@@ -3605,10 +3652,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         matrix=IDENTITY_MATRIX,
                         name=proj_name
                     )
+
+                    # activate the projection
                     proj._activate_for_compositions(self)
+
+                    # if the node is a nested Composition, activate the projection for the nested Composition as well
                     if isinstance(node, Composition):
                         proj._activate_for_compositions(node)
 
+        # compare the set of ports in output_CIM_ports to the set of output ports of output nodes that currently exist in
+        # the composition, so that we can remove ports on the output CIM that correspond to nodes that no longer should
+        # connect to the CIM
         previous_output_node_output_ports = set(self.output_CIM_ports.keys())
         for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
             # remove the CIM input and output ports associated with this Terminal Node OutputPort
@@ -3619,73 +3673,75 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and from the dictionary of CIM OutputPort/InputPort pairs
             del self.output_CIM_ports[output_port]
 
-        # PARAMETER CIMS
-        if self.controller:
-            controller = self.controller
-            nested_nodes = dict(self._get_nested_nodes())
-            nested_comps = self._get_nested_compositions()
-            for comp in nested_comps:
-                for port in comp.parameter_CIM.input_ports:
-                    for afferent in port.all_afferents:
-                        if not comp in afferent.sender.owner.composition._get_nested_compositions():
-                            del port._afferents_info[afferent]
-                            if afferent in port.path_afferents:
-                                port.path_afferents.remove(afferent)
-                            if afferent in port.mod_afferents:
-                                port.mod_afferents.remove(afferent)
-                            self.remove_projection(afferent)
+        # PARAMETER CIM
+        # A node role does not exist for externally modulated nodes in the way that it does for input and output nodes,
+        # which are used to set up the INPUT and OUTPUT CIMS. Therefore, we call _get_external_control_projections to
+        # retrieve all projections that need to be routed through the PCIM
 
-            for modulatory_signal in controller.control_signals:
-                for projection in modulatory_signal.projections:
-                    receiver = projection.receiver
-                    mech = receiver.owner
-                    if mech in nested_nodes:
-                        comp = nested_nodes[mech]
-                        pcim = comp.parameter_CIM
-                        pcIM_ports = comp.parameter_CIM_ports
-                        if receiver not in pcIM_ports:
-                            if not pcim.connected_to_composition:
-                                pcim.remove_ports(pcim.input_port)
-                                pcim.remove_ports(pcim.output_port)
-                                pcim.connected_to_composition = True
-                            modulation = modulatory_signal.owner.modulation
-                            input_port = InputPort(
-                                owner = pcim,
-                            )
-                            control_signal = ControlSignal(
-                                owner = pcim,
-                                modulation = modulation,
-                                variable = OWNER_VALUE,
-                                transfer_function=InterfacePortMap(
-                                    corresponding_input_port = input_port
-                                ),
-                                modulates = receiver,
-                                name = 'PARAMETER_CIM_' + mech.name + "_" + receiver.name
-                            )
-                            for projection in control_signal.projections:
-                                projection._activate_for_compositions(self)
-                                projection._activate_for_compositions(comp)
-                            for projection in receiver.mod_afferents:
-                                if projection.sender.owner == controller:
-                                    receiver.mod_afferents.remove(projection)
-                                    self.remove_projection(projection)
-                            pcIM_ports[receiver] = (modulatory_signal, input_port)
+        # Note whether or not the parameter CIM is used
+        externally_modulated = False
 
-            for comp in nested_comps:
-                pcim = comp.parameter_CIM
-                connected_to_controller = False
-                for afferent in pcim.afferents:
-                    if afferent.sender.owner is controller:
-                        connected_to_controller = True
-                if not connected_to_controller:
-                    for efferent in controller.efferents:
-                        if efferent.receiver in pcIM_ports:
-                            input_projection = MappingProjection(
-                                sender = efferent.sender,
-                                receiver = pcIM_ports[efferent.receiver][1]
-                            )
-                            input_projection._activate_for_compositions(self)
-                            input_projection._activate_for_compositions(comp)
+        # here we get the projection that needs to be routed through the PCIM as well as the composition that owns it,
+        # because we will need to activate the new projections for the composition that owns the PCIM as well as the
+        # referring composition
+        for comp_projection, referring_composition in self._get_external_modulatory_projections():
+            # the mechanism that owns the control signal for which the projection is an efferent
+            sender = comp_projection.sender.owner
+            # the port that receives the projection
+            receiver = comp_projection.receiver
+            # the mechanism that owns the port for which the projection is an afferent
+            owner = receiver.owner
+            if not (sender, receiver) in self.parameter_CIM_ports:
+                externally_modulated = True
+                # control signal modulation should match the modulation type of the original control signal
+                modulation = comp_projection.sender.modulation
+                # input port of parameter CIM that will receive projection from the original control signal
+                input_port = InputPort(
+                    owner=self.parameter_CIM,
+                )
+                # control signal for parameter CIM that will project directly to inner Composition's parameter
+                control_signal = ControlSignal(
+                    owner=self.parameter_CIM,
+                    modulation=modulation,
+                    variable=OWNER_VALUE,
+                    transfer_function=InterfacePortMap(
+                        corresponding_input_port=input_port
+                    ),
+                    modulates=receiver,
+                    name='PARAMETER_CIM_' + owner.name + "_" + receiver.name
+                )
+                # add sender and receiver to self.parameter_CIM_ports dict
+                self.parameter_CIM_ports[(sender, receiver)] = (input_port, control_signal)
+                # projection name
+                proj_name = "(" + comp_projection.sender.name + ") to (" + input_port.name + ")"
+                # instantiate the projection
+                proj = MappingProjection(
+                    sender=comp_projection.sender,
+                    receiver=input_port,
+                    # FIX:  This fails if OutputPorts don't all have the same dimensionality (number of axes);
+                    #       see example in test_output_ports/TestOutputPorts
+                    matrix=IDENTITY_MATRIX,
+                    name=proj_name
+                )
+                # activate the projection for this composition and the referring composition
+                proj._activate_for_compositions(self)
+                proj._activate_for_compositions(referring_composition)
+                # activate all projections from the newly instantiated control signal
+                for projection in control_signal.projections:
+                    projection._activate_for_compositions(self)
+                # remove the original direct projection from the target ParameterPort
+                receiver.mod_afferents.remove(comp_projection)
+
+        # NOTE: We remove default ports on the PCIM here, and not where we did it for the input and output CIMS.
+        # This is because compilation breaks when a PCIM has no ports, so we only remove default ports on the
+        # PCIM if we are going to route projections through it.
+        # Ultimately, this should be moved to the beginning of the method when the compilation issue is fixed
+        # -DS
+        if externally_modulated and not self.parameter_CIM.connected_to_composition:
+            self.parameter_CIM.input_ports.remove(self.parameter_CIM.input_port)
+            self.parameter_CIM.output_ports.remove(self.parameter_CIM.output_port)
+            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
+            self.parameter_CIM.connected_to_composition = True
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
             # KDM 4/3/20: should reevluate this some time - is it
@@ -3715,31 +3771,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             context.execution_id = orig_eid
 
-            # FIX 4/4/20 [JDC]: THIS PASSES ALL TESTS EXCEPT test_warning_on_custom_cim_ports,
-            #                   IN WHICH AN ATTEMPT IS MADE TO MANUALLY ADD A CIM.  NEED TO RECONCILE ASSERT W/ WARNING
-            # assert len(cim.input_ports)==len(cim.output_ports)
+            # verify there is exactly one automatically instantiated input port for each automatically instantiated
+            # output port
+            num_auto_input_ports = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
+            num_auto_output_ports = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
+            assert num_auto_input_ports == num_auto_output_ports
             if type==INPUT:
                 # FIX 4/4/20 [JDC]: NEED TO ADD ASSERTION FOR NUMBER OF SHADOW PROJECTIONS
                 n = len(cim.output_ports) - len(cim.user_added_ports[OUTPUT_PORTS])
                 i = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])
-                p = len([p for p in self.projections if (INPUT_CIM_NAME in p.name and SHADOW_INPUT_NAME not in p.name)])
                 assert n == i, f"PROGRAM ERROR:  Number of OutputPorts on {self.input_CIM.name} ({n}) does not match " \
                                f"the number of external_input_ports over all INPUT nodes of {self.name} ({i})."
+                # p = len([p for p in self.projections if (INPUT_CIM_NAME in p.name and SHADOW_INPUT_NAME not in p.name )])
                 # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
                 # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.input_CIM.name})" \
                 #                f"({p} does not match the number of its OutputPorts ({n})."
             elif type==OUTPUT:
-                n = len(cim.input_ports)
-                # FIX 4/4/20 [JDC]: NEED TO DETERMINE # OutputPorts on OUTPUT Nodes:
-                # o = sum([len(n.external_input_ports) for n in self.get_nodes_by_role(NodeRole.INPUT)])
-                # assert n == o, f"PROGRAM ERROR:  Number of InputPorts on {self.output_CIM.name} ({n}) does not " \
-                #                f"match the number of OutputPorts over all OUTPUT nodes of {self.name} ({o})."
-                p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
+                n = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
+                o = sum([len(n.output_ports) for n in self.get_nodes_by_role(NodeRole.OUTPUT)])
+                assert n == o, f"PROGRAM ERROR:  Number of InputPorts on {self.output_CIM.name} ({n}) does not " \
+                               f"match the number of OutputPorts over all OUTPUT nodes of {self.name} ({o})."
+                # p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
                 # FIX 4/4/20 [JDC]: THIS FAILS FOR NESTED COMPS (AND OTHER PLACES?):
                 # assert p == n, f"PROGRAM ERROR:  Number of Projections associated with {self.output_CIM.name} " \
                 #                f"({p}) does not match the number of its InputPorts ({n})."
             elif type==PARAMETER:
-                pass # FIX 4/4/20 [JDC]: ADD ASSERTION HERE
+                # _get_external_control_projections finds all projections which currently need to be routed through the
+                # PCIM, so the length of the returned array should be 0
+                c = len(self._get_external_modulatory_projections())
+                assert c == 0, f"PROGRAM ERROR:  Number of external control projections {c} is greater than 0. " \
+                               f"This means there was a failure to route these projections through the PCIM."
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
