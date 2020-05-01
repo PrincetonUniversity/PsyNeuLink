@@ -192,6 +192,9 @@ class CompositionRunner():
             if minibatch_size == TRAINING_SET:
                 minibatch_size = num_trials
 
+            if minibatch_size > num_trials:
+                raise Exception("The minibatch size cannot be greater than the number of trials.")
+
             early_stopper = None
             if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
@@ -201,14 +204,11 @@ class CompositionRunner():
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
             skip_initialization = True
 
-        # FIXME: compiled run values differ from pytorch run
-        results = self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:] # return results from last epoch
-        # if bin_execute is not False and bin_execute != 'Python':
-        #     results = [x for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
-        # else:
-        #     results = [x[0] for x in self._composition.parameters.results.get(context)[-1 * num_trials * minibatch_size:]] # return results from last epoch
+        num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
+        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:] # return results from last epoch
 
         return results
+
 class EarlyStopping(object):
     def __init__(self, mode='min', min_delta=0, patience=10):
         self.mode = mode
