@@ -3969,20 +3969,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Enforce order of ports to same as node_order
             # Get node port mappings for cim
-            if type != PARAMETER:
-                node_port_to_cim_port_tuples_mapping = self.__getattribute__(f'{type}_CIM_ports')
-                # Create list of (cim.input_port[i], cim.output_port[i], comp_node_index) tuples
-                cim_port_tuple_node_indices = []
-                for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
-                    node = node_port.owner
-                    if isinstance(node, CompositionInterfaceMechanism):
-                        node = node.composition
-                    cim_port_tuple_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
-                # Sort cim input_ports and output_ports according to the order of their corresponding Nodes in self.nodes
-                if node_port_to_cim_port_tuples_mapping:
-                    # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
-                    cim.output_ports.sort(key=lambda x: next((t[2] for t in cim_port_tuple_node_indices if x in t),
-                                                             len(self.nodes)))
+            # if type != PARAMETER:
+            node_port_to_cim_port_tuples_mapping = getattr(self, f'{type}_CIM_ports')
+            # Create lists of:
+            #    (cim.input_port[i], cim.output_port[i], comp_node_index) tuples
+            #    (cim.input_port[i], cim.output_port[i], comp_port_within_node_index) tuples
+            cim_node_indices = []
+            cim_port_within_node_indices = []
+            for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
+                node = node_port.owner
+                if isinstance(node, CompositionInterfaceMechanism):
+                    node = node.composition
+                cim_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
+                # FIX: ASSIGN INDICES FOR PORTS WITHIN NODE:
+                #  NEED TO USE TO type TO PICK RELEVANT CIM PORT AND CONDITIONALIZE PORT LIST TO SEARCH IN ON NODE
+                node_port_list = getattr(node, f'{type}_ports')
+                cim_port_within_node_indices.append((cim_ports[0], cim_ports[1], node_port_list.index(node_port)))
+            # Sort cim input_ports and output_ports according to the order in self.nodes
+            #    of the Nodes to which they  correspond.
+            if node_port_to_cim_port_tuples_mapping:
+                # FIX 4/28/20 [JDC]:
+                #      FIRST SORT BY PORT WITHIN NODE BASED ON ORDER IN NODE;
+                cim.input_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                         for cim_prt_tpl in cim_port_within_node_indices
+                                                         if x in cim_prt_tpl),
+                                                        len(node_port_list)))
+                cim.output_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                          for cim_prt_tpl in cim_port_within_node_indices
+                                                          if x in cim_prt_tpl),
+                                                         len(node_port_list)))
+
+                # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
+                #        by assigning len(self.nodes) as the default
+                cim.input_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                         for cim_prt_tpl in cim_node_indices
+                                                          if x in cim_prt_tpl),
+                                                        len(self.nodes)))
+                cim.output_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                          for cim_prt_tpl in cim_node_indices
+                                                          if x in cim_prt_tpl),
+                                                         len(self.nodes)))
 
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
@@ -8069,6 +8095,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 typically, the composition will infer the number of trials from the length of its input specification.
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
+
+            COMMENT:
+                FIX 4/28/20 [JDC]: THE FOLLOWING NEED TO BE CORRECTED/ADDED BASED ON REFACTORING OF THIS FUNCTIONALITY
+            COMMENT
 
             initial_values : Dict[Node: Node Value] : default None
                 sets the values of nodes before the start of the run. This is useful in cases where a node's value is
