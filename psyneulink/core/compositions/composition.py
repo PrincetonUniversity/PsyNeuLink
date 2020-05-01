@@ -3907,13 +3907,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # because we will need to activate the new projections for the composition that owns the PCIM as well as the
         # referring composition
         for comp_projection, referring_composition in self._get_external_modulatory_projections():
-            # the mechanism that owns the control signal for which the projection is an efferent
-            sender = comp_projection.sender.owner
             # the port that receives the projection
             receiver = comp_projection.receiver
             # the mechanism that owns the port for which the projection is an afferent
             owner = receiver.owner
-            if not (sender, receiver) in self.parameter_CIM_ports:
+            if not receiver in self.parameter_CIM_ports:
                 externally_modulated = True
                 # control signal modulation should match the modulation type of the original control signal
                 modulation = comp_projection.sender.modulation
@@ -3933,7 +3931,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     name='PARAMETER_CIM_' + owner.name + "_" + receiver.name
                 )
                 # add sender and receiver to self.parameter_CIM_ports dict
-                self.parameter_CIM_ports[(sender, receiver)] = (input_port, control_signal)
+                self.parameter_CIM_ports[receiver] = (input_port, control_signal)
                 # projection name
                 proj_name = "(" + comp_projection.sender.name + ") to (" + input_port.name + ")"
                 # instantiate the projection
