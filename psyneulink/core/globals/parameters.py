@@ -814,24 +814,30 @@ class Parameter(types.SimpleNamespace):
         # time and only recompute lazily when the current source becomes
         # inherited itself, or a closer parent becomes uninherited. Both
         # will be indicated by the following conditional
+        try:
+            inherited_source = self._inherited_source()
+        except TypeError:
+            inherited_source = None
+
         if (
             self._parent is not None
             and (
-                self._inherited_source is None
+                inherited_source is None
                 # this condition indicates the cache was invalidated
                 # since it was set
-                or self._inherited_source._is_invalid_source
+                or inherited_source._is_invalid_source
             )
         ):
             next_parent = self._parent
             while next_parent is not None:
                 if not next_parent._is_invalid_source:
                     self._inherit_from(next_parent)
+                    inherited_source = next_parent
                     break
                 next_parent = next_parent._parent
 
         try:
-            return getattr(self._inherited_source, attr)
+            return getattr(inherited_source, attr)
         except AttributeError:
             raise AttributeError("Parameter '%s' has no attribute '%s'" % (self.name, attr)) from None
 
@@ -915,7 +921,7 @@ class Parameter(types.SimpleNamespace):
             self.__inherited = value
 
     def _inherit_from(self, parent):
-        self._inherited_source = parent
+        self._inherited_source = weakref.ref(parent)
 
     def _cache_inherited_attrs(self):
         for attr in self._param_attrs:
