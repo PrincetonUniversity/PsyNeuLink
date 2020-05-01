@@ -1120,14 +1120,18 @@ class Mechanism_Base(Mechanism):
         in which each label (key) specifies a string associated with a value for the InputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
-    input_labels : list
+    input_labels : list[str]
         contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
         of an InputPort does not have a corresponding label, then its numeric value is used instead.
 
-    external_input_values : list
-        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputPort.value>` only of
-        InputPorts that are **not** designated as `internal_only <InputPort.internal_only>` (that is, ones that
-        receive external inputs).
+    external_input_ports : list[InputPort]
+        list of the `input_ports <Mechanism_Base.input_ports>` for the Mechanism that are not designated as
+        `internal_only <InputPort.internal_only>`;  these receive `inputs from a Composition
+        <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
+
+    external_input_values : List[List or 1d np.array]
+        list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
 
     COMMENT:
     target_labels_dict : dict

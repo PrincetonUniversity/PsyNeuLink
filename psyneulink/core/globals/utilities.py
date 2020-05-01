@@ -102,6 +102,7 @@ import time
 import warnings
 import weakref
 import types
+import typing
 
 from enum import Enum, EnumMeta, IntEnum
 
@@ -127,7 +128,7 @@ __all__ = [
     'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
-    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
+    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1756,3 +1757,38 @@ def get_all_explicit_arguments(cls_, func_str):
             break
 
     return all_arguments
+
+
+def create_union_set(*args) -> set:
+    """
+        Returns:
+            a ``set`` containing all items in **args**, expanding
+            iterables
+    """
+    result = set()
+    for item in args:
+        if hasattr(item, '__iter__') and not isinstance(item, str):
+            result = result.union(item)
+        else:
+            result = result.union([item])
+
+    return result
+
+
+def merge_dictionaries(a: dict, b: dict) -> typing.Tuple[dict, bool]:
+    """
+        Returns: a tuple containing:
+            - a ``dict`` containing each key-value pair in **a** and
+            **b** where the values of shared keys are sets of their
+            original values
+
+            - a ``bool`` indicating if **a** and **b** have any shared
+            keys
+    """
+    shared_keys = [x for x in a if x in b]
+
+    new_dict = {k: v for k, v in a.items()}
+    new_dict.update(b)
+    new_dict.update({k: create_union_set(a[k], b[k]) for k in shared_keys})
+
+    return new_dict, len(new_dict) < (len(a) + len(b))

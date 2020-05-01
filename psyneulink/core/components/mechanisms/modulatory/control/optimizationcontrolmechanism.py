@@ -110,7 +110,7 @@ The following arguments of its constructor are specific to the OptimizationContr
   and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
   `model-based optimzation <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
-  Compositoin (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
+  Composition (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
   method is called (see `OptimizationControlMechanism_Features` below).  Features can be specified using any of the
   following, singly or combined in a list:
 
