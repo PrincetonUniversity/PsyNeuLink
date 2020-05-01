@@ -126,6 +126,21 @@ def test_simplified_necker_cube(benchmark, mode):
         [[205.67990124], [205.536034], [206.29612605], [-204.87230198], [-204.98539771], [-205.35434273]]
     )
 
+    # Test that order of CIM ports follows order of Nodes in self.nodes
+    assert 'a-0' in bp_comp.input_CIM.input_ports.names[0]
+    assert 'a-1' in bp_comp.input_CIM.input_ports.names[1]
+    assert 'a-2' in bp_comp.input_CIM.input_ports.names[2]
+    assert 'b-0' in bp_comp.input_CIM.input_ports.names[3]
+    assert 'b-1' in bp_comp.input_CIM.input_ports.names[4]
+    assert 'b-2' in bp_comp.input_CIM.input_ports.names[5]
+
+    assert 'a-0' in bp_comp.output_CIM.output_ports.names[0]
+    assert 'a-1' in bp_comp.output_CIM.output_ports.names[1]
+    assert 'a-2' in bp_comp.output_CIM.output_ports.names[2]
+    assert 'b-0' in bp_comp.output_CIM.output_ports.names[3]
+    assert 'b-1' in bp_comp.output_CIM.output_ports.names[4]
+    assert 'b-2' in bp_comp.output_CIM.output_ports.names[5]
+
     benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
 
 @pytest.mark.model

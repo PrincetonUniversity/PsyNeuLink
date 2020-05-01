@@ -5266,6 +5266,7 @@ class TestInputPortSpecifications:
         assert np.allclose(A.input_ports[1].parameters.value.get(comp), [4.0])
         assert np.allclose(A.parameters.variable.get(comp.default_execution_id), [[2.0], [4.0]])
 
+
 class TestInputSpecifications:
 
     # def test_2_mechanisms_default_input_1(self):
@@ -5990,6 +5991,7 @@ class TestReinitializeValues:
 
 
 class TestNodeRoles:
+    # Note:  Tests of CIM_port order are embedded here (for efficiency) and also in test_simplified_necker_cube()
 
     def test_INPUT_and_OUTPUT_and_SINGLETON(self):
         A = ProcessingMechanism(name='A')
@@ -6023,13 +6025,17 @@ class TestNodeRoles:
         # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={B}
 
     def test_three_node_cycle(self):
-        A = TransferMechanism()
-        B = TransferMechanism()
-        C = TransferMechanism()
+        A = TransferMechanism(name='MECH A')
+        B = TransferMechanism(name='MECH B')
+        C = TransferMechanism(name='MECH C')
         comp = Composition(pathways=[A, B, C])
         comp.add_projection(sender=C, receiver=A)
         comp._analyze_graph()
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        # Test that order of output_CIM.output ports follows order of Nodes in self.nodes
+        assert 'MECH A' in comp.output_CIM.output_ports.names[0]
+        assert 'MECH B' in comp.output_CIM.output_ports.names[1]
+        assert 'MECH C' in comp.output_CIM.output_ports.names[2]
         # THE FOLLOWING PASS:
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
@@ -6064,13 +6070,34 @@ class TestNodeRoles:
 
     def test_CYCLE_no_FEEDBACK(self):
         comp = Composition(name='comp')
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
+        A = ProcessingMechanism(name='MECH A')
+        B = ProcessingMechanism(name='MECH B')
+        C = ProcessingMechanism(name='MECH C')
         comp.add_linear_processing_pathway([A, B, C])
         comp.add_projection(sender=C, receiver=A)
         comp._analyze_graph()
 
+        # Test that order of output_CIM.output ports follows order of Nodes in self.nodes
+        assert 'MECH A' in comp.output_CIM.output_ports.names[0]
+        assert 'MECH B' in comp.output_CIM.output_ports.names[1]
+        assert 'MECH C' in comp.output_CIM.output_ports.names[2]
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+        assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
+
+    def test_CYCLE_in_pathway_spec_no_FEEDBACK(self):
+        comp = Composition(name='comp')
+        A = ProcessingMechanism(name='MECH A')
+        B = ProcessingMechanism(name='MECH B')
+        C = ProcessingMechanism(name='MECH C')
+        comp.add_linear_processing_pathway([A, B, C, A])
+        comp._analyze_graph()
+
+        # Test that order of output_CIM.output ports follows order of Nodes in self.nodes
+        assert 'MECH A' in comp.output_CIM.output_ports.names[0]
+        assert 'MECH B' in comp.output_CIM.output_ports.names[1]
+        assert 'MECH C' in comp.output_CIM.output_ports.names[2]
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
