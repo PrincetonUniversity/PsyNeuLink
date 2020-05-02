@@ -227,6 +227,28 @@ class TestControlSpecification:
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
+    def test_agent_rep_assignement_as_controller_and_replacement():
+        mech = pnl.ProcessingMechanism()
+        comp = pnl.Composition(name='comp',
+                           pathways=[mech],
+                           controller=pnl.OptimizationControlMechanism(agent_rep=None,
+                                                                   control_signals=(pnl.SLOPE, mech)))
+        # TEST FOR RE-REPLACING controller BELOW:
+        # ocm1=OptimizationControlMechanism(name='OCM 1', control_signals=(SLOPE, ia))
+        # comp.add_controller(ocm1)
+        assert comp.controller.composition == comp
+        assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
+        assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
+
+        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None, control_signals=(pnl.INTERCEPT, mech))
+        old_ocm = comp.controller
+        comp.add_controller(new_ocm)
+
+        assert comp.controller == new_ocm
+        assert old_ocm.composition == None
+        assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
+        assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
+# comp.add_controller(ocm1)
 
 class TestControlMechanisms:
 
@@ -967,6 +989,7 @@ class TestControlMechanisms:
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, bin_execute=mode)
         assert np.allclose(comp.results, [[[0.375]]])
+
 
 class TestModelBasedOptimizationControlMechanisms:
 
@@ -1995,6 +2018,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # Thus, in the correct case, the output of the model is 7 ((5*1)+(-2*-1)) and in the errant case the output of the model is
         # -7 ((5*-1)+(-2*1))
         assert np.allclose(results, [[7]])
+
 
 class TestSampleIterator:
 
