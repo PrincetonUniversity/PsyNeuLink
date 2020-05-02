@@ -1838,7 +1838,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -3730,16 +3730,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Composition's CIMs need to be set up from scratch, so we remove their default input and output ports
         if not self.input_CIM.connected_to_composition:
-            self.input_CIM.input_ports.remove(self.input_CIM.input_port)
-            self.input_CIM.output_ports.remove(self.input_CIM.output_port)
+            self.input_CIM.remove_ports(self.input_CIM.input_port)
+            self.input_CIM.remove_ports(self.input_CIM.output_port)
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.input_CIM.connected_to_composition = True
 
         if not self.output_CIM.connected_to_composition:
-            self.output_CIM.input_ports.remove(self.output_CIM.input_port)
-            self.output_CIM.output_ports.remove(self.output_CIM.output_port)
+            self.output_CIM.remove_ports(self.output_CIM.input_port)
+            self.output_CIM.remove_ports(self.output_CIM.output_port)
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.output_CIM.connected_to_composition = True
+
+        # PCIMs are not currently supported for compilation if they don't have any input/output ports,
+        # so remove their default ports only in the case that additional ports are going to be configured below
+        external_modulatory_projections = self._get_external_modulatory_projections()
+        if not self.parameter_CIM.connected_to_composition and external_modulatory_projections:
+            self.parameter_CIM.remove_ports(self.parameter_CIM.input_port)
+            self.parameter_CIM.remove_ports(self.parameter_CIM.output_port)
+            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
+            self.parameter_CIM.connected_to_composition = True
 
         # INPUT CIM
         current_input_node_input_ports = set()
@@ -3902,48 +3911,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.output_CIM_ports[output_port]
 
         # PARAMETER CIM
-        # A node role does not exist for externally modulated nodes in the way that it does for input and output nodes,
-        # which are used to set up the INPUT and OUTPUT CIMS. Therefore, we call _get_external_control_projections to
-        # retrieve all projections that need to be routed through the PCIM
-
-        # Note whether or not the parameter CIM is used
-        externally_modulated = False
-
-        # here we get the projection that needs to be routed through the PCIM as well as the composition that owns it,
+        # We get the projection that needs to be routed through the PCIM as well as the composition that owns it,
         # because we will need to activate the new projections for the composition that owns the PCIM as well as the
         # referring composition
-        for comp_projection, referring_composition in self._get_external_modulatory_projections():
+        for comp_projection, referring_composition in external_modulatory_projections:
             # the port that receives the projection
             receiver = comp_projection.receiver
             # the mechanism that owns the port for which the projection is an afferent
             owner = receiver.owner
             if not receiver in self.parameter_CIM_ports:
-                externally_modulated = True
                 # control signal modulation should match the modulation type of the original control signal
                 modulation = comp_projection.sender.modulation
                 # input port of parameter CIM that will receive projection from the original control signal
-                input_port = InputPort(
-                    owner=self.parameter_CIM,
-                )
+                interface_input_port = InputPort(owner=self.parameter_CIM,
+                                                 variable=receiver.defaults.value,
+                                                 reference_value=receiver.defaults.value,
+                                                 name= PARAMETER_CIM_NAME + "_" + owner.name + "_" + receiver.name,
+                                                 context=context)
+                self.parameter_CIM.add_ports([interface_input_port], context=context)
                 # control signal for parameter CIM that will project directly to inner Composition's parameter
                 control_signal = ControlSignal(
-                    owner=self.parameter_CIM,
-                    modulation=modulation,
-                    variable=OWNER_VALUE,
-                    transfer_function=InterfacePortMap(
-                        corresponding_input_port=input_port
-                    ),
-                    modulates=receiver,
-                    name='PARAMETER_CIM_' + owner.name + "_" + receiver.name
+                        modulation=modulation,
+                        variable=OWNER_VALUE,
+                        transfer_function=InterfacePortMap(
+                                corresponding_input_port=interface_input_port
+                        ),
+                        modulates=receiver,
+                        name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
                 )
+                self.parameter_CIM.add_ports([control_signal], context=context)
                 # add sender and receiver to self.parameter_CIM_ports dict
-                self.parameter_CIM_ports[receiver] = (input_port, control_signal)
+                self.parameter_CIM_ports[receiver] = (interface_input_port, control_signal)
                 # projection name
-                proj_name = "(" + comp_projection.sender.name + ") to (" + input_port.name + ")"
+                proj_name = "(" + comp_projection.sender.name + ") to (" + interface_input_port.name + ")"
                 # instantiate the projection
                 proj = MappingProjection(
                     sender=comp_projection.sender,
-                    receiver=input_port,
+                    receiver=interface_input_port,
                     # FIX:  This fails if OutputPorts don't all have the same dimensionality (number of axes);
                     #       see example in test_output_ports/TestOutputPorts
                     matrix=IDENTITY_MATRIX,
@@ -3957,17 +3961,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection._activate_for_compositions(self)
                 # remove the original direct projection from the target ParameterPort
                 receiver.mod_afferents.remove(comp_projection)
-
-        # NOTE: We remove default ports on the PCIM here, and not where we did it for the input and output CIMS.
-        # This is because compilation breaks when a PCIM has no ports, so we only remove default ports on the
-        # PCIM if we are going to route projections through it.
-        # Ultimately, this should be moved to the beginning of the method when the compilation issue is fixed
-        # -DS
-        if externally_modulated and not self.parameter_CIM.connected_to_composition:
-            self.parameter_CIM.input_ports.remove(self.parameter_CIM.input_port)
-            self.parameter_CIM.output_ports.remove(self.parameter_CIM.output_port)
-            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
-            self.parameter_CIM.connected_to_composition = True
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
