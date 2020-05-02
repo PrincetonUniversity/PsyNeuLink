@@ -159,7 +159,7 @@ class TestControlSpecification:
                                  {PROJECTIONS: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         )
-        assert comp.controller.initialization_status == pnl.ContextFlags.DEFERRED_INIT
+        assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])

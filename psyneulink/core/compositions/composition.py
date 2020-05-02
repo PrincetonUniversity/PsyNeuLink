@@ -2740,6 +2740,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Controller
         self.controller = None
+        self._controller_initialization_status = ContextFlags.INITIALIZED
         if controller:
             self.add_controller(controller)
         else:
@@ -2771,6 +2772,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_projections(projections)
 
         self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+
+        self._analyze_graph()
 
     @property
     def graph_processing(self):
@@ -6156,7 +6159,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # VALIDATE AND ADD CONTROLLER
 
-        if not controller.initialization_status == ContextFlags.DEFERRED_INIT:
+        # Note:  initialization_status here pertains to controller's own initialization status
+        #        (i.e., whether it has been fully instantiated); if not, presumably this is because it is an
+        #        OptimizationControlMechanism [OCM] for which the agent_rep has not yet been assigned
+        #        (e.g., was constructed in the controller argument of the Compositon), in which case assign it here.
+        if controller.initialization_status == ContextFlags.DEFERRED_INIT:
+            controller._init_args[AGENT_REP] = self
+            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
+
+        # Note:  initialization_status here pertains to controller's status w/in the Composition
+        #        (i.e., whether any Nodes and/or Projections on which it depends are not yet in the Composition)
+        if self._controller_initialization_status != ContextFlags.DEFERRED_INIT:
+
             # Warn for request to assign the ControlMechanism already assigned and ignore
             if controller is self.controller:
                 warnings.warn(f"{controller.name} has already been assigned as the {CONTROLLER} "
@@ -6169,10 +6183,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
                 return
 
-            # Warn if current one is being replaced
-            if self.controller and self.prefs.verbosePref:
-                warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
-                              f"is being replaced by {controller.name}.")
+            # Warn if current one is being replaced, and remove Projections for old one
+            if self.controller:
+                if self.prefs.verbosePref:
+                    warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
+                                  f"is being replaced by {controller.name}.")
+                for proj in self.projections:
+                    if (proj in self.controller.afferents or proj in self.controller.efferents):
+                        self.remove_projection(proj)
+                self.controller.composition=None
 
         controller.composition = self
         self.controller = controller
@@ -6265,13 +6284,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                ?PUT IT IN aux_components FOR NODE?
                 #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
                 controller._activate_projections_for_compositions(self)
-            controller.initialization_status = ContextFlags.INITIALIZED
+            self._controller_initialization_status = ContextFlags.INITIALIZED
             # MODIFIED 4/25/20 NEW:
             # self._analyze_graph()
             self._analyze_graph(context=Context(source=ContextFlags.METHOD))
             # MODIFIED 4/25/20 END
         else:
-            controller.initialization_status = ContextFlags.DEFERRED_INIT
+            self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
 
     def _get_control_signals_for_composition(self):
@@ -6403,9 +6422,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         # Check if controller is in deferred init
-        if self.controller and self.controller.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller)
-            if self.controller.initialization_status == ContextFlags.DEFERRED_INIT:
+            if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
                 invalid_aux_components = self._get_invalid_aux_components(self.controller)
                 for component in invalid_aux_components:
                     if isinstance(component, Projection):
