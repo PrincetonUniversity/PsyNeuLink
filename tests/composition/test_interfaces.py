@@ -7,12 +7,16 @@ from psyneulink.core.components.functions.transferfunctions import Identity, Lin
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
+from psyneulink.core.globals.keywords import INTERCEPT, NOISE, SLOPE
 
 
 class TestExecuteCIM:
@@ -542,6 +546,42 @@ class TestConnectCompositionsViaCIMS:
         # verify that call to remove ports succesfully removed the ports from user_added_ports
         assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
+
+    def test_parameter_CIM_port_order(self):
+        # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
+
+        # # FIX: FAILS
+        # # Inner Composition
+        # ia = TransferMechanism(name='ia')
+        # icomp = Composition(name='icomp', pathways=[ia])
+        #
+        # # Outer Composition
+        # oc = ControlMechanism(name='ic',
+        #                       control_signals=[ControlSignal(projections=[(SLOPE, ia)]),
+        #                                        ControlSignal(projections=[(INTERCEPT, ia)])])
+        # ocomp = Composition(name='ocomp', pathways=[icomp, oc])
+        # ocomp.show_graph()
+
+        # Inner Composition
+        ia = TransferMechanism(name='ia')
+        icomp = Composition(name='icomp', pathways=[ia])
+
+        # Outer Composition
+        ocomp = Composition(name='ocomp', pathways=[icomp])
+        ocm = OptimizationControlMechanism(name='ic',
+                                           agent_rep=ocomp,
+                                           control_signals=[
+                                               ControlSignal(projections=[(NOISE, ia)]),
+                                               ControlSignal(projections=[(INTERCEPT, ia)]),
+                                               ControlSignal(projections=[(SLOPE, ia)]),
+                                           ]
+                                           )
+        ocomp.add_controller(ocm)
+
+        assert INTERCEPT in icomp.parameter_CIM.output_ports.names[0]
+        assert NOISE in icomp.parameter_CIM.output_ports.names[1]
+        assert SLOPE in icomp.parameter_CIM.output_ports.names[2]
+
 
 class TestInputCIMOutputPortToOriginOneToMany:
 
