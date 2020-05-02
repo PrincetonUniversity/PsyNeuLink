@@ -767,12 +767,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.composition import Composition
         if request_set[AGENT_REP] is None:
-            # # MODIFIED 5/2/20 OLD:
-            # raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
-            #                                         f"be specified and be a {Composition.__name__}")
-            # MODIFIED 5/2/20 NEW:
-            pass
-            # MODIFIED 5/2/20 END
+            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
+                                                    f"be specified and be a {Composition.__name__}")
 
         elif not (isinstance(request_set[AGENT_REP], Composition)
                   or (isinstance(request_set[AGENT_REP], type) and issubclass(request_set[AGENT_REP], Composition))):
