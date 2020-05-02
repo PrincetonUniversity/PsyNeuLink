@@ -7755,6 +7755,94 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._animation.append(image)
 
+    def _handle_input_generator_function(self, inputs):
+        _inputs = inputs()
+        return self._handle_input_generator(_inputs)
+
+    def _handle_input_generator(self, inputs):
+        return inputs, sys.maxsize
+
+    def _handle_input_list(self, inputs):
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        if len(input_nodes) == 1:
+            _inputs = {next(iter(input_nodes)): inputs}
+        else:
+            raise CompositionError(
+                f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
+        return self._handle_input_dict(_inputs)
+
+    def _handle_input_function(self, inputs):
+        return inputs, 1
+
+    def _validate_input_shapes(self, inputs):
+        input_lengths = set()
+        inputs_to_duplicate = []
+        for port, input in inputs.items():
+            input_lengths.add(len(input))
+            if len(input) == 1:
+                inputs_to_duplicate.append(port)
+            variable = port.defaults.variable
+            for i in range(len(input)):
+                single_trial_input = input[i]
+                match = self._input_matches_variable(single_trial_input, variable)
+                if not match:
+                    # TODO: write this error
+                    raise CompositionError()
+                elif match == 'homogeneous':
+                    inputs[port][i] = [single_trial_input]
+        input_lengths.remove(1)
+        if len(input_lengths) > 1:
+            # TODO: write this error
+            raise CompositionError()
+        elif len(input_lengths) > 0:
+            num_trials = list(input_lengths)[0]
+            for port in inputs_to_duplicate:
+                inputs[port] *= num_trials
+        return inputs
+
+    def _handle_input_dict(self, inputs):
+        _inputs = self._validate_input_dict_node_roles(inputs)
+        _inputs = self._flatten_input_dict(_inputs)
+        _inputs = self._validate_input_shapes(_inputs)
+        num_trials = len(next(iter(_inputs.values()))[0])
+        return _inputs, num_trials
+
+    def _validate_input_dict_node_roles(self, inputs):
+        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        for node in inputs.keys():
+            if not node in input_nodes:
+                if not isinstance(node, (Mechanism, Composition)):
+                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
+                                           f'{Mechanism.__name__} or {Composition.__name__}.')
+                else:
+                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+
+        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
+        for node in input_nodes:
+            if not node in inputs:
+                inputs[node] = node.default_external_input_values
+        return inputs
+
+    def _preprocess_inputs(self, inputs):
+        if isgeneratorfunction(inputs):
+            _inputs, num_inputs_sets = self._handle_input_generator_function(inputs)
+        elif isgenerator(inputs):
+            _inputs, num_inputs_sets = self._handle_input_generator(inputs)
+        elif callable(inputs):
+            _inputs, num_inputs_sets = self._handle_input_function(inputs)
+        elif type(inputs) == list:
+            _inputs, num_inputs_sets = self._handle_input_list(inputs)
+        elif type(inputs) == dict:
+            _inputs, num_inputs_sets = self._handle_input_dict(inputs)
+        else:
+            #TODO: write error
+            raise CompositionError()
+        return _inputs, num_inputs_sets
+
+    def _preprocess_run(self, inputs):
+        self._preprocess_inputs(inputs)
 
     # ******************************************************************************************************************
     #                                           EXECUTION
@@ -8069,39 +8157,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # if inputs is a generator function, we should instantiate it now so that it will be properly handled
-        # below
-        if isgeneratorfunction(inputs):
-            inputs = inputs()
-
-        # if there is only one INPUT Node, allow inputs to be specified in a list
-        if isinstance(inputs, (list, np.ndarray)):
-            if len(input_nodes) == 1:
-                inputs = {next(iter(input_nodes)): inputs}
-            else:
-                raise CompositionError(
-                    f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
-                    f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        elif callable(inputs):
-            num_inputs_sets = 1
-        elif hasattr(inputs, '__next__'):
-            num_inputs_sets = sys.maxsize
-        elif not isinstance(inputs, dict):
-            if len(input_nodes) == 1:
-                raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary "
-                    "with the INPUT node ({}) as its only key".
-                        format(self.name, next(iter(input_nodes)).name))
-            else:
-                input_node_names = ", ".join([i.name for i in input_nodes])
-                raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary "
-                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
-                    format(self.name, len(input_nodes), input_node_names))
-        if not callable(inputs) \
-                and not hasattr(inputs, '__next__'):
-            # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets = self._adjust_stimulus_dict(inputs)
+        inputs, num_inputs_sets = self._preprocess_inputs(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -8182,7 +8238,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     break
 
             if callable(inputs) or isgenerator(inputs):
-                next_inputs, num_inputs_sets = self._adjust_stimulus_dict(next_inputs)
+                next_inputs, num_inputs_sets = self._handle_input_dict(next_inputs)
                 execution_stimuli = {}
                 for node in next_inputs:
                     if len(next_inputs[node]) == 1:
@@ -8210,6 +8266,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # execute processing
             # pass along the stimuli for this trial
+
 
             trial_output = self.execute(inputs=execution_stimuli,
                                         scheduler=scheduler,
@@ -9042,7 +9099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _input_matches_variable(self, input_value, var):
         # input_value ports are uniform
-        if np.shape(np.atleast_2d(input_value)) == np.shape(var):
+        if np.shape(np.squeeze(input_value)) == np.shape(np.squeeze(var)):
             return "homogeneous"
         # input_value ports have different lengths
         elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
@@ -9056,24 +9113,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Returns true if the composition can learn in the given context"""
         return (not self.disable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
 
-    def _adjust_stimulus_dict(self, stimuli):
-
-        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
-        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-        for node in stimuli.keys():
-            if not node in input_nodes:
-                if not isinstance(node, (Mechanism, Composition)):
-                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
-                                           f'{Mechanism.__name__} or {Composition.__name__}.')
+    def _flatten_input_dict(self, inputs):
+        _inputs = {}
+        for sender, stimuli in inputs.items():
+            if sender.componentCategory == 'Composition':
+                _inputs.update(self._flatten_input_dict(inputs))
+            elif sender.componentCategory == 'Mechanism_Base':
+                _inputs.update(self._flatten_input_dict({sender.input_port: stimuli}))
+            else:
+                input_CIM_port = self.input_CIM_ports[sender][0]
+                if type(stimuli) == np.ndarray:
+                    _stimuli = stimuli.tolist()
                 else:
-                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+                    _stimuli = stimuli
+                _inputs[input_CIM_port] = _stimuli
+        return _inputs
 
-        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
-        for node in input_nodes:
-            if not node in stimuli:
-                stimuli[node] = node.default_external_input_values
-
-        # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
+    def _standardize_input_dict(self, stimuli):
+        # Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
         # (1) Replace any user provided convenience notations with values that match the following specs:
         # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
@@ -9088,7 +9145,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 if isinstance(stim_list, dict):
 
-                    adjusted_stimulus_dict, num_trials = node._adjust_stimulus_dict(stim_list)
+                    adjusted_stimulus_dict, num_trials = node._handle_input_dict(stim_list)
                     translated_stimulus_dict = {}
 
                     # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
@@ -9172,7 +9229,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 input_must_match = node.default_external_input_values
                 if isinstance(stimulus, dict):
-                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
+                    adjusted_stimulus_dict = node._standardize_input_dict(stimulus)
                     adjusted_stimuli[node] = adjusted_stimulus_dict
                     continue
             else:
