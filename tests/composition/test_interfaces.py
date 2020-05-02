@@ -560,7 +560,6 @@ class TestConnectCompositionsViaCIMS:
         #                       control_signals=[ControlSignal(projections=[(SLOPE, ia)]),
         #                                        ControlSignal(projections=[(INTERCEPT, ia)])])
         # ocomp = Composition(name='ocomp', pathways=[icomp, oc])
-        # ocomp.show_graph()
 
         # Inner Composition
         ia = TransferMechanism(name='ia')

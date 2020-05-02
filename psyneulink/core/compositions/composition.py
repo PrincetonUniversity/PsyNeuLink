@@ -1838,7 +1838,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -3916,20 +3916,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # control signal modulation should match the modulation type of the original control signal
                 modulation = comp_projection.sender.modulation
                 # input port of parameter CIM that will receive projection from the original control signal
+                # MODIFIED 5/2/20 OLD:
                 input_port = InputPort(
                     owner=self.parameter_CIM,
+                    # # FIX 5/2/20 [JDC]: THE FOLLOWING IS NEEDED SO THAT CALL TO _analyze_graph
+                        #  WON'T BE TREATED AS COMMAND_LINE,  BUT IT CAUSES A CRASH;
+                        #  SEEMS TO HAVE TO DO WITH input_port NUMBERSING (1 vs. 0)
+                    # context=context
                 )
-                # control signal for parameter CIM that will project directly to inner Composition's parameter
+                # # MODIFIED 5/2/20 NEW: [JDC]
+                # interface_input_port = InputPort(owner=self.parameter_CIM,
+                #                                  variable=receiver.defaults.value,
+                #                                  reference_value=receiver.defaults.value,
+                #                                  name= PARAMETER_CIM_NAME + "_" + owner.name + "_" + receiver.name,
+                #                                  context=context)
+                # self.parameter_CIM.add_ports([interface_input_port], context=context)
+                # MODIFIED  END
+                # control signa5/2/20l for parameter CIM that will project directly to inner Composition's parameter
                 control_signal = ControlSignal(
-                    owner=self.parameter_CIM,
-                    modulation=modulation,
-                    variable=OWNER_VALUE,
-                    transfer_function=InterfacePortMap(
-                        corresponding_input_port=input_port
-                    ),
-                    modulates=receiver,
-                    name='PARAMETER_CIM_' + owner.name + "_" + receiver.name
+                        # MODIFIED 5/2/20 OLD:
+                        owner=self.parameter_CIM,
+                        # MODIFIED 5/2/20 END
+                        modulation=modulation,
+                        variable=OWNER_VALUE,
+                        transfer_function=InterfacePortMap(
+                                corresponding_input_port=input_port
+                        ),
+                        modulates=receiver,
+                        name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
                 )
+                # # # MODIFIED 5/2/20 NEW: [JDC]
+                # self.parameter_CIM.add_ports([control_signal], context=context)
+                # MODIFIED 5/2/20 END
                 # add sender and receiver to self.parameter_CIM_ports dict
                 self.parameter_CIM_ports[receiver] = (input_port, control_signal)
                 # projection name
@@ -3958,10 +3976,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Ultimately, this should be moved to the beginning of the method when the compilation issue is fixed
         # -DS
         if externally_modulated and not self.parameter_CIM.connected_to_composition:
+            # MODIFIED 5/2/20 OLD:
             self.parameter_CIM.input_ports.remove(self.parameter_CIM.input_port)
             self.parameter_CIM.output_ports.remove(self.parameter_CIM.output_port)
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.parameter_CIM.connected_to_composition = True
+            # # MODIFIED 5/2/20 NEW: [JDC]
+            # self.parameter_CIM.remove_ports(self.parameter_CIM.input_port)
+            # self.parameter_CIM.remove_ports(self.parameter_CIM.output_port)
+            # # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
+            # self.parameter_CIM.connected_to_composition = True
+            # MODIFIED 5/2/20 END
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
