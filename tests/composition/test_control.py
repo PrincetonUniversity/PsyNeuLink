@@ -227,15 +227,13 @@ class TestControlSpecification:
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
-    def test_agent_rep_assignement_as_controller_and_replacement():
+    def test_agent_rep_assignement_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
         comp = pnl.Composition(name='comp',
                            pathways=[mech],
                            controller=pnl.OptimizationControlMechanism(agent_rep=None,
-                                                                   control_signals=(pnl.SLOPE, mech)))
-        # TEST FOR RE-REPLACING controller BELOW:
-        # ocm1=OptimizationControlMechanism(name='OCM 1', control_signals=(SLOPE, ia))
-        # comp.add_controller(ocm1)
+                                                                       control_signals=(pnl.SLOPE, mech)))
+        comp._analyze_graph()
         assert comp.controller.composition == comp
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
@@ -248,7 +246,7 @@ class TestControlSpecification:
         assert old_ocm.composition == None
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
-# comp.add_controller(ocm1)
+
 
 class TestControlMechanisms:
 
