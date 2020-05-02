@@ -2776,7 +2776,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 5/2/20 NEW:
         # self._analyze_graph()
         # # Call with context = METHOD to avoid calling _check_initialization_status again
-        # self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
         # MODIFIED 5/2/20 END
 
     @property
@@ -2849,8 +2849,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # Instantiate any deferred init components
-        if context.source != ContextFlags.METHOD:  # Prevent recursion in call from add_controller
-            self._check_projection_initialization_status()
+        self._check_projection_initialization_status(context=context)
 
         # Call _analzye_graph() for any nested Compositions
         for n in self.nodes:
@@ -6421,13 +6420,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
 
-    def _check_projection_initialization_status(self):
+    def _check_projection_initialization_status(self, context=None):
         """Checks initialization status of controller (if applicable) and any projections or ports
-
         """
+
+        # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below
+        if context and context.source == ContextFlags.METHOD:
+            return
+
         # Check if controller is in deferred init
         if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller)
+
+            # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
+            #    since no need to detect deferred_init and generate errors until runtime
+            if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
+                return
+
             if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
                 invalid_aux_components = self._get_invalid_aux_components(self.controller)
                 for component in invalid_aux_components:

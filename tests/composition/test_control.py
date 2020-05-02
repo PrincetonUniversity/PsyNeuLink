@@ -233,7 +233,6 @@ class TestControlSpecification:
                            pathways=[mech],
                            controller=pnl.OptimizationControlMechanism(agent_rep=None,
                                                                        control_signals=(pnl.SLOPE, mech)))
-        comp._analyze_graph()
         assert comp.controller.composition == comp
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
