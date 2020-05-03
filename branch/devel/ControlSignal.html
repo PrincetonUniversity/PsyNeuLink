@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0.7.5.4+74.g641d4aa documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0.7.5.4+75.g068b51e documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+74
+                  0.7.5.4+75
                 </div>
               
             
@@ -468,8 +468,8 @@ ControlSignal modulates the <a class="reference internal" href="ModulatorySignal
 <p>This specifies that the value of the ControlSignal should be added to, rather than multiply the value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the Logistic function.  Note that the <strong>modulation</strong> argument determines how to modify a
 <em>parameter</em> of the <em>Logistic</em> Function (in this case, its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter), and its input directly;
 that is, in this example, the value of the ControlSignal is added to the <em>gain parameter</em> of the Logistic function,
-<em>not</em> to its <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If the value of the ControlSignal’s <strong>modulation</strong> argument had been
-<em>OVERRIDE</em>, then the ControlSignal’s value would have been used as (i.e., it would have replaced) the value of the
+<em>not</em> to its <code class="xref any docutils literal"><span class="pre">variable</span></code>.  If the value of the ControlSignal’s <strong>modulation</strong> argument had been
+<em>OVERRIDE</em>, then the ControlSignal’s value would have been used as (i.e., it would have replaced) the ˚value of the
 <em>Logistic</em> Function’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter, rather than being added to it.</p>
 <p><em>Specify ControlSignals in a ControlMechanism’s constructor</em></p>
 <p>Parameters can also be specified for control in constructor of the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that controls
@@ -797,7 +797,7 @@ It can be any function that takes an array and returns a scalar value.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+74.g641d4aa',
+               VERSION:'0.7.5.4+75.g068b51e',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+74.g641d4aa documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+75.g068b51e documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+74
+                  0.7.5.4+75
                 </div>
               
             
@@ -624,7 +624,7 @@ any specifications in the Mechanism’s <a class="reference internal" href="#psy
 associated with an instantiated OutputPort at the time the Mechanism is executed are ignored.</p>
 <p>The <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> (e.g., <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>) it receives are listed
 in its <code class="xref any docutils literal"><span class="pre">path_afferents</span></code> attribute.  If the Mechanism is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanism of a
-<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, this includes a Projection from the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">input_CIM</span></code></a>.  Any
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, this includes a Projection from the Composition’s <code class="xref any docutils literal"><span class="pre">input_CIM</span></code>.  Any
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> it receives are listed in its
 <code class="xref any docutils literal"><span class="pre">mod_afferents</span></code> attribute.</p>
 </div>
@@ -696,7 +696,7 @@ attributes are listed below by their argument names / keywords, along with a des
 </ul>
 <ul class="simple">
 <li><strong>monitor_for_control</strong> / <em>MONITOR_FOR_CONTROL</em> - specifies which of the Mechanism’s OutputPorts is monitored by
-the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for the System to which the Mechanism belongs (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">specifying monitored OutputPorts</span></a> for details of specification).</li>
+the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for the System to which the Mechanism belongs (see <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">specifying monitored OutputPorts</span></a> for details of specification).</li>
 </ul>
 <ul class="simple">
 <li><strong>monitor_for_learning</strong> / <em>MONITOR_FOR_LEARNING</em> - specifies which of the Mechanism’s OutputPorts is used for
@@ -862,7 +862,7 @@ label, then its numeric value is used instead.</li>
 </div>
 <p>Labels may be used to visualize the input and outputs of Mechanisms in a System via the <strong>show_structure</strong> option of the
 System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.show_graph" title="psyneulink.core.components.system.System.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with the keyword <strong>LABELS</strong>.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_mechanism_structure</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">LABELS</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">S</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_mechanism_structure</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">LABELS</span><span class="p">)</span>  
 </pre></div>
 </div>
 <div class="admonition note">
@@ -1620,7 +1620,7 @@ description of formatting requirements and options).</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+74.g641d4aa',
+               VERSION:'0.7.5.4+75.g068b51e',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
