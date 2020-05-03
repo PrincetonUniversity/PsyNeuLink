@@ -532,8 +532,8 @@ class TestConnectCompositionsViaCIMS:
         mech = ProcessingMechanism()
         comp.add_node(mech)
         # instantiate custom input and output ports
-        inp = InputPort()
-        out = OutputPort()
+        inp = InputPort(size=2)
+        out = OutputPort(size=2)
         # add custom input and output ports to CIM
         comp.input_CIM.add_ports([inp, out])
         # verify the ports have been added to the user_added_ports set
@@ -549,17 +549,6 @@ class TestConnectCompositionsViaCIMS:
 
     def test_parameter_CIM_port_order(self):
         # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
-
-        # # FIX: FAILS
-        # # Inner Composition
-        # ia = TransferMechanism(name='ia')
-        # icomp = Composition(name='icomp', pathways=[ia])
-        #
-        # # Outer Composition
-        # oc = ControlMechanism(name='ic',
-        #                       control_signals=[ControlSignal(projections=[(SLOPE, ia)]),
-        #                                        ControlSignal(projections=[(INTERCEPT, ia)])])
-        # ocomp = Composition(name='ocomp', pathways=[icomp, oc])
 
         # Inner Composition
         ia = TransferMechanism(name='ia')

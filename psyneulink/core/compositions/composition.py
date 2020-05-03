@@ -2774,8 +2774,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
 
         # MODIFIED 5/2/20 NEW:
-        # self._analyze_graph()
-        # # Call with context = METHOD to avoid calling _check_initialization_status again
+        # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
         # MODIFIED 5/2/20 END
 
