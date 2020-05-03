@@ -1,0 +1,39 @@
+import pytest
+import doctest
+
+
+import psyneulink as pnl
+
+
+@pytest.mark.parametrize("mod", [# Ports
+                                 pnl.core.components.ports.parameterport,
+                                 pnl.core.components.ports.outputport,
+                                 pnl.core.components.ports.modulatorysignals.controlsignal,
+                                 pnl.core.components.ports.modulatorysignals.gatingsignal,
+                                 # Mechanisms
+                                 pnl.core.components.mechanisms.mechanism,
+                                 pnl.core.components.mechanisms.processing.transfermechanism,
+                                 pnl.core.components.mechanisms.processing.integratormechanism,
+                                 pnl.core.components.mechanisms.processing.objectivemechanism,
+                                 pnl.core.components.mechanisms.modulatory.control.controlmechanism,
+                                 # Function
+                                 pnl.core.components.functions.function,
+                                ])
+def test_core_docs(mod):
+    fail, total = doctest.testmod(mod)
+    if fail > 0:
+        pytest.fail("{} out of {} examples failed.".format(fail, total), pytrace=False)
+
+@pytest.mark.parametrize("mod", [# Mechanisms
+                                 pnl.library.components.mechanisms.processing.integrator.ddm,
+                                 pnl.library.components.mechanisms.processing.objective.comparatormechanism,
+                                 pnl.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism,
+                                 # Scheduling
+                                 pnl.core.scheduling.scheduler,
+                                 # Logs
+                                 pnl.core.globals.log,
+                                ])
+def test_other_docs(mod):
+    fail, total = doctest.testmod(mod, optionflags=doctest.REPORT_NDIFF)
+    if fail > 0:
+        pytest.fail("{} out of {} examples failed.".format(fail, total), pytrace=False)
