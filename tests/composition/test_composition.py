@@ -28,7 +28,7 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, CONTROL, DISABLE, INPUT_PORT, LEARNING, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -1173,7 +1173,9 @@ class TestAnalyzeGraph:
                                                                                                           0.3)}]
                                                                         )
                                        )
-        comp._analyze_graph()
+        # # MODIFIED 4/25/20 OLD:
+        # comp._analyze_graph()
+        # MODIFIED 4/25/20 END
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
         # disable controller
@@ -5565,7 +5567,8 @@ class TestInputSpecifications:
                                                                intensity_cost_function=pnl.Linear(slope=0.0),
                                                                allocation_samples=pnl.SampleSpec(start=1.0,
                                                                                                  stop=10.0,
-                                                                                                 num=2))])
+                                                                                                 num=2))
+                                             ]),
             )
 
         # set up input using three different formats:
@@ -5633,6 +5636,7 @@ class TestProperties:
         result = c.run(inputs={A: [1]}, num_trials=2)
         assert result == c.output_values == [np.array([1])]
 
+
 class TestAuxComponents:
     def test_two_transfer_mechanisms(self):
         A = TransferMechanism(name='A')
@@ -5681,22 +5685,6 @@ class TestAuxComponents:
         # Input to B = 2.0 + 1.0 | Output = 3.0
 
         assert np.allclose(B.parameters.value.get(comp), [[3.0]])
-
-    def test_required_node_roles(self):
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B',
-                              function=Linear(slope=2.0))
-
-        comp = Composition(name='composition')
-        comp.add_node(A, required_roles=[NodeRole.TERMINAL])
-        comp.add_linear_processing_pathway([A, B])
-
-        result = comp.run(inputs={A: [[1.0]]})
-
-        terminal_mechanisms = comp.get_nodes_by_role(NodeRole.TERMINAL)
-
-        assert A in terminal_mechanisms and B in terminal_mechanisms
-        assert np.allclose(result, [[1.0], [2.0]])
 
     def test_aux_component_with_required_role(self):
         A = TransferMechanism(name='A')
@@ -6025,7 +6013,46 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
-    def test_FEEDBACK_no_CYCLE(self):
+    def test_two_node_cycle(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        comp = Composition(pathways=[A, B, A])
+        assert set(comp.get_nodes_by_role(NodeRole.ORIGIN))=={A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.TERMINAL))=={A,B}
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE))=={A,B}
+        # # THE FOLLOWING FAIL:
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))=={A}
+        # assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))=={B}
+
+    def test_three_node_cycle(self):
+        A = TransferMechanism(name='MECH A')
+        B = TransferMechanism(name='MECH B')
+        C = TransferMechanism(name='MECH C')
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A)
+        comp._analyze_graph()
+        assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+        # Test that order of output_CIM.output ports follows order of Nodes in self.nodes
+        assert 'MECH A' in comp.output_CIM.output_ports.names[0]
+        assert 'MECH B' in comp.output_CIM.output_ports.names[1]
+        assert 'MECH C' in comp.output_CIM.output_ports.names[2]
+        # THE FOLLOWING PASS:
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+        assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+
+    def test_three_node_cycle_with_FEEDBACK(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition(pathways=[A, B, C])
+        comp.add_projection(sender=C, receiver=A, feedback=True)
+        comp._analyze_graph()
+        assert not set(comp.get_nodes_by_role(NodeRole.CYCLE))
+        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)) == {C}
+        assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
+        assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
+
+    def  test_FEEDBACK_no_CYCLE(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -6043,40 +6070,69 @@ class TestNodeRoles:
 
     def test_CYCLE_no_FEEDBACK(self):
         comp = Composition(name='comp')
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
+        A = ProcessingMechanism(name='MECH A')
+        B = ProcessingMechanism(name='MECH B')
+        C = ProcessingMechanism(name='MECH C')
         comp.add_linear_processing_pathway([A, B, C])
         comp.add_projection(sender=C, receiver=A)
         comp._analyze_graph()
 
+        # Test that order of output_CIM.output ports follows order of Nodes in self.nodes
+        assert 'MECH A' in comp.output_CIM.output_ports.names[0]
+        assert 'MECH B' in comp.output_CIM.output_ports.names[1]
+        assert 'MECH C' in comp.output_CIM.output_ports.names[2]
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
 
-    def test_CYCLE_no_FEEDBACK(self):
+    def test_CYCLE_in_pathway_spec_no_FEEDBACK(self):
         comp = Composition(name='comp')
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        comp.add_linear_processing_pathway([A, B, C])
-        comp.add_projection(sender=C, receiver=A)
+        A = ProcessingMechanism(name='MECH A')
+        B = ProcessingMechanism(name='MECH B')
+        C = ProcessingMechanism(name='MECH C')
+        comp.add_linear_processing_pathway([A, B, C, A])
         comp._analyze_graph()
 
+        # Test that order of output_CIM.output ports follows order of Nodes in self.nodes
+        assert 'MECH A' in comp.output_CIM.output_ports.names[0]
+        assert 'MECH B' in comp.output_CIM.output_ports.names[1]
+        assert 'MECH C' in comp.output_CIM.output_ports.names[2]
         assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
         assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
         assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
+
+    # def test_CYCLE_no_FEEDBACK(self):
+    #     comp = Composition(name='comp')
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     C = ProcessingMechanism(name='C')
+    #     comp.add_linear_processing_pathway([A, B, C])
+    #     comp.add_projection(sender=C, receiver=A)
+    #     comp._analyze_graph()
+    #
+    #     assert set(comp.get_nodes_by_role(NodeRole.CYCLE)) == {A,B,C}
+    #     assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+    #     assert not set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER))
+    #     assert set(comp.get_nodes_by_role(NodeRole.SINGLETON)) == {A,B,C}
+
+    # def test_CONTROL_OBJECTIVE(self):
+    #     pass
+    #
+    # def test_CONTROLLER_OBJECTIVE(self):
+    #     pass
 
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
         comp = Composition(pathways=A)
         pathway = comp.pathways[0]
-        pathway.target == None
-        pathway.learning_objective == None
-        pathway.learning_components == {}
-        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT,NodeRole.FEEDBACK_RECEIVER}
+        assert pathway.target == None
+        assert pathway.learning_objective == None
+        assert pathway.learning_components == {}
+        roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT
+            # , NodeRole.FEEDBACK_RECEIVER
+                 }
         assert roles.issubset(set(comp.get_roles_by_node(A)))
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == {A.learning_mechanism}
 
@@ -6094,7 +6150,10 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == learning
-        # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)) == {objective}
+        # Validate that objective projects to LearningMechanism (allowed to have other user-assigned Projections)
+        assert any([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
+        # Validate that TERMINAL is LearningMechanism that projects to first MappingProjection in learning pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
     def test_LEARNING_bp(self):
@@ -6113,8 +6172,47 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INPUT)) == {A, target}
         assert set(comp.get_nodes_by_role(NodeRole.OUTPUT)) == {D}
         assert set(comp.get_nodes_by_role(NodeRole.LEARNING)) == set(learning)
-        # Validate that TERMINAL is LearningMechanism that Project to first MappingProjection in learning_pathway
+        assert set(comp.get_nodes_by_role(NodeRole.LEARNING_OBJECTIVE)) == {objective}
+        # Validate that objective projects to LearningMechanism  (allowed to have other user-assigned Projections)
+        assert any([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
+        # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
+
+    def test_OUTPUT_asymmetric_with_learning_short_first(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[[A], {'LEARNING_PATHWAY':([B,C], BackPropagation)}])
+        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_OUTPUT_asymmetric_with_learning_short_last(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[{'LEARNING_PATHWAY':([B,C], BackPropagation)},[A]])
+        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_OUTPUT_required_node_roles_override(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B', function=Linear(slope=2.0))
+        comp = Composition(name='composition')
+        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
+        comp.add_linear_processing_pathway([A, B])
+        result = comp.run(inputs={A: [[1.0]]})
+        output_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert set(output_mechanisms) == {A,B}
+        assert np.allclose(result, [[1.0],[2.0]])
+
+    def test_OUTPUT_required_node_roles_both(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B', function=Linear(slope=2.0))
+        comp = Composition(name='composition')
+        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
+        comp.add_linear_processing_pathway([A, (B, NodeRole.OUTPUT)])
+        result = comp.run(inputs={A: [[1.0]]})
+        terminal_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert A in terminal_mechanisms and B in terminal_mechanisms
+        assert np.allclose(result, [[1.0],[2.0]])
 
 
 class TestMisc:

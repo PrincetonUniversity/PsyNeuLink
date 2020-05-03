@@ -553,6 +553,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                          name="\'{}\' {}".format(lc.activation_output_mech.name,
             #                                                                  OBJECTIVE_MECHANISM))
 
+            # FIX 4/27/20 _role: DELETE:
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
 

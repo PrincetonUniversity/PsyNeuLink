@@ -843,6 +843,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 function=function
             )
 
+    owner.parameter_ports.sort(key=lambda port: port.name)
 
 def _instantiate_parameter_port(owner, param_name, param_value, context, function=None):
     """Call _instantiate_port for allowable params, to instantiate a ParameterPort for it

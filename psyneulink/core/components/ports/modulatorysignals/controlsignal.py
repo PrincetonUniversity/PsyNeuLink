@@ -305,8 +305,8 @@ This specifies that the value of the ControlSignal should be added to, rather th
 <Logistic.gain>` parameter of the Logistic function.  Note that the **modulation** argument determines how to modify a
 *parameter* of the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and its input directly;
 that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
-*not* to its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation** argument had been
-*OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced) the value of the
+*not* to its `variable <Lo˚gistic.variable>`.  If the value of the ControlSignal's **modulation** argument had been
+*OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced) the ˚value of the
 *Logistic* Function's `gain <Logistic.gain>` parameter, rather than being added to it.
 
 *Specify ControlSignals in a ControlMechanism's constructor*

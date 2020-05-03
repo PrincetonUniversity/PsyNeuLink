@@ -11,7 +11,7 @@ from psyneulink.core.components.functions.optimizationfunctions import GridSearc
 from psyneulink.core.components.functions.transferfunctions import GaussianDistort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 
 @pytest.mark.model
@@ -168,6 +168,7 @@ def test_predator_prey(benchmark, mode, samples):
     agent_comp.add_node(predator_obs)
     agent_comp.add_node(prey_obs)
     agent_comp.add_node(greedy_action_mech)
+    agent_comp.exclude_node_roles(predator_obs, NodeRole.OUTPUT)
 
 
     # ControlMechanism
