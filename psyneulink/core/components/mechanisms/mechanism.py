@@ -798,7 +798,7 @@ OutputPort(s).
 Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
 System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
 
-        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)
+        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
 .. note::
 
