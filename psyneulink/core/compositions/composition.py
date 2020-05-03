@@ -3596,12 +3596,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._add_node_role(node, NodeRole.OUTPUT)
                     continue
 
-                # Assign OUTPUT if the node projects only:
-                #    to an ObjectiveMechanism designatedas CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
-                #    and/or directly to a ControlMechanism but is not an ObjectiveMechanism
-                #    and/or (already projects) to output_CIM
-                # and it is not the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
+                # Assign OUTPUT only if the node is not:
+                #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
+                #  - a ModulatoryMechanism
+                # and the node projects only to:
+                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #  - and/or (already projects) to output_CIM
                 if NodeRole.TARGET in self.get_roles_by_node(node):
+                    continue
+                if isinstance(node, ModulatoryMechanism_Base):
                     continue
                 if all((any(p.receiver.owner in self.get_nodes_by_role(role)
                            for role in {NodeRole.CONTROL_OBJECTIVE,
