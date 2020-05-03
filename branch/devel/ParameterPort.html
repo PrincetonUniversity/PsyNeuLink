@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.7.5.4+70.gfa575df documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.7.5.4+74.g641d4aa documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+70
+                  0.7.5.4+74
                 </div>
               
             
@@ -402,35 +402,36 @@ parameter specification dictionary takes priority (i.e., it is the value that wi
 parameters of the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, as shown for the <strong>gain</strong> and <strong>bias</strong> parameters of
 the Logistic function in the example.</p>
 <p>The example below shows how to access ParameterPort values vs base values, and demonstrates their differences:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>              
-<span class="gp">... </span>                     <span class="n">noise</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>                             
-<span class="gp">... </span>                     <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>        
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">5.0</span>                   
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>             
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">2.0</span>   
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>             
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>
+<span class="gp">... </span>                     <span class="n">noise</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
+<span class="gp">... </span>                     <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">5.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">2.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>Notice that the noise attribute, which stores the base value for the noise ParameterPort of my_transfer_mechanism, is
 on my_transfer_mechanism, while the slope attribute, which stores the base value for the slope ParameterPort of
 my_transfer_mechanism, is on my_transfer_mechanism’s function. However, mod_noise and mod_slope are both properties on
 my_transfer_mechanism.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="mf">4.0</span>                           
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mf">1.0</span>           
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">4.0</span>                   
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>             
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>   
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>             
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">4.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
 have changed. We do not observe a change in mod_noise or mod_slope because the ParameterPort value will not update
 until the mechanism executes.</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">10.0</span><span class="p">])</span>                       
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">4.0</span>                   
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">]</span>             
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>   
-<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="mf">1.0</span>               
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">10.0</span><span class="p">])</span>
+<span class="go">array([[14.]])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span> <span class="o">==</span> <span class="mf">4.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">==</span> <span class="mf">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_slope</span> <span class="o">==</span> <span class="mf">1.0</span>
 </pre></div>
 </div>
 <p>Now that the mechanism has executed, we can see that each ParameterPort evaluated its function with the base value,
@@ -640,7 +641,7 @@ ParmeterPort is responsible.  Note that this is not necessarily the same as the 
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+70.gfa575df',
+               VERSION:'0.7.5.4+74.g641d4aa',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
