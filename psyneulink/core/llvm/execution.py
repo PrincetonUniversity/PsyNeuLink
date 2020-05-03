@@ -526,6 +526,16 @@ class CompExecution(CUDAExecution):
         run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({m:inp[m][i] for m in inp.keys()})) for i in range(num_input_sets)) for inp in inputs)
         return c_input(*_tupleize(run_inputs))
 
+    def _get_generator_run_input_struct(self, inputs, runs):
+        assert len(self._execution_contexts) == 1
+        # Extract input for each trial
+        run_inputs = ((np.atleast_2d(x) for x in self._composition._build_variable_for_input_CIM({k:np.atleast_1d(v) for k,v in inp.items()})) for inp in inputs)
+        run_inputs = _tupleize(run_inputs)
+        num_input_sets = len(run_inputs)
+        runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs
+        c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
+        return c_input(*run_inputs), runs
+
     @property
     def _bin_run_func(self):
         if self.__bin_run_func is None:
@@ -543,14 +553,7 @@ class CompExecution(CUDAExecution):
 
     def run(self, inputs, runs=0, num_input_sets=0):
         if isgenerator(inputs):
-            assert len(self._execution_contexts) == 1
-            # Extract input for each trial
-            run_inputs = ((np.atleast_2d(x) for x in self._composition._build_variable_for_input_CIM({k:np.atleast_1d(v) for k,v in inp.items()})) for inp in inputs)
-            run_inputs = _tupleize(run_inputs)
-            num_input_sets = len(run_inputs)
-            runs = num_input_sets if runs == 0 or runs == sys.maxsize else runs
-            c_input = self._bin_run_func.byref_arg_types[3] * num_input_sets
-            inputs = c_input(*run_inputs)
+            inputs, runs = self._get_generator_run_input_struct(inputs, runs)
         else:
             inputs = self._get_run_input_struct(inputs, num_input_sets)
 
@@ -572,7 +575,10 @@ class CompExecution(CUDAExecution):
 
     def cuda_run(self, inputs, runs, num_input_sets):
         # Create input buffer
-        inputs = self._get_run_input_struct(inputs, num_input_sets)
+        if isgenerator(inputs):
+            inputs, runs = self._get_generator_run_input_struct(inputs, runs)
+        else:
+            inputs = self._get_run_input_struct(inputs, num_input_sets)
         data_in = self.upload_ctype(inputs)
 
         # Create output buffer
