@@ -7,7 +7,7 @@ from psyneulink.core.components.functions.selectionfunctions import max_vs_next
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.scheduling.condition import Never, WhenFinished, AtRunStart
+from psyneulink.core.scheduling.condition import Never, WhenFinished, AtRunStart, AtTrialStart
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import \
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT, CONVERGENCE
 
@@ -308,7 +308,7 @@ class TestLCAReinitialize:
         C.run(inputs={L: 1.0},
               num_trials=2,
               # reinitialize_nodes_when=AtRunStart(),
-              reinitialize_nodes_when=AtTrialStart(),
+              # reinitialize_nodes_when=AtTrialStart(),
               reinitialize_values={L: [0.0]})
 
         # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
