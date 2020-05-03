@@ -19,10 +19,12 @@ import psyneulink as pnl
                                  # Function
                                  pnl.core.components.functions.function,
                                 ])
-def test_core_docs(mod):
+def test_core_docs(mod, capsys):
     fail, total = doctest.testmod(mod)
     if fail > 0:
-        pytest.fail("{} out of {} examples failed.".format(fail, total), pytrace=False)
+        captured = capsys.readouterr()
+        pytest.fail("{} out of {} examples failed:\n{}\n{}".format(
+            fail, total, captured.err, captured.out), pytrace=False)
 
 @pytest.mark.parametrize("mod", [# Mechanisms
                                  pnl.library.components.mechanisms.processing.integrator.ddm,
@@ -33,7 +35,9 @@ def test_core_docs(mod):
                                  # Logs
                                  pnl.core.globals.log,
                                 ])
-def test_other_docs(mod):
+def test_other_docs(mod, capsys):
     fail, total = doctest.testmod(mod, optionflags=doctest.REPORT_NDIFF)
     if fail > 0:
-        pytest.fail("{} out of {} examples failed.".format(fail, total), pytrace=False)
+        captured = capsys.readouterr()
+        pytest.fail("{} out of {} examples failed:\n{}\n{}".format(
+            fail, total, captured.err, captured.out), pytrace=False)
