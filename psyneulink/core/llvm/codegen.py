@@ -310,14 +310,14 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Generate loop body
         builder.position_at_end(loop_body)
 
-        zero = ctx.int32_ty(0)
-        any_cond = ir.IntType(1)(0)
         is_finished_flags = {}
         for idx, node in enumerate(composition.nodes):
             node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             is_finished_flag_ptr = helpers.get_state_ptr(builder, node, node_state, "is_finished_flag")
             is_finished_flags[node] = builder.load(is_finished_flag_ptr)
 
+        zero = ctx.int32_ty(0)
+        any_cond = ir.IntType(1)(0)
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr,
@@ -341,7 +341,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
                 num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
                 builder.store(ctx.int32_ty(0), num_exec_time_ptr)
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)]) #HACK: Move pass reset to actual pass count
+                # FIXME: Move pass reset to actual pass count
+                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)])
                 builder.store(ctx.int32_ty(0), num_exec_time_ptr)
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
