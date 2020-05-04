@@ -359,7 +359,6 @@ class ComparatorMechanism(ObjectiveMechanism):
                          params=params,
                          name=name,
                          prefs=prefs,
-
                          **kwargs
                          )
 

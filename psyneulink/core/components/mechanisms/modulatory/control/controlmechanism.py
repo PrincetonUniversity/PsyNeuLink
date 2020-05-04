@@ -1397,9 +1397,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                          self.monitored_output_ports.index(port)][EXPONENT_INDEX]
                 print(f"\t{weight} (exp: {weight}; wt: {exponent})")
 
-        # Assign ObjectiveMechanism's role as CONTROL
-        self.objective_mechanism._role = CONTROL
-
         # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self,
@@ -1412,7 +1409,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         for input_port in self.objective_mechanism.input_ports:
             input_port.internal_only = True
         # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
-        self.aux_components.append(self.objective_mechanism)
+        from psyneulink.core.compositions.composition import NodeRole
+        self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
         self.aux_components.append(projection_from_objective)
 
         # ASSIGN ATTRIBUTES
@@ -1806,7 +1804,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         if self.objective_mechanism:
             # Safe to add this, as it is already in the ControlMechanism's aux_components
             #    and will therefore be added to the Composition along with the ControlMechanism
-            assert self.objective_mechanism in self.aux_components, \
+            from psyneulink.core.compositions.composition import NodeRole
+            assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
                 f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
             dependent_projections.add(self._objective_projection)
 
