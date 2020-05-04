@@ -55,43 +55,55 @@ class TestNoLearning:
             matrix=Input_Weights_matrix,
         )
 
-        p = Process(
-            default_variable=[0, 0],
-            pathway=[
-                Input_Layer,
-                # The following reference to Input_Weights is needed to use it in the pathway
-                #    since it's sender and receiver args are not specified in its declaration above
-                Input_Weights,
-                Hidden_Layer_1,
-                # No projection specification is needed here since the sender arg for Middle_Weights
-                #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
-                # Middle_Weights,
-                Hidden_Layer_2,
-                # Output_Weights does not need to be listed for the same reason as Middle_Weights
-                # If Middle_Weights and/or Output_Weights is not declared above, then the process
-                #    will assign a default for missing projection
-                # Output_Weights,
-                Output_Layer
-            ],
-            clamp_input=SOFT_CLAMP,
-            target=[0, 0, 1],
-            prefs={
-                VERBOSE_PREF: False,
-                REPORT_OUTPUT_PREF: True
-            }
-        )
+        # p = Process(
+        #     default_variable=[0, 0],
+        #     pathway=[
+        #         Input_Layer,
+        #         # The following reference to Input_Weights is needed to use it in the pathway
+        #         #    since it's sender and receiver args are not specified in its declaration above
+        #         Input_Weights,
+        #         Hidden_Layer_1,
+        #         # No projection specification is needed here since the sender arg for Middle_Weights
+        #         #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
+        #         # Middle_Weights,
+        #         Hidden_Layer_2,
+        #         # Output_Weights does not need to be listed for the same reason as Middle_Weights
+        #         # If Middle_Weights and/or Output_Weights is not declared above, then the process
+        #         #    will assign a default for missing projection
+        #         # Output_Weights,
+        #         Output_Layer
+        #     ],
+        #     clamp_input=SOFT_CLAMP,
+        #     target=[0, 0, 1],
+        #     prefs={
+        #         VERBOSE_PREF: False,
+        #         REPORT_OUTPUT_PREF: True
+        #     }
+        # )
+        #
+        # s = System(processes=[p])
+        #
+        # s.reportOutputPref = True
+        #
+        # stim_list = {Input_Layer: [[-1, 30]]}
+        #
+        # s.run(
+        #     num_trials=10,
+        #     inputs=stim_list,
+        # )
 
-        s = System(processes=[p])
-
-        s.reportOutputPref = True
-
-        stim_list = {Input_Layer: [[-1, 30]]}
-
-        s.run(
-            num_trials=10,
-            inputs=stim_list,
-        )
+        from psyneulink.core.compositions.composition import Composition
+        c = Composition()
+        learning_components = c.add_backpropagation_learning_pathway(pathway=[Input_Layer,
+                                                                              Input_Weights,
+                                                                              Hidden_Layer_1,
+                                                                              Hidden_Layer_2,
+                                                                              Output_Layer]),
+        target = learning_components[0].target
+        stim_list = {Input_Layer: [[-1, 30]],
+                     target: [0, 0, 1]}
+        c.run(num_trials=10, inputs=stim_list, clamp_input=SOFT_CLAMP)
 
         expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
 
-        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.get_output_values(s))
+        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.get_output_values(c))
