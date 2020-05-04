@@ -8109,10 +8109,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list } : default None
-                a dictionary containing a key-value pair for each Node in the composition that receives inputs from
-                the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-                list corresponds to a certain `TRIAL <TimeScale.TRIAL>`.
+            inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None
+                specifies the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL
+                <TimeScale.TRIAL>` executed during the run;  see `Composition_Execution_Inputs` for additional
+                information about format.  If **inputs** is not specified, the `default_variable
+                <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`
 
             num_trials : int : default 1
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -8136,9 +8137,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
 
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
-                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
-                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `RUN` when the specified `Condition` is met.
+                specifies alternate parameter values to be used only during this `RUN` when the specified `Condition`
+                is met; nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms
+                <Mechanism>` or `Compositions <Composition>` of the Composition.
 
                 Outer dictionary:
                     - *key* - Node
@@ -8232,7 +8233,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 CUDA compilation.
 
             context : `Context.execution_id>` : default `default_execution_id`
-                context in which the `Composition` will be eecuted;  set to self.default_execution_id ifunspecified.
+                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
             base_context : `Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the execution context from which this execution will be initialized,
@@ -8389,6 +8390,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # if inputs is a generator function, we should instantiate it now so that it will be properly handled
         # below
+        inputs = inputs or {}
+
         if isgeneratorfunction(inputs):
             inputs = inputs()
 
@@ -8733,37 +8736,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
+            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list } : default None
                 a dictionary containing a key-value pair for each node in the composition that receives inputs from
-                the user. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
-                the shape of which must match the node's default variable.
+                the user. For each pair, the key is the Node <Compositon_Nodes>` (A `Mechanism <Mechanism>` or
+                `Composition`) and the value is an input, the shape of which must match the Node's default variable.
+                if **inputs** is not specified, the `default_variable <Component_Variable>` for each `INPUT` Node
+                is used as its input;  see
 
-            scheduler : Scheduler
+            clamp_input : SOFT_CLAMP : default SOFT_CLAMP
+
+            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
+                specifies alternate parameter values to be used only during this `EXECUTION` when the specified
+                `Condition` is met. See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            skip_initialization :  : default False
+
+            scheduler : Scheduler : default None
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            context
-                context will be set to self.default_execution_id if unspecified
+            context : `Context.execution_id>` : default `default_execution_id`
+                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
-            base_context
+            base_context : `Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the execution context from which this execution will be initialized,
                 if values currently do not exist for **context**
 
-            call_before_time_step : callable
+            call_before_time_step : callable : default None
                 called before each `TIME_STEP` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            call_after_time_step : callable
+            call_after_time_step : callable : default None
                 called after each `TIME_STEP` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            call_before_pass : callable
+            call_before_pass : callable : default None
                 called before each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            call_after_pass : callable
+            call_after_pass : callable : default None
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
+
+            bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+                specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
+                see **bin_execute** argument of `run <Composition.run>` method for additional details.
 
             Returns
             ---------
