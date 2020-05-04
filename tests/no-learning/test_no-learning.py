@@ -2,11 +2,11 @@ import logging
 
 import numpy as np
 
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 
@@ -55,51 +55,13 @@ class TestNoLearning:
             matrix=Input_Weights_matrix,
         )
 
-        # p = Process(
-        #     default_variable=[0, 0],
-        #     pathway=[
-        #         Input_Layer,
-        #         # The following reference to Input_Weights is needed to use it in the pathway
-        #         #    since it's sender and receiver args are not specified in its declaration above
-        #         Input_Weights,
-        #         Hidden_Layer_1,
-        #         # No projection specification is needed here since the sender arg for Middle_Weights
-        #         #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
-        #         # Middle_Weights,
-        #         Hidden_Layer_2,
-        #         # Output_Weights does not need to be listed for the same reason as Middle_Weights
-        #         # If Middle_Weights and/or Output_Weights is not declared above, then the process
-        #         #    will assign a default for missing projection
-        #         # Output_Weights,
-        #         Output_Layer
-        #     ],
-        #     clamp_input=SOFT_CLAMP,
-        #     target=[0, 0, 1],
-        #     prefs={
-        #         VERBOSE_PREF: False,
-        #         REPORT_OUTPUT_PREF: True
-        #     }
-        # )
-        #
-        # s = System(processes=[p])
-        #
-        # s.reportOutputPref = True
-        #
-        # stim_list = {Input_Layer: [[-1, 30]]}
-        #
-        # s.run(
-        #     num_trials=10,
-        #     inputs=stim_list,
-        # )
-
-        from psyneulink.core.compositions.composition import Composition
         c = Composition()
-        learning_components = c.add_backpropagation_learning_pathway(pathway=[Input_Layer,
-                                                                              Input_Weights,
-                                                                              Hidden_Layer_1,
-                                                                              Hidden_Layer_2,
-                                                                              Output_Layer]),
-        target = learning_components[0].target
+        learning_pathway = c.add_backpropagation_learning_pathway(pathway=[Input_Layer,
+                                                                           Input_Weights,
+                                                                           Hidden_Layer_1,
+                                                                           Hidden_Layer_2,
+                                                                           Output_Layer])
+        target = learning_pathway.target
         stim_list = {Input_Layer: [[-1, 30]],
                      target: [0, 0, 1]}
         c.run(num_trials=10, inputs=stim_list, clamp_input=SOFT_CLAMP)
