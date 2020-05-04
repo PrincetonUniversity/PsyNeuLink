@@ -851,6 +851,11 @@ set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified us
 can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
 The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
 (in which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed).
+If the **inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>`
+methods, the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL
+<TimeScale.TRIAL>`.  if it is not specified for the `learn <Composition.learn>` method, an error is generated
+(since it requires that a target for learning be specified in inputs).
+
 
 .. _Composition_Execution_Results:
 
@@ -8796,6 +8801,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
             self._animate = False
+
+        inputs = inputs or {}
 
         # KAM Note 4/29/19
         # The nested var is set to True if the Composition is nested in another Composition, otherwise False
