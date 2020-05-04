@@ -854,7 +854,7 @@ The same number of inputs must be specified for every `INPUT` Node, unless only 
 If the **inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>`
 methods, the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL
 <TimeScale.TRIAL>`.  if it is not specified for the `learn <Composition.learn>` method, an error is generated
-(since it requires that a target for learning be specified in inputs).
+(since it requires the target for learning that is specified in **inputs**).
 
 
 .. _Composition_Execution_Results:
