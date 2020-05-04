@@ -1,6 +1,6 @@
 import numpy as np
 from psyneulink.core.scheduling.time import TimeScale
-from psyneulink.core.globals.utilities import NodeRole
+from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm
@@ -127,23 +127,21 @@ class PytorchModelCreator(torch.nn.Module):
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        llvm_func = None
         args = [ctx.get_state_struct_type(self._composition).as_pointer(),
                 ctx.get_param_struct_type(self._composition).as_pointer(),
                 ctx.get_data_struct_type(self._composition).as_pointer()
                 ]
         builder = ctx.create_llvm_function(args, self)
-        llvm_func = builder.function
 
-        state, params, data = llvm_func.args
+        state, params, data = builder.function.args
         if "learning" in tags:
             self._gen_llvm_training_function_body(ctx, builder, state, params, data)
         else:
             model_input = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
             self._gen_llvm_forward_function_body(ctx, builder, state, params, model_input, data)
-        builder.ret_void()
 
-        return llvm_func
+        builder.ret_void()
+        return builder.function
 
     # gets a pointer for the weights matrix between node and afferent_node
     def _gen_get_node_weight_ptr(self, ctx, builder, params, node, afferent_node):

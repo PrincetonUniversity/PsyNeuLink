@@ -6,7 +6,6 @@ import psyneulink.core.components.functions.statefulfunctions.integratorfunction
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.utilities
 
-
 class TestModels:
 
     # This implements the model by Cohen, J. D., & Huston, T. A. (1994). Progress in the use of interactive
@@ -221,7 +220,11 @@ class TestModels:
                                         task_layer]
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
-        bidirectional_stroop.add_required_node_role(response_layer, psyneulink.core.globals.utilities.NodeRole.TERMINAL)
+        # # MODIFIED 4/25/20 OLD:
+        # bidirectional_stroop.add_required_node_role(response_layer, pnl.NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 NEW:
+        bidirectional_stroop.require_node_roles(response_layer, pnl.NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 END
 
         input_dict = {colors_input_layer: [0, 0, 0],
                       words_input_layer: [0, 0, 0],
@@ -780,7 +783,7 @@ class TestModels:
 
         PCTC = pnl.Composition(name="PCTC")
 
-        composition_pathways = [color_response_pathway,
+        Composition_Pathwayss = [color_response_pathway,
                                 word_response_pathway,
                                 task_pathway,
                                 task_color_pathway_1,
@@ -791,7 +794,7 @@ class TestModels:
                                 bias_word_pathway,
                                 conflict_pathway]
 
-        for pathway in composition_pathways:
+        for pathway in Composition_Pathwayss:
             PCTC.add_linear_processing_pathway(pathway)
 
         def pass_threshold(response_layer, thresh, context=None):

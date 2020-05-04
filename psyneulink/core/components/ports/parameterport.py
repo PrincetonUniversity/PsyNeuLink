@@ -251,35 +251,36 @@ the Logistic function in the example.
 
 The example below shows how to access ParameterPort values vs base values, and demonstrates their differences:
 
-    >>> my_transfer_mechanism = pnl.TransferMechanism(              #doctest: +SKIP
-    ...                      noise=5.0,                             #doctest: +SKIP
-    ...                      function=pnl.Linear(slope=2.0))        #doctest: +SKIP
-    >>> assert my_transfer_mechanism.noise == 5.0                   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function.slope == 2.0   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
+    >>> my_transfer_mechanism = pnl.TransferMechanism(
+    ...                      noise=5.0,
+    ...                      function=pnl.Linear(slope=2.0))
+    >>> assert my_transfer_mechanism.noise == 5.0
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]
+    >>> assert my_transfer_mechanism.function.slope == 2.0
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]
 
 Notice that the noise attribute, which stores the base value for the noise ParameterPort of my_transfer_mechanism, is
 on my_transfer_mechanism, while the slope attribute, which stores the base value for the slope ParameterPort of
 my_transfer_mechanism, is on my_transfer_mechanism's function. However, mod_noise and mod_slope are both properties on
 my_transfer_mechanism.
 
-    >>> my_transfer_mechanism.noise = 4.0                           #doctest: +SKIP
-    >>> my_transfer_mechanism.function.slope = 1.0           #doctest: +SKIP
-    >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function.slope == 1.0   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
+    >>> my_transfer_mechanism.noise = 4.0
+    >>> my_transfer_mechanism.function.slope = 1.0
+    >>> assert my_transfer_mechanism.noise == 4.0
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]
+    >>> assert my_transfer_mechanism.function.slope == 1.0
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]
 
 When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
 have changed. We do not observe a change in mod_noise or mod_slope because the ParameterPort value will not update
 until the mechanism executes.
 
-    >>> my_transfer_mechanism.execute([10.0])                       #doctest: +SKIP
-    >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_noise == [4.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function.slope == 1.0   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_slope == 1.0               #doctest: +SKIP
+    >>> my_transfer_mechanism.execute([10.0])
+    array([[14.]])
+    >>> assert my_transfer_mechanism.noise == 4.0
+    >>> assert my_transfer_mechanism.mod_noise == [4.0]
+    >>> assert my_transfer_mechanism.function.slope == 1.0
+    >>> assert my_transfer_mechanism.mod_slope == 1.0
 
 Now that the mechanism has executed, we can see that each ParameterPort evaluated its function with the base value,
 producing a modulated noise value of 4.0 and a modulated slope value of 1.0. These values were used by
@@ -842,6 +843,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 function=function
             )
 
+    owner.parameter_ports.sort(key=lambda port: port.name)
 
 def _instantiate_parameter_port(owner, param_name, param_value, context, function=None):
     """Call _instantiate_port for allowable params, to instantiate a ParameterPort for it

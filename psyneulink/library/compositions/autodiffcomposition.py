@@ -132,11 +132,10 @@ from psyneulink.core.components.functions.transferfunctions import Linear, Logis
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
-from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
@@ -189,7 +188,8 @@ class AutodiffComposition(Composition):
         the learning rate, which is passed to the optimizer.
 
     disable_learning : bool: default False
-        specifies whether the AutodiffComposition should disable learning when ran in `learning mode <Composition_Learning_Mode>`
+        specifies whether the AutodiffComposition should disable learning when run in `learning mode
+        <Composition.learn>`.
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.

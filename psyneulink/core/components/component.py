@@ -352,8 +352,8 @@ Component_Execution_Termination
 
 .. _Component_Is_Finished:
 
-* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL`;  it is only
-  used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
+* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL
+  <TimeScale.TRIAL>`;  it is only used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
 
 .. _Component_Execute_Until_Finished:
 
@@ -1041,7 +1041,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             self.reinitialize_when = Never()
 
-        self._role = None
+        # MODIFIED 4/25/20 NEW:
+        if not hasattr(self, '_role'):
+            self._role = None
+        # MODIFIED 4/25/20 END
 
         # self.componentName = self.componentType
         try:
@@ -1295,10 +1298,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer()]
         builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
-        llvm_func = builder.function
 
-        llvm_func.attributes.add('alwaysinline')
-        params, state, arg_in, arg_out = llvm_func.args[:len(args)]
+        params, state, arg_in, arg_out = builder.function.args[:len(args)]
         if len(extra_args) == 0:
             for p in params, state, arg_in, arg_out:
                 p.attributes.add('noalias')
@@ -1312,8 +1313,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             builder = self._gen_llvm_function_body(ctx, builder, params, state,
                                                    arg_in, arg_out, tags=tags)
         builder.ret_void()
-
-        return llvm_func
+        return builder.function
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
@@ -2610,9 +2610,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def is_finished(self, context=None):
         """
-            set by a Component to signal completion of its `execution <Component_Execution>` in a `trial`; used by
-            `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
-            Components on a Component.
+            set by a Component to signal completion of its `execution <Component_Execution>` in a `TRIAL
+            <TimeScale.TRIAL>`; used by `Component-based Conditions <Conditions_Component_Based>` to predicate the
+            execution of one or more other Components on a Component.
         """
         return self.parameters.is_finished_flag._get(context)
 

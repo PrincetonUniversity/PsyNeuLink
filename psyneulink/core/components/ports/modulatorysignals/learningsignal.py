@@ -171,7 +171,7 @@ A LearningSignal cannot be executed directly.  It is executed whenever the `Lear
 executed.  When this occurs, the LearningMechanism provides the LearningSignal with a
 `learning_signal <LearningMechanism.learning_signal>`, that is used by its `function <LearningSignal.function>` to
 compute its `value <LearningSignal.value>` (i.e., its own `learning_signal <LearningSignal.learning_signal>` for that
-`TRIAL`. That value is used by its `LearningProjection(s) <LearningProjection>` to modify the `matrix
+`TRIAL <TimeScale.TRIAL>`. That value is used by its `LearningProjection(s) <LearningProjection>` to modify the `matrix
 <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` to which the LearningSignal
 projects.
 

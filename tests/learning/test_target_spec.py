@@ -349,7 +349,7 @@ class TestInvalidTargetSpecs:
             S.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]},
                   targets={B: [[1.0], [2.0], [3.0]]})
 
-        assert 'Number of target values specified (3) for each learning sequence' in str(error_text.value) and \
+        assert 'Number of target values specified (3) for each learning Pathway' in str(error_text.value) and \
                'must equal the number of input values specified (4)' in str(error_text.value)
 
     def test_2_target_mechanisms_1_dict_entry(self):

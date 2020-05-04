@@ -1792,7 +1792,7 @@ class BackPropagation(LearningFunction):
         `activation_output <BackPropagation.activation_output>`.
 
     error_signal : 1d array
-        the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
+        the error signal for the next matrix (layer above) in the learning pathway, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>`.
 

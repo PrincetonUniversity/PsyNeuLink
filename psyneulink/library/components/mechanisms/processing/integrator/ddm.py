@@ -563,8 +563,8 @@ class DDM(ProcessingMechanism):
             or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
             solution calculated by the `function <DDM.function>`); \n
           • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began
-            to execute in the current `TRIAL` or, if it has reached the positive or negative value of the DDM `function
-            <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
+            to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative value of
+            the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
           Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
 
         .. _DDM_PROBABILITY_UPPER_THRESHOLD:
@@ -1195,3 +1195,36 @@ class DDM(ProcessingMechanism):
             )
             return True
         return False
+    
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        # Setup pointers to internal function
+        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')
+        func_param_ptr = pnlvm.helpers.get_state_ptr(builder, self, params, 'function')
+
+        # Find the single numeric entry in previous_value
+        try:
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, func_state_ptr, "previous_value")
+        except ValueError:
+            return pnlvm.ir.IntType(1)(1)
+
+        # Extract scalar value from ptr
+        prev_val_ptr = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        prev_val = builder.load(prev_val_ptr)
+
+        # Take abs of previous val
+        llvm_fabs = ctx.get_builtin("fabs", [ctx.float_ty])
+        prev_val = builder.call(llvm_fabs, [prev_val])
+
+
+        # obtain threshold value
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder,
+                                                    self.function,
+                                                    func_param_ptr,
+                                                    "threshold")
+
+        threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        threshold = builder.load(threshold_ptr)
+        is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)
+
+        return is_prev_greater_or_equal
+

@@ -88,6 +88,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
+        # noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
         noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='COLORS HIDDEN'
     )
@@ -96,6 +97,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
+        # noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
         noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='WORDS HIDDEN'
     )
@@ -105,6 +107,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=pnl.Logistic,
         integrator_mode=True,
         integration_rate=integration_rate,
+        # noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
         noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='OUTPUT'
     )
@@ -233,7 +236,7 @@ model, nodes, model_params = get_stroop_model(unit_noise_std, dec_noise_std)
 
 #%%
 
-# model.show_graph(show_controller=True)
+model.show_graph(show_controller=True)
 
 #%% md
 
