@@ -776,7 +776,7 @@ class LCControlMechanism(ControlMechanism):
 
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
-        # FIX: IMPLEMENT FOR COMPOSITION
+        # FIX: SYSTEM IMPLEMENT FOR COMPOSITION
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
             if self.systems:
                 for system in self.systems:
