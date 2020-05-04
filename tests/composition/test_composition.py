@@ -12,7 +12,8 @@ import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.transferfunctions import \
+    Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
@@ -21,14 +22,17 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
 from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, CONTROL, DISABLE, INPUT_PORT, LEARNING, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, CONTROL, DISABLE, INPUT_PORT, INTERCEPT, \
+    LEARNING, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -6125,6 +6129,85 @@ class TestNodeRoles:
     # def test_CONTROLLER_OBJECTIVE(self):
     #     pass
 
+    def test_OUTPUT_asymmetric_with_learning_short_first(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[[A], {'LEARNING_PATHWAY':([B,C], BackPropagation)}])
+        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_OUTPUT_asymmetric_with_learning_short_last(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition(pathways=[{'LEARNING_PATHWAY':([B,C], BackPropagation)},[A]])
+        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
+
+    def test_OUTPUT_required_node_roles_override(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B', function=Linear(slope=2.0))
+        comp = Composition(name='composition')
+        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
+        comp.add_linear_processing_pathway([A, B])
+        result = comp.run(inputs={A: [[1.0]]})
+        output_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert set(output_mechanisms) == {A,B}
+        assert np.allclose(result, [[1.0],[2.0]])
+
+    def test_OUTPUT_required_node_roles_both(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B', function=Linear(slope=2.0))
+        comp = Composition(name='composition')
+        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
+        comp.add_linear_processing_pathway([A, (B, NodeRole.OUTPUT)])
+        result = comp.run(inputs={A: [[1.0]]})
+        terminal_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
+        assert A in terminal_mechanisms and B in terminal_mechanisms
+        assert np.allclose(result, [[1.0],[2.0]])
+
+    def test_exclude_control_mechanisms_as_OUTPUT(self):
+        mech = ProcessingMechanism(name='my_mech')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+                                                                    cost_options=CostFunctions.INTENSITY))
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+        comp = Composition(pathways=[mech, ctl_mech_A, ctl_mech_B])
+        # mech (and not either ControlMechanism) should be the OUTPUT Nodd
+        assert {mech} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
+        # # There should be only one TERMINAL node (one -- but not both -- of the ControlMechanisms
+        # assert len(comp.get_nodes_by_role(NodeRole.TERMINAL)) == 1
+        assert isinstance(list(comp.get_nodes_by_role(NodeRole.TERMINAL))[0], ControlMechanism)
+
+    def test_force_one_control_mechanisms_as_OUTPUT(self):
+        mech = ProcessingMechanism(name='my_mech')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+                                                                    cost_options=CostFunctions.INTENSITY))
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+        comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), ctl_mech_B])
+        assert {mech, ctl_mech_A} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
+        # Current instantiation always assigns ctl_mech_A as TERMINAL (presumably since it was forced to be OUTPUT);
+        # However, ctl_mech_B might also be;  depends on where feedback was assigned?
+        assert ctl_mech_A in set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+
+    def test_force_two_control_mechanisms_as_OUTPUT(self):
+        mech = ProcessingMechanism(name='my_mech')
+        ctl_mech_A = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+                                                                    cost_options=CostFunctions.INTENSITY))
+        ctl_mech_B = ControlMechanism(monitor_for_control=mech,
+                                      control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
+                                                                    modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
+        comp = Composition(pathways=[mech, (ctl_mech_A, NodeRole.OUTPUT), (ctl_mech_B, NodeRole.OUTPUT)])
+        assert {mech, ctl_mech_A, ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.OUTPUT))
+        # Current instantiation always assigns ctl_mech_B as TERMINAL in this case;
+        # this is here to flag any violation of this in the future, in case that is not intended
+        assert {ctl_mech_B} == set(comp.get_nodes_by_role(NodeRole.TERMINAL))
+
     def test_LEARNING_hebbian(self):
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
         comp = Composition(pathways=A)
@@ -6179,42 +6262,6 @@ class TestNodeRoles:
         assert any([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
-
-    def test_OUTPUT_asymmetric_with_learning_short_first(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        c = Composition(pathways=[[A], {'LEARNING_PATHWAY':([B,C], BackPropagation)}])
-        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
-
-    def test_OUTPUT_asymmetric_with_learning_short_last(self):
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        c = Composition(pathways=[{'LEARNING_PATHWAY':([B,C], BackPropagation)},[A]])
-        assert {A,C} == set(c.get_nodes_by_role(NodeRole.OUTPUT))
-
-    def test_OUTPUT_required_node_roles_override(self):
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B', function=Linear(slope=2.0))
-        comp = Composition(name='composition')
-        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
-        comp.add_linear_processing_pathway([A, B])
-        result = comp.run(inputs={A: [[1.0]]})
-        output_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
-        assert set(output_mechanisms) == {A,B}
-        assert np.allclose(result, [[1.0],[2.0]])
-
-    def test_OUTPUT_required_node_roles_both(self):
-        A = TransferMechanism(name='A')
-        B = TransferMechanism(name='B', function=Linear(slope=2.0))
-        comp = Composition(name='composition')
-        comp.add_node(A, required_roles=[NodeRole.OUTPUT])
-        comp.add_linear_processing_pathway([A, (B, NodeRole.OUTPUT)])
-        result = comp.run(inputs={A: [[1.0]]})
-        terminal_mechanisms = comp.get_nodes_by_role(NodeRole.OUTPUT)
-        assert A in terminal_mechanisms and B in terminal_mechanisms
-        assert np.allclose(result, [[1.0],[2.0]])
 
 
 class TestMisc:
