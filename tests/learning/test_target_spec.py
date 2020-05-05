@@ -60,22 +60,16 @@ class TestMultilayerLearning:
         A = TransferMechanism(name="multilayer-mech-A")
         B = TransferMechanism(name="multilayer-mech-B")
         C = TransferMechanism(name="multilayer-mech-C")
-        P = Process(name="multilayer-process",
-                     pathway=[A, B, C],
-                     learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[P]
-                   )
-
-        S.run(inputs={A: 1.0},
-              targets={C: 2.0})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [2.0]})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [[2.0]]})
+        comp = Composition()
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        target = learning_pathway.target
+        comp.run(inputs={A: 1.0,
+                      target:2.0})
+        comp.run(inputs={A: 1.0,
+                      target:[2.0]})
+        comp.run(inputs={A: 1.0,
+                      target:[[2.0]]})
+        assert True
 
     def test_dict_target_spec_length2(self):
         A = TransferMechanism(name="multilayer-mech-A")
