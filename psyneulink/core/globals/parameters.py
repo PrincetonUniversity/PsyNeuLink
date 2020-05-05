@@ -1448,15 +1448,14 @@ class ParametersBase(ParametersTemplate):
             self._validate(param, value.default_value)
 
     def __getattr__(self, attr):
-        try:
-            return getattr(self._parent, attr)
-        except AttributeError:
+        def throw_error():
             try:
                 param_owner = self._owner
                 if isinstance(param_owner, type):
                     owner_string = f' of {param_owner}'
                 else:
                     owner_string = f' of {param_owner.name}'
+
                 if hasattr(param_owner, 'owner') and param_owner.owner:
                     owner_string += f' for {param_owner.owner.name}'
                     if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
@@ -1464,7 +1463,20 @@ class ParametersBase(ParametersTemplate):
             except AttributeError:
                 owner_string = ''
 
-            raise AttributeError(f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}.") from None
+            raise AttributeError(
+                f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
+            ) from None
+
+        # underscored attributes don't need special handling because
+        # they're not Parameter objects. This includes parsing and
+        # validation methods
+        if attr[0] == '_':
+            throw_error()
+        else:
+            try:
+                return getattr(self._parent, attr)
+            except AttributeError:
+                throw_error()
 
     def __setattr__(self, attr, value):
         # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter
