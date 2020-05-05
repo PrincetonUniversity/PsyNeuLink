@@ -211,8 +211,13 @@ Gilbert_Shallice_System.add_linear_processing_pathway(pathway=color_recurrent_co
 
 
 ## specify terminal layers (can only specify one terminal layer at a time)
-Gilbert_Shallice_System.add_required_node_role(WORD_OUTPUT_LAYER, pnl.NodeRole.TERMINAL)
-Gilbert_Shallice_System.add_required_node_role(COLOR_OUTPUT_LAYER, pnl.NodeRole.TERMINAL)
+# # MODIFIED 4/25/20 OLD:
+# Gilbert_Shallice_System.add_required_node_role(WORD_OUTPUT_LAYER, pnl.NodeRole.TERMINAL)
+# Gilbert_Shallice_System.add_required_node_role(COLOR_OUTPUT_LAYER, pnl.NodeRole.TERMINAL)
+# MODIFIED 4/25/20 NEW:
+Gilbert_Shallice_System.require_node_roles(WORD_OUTPUT_LAYER, pnl.NodeRole.TERMINAL)
+Gilbert_Shallice_System.require_node_roles(COLOR_OUTPUT_LAYER, pnl.NodeRole.TERMINAL)
+# MODIFIED 4/25/20 END
 
 Gilbert_Shallice_System._analyze_graph()
 # Gilbert_Shallice_System.show_graph()

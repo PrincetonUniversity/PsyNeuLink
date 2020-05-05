@@ -767,16 +767,17 @@ class LCControlMechanism(ControlMechanism):
     def _instantiate_output_ports(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
-        If **modulated_mechanisms** argument of constructor was specified as *ALL*,
-            assign all ProcessingMechanisms in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms
+        If **modulated_mechanisms** argument of constructor was specified as *ALL*, assign all ProcessingMechanisms
+           in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms.
         Instantiate ControlSignal with Projection to the ParameterPort for the multiplicative_param of every
-           Mechanism listed in self.modulated_mechanisms
+           Mechanism listed in self.modulated_mechanisms.
         """
         from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
-        # FIX: SYSTEM IMPLEMENT FOR COMPOSITION
+        # FIX: SYSTEM IMPLEMENT FOR COMPOSITION:
+        #      add keyword in aux_comopnents (ALL) that is parsed by Composition to implement relevant Projections
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
             if self.systems:
                 for system in self.systems:

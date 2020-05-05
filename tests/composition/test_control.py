@@ -159,7 +159,7 @@ class TestControlSpecification:
                                  {PROJECTIONS: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         )
-        assert comp.controller.initialization_status == pnl.ContextFlags.DEFERRED_INIT
+        assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -226,6 +226,25 @@ class TestControlSpecification:
         for trial in range(len(expected_results_array)):
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
+
+    def test_agent_rep_assignement_as_controller_and_replacement(self):
+        mech = pnl.ProcessingMechanism()
+        comp = pnl.Composition(name='comp',
+                           pathways=[mech],
+                           controller=pnl.OptimizationControlMechanism(agent_rep=None,
+                                                                       control_signals=(pnl.SLOPE, mech)))
+        assert comp.controller.composition == comp
+        assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
+        assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
+
+        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None, control_signals=(pnl.INTERCEPT, mech))
+        old_ocm = comp.controller
+        comp.add_controller(new_ocm)
+
+        assert comp.controller == new_ocm
+        assert old_ocm.composition == None
+        assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
+        assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
 
 class TestControlMechanisms:
@@ -396,7 +415,7 @@ class TestControlMechanisms:
         S.add_node(A, required_roles=pnl.NodeRole.INPUT)
         S.add_linear_processing_pathway(pathway=path)
         S.add_node(LC)
-        S.show_graph()
+        S.show_graph(output_fmt=None)
         LC.reinitialize_when = pnl.Never()
 
         gain_created_by_LC_output_port_1 = []

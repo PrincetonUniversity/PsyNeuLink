@@ -1041,7 +1041,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             self.reinitialize_when = Never()
 
-        self._role = None
+        # MODIFIED 4/25/20 NEW:
+        if not hasattr(self, '_role'):
+            self._role = None
+        # MODIFIED 4/25/20 END
 
         # self.componentName = self.componentType
         try:
@@ -1295,10 +1298,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer()]
         builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
-        llvm_func = builder.function
 
-        llvm_func.attributes.add('alwaysinline')
-        params, state, arg_in, arg_out = llvm_func.args[:len(args)]
+        params, state, arg_in, arg_out = builder.function.args[:len(args)]
         if len(extra_args) == 0:
             for p in params, state, arg_in, arg_out:
                 p.attributes.add('noalias')
@@ -1312,8 +1313,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             builder = self._gen_llvm_function_body(ctx, builder, params, state,
                                                    arg_in, arg_out, tags=tags)
         builder.ret_void()
-
-        return llvm_func
+        return builder.function
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers

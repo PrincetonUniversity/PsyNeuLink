@@ -798,7 +798,7 @@ OutputPort(s).
 Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
 System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
 
-        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)
+        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
 .. note::
 
@@ -2603,7 +2603,7 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_input_ports(self, ctx, builder,
-                               mech_params, mech_state, mech_input):
+                              mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
         # of InputPort results should match the main function input.
         ip_output_list = []
@@ -2625,6 +2625,8 @@ class Mechanism_Base(Mechanism):
 
         def _fill_input(b, p_input, i):
             ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            # Input port inputs are {original parameter, [modulations]},
+            # fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(ip_in), data_ptr)
             return b
@@ -2655,9 +2657,9 @@ class Mechanism_Base(Mechanism):
             param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
                                                        param_ports[i].name)
             # Parameter port inputs are {original parameter, [modulations]},
-            # fill in the first one
-            p_input = b.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(param_in_ptr), p_input)
+            # fill in the first one.
+            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(param_in_ptr), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports,
@@ -2689,6 +2691,8 @@ class Mechanism_Base(Mechanism):
         def _fill_input(b, s_input, i):
             data_ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_ports[i])
+            # Output port inputs are {original parameter, [modulations]},
+            # fill in the first one.
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
@@ -3465,7 +3469,6 @@ class Mechanism_Base(Mechanism):
         # del mechanism.function
         remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
                                       component=mechanism)
-        del mechanism
 
     def get_input_port_position(self, port):
         if port in self.input_ports:
