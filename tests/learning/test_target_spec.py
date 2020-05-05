@@ -69,7 +69,7 @@ class TestMultilayerLearning:
                       target:[2.0]})
         comp.run(inputs={A: 1.0,
                       target:[[2.0]]})
-        assert True
+        assert np.allclose(comp.results, [[[1.], [1.], [1.]]])
 
     def test_dict_target_spec_length2(self):
         A = TransferMechanism(name="multilayer-mech-A")
