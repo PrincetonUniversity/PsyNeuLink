@@ -134,30 +134,28 @@ class TestStroop:
         respond_green_differencing_weights = pnl.MappingProjection(matrix=np.atleast_2d([[-1.0], [1.0]]),
                                                                    name='RESPOND_GREEN_WEIGHTS')
 
-        # #   CREATE PATHWAYS
-
-        # COMPOSITION:
+        # CREATE COMPOSITION FROM PATHWAYS
         my_Stroop = pnl.Composition(pathways=[
-            {'WORD_PROCESS':[words_input_layer,
+            {'WORD_PATHWAY':[words_input_layer,
                              word_weights,
                              words_hidden_layer,
                              word_response_weights,
                              response_layer]},
-            {'COLO_PROCESS': [colors_input_layer,
+            {'COLO_PATHWAY': [colors_input_layer,
                               color_weights,
                               colors_hidden_layer,
                               color_response_weights,
                               response_layer]},
-            {'TASK_CN_PROCESS':[task_layer,
+            {'TASK_CN_PATHWAY':[task_layer,
                                 task_CN_weights,
                                 colors_hidden_layer]},
-            {'TASK_WR_PROCESS':[task_layer,
+            {'TASK_WR_PATHWAY':[task_layer,
                                 task_WR_weights,
                                 words_hidden_layer]},
-            {'RESPOND_RED_PROCESS':[response_layer,
+            {'RESPOND_RED_PATHWAY':[response_layer,
                                     respond_red_differencing_weights,
                                     respond_red_accumulator]},
-            {'RESPOND_GREEN_PROCESS': [response_layer,
+            {'RESPOND_GREEN_PATHWAY': [response_layer,
                                        respond_green_differencing_weights,
                                        respond_green_accumulator]},
         ])
@@ -212,15 +210,15 @@ class TestStroop:
             # Turn off noise
             switch_noise(mechanisms, 0)
             # Execute once per trial
-            my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.AllHaveRun()}
+            my_Stroop.termination_PATHWAYing = {pnl.TimeScale.TRIAL: pnl.AllHaveRun()}
 
-        def switch_to_processing_trial(mechanisms):
+        def switch_to_PATHWAYing_trial(mechanisms):
             # Turn on accumulation
             switch_integrator_mode(mechanisms, True)
             # Turn on noise
             switch_noise(mechanisms, psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
-            my_Stroop.termination_processing = {
+            my_Stroop.termination_PATHWAYing = {
                 pnl.TimeScale.TRIAL: pnl.While(
                     pass_threshold,
                     respond_red_accumulator,
@@ -231,8 +229,8 @@ class TestStroop:
 
         def switch_trial_type():
             # Next trial will be a processing trial
-            if isinstance(my_Stroop.termination_processing[pnl.TimeScale.TRIAL], pnl.AllHaveRun):
-                switch_to_processing_trial(mechanisms_to_update)
+            if isinstance(my_Stroop.termination_PATHWAYing[pnl.TimeScale.TRIAL], pnl.AllHaveRun):
+                switch_to_PATHWAYing_trial(mechanisms_to_update)
             # Next trial will be an initialization trial
             else:
                 switch_to_initialization_trial(mechanisms_to_update)
@@ -245,7 +243,7 @@ class TestStroop:
         switch_to_initialization_trial(mechanisms_to_update)
 
         my_Stroop.run(inputs=trial_dict(0, 1, 1, 0, 1, 0),
-                      # termination_processing=change_termination_processing,
+                      # termination_PATHWAYing=change_termination_PATHWAYing,
                       num_trials=4,
                       call_after_trial=switch_trial_type)
 
