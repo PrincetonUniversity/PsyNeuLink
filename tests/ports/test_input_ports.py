@@ -15,11 +15,9 @@ class TestInputPorts:
                 size=2,
                 input_ports=pnl.InputPort(
                         combine=pnl.PRODUCT))
-        p1 = pnl.Process(pathway=[t1, t3])
-        p2 = pnl.Process(pathway=[t2, t3])
-        s = pnl.System(processes=[p1,p2])
+        c = pnl.Composition(pathways=[[t1, t3], [t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
-        val = s.run(inputs=input_dict)
+        val = c.run(inputs=input_dict)
         assert np.allclose(val, [[3, 8]])
 
     def test_combine_param_redundant_fct_class_spec(self):
@@ -30,11 +28,9 @@ class TestInputPorts:
                 input_ports=pnl.InputPort(function=psyneulink.core.components.functions.combinationfunctions
                                            .LinearCombination,
                                            combine=pnl.PRODUCT))
-        p1 = pnl.Process(pathway=[t1, t3])
-        p2 = pnl.Process(pathway=[t2, t3])
-        s = pnl.System(processes=[p1,p2])
+        c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
-        val = s.run(inputs=input_dict)
+        val = c.run(inputs=input_dict)
         assert np.allclose(val, [[3, 8]])
 
     def test_combine_param_redundant_fct_constructor_spec(self):
@@ -44,11 +40,9 @@ class TestInputPorts:
                 size=2,
                 input_ports=pnl.InputPort(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
                                            combine=pnl.PRODUCT))
-        p1 = pnl.Process(pathway=[t1, t3])
-        p2 = pnl.Process(pathway=[t2, t3])
-        s = pnl.System(processes=[p1,p2])
+        c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
-        val = s.run(inputs=input_dict)
+        val = c.run(inputs=input_dict)
         assert np.allclose(val, [[3, 8]])
 
     def test_combine_param_conflicting_fct_operation_spec(self):

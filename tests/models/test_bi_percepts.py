@@ -78,9 +78,14 @@ def test_simplified_necker_cube(benchmark, mode):
     reportOutputPref = False
 
     # make sure all nodes are both input and outputs
+    # # MODIFIED 4/25/20 OLD:
+    # for node in bp_comp.nodes:
+    #     bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
+    #     bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+    # MODIFIED 4/25/20 NEW:
     for node in bp_comp.nodes:
-        bp_comp.add_required_node_role(node, pnl.NodeRole.INPUT)
-        bp_comp.add_required_node_role(node, pnl.NodeRole.OUTPUT)
+        bp_comp.require_node_roles(node, [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT])
+    # MODIFIED 4/25/20 END
         # turn off report
         node.reportOutputPref = reportOutputPref
 
@@ -118,12 +123,23 @@ def test_simplified_necker_cube(benchmark, mode):
     res = bp_comp.run(input_dict, num_trials=10, bin_execute=mode)
     np.testing.assert_allclose(
         res,
-        [
-            [-205.35434273], [-204.87230198],
-            [-204.98539771], [205.67990124],
-            [205.536034], [206.29612605]
-        ]
+        [[205.67990124], [205.536034], [206.29612605], [-204.87230198], [-204.98539771], [-205.35434273]]
     )
+
+    # Test that order of CIM ports follows order of Nodes in self.nodes
+    assert 'a-0' in bp_comp.input_CIM.input_ports.names[0]
+    assert 'a-1' in bp_comp.input_CIM.input_ports.names[1]
+    assert 'a-2' in bp_comp.input_CIM.input_ports.names[2]
+    assert 'b-0' in bp_comp.input_CIM.input_ports.names[3]
+    assert 'b-1' in bp_comp.input_CIM.input_ports.names[4]
+    assert 'b-2' in bp_comp.input_CIM.input_ports.names[5]
+
+    assert 'a-0' in bp_comp.output_CIM.output_ports.names[0]
+    assert 'a-1' in bp_comp.output_CIM.output_ports.names[1]
+    assert 'a-2' in bp_comp.output_CIM.output_ports.names[2]
+    assert 'b-0' in bp_comp.output_CIM.output_ports.names[3]
+    assert 'b-1' in bp_comp.output_CIM.output_ports.names[4]
+    assert 'b-2' in bp_comp.output_CIM.output_ports.names[5]
 
     benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
 

@@ -9,7 +9,6 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition, EdgeType
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import VALUE
@@ -162,24 +161,25 @@ class TestScheduler:
 
     def test_change_termination_condition(self):
         D = DDM(function=DriftDiffusionIntegrator(threshold=10))
-        P = Process(pathway=[D])
-        S = System(processes=[P])
+        # P = Process(pathway=[D])
+        # S = System(processes=[P])
+        C = Composition(pathways=[D])
 
         D.set_log_conditions(VALUE)
 
         def change_termination_processing():
-            if S.termination_processing is None:
-                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
-                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
-            elif isinstance(S.termination_processing[TimeScale.TRIAL], AllHaveRun):
-                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
-                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            if C.termination_processing is None:
+                C.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                C.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            elif isinstance(C.termination_processing[TimeScale.TRIAL], AllHaveRun):
+                C.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                C.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
             else:
-                S.scheduler.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
-                S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
+                C.scheduler.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
+                C.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
 
         change_termination_processing()
-        S.run(inputs={D: [[1.0], [2.0]]},
+        C.run(inputs={D: [[1.0], [2.0]]},
               # termination_processing={TimeScale.TRIAL: WhenFinished(D)},
               call_after_trial=change_termination_processing,
               num_trials=4)
@@ -193,7 +193,7 @@ class TestScheduler:
                             [np.array([[2.]]), np.array([[1.]])],
                             [np.array([[10.]]), np.array([[10.]])],
                             [np.array([[2.]]), np.array([[1.]])]]
-        assert np.allclose(expected_results, np.asfarray(S.results))
+        assert np.allclose(expected_results, np.asfarray(C.results))
 
 
 class TestLinear:

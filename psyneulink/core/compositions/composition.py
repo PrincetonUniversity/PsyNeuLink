@@ -270,20 +270,20 @@ one or more `NodeRoles <NodeRole>` automatically when a Composition is construct
     Composition (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its
     2nd item.
 
-  * the **role** argument of the `add_required_node_role <Composition.add_required_node_role>` called for an
+  * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an
     an existing `Node <Composition_Nodes>`.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
 receive its external input when it is `run <Composition.run>`), and similarly its `TERMINAL` Nodes are assigned as its
 `OUTPUT` Nodes (the values of which are reported as the `results <Composition.results>` of running the Composition).
-However, any other nodes can be specifies as the `INPUT` or `OUTPUT` Nodes using the methods above, in which case
-the default assignents are ignored
+However, any other nodes can be specified as the `INPUT` or `OUTPUT` Nodes using the methods above, in which case
+the default assignents are ignored.
 COMMENT:
     ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
     <Composition_Learning_Pathway>` (see XXX).
 COMMENT
-.  A NodeRole can also be removed from a `Node <Composition_Nodes>` using the `remove_required_node_role
-<Composition.remove_required_node_role>` method. All of the roles assigned assigned to a particular Node can be
+.  A NodeRole can also be excluded from being assinged to a `Node <Composition_Nodes>` using the `exclude_node_roles
+<Composition.exclude_node_roles>` method.  All of the roles assigned assigned to a particular Node can be
 listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the nodes assigned a
 particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
 
@@ -1807,16 +1807,14 @@ from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
+    OptimizationControlMechanism, AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -1834,13 +1832,13 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
+    LEARNING, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -1853,10 +1851,14 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
-from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
+from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions',
@@ -2291,7 +2293,8 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
         receive Projections from the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.
+        always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.  This role cannot be
+        modified programmatically.
 
     INPUT
         A `Node <Composition_Nodes>` that receives input from outside its `Composition`, either from the Composition's
@@ -2301,35 +2304,33 @@ class NodeRole(Enum):
         can have many `INPUT` Nodes.
 
     SINGLETON
-        A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.
+        A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.  This role cannot be modified
+        programmatically.
 
     INTERNAL
-        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`
-
-    OUTPUT
-        A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
-        the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
-        Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
-        <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
-
-    TERMINAL
-        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes
-        within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
-        send Projections to the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
-        always ends with an `TERMINAL` Node.  A Composition may have many `TERMINAL` Nodes.
+        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`.  This role cannot be modified
+        programmatically.
 
     CYCLE
-        A `Node <Composition_Nodes>` that belongs to a cycle.
+        A `Node <Composition_Nodes>` that belongs to a cycle. This role cannot be modified programmatically.
 
     FEEDBACK_SENDER
         A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` the `feedback
-        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway` that
-        would otherwise form a `cycle <Composition_Feedback_Pathways>`.
+        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway`
+        that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be  modified directly,
+        but will be modified if the `feedback <Projection.feedback>` attribute of the relelvant `Projection
+        <Projection>`\\(s) is modified.
 
     FEEDBACK_RECEIVER
         A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>`  the `feedback
         <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
-        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`.
+        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be
+        modified directly, but will be modified if the `feedback <Projection.feedback>` attribute of the
+        relelvant `Projection <Projection>`\\(s) is modified.
+
+    CONTROL_OBJECTIVE
+        A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
+        than the Composition's `controller <Composition.controller>` (if it has one).
 
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
@@ -2337,7 +2338,8 @@ class NodeRole(Enum):
 
     LEARNING
         A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
-        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`.
+        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role cannot be modified
+        programmatically.
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
@@ -2348,21 +2350,42 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
         <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
 
+    OUTPUT
+        A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
+        the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
+        Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
+        <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
+        COMMENT:
+        .. technical_note::
+           TEST
+        COMMENT
+
+    TERMINAL
+        A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
+        its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
+        to the outer Composition. A Composition may have many `TERMINAL` Nodes. The `ObjectiveMechanism` associated
+        with the Composition's `controller <Composition.controller>` (assigned the role `CONTROLLER_OBJECTIVE`)
+        cannot be a `TERMINAL` Node of a Composition.  `Execution of a Composition <Compostion_Execution>` itself
+        always ends with a `TERMINAL` Node, although the `controller <Composition.controller>` and its associated
+        `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
+        belong to a `Pathway` that is shorter than the longest one in the Composition).
+        This role cannot be modified programmatically.
+
     """
     ORIGIN = 0
     INPUT = 1
     SINGLETON = 2
     INTERNAL = 3
-    OUTPUT = 4
-    TERMINAL = 5
-    CYCLE = 6
-    FEEDBACK_SENDER = 7
-    FEEDBACK_RECEIVER = 8
-    CONTROLLER_OBJECTIVE = 9
-    LEARNING = 10
-    TARGET = 11
-    LEARNING_OBJECTIVE = 12
-
+    CYCLE = 4
+    FEEDBACK_SENDER = 5
+    FEEDBACK_RECEIVER = 6
+    CONTROL_OBJECTIVE = 7
+    CONTROLLER_OBJECTIVE = 8
+    LEARNING = 9
+    TARGET = 10
+    LEARNING_OBJECTIVE = 11
+    OUTPUT = 12
+    TERMINAL = 13
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -2389,7 +2412,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     Arguments
     ---------
 
-    nodes : Node or list[Node] : default None
+    nodes : `Mechanism <Mechanism>`, `Composition` or list[`Mechanism <Mechanism>`, `Composition`] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
         `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
 
@@ -2434,11 +2457,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the full `Graph` associated with the Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
         `Compositions <Composition>`) and `Projections <Projection>`
 
-    nodes : list[`Mechanism(s) <Mechanism>` and/or `Composition(s) <Composition>`]
-        a list of all Nodes (`Mechanisms <Mechanism>` and/or `Compositions <Composition>`) contained in
-        the Composition
+    nodes : ContentAddressableList[`Mechanism <Mechanism>` or `Composition`]
+        a list of all `Nodes <Composition_Nodes>` in the Composition.
 
-    pathways : list
+    node_ordering : list[`Mechanism <Mechanism>` or `Composition`]
+        a list of all `Nodes <Composition_Nodes>` in the order in which they were added to the Composition.
+        COMENT:
+            FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
+        COMMENT
+
+    required_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
+        a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` assigned to it.
+
+    excluded_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
+        a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` that is excluded from
+        being assigned to it.
+
+    pathways : ContentAddressableList
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
         <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
@@ -2645,8 +2680,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
-        self.required_node_roles = []
         self.node_ordering = []
+        self.required_node_roles = []
+        self.excluded_node_roles = []
         from psyneulink.core.compositions.pathway import Pathway
         self.pathways = ContentAddressableList(component_type=Pathway)
 
@@ -2679,7 +2715,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
         self.needs_update_graph = True  # Tracks if Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
-        self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
+        self.needs_update_scheduler = True  # Tracks i4f the scheduler needs to be regenerated
 
         self.nodes_to_roles = collections.OrderedDict()
 
@@ -2704,6 +2740,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Controller
         self.controller = None
+        self._controller_initialization_status = ContextFlags.INITIALIZED
         if controller:
             self.add_controller(controller)
         else:
@@ -2735,6 +2772,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_projections(projections)
 
         self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+
+        # MODIFIED 5/2/20 NEW:
+        # Call with context = COMPOSITION to avoid calling _check_initialization_status again
+        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
+        # MODIFIED 5/2/20 END
 
     @property
     def graph_processing(self):
@@ -2806,8 +2848,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # Instantiate any deferred init components
-        if context.source != ContextFlags.METHOD:  # Prevent recursion in call from add_controller
-            self._check_projection_initialization_status()
+        self._check_projection_initialization_status(context=context)
 
         # Call _analzye_graph() for any nested Compositions
         for n in self.nodes:
@@ -2860,22 +2901,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # this determines CYCLE nodes and final FEEDBACK nodes
         self._graph_processing.prune_feedback_edges()
         self.needs_update_graph_processing = False
-
-    def _analyze_consideration_queue(self, q, objective_mechanism):
-        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL to
-            all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a controller
-            may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry of the
-            consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
-        """
-        for node in q[0]:
-            self._add_node_role(node, NodeRole.ORIGIN)
-
-        for node in list(q)[-1]:
-            if node != objective_mechanism:
-                self._add_node_role(node, NodeRole.TERMINAL)
-            elif len(q[-1]) < 2:
-                for previous_node in q[-2]:
-                    self._add_node_role(previous_node, NodeRole.TERMINAL)
 
 
     # ******************************************************************************************************************
@@ -2942,7 +2967,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}:
                             projections.append(component)
                         else:
-                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
                                                    "tuple is used to specify a Projection, then the index 0 item must "
                                                    "be the Projection, and the index 1 item must be the feedback "
                                                    "specification (True or False).".format(component, node.name))
@@ -2953,22 +2978,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if isinstance(component[1][0], NodeRole):
                                 self.add_node(node=component[0], required_roles=component[1])
                             else:
-                                raise CompositionError("Invalid component specification ({}) in {}'s aux_components. "
+                                raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
-                                                       "the index 0 item must be the node, and the index 1 item must "
+                                                       "the index 0 item must be the Node, and the index 1 item must "
                                                        "be the required_roles".format(component, node.name))
 
                         else:
-                            raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a "
+                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
                                                    "tuple is used to specify a Mechanism or Composition, then the "
-                                                   "index 0 item must be the node, and the index 1 item must be the "
+                                                   "index 0 item must be the Node, and the index 1 item must be the "
                                                    "required_roles".format(component, node.name))
                     else:
-                        raise CompositionError("Invalid component specification ({}) in {}'s aux_components. If a tuple"
+                        raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a tuple"
                                                " is specified, then the index 0 item must be a Projection, Mechanism, "
                                                "or Composition.".format(component, node.name))
                 else:
-                    raise CompositionError("Invalid component ({}) in {}'s aux_components. Must be a Mechanism, "
+                    raise CompositionError("Invalid Component ({}) in {}'s aux_components. Must be a Mechanism, "
                                            "Composition, Projection, or tuple."
                                            .format(component.name, node.name))
 
@@ -2999,7 +3024,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not isinstance(required_roles, list):
                 required_roles = [required_roles]
             for required_role in required_roles:
-                self.add_required_node_role(node, required_role)
+                self._add_required_node_role(node, required_role, context)
 
         # Add projections to node from sender of any shadowed InputPorts
         for input_port in node.input_ports:
@@ -3079,15 +3104,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             self.graph.remove_component(node)
             del self.nodes_to_roles[node]
+
+            # Remove any entries for node in required_node_roles or excluded_node_roles
             node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
             for item in node_role_pairs:
                 self.required_node_roles.remove(item)
+            node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node]
+            for item in node_role_pairs:
+                self.excluded_node_roles.remove(item)
+
             del self.nodes[node]
             self.node_ordering.remove(node)
 
-    def add_required_node_role(self, node, role):
+    @handle_external_context()
+    def _add_required_node_role(self, node, role, context=None):
         """
-            Assign the `NodeRole` specified by **role** to **node**.
+            Assign the `NodeRole` specified by **role** to **node**.  Remove exclusion of that `NodeRole` if
+            it had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
 
             Arguments
             _________
@@ -3102,13 +3135,69 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
+        # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+        # FIX 4/25/20 [JDC]: CHECK IF ROLE OR EQUIVALENT STATUS HAS ALREADY BEEN ASSIGNED AND, IF SO, ISSUE WARNING
+        if context.source == ContextFlags.COMMAND_LINE:
+            if role in {NodeRole.CONTROL_OBJECTIVE, NodeRole.CONTROLLER_OBJECTIVE}:
+                # raise CompositionError(f"{role} cannot be directly assigned to an {ObjectiveMechanism.__name__};"
+                #                        # f"assign 'CONTROL' to 'role' argument of consructor for {node} of {self.name}")
+                #                        f"try assigning {node} to '{OBJECTIVE_MECHANISM}' argument of "
+                #                        f"the constructor for the desired {ControlMechanism.__name__}.")
+                warnings.warn(f"{role} should be assigned with caution to {self.name}. "
+                              f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
+                              f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
+                              f"argument of its constructor.  Doing so otherwise may cause unexpected results.")
+            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE}:
+                warnings.warn(f"{role} should be assigned with caution to {self.name}. "
+                              f"Learning Components are generally constructed automatically as part of "
+                              f"a learning Pathway. Doing so otherwise may cause unexpected results.")
+            elif role in {NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER}:
+                to_from = 'from'
+                if role is NodeRole.FEEDBACK_RECEIVER:
+                    to_from = 'to'
+                from psyneulink.core.components.projections.projection import Projection
+                warnings.warn(f"{role} is not a role that can be assigned directly {to_from} {self.name}. "
+                              f"The relevant {Projection.__name__} to it must be designated as 'feedback' "
+                              f"where it is addd to the {self.name};  assignment will be ignored.")
+            elif role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL, NodeRole.CYCLE}:
+                raise CompositionError(f"Attempt to assign {role} (to {node} of {self.name})"
+                                       f"that cannot be modified by user.")
+
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
+        for item in node_role_pairs:
+            self.excluded_node_roles.remove(item)
 
-    def remove_required_node_role(self, node, role):
+    @handle_external_context()
+    def require_node_roles(self, node, roles, context=None):
         """
-            Remove `NodeRole` specified by **role** from **node** if it was been assigned.
+            Assign the `NodeRole`\\(s) specified in **roles** to **node**.  Remove exclusion of those NodeRoles if
+            it any had previously been specified in `exclude_node_roles <Composition.exclude_node_roles>`.
+
+            Arguments
+            _________
+
+            node : `Node <Composition_Nodes>`
+                `Node <Composition_Nodes>` to which **role** should be assigned.
+
+            roles : `NodeRole` or list[`NodeRole`]
+                `NodeRole`\\(s) to assign to **node**.
+
+        """
+        roles = convert_to_list(roles)
+        for role in roles:
+            self._add_required_node_role(node, role, context)
+
+    @handle_external_context()
+    def exclude_node_roles(self, node, roles, context):
+        """
+            Excludes the `NodeRole`\\(s) specified in **roles** from being assigned to **node**.
+
+            Removes specified roles if they had been previous assigned either by default as a `required_node_role
+            <Composition_Node_Role_Assignment>` or using the `required_node_roles <Composition.required_node_roles>`
+            method.
 
             Arguments
             _________
@@ -3116,16 +3205,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node : `Node <Composition_Nodes>`
                 `Node <Composition_Nodes>` from which **role** should be removed.
 
-            role : `NodeRole`
-                `NodeRole` to remove from **node**.
+            roles : `NodeRole` or list[`NodeRole`]
+                `NodeRole`\\(s) to remove and/or exclude from **node**.
 
         """
-        if role not in NodeRole:
-            raise CompositionError('Invalid NodeRole: {0}'.format(role))
+        roles = convert_to_list(roles)
 
-        node_role_pair = (node, role)
-        if node_role_pair in self.required_node_roles:
-            self.required_node_roles.remove(node_role_pair)
+        for role in roles:
+            if role not in NodeRole:
+                raise CompositionError(f"Invalid NodeRole specified for {node} in 'exclude_node_roles': {role}.")
+
+            # Disallow assignment of NodeRoles by user that are not programmitically modifiable:
+            if (context.source == ContextFlags.COMMAND_LINE and
+                    role in {NodeRole.ORIGIN, NodeRole.INTERNAL, NodeRole.SINGLETON, NodeRole.TERMINAL,
+                             NodeRole.CYCLE, NodeRole.FEEDBACK_SENDER, NodeRole.FEEDBACK_RECEIVER, NodeRole.LEARNING}):
+                raise CompositionError(f"Attempt to exclude {role} (from {node} of {self.name})"
+                                       f"that cannot be modified by user.")
+            node_role_pair = (node, role)
+            self.excluded_node_roles.append(node_role_pair)
+            if node_role_pair in self.required_node_roles:
+                self.required_node_roles.remove(node_role_pair)
+            self._remove_node_role(node, role)
 
     def get_roles_by_node(self, node):
         """
@@ -3243,53 +3343,163 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
+    def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
+        """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
+           to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
+           controller may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry
+           of the consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
+        """
+        queue = self.scheduler.consideration_queue
+
+        for node in list(queue)[0]:
+            self._add_node_role(node, NodeRole.ORIGIN)
+
+        for node in list(queue)[-1]:
+            if NodeRole.CONTROLLER_OBJECTIVE not in self.get_roles_by_node(node):
+                self._add_node_role(node, NodeRole.TERMINAL)
+            elif len(queue[-1]) < 2:
+                for previous_node in queue[-2]:
+                    self._add_node_role(previous_node, NodeRole.TERMINAL)
+
+        # IMPLEMENTATION NOTE:
+        #   The following is needed because the assignments above only identify nodes in the *last* consideration_set;
+        #   however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not be in the last
+        #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
+        #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
+        for node in self.nodes:
+            if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
+                self._add_node_role(node, NodeRole.TERMINAL)
+
     def _determine_node_roles(self, context=None):
+        """Assign NodeRoles to Nodes in Compositoin
+
+        .. note::
+           Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
+           unless otherwise noted.
+
+        Assignment criteria:
+
+        ORIGIN:
+          - all Nodes that are in first consideration_set (i.e., self.scheduler.consideration_queue[0]).
+          .. _note::
+             - this takes account of any Projections designated as feedback by graph_processing
+               (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK)
+             - these will all be assigined afferent Projections from Composition.input_CIM
+
+        INPUT:
+          - all ORIGIN Nodes for which INPUT has not been removed and/or excluded using exclude_node_roles();
+          - all Nodes for which INPUT has been assigned as a required_node_role by user
+            (i.e., in self.required_node_roles[NodeRole.INPUT].
+
+        SINGLETON:
+          - all Nodes that are *both* ORIGIN and TERMINAL
+
+        INTERNAL:
+          - all Nodes that are *neither* ORIGIN nor TERMINAL
+
+        CYCLE:
+          - all Nodes that identified as being in a cycle by self.graph_processing
+            (i.e., in self.graph_processing.cycle_vertices)
+
+        FEEDBACK_SENDER:
+          - all Nodes that send a Projection designated as feedback by self.graph_processing OR
+            specified as feedback by user
+
+        FEEDBACK_RECEIVER:
+          - all Nodes that receive a Projection designated as feedback by self.graph_processing OR
+            specified as feedback by user
+
+        CONTROL_OBJECTIVE
+          - ObjectiveMechanism assigned CONTROL_OBJECTIVE as a required_node_role in ControlMechanism's
+            _instantiate_objective_mechanism()
+          .. note::
+             - *not the same as* CONTROLLER_OBJECTIVE
+             - all project to a ControlMechanism
+
+        CONTROLLER_OBJECTIVE
+          - ObjectiveMechanism assigned CONTROLLER_OBJECTIVE as a required_node_role in add_controller()
+          .. note::
+             - also assigned CONTROL_OBJECTIVE
+             - *not the same as* CONTROL_OBJECTIVE
+
+        LEARNING
+          - all Nodes for which LEARNING is assigned as a required_noded_role in
+            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
+
+        TARGET
+          - all Nodes for which TARGET has been assigned as a required_noded_role in
+            add_linear_learning_pathway() or _create_terminal_backprop_learning_components()
+          .. note::
+             - receive a Projection from input_CIM, and project to LEARNING_OBJECTIVE and output_CIM
+             - also assigned ORIGIN, INPUT, LEARNING, OUTPUT, and TERMINAL
+
+        LEARNING_OBJECTIVE
+          - all Nodes for which LEARNING_OBJECTIVE is assigned required_noded_role in
+            add_linear_learning_pathway(), _create_non_terminal_backprop_learning_components,
+            or _create_terminal_backprop_learning_components()
+          .. note::
+             - also assigned LEARNING
+             - ObjectiveMechanism._role == LEARNING
+             - must project to a LearningMechanism
+
+        OUTPUT:
+          - all TERMINAL Nodes *unless* they are:
+            - a ModulatoryMechanism (i.e., ControlMechanism or LearningMechanism)
+            - an ObjectiveMechanisms associated with ModulatoryMechanism
+          - all Nodes that project only to:
+            - a ModulatoryMechanism
+            - an ObjectiveMechanism designated CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+            ? unless it is the ??TARGET_MECHANISM for a 'learning pathway <Composition_Learning_Pathway>`
+              this is currently the case, but is inconsistent with the analog in Control,
+              where monitored Mechanisms *are* allowed to be OUTPUT;
+              therefore, might be worth allowing TARGET_MECHANISM to be assigned as OUTPUT
+          - all Nodes for which OUTPUT has been assigned as a required_node_role, inculding by user
+            (i.e., in self.required_node_roles[NodeRole.OUTPUT]
+
+        TERMINAL:
+          - all Nodes that
+            - are not an ObjectiveMechanism assigned the role CONTROLLER_OBJECTIVE
+            - or have *no* efferent projections OR
+            - or for for which any efferent projections are either:
+                - to output_CIM OR
+                - assigned as feedback (i.e., self.graph.comp_to_vertex[efferent].feedback == EdgeType.FEEDBACK
+          .. _note::
+             - this insures that for cases in which there are nested CYCLES
+               (e.g., LearningMechanisms for a `learning Pathway <Composition.Learning_Pathway>`),
+               only the Node in the *outermost* CYCLE that is specified as a FEEDBACK_SENDER
+               is assigned as a TERMINAL Node
+               (i.e., the LearningMechanism responsible for the *first* `learned Projection;
+               <Composition_Learning_Components>` in the `learning Pathway  <Composition.Learning_Pathway>`)
+             - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
+               `controller <Composition.controller>` are executed outside of (either before or after)
+               all of the other Components of the Composition, as managed directly by the scheduler;
+             - `Execution of a `Composition <Compostion_Execution>` always ends with a `TERMINAL` Node,
+               although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
+               is shorter than the longest one in the Composition).
+
+       """
         from psyneulink.core.compositions.pathway import PathwayRole
 
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
 
-        # Required Roles
+        # Assign required_node_roles
         for node_role_pair in self.required_node_roles:
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
-        objective_mechanism = None
-        if (self.controller
-                and self.controller.objective_mechanism
-                and not self.controller.initialization_status == ContextFlags.DEFERRED_INIT):
-            objective_mechanism = self.controller.objective_mechanism
-            self._add_node_role(objective_mechanism, NodeRole.CONTROLLER_OBJECTIVE)
-
-        # Use Scheduler.consideration_queue to check for ORIGIN and TERMINAL Nodes:
+        # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
         if self.scheduler.consideration_queue:
-            self._analyze_consideration_queue(self.scheduler.consideration_queue, objective_mechanism)
-        # Also assign TERMINAL to any nodes that don't have efferent Projections other than to Composition's output_CIM
-        # IMPLEMENTATION NOTE:
-        #   This is needed because _analyze_consideration_queue() assigns TERMINAL only to nodes in the *last*
-        #   consideration_set; however, the TERMINAL node(s) of a pathway with fewer nodes than the longest one may not
-        #   be in the last consideration set, and therefore not assigned as TERMINAL by _analyze_consideration_queue().
-        #   This also assumes that _check_feedback() has already identified cycles and assigned FEEDBACK_SENDER, and
-        #   that _analyze_consideration_queue() assigns those to the last consideration set (which is why it must be
-        #   called here).  A potential alternative would be to not use _analyze_consideration_queue(), and simply
-        #   TERMINAL to all nodes without efferents (other than to output_CIM) or labeled as FEEDBACK_SENDER.
-        for node in self.nodes:
-            if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
-                self._add_node_role(node, NodeRole.TERMINAL)
+            self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
-        # A ControlMechanism should not be the TERMINAL node of a Composition
-        #    (unless it is specifed as a required_role, in which case it is reassigned below)
-        for node in self.nodes:
-            if isinstance(node, ControlMechanism):
-                if NodeRole.TERMINAL in self.nodes_to_roles[node]:
-                    self.nodes_to_roles[node].remove(NodeRole.TERMINAL)
-                if NodeRole.OUTPUT in self.nodes_to_roles[node]:
-                    self.nodes_to_roles[node].remove(NodeRole.OUTPUT)
+        # INPUT
+        for node in self.get_nodes_by_role(NodeRole.ORIGIN):
+            self._add_node_role(node, NodeRole.INPUT)
 
-        # Cycles
+        # CYCLE
         for node in self.graph_processing.cycle_vertices:
             self._add_node_role(node, NodeRole.CYCLE)
 
-        # "Feedback" projections
+        # FEEDBACK_SENDER and FEEDBACK_RECEIVER
         for receiver in self.graph_processing.vertices:
             for sender, typ in receiver.source_types.items():
                 if typ is EdgeType.FEEDBACK:
@@ -3302,111 +3512,123 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         NodeRole.FEEDBACK_RECEIVER
                     )
 
-        # due to test_LEARNING_hebbian, all recurrent projections cause
-        # their senders to be FEEDBACK_RECEIVER
-        # REVIEW: but not FEEDBACK_SENDER - why?
+        # region
+        # # MODIFIED 4/25/20 OLD NOTES:
+        # # If no OUTPUT nodes were explicitly specified as required_roles by *user* , assign them:
+        # # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
+        # # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
+        # # - ignore OUTPUT nodes in learning pathways as those are assigned automatically in add_linear_learning_pathway
+        # #   and don't want that to suppress normal assignment of TERMINAL nodes in non-learning pathways as OUTPUT nodes
+        # #   (if user has not specified any as required roles)
+        #     #         # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
+        #     #         #    - not used for Learning;
+        #     #         #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
+        #     #         #    - do not project to any other nodes.
+        #     #
+        #     #         # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
+        #     #         #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
+        #     #         #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
+        #     #         # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
+        #     #         #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
+        #     #         # Then, add any nodes that are not learning-related or a ControlMechanism,
+        #     #         #    and that have *no* efferent Projections
+        #     #         # IMPLEMENTATION NOTE:
+        #     #         #  Do this here, as the list considers entire sets in the consideration queue,
+        #     #         #    and a node with no efferents may be in the same set as one with efferents
+        #     #         #    if they have the same dependencies.
+        #         # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
+        #         #    - not used for Learning;
+        #         #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
+        #         #    - do not project to any other nodes.
+        #         # FIX 4/25/20 [JDC]:  MISSES ObjectiveMechanism BURIED IN LAST CONSIDERATION SET
+        #         # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
+        #         #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
+        #         #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
+        #     # MODIFIED 4/25/20 END
+        # endregion
+
+        # MODIFIED 4/25/20 NEW:
+        # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
+        #     - Simply execlude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
+        #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
+
+        # OUTPUT
+
         for node in self.nodes:
-            if node in {eff.receiver.owner for eff in node.efferents}:
-                self._add_node_role(node, NodeRole.FEEDBACK_RECEIVER)
 
-        # Required Roles
-        for node_role_pair in self.required_node_roles:
-            self._add_node_role(node_role_pair[0], node_role_pair[1])
+            # Assign OUTPUT if node is TERMINAL...
+            if NodeRole.TERMINAL in self.get_roles_by_node(node):
+                # unless it is a ModulatoryMechanism
+                if (isinstance(node, ModulatoryMechanism_Base)
+                    # # FIX: WHY WOULD SUCH AN ObjectiveMechanism BE TERMINAL IF IT PROJECTS TO A MODULATORY_MECHANISM
+                    # #      (IS THIS BECAUSE MODULATORY MECH GETS DISCOUNTED FROM BEING TERMINAL IN graph_processing?)
+                    # # or an ObjectiveMechanism associated with ControlMechanism or LearningMechanism
+                    #     or any(role in self.get_roles_by_node(node) for role in {NodeRole.CONTROL_OBJECTIVE,
+                    #                                                              NodeRole.CONTROLLER_OBJECTIVE,
+                    #                                                              NodeRole.LEARNING_OBJECTIVE})
+                ):
+                    continue
+                else:
+                    self._add_node_role(node, NodeRole.OUTPUT)
 
-        # If INPUT nodes were not specified by user, ORIGIN nodes become INPUT nodes
-        if not self.get_nodes_by_role(NodeRole.INPUT):
-            origin_nodes = self.get_nodes_by_role(NodeRole.ORIGIN)
-            for node in origin_nodes:
-                self._add_node_role(node, NodeRole.INPUT)
-
-        # If no OUTPUT nodes were explicitly specified as required_roles by *user* , assign them:
-        # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-        # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
-        # - ignore OUTPUT nodes in learning pathways as those are assigned automatically in add_linear_learning_pathway
-        #   and don't want that to suppress normal assignment of TERMINAL nodes in non-learning pathways as OUTPUT nodes
-        #   (if user has not specified any as required roles)
-
-        # MODIFIED 4/4/20 OLD:
-        # if not self.get_nodes_by_role(NodeRole.OUTPUT):
-        # MODIFIED 4/4/20 NEW:  FIX: ?HOW DOES THIS RELATE TO EXECLUSION BELOW?
-        # If there are not any OUTPUT nodes (execept ones designated as OUTPUT in a learning pathway)
-        if not any([node for node in self.get_nodes_by_role(NodeRole.OUTPUT)
-                    if not any(n for n in [pathway for pathway in self.pathways
-                                 if PathwayRole.LEARNING in pathway.roles])]):
-        # MODIFIED 4/4/20 END
-
-            # FIX: 10/24/19: NOW MISSES controller.objective_mechanism in test_controller_objective_mech_not_terminal
-            #                 if controller_enabled = False
-            def remove_learning_and_control_nodes(nodes):
-                output_nodes_copy = nodes.copy()
-                for node in output_nodes_copy:
-                    if (NodeRole.LEARNING in self.nodes_to_roles[node]
-                            or isinstance(node, ControlMechanism)
-                            or (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)):
-                        nodes.remove(node)
-
-            if self.get_nodes_by_role(NodeRole.LEARNING):
-                # FIX: ADD COMMENT HERE
-                # FIX 4/4/20 [JDC]: WHY ISN'T THIS REDUNDANT WITH EXCLUSION OF LEARNING OUTPUT NODES ABOVE?
-                # terminal_nodes = [[n for n in self.nodes if not NodeRole.LEARNING in self.nodes_to_roles[n]][-1]]
-                output_nodes = list([items for items in self.scheduler.consideration_queue
-                                     if any([item for item in items
-                                               if not NodeRole.LEARNING in self.nodes_to_roles[item]
-                                               ])])[-1].copy()
+            # Assign OUTPUT to any non-TERMINAL Nodes
             else:
-                output_nodes = self.get_nodes_by_role(NodeRole.TERMINAL)
 
-            if output_nodes:
-                remove_learning_and_control_nodes(output_nodes)
-            else:
-                try:
-                    # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
-                    #    - not used for Learning;
-                    #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
-                    #    - do not project to any other nodes.
+                # IMPLEMENTATION NOTE:
+                #   This version allows LEARNING_OBJECTIVE to be assigned as OUTPUT
+                #   The alternate version below restricts OUTPUT only to RecurrentTransferMechasnism
+                # # Assign OUTPUT if node projects only to itself and/or a LearningMechanism
+                # #     (i.e., it is either a RecurrentTransferMechanism configured for learning
+                # #      or the LEARNING_OBJECTIVE of a `learning pathway <Composition_Learning_Pathway>`
+                # if all(p.receiver.owner is node or isinstance(p.receiver.owner, LearningMechanism)
+                #        for p in node.efferents):
+                #     self._add_node_role(node, NodeRole.OUTPUT)
+                #     continue
 
-                    # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
-                    #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
-                    #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
-                    output_nodes = list([items for items in self.scheduler.consideration_queue
-                                           if any([item for item in items if
-                                                   (not NodeRole.LEARNING in self.nodes_to_roles[item]
-                                                    and not isinstance(item, ControlMechanism)
-                                                    and not (isinstance(item, ObjectiveMechanism)
-                                                             and item._role == CONTROL))
-                                                   ])]
-                                          )[-1].copy()
+                # Assign OUTPUT if it is an `RecurrentTransferMechanism` configured for learning
+                #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
+                #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
+                #    but can (or already does) project to an output_CIM
+                if all((p.receiver.owner is node
+                        or isinstance(p.receiver.owner, AutoAssociativeLearningMechanism)
+                        or p.receiver.owner is self.output_CIM)
+                       for p in node.efferents):
+                    self._add_node_role(node, NodeRole.OUTPUT)
+                    continue
 
-                    # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
-                    #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
-                    remove_learning_and_control_nodes(output_nodes)
+                # Assign OUTPUT only if the node is not:
+                #  - the TARGET_MECHANISM of a `learning Pathway <Composition_Learning_Pathway>`
+                #  - a ModulatoryMechanism
+                # and the node projects only to:
+                #  - an ObjectiveMechanism designated as CONTROL_OBJECTIVE, CONTROLLER_OBJECTIVE or LEARNING_OBJECTIVE
+                #  - and/or directly to a ControlMechanism but is not an ObjectiveMechanism
+                #  - and/or (already projects) to output_CIM
+                if NodeRole.TARGET in self.get_roles_by_node(node):
+                    continue
+                if isinstance(node, ModulatoryMechanism_Base):
+                    continue
+                if all((any(p.receiver.owner in self.get_nodes_by_role(role)
+                           for role in {NodeRole.CONTROL_OBJECTIVE,
+                                        NodeRole.CONTROLLER_OBJECTIVE,
+                                        NodeRole.LEARNING_OBJECTIVE})
+                        or p.receiver.owner is self.output_CIM
+                       or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
+                       for p in node.efferents):
+                    self._add_node_role(node, NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 END
 
-                    # Then, add any nodes that are not learning-related or a ControlMechanism,
-                    #    and that have *no* efferent Projections
-                    # IMPLEMENTATION NOTE:
-                    #  Do this here, as the list considers entire sets in the consideration queue,
-                    #    and a node with no efferents may be in the same set as one with efferents
-                    #    if they have the same dependencies.
-                    for node in self.nodes:
-                        if (not node.efferents
-                                and not NodeRole.LEARNING in self.nodes_to_roles[node]
-                                and not isinstance(node, ControlMechanism)
-                                and not (isinstance(node, ObjectiveMechanism) and node._role == CONTROL)
-                        ):
-                            output_nodes.add(node)
-                except IndexError:
-                    output_nodes = []
-            for node in output_nodes:
-                self._add_node_role(node, NodeRole.OUTPUT)
+        # Assign SINGLETON and INTERNAL nodes
+        for node in self.nodes:
+            if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                self._add_node_role(node, NodeRole.SINGLETON)
+            if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
+                self._add_node_role(node, NodeRole.INTERNAL)
 
-            # Finally, assign TERMINAL and SINGLETON nodes
-            for node in self.nodes:
-                if not node.efferents or NodeRole.FEEDBACK_SENDER in self.nodes_to_roles[node]:
-                    self._add_node_role(node, NodeRole.TERMINAL)
-                if all(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-                    self._add_node_role(node, NodeRole.SINGLETON)
-                if not any(n in self.nodes_to_roles[node] for n in {NodeRole.ORIGIN, NodeRole.TERMINAL}):
-                    self._add_node_role(node, NodeRole.INTERNAL)
+        # Finally, remove any NodeRole assignments specified in excluded_node_roles
+        for node in self.nodes:
+            for node, role in self.excluded_node_roles:
+                if role in self.get_roles_by_node(node):
+                    self._remove_node_role(node, role)
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -3420,14 +3642,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _add_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
         self.nodes_to_roles[node].add(role)
 
     def _remove_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
+        try:
+            self.nodes_to_roles[node].remove(role)
+        except KeyError as e:
+            pass
+            # if e.args[0] is node:
+            #     assert False, f"PROGRAM ERROR in _remove_node_role: {node} not found in {self.name}.nodes_to_role."
+            # elif e.args[0] is role:
+            #     assert False, f"PROGRAM ERROR in _remove_node_role: " \
+            #                   f"{role} not found for {node} in {self.name}.nodes_to_role."
+            # else:
+            #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
 
-        self.nodes_to_roles[node].remove(role)
 
     def _determine_pathway_roles(self, context=None):
         from psyneulink.core.compositions.pathway import PathwayRole
@@ -3502,16 +3733,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Composition's CIMs need to be set up from scratch, so we remove their default input and output ports
         if not self.input_CIM.connected_to_composition:
-            self.input_CIM.input_ports.remove(self.input_CIM.input_port)
-            self.input_CIM.output_ports.remove(self.input_CIM.output_port)
+            self.input_CIM.remove_ports(self.input_CIM.input_port)
+            self.input_CIM.remove_ports(self.input_CIM.output_port)
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.input_CIM.connected_to_composition = True
 
         if not self.output_CIM.connected_to_composition:
-            self.output_CIM.input_ports.remove(self.output_CIM.input_port)
-            self.output_CIM.output_ports.remove(self.output_CIM.output_port)
+            self.output_CIM.remove_ports(self.output_CIM.input_port)
+            self.output_CIM.remove_ports(self.output_CIM.output_port)
             # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
             self.output_CIM.connected_to_composition = True
+
+        # PCIMs are not currently supported for compilation if they don't have any input/output ports,
+        # so remove their default ports only in the case that additional ports are going to be configured below
+        external_modulatory_projections = self._get_external_modulatory_projections()
+        if not self.parameter_CIM.connected_to_composition and external_modulatory_projections:
+            self.parameter_CIM.remove_ports(self.parameter_CIM.input_port)
+            self.parameter_CIM.remove_ports(self.parameter_CIM.output_port)
+            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
+            self.parameter_CIM.connected_to_composition = True
 
         # INPUT CIM
         current_input_node_input_ports = set()
@@ -3523,7 +3763,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # loop through all external input ports on input nodes (i.e. ports that are projected to from other nodes)
             for input_port in node.external_input_ports:
 
-                # add it to our set of current input ports
+                # add it to set of current input ports
                 current_input_node_input_ports.add(input_port)
 
                 # if there is not a corresponding CIM InputPort/OutputPort pair, add them
@@ -3553,7 +3793,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # add entry to input_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
                     # input node's input port
-                    self.input_CIM_ports[input_port] = [interface_input_port, interface_output_port]
+                    self.input_CIM_ports[input_port] = (interface_input_port, interface_output_port)
 
                     # create projection from the output port on the input CIM to the input port on the input node
                     projection = MappingProjection(sender=interface_output_port,
@@ -3639,7 +3879,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # add entry to output_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
                     # output node's output port
-                    self.output_CIM_ports[output_port] = [interface_input_port, interface_output_port]
+                    self.output_CIM_ports[output_port] = (interface_input_port, interface_output_port)
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
@@ -3674,48 +3914,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.output_CIM_ports[output_port]
 
         # PARAMETER CIM
-        # A node role does not exist for externally modulated nodes in the way that it does for input and output nodes,
-        # which are used to set up the INPUT and OUTPUT CIMS. Therefore, we call _get_external_control_projections to
-        # retrieve all projections that need to be routed through the PCIM
-
-        # Note whether or not the parameter CIM is used
-        externally_modulated = False
-
-        # here we get the projection that needs to be routed through the PCIM as well as the composition that owns it,
+        # We get the projection that needs to be routed through the PCIM as well as the composition that owns it,
         # because we will need to activate the new projections for the composition that owns the PCIM as well as the
         # referring composition
-        for comp_projection, referring_composition in self._get_external_modulatory_projections():
+        for comp_projection, referring_composition in external_modulatory_projections:
             # the port that receives the projection
             receiver = comp_projection.receiver
             # the mechanism that owns the port for which the projection is an afferent
             owner = receiver.owner
             if not receiver in self.parameter_CIM_ports:
-                externally_modulated = True
                 # control signal modulation should match the modulation type of the original control signal
                 modulation = comp_projection.sender.modulation
                 # input port of parameter CIM that will receive projection from the original control signal
-                input_port = InputPort(
-                    owner=self.parameter_CIM,
-                )
+                interface_input_port = InputPort(owner=self.parameter_CIM,
+                                                 variable=receiver.defaults.value,
+                                                 reference_value=receiver.defaults.value,
+                                                 name= PARAMETER_CIM_NAME + "_" + owner.name + "_" + receiver.name,
+                                                 context=context)
+                self.parameter_CIM.add_ports([interface_input_port], context=context)
                 # control signal for parameter CIM that will project directly to inner Composition's parameter
                 control_signal = ControlSignal(
-                    owner=self.parameter_CIM,
-                    modulation=modulation,
-                    variable=OWNER_VALUE,
-                    transfer_function=InterfacePortMap(
-                        corresponding_input_port=input_port
-                    ),
-                    modulates=receiver,
-                    name='PARAMETER_CIM_' + owner.name + "_" + receiver.name
+                        modulation=modulation,
+                        variable=OWNER_VALUE,
+                        transfer_function=InterfacePortMap(
+                                corresponding_input_port=interface_input_port
+                        ),
+                        modulates=receiver,
+                        name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
                 )
+                self.parameter_CIM.add_ports([control_signal], context=context)
                 # add sender and receiver to self.parameter_CIM_ports dict
-                self.parameter_CIM_ports[receiver] = (input_port, control_signal)
+                self.parameter_CIM_ports[receiver] = (interface_input_port, control_signal)
                 # projection name
-                proj_name = "(" + comp_projection.sender.name + ") to (" + input_port.name + ")"
+                proj_name = "(" + comp_projection.sender.name + ") to (" + interface_input_port.name + ")"
                 # instantiate the projection
                 proj = MappingProjection(
                     sender=comp_projection.sender,
-                    receiver=input_port,
+                    receiver=interface_input_port,
                     # FIX:  This fails if OutputPorts don't all have the same dimensionality (number of axes);
                     #       see example in test_output_ports/TestOutputPorts
                     matrix=IDENTITY_MATRIX,
@@ -3730,18 +3965,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # remove the original direct projection from the target ParameterPort
                 receiver.mod_afferents.remove(comp_projection)
 
-        # NOTE: We remove default ports on the PCIM here, and not where we did it for the input and output CIMS.
-        # This is because compilation breaks when a PCIM has no ports, so we only remove default ports on the
-        # PCIM if we are going to route projections through it.
-        # Ultimately, this should be moved to the beginning of the method when the compilation issue is fixed
-        # -DS
-        if externally_modulated and not self.parameter_CIM.connected_to_composition:
-            self.parameter_CIM.input_ports.remove(self.parameter_CIM.input_port)
-            self.parameter_CIM.output_ports.remove(self.parameter_CIM.output_port)
-            # flag the CIM as connected to the Composition so we don't remove ports on future calls to this method
-            self.parameter_CIM.connected_to_composition = True
-
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
+
+            # Enforce order of ports to same as node_order
+            # Get node port mappings for cim
+            node_port_to_cim_port_tuples_mapping = getattr(self, f'{type}_CIM_ports')
+            # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
+            # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
+            cim_node_indices = []
+            cim_port_within_node_indices = []
+            for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
+                node = node_port.owner
+                if isinstance(node, CompositionInterfaceMechanism):
+                    node = node.composition
+                cim_node_indices.append((cim_ports[0], cim_ports[1], self.nodes.index(node)))
+                node_port_list = getattr(node, f'{type}_ports')
+                cim_port_within_node_indices.append((cim_ports[0], cim_ports[1], node_port_list.index(node_port)))
+            # Sort cim input_ports and output_ports...
+            # Note:  put any extra ports (i.e., user-assigned, despite warning!) at end of list
+            #        by assigning len(self.nodes) as the default
+            if node_port_to_cim_port_tuples_mapping:
+                # FIX 4/28/20 [JDC]: ALSO SORT parameter_ports FOR cim??  DOES IT EVEN HAVE ANY?
+                # First sort according to the order in which ports for the same Node are listed on that node
+                cim.input_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                         for cim_prt_tpl in cim_port_within_node_indices
+                                                         if x in cim_prt_tpl),
+                                                        len(node_port_list)))
+                cim.output_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                          for cim_prt_tpl in cim_port_within_node_indices
+                                                          if x in cim_prt_tpl),
+                                                         len(node_port_list)))
+                # Then sort according to the order in which the Nodes appear in self.nodes
+                cim.input_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                         for cim_prt_tpl in cim_node_indices
+                                                          if x in cim_prt_tpl),
+                                                        len(self.nodes)))
+                cim.output_ports.sort(key=lambda x: next((cim_prt_tpl[2]
+                                                          for cim_prt_tpl in cim_node_indices
+                                                          if x in cim_prt_tpl),
+                                                         len(self.nodes)))
+
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
             # happening outside of this normal context? This is here as
@@ -3799,6 +4062,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 c = len(self._get_external_modulatory_projections())
                 assert c == 0, f"PROGRAM ERROR:  Number of external control projections {c} is greater than 0. " \
                                f"This means there was a failure to route these projections through the PCIM."
+
+
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
@@ -4549,8 +4814,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.add_nodes([pathway[c]])
                 nodes.append(pathway[c])
 
-        # FIX 8/27/19 [JDC]:  GENERALIZE TO ControlMechanism
-        # MODIFIED 8/12/19 NEW: [JDC] - AVOID DUPLCIATE CONTROL_RELATED PROJECTIONS
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
         #    as well as any projections to them specified in the pathway;
@@ -4559,7 +4822,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         items_to_delete = []
         for i, item in enumerate(pathway):
             if ((isinstance(item, ControlMechanism) and item.monitor_for_control)
-                    or (isinstance(item, ObjectiveMechanism) and item._role == CONTROL)):
+                    or (isinstance(item, ObjectiveMechanism) and
+                        set(self.get_roles_by_node(item)).intersection({NodeRole.CONTROL_OBJECTIVE,
+                                                                          NodeRole.CONTROLLER_OBJECTIVE}))):
                 items_to_delete.append(item)
                 # Delete any projections to the ControlMechanism or ObjectiveMechanism specified in pathway
                 if i>0 and _is_pathway_entry_spec(pathway[i - 1],PROJECTION):
@@ -4976,7 +5241,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self.add_required_node_role(node, NodeRole.OUTPUT)
+                self._add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
@@ -4999,7 +5264,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-        self.add_required_node_role(output_source, NodeRole.OUTPUT)
+        self._add_required_node_role(output_source, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
                                                               name=pathway_name,
@@ -5019,7 +5284,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             s.parameters.require_projection_in_composition.set(False,
                                                                override=True)
         # Add nodes to Composition
-        self.add_nodes([(target, NodeRole.TARGET), comparator, learning_mechanism], required_roles=NodeRole.LEARNING)
+        self.add_nodes([(target, NodeRole.TARGET),
+                        (comparator, NodeRole.LEARNING_OBJECTIVE),
+                         learning_mechanism],
+                       required_roles=NodeRole.LEARNING)
 
         # Create Projections to and among learning-related Mechanisms and add to Composition
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -5271,12 +5539,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif is_function_type(learning_function):
             target_mechanism = ProcessingMechanism(name='Target')
             objective_mechanism = ComparatorMechanism(name='Comparator',
-                                                       sample={NAME: SAMPLE,
-                                                               VARIABLE: [0.], WEIGHT: -1},
-                                                       target={NAME: TARGET,
-                                                               VARIABLE: [0.]},
-                                                       function=error_function,
-                                                       output_ports=[OUTCOME, MSE])
+                                                      sample={NAME: SAMPLE,
+                                                              VARIABLE: [0.], WEIGHT: -1},
+                                                      target={NAME: TARGET,
+                                                              VARIABLE: [0.]},
+                                                      function=error_function,
+                                                      output_ports=[OUTCOME, MSE],
+                                                      )
             learning_mechanism = LearningMechanism(
                                     function=learning_function(
                                                          default_variable=[input_source.output_ports[0].value,
@@ -5344,12 +5613,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_mechanism = ProcessingMechanism(name='Target')
 
         objective_mechanism = ComparatorMechanism(name='Comparator',
-                                                   sample={NAME: SAMPLE,
-                                                           VARIABLE: [0.], WEIGHT: -1},
-                                                   target={NAME: TARGET,
-                                                           VARIABLE: [0.]},
-                                                   function=error_function,
-                                                   output_ports=[OUTCOME, MSE])
+                                                  sample={NAME: SAMPLE,
+                                                          VARIABLE: [0.], WEIGHT: -1},
+                                                  target={NAME: TARGET,
+                                                          VARIABLE: [0.]},
+                                                  function=error_function,
+                                                  output_ports=[OUTCOME, MSE],
+                                                  )
 
         learning_mechanism = \
             LearningMechanism(function=Reinforcement(default_variable=[input_source.output_ports[0].value,
@@ -5436,7 +5706,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX CROSSED_PATHWAYS 7/28/19 [JDC]:
             #  THIS SHOULD BE INTEGRATED WITH CALL TO _create_terminal_backprop_learning_components
             #  ** NEED TO CHECK WHETHER LAST NODE IN THE SEQUENCE IS TERMINAL AND IF SO:
-            #     ASSIGN USING: self.add_required_node_role(output_source, NodeRole.OUTPUT)
+            #     ASSIGN USING: self._add_required_node_role(output_source, NodeRole.OUTPUT)
             # If learned_projection already has a LearningProjection (due to pathway overlap),
             #    use those terminal sequence components
             if (learned_projection.has_learning_projection
@@ -5516,7 +5786,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self.add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT)
+            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
 
             sequence_end = path_length - 3
 
@@ -5626,13 +5896,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             target_mechanism = ProcessingMechanism(name='Target',
                                                    default_variable=output_source.output_ports[0].value)
             objective_mechanism = ComparatorMechanism(name='Comparator',
-                                                       target={NAME: TARGET,
-                                                               VARIABLE: target_mechanism.output_ports[0].value},
-                                                       sample={NAME: SAMPLE,
-                                                               VARIABLE: output_source.output_ports[0].value,
-                                                               WEIGHT: -1},
-                                                       function=error_function,
-                                                       output_ports=[OUTCOME, MSE])
+                                                      target={NAME: TARGET,
+                                                              VARIABLE: target_mechanism.output_ports[0].value},
+                                                      sample={NAME: SAMPLE,
+                                                              VARIABLE: output_source.output_ports[0].value,
+                                                              WEIGHT: -1},
+                                                      function=error_function,
+                                                      output_ports=[OUTCOME, MSE],
+                                                      )
 
         learning_function = BackPropagation(default_variable=[input_source.output_ports[0].value,
                                                               output_source.output_ports[0].value,
@@ -5651,7 +5922,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                name="Learning Mechanism for " + learned_projection.name)
 
         self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
-                              objective_mechanism,
+                              (objective_mechanism, NodeRole.LEARNING_OBJECTIVE),
                               learning_mechanism],
                        required_roles=NodeRole.LEARNING)
 
@@ -5887,7 +6158,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # VALIDATE AND ADD CONTROLLER
 
-        if not controller.initialization_status == ContextFlags.DEFERRED_INIT:
+        # Note:  initialization_status here pertains to controller's own initialization status
+        #        (i.e., whether it has been fully instantiated); if not, presumably this is because it is an
+        #        OptimizationControlMechanism [OCM] for which the agent_rep has not yet been assigned
+        #        (e.g., was constructed in the controller argument of the Compositon), in which case assign it here.
+        if controller.initialization_status == ContextFlags.DEFERRED_INIT:
+            controller._init_args[AGENT_REP] = self
+            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
+
+        # Note:  initialization_status here pertains to controller's status w/in the Composition
+        #        (i.e., whether any Nodes and/or Projections on which it depends are not yet in the Composition)
+        if self._controller_initialization_status != ContextFlags.DEFERRED_INIT:
+
             # Warn for request to assign the ControlMechanism already assigned and ignore
             if controller is self.controller:
                 warnings.warn(f"{controller.name} has already been assigned as the {CONTROLLER} "
@@ -5900,10 +6182,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
                 return
 
-            # Warn if current one is being replaced
-            if self.controller and self.prefs.verbosePref:
-                warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
-                              f"is being replaced by {controller.name}.")
+            # Warn if current one is being replaced, and remove Projections for old one
+            if self.controller:
+                if self.prefs.verbosePref:
+                    warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
+                                  f"is being replaced by {controller.name}.")
+                for proj in self.projections:
+                    if (proj in self.controller.afferents or proj in self.controller.efferents):
+                        self.remove_projection(proj)
+                self.controller.composition=None
 
         controller.composition = self
         self.controller = controller
@@ -5912,7 +6199,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not invalid_aux_components:
             if self.controller.objective_mechanism:
-                self.add_node(self.controller.objective_mechanism)
+                # # MODIFIED 4/25/20 OLD:
+                # self.add_node(self.controller.objective_mechanism)
+                # MODIFIED 4/25/20 NEW:
+                self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+                # MODIFIED 4/25/20 END
 
             self.node_ordering.append(controller)
 
@@ -5992,9 +6283,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                ?PUT IT IN aux_components FOR NODE?
                 #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
                 controller._activate_projections_for_compositions(self)
-            controller.initialization_status = ContextFlags.INITIALIZED
+            self._controller_initialization_status = ContextFlags.INITIALIZED
+            # MODIFIED 4/25/20 NEW:
+            # self._analyze_graph()
+            self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+            # MODIFIED 4/25/20 END
         else:
-            controller.initialization_status = ContextFlags.DEFERRED_INIT
+            self._controller_initialization_status = ContextFlags.DEFERRED_INIT
+
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by nodes in the Composition
@@ -6120,14 +6416,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
 
-    def _check_projection_initialization_status(self):
+    def _check_projection_initialization_status(self, context=None):
         """Checks initialization status of controller (if applicable) and any projections or ports
-
         """
+
+        # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below
+        if context and context.source == ContextFlags.METHOD:
+            return
+
         # Check if controller is in deferred init
-        if self.controller and self.controller.initialization_status == ContextFlags.DEFERRED_INIT:
+        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller)
-            if self.controller.initialization_status == ContextFlags.DEFERRED_INIT:
+
+            # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
+            #    since no need to detect deferred_init and generate errors until runtime
+            if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
+                return
+
+            if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
                 invalid_aux_components = self._get_invalid_aux_components(self.controller)
                 for component in invalid_aux_components:
                     if isinstance(component, Projection):
@@ -6284,7 +6590,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    control_projection_arrow='box',
                    feedback_shape = 'septagon',
                    cim_shape='square',
-                   output_fmt:tc.enum('pdf','gv','jupyter','gif')='pdf',
+                   output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
                    context=None,
                    **kwargs):
         """
@@ -6446,11 +6752,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
-        output_fmt : keyword : default 'pdf'
+        output_fmt : keyword or None : default 'pdf'
             'pdf': generate and open a pdf with the visualization;
             'jupyter': return the object (for working in jupyter/ipython notebooks);
             'gv': return graphviz object
             'gif': return gif used for animation
+            None : return None
 
         Returns
         -------
@@ -7327,6 +7634,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
 
         for node in self.nodes:
+            if isinstance(node, Composition):
+                continue
             roles = self.get_roles_by_node(node)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
@@ -7374,6 +7683,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             elif output_fmt == 'gv':
                 return G
+
+            elif not output_fmt:
+                return None
+
+            else:
+                raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
+
         except:
             raise CompositionError(f"Problem displaying graph for {self.name}")
 
@@ -7803,6 +8119,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 typically, the composition will infer the number of trials from the length of its input specification.
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
+
+            COMMENT:
+                FIX 4/28/20 [JDC]: THE FOLLOWING NEED TO BE CORRECTED/ADDED BASED ON REFACTORING OF THIS FUNCTIONALITY
+            COMMENT
 
             initial_values : Dict[Node: Node Value] : default None
                 sets the values of nodes before the start of the run. This is useful in cases where a node's value is
