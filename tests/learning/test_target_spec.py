@@ -9,7 +9,7 @@ from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import ENABLED
 
-class TestSimpleLearningPathway:
+class TestSimpleLearningPathways:
 
     def test_target_dict_spec_single_trial_scalar_and_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -17,139 +17,79 @@ class TestSimpleLearningPathway:
         comp = Composition()
         learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[A,B])
         target = learning_pathway.target
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:2.0})
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:[2.0]})
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.]]])
+        assert np.allclose(comp.results, [[[1.]], [[1.05]], [[1.0975]]])
 
     def test_target_dict_spec_single_trial_scalar_and_lists_bp(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C")
         comp = Composition()
-        learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[A,B])
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
         target = learning_pathway.target
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:2.0})
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:[2.0]})
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.]]])
+        assert np.allclose(comp.results, [[[1.]], [[1.21]], [[1.40873161]]])
 
     def test_target_dict_spec_multi_trial_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
-
         comp = Composition()
         learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
         target = learning_pathway.target
-        comp.run(inputs={A: [1.0, 2.0, 3.0],
+        comp.learn(inputs={A: [1.0, 2.0, 3.0],
                          target: [[4.0], [5.0], [6.0]]})
-        comp.run(inputs={A: [1.0, 2.0, 3.0],
+        comp.learn(inputs={A: [1.0, 2.0, 3.0],
                          target: [[[4.0]], [[5.0]], [[6.0]]]})
-
         assert np.allclose(comp.results,
-                            [[[1.]], [[2.]], [[3.]],
-                             [[1.]], [[2.]], [[3.]]])
+                            [[[1.]], [[2.6]], [[5.34]],
+                             [[1.978]], [[4.3604]], [[6.92436]]])
 
     def test_target_dict_spec_multi_trial_lists_bp(self):
         A = TransferMechanism(name="learning-process-mech-A")
-        B = TransferMechanism(name="learning-process-mech-B",
+        B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C",
                               default_variable=[[0.0, 0.0]])
-
         comp = Composition()
-        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
         target = learning_pathway.target
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:[2.0, 3.0]})
-        comp.run(inputs={A: 1.0,
+        comp.learn(inputs={A: 1.0,
                       target:[[2.0, 3.0]]})
-        comp.run(inputs={A: [1.0, 2.0, 3.0],
+        comp.learn(inputs={A: [1.0, 2.0, 3.0],
                          target: [[3.0, 4.0], [5.0, 6.0], [7.0, 8.0]]})
-        comp.run(inputs={A: [1.0, 2.0, 3.0],
+        comp.learn(inputs={A: [1.0, 2.0, 3.0],
                          target: [[[3.0, 4.0]], [[5.0, 6.0]], [[7.0, 8.0]]]})
-
         assert np.allclose(comp.results,
                            [[[1., 1.]],
-                            [[1., 1.]],
-                            [[1., 1.]], [[2., 2.]], [[3., 3.]],
-                            [[1., 1.]], [[2., 2.]], [[3., 3.]]])
-
-        with pytest.raises(RunError) as error_text:
-            comp.run(inputs={A: [1.0, 2.0, 3.0],
-                             target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
-        assert ("Input stimulus" in str(error_text.value) and
-                "for Target is incompatible with its external_input_values" in str(error_text.value))
+                            [[1.2075, 1.265]],
+                            [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
+                            [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
 
     # def test_target_function_spec(self):
-    #     A = TransferMechanism(name="multilayer-mech-A")
-    #     B = TransferMechanism(name="multilayer-mech-B")
-    #     C = TransferMechanism(name="multilayer-mech-C")
+    #     A = TransferMechanism(name="learning-process-mech-A")
+    #     B = TransferMechanism(name="learning-process-mech-B")
+    #     C = TransferMechanism(name="learning-process-mech-C",
+    #                           default_variable=[[0.0, 0.0]])
     #     comp = Composition()
     #     learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
     #     target = learning_pathway.target
-    #     comp.run(inputs={A: 1.0,
-    #                   target:2.0})
+    #     input_fct = FUNCTION()
+    #     comp.learn(inputs=input_fct)
     #
-    #     def target_function():
-    #         val_1 = NormalDist(mean=3.0)()
-    #         return val_1
-    #
-    #     S.run(inputs={A: 1.0},
-    #           targets={C: target_function})
-
-class TestMultilayerLearning:
-
-    def test_dict_target_spec(self):
-        A = TransferMechanism(name="multilayer-mech-A")
-        B = TransferMechanism(name="multilayer-mech-B")
-        C = TransferMechanism(name="multilayer-mech-comp")
-        comp = Composition()
-        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        target = learning_pathway.target
-        comp.run(inputs={A: 1.0,
-                      target:2.0})
-        comp.run(inputs={A: 1.0,
-                      target:[2.0]})
-        comp.run(inputs={A: 1.0,
-                      target:[[2.0]]})
-        assert np.allclose(comp.results, [[[1.], [1.], [1.]]])
-
-    def test_dict_target_spec_length2(self):
-        A = TransferMechanism(name="multilayer-mech-A")
-        B = TransferMechanism(name="multilayer-mech-B")
-        C = TransferMechanism(name="multilayer-mech-C",
-                              default_variable=[[0.0, 0.0]])
-        comp = Composition()
-        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        target = learning_pathway.target
-        comp.run(inputs={A: 1.0,
-                      target:[2.0, 3.0]})
-        comp.run(inputs={A: 1.0,
-                      target:[[2.0, 3.0]]})
-        assert np.allclose(comp.results, [[1., 1.], [1., 1.]])
-
-    def test_function_target_spec(self):
-        A = TransferMechanism(name="multilayer-mech-A")
-        B = TransferMechanism(name="multilayer-mech-B")
-        C = TransferMechanism(name="multilayer-mech-C")
-        comp = Composition()
-        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        target = learning_pathway.target
-        comp.run(inputs={A: 1.0,
-                      target:2.0})
-
-        def target_function():
-            val_1 = NormalDist(mean=3.0)()
-            return val_1
-
-        S.run(inputs={A: 1.0},
-              targets={C: target_function})
+    #     assert np.allclose(comp.results, ???)
 
 class TestDivergingLearningPathways:
 
@@ -159,164 +99,105 @@ class TestDivergingLearningPathways:
         C = TransferMechanism(name="diverging-learning-pathways-mech-C")
         D = TransferMechanism(name="diverging-learning-pathways-mech-D")
         E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+        comp = Composition()
+        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        p1_target = p1.target
+        p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
+        p2_target = p2.target
+        comp.learn(inputs={A: 1.0,
+                         p1_target: 2.0,
+                         p2_target: 4.0
+                         })
+        comp.learn(inputs={A: 2.0,
+                         p1_target: 2.0,
+                         p2_target: 4.0
+                         })
+        assert np.allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
 
-        P1 = Process(name="learning-pathway-1",
-                     pathway=[A, B, C],
-                     learning=ENABLED)
-        P2 = Process(name="learning-pathway-2",
-                    pathway=[A, D, E],
-                    learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[P1, P2]
-                   )
-
-        S.run(inputs={A: 1.0},
-              targets={C: 2.0,
-                       E: 4.0})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [2.0],
-                       E: [4.0]})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [[2.0]],
-                       E: [[4.0]]})
-
-    def test_dict_target_spec_length2(self):
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C",
-                              default_variable=[[0.0, 0.0]])
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E",
-                              default_variable=[[0.0, 0.0]])
-
-        P1 = Process(name="learning-pathway-1",
-                     pathway=[A, B, C],
-                     learning=ENABLED)
-        P2 = Process(name="learning-pathway-2",
-                    pathway=[A, D, E],
-                    learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[P1, P2]
-                   )
-
-        S.run(inputs={A: 1.0},
-              targets={C: [2.0, 3.0],
-                       E: [4.0, 5.0]})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [[2.0, 3.0]],
-                       E: [[4.0, 5.0]]})
-
-    def test_dict_list_and_function(self):
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-
-        P1 = Process(name="learning-pathway-1",
-                     pathway=[A, B, C],
-                     learning=ENABLED)
-        P2 = Process(name="learning-pathway-2",
-                    pathway=[A, D, E],
-                    learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[P1, P2]
-                   )
-
-        def target_function():
-            val_1 = NormalDist(mean=3.0)()
-            return val_1
-
-        S.run(inputs={A: 1.0},
-              targets={C: 2.0,
-                       E: target_function})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [2.0],
-                       E: target_function})
-
-        S.run(inputs={A: 1.0},
-              targets={C: [[2.0]],
-                       E: target_function})
+    # def test_target_function_spec(self):
+    #     A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+    #     B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+    #     C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+    #     D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+    #     E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+    #     comp = Composition()
+    #     p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+    #     p1_target = p1.target
+    #     p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
+    #     p2_target = p2.target
+    #     inputs_fct = FUNCTION()
+    #     comp.learn(inputs=inputs_fct)
+    #     comp.learn(inputs=inputs_fct)
+    #     assert np.allclose(comp.results,???)
 
 class TestConvergingLearningPathways:
 
     def test_dict_target_spec(self):
-        A = TransferMechanism(name="converging-learning-pathways-mech-A")
-        B = TransferMechanism(name="converging-learning-pathways-mech-B")
-        C = TransferMechanism(name="converging-learning-pathways-mech-C")
-        D = TransferMechanism(name="converging-learning-pathways-mech-D")
-        E = TransferMechanism(name="converging-learning-pathways-mech-E")
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+        comp = Composition()
+        p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        p = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+        target = p.target
+        comp.learn(inputs={A: 1.0,
+                         D: 2.0,
+                         target: [3.0, 4.0]
+                         })
+        comp.learn(inputs={A: 5.0,
+                         D: 6.0,
+                         target: [7.0, 8.0]
+                         })
+        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
-        P1 = Process(name="learning-pathway-1",
-                     pathway=[A, B, C],
-                     learning=ENABLED)
-        P2 = Process(name="learning-pathway-2",
-                    pathway=[D, E, C],
-                    learning=ENABLED)
+    # def test_target_function_spec(self):
+    #     A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+    #     B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+    #     C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
+    #     D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+    #     E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+    #     comp = Composition()
+    #     p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+    #     p = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+    #     target = p.target
+    #     inputs_fct = FUNCTION()
+    #     comp.learn(inputs=inputs_fct)
+    #     comp.learn(inputs=inputs_fct)
+    #     assert np.allclose(comp.results,???)
 
-        S = System(name="learning-system",
-                   processes=[P1, P2]
-                   )
-
-        S.run(inputs={A: 1.0,
-                      D: 1.0},
-              targets={C: 2.0})
-
-        S.run(inputs={A: 1.0,
-                      D: 1.0},
-              targets={C: [2.0]})
-
-        S.run(inputs={A: 1.0,
-                      D: 1.0},
-              targets={C: [[2.0]]})
-
-    def test_dict_target_spec_length2(self):
-        A = TransferMechanism(name="converging-learning-pathways-mech-A")
-        B = TransferMechanism(name="converging-learning-pathways-mech-B")
-        C = TransferMechanism(name="converging-learning-pathways-mech-C",
-                              default_variable=[[0.0, 0.0]])
-        D = TransferMechanism(name="converging-learning-pathways-mech-D")
-        E = TransferMechanism(name="converging-learning-pathways-mech-E")
-
-        P1 = Process(name="learning-pathway-1",
-                     pathway=[A, B, C],
-                     learning=ENABLED)
-        P2 = Process(name="learning-pathway-2",
-                    pathway=[D, E, C],
-                    learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[P1, P2]
-                   )
-
-        S.run(inputs={A: 1.0,
-                      D: 1.0},
-              targets={C: [2.0, 3.0]})
-
-        S.run(inputs={A: 1.0,
-                      D: 1.0},
-              targets={C: [[2.0, 3.0]]})
 
 class TestInvalidTargetSpecs:
+
+    def test_target_spec_over_nesting_of_items_in_target_value(self):
+        A = TransferMechanism(name="learning-process-mech-A")
+        B = TransferMechanism(name="learning-process-mech-B")
+        C = TransferMechanism(name="learning-process-mech-C",
+                              default_variable=[[0.0, 0.0]])
+        comp = Composition()
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        target = learning_pathway.target
+        with pytest.raises(RunError) as error_text:
+            comp.learn(inputs={A: [1.0, 2.0, 3.0],
+                             target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
+        assert ("Input stimulus" in str(error_text.value) and
+                "for Target is incompatible with its external_input_values" in str(error_text.value))
 
     def test_3_targets_4_inputs(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
-
-        LP = Process(name="learning-process",
-                     pathway=[A, B],
-                     learning=ENABLED)
-
-        S = System(name="learning-system",
-                   processes=[LP],
-                   )
+        #
+        # LP = Process(name="learning-process",
+        #              pathway=[A, B],
+        #              learning=ENABLED)
+        #
+        # S = System(name="learning-system",
+        #            processes=[LP],
+        #            )
+        comp = Composition()
+        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        target = learning_pathway.target
         with pytest.raises(RunError) as error_text:
             S.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]},
                   targets={B: [[1.0], [2.0], [3.0]]})
