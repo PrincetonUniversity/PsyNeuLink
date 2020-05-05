@@ -134,49 +134,33 @@ class TestStroop:
         respond_green_differencing_weights = pnl.MappingProjection(matrix=np.atleast_2d([[-1.0], [1.0]]),
                                                                    name='RESPOND_GREEN_WEIGHTS')
 
-        #   CREATE PATHWAYS
-        #   Words pathway
-        words_process = pnl.Process(pathway=[words_input_layer,
-                                             word_weights,
-                                             words_hidden_layer,
-                                             word_response_weights,
-                                             response_layer], name='WORDS_PROCESS')
+        # #   CREATE PATHWAYS
 
-        #   Colors pathway
-        colors_process = pnl.Process(pathway=[colors_input_layer,
-                                              color_weights,
-                                              colors_hidden_layer,
-                                              color_response_weights,
-                                              response_layer], name='COLORS_PROCESS')
-
-        #   Task representation pathway
-        task_CN_process = pnl.Process(pathway=[task_layer,
-                                               task_CN_weights,
-                                               colors_hidden_layer],
-                                      name='TASK_CN_PROCESS')
-        task_WR_process = pnl.Process(pathway=[task_layer,
-                                               task_WR_weights,
-                                               words_hidden_layer],
-                                      name='TASK_WR_PROCESS')
-
-        #   Evidence accumulation pathway
-        respond_red_process = pnl.Process(pathway=[response_layer,
-                                                   respond_red_differencing_weights,
-                                                   respond_red_accumulator],
-                                          name='RESPOND_RED_PROCESS')
-        respond_green_process = pnl.Process(pathway=[response_layer,
-                                                     respond_green_differencing_weights,
-                                                     respond_green_accumulator],
-                                            name='RESPOND_GREEN_PROCESS')
-
-        #   CREATE SYSTEM
-        my_Stroop = pnl.System(processes=[colors_process,
-                                          words_process,
-                                          task_CN_process,
-                                          task_WR_process,
-                                          respond_red_process,
-                                          respond_green_process],
-                               name='FEEDFORWARD_STROOP_SYSTEM')
+        # COMPOSITION:
+        my_Stroop = pnl.Composition(pathways=[
+            {'WORD_PROCESS':[words_input_layer,
+                             word_weights,
+                             words_hidden_layer,
+                             word_response_weights,
+                             response_layer]},
+            {'COLO_PROCESS': [colors_input_layer,
+                              color_weights,
+                              colors_hidden_layer,
+                              color_response_weights,
+                              response_layer]},
+            {'TASK_CN_PROCESS':[task_layer,
+                                task_CN_weights,
+                                colors_hidden_layer]},
+            {'TASK_WR_PROCESS':[task_layer,
+                                task_WR_weights,
+                                words_hidden_layer]},
+            {'RESPOND_RED_PROCESS':[response_layer,
+                                    respond_red_differencing_weights,
+                                    respond_red_accumulator]},
+            {'RESPOND_GREEN_PROCESS': [response_layer,
+                                       respond_green_differencing_weights,
+                                       respond_green_accumulator]},
+        ])
 
         # my_Stroop.show()
         # my_Stroop.show_graph(show_dimensions=pnl.ALL)
