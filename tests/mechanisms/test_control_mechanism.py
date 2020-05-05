@@ -138,15 +138,12 @@ class TestLCControlMechanism:
                 objective_mechanism=True,
                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
                                                   modulates=(pnl.SLOPE, Tz)))
-        P1=pnl.Process(pathway=[Tx,Tz])
-        P2=pnl.Process(pathway=[Ty, C])
-        S=pnl.System(processes=[P1, P2])
-        from pprint import pprint
-        pprint(S.execution_graph)
+        comp=pnl.Composition(pathways=[[Tx, Tz],[Ty, C]])
+        comp.show_graph()
 
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
-        result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
-        assert result == [[[4.], [4.]], [[4.], [4.]]]
+        result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
+        assert comp.results == [[[4.], [4.]], [[4.], [4.]]]
 
     def test_identicalness_of_control_and_gating(self):
         """Tests same configuration as gating in tests/mechansims/test_gating_mechanism"""
