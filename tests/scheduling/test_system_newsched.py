@@ -6,15 +6,11 @@ from psyneulink.core.components.functions.distributionfunctions import DriftDiff
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism import EVCControlMechanism
-
 
 
 class TestInit:
@@ -48,50 +44,20 @@ class TestInit:
             ),
             name='Decision',
         )
-        # Outcome Mechanisms:
+        # Outcome Mechanism:
         Reward = TransferMechanism(name='Reward')
 
-        # Processes:
-        ColorNamingProcess = Process(
-            default_variable=[0],
-            pathway=[Color_Input, Color_Hidden, Output, Decision],
-            name='Color Naming Process',
-        )
+        myComposition = Composition(pathways=[[Color_Input, Color_Hidden, Output, Decision],
+                                              [Word_Input, Word_Hidden, Output, Decision],
+                                              [Reward]])
 
-        WordReadingProcess = Process(
-            default_variable=[0],
-            pathway=[Word_Input, Word_Hidden, Output, Decision],
-            name='Word Reading Process',
-        )
-
-        RewardProcess = Process(
-            default_variable=[0],
-            pathway=[Reward],
-            name='RewardProcess',
-        )
-
-        # System:
-        mySystem = System(
-            processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-            controller=EVCControlMechanism,
-            enable_controller=True,
-            # monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
-            name='EVC Gratton System',
-        )
-
-        sched = Scheduler(system=mySystem)
-
-        integrator_ColorInputPrediction = mySystem.execution_list[7]
-        integrator_RewardPrediction = mySystem.execution_list[8]
-        integrator_WordInputPrediction = mySystem.execution_list[9]
-        objective_EVC_mech = mySystem.execution_list[10]
+        sched = Scheduler(composition=myComposition)
 
         expected_consideration_queue = [
-            {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
+            {Color_Input, Word_Input, Reward},
             {Color_Hidden, Word_Hidden},
             {Output},
-            {Decision},
-            {objective_EVC_mech},
+            {Decision}
         ]
 
         assert sched.consideration_queue == expected_consideration_queue
