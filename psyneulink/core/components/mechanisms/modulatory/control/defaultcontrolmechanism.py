@@ -39,7 +39,7 @@ import typecheck as tc
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_PORTS, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
+from psyneulink.core.globals.keywords import CONTROL, INPUT_PORTS, NAME
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList

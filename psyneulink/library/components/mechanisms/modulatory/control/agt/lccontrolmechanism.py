@@ -212,12 +212,12 @@ Execution
 
 An LCControlMechanism executes within a `Composition` at a point specified in the Composition's `Scheduler` or, if it
 is the `controller <Composition.controller>` for a `Composition`, after all of the other Mechanisms in the Composition
-have `executed <Composition_Run>` in a `TRIAL`. It's `function <LCControlMechanism.function>` takes the `value
-<InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input, and generates a
-response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is assigned as the
-`allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are used by its
-`ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL` of execution --  of the
-Mechanisms the LCControlMechanism controls.
+have `executed <Composition_Execution>` in a `TRIAL <TimeScale.TRIAL>`. It's `function <LCControlMechanism.function>`
+takes the `value <InputPort.value>` of the LCControlMechanism's `primary InputPort <InputPort_Primary>` as its input,
+and generates a response -- under the influence of its `mode <FitzHughNagumoIntegrator.mode>` parameter -- that is
+assigned as the `allocation <LCControlSignal.allocation>` of its `ControlSignals <ControlSignal>`.  The latter are
+used by its `ControlProjections <ControlProjection>` to modulate the response -- in the next `TRIAL <TimeScale.TRIAL>`
+of execution -- of the Mechanisms the LCControlMechanism controls.
 
 .. note::
    A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
@@ -767,16 +767,17 @@ class LCControlMechanism(ControlMechanism):
     def _instantiate_output_ports(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
 
-        If **modulated_mechanisms** argument of constructor was specified as *ALL*,
-            assign all ProcessingMechanisms in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms
+        If **modulated_mechanisms** argument of constructor was specified as *ALL*, assign all ProcessingMechanisms
+           in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms.
         Instantiate ControlSignal with Projection to the ParameterPort for the multiplicative_param of every
-           Mechanism listed in self.modulated_mechanisms
+           Mechanism listed in self.modulated_mechanisms.
         """
         from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
-        # FIX: IMPLEMENT FOR COMPOSITION
+        # FIX: IMPLEMENT FOR COMPOSITION:
+        #      add keyword in aux_comopnents (ALL) that is parsed by Composition to implement relevant Projections
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
             if self.systems:
                 for system in self.systems:
@@ -855,6 +856,16 @@ class LCControlMechanism(ControlMechanism):
                                                          "scaling_factor_gain")
         base_factor_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                       "base_level_gain")
+        # If modulated, scaling factor is a single element array
+        if isinstance(scaling_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(scaling_factor_ptr.type.pointee) == 1
+            scaling_factor_ptr = builder.gep(scaling_factor_ptr,
+                                             [ctx.int32_ty(0), ctx.int32_ty(0)])
+        # If modulated, base factor is a single element array
+        if isinstance(base_factor_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(base_factor_ptr.type.pointee) == 1
+            base_factor_ptr = builder.gep(base_factor_ptr,
+                                          [ctx.int32_ty(0), ctx.int32_ty(0)])
         scaling_factor = builder.load(scaling_factor_ptr)
         base_factor = builder.load(base_factor_ptr)
 

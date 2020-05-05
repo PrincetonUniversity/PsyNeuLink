@@ -686,7 +686,7 @@ OutputPort(s):
 
 The labels specified in these dictionaries can be used to:
 
-    - specify items in the `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>` arguments of the
+    - specify items in the `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>` arguments of the
       `run <System.run>` method of a `System`
     - report the values of the InputPort(s) and OutputPort(s) of a Mechanism
     - visualize the inputs and outputs of the System's Mechanisms
@@ -729,7 +729,7 @@ applied to a Mechanism with multiple InputPort, only the index zero InputPort wo
 
 *Using Label Dictionaries*
 
-When using labels to specify items in the `inputs <Composition_Run_Inputs>` arguments of the `run <System.run>` method, labels may
+When using labels to specify items in the `inputs <Composition_Execution_Inputs>` arguments of the `run <System.run>` method, labels may
 directly replace any or all of the `InputPort values <InputPort.value>` in an input specification dictionary. Keep in
 mind that each label must be specified in the `input_labels_dict <Mechanism_Base.input_labels_dict>` of the Origin
 Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
@@ -750,8 +750,8 @@ the input dictionary.
 The same general rules apply when using labels to specify `target values <Run_Targets>` for a pathway with learning.
 With target values, however, the labels must be included in the `output_labels_dict <Mechanism_Base.output_labels_dict>`
 of the Mechanism that projects to the `TARGET` Mechanism (see `TARGET Mechanisms <LearningMechanism_Targets>`), or in
-other words, the last Mechanism in the `learning sequence <Process_Learning_Sequence>`. This is the same Mechanism used
-to specify target values for a particular learning sequence in the `targets dictionary <Run_Targets>`.
+other words, the last Mechanism in a `learning pathway <LearningMechanism_Multilayer_Learning>`. This is the same
+Mechanism used to specify target values for a particular learning pathway in the `targets dictionary <Run_Targets>`.
 
         >>> input_labels_dict_M1 = {"red": [[1]],
         ...                         "green": [[0]]}
@@ -798,7 +798,7 @@ OutputPort(s).
 Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
 System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
 
-        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)
+        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
 .. note::
 
@@ -1120,14 +1120,18 @@ class Mechanism_Base(Mechanism):
         in which each label (key) specifies a string associated with a value for the InputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
-    input_labels : list
+    input_labels : list[str]
         contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
         of an InputPort does not have a corresponding label, then its numeric value is used instead.
 
-    external_input_values : list
-        same as `input_values <Mechanism_Base.input_values>`, but containing the `value <InputPort.value>` only of
-        InputPorts that are **not** designated as `internal_only <InputPort.internal_only>` (that is, ones that
-        receive external inputs).
+    external_input_ports : list[InputPort]
+        list of the `input_ports <Mechanism_Base.input_ports>` for the Mechanism that are not designated as
+        `internal_only <InputPort.internal_only>`;  these receive `inputs from a Composition
+        <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
+
+    external_input_values : List[List or 1d np.array]
+        list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
 
     COMMENT:
     target_labels_dict : dict
@@ -1463,23 +1467,28 @@ class Mechanism_Base(Mechanism):
                                 MECHANISM: port[1]
                             }
                     elif len(port) > 2:
-                        # if port is assigned to an object,
-                        # use a reference instead of name/value
-                        if isinstance(port[0], Component):
-                            spec = {PORT_SPEC: port[0]}
+                        # nonstandard 4 item tuple
+                        if isinstance(port[0], (list, tuple)):
+                            spec = port
                         else:
-                            spec = {
-                                NAME: port[0].name,
-                                VALUE: port[0].defaults.value,
-                            }
+                            # if port is assigned to an object,
+                            # use a reference instead of name/value
+                            if isinstance(port[0], Component):
+                                spec = {PORT_SPEC: port[0]}
 
-                        spec[WEIGHT] = port[1]
-                        spec[EXPONENT] = port[2]
+                            else:
+                                spec = {
+                                    NAME: port[0].name,
+                                    VALUE: port[0].defaults.value,
+                                }
 
-                        try:
-                            spec[PROJECTIONS] = port[3]
-                        except IndexError:
-                            pass
+                            spec[WEIGHT] = port[1]
+                            spec[EXPONENT] = port[2]
+
+                            try:
+                                spec[PROJECTIONS] = port[3]
+                            except IndexError:
+                                pass
 
                     spec_list.append(spec)
                 else:
@@ -2190,7 +2199,7 @@ class Mechanism_Base(Mechanism):
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
             of the Mechanism's `input_ports  <Mechanism_Base.input_ports>`, and each item must be compatible with the
             format (number and type of elements) of the `variable <InputPort.InputPort.variable>` of the
-            corresponding InputPort (see `Run Inputs <Composition_Run_Inputs>` for details of input
+            corresponding InputPort (see `Run Inputs <Composition_Execution_Inputs>` for details of input
             specification formats).
 
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
@@ -2207,7 +2216,7 @@ class Mechanism_Base(Mechanism):
 
         Mechanism's output_values : List[value]
             list with the `value <OutputPort.value>` of each of the Mechanism's `OutputPorts
-            <Mechanism_OutputPorts>` after either one `TIME_STEP` or a `TRIAL`.
+            <Mechanism_OutputPorts>` after either one `TIME_STEP` or a `TRIAL <TimeScale.TRIAL>`.
 
         """
 
@@ -2382,7 +2391,7 @@ class Mechanism_Base(Mechanism):
         ---------
 
         inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Run_Inputs` for a detailed
+            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Execution_Inputs` for a detailed
             description of formatting requirements and options).
 
         num_trials: int
@@ -2596,7 +2605,7 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_input_ports(self, ctx, builder,
-                               mech_params, mech_state, mech_input):
+                              mech_params, mech_state, mech_input):
         # Allocate temporary storage. We rely on the fact that series
         # of InputPort results should match the main function input.
         ip_output_list = []
@@ -2618,6 +2627,8 @@ class Mechanism_Base(Mechanism):
 
         def _fill_input(b, p_input, i):
             ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            # Input port inputs are {original parameter, [modulations]},
+            # fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(ip_in), data_ptr)
             return b
@@ -2637,19 +2648,20 @@ class Mechanism_Base(Mechanism):
         builder.store(builder.load(params_in), params_out)
 
         # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj._get_param_ids()]
+        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
                                               param_ports[i].name)
             return b, ptr
 
-        def _fill_input(b, s_input, i):
+        def _fill_input(b, p_input, i):
             param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
                                                        param_ports[i].name)
-            # get rid of extra dimension
-            raw_ps_input = b.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(param_in_ptr), raw_ps_input)
+            # Parameter port inputs are {original parameter, [modulations]},
+            # fill in the first one.
+            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            b.store(b.load(param_in_ptr), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports,
@@ -2681,6 +2693,8 @@ class Mechanism_Base(Mechanism):
         def _fill_input(b, s_input, i):
             data_ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_ports[i])
+            # Output port inputs are {original parameter, [modulations]},
+            # fill in the first one.
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
@@ -2746,12 +2760,16 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reinitialize" not in tags
+
+        params, builder = self._gen_llvm_param_ports_for_obj(
+                self, params, ctx, builder, params, state, arg_in)
+
         is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "is_finished_flag")
+                                                           "is_finished_flag")
         is_finished_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "num_executions_before_finished")
+                                                            "num_executions_before_finished")
         is_finished_max_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                "max_executions_before_finished")
+                                                          "max_executions_before_finished")
 
         # Reset the flag and counter
         # FIXME: Use int for flag
@@ -2773,13 +2791,14 @@ class Mechanism_Base(Mechanism):
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=pnlvm.ir.IntType(1))
+        iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         params, state, arg_in, arg_out)
+                                                                         iparams, istate, iin, iout)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
         internal_f = internal_builder.function
-        is_finished_cond = builder.call(internal_f, builder.function.args)
+        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, *builder.function.args[4:]])
 
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count
@@ -3375,19 +3394,22 @@ class Mechanism_Base(Mechanism):
         if not isinstance(ports, (list, ContentAddressableList)):
             ports = [ports]
 
-        def delete_port_Projections(proj_list):
+        def delete_port_Projections(proj_list, port):
             for proj in proj_list:
-                type(proj)._delete_projection(proj)
+                try:
+                    type(proj)._delete_projection(proj)
+                except:
+                    raise MechanismError(f"PROGRAM ERROR: {proj} not found when removing {port} from {self.name}.")
 
         for port in ports:
 
-            delete_port_Projections(port.mod_afferents)
+            delete_port_Projections(port.mod_afferents, port)
 
             if port in self.input_ports:
                 if isinstance(port, str):
                     port = self.input_ports[port]
                 index = self.input_ports.index(port)
-                delete_port_Projections(port.path_afferents)
+                delete_port_Projections(port.path_afferents, port)
                 del self.input_ports[index]
                 # If port is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
@@ -3417,7 +3439,7 @@ class Mechanism_Base(Mechanism):
                     index = self.output_ports.index(port)
                 else:
                     index = self.output_ports.index(self.output_ports[port])
-                delete_port_Projections(port.efferents)
+                delete_port_Projections(port.efferents, port)
                 del self.output_values[index]
                 del self.output_ports[port]
                 # If port is subclass of OutputPort:
@@ -3439,7 +3461,6 @@ class Mechanism_Base(Mechanism):
         # del mechanism.function
         remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
                                       component=mechanism)
-        del mechanism
 
     def get_input_port_position(self, port):
         if port in self.input_ports:

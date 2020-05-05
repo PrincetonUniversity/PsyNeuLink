@@ -24,7 +24,7 @@ directly, using its :keyword:`run` method is easier because it:
     * allows multiple rounds of execution to be run in sequence, whereas the :keyword:`execute` method of a Component
       runs only a single execution of the object;
     ..
-    * uses simpler formats for specifying `inputs <Composition_Run_Inputs>` and `targets <Run_Targets>`;
+    * uses simpler formats for specifying `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>`;
     ..
     * automatically aggregates results across executions and stores them in the results attribute of the object.
 
@@ -102,20 +102,21 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 ========
 
 When :keyword:`run` is called by a Component, it calls that Component's :keyword:`execute` method once for each
-`input <Composition_Run_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a `TRIAL` of
-execution.  For each `TRIAL`, the Component makes repeated `calls to its Scheduler <Scheduler_Execution>`,
-executing the Components it specifies in each `TIME_STEP`, until every Component has been executed at least once or
-another `termination condition <Scheduler_Termination_Conditions>` is met.  The `Scheduler` can be used in combination
-with `Condition` specifications for individual Components to execute different Components at different time scales.
+`input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to :keyword:`run`, which constitutes a
+`TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`, the Component makes repeated `calls to
+its Scheduler <Scheduler_Execution>`, executing the Components it specifies in each `TIME_STEP`, until every
+Component has been executed at least once or another `termination condition <Scheduler_Termination_Conditions>` is
+met.  The `Scheduler` can be used in combination with `Condition` specifications for individual Components to execute
+different Components at different time scales.
 
-.. _Composition_Run_Inputs:
+.. _Composition_Execution_Inputs:
 
 *Inputs*
 ========
 
-The :keyword:`run` function presents the inputs for each `TRIAL` to the input_ports of the relevant Mechanisms in
-the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a Component's
-:keyword:`execute` or :keyword:`run` method.
+The :keyword:`run` function presents the inputs for each `TRIAL <TimeScale.TRIAL>` to the input_ports of the relevant
+Mechanisms in the `scope of execution <Run_Scope_of_Execution>`. These are specified in the **inputs** argument of a
+Component's :keyword:`execute` or :keyword:`run` method.
 
 Inputs are specified in a Python dictionary where the keys are `ORIGIN` Mechanisms, and the values are lists in which
 the i-th element represents the input value to the Mechanism on trial i. Each input value must be compatible with the
@@ -147,13 +148,13 @@ an origin mechanism are usually specified by a list of 2d lists/arrays, though `
         >>> s.run(inputs=input_dictionary)
 
 COMMENT:
-    .. _Composition_Run_Inputs_Fig:
+    .. _Composition_Execution_Inputs_Fig:
 
     .. figure:: _static/input_spec_variables.svg
        :alt: Example input specifications with variable
 COMMENT
 
-.. _Composition_Run_Inputs_Fig_States:
+.. _Composition_Execution_Inputs_Fig_States:
 
 .. figure:: _static/input_spec_states.svg
    :alt: Example input specifications with input ports
@@ -468,35 +469,39 @@ COMMENT
 *Targets*
 =========
 
-If learning is specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`, then
-target values for each `TRIAL` must be provided for each `TARGET` Mechanism in the Process or System being run.  These
-are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
+If learning is specified for a `Pathway` (see `learning Pathway <Composition_Learning_Pathway>`), then
+target values for each `TRIAL <TimeScale.TRIAL>` must be provided for each `TARGET` Mechanism in the Process or System
+being run.  These are specified in the **targets** argument of the :keyword:`execute` or :keyword:`run` method.
 
-Recall that the `TARGET`, or `ComparatorMechanism`, of a learning sequence receives a TARGET, which is provided by the
-user at run time, and a SAMPLE, which is received from a projection sent by the last mechanism of the learning sequence.
-The TARGET and SAMPLE values for a particular `TARGET` Mechanism must have the same shape. See `learning sequence
-<Process_Learning_Sequence>` for more details on how these components relate to each other.
+Recall that the `TARGET`, or `ComparatorMechanism`, of a `learning Pathway <Composition_Learning_Pathway>` receives a
+TARGET, that is provided by the user at run time, and a SAMPLE, that is received from a projection sent by the last
+Mechanism of the `learning Pathway <Composition_Learning_Pathway>`. The TARGET and SAMPLE values for a particular
+`TARGET` Mechanism must have the same shape. See `learning Pathway <Composition_Learning_Pathway>` for more details on
+how these components relate to each other.
 
 The standard format for specifying targets is a Python dictionary where the keys are the last mechanism of each learning
-sequence, and the values are lists in which the i-th element represents the target value for that learning sequence on
-trial i. There must be the same number of keys in the target specification dictionary as there are `TARGET` Mechanisms
-in the system. Each target value must be compatible with the shape of the `TARGET` mechanism's TARGET `InputPort
-<ComparatorMechanism.input_ports>`. This means that for a given key (which is always the last mechanism of the
-learning sequence) in the target specification dictionary, the value is usually a list of 1d lists/arrays.
+sequence, and the values are lists in which the i-th element represents the target value for that `learning Pathway
+<Composition_Learning_Pathway>` on trial i. There must be the same number of keys in the target specification
+dictionary as there are `TARGET` Mechanisms in the system. Each target value must be compatible with the shape of the
+`TARGET` mechanism's TARGET `InputPort <ComparatorMechanism.input_ports>`. This means that for a given key (which is
+always the last Mechanism of the `learning Pathway <Composition_Learning_Pathway>`) in the target specification
+dictionary, the value is usually a list of 1d lists/arrays.
 
 The number of targets specified for each Mechanism must equal the number specified for the **inputs** argument;  as
-with **inputs**, if the number of `TRIAL` \\s specified is greater than the number of inputs (and targets), then the
-list will be cycled until the number of `TRIAL` \\s specified is completed.
+with **inputs**, if the number of `TRIAL <TimeScale.TRIAL>` \\s specified is greater than the number of inputs
+(and targets), then the list will be cycled until the number of `TRIAL <TimeScale.TRIAL>` \\s specified is completed.
 
-+------------------------------------------+--------------+--------------+
-| Trial #                                  |0             |   1          |
-+------------------------------------------+--------------+--------------+
-| Target value for the learning sequence   | [1.0, 1.0]   |   [2.0, 2.0] |
-| containing **Mechanism b**               |              |              |
-+------------------------------------------+--------------+--------------+
-| Target value for the learning sequence   |  [1.0]       |   [2.0]      |
-| containing **Mechanism c**               |              |              |
-+------------------------------------------+--------------+--------------+
++----------------------------------------------------+--------------+--------------+
+| Trial #                                            |0             |   1          |
++----------------------------------------------------+--------------+--------------+
+| TARGET value for the                               | [1.0, 1.0]   |   [2.0, 2.0] |
+| `learning Pathway <Composition_Learning_Pathway>`  |              |              |
+| containing **Mechanism b**                         |              |              |
++----------------------------------------------------+--------------+--------------+
+| TARGET value for the                               |  [1.0]       |   [2.0]      |
+| `learning Pathway <Composition_Learning_Pathway>`  |              |              |
+| containing **Mechanism c**                         |              |              |
++----------------------------------------------------+--------------+--------------+
 
 ::
 
@@ -531,11 +536,11 @@ list will be cycled until the number of `TRIAL` \\s specified is completed.
 .. figure:: _static/target_spec_dictionary.svg
    :alt: Example of dictionary format of target specification
 
-Alternatively, the value for a given key (last mechanism in the learning sequence) in the target specification
-dictionary may be a function. The output of that function must be compatible with the shape of the `TARGET` mechanism's
-TARGET `InputPort <ComparatorMechanism.input_ports>`. The function will be executed at the start of the learning
-portion of each trial. This format allows targets to be constructed programmatically, in response
-to computations made during the run.
+Alternatively, the value for a given key (last mechanism in the `learning Pathway <Composition_Learning_Pathway>`) in
+the target specification dictionary may be a function. The output of that function must be compatible with the shape
+of the `TARGET` mechanism's TARGET `InputPort <ComparatorMechanism.input_ports>`. The function will be executed at
+the start of the learning portion of each trial. This format allows targets to be constructed programmatically,
+in response to computations made during the run.
 
 ::
 
@@ -561,11 +566,12 @@ to computations made during the run.
 
 .. note::
 
-    Target specification dictionaries that provide values for multiple learning sequences may contain functions for some
-    learning sequences and lists of values for others.
+    Target specification dictionaries that provide values for multiple `learning Pathways
+    <Composition_Learning_Pathway>` may contain functions for some `learning Pathways <Composition_Learning_Pathway>`
+    and lists of values for others.
 
-Finally, for convenience, if there is only one learning sequence in a system, the targets may be specified in a list,
-rather than a dictionary.
+Finally, for convenience, if there is only one `learning Pathway <Composition_Learning_Pathway>` in a system, the
+targets may be specified in a list, rather than a dictionary.
 
 +------------------------------------------+-------+------+------+------+------+
 | Trial #                                  |0      |1     |2     |3     |4     |
@@ -592,7 +598,7 @@ Complete input specification:
         >>> s.run(inputs=input_dictionary,
         ...       targets=target_dictionary)
 
-Shorthand - specify the targets in a list because there is only one learning sequence:
+Shorthand - specify the targets in a list because there is only one `learning Pathway <Composition_Learning_Pathway>`:
 
 ::
 
@@ -674,7 +680,7 @@ def run(obj,
     Run a sequence of executions for a `Process` or `System`.
 
     COMMENT:
-        First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL`:
+        First, validate inputs (and targets, if learning is enabled).  Then, for each `TRIAL <TimeScale.TRIAL>`:
             * call call_before_trial if specified;
             * for each time_step in the trial:
                 * call call_before_time_step if specified;
@@ -697,23 +703,25 @@ def run(obj,
    Arguments
    ---------
 
-    inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL`
-        the input for each `TRIAL` in a sequence (see `Composition_Run_Inputs` for detailed description of formatting
-        requirements and options).
+    inputs : List[input] or ndarray(input) : default default_variable for a single `TRIAL <TimeScale.TRIAL>`
+        the input for each `TRIAL <TimeScale.TRIAL>` in a sequence (see `Composition_Execution_Inputs` for detailed
+        description of formatting requirements and options).
 
     num_trials : int : default None
-        the number of `TRIAL` \\s to run.  If it is `None` (the default), then a number of `TRIAL` \\s run will be equal
-        equal to the number of items specified in the **inputs** argument.  If **num_trials** exceeds the number of
-        inputs, then the inputs will be cycled until the number of `TRIAL` \\s specified have been run.
+        the number of `TRIAL <TimeScale.TRIAL>` \\s to run.  If it is `None` (the default), then a number of `TRIAL
+        <TimeScale.TRIAL>` \\s run will be equal to the number of items specified in the **inputs** argument.
+        If **num_trials** exceeds the number of inputs, then the inputs will be cycled until the number of
+        `TRIAL <TimeScale.TRIAL>` \\s specified have been run.
 
     initialize : bool default False
-        calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL`.
+        calls the `initialize <System.initialize>` method of the System prior to the first `TRIAL <TimeScale.TRIAL>`.
 
     initial_values : Dict[Mechanism:List[input]], List[input] or np.ndarray(input) : default None
         the initial values assigned to Mechanisms designated as `INITIALIZE_CYCLE`.
 
     targets : dict : default None
-        the target values assigned to the `ComparatorMechanism` of each learning sequence on each `TRIAL`.
+        the target values assigned to the `ComparatorMechanism` of each `learning Pathway
+        <Composition_Learning_Pathway>` on each `TRIAL <TimeScale.TRIAL>`.
 
     learning : bool :  default None
         enables or disables learning during execution for a `Process <Process_Execution_Learning>` or
@@ -721,10 +729,10 @@ def run(obj,
         If it is `True`, learning is forced on; if it is `False`, learning is forced off.
 
     call_before_trial : Function : default `None`
-        called before each `TRIAL` in the sequence is run.
+        called before each `TRIAL <TimeScale.TRIAL>` in the sequence is run.
 
     call_after_trial : Function : default `None`
-        called after each `TRIAL` in the sequence is run.
+        called after each `TRIAL <TimeScale.TRIAL>` in the sequence is run.
 
     call_before_time_step : Function : default ``None`
         called before each `TIME_STEP` is executed.
@@ -759,7 +767,7 @@ def run(obj,
    -------
 
     <obj>.results : List[OutputPort.value]
-        list of the values, for each `TRIAL`, of the OutputPorts for a Mechanism run directly,
+        list of the values, for each `TRIAL <TimeScale.TRIAL>`, of the OutputPorts for a Mechanism run directly,
         or of the OutputPorts of the `TERMINAL` Mechanisms for the Process or System run.
     """
     from psyneulink.core.globals.context import ContextFlags
@@ -815,7 +823,7 @@ def run(obj,
 
         # if num_targets = -1, all targets were specified as functions
         if num_targets != num_inputs_sets and num_targets != -1:
-            raise RunError("Number of target values specified ({}) for each learning sequence in {} must equal the "
+            raise RunError("Number of target values specified ({}) for each learning Pathway in {} must equal the "
                            "number of input values specified ({}) for each origin mechanism in {}."
                            .format(num_targets, obj.name, num_inputs_sets, obj.name))
 

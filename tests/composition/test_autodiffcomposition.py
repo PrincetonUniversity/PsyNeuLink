@@ -58,7 +58,7 @@ class TestACConstructor:
         assert comp.input_CIM.reportOutputPref == False
         assert comp.output_CIM.reportOutputPref == False
         # assert comp.target_CIM.reportOutputPref == False
-    
+
     # FIXME: This test for patience doesn't actually test for correctness
     # def test_patience(self):
         # comp = AutodiffComposition()
@@ -134,7 +134,7 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        
+
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
              [0, 1],
@@ -1099,7 +1099,7 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        
+
         mnet.learn(
                 inputs=input_set,
                 minibatch_size=1,
@@ -2007,7 +2007,7 @@ class TestTrainingIdenticalness():
         # SET UP SYSTEM
         sem_net_sys = Composition()
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 nouns_in_sys,
                 map_nouns_h1_sys,
@@ -2019,9 +2019,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_I]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_I]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 rels_in_sys,
                 map_rels_h2_sys,
@@ -2031,9 +2031,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_is]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_is]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 h2_sys,
                 map_h2_has_sys,
@@ -2041,9 +2041,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_has]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_has]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 h2_sys,
                 map_h2_can_sys,
@@ -2051,7 +2051,7 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_can]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_can]
 
         # TRAIN SYSTEM
         results = sem_net_sys.learn(inputs=inputs_dict_sys,
@@ -2516,10 +2516,10 @@ class TestNested:
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(xor_autodiff)
-        
+
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
-        
+
         learning_context = Context()
         result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
         result1 = np.array(result1).flatten()

@@ -713,3 +713,27 @@ def test_DDM_threshold_modulation(mode):
     val = np.asfarray(val)
     assert np.allclose(val[0], [60.0])
     assert np.allclose(val[1], [60.2])
+
+@pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVM', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                    ])
+@pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
+                            (1.0, 0.0, (0.0, 1.0)),
+                            (1.5, 2, (-2.0, 1.0)),
+                            (10.0, 10.0, (10.0, 29.0)),
+                            (100.0, 100.0, (100.0, 76.0)),
+                        ])
+def test_ddm_is_finished(mode, noise, threshold, expected_results):
+    comp = Composition()
+    ddm = DDM(execute_until_finished=True,
+                function=DriftDiffusionIntegrator(threshold=threshold, noise=noise))
+    comp.add_node(ddm)
+
+    results = comp.run([0], bin_execute=mode)
+
+    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
+    assert np.allclose(results, np.array(expected_results).flatten())

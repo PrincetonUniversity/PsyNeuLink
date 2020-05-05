@@ -512,9 +512,9 @@ from psyneulink.core.components.ports.port import PortError, Port_Base, _instant
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
-    PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
-    SENDER, SIZE, PORT_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
+    PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
+    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -537,8 +537,6 @@ WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
-SHADOW_INPUTS = 'shadow_inputs'
-SHADOW_INPUT_NAME = 'Shadowed input of '
 
 class InputPortError(Exception):
     def __init__(self, error_value):
@@ -615,9 +613,8 @@ class InputPort(Port_Base):
         specifies the value of the `exponent <InputPort.exponent>` attribute of the InputPort.
 
     internal_only : bool : False
-        specifies whether external input is required by the InputPort's `owner <Port.owner>` if its `role
-        <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputPort.internal_only>`
-        for details).
+        specifies whether the InputPort requires external input when its `owner <Port.owner>` is the `INPUT`
+        `Node <Composition_Nodes>` of a `Composition (see `internal_only <InputPort.internal_only>` for details).
 
     Attributes
     ----------
@@ -660,10 +657,10 @@ class InputPort(Port_Base):
         see `weight and exponent <InputPort_Weights_And_Exponents>` for description.
 
     internal_only : bool
-        determines whether input is required for this InputPort from `Run` or another `Composition` when the
-        InputPort's `owner <Port.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
-        is designated as *EXTERNAL_INPUT*;  if `True`, external input is *not* required or allowed;  otherwise,
-        external input is required.
+        determines whether `input from a Composition <Composition_Execution_Input>` must be specified for this
+        InputPort from a Composition's `execution method <Composition_Execution_Method>` if the InputPort's `owner
+        <Port.owner>` is an `INPUT` `Node <Composition_Nodes>` of that Composition; if `True`, external input is
+        *not* required or allowed.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is
@@ -940,6 +937,15 @@ class InputPort(Port_Base):
 
         Returns redundant Projection if found, otherwise False.
         """
+
+        try:
+            self.path_afferents
+        except:
+            if self.initialization_status == ContextFlags.DEFERRED_INIT:
+                raise InputPortError(f"Attempt to assign Projection ('{projection}') "
+                                     f"to InputPort ('{self.name}') that is in deferred init")
+            else:
+                raise InputPortError(f"No 'path_afferents' for {self.name}")
 
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_PORT
         duplicate = next(iter([proj for proj in self.path_afferents

@@ -1,6 +1,6 @@
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.pytorchllvmhelper import *
-from psyneulink.core.globals.utilities import NodeRole
+from psyneulink.core.compositions.composition import NodeRole
 
 __all__ = ['AdamOptimizer', 'SGDOptimizer']
 

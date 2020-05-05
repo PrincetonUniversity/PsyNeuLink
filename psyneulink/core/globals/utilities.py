@@ -102,6 +102,7 @@ import time
 import warnings
 import weakref
 import types
+import typing
 
 from enum import Enum, EnumMeta, IntEnum
 
@@ -113,19 +114,21 @@ from psyneulink.core.globals.keywords import \
 
 __all__ = [
     'append_type_to_name', 'AutoNumber', 'ContentAddressableList', 'convert_to_list', 'convert_to_np_array',
-    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'NodeRole', 'get_class_attributes', 'flatten_list', 'get_all_explicit_arguments',
-    'get_modulationOperation_name', 'get_value_from_array', 'is_comparison_operator', 'is_component',
-    'is_distance_metric', 'is_matrix',
-    'insert_list', 'is_matrix_spec', 'all_within_range', 'is_iterable',
+    'convert_all_elements_to_np_array', 'copy_iterable_with_shared', 'get_class_attributes', 'flatten_list',
+    'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
+    'insert_list', 'is_matrix_spec', 'all_within_range',
+    'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
-    'is_value_spec', 'iscompatible', 'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
+    'is_value_spec',
+    'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property', 'merge_param_dicts',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
-    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf', 'parse_valid_identifier', 'parse_string_to_psyneulink_object_string',
-    'parameter_spec', 'powerset', 'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
+    'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
+    'parse_valid_identifier', 'parse_string_to_psyneulink_object_string', 'parameter_spec', 'powerset',
+    'random_matrix', 'ReadOnlyOrderedDict', 'safe_equals', 'safe_len',
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
-    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy'
+    'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
 ]
 
 logger = logging.getLogger(__name__)
@@ -1671,61 +1674,6 @@ def call_with_pruned_args(func, *args, **kwargs):
     return func(*args, **kwargs)
 
 
-class NodeRole(Enum):
-    """
-    COMMENT:
-    Attributes
-    ----------
-    COMMENT
-
-    ORIGIN
-        A Node that does not receive any projections. A Composition may have many `ORIGIN` Nodes.
-
-    INPUT
-        A Node that receives external input. A Composition may have many `INPUT` Nodes.
-
-    TERMINAL
-        A Node that does not send any projections. A Composition may have many `TERMINAL` Nodes.
-
-    OUTPUT
-        A Node whose `output_values <Mechanism_Base.output_values>` are returned as output of the Composition. A
-        Composition may have many `OUTPUT` Nodes.
-
-    INTERNAL
-        A Node that is neither `ORIGIN` nor `TERMINAL`
-
-    CONTROLLER_OBJECTIVE
-        A Node that is the ObjectiveMechanism of a controller.
-
-    FEEDBACK_SENDER
-        A Node with one or more outgoing projections marked as "feedback". This means that the Node is at the end of a
-        pathway which would otherwise form a cycle.
-
-    FEEDBACK_RECEIVER
-        A Node with one or more incoming projections marked as "feedback". This means that the Node is at the start of a
-        pathway which would otherwise form a cycle.
-
-    CYCLE
-        A Node that belongs to a cycle.
-
-    LEARNING
-        A Node that is only executed when learning is enabled.
-
-    TARGET
-        A Node that receives the target for a learning sequence
-    """
-    ORIGIN = 0
-    INPUT = 1
-    TERMINAL = 2
-    OUTPUT = 3
-    INTERNAL = 4
-    CONTROLLER_OBJECTIVE = 5
-    FEEDBACK_SENDER = 6
-    FEEDBACK_RECEIVER = 7
-    CYCLE = 8
-    LEARNING = 9
-    TARGET = 10
-
 def unproxy_weakproxy(proxy):
     """
         Returns the actual object weak-referenced by a weakproxy.proxy object
@@ -1809,3 +1757,38 @@ def get_all_explicit_arguments(cls_, func_str):
             break
 
     return all_arguments
+
+
+def create_union_set(*args) -> set:
+    """
+        Returns:
+            a ``set`` containing all items in **args**, expanding
+            iterables
+    """
+    result = set()
+    for item in args:
+        if hasattr(item, '__iter__') and not isinstance(item, str):
+            result = result.union(item)
+        else:
+            result = result.union([item])
+
+    return result
+
+
+def merge_dictionaries(a: dict, b: dict) -> typing.Tuple[dict, bool]:
+    """
+        Returns: a tuple containing:
+            - a ``dict`` containing each key-value pair in **a** and
+            **b** where the values of shared keys are sets of their
+            original values
+
+            - a ``bool`` indicating if **a** and **b** have any shared
+            keys
+    """
+    shared_keys = [x for x in a if x in b]
+
+    new_dict = {k: v for k, v in a.items()}
+    new_dict.update(b)
+    new_dict.update({k: create_union_set(a[k], b[k]) for k in shared_keys})
+
+    return new_dict, len(new_dict) < (len(a) + len(b))

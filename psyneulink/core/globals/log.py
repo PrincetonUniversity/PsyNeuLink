@@ -45,7 +45,8 @@ Structure
 A Log is composed of `entries <Log.entries>`, each of which is a dictionary that maintains a record of the logged
 values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
 of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three items:
-    * *time* -- the `RUN`, `TRIAL`, `PASS`, and `TIME_STEP` in which the value of the item was recorded;
+    * *time* -- the `RUN`, `TRIAL <TimeScale.TRIAL>`, `PASS`, and `TIME_STEP` in which the value of the item was
+      recorded;
     * *context* -- a string indicating the context in which the value was recorded;
     * *value* -- the value of the item.
 The time is recorded only if the Component is executed within a `System`;  otherwise, the time field is `None`.
@@ -143,9 +144,9 @@ that the `value <Mechanism_Base.value>` of ``my_mech`` be logged both during exe
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::
-   `LogCondition.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL`.  To log its
-   `value <Component.value>` at the start of a `TRIAL`, use its `log_values <Component.log_values>` method in the
-   **call_before_trial** argument of the System's `run <System.run>` method.
+   `LogCondition.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL <TimeScale.TRIAL>`.
+   To log its `value <Component.value>` at the start of a `TRIAL <TimeScale.TRIAL>`, use its `log_values
+   <Component.log_values>` method in the **call_before_trial** argument of the System's `run <System.run>` method.
 
 .. _Log_Execution:
 
@@ -427,9 +428,9 @@ class LogCondition(enum.IntFlag):
     SIMULATION = ContextFlags.SIMULATION
     # Set during simulation by Composition.controller
     TRIAL = ContextFlags.SIMULATION << 1
-    """Set at the end of a `TRIAL`."""
+    """Set at the end of a 'TRIAL'."""
     RUN = ContextFlags.SIMULATION << 2
-    """Set at the end of a `RUN`."""
+    """Set at the end of a 'RUN'."""
     ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
         | SIMULATION | TRIAL | RUN

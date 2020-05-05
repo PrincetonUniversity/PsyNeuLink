@@ -88,6 +88,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
+        # noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
         noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='COLORS HIDDEN'
     )
@@ -96,6 +97,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=hidden_func,
         integrator_mode=True,
         integration_rate=integration_rate,
+        # noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
         noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='WORDS HIDDEN'
     )
@@ -105,6 +107,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
         function=pnl.Logistic,
         integrator_mode=True,
         integration_rate=integration_rate,
+        # noise=pnl.NormalDist(standard_deviation=unit_noise_std).function,
         noise=pnl.NormalDist(standard_deviation=unit_noise_std),
         name='OUTPUT'
     )
@@ -190,7 +193,9 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     model.add_linear_processing_pathway([hid_wrd, wts_wrd_ho, output])
     model.add_linear_processing_pathway([inp_task, wts_tc, hid_clr])
     model.add_linear_processing_pathway([inp_task, wts_tw, hid_wrd])
-    model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])
+    model.add_linear_processing_pathway([output, pnl.IDENTITY_MATRIX, decision])  # 3/15/20
+    # model.add_linear_processing_pathway([output, [[1,-1]], (decision, pnl.NodeRole.OUTPUT)])   # 3/15/20
+    # model.add_linear_processing_pathway([output, [[1],[-1]], decision])   # 3/15/20
 
     model.add_nodes([reward_rate, punish_rate])
 
@@ -231,7 +236,7 @@ model, nodes, model_params = get_stroop_model(unit_noise_std, dec_noise_std)
 
 #%%
 
-# model.show_graph(show_controller=True)
+model.show_graph(show_controller=True)
 
 #%% md
 

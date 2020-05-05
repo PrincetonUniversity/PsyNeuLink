@@ -369,11 +369,12 @@ accepts a single argument that is a 2d array with two entries.
     .. _TransferMechanism_Termination_By_Time:
 
     *Termination by time*.  This terminates execution when the Mechanism has executed at least a number of times equal
-    to the **threshold** at a particular TimeScale (e.g., within a `Run` or a `Trial`). This is specified by assigning
-    a `TimeScale` to **termination_measure**;  execution terminates when the number of executions at that TimeScale
-    equals the **termination_threshold**.  Note that, in this case, the **termination_comparison_op** argument is
-    ignored (the `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
-    *GREATER_THAN_OR_EQUAL*).  For example, ``my_mech`` is configured below to execute at least twice per trial::
+    to the **threshold** at a particular TimeScale (e.g., within a `RUN` or a `TRIAL <TimeScale.TRIAL>`). This is
+    specified by assigning a `TimeScale` to **termination_measure**;  execution terminates when the number of
+    executions at that TimeScale equals the **termination_threshold**.  Note that, in this case,
+    the **termination_comparison_op** argument is ignored (the `termination_comparison_op
+    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
+    ``my_mech`` is configured below to execute at least twice per trial::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -1551,19 +1552,25 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update previous value to make sure that repeated executions work
         builder.store(builder.load(current), prev_val_ptr)
 
-        if self.parameters.termination_threshold.get(None) is None:
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                    "termination_threshold")
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
             # Threshold is not defined, return the old value of finished flag
+            assert len(threshold_ptr.type.pointee) == 0
             is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                           "is_finished_flag")
             is_finished_flag = builder.load(is_finished_ptr)
             return builder.fcmp_ordered("!=", is_finished_flag,
                                               is_finished_flag.type(0))
 
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                    "termination_threshold")
+        # If modulated, termination threshold is single element array
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(threshold_ptr.type.pointee) == 1
+            threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
-        builder.store(threshold, cmp_val_ptr)
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
             # Get inside of the structure

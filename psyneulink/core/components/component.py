@@ -352,8 +352,8 @@ Component_Execution_Termination
 
 .. _Component_Is_Finished:
 
-* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL`;  it is only
-  used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
+* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL
+  <TimeScale.TRIAL>`;  it is only used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
 
 .. _Component_Execute_Until_Finished:
 
@@ -1041,7 +1041,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             self.reinitialize_when = Never()
 
-        self._role = None
+        # MODIFIED 4/25/20 NEW:
+        if not hasattr(self, '_role'):
+            self._role = None
+        # MODIFIED 4/25/20 END
 
         # self.componentName = self.componentType
         try:
@@ -1199,7 +1202,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return pnlvm._tupleize(_convert(self._get_state_values(context)))
 
     def _get_compilation_params(self):
-        # FIXME: MAGIC LIST, Use stateful tag for this
+        # FIXME: MAGIC LIST, detect used parameters automatically
         blacklist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions", "variable",
@@ -1209,14 +1212,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "search_space",
-                     "activation_derivative_fct", "costs",
-                     # composition specific FIXME: Move to inherited blacklist on comp.
-                     "input_specification",
+                     "activation_derivative_fct", "input_specification",
+                     # Shape mismatch
+                     "costs", "auto", "hetero",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
-        # mechanism functions are handled separately
+        # Mechanism's need few extra entires:
+        # * function -- might overload _get_{param,state}_struct_type
+        # * matrix -- is never used directly, and is flatened below
+        # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
-            blacklist.add("function")
+            blacklist.update(["function", "matrix", "integration_rate"])
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
@@ -1244,22 +1250,27 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_param_values(self, context=None):
         def _get_values(p):
             param = p.get(context)
+            is_modulated = False
             try:
-                # Existence of ParameterPort changes the shape to array
-                # the base value should remain the same though
-                if p.name in self.owner.parameter_ports:
-                    param = [param]
+                is_modulated = is_modulated or p.name in self.owner.parameter_ports
             except AttributeError:
                 pass
-            try:
-                # Modulated parameters change shape to array
-                modulated_params = (
-                    getattr(self.parameters, p.sender.modulation).source
-                    for p in self.owner.mod_afferents)
-                if p in modulated_params:
-                    param = [param]
-            except AttributeError:
-                pass
+            if not is_modulated:
+                try:
+                    is_modulated = is_modulated or p.name in self.parameter_ports
+                except AttributeError:
+                    pass
+            if not is_modulated:
+                try:
+                    modulated_params = (
+                        getattr(self.parameters, p.sender.modulation).source
+                        for p in self.owner.mod_afferents)
+                    is_modulated = is_modulated or p in modulated_params
+                except AttributeError:
+                    pass
+            # Modulated parameters change shape to array
+            if is_modulated:
+                param = [param]
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
                     param = np.asfarray(param).flatten().tolist()
@@ -1287,10 +1298,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer()]
         builder = ctx.create_llvm_function(args + extra_args, self, tags=tags)
-        llvm_func = builder.function
 
-        llvm_func.attributes.add('alwaysinline')
-        params, state, arg_in, arg_out = llvm_func.args[:len(args)]
+        params, state, arg_in, arg_out = builder.function.args[:len(args)]
         if len(extra_args) == 0:
             for p in params, state, arg_in, arg_out:
                 p.attributes.add('noalias')
@@ -1304,8 +1313,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             builder = self._gen_llvm_function_body(ctx, builder, params, state,
                                                    arg_in, arg_out, tags=tags)
         builder.ret_void()
-
-        return llvm_func
+        return builder.function
 
     # ------------------------------------------------------------------------------------------------------------------
     # Handlers
@@ -2602,9 +2610,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def is_finished(self, context=None):
         """
-            set by a Component to signal completion of its `execution <Component_Execution>` in a `trial`; used by
-            `Component-based Conditions <Conditions_Component_Based>` to predicate the execution of one or more other
-            Components on a Component.
+            set by a Component to signal completion of its `execution <Component_Execution>` in a `TRIAL
+            <TimeScale.TRIAL>`; used by `Component-based Conditions <Conditions_Component_Based>` to predicate the
+            execution of one or more other Components on a Component.
         """
         return self.parameters.is_finished_flag._get(context)
 

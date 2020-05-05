@@ -94,9 +94,10 @@ Class Reference
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionRegistry
+from psyneulink.core.globals.keywords import MODULATORY_PROJECTION, NAME
 from psyneulink.core.globals.log import ContextFlags, LogEntry
+from psyneulink.core.globals.registry import remove_instance_from_registry
 
 
 __all__ = [
@@ -153,9 +154,3 @@ class ModulatoryProjection_Base(Projection_Base):
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
                                             format(self, self.initialization_status))
-
-    def _delete_projection(projection):
-        """Delete Projection and its entry in receiver and sender lists"""
-        del projection.sender.efferents[projection.sender.efferents.index(projection)]
-        del projection.receiver.mod_afferents[projection.receiver.mod_afferents.index(projection)]
-        del projection

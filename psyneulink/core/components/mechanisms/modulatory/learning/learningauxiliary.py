@@ -151,7 +151,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
-    BACKPROPAGATION_FUNCTION, COMPARATOR_MECHANISM, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, \
+    BACKPROPAGATION_FUNCTION, HEBBIAN_FUNCTION, IDENTITY_MATRIX, LEARNING, LEARNING_MECHANISM, LEARNING_OBJECTIVE, \
     MATRIX, MONITOR_FOR_LEARNING, NAME, OUTCOME, PREDICTION_ERROR_MECHANISM, PROJECTIONS, RL_FUNCTION, SAMPLE, \
     TARGET, TDLEARNING_FUNCTION, VARIABLE, WEIGHT
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import PredictionErrorMechanism
@@ -170,16 +170,16 @@ def _instantiate_learning_components(learning_projection, context=None):
     """Instantiate learning components for a LearningProjection
 
     Instantiates a LearningMechanism or ObjectiveMechanism as the sender for each learning_projection in a learning
-        sequence.  A learning sequence is defined as a sequence of ProcessingMechanisms, each of which has a
-        projection — that has been specified for learning — to the next Mechanism in the sequence.  This method
-        instantiates the components required to support learning for those projections (most importantly,
+        sequence.  A learning pathway is defined as a sequence of ProcessingMechanisms, each of which has a
+        Projection — that has been specified for learning — to the next Mechanism in the sequence.  This method
+        instantiates the Components required to support learning for those Projections (most importantly,
         the LearningMechanism that provide them with the learning_signal required to modify the matrix of the
-        projection, and the ObjectiveMechanism that calculates the error_signal used to generate the learning_signals).
+        Projection, and the ObjectiveMechanism that calculates the error_signal used to generate the learning_signals).
 
 
     It instantiates a LearningMechanism or ObjectiveMechanism as the sender for the learning_projection:
-    - a LearningMechanism for projections to any ProcessingMechanism that is not the last in the learning sequence;
-    - an ObjectiveMechanism for projections to a ProcessingMechanism that is the last in the learning sequence
+    - a LearningMechanism for projections to any ProcessingMechanism that is not the last in the learning pathway;
+    - an ObjectiveMechanism for projections to a ProcessingMechanism that is the last in the learning pathway
 
     Assume that learning_projection's variable and parameters have been specified and validated,
        (which is the case when this method is called from the learning_projection itself in _instantiate_sender()).
@@ -193,7 +193,7 @@ def _instantiate_learning_components(learning_projection, context=None):
 
     * See LearningComponents class for the names of the components of learning used here.
 
-    * This method supports only a single pathway for learning;  that is, the learning sequence must be a linear
+    * This method supports only a single pathway for learning;  that is, the learning pathway must be a linear
         sequence of ProcessingMechanisms.  This is consistent with its implementation at the Process level;
         convergent and divergent pathways for learning can be accomplished through Composition in a
         System.  Accordingly:
@@ -307,7 +307,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                 # If receiver_mech for activation_output_mech is a LearningMechanism that receives projections to its:
                 #     - ACTIVATION_INPUT InputPort from activation_mech_input.owner
                 #     - ACTIVATION_OUTPUT InputPort from activation_output_mech
-                #         (i.e., the mechanism before activation_output_mech in the learning sequence)
+                #         (i.e., the mechanism before activation_output_mech in the learning pathway)
                 #         then this should be the LearningMechanism for the learning_projection,
                 #         so issue warning, assign it as the sender, and return
                 if (receiver_state.name == ACTIVATION_OUTPUT and
@@ -514,7 +514,7 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                          # WEIGHT:1
             #                                                          }],
             #                                           name="{} {}".format(lc.activation_output_mech.name,
-            #                                                               COMPARATOR_MECHANISM))
+            #                                                               OBJECTIVE_MECHANISM))
             # MODIFIED 10/10/17 NEW:
             if learning_function.componentName == TDLEARNING_FUNCTION:
                 objective_mechanism = PredictionErrorMechanism(
@@ -536,7 +536,7 @@ def _instantiate_learning_components(learning_projection, context=None):
                                                           function=error_function,
                                                           output_ports=[OUTCOME, MSE],
                                                           name="{} {}".format(lc.activation_output_mech.name,
-                                                                              COMPARATOR_MECHANISM),
+                                                                              LEARNING_OBJECTIVE),
                                                           context=context)
                 # MODIFIED 10/10/17 END
 
@@ -551,8 +551,9 @@ def _instantiate_learning_components(learning_projection, context=None):
             #                                                         {NAME:MSE,
             #                                                          ASSIGN:lambda x: np.sum(x*x)/len(x)}],
             #                                          name="\'{}\' {}".format(lc.activation_output_mech.name,
-            #                                                                  COMPARATOR_MECHANISM))
+            #                                                                  OBJECTIVE_MECHANISM))
 
+            # FIX 4/27/20 _role: DELETE:
             objective_mechanism._role = LEARNING
             objective_mechanism._learning_role = TARGET
 
@@ -805,7 +806,7 @@ class LearningComponents(object):
     * `activation_mech_output` (`OutputPort`):  output of activation_output_mech
     * `activation_mech_fct` (function):  function of Mechanism to which projection being learned projects
     * `activation_derivative` (function):  derivative of function for activation_output_mech
-    * `error_projection` (`MappingProjection`):  next projection in learning sequence after activation_mech_projection
+    * `error_projection` (`MappingProjection`):  next projection in learning pathway after activation_mech_projection
     * `error_matrix` (`ParameterPort`):  parameterPort of error_projection with error_matrix
     * `error_derivative` (function):  deriviative of function of error_mech
     * `error_mech` (ProcessingMechanism):  Mechanism to which error_projection projects
@@ -813,10 +814,10 @@ class LearningComponents(object):
                                           ProcessingMechanism in the pathway, or to an ObjectiveMechanism
     * `error_signal_mech` (LearningMechanism or ObjectiveMechanism):  Mechanism from which LearningMechanism
                                                                       gets its error_signal (ObjectiveMechanism for
-                                                                      the last Mechanism in a learning sequence; next
+                                                                      the last Mechanism in a learning pathway; next
                                                                       LearningMechanism in the sequence for all others)
     * `error_signal_mech_output` (OutputPort): outputPort of error_signal_mech, that projects to the preceeding
-                                                LearningMechanism in the learning sequence (or nothing for the 1st mech)
+                                                LearningMechanism in the learning pathway (or nothing for the 1st mech)
 
     IMPLEMENTATION NOTE:  The helper methods in this class (that assign values to the various attributes)
                           respect membership in a process;  that is, they do not assign attribute values to
@@ -1176,7 +1177,7 @@ class LearningComponents(object):
             # if there are none, the error_matrix might be for an error_projection to an ObjectiveMechanism
             #   (i.e., the TARGET mechanism)
             if not learning_proj:
-                # if error_mech is the last in the learning sequence, then its error_matrix does not receive a
+                # if error_mech is the last in the learning pathway, then its error_matrix does not receive a
                 #    LearningProjection, but its error_projection does project to an ObjectiveMechanism, so return that
                 objective_mechanism = self.error_matrix.owner.receiver.owner
                 if not isinstance(objective_mechanism, ObjectiveMechanism):

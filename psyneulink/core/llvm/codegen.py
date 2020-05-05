@@ -46,7 +46,6 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
 
     builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
     llvm_func = builder.function
-    llvm_func.attributes.add('alwaysinline')
     for a in llvm_func.args:
         a.attributes.add('nonnull')
 
@@ -262,7 +261,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 continue
 
             reinit_cond = cond_gen.generate_sched_condition(
-                builder, when, cond, node)
+                builder, when, cond, node, None)
             with builder.if_then(reinit_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reinitialize"}))
@@ -288,14 +287,25 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
         builder.store(ctx.int32_ty(0), iter_ptr)
 
+        # Generate pointers to 'is_finished_flags' locations
+        is_finished_flag_locs = {}
+        for idx, node in enumerate(composition.nodes):
+            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                             ctx.int32_ty(idx)])
+            is_finished_flag_ptr = helpers.get_state_ptr(builder, node,
+                                                         node_state,
+                                                         "is_finished_flag")
+            is_finished_flag_locs[node] = is_finished_flag_ptr
+
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
         builder.branch(loop_condition)
 
         # Generate a while not 'end condition' loop
         builder.position_at_end(loop_condition)
+
         run_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None)
+            cond, None, is_finished_flag_locs)
         run_cond = builder.not_(run_cond, name="not_run_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -307,7 +317,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         zero = ctx.int32_ty(0)
         any_cond = ir.IntType(1)(0)
-
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr,
@@ -315,7 +324,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node)
+                cond, node, is_finished_flag_locs)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)
@@ -331,7 +340,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
                 num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
                 builder.store(ctx.int32_ty(0), num_exec_time_ptr)
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)]) #HACK: Move pass reset to actual pass count
+                # FIXME: Move pass reset to actual pass count
+                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)])
                 builder.store(ctx.int32_ty(0), num_exec_time_ptr)
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
