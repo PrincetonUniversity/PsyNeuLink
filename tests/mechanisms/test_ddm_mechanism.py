@@ -13,8 +13,9 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
-    ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY, DECISION_VARIABLE_ARRAY
+    ARRAY, DDM, DDMError, DECISION_VARIABLE_ARRAY, SELECTED_INPUT_ARRAY
 
 class TestReinitialize:
 
@@ -733,3 +734,59 @@ def test_ddm_is_finished(mode, noise, threshold, expected_results):
 
     results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
     assert np.allclose(results, np.array(expected_results).flatten())
+
+
+def test_sequence_of_DDM_mechs_in_Composition_Pathway():
+    myMechanism = DDM(
+        function=DriftDiffusionAnalytical(
+            drift_rate=(1.0),
+            threshold=(10.0),
+            starting_point=0.0,
+        ),
+        name='My_DDM',
+    )
+
+    myMechanism_2 = DDM(
+        function=DriftDiffusionAnalytical(
+            drift_rate=2.0,
+            threshold=20.0),
+        name='My_DDM_2'
+    )
+
+    myMechanism_3 = DDM(
+        function=DriftDiffusionAnalytical(
+            drift_rate=3.0,
+            threshold=30.0
+        ),
+        name='My_DDM_3',
+    )
+
+    z = Composition(
+        # default_variable=[[30], [10]],
+        pathways=[[
+            myMechanism,
+            (IDENTITY_MATRIX),
+            myMechanism_2,
+            (FULL_CONNECTIVITY_MATRIX),
+            myMechanism_3
+        ]],
+    )
+
+    result = z.execute(inputs={myMechanism:[40]})
+
+    expected_output = [
+        (myMechanism.input_ports[0].parameters.value.get(z), np.array([40.])),
+        (myMechanism.output_ports[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.input_ports[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.output_ports[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.input_ports[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.output_ports[0].parameters.value.get(z), np.array([30.])),
+        (result[0], np.array([30.])),
+    ]
+
+    for i in range(len(expected_output)):
+        val, expected = expected_output[i]
+        # setting absolute tolerance to be in accordance with reference_output precision
+        # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        # which WILL FAIL unless you gather higher precision values to use as reference
+        np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
