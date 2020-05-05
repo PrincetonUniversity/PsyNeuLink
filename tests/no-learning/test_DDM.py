@@ -1,7 +1,7 @@
 import numpy as np
 
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
-from psyneulink.core.components.process import Process
 from psyneulink.core.globals.keywords import FULL_CONNECTIVITY_MATRIX, IDENTITY_MATRIX
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 
@@ -32,18 +32,28 @@ def test_DDM():
         name='My_DDM_3',
     )
 
-    z = Process(
-        default_variable=[[30], [10]],
-        pathway=[
+    # z = Process(
+    #     default_variable=[[30], [10]],
+    #     pathway=[
+    #         myMechanism,
+    #         (IDENTITY_MATRIX),
+    #         myMechanism_2,
+    #         (FULL_CONNECTIVITY_MATRIX),
+    #         myMechanism_3
+    #     ],
+    # )
+    z = Composition(
+        # default_variable=[[30], [10]],
+        pathways=[[
             myMechanism,
             (IDENTITY_MATRIX),
             myMechanism_2,
             (FULL_CONNECTIVITY_MATRIX),
             myMechanism_3
-        ],
+        ]],
     )
 
-    result = z.execute([[30], [10]])
+    result = z.execute(inputs={myMechanism:[[30], [10]]})
 
     expected_output = [
         (myMechanism.input_ports[0].parameters.value.get(z), np.array([40.])),
