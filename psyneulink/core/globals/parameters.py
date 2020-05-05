@@ -366,6 +366,12 @@ class ParametersTemplate:
 
     __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
 
+    def __del__(self):
+        try:
+            self._parent._children.remove(weakref.ref(self))
+        except (AttributeError, KeyError):
+            pass
+
     def __iter__(self):
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
 
