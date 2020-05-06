@@ -529,6 +529,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 from enum import Enum
 
@@ -1192,8 +1193,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
             Projection with which each error_source is associated.
             :param function:
         """
-        from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
-            import _instantiate_error_signal_projection
 
         if self._error_sources:
             self.input_ports = self.input_ports[:2] + [ERROR_SIGNAL] * len(self._error_sources)
@@ -1205,13 +1204,17 @@ class LearningMechanism(ModulatoryMechanism_Base):
             self.error_matrices = [None] * len(self._error_sources)
             for i, error_source in enumerate(self._error_sources):
                 if not self.in_composition:
-                    # FIX: [JDC 7/15/19] - SHOULD THIS HAPPEN OUTSIDE OF SYSTEM OR PROCESS,
-                    #  OR BE REMOVED WHEN THOSE ARE FULLY DEPRECATED
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
                     #    in Composition take care of creating projections from _error_sources to LearningMechanisms
-                    self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source,
-                                                                                        receiver=self)
+                    # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
+                    # from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
+                    #     import _instantiate_error_signal_projection
+                    # self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source,
+                    #                                                                     receiver=self)
+                    # MODIFIED 5/2/20 NEW:
+                    warnings.warn("Instantiation of a LearningMechanism outside of a Composition is tricky!")
+                    # MODIFIED 5/2/20 END
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_ports[SAMPLE].value))
                 else:

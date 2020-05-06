@@ -1336,7 +1336,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         * self.input_ports is the usual ordered dict of ports,
             each of which receives a Projection from a corresponding OutputPort in self.monitored_output_ports
         """
-        from psyneulink.core.components.system import MonitoredOutputPortTuple
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
         from psyneulink.core.components.ports.inputport import EXPONENT_INDEX, WEIGHT_INDEX

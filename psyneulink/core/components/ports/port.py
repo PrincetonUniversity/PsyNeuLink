@@ -1882,7 +1882,6 @@ class Port_Base(Port):
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
 
-        from psyneulink.core.components.process import ProcessInputPort
         from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

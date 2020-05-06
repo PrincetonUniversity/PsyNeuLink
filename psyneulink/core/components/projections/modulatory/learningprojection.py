@@ -179,6 +179,7 @@ Class Reference
 """
 
 import inspect
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -555,12 +556,16 @@ class LearningProjection(ModulatoryProjection_Base):
         self.sender = sender
 
         if not isinstance(self.sender, (OutputPort, LearningMechanism)):
-            from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
-                import _instantiate_learning_components
-            context.source = ContextFlags.METHOD
-            _instantiate_learning_components(learning_projection=self,
-                                             # TODO: do we need this argument?
-                                             context=context)
+            # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
+            # from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
+            #     import _instantiate_learning_components
+            # context.source = ContextFlags.METHOD
+            # _instantiate_learning_components(learning_projection=self,
+            #                                  # TODO: do we need this argument?
+            #                                  context=context)
+            # MODIFIED 5/2/20 NEW: [JDC]
+            warnings.warn("Instantiation of a LearningProjection outside of a Composition is tricky!")
+            # MODIFIED 5/2/20 END
 
         if isinstance(self.sender, OutputPort) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".

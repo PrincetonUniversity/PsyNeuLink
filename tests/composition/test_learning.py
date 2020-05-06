@@ -8,12 +8,7 @@ import numpy as np
 import pytest
 
 from psyneulink.core.compositions.composition import Composition, RunError
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
-from psyneulink.core.globals.keywords import ENABLED
 
 class TestTargetSpecs:
 
@@ -110,18 +105,38 @@ class TestTargetSpecs:
                             [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
                             [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
 
-    # def test_target_function_spec(self):
-    #     A = TransferMechanism(name="learning-process-mech-A")
-    #     B = TransferMechanism(name="learning-process-mech-B")
-    #     C = TransferMechanism(name="learning-process-mech-C",
-    #                           default_variable=[[0.0, 0.0]])
-    #     comp = Composition()
-    #     learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-    #     target = learning_pathway.target
-    #     input_fct = FUNCTION()
-    #     comp.learn(inputs=input_fct)
+    # def test_function_target_spec(self):
     #
-    #     assert np.allclose(comp.results, ???)
+    #     from psyneulink.core.compositions.composition import Composition
+    #     A = pnl.TransferMechanism(name="learning-process-mech-A")
+    #     B = pnl.TransferMechanism(name="learning-process-mech-B",
+    #                           default_variable=np.array([[0.0, 0.0]]))
+    #     comp = Composition()
+    #     learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B], learning_rate=0.05)
+    #     target = learning_pathway.target
+    #     # global x
+    #     # x = 1
+    #
+    #     # def input_function(a,b):
+    #     #     global x
+    #     #     x = x + 1
+    #     #     y = 2 * x
+    #     #     z = 3 * x
+    #     #     target_value = {A:[x], target:[y,z]}
+    #     #     print('trial')
+    #     #     return target_value
+    #     def input_function(trial):
+    #         x = trial
+    #         y = 2 * x
+    #         z = y + 2
+    #         target_value = {A:[x], target:[y,z]}
+    #         print(target_value)
+    #         return target_value
+    #
+    #     target.log.set_log_conditions('variable')
+    #
+    #     comp.learn(inputs=input_function, num_trials=3)
+    #     assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
 
     def test_dict_target_spec_converging_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
@@ -1691,39 +1706,6 @@ class TestBackProp:
         C.learning_components[2].learning_rate = 0.5
         result = C.learn(inputs=inputs, num_trials=2)
         assert np.allclose(result, [[[0.52497919]], [[0.55439853]]])
-
-    def test_function_target_spec(self):
-
-        from psyneulink.core.compositions.composition import Composition
-        A = pnl.TransferMechanism(name="learning-process-mech-A")
-        B = pnl.TransferMechanism(name="learning-process-mech-B",
-                              default_variable=np.array([[0.0, 0.0]]))
-        comp = Composition()
-        learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B], learning_rate=0.05)
-        target = learning_pathway.target
-        # global x
-        # x = 1
-
-        # def input_function(a,b):
-        #     global x
-        #     x = x + 1
-        #     y = 2 * x
-        #     z = 3 * x
-        #     target_value = {A:[x], target:[y,z]}
-        #     print('trial')
-        #     return target_value
-        def input_function(trial):
-            x = trial
-            y = 2 * x
-            z = y + 2
-            target_value = {A:[x], target:[y,z]}
-            print(target_value)
-            return target_value
-
-        target.log.set_log_conditions('variable')
-
-        comp.learn(inputs=input_function, num_trials=3)
-        assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
 
     @pytest.mark.pytorch
     def test_back_prop(self):

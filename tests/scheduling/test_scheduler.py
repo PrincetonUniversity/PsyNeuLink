@@ -7,7 +7,6 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, EdgeType
 from psyneulink.core.globals.context import Context
@@ -161,8 +160,6 @@ class TestScheduler:
 
     def test_change_termination_condition(self):
         D = DDM(function=DriftDiffusionIntegrator(threshold=10))
-        # P = Process(pathway=[D])
-        # S = System(processes=[P])
         C = Composition(pathways=[D])
 
         D.set_log_conditions(VALUE)

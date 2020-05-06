@@ -13,7 +13,6 @@ from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 # from psyneulink.core.components.system import System
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
