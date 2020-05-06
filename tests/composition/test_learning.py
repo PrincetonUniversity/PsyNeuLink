@@ -123,6 +123,41 @@ class TestTargetSpecs:
     #
     #     assert np.allclose(comp.results, ???)
 
+    def test_dict_target_spec_converging_pathways(self):
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+        comp = Composition()
+        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+        assert p1.target == p2.target
+        comp.learn(inputs={A: 1.0,
+                           D: 2.0,
+                           p1.target: [3.0, 4.0]
+                           })
+        comp.learn(inputs={A: 5.0,
+                           D: 6.0,
+                           p1.target: [7.0, 8.0]
+                           })
+        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
+
+    # def test_target_function_spec_converging_pathways(self):
+    #     A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+    #     B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+    #     C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
+    #     D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+    #     E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+    #     comp = Composition()
+    #     p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+    #     p = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+    #     target = p.target
+    #     inputs_fct = FUNCTION()
+    #     comp.learn(inputs=inputs_fct)
+    #     comp.learn(inputs=inputs_fct)
+    #     assert np.allclose(comp.results,???)
+
     def test_dict_target_spec_diverging_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
         B = TransferMechanism(name="diverging-learning-pathways-mech-B")
@@ -190,41 +225,6 @@ class TestTargetSpecs:
     #     comp.learn(inputs=inputs_fct)
     #     assert np.allclose(comp.results,???)
 
-    def test_dict_target_spec_converging_pathways(self):
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-        comp = Composition()
-        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
-        assert p1.target == p2.target
-        comp.learn(inputs={A: 1.0,
-                           D: 2.0,
-                           p1.target: [3.0, 4.0]
-                           })
-        comp.learn(inputs={A: 5.0,
-                           D: 6.0,
-                           p1.target: [7.0, 8.0]
-                           })
-        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
-
-    # def test_target_function_spec_diverging_pathways(self):
-    #     A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-    #     B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-    #     C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
-    #     D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-    #     E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-    #     comp = Composition()
-    #     p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-    #     p = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
-    #     target = p.target
-    #     inputs_fct = FUNCTION()
-    #     comp.learn(inputs=inputs_fct)
-    #     comp.learn(inputs=inputs_fct)
-    #     assert np.allclose(comp.results,???)
-
     def test_target_spec_over_nesting_of_items_in_target_value_error(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
@@ -256,6 +256,146 @@ class TestTargetSpecs:
         assert ('The input dictionary' in str(error_text.value) and
                 'contains input specifications of different lengths ({3, 4})' in str(error_text.value) and
                 'The same number of inputs must be provided for each node in a Composition' in str(error_text.value))
+
+
+class TestLearningPathwayMethods:
+    def test_multiple_of_same_learning_pathway(self):
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                       default_variable=np.zeros(2))
+
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
+        # Try readd the same learning pathway (shouldn't error)
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
+
+    def test_run_no_targets(self):
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                       default_variable=np.zeros(2))
+
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                          in_to_hidden_comp,
+                                                                          hidden_comp,
+                                                                          hidden_to_out_comp,
+                                                                          output_comp],
+                                                                         learning_rate=10)
+        # Try to run without any targets (non-learning
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+            [0, 1],
+            [1, 0],
+            [1, 1]])
+        xor_comp.run(inputs={input_comp:xor_inputs})
+
+class TestNoLearning:
+
+    def test_multilayer(self):
+        Input_Layer = pnl.TransferMechanism(
+            name='Input Layer',
+            function=pnl.Logistic,
+            default_variable=np.zeros((2,)),
+        )
+
+        Hidden_Layer_1 = pnl.TransferMechanism(
+            name='Hidden Layer_1',
+            function=pnl.Logistic(),
+            default_variable=np.zeros((5,)),
+        )
+
+        Hidden_Layer_2 = pnl.TransferMechanism(
+            name='Hidden Layer_2',
+            function=pnl.Logistic(),
+            default_variable=[0, 0, 0, 0],
+        )
+
+        Output_Layer = pnl.TransferMechanism(
+            name='Output Layer',
+            function=pnl.Logistic,
+            default_variable=[0, 0, 0],
+        )
+
+        Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
+
+        # TEST LEARNING WITH:
+        # CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
+        # INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
+        # NO EXPLICIT CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
+
+        # This projection will be used by the process below by referencing it in the process' pathway;
+        #    note: sender and receiver args don't need to be specified
+        Input_Weights = pnl.MappingProjection(
+            name='Input Weights',
+            matrix=Input_Weights_matrix,
+        )
+
+        c = pnl.Composition()
+        learning_pathway = c.add_backpropagation_learning_pathway(pathway=[Input_Layer,
+                                                                           Input_Weights,
+                                                                           Hidden_Layer_1,
+                                                                           Hidden_Layer_2,
+                                                                           Output_Layer])
+        target = learning_pathway.target
+        stim_list = {Input_Layer: [[-1, 30]],
+                     target: [0, 0, 1]}
+        c.run(num_trials=10, inputs=stim_list, clamp_input=pnl.SOFT_CLAMP)
+
+        expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
+
+        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.get_output_values(c))
 
 
 class TestHebbian:
@@ -2713,145 +2853,3 @@ class TestRumelhartSemanticNetwork:
     #           #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
     #           #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
     #           )
-
-
-class TestLearningPathwayMethods:
-    def test_multiple_of_same_learning_pathway(self):
-        in_to_hidden_matrix = np.random.rand(2,10)
-        hidden_to_out_matrix = np.random.rand(10,1)
-
-        input_comp = pnl.TransferMechanism(name='input_comp',
-                                       default_variable=np.zeros(2))
-    
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
-                                    default_variable=np.zeros(10),
-                                    function=pnl.Logistic())
-
-        output_comp = pnl.TransferMechanism(name='output_comp',
-                                    default_variable=np.zeros(1),
-                                    function=pnl.Logistic())
-
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
-                                    sender=input_comp,
-                                    receiver=hidden_comp)
-
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
-                                    matrix=hidden_to_out_matrix.copy(),
-                                    sender=hidden_comp,
-                                    receiver=output_comp)
-
-        xor_comp = pnl.Composition()
-
-        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                          in_to_hidden_comp,
-                                                                          hidden_comp,
-                                                                          hidden_to_out_comp,
-                                                                          output_comp],
-                                                                         learning_rate=10)
-        # Try readd the same learning pathway (shouldn't error)
-        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                          in_to_hidden_comp,
-                                                                          hidden_comp,
-                                                                          hidden_to_out_comp,
-                                                                          output_comp],
-                                                                         learning_rate=10)
-    def test_run_no_targets(self):
-        in_to_hidden_matrix = np.random.rand(2,10)
-        hidden_to_out_matrix = np.random.rand(10,1)
-
-        input_comp = pnl.TransferMechanism(name='input_comp',
-                                       default_variable=np.zeros(2))
-    
-        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
-                                    default_variable=np.zeros(10),
-                                    function=pnl.Logistic())
-
-        output_comp = pnl.TransferMechanism(name='output_comp',
-                                    default_variable=np.zeros(1),
-                                    function=pnl.Logistic())
-
-        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
-                                    matrix=in_to_hidden_matrix.copy(),
-                                    sender=input_comp,
-                                    receiver=hidden_comp)
-
-        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
-                                    matrix=hidden_to_out_matrix.copy(),
-                                    sender=hidden_comp,
-                                    receiver=output_comp)
-
-        xor_comp = pnl.Composition()
-
-        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
-                                                                          in_to_hidden_comp,
-                                                                          hidden_comp,
-                                                                          hidden_to_out_comp,
-                                                                          output_comp],
-                                                                         learning_rate=10)
-        # Try to run without any targets (non-learning
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0],
-            [0, 1],
-            [1, 0],
-            [1, 1]])
-        xor_comp.run(inputs={input_comp:xor_inputs})
-
-
-class TestNoLearning:
-
-    def test_multilayer(self):
-        Input_Layer = pnl.TransferMechanism(
-            name='Input Layer',
-            function=pnl.Logistic,
-            default_variable=np.zeros((2,)),
-        )
-
-        Hidden_Layer_1 = pnl.TransferMechanism(
-            name='Hidden Layer_1',
-            function=pnl.Logistic(),
-            default_variable=np.zeros((5,)),
-        )
-
-        Hidden_Layer_2 = pnl.TransferMechanism(
-            name='Hidden Layer_2',
-            function=pnl.Logistic(),
-            default_variable=[0, 0, 0, 0],
-        )
-
-        Output_Layer = pnl.TransferMechanism(
-            name='Output Layer',
-            function=pnl.Logistic,
-            default_variable=[0, 0, 0],
-        )
-
-        Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
-
-        # TEST LEARNING WITH:
-        # CREATION OF FREE STANDING PROJECTIONS THAT HAVE NO LEARNING (Input_Weights, Middle_Weights and Output_Weights)
-        # INLINE CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
-        # NO EXPLICIT CREATION OF PROJECTIONS (Input_Weights, Middle_Weights and Output_Weights)
-
-        # This projection will be used by the process below by referencing it in the process' pathway;
-        #    note: sender and receiver args don't need to be specified
-        Input_Weights = pnl.MappingProjection(
-            name='Input Weights',
-            matrix=Input_Weights_matrix,
-        )
-
-        c = pnl.Composition()
-        learning_pathway = c.add_backpropagation_learning_pathway(pathway=[Input_Layer,
-                                                                           Input_Weights,
-                                                                           Hidden_Layer_1,
-                                                                           Hidden_Layer_2,
-                                                                           Output_Layer])
-        target = learning_pathway.target
-        stim_list = {Input_Layer: [[-1, 30]],
-                     target: [0, 0, 1]}
-        c.run(num_trials=10, inputs=stim_list, clamp_input=pnl.SOFT_CLAMP)
-
-        expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
-
-        np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.get_output_values(c))
-
-    
