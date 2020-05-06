@@ -7,12 +7,16 @@ from psyneulink.core.components.functions.transferfunctions import Identity, Lin
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
+from psyneulink.core.globals.keywords import INTERCEPT, NOISE, SLOPE
 
 
 class TestExecuteCIM:
@@ -528,8 +532,8 @@ class TestConnectCompositionsViaCIMS:
         mech = ProcessingMechanism()
         comp.add_node(mech)
         # instantiate custom input and output ports
-        inp = InputPort()
-        out = OutputPort()
+        inp = InputPort(size=2)
+        out = OutputPort(size=2)
         # add custom input and output ports to CIM
         comp.input_CIM.add_ports([inp, out])
         # verify the ports have been added to the user_added_ports set
@@ -542,6 +546,49 @@ class TestConnectCompositionsViaCIMS:
         # verify that call to remove ports succesfully removed the ports from user_added_ports
         assert len(comp.input_CIM.user_added_ports['input_ports']) == 0
         assert len(comp.input_CIM.user_added_ports['output_ports']) == 0
+
+    def test_parameter_CIM_port_order(self):
+        # Note:  CIM_port order is also tested in TestNodes and test_simplified_necker_cube()
+
+        # Inner Composition
+        ia = TransferMechanism(name='ia')
+        icomp = Composition(name='icomp', pathways=[ia])
+
+        # Outer Composition
+        ocomp = Composition(name='ocomp', pathways=[icomp])
+        ocm = OptimizationControlMechanism(name='ic',
+                                           agent_rep=ocomp,
+                                           control_signals=[
+                                               ControlSignal(projections=[(NOISE, ia)]),
+                                               ControlSignal(projections=[(INTERCEPT, ia)]),
+                                               ControlSignal(projections=[(SLOPE, ia)]),
+                                           ]
+                                           )
+        ocomp.add_controller(ocm)
+
+        assert INTERCEPT in icomp.parameter_CIM.output_ports.names[0]
+        assert NOISE in icomp.parameter_CIM.output_ports.names[1]
+        assert SLOPE in icomp.parameter_CIM.output_ports.names[2]
+
+    def test_parameter_CIM_routing_from_ControlMechanism(self):
+        # Inner Composition
+        ia = TransferMechanism(name='ia')
+        ib = TransferMechanism(name='ib')
+        icomp = Composition(name='icomp', pathways=[ia])
+        # Outer Composition
+        ocomp = Composition(name='ocomp', pathways=[icomp])
+        cm = ControlMechanism(
+            name='control_mechanism',
+            control_signals=
+            ControlSignal(projections=[(SLOPE, ib)])
+        )
+        icomp.add_linear_processing_pathway([ia, ib])
+        ocomp.add_linear_processing_pathway([cm, icomp])
+        res = ocomp.run([[2], [2], [2]])
+        assert np.allclose(res, [[4], [4], [4]])
+        assert len(ib.mod_afferents) == 1
+        assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
+        assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
 
 class TestInputCIMOutputPortToOriginOneToMany:
 

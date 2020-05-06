@@ -2558,9 +2558,12 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
                 # If call to _instantiate_port specified variable, use that
                 if variable is not None:
                     port._init_args[VARIABLE] = variable
-                # Otherwise, use Port's owner's default variable as default
-                else:
+                # Otherwise, use Port's owner's default variable as default if it has one
+                elif len(owner.defaults.variable):
                     port._init_args[VARIABLE] = owner.defaults.variable[0]
+                # If all else fails, use Port's own defaults.variable
+                else:
+                    port._init_args[VARIABLE] = port.defaults.variable
             if not hasattr(port, REFERENCE_VALUE):
                 if REFERENCE_VALUE in port._init_args and port._init_args[REFERENCE_VALUE] is not None:
                     port.reference_value = port._init_args[REFERENCE_VALUE]

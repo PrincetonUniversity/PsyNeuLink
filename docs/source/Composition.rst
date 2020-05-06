@@ -28,4 +28,3 @@ Related
 .. automodule:: psyneulink.core.compositions.composition
    :members: Composition, NodeRole
    :exclude-members: Parameters, show_structure, CompositionError
-

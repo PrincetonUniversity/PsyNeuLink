@@ -798,7 +798,7 @@ OutputPort(s).
 Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
 System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
 
-        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)
+        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
 .. note::
 
@@ -1467,23 +1467,28 @@ class Mechanism_Base(Mechanism):
                                 MECHANISM: port[1]
                             }
                     elif len(port) > 2:
-                        # if port is assigned to an object,
-                        # use a reference instead of name/value
-                        if isinstance(port[0], Component):
-                            spec = {PORT_SPEC: port[0]}
+                        # nonstandard 4 item tuple
+                        if isinstance(port[0], (list, tuple)):
+                            spec = port
                         else:
-                            spec = {
-                                NAME: port[0].name,
-                                VALUE: port[0].defaults.value,
-                            }
+                            # if port is assigned to an object,
+                            # use a reference instead of name/value
+                            if isinstance(port[0], Component):
+                                spec = {PORT_SPEC: port[0]}
 
-                        spec[WEIGHT] = port[1]
-                        spec[EXPONENT] = port[2]
+                            else:
+                                spec = {
+                                    NAME: port[0].name,
+                                    VALUE: port[0].defaults.value,
+                                }
 
-                        try:
-                            spec[PROJECTIONS] = port[3]
-                        except IndexError:
-                            pass
+                            spec[WEIGHT] = port[1]
+                            spec[EXPONENT] = port[2]
+
+                            try:
+                                spec[PROJECTIONS] = port[3]
+                            except IndexError:
+                                pass
 
                     spec_list.append(spec)
                 else:
