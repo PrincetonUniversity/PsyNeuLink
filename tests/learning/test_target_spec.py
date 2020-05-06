@@ -17,6 +17,10 @@ class TestSimpleLearningPathways:
         comp = Composition()
         learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[A,B])
         target = learning_pathway.target
+        # Confirm that targets are ignored in run (vs learn)
+        comp.run(inputs={A: 1.0,
+                      target:2.0})
+        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.]]])
         comp.learn(inputs={A: 1.0,
                       target:2.0})
         comp.learn(inputs={A: 1.0,
@@ -24,7 +28,7 @@ class TestSimpleLearningPathways:
         comp.learn(inputs={A: 1.0,
                       target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.05]], [[1.0975]]])
+        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.05]], [[1.0975]]])
 
     def test_target_dict_spec_single_trial_scalar_and_lists_bp(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -33,6 +37,10 @@ class TestSimpleLearningPathways:
         comp = Composition()
         learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
         target = learning_pathway.target
+        # Confirm that targets are ignored in run (vs learn)
+        comp.run(inputs={A: 1.0,
+                      target:2.0})
+        assert np.allclose(comp.results, [[[1.]]])
         comp.learn(inputs={A: 1.0,
                       target:2.0})
         comp.learn(inputs={A: 1.0,
@@ -40,7 +48,7 @@ class TestSimpleLearningPathways:
         comp.learn(inputs={A: 1.0,
                       target:[[2.0]]})
 
-        assert np.allclose(comp.results, [[[1.]], [[1.21]], [[1.40873161]]])
+        assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
 
     def test_target_dict_spec_multi_trial_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -178,6 +186,13 @@ class TestInvalidTargetSpecs:
         comp = Composition()
         learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
         target = learning_pathway.target
+        # Elicit test with run
+        with pytest.raises(RunError) as error_text:
+            comp.run(inputs={A: [1.0, 2.0, 3.0],
+                             target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
+        assert ("Input stimulus" in str(error_text.value) and
+                "for Target is incompatible with its external_input_values" in str(error_text.value))
+        # Elicit test with learn
         with pytest.raises(RunError) as error_text:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                              target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
@@ -187,23 +202,15 @@ class TestInvalidTargetSpecs:
     def test_3_targets_4_inputs(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
-        #
-        # LP = Process(name="learning-process",
-        #              pathway=[A, B],
-        #              learning=ENABLED)
-        #
-        # S = System(name="learning-system",
-        #            processes=[LP],
-        #            )
         comp = Composition()
         learning_pathway = comp.add_backpropagation_learning_pathway(pathway=[A,B])
         target = learning_pathway.target
         with pytest.raises(RunError) as error_text:
-            S.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]]},
-                  targets={B: [[1.0], [2.0], [3.0]]})
-
-        assert 'Number of target values specified (3) for each learning Pathway' in str(error_text.value) and \
-               'must equal the number of input values specified (4)' in str(error_text.value)
+            comp.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]],
+                             target: [[1.0], [2.0], [3.0]]})
+        assert ('The input dictionary' in str(error_text.value) and
+                'contains input specifications of different lengths ({3, 4})' in str(error_text.value) and
+                'The same number of inputs must be provided for each node in a Composition' in str(error_text.value))
 
     def test_2_target_mechanisms_1_dict_entry(self):
         A = TransferMechanism(name="learning-process-mech-A")

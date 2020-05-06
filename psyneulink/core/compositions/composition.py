@@ -9489,9 +9489,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 adjusted_stimuli[node] *= max(nums_input_sets)
         nums_input_sets.discard(1)
         if len(nums_input_sets) > 1:
-            raise CompositionError("The input dictionary for {} contains input specifications of different "
-                                    "lengths ({}). The same number of inputs must be provided for each node "
-                                    "in a Composition.".format(self.name, nums_input_sets))
+            raise RunError(f"The input dictionary for {self.name} contains input specifications of different "
+                           f"lengths ({nums_input_sets}). The same number of inputs must be provided for each node "
+                           f"in a Composition.")
         return adjusted_stimuli, num_trials
 
     def _adjust_execution_stimuli(self, stimuli):
