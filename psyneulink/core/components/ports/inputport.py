@@ -513,8 +513,8 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
     LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
-    PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
-    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
+    PARAMS, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
+    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -681,8 +681,6 @@ class InputPort(Port_Base):
     portAttributes = Port_Base.portAttributes | {WEIGHT, EXPONENT}
 
     connectsWith = [OUTPUT_PORT,
-                    PROCESS_INPUT_PORT,
-                    SYSTEM_INPUT_PORT,
                     LEARNING_SIGNAL,
                     GATING_SIGNAL,
                     CONTROL_SIGNAL

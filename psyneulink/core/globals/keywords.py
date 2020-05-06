@@ -471,8 +471,6 @@ KOHONEN_LEARNING_MECHANISM = 'KohonenLearningMechanism'
 
 # Ports:
 INPUT_PORT = "InputPort"
-PROCESS_INPUT_PORT = "ProcessInputPort"
-SYSTEM_INPUT_PORT = "SystemInputPort"
 PARAMETER_PORT = "ParameterPort"
 OUTPUT_PORT = "OutputPort"
 MODULATORY_SIGNAL = 'ModulatorySignal'
