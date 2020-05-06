@@ -4080,10 +4080,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for nc in nested_comps:
             if node in nc.nodes:
                 # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
-                if role not in nc.nodes_to_roles[node]:
-                    raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                           format(node.name, Composition.__name__, self.name, nc.name,
-                                                  NodeRole.__name__, repr(role)))
+                # This validation does not apply to ParameterPorts. Externally modulated nodes
+                # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes
+                if not isinstance(node_state, ParameterPort):
+                    if role not in nc.nodes_to_roles[node]:
+                        raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
+                                               format(node.name, Composition.__name__, self.name, nc.name,
+                                                      NodeRole.__name__, repr(role)))
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
                 # if CIM_port_for_nested_node:
@@ -4099,14 +4102,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 elif isinstance(node_state, OutputPort):
                     CIM_port_for_nested_node = nc.output_CIM_ports[node_state][1]
                     CIM = nc.output_CIM
-                else:
-                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterPort handling
-                    #                       However, typecheck above should have caught this
-                    assert False
-
+                elif isinstance(node_state, ParameterPort):
+                    # NOTE: there is special casing here for parameter ports. They don't have a node role
+                    # associated with them in the way that input and output nodes do, so we don't know for sure
+                    # if they will have a port in parameter_CIM_ports. If they don't, we just set the
+                    # CIM_port_for_nested_node to the node_state itself, and delegate its routing through the PCIM
+                    # to a future call to create_CIM_ports
+                    if node_state in nc.parameter_CIM_ports:
+                        CIM_port_for_nested_node = nc.parameter_CIM_ports[node_state][0]
+                        CIM = nc.parameter_CIM
+                    else:
+                        CIM_port_for_nested_node = node_state
+                        CIM = nc.parameter_CIM
                 nested_comp = nc
                 break
-
         return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
     def _update_shadows_dict(self, node):
