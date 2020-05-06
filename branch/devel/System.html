@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>System &mdash; PsyNeuLink 0.7.5.4+90.g365fd73 documentation</title>
+  <title>System &mdash; PsyNeuLink 0.7.5.4+93.g0ba84b9 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+90
+                  0.7.5.4+93
                 </div>
               
             
@@ -380,7 +380,7 @@ each of which is an appropriate input for the corresponding <a class="reference 
 input for only a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is provided, and only a single <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> is executed.  The <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method
 can be used for a sequence of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>s, by providing it with a list or ndarray of inputs, one for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.  In
 both cases, two other types of input can be provided in corresponding arguments of the <a class="reference internal" href="#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method:
-a list or ndarray of <strong>initial_values</strong>, and a list or ndarray of <strong>target</strong> values. The <strong>initial_values</strong> are
+a list or ndarray of <strong>initialize_cycle_values</strong>, and a list or ndarray of <strong>target</strong> values. The <strong>initialize_cycle_values</strong> are
 assigned at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> as input to Mechanisms that close recurrent loops (designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code>,
 and listed in the System’s <a class="reference internal" href="#psyneulink.core.components.system.System.recurrent_init_mechanisms" title="psyneulink.core.components.system.System.recurrent_init_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_init_mechanisms</span></code></a> attribute), and
 <strong>target</strong> values are assigned as the <em>TARGET</em> input of the System’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal"><span class="pre">TARGET</span></code></a> Mechanisms (see
@@ -660,7 +660,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="method">
 <dt id="psyneulink.core.components.system.System.initialize">
 <code class="descname">initialize</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.system.System.initialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign <a class="reference internal" href="#psyneulink.core.components.system.System.initialize" title="psyneulink.core.components.system.System.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initial_values</span></code></a> to mechanisms designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> nd
+<dd><p>Assign <a class="reference internal" href="#psyneulink.core.components.system.System.initialize" title="psyneulink.core.components.system.System.initialize"><code class="xref any py py-meth docutils literal"><span class="pre">initialize_cycle_values</span></code></a> to mechanisms designated as <code class="xref any docutils literal"><span class="pre">INITIALIZE_CYCLE</span></code> nd
 contained in recurrent_init_mechanisms.</p>
 </dd></dl>
 
@@ -812,7 +812,7 @@ the show_graph <strong>show_control</strong> argument specified as <em>ALL</em> 
 <p>ORIGIN_MECHANISMS: list of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms;</p>
 <p>INPUT_ARRAY: ndarray of the inputs to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal"><span class="pre">ORIGIN</span></code></a> Mechanisms;</p>
 <p>RECURRENT_MECHANISMS:  list of <code class="xref any docutils literal"><span class="pre">INITALIZE_CYCLE</span></code> Mechanisms;</p>
-<p>RECURRENT_INIT_ARRAY: ndarray of initial_values;</p>
+<p>RECURRENT_INIT_ARRAY: ndarray of initialize_cycle_values;</p>
 <p>TERMINAL_MECHANISMS: list of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanisms;</p>
 <p>OUTPUT_PORT_NAMES: list of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> names corresponding to 1D arrays in output_value_array;</p>
 <p>OUTPUT_VALUE_ARRAY: 3D ndarray of 2D arrays of output.value arrays of OutputPorts for all <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a>
@@ -1165,7 +1165,7 @@ corresponding InputPort of the <a class="reference internal" href="#psyneulink.c
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+90.g365fd73',
+               VERSION:'0.7.5.4+93.g0ba84b9',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

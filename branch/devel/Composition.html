@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.5.4+90.g365fd73 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.5.4+93.g0ba84b9 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+90
+                  0.7.5.4+93
                 </div>
               
             
@@ -2415,7 +2415,7 @@ it any had previously been specified in <a class="reference internal" href="#psy
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>num_trials=None</em>, <em>initial_values=None</em>, <em>reinitialize_values=None</em>, <em>reinitialize_nodes_when=&lt;psyneulink.core.scheduling.condition.Never object&gt;</em>, <em>skip_initialization=False</em>, <em>clamp_input='soft_clamp'</em>, <em>runtime_params=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>termination_processing=None</em>, <em>skip_analyze_graph=False</em>, <em>animate=False</em>, <em>log=False</em>, <em>scheduler=None</em>, <em>bin_execute=False</em>, <em>context=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>num_trials=None</em>, <em>initialize_cycle_values=None</em>, <em>reinitialize_values=None</em>, <em>reinitialize_nodes_when=&lt;psyneulink.core.scheduling.condition.Never object&gt;</em>, <em>skip_initialization=False</em>, <em>clamp_input='soft_clamp'</em>, <em>runtime_params=None</em>, <em>call_before_time_step=None</em>, <em>call_after_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_pass=None</em>, <em>call_before_trial=None</em>, <em>call_after_trial=None</em>, <em>termination_processing=None</em>, <em>skip_analyze_graph=False</em>, <em>animate=False</em>, <em>log=False</em>, <em>scheduler=None</em>, <em>bin_execute=False</em>, <em>context=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
 conditions are met.</p>
 <p>See <a class="reference internal" href="#composition-execution"><span class="std std-ref">Executing a Composition</span></a> for details of formatting input specifications.
@@ -2430,12 +2430,32 @@ list corresponds to a certain <a class="reference internal" href="Time.html#psyn
 <dd>typically, the composition will infer the number of trials from the length of its input specification.
 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
 or use default inputs, and select a number of trials with num_trials.</dd>
-<dt>initial_values <span class="classifier-delimiter">:</span> <span class="classifier">Dict[Node: Node Value]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
-<dd>sets the values of nodes before the start of the run. This is useful in cases where a node’s value is
-used before that node executes for the first time (usually due to recurrence or control).</dd>
+<dt>initialize_cycle_values <span class="classifier-delimiter">:</span> <span class="classifier">Dict { Node: Node Value }</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
+<dd><p class="first">sets the values of nodes before the start of the run. This is useful in cases where a node is part of a
+cycle, because nodes in cycles receive their preceding nodes’ values as of the previous trial. Thus,
+this argument allows you to seed the values of nodes in cycles for use on the initial execution. If this
+is not specified, the nodes will use their default values.
+..technical_note:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">the</span> <span class="n">initial</span> <span class="n">value</span> <span class="n">of</span> <span class="n">a</span> <span class="n">node</span> <span class="ow">is</span> <span class="n">only</span> <span class="n">relevant</span> <span class="n">when</span> <span class="n">it</span> <span class="ow">is</span> <span class="n">embedded</span> <span class="ow">in</span> <span class="n">a</span> <span class="n">Cycle</span><span class="p">,</span> <span class="n">because</span> <span class="n">this</span>
+<span class="ow">is</span> <span class="n">the</span> <span class="n">only</span> <span class="n">case</span> <span class="ow">in</span> <span class="n">which</span> <span class="n">its</span> <span class="n">value</span> <span class="n">Parameter</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span> <span class="n">before</span> <span class="n">being</span> <span class="n">updated</span><span class="o">.</span>
+</pre></div>
+</div>
+</dd>
+<dt>reinitialize_values <span class="classifier-delimiter">:</span> <span class="classifier">Dict { Node</span> <span class="classifier-delimiter">:</span> <span class="classifier">Object | iterable [Object] }</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
+<dd><p class="first">object or iterable of objects to be passed as arguments to nodes’ reinitialize methods when their
+respective reinitialize_when conditions are met. These are used to seed the previous_value parameters
+of Mechanisms that have active integrator functions.
+..technical_note:</p>
+<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">reinitialize</span> <span class="n">values</span> <span class="n">are</span> <span class="n">used</span> <span class="n">to</span> <span class="n">seed</span> <span class="n">the</span> <span class="n">previous_value</span> <span class="n">Parameter</span> <span class="n">of</span> <span class="n">Mechanisms</span> <span class="k">with</span>
+<span class="n">active</span> <span class="n">IntegratorFunctions</span><span class="p">,</span> <span class="n">thus</span> <span class="n">effectively</span> <span class="n">starting</span> <span class="n">Integration</span> <span class="n">at</span> <span class="n">a</span> <span class="n">user</span><span class="o">-</span><span class="n">specified</span> <span class="n">point</span> <span class="k">for</span> <span class="n">a</span>
+<span class="n">call</span> <span class="n">to</span> <span class="n">run</span><span class="o">.</span>
+</pre></div>
+</div>
+</dd>
+<dt>reinitialize_nodes_when <span class="classifier-delimiter">:</span> <span class="classifier">Condition</span> <span class="classifier-delimiter">:</span> <span class="classifier">default Never()</span></dt>
+<dd>sets the reinitialize_when condition for all nodes in the Composition that currently have their
+reinitialize_when condition set to <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Never" title="psyneulink.core.scheduling.condition.Never"><code class="xref any py py-class docutils literal"><span class="pre">Never</span></code></a> for the duration of the run.</dd>
 </dl>
-<p>reinitialize_values : value : default None</p>
-<p>reinitialize_nodes_when :  Condition : default Never()</p>
 <p>skip_initialization : bool : default False</p>
 <p>clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP</p>
 <dl class="docutils">
@@ -2933,7 +2953,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+90.g365fd73',
+               VERSION:'0.7.5.4+93.g0ba84b9',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
