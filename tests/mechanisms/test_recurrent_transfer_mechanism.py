@@ -1013,9 +1013,10 @@ class TestRecurrentTransferMechanismReinitialize:
         #       num_trials=2,
         #       initialize=True,
         #       initial_values={R: 0.0})
-        from psyneulink.core.scheduling.condition import AtTrialStart
+        from psyneulink.core.scheduling.condition import AtTrialStart, AtRunStart
         C.run(inputs={R: 1.0},
               num_trials=2,
+              # reinitialize_nodes_when=AtRunStart(),
               reinitialize_nodes_when=AtTrialStart(),
               reinitialize_values={R: [0.0]})
 
