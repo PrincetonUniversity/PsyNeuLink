@@ -277,7 +277,7 @@ each of which is an appropriate input for the corresponding `ORIGIN` Mechanism (
 input for only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System.run>` method
 can be used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In
 both cases, two other types of input can be provided in corresponding arguments of the `run <System.run>` method:
-a list or ndarray of **initial_values**, and a list or ndarray of **target** values. The **initial_values** are
+a list or ndarray of **initialize_cycle_values**, and a list or ndarray of **target** values. The **initialize_cycle_values** are
 assigned at the start of a `TRIAL` as input to Mechanisms that close recurrent loops (designated as `INITIALIZE_CYCLE`,
 and listed in the System's `recurrent_init_mechanisms <System.recurrent_init_mechanisms>` attribute), and
 **target** values are assigned as the *TARGET* input of the System's `TARGET` Mechanisms (see
@@ -457,7 +457,7 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, BOLD, COMPONENT, CONDITION, CONTROL, CONTROLLER, CYCLE, FUNCTION, FUNCTIONS, \
-    INITIALIZE_CYCLE, INITIAL_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
+    INITIALIZE_CYCLE, INITIALIZE_CYCLE_VALUES, INTERNAL, LABELS, LEARNING, MATRIX, MONITOR_FOR_CONTROL, \
     OBJECTIVE_MECHANISM, ORIGIN, OUTCOME, PROJECTIONS, ROLES, SAMPLE, SINGLETON, TARGET, TERMINAL, VALUES, \
     SYSTEM_COMPONENT_CATEGORY
 from psyneulink.core.globals.log import Log
@@ -598,7 +598,7 @@ class System(System_Base):
         default_variable=None,                      \
         size=None,                                  \
         processes=None,                             \
-        initial_values=None,                        \
+        initialize_cycle_values=None,                        \
         controller=None,                            \
         enable_controller=:keyword:`False`,         \
         monitor_for_control=None,                   \
@@ -873,8 +873,8 @@ class System(System_Base):
                     :default value: None
                     :type:
 
-                initial_values
-                    see `initial_values <System.initial_values>`
+                initialize_cycle_values
+                    see `initialize_cycle_values <System.initialize_cycle_values>`
 
                     :default value: None
                     :type:
@@ -1039,7 +1039,7 @@ class System(System_Base):
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate controller, processes and initial_values
+        """Validate controller, processes and initialize_cycle_values
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
@@ -1054,10 +1054,10 @@ class System(System_Base):
             if not isinstance(process, Process_Base):
                 raise SystemError("{} (in processes arg for \'{}\') is not a Process object".format(process, self.name))
 
-        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES] is not None:
-            for mech, value in target_set[INITIAL_VALUES].items():
+        if INITIALIZE_CYCLE_VALUES in target_set and target_set[INITIALIZE_CYCLE_VALUES] is not None:
+            for mech, value in target_set[INITIALIZE_CYCLE_VALUES].items():
                 if not isinstance(mech, Mechanism):
-                    raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
+                    raise SystemError("{} (key for entry in initialize_cycle_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -1294,7 +1294,7 @@ class System(System_Base):
             learning_mechanisms
             control_mechanism
 
-        Validate initial_values
+        Validate initialize_cycle_values
 
         """
         from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
@@ -1684,16 +1684,16 @@ class System(System_Base):
         self._instantiate_stimulus_inputs(context=context)
 
         # Validate initial values
-        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIAL_VALUES ENTRY
+        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITIALIZE HAVE AN INITIALIZE_CYCLE_VALUES ENTRY
         # FIX: ONLY CHECKS FIRST ITEM OF self.defaults.value (ASSUMES THAT IS ALL THAT WILL GET ASSIGNED)
         # FIX: ONLY CHECK ONES THAT RECEIVE PROJECTIONS
         if self.initial_values is not None:
             for mech, value in self.initial_values.items():
                 if not mech in self.execution_graph:
-                    raise SystemError("{} (entry in initial_values arg) is not a Mechanism in \'{}\'".
+                    raise SystemError("{} (entry in initialize_cycle_values arg) is not a Mechanism in \'{}\'".
                                       format(mech.name, self.name))
                 if not iscompatible(value, mech.defaults.value[0]):
-                    raise SystemError("{} (in initial_values arg for \'{}\') is not a valid value for {}".
+                    raise SystemError("{} (in initialize_cycle_values arg for \'{}\') is not a valid value for {}".
                                       format(value, self.name, append_type_to_name(self)))
 
     def _instantiate_stimulus_inputs(self, context=None):
@@ -2663,7 +2663,7 @@ class System(System_Base):
         return runtime_params
 
     def initialize(self, context=None):
-        """Assign `initial_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
+        """Assign `initialize_cycle_values <System.initialize>` to mechanisms designated as `INITIALIZE_CYCLE` \and
         contained in recurrent_init_mechanisms.
         """
         # FIX:  INITIALIZE PROCESS INPUT??
@@ -3490,7 +3490,7 @@ class System(System_Base):
 
             RECURRENT_MECHANISMS:  list of `INITALIZE_CYCLE` Mechanisms;
 
-            RECURRENT_INIT_ARRAY: ndarray of initial_values;
+            RECURRENT_INIT_ARRAY: ndarray of initialize_cycle_values;
 
             TERMINAL_MECHANISMS: list of `TERMINAL` Mechanisms;
 
