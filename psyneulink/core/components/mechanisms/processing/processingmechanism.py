@@ -205,8 +205,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
         :param context: (str)
         """
 
-        self.system = None
-
         super().__init__(default_variable=default_variable,
                          size=size,
                          input_ports=input_ports,

@@ -21,7 +21,7 @@ class TestLCControlMechanism:
         A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
         B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
 
-        S = pnl.Composition()
+        C = pnl.Composition()
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
             base_level_gain=G,
@@ -32,12 +32,12 @@ class TestLCControlMechanism:
                 name='LC ObjectiveMechanism'
             )
         )
-        S.add_linear_processing_pathway([A,B])
-        S.add_controller(LC)
+        C.add_linear_processing_pathway([A,B])
+        C.add_controller(LC)
 
 
         for output_port in LC.output_ports:
-            output_port.parameters.value.set(output_port.value * starting_value_LC, S, override=True)
+            output_port.parameters.value.set(output_port.value * starting_value_LC, C, override=True)
 
         LC.reinitialize_when = pnl.Never()
 
@@ -47,18 +47,18 @@ class TestLCControlMechanism:
         mod_gain_assigned_to_B = []
         base_gain_assigned_to_B = []
 
-        def report_trial(system):
+        def report_trial(composition):
             from psyneulink import parse_context
-            context = parse_context(system)
+            context = parse_context(composition)
             gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
-            mod_gain_assigned_to_A.append([A.get_mod_gain(system)])
-            mod_gain_assigned_to_B.append([B.get_mod_gain(system)])
+            mod_gain_assigned_to_A.append([A.get_mod_gain(composition)])
+            mod_gain_assigned_to_B.append([B.get_mod_gain(composition)])
             base_gain_assigned_to_A.append(A.function.gain)
             base_gain_assigned_to_B.append(B.function.gain)
 
-        S._analyze_graph()
-        benchmark(S.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
-              call_after_trial=functools.partial(report_trial, S))
+        C._analyze_graph()
+        benchmark(C.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+              call_after_trial=functools.partial(report_trial, C))
 
         # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
         assert mod_gain_assigned_to_A[0] == [starting_value_LC]

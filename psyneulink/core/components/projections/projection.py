@@ -1929,38 +1929,6 @@ def _validate_receiver(sender_mech:Mechanism,
                                            port.__class__.__name__,
                                            expected_owner_type.__name__))
 
-    # Check if receiver_mech is in the same system as sender_mech;
-    #    if either has not been assigned a system, return
-
-    # Check whether mech is in the same system as sender_mech
-    receiver_systems = set()
-    # receiver_mech is a ControlMechanism (which has a system but no systems attribute)
-    if hasattr(receiver_mech, 'system') and receiver_mech.system:
-        receiver_systems.update({receiver_mech.system})
-    # receiver_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
-    elif hasattr(receiver_mech, 'systems') and receiver_mech.systems:
-        receiver_systems.update(set(receiver_mech.systems))
-    else:
-        return
-
-    sender_systems = set()
-    # sender_mech is a ControlMechanism (which has a system but no systems attribute)
-    if hasattr(sender_mech, 'system') and sender_mech.system:
-        sender_systems.update({sender_mech.system})
-    # sender_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
-    elif hasattr(sender_mech, 'systems')and sender_mech.systems:
-        sender_systems.update(set(sender_mech.systems))
-    else:
-        return
-
-    #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
-    if not receiver_systems & sender_systems:
-        raise ProjectionError("A {} specified {}for {} projects to a Component that is not in the same System".
-                                    format(projection.__class__.__name__,
-                                           spec_type,
-                                           sender_mech.name))
-
-
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, port, projection_spec, context=None):
     """Assign an "incoming" Projection to a receiver InputPort or ParameterPort of a Component object

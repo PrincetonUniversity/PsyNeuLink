@@ -746,7 +746,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # MODIFIED 5/2/20 END
 
         super().__init__(
-            system=None,
             function=function,
             input_ports=features,
             features=features,

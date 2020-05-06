@@ -1912,10 +1912,12 @@ class Port_Base(Port):
             if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
-            # Only accept projections from a Process to which the owner Mechanism belongs
-            if isinstance(sender, ProcessInputPort):
-                if not sender.owner in self.owner.processes.keys():
-                    continue
+            # # MODIFIED 5/2/20 OLD:  ELIMINATE SYSTEM
+            # # Only accept projections from a Process to which the owner Mechanism belongs
+            # if isinstance(sender, ProcessInputPort):
+            #     if not sender.owner in self.owner.processes.keys():
+            #         continue
+            # MODIFIED 5/2/20 END
 
             # Merge with relevant projection type-specific params
             if isinstance(projection, MappingProjection):

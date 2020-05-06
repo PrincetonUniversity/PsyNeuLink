@@ -776,8 +776,9 @@ class LCControlMechanism(ControlMechanism):
 
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
-        # FIX: SYSTEM IMPLEMENT FOR COMPOSITION:
-        #      add keyword in aux_comopnents (ALL) that is parsed by Composition to implement relevant Projections
+        # MODIFIED 5/2/20 OLD:  ELIMINATE SYSTEM
+        # FIX: REPLACE WITH ASSIGNMENT OF DUMMY AUX_COMPONENT AND/OR
+        #      IMPLEMENTATION OF NodeRole.MODULABLE and MODULATED AND USE OF THESE TO MAKE ASSIGNMENTS IN COMPOSITION
         if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
             if self.systems:
                 for system in self.systems:
@@ -791,6 +792,7 @@ class LCControlMechanism(ControlMechanism):
             else:
                 # If LCControlMechanism is not in a Process or System, defer implementing OutputPorts until it is
                 return
+        # MODIFIED 5/2/20 END
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
