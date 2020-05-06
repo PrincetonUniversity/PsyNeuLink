@@ -865,13 +865,13 @@ class TestRecurrentTransferMechanismInSystem:
         # p = Process(pathway=[R])
         c = Composition(pathways=[R])
         R.learning_enabled = False
-        c.execute(inputs={R:[1, 1, 0, 0]})
-        c.execute(inputs={R:[1, 1, 0, 0]})
+        c.learn(inputs={R:[1, 1, 0, 0]})
+        c.learn(inputs={R:[1, 1, 0, 0]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1.2, 1.2, 0.2, 0.2]])
 
         # Test that activity and weight changes are properly computed with learning
         R.learning_enabled = True
-        c.execute(inputs={R:[1, 1, 0, 0]})
+        c.learn(inputs={R:[1, 1, 0, 0]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1.28, 1.28, 0.28, 0.28]])
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(c),
@@ -882,7 +882,7 @@ class TestRecurrentTransferMechanismInSystem:
                 [0.11792000000000001, 0.11792000000000001, 0.10392000000000001, 0.1]
             ]
         )
-        c.execute(inputs={R:[1, 1, 0, 0]})
+        c.learn(inputs={R:[1, 1, 0, 0]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1.4268928, 1.4268928, 0.3589728, 0.3589728]])
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(c),
@@ -907,7 +907,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert R.learning_rate == 0.1
         assert R.learning_mechanism.learning_rate == 0.1
         # assert R.learning_mechanism.function.learning_rate == 0.1
-        c.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
+        c.learn(inputs={R:[[1.0, 1.0, 1.0, 1.0]]})
         matrix_1 = [[0., 1.1, 1.1, 1.1],
                     [1.1, 0., 1.1, 1.1],
                     [1.1, 1.1, 0., 1.1],
@@ -919,7 +919,7 @@ class TestRecurrentTransferMechanismInSystem:
         assert R.learning_rate == 0.9
         assert R.learning_mechanism.learning_rate == 0.9
         # assert R.learning_mechanism.function.learning_rate == 0.9
-        c.run(inputs=[[1.0, 1.0, 1.0, 1.0]])
+        c.learn(inputs={R:[[1.0, 1.0, 1.0, 1.0]]})
         matrix_2 = [[0., 1.911125, 1.911125, 1.911125],
                     [1.911125, 0., 1.911125, 1.911125],
                     [1.911125, 1.911125, 0., 1.911125],
@@ -1016,9 +1016,8 @@ class TestRecurrentTransferMechanismReinitialize:
         from psyneulink.core.scheduling.condition import AtTrialStart, AtRunStart
         C.run(inputs={R: 1.0},
               num_trials=2,
-              # reinitialize_nodes_when=AtRunStart(),
-              reinitialize_nodes_when=AtTrialStart(),
-              reinitialize_values={R: [0.0]})
+              initialize_cycle_values={R: [0.0]}
+        )
 
         # Trial 1    |   variable = 1.0 + 0.0
         # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
