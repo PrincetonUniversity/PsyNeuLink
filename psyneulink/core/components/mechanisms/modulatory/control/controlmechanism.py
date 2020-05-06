@@ -1164,8 +1164,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
                 return
-            validate_monitored_port_spec(self._owner._owner, input_ports)
 
+            # TODO: uncomment this method or remove this block entirely.
+            # This validation check was never being run due to an
+            # unintentionally suppressed exception. Why is the default
+            # specification ([OUTCOME]) invalid according to this
+            # method?
+            # validate_monitored_port_spec(self._owner, input_ports)
 
     @tc.typecheck
     def __init__(self,

@@ -457,7 +457,7 @@ COMMENT:
 Any Mechanism that is the `sender <Projection_Base.sender>` of a Projection that closes a loop in a Process
 or System, and that is not an `ORIGIN` Mechanism, is designated as `INITIALIZE_CYCLE`. An initial value can be assigned
 to such Mechanisms, that will be used to initialize them when the Process or System is first run.  These values are
-specified in the **initial_values** argument of :keyword:`run`, as a dictionary. The key for each entry must
+specified in the **initialize_cycle_values** argument of :keyword:`run`, as a dictionary. The key for each entry must
 be a Mechanism designated as `INITIALIZE_CYCLE`, and its value an input for the Mechanism to be used as its initial
 value.  The size of the input (length of the outermost level if it is a list, or axis 0 if it is an np.ndarray),
 must equal the number of InputPorts of the Mechanism, and the size of each value must match (in number and type of

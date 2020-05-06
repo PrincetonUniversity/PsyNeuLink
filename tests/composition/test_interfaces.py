@@ -570,6 +570,25 @@ class TestConnectCompositionsViaCIMS:
         assert NOISE in icomp.parameter_CIM.output_ports.names[1]
         assert SLOPE in icomp.parameter_CIM.output_ports.names[2]
 
+    def test_parameter_CIM_routing_from_ControlMechanism(self):
+        # Inner Composition
+        ia = TransferMechanism(name='ia')
+        ib = TransferMechanism(name='ib')
+        icomp = Composition(name='icomp', pathways=[ia])
+        # Outer Composition
+        ocomp = Composition(name='ocomp', pathways=[icomp])
+        cm = ControlMechanism(
+            name='control_mechanism',
+            control_signals=
+            ControlSignal(projections=[(SLOPE, ib)])
+        )
+        icomp.add_linear_processing_pathway([ia, ib])
+        ocomp.add_linear_processing_pathway([cm, icomp])
+        res = ocomp.run([[2], [2], [2]])
+        assert np.allclose(res, [[4], [4], [4]])
+        assert len(ib.mod_afferents) == 1
+        assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
+        assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
 
 class TestInputCIMOutputPortToOriginOneToMany:
 

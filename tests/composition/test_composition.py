@@ -4858,7 +4858,7 @@ class TestNestedCompositions:
         )
         assert not ocomp._check_for_existing_projections(sender=ib, receiver=ocomp_objective_mechanism)
         return ocomp
-    # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
+    # Does not work yet due to initialize_cycle_values bug that causes first recurrent projection to pass different values
     # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
     #
@@ -6369,6 +6369,47 @@ class TestShadowInputs:
                          B: 15.0})
         assert obj.value == [[25.0]]
 
+
+
+class TestInitialize:
+
+    def test_initialize_cycle_values(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = RecurrentTransferMechanism(name='C',
+                                       auto=1.0)
+
+        abc_Composition = Composition(pathways=[[A, B, C]])
+
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]},
+                            initialize_cycle_values={C: 2.0})
+
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]},
+                            initialize_cycle_values={C: 2.0})
+
+        # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
+        # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
+        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+
+    def test_initialize_cycle_values_warning(self):
+        A = ProcessingMechanism(name='A')
+        err = f"A value is specified for node {A.name} in the initialize_cycle_values " \
+            f"argument, but this node is not part of a cycle. Setting initialization cycle values of nodes that " \
+            f"are not part of cycles is generally a mistake, because these values will be overwritten " \
+            f"when the node first executes, and therefore never used."
+        a_Composition = Composition(name='a_Composition',
+                                    pathways=[[A]])
+        with pytest.warns(UserWarning) as w:
+            a_Composition.run(
+                inputs={
+                    A:[1]
+                },
+                initialize_cycle_values={
+                    A:[1]
+                }
+            )
+            warning_triggered = err in [warn.message.args[0] for warn in w]
+            assert warning_triggered
 
 class TestReinitializeValues:
 
