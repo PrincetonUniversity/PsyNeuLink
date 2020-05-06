@@ -309,7 +309,7 @@ class TestLCAReinitialize:
               num_trials=2,
               # reinitialize_nodes_when=AtRunStart(),
               # reinitialize_nodes_when=AtTrialStart(),
-              reinitialize_values={L: [0.0]})
+              initialize_cycle_values={L: [0.0]})
 
         # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
 
@@ -339,7 +339,7 @@ class TestLCAReinitialize:
         # Trial 4    |   variable = 1.0 + 2.05
         # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
         #  linear fn: 5.305*1.0 = 5.305
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 4.705)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 4.705)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 

@@ -936,13 +936,11 @@ class TestRecurrentTransferMechanismInSystem:
             auto=0,
             hetero=np.full((size,size),0.0)
             )
-        # P=Process(pathway=[R])
-        # S=System(processes=[P])
         C=Composition(pathways=[R])
 
         inputs_dict = {R:[1,0,1,0]}
-        C.run(num_trials=4,
-              inputs=inputs_dict)
+        C.learn(num_trials=4,
+                inputs=inputs_dict)
         np.testing.assert_allclose(
             R.recurrent_projection.get_mod_matrix(C),
             [
@@ -957,16 +955,16 @@ class TestRecurrentTransferMechanismInSystem:
         # Reset state so learning of new pattern is "uncontaminated" by activity from previous one
         R.output_port.parameters.value.set([0, 0, 0, 0], C, override=True)
         inputs_dict = {R:[0,1,0,1]}
-        C.run(num_trials=4,
-              inputs=inputs_dict)
+        C.learn(num_trials=4,
+                inputs=inputs_dict)
         np.testing.assert_allclose(
-            R.recurrent_projection.get_mod_matrix(C),
-            [
-                [0.0,        0.0,        0.23700501, 0.0       ],
-                [0.0,        0.0,        0.0,        0.23700501],
-                [0.23700501, 0.0,        0.0,        0.        ],
-                [0.0,        0.23700501, 0.0,        0.        ]
-            ]
+                R.recurrent_projection.get_mod_matrix(C),
+                [
+                    [0.0,        0.0,        0.23700501, 0.0       ],
+                    [0.0,        0.0,        0.0,        0.23700501],
+                    [0.23700501, 0.0,        0.0,        0.        ],
+                    [0.0,        0.23700501, 0.0,        0.        ]
+                ]
         )
         np.testing.assert_allclose(R.output_port.parameters.value.get(C),[0.0, 1.18518086, 0.0, 1.18518086])
 
