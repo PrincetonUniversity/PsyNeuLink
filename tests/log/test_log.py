@@ -194,59 +194,69 @@ class TestLog:
             'weight': 'OFF'
         }
 
-        PS.execute()
-        PS.execute()
-        PS.execute()
+        PS.run(inputs={T_1:[0,0]})
+        PS.run(inputs={T_1:[1,2]})
+        PS.run(inputs={T_1:[3,4]})
 
         assert T_1.logged_items == {'RESULT': 'EXECUTION', 'mod_noise': 'EXECUTION'}
         assert PJ.logged_items == {'mod_matrix': 'EXECUTION'}
 
         T_1.log.print_entries(contexts=PS)
-
         # assert T_1.log.print_entries() ==
-        # # Log for mech_A:
-        # #
-        # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # #
-        # #
-        # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        #
-        # assert T_2.log.print_entries() ==
-        # # Log for mech_A:
-        # #
-        # # Index     Variable:                                          Context                                                                  Value
-        # # 0         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'RESULT'.........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # #
-        # #
-        # # 0         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
-        # # 1         'noise'...........................................' EXECUTING  PROCESS Process-0'.......................................    0.0
+        # test_log.py::TestLog::test_log
+        # Log for log_test_T_1:
+        # Logged Item:   Time       Context                    Value
+        # 'RESULT'       0:0:0:0   'PROCESSING, COMPOSI...   [0. 0.]
+        # 'RESULT'       1:0:0:0   'PROCESSING, COMPOSI...   [1. 2.]
+        # 'RESULT'       2:0:0:0   'PROCESSING, COMPOSI...   [3. 4.]
+        # 'mod_noise'    0:0:0:0   'PROCESSING, COMPOSI...   [0.]
+        # 'mod_noise'    1:0:0:0   'PROCESSING, COMPOSI...   [0.]
+        # 'mod_noise'    2:0:0:0   'PROCESSING, COMPOSI...   [0.]
 
         T_1_csv = T_1.log.csv(entries=['mod_noise', 'RESULT'], owner_name=False, quotes=None)
         print(T_1_csv)
         assert T_1_csv == \
             "'Execution Context', 'Data'\n" \
-            + "'{0}', \'Index\', \'mod_noise\', \'RESULT\'\n".format(PS.default_execution_id) \
-            + ", 0, 0.0, 0.0 0.0\n" \
-            + ", 1, 0.0, 0.0 0.0\n" \
-            + ", 2, 0.0, 0.0 0.0\n"
+            + f"'{PS.default_execution_id}', \'Run\', \'Trial\', \'Pass\', \'Time_step\', \'mod_noise\', \'RESULT\'\n" \
+            + ", 0, 0, 0, 0, 0.0, 0.0 0.0\n" \
+            + ", 1, 0, 0, 0, 0.0, 1.0 2.0\n" \
+            + ", 2, 0, 0, 0, 0.0, 3.0 4.0\n"
 
         assert PJ.log.csv(entries='mod_matrix', owner_name=True, quotes=True) == \
             "'Execution Context', 'Data'\n" \
-            + "'{0}', \'Index\', \'MappingProjection from log_test_T_1 to log_test_T_2[mod_matrix]\'\n".format(PS.default_execution_id) \
-            + ", \'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
-            + ", \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
-            + ", \'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
+            + f"'{PS.default_execution_id}', \'Run\', \'Trial\', \'Pass\', \'Time_step\', " \
+              "\'MappingProjection from log_test_T_1[RESULT] to log_test_T_2[InputPort-0][mod_matrix]\'\n" \
+            + ", \'0\', \'0\', \'0\', \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+            + ", \'1\', \'0\', \'0\', \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+            + ", \'2\', \'0\', \'0\', \'1\', \'1.0 0.0\' \'0.0 1.0\'\n"
+
+
+        # assert PJ.log.csv(entries='mod_matrix', owner_name=True, quotes=True) == \
+        #     "'Execution Context', 'Data'\n" \
+        #     + "'{PS.default_execution_id}', \'Index\', " \
+        #       "\'MappingProjection from log_test_T_1[RESULT] to log_test_T_2[InputPort-0][mod_matrix]\'\n" \
+        #     + ", \'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+        #     + ", \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
+        #     + ", \'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
+        #
+        #
+        #     'Execution Context', 'Data'
+        #     'log_test_PS', 'Run', 'Trial', 'Pass', 'Time_step', 'MappingProjection from log_test_T_1[RESULT] to log_test_T_2[InputPort-0][mod_matrix]'
+        #     , '0', '0', '0', '1', '1.0 0.0' '0.0 1.0'
+        #     , '1', '0', '0', '1', '1.0 0.0' '0.0 1.0'
+        #     , '2', '0', '0', '1', '1.0 0.0' '0.0 1.0'
+
 
         result = T_1.log.nparray(entries=['mod_noise', 'RESULT'], header=False, owner_name=True)
         assert result[0] == PS.default_execution_id
         np.testing.assert_array_equal(result[1][0],
                                       np.array([[[0], [1], [2]],
                                                 [[ 0.], [ 0.], [ 0.]],
-                                                [[ 0.,  0.], [ 0.,  0.],[ 0., 0.]]]))
+                                                [[ 0.], [ 0.], [ 0.]],
+                                                [[ 0.], [ 0.], [ 0.]],
+                                                [[ 0.0], [ 0.0],[ 0.0]],
+                                                [[ 0.,  0.], [ 1.,  2.],[ 3., 4.]],
+                                                ]))
 
     def test_log_initialization(self):
         T = pnl.TransferMechanism(
