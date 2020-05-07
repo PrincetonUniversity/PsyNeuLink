@@ -4404,8 +4404,8 @@ class TestNestedCompositions:
         )
         assert not ocomp._check_for_existing_projections(sender=ib, receiver=ocomp_objective_mechanism)
         return ocomp
-    # Does not work yet due to initialize_cycle_values bug that causes first recurrent projection to pass different values
-    # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
+    # # Does not work yet due to initialize_cycle_values bug that causes first recurrent projection to pass different values
+    # # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
     #
     #     # mechanisms
@@ -4431,7 +4431,7 @@ class TestNestedCompositions:
     #     comp1.run(inputs={A: [1.0, 2.0, 3.0]})
     #     comp2.run(inputs={C: [1.0, 2.0, 3.0]})
     #
-    #     # assert np.allclose(comp1.results, comp2.results)
+    #     assert np.allclose(comp1.results, comp2.results)
 
     def test_combine_two_disjunct_trees(self):
         # Goal:
