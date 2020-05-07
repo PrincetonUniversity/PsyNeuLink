@@ -95,13 +95,12 @@ encoder network, the first layer of which takes an an array of length 5 as its i
 `Logistic` function::
 
     # Construct the Mechanisms:
-    input_layer = ProcessingMechanism(size=5)
-    hidden_layer = ProcessingMechanism(size=2, function=Logistic)
-    output_layer = ProcessingMechanism(size=5, function=Logistic)
+    input_layer = ProcessingMechanism(size=5, name='Input')
+    hidden_layer = ProcessingMechanism(size=2, function=Logistic, name='hidden')
+    output_layer = ProcessingMechanism(size=5, function=Logistic, name='output')
 
     # Construct the Composition:
-    my_encoder = Composition()
-    my_encoder.add_linear_processing_pathway([input_layer, hidden_layer, output_layer])
+    my_encoder = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
 with an appropriately-sized input array, for example::
@@ -154,8 +153,10 @@ matrix, simply by inserting them in between the Mechanisms in the pathway::
     my_encoder.add_linear_processing_pathway([input_layer, my_projection, hidden_layer, output_layer])
 
 The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
-which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  The matrix itself could also
-have been inserted directly, as follows::
+which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  Note that here, one of the
+Composition's `pathway addition methods <Composition_Pathway_Addition_Methods>` is used to create the pathway, as an
+alternative to specifying it in the **pathways** argument of the constructor (as shown in the initial example). The
+Projection's matrix itself could also have been inserted directly, as follows::
 
     my_encoder.add_linear_processing_pathway([input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
 
