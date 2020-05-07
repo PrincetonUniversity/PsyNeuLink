@@ -122,7 +122,7 @@ class TestMechanismInputLabels:
         C.run(inputs={M:'red'})
         assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]]])
 
-        C.run(inputs={M:{['red']})
+        C.run(inputs={M:['red']})
         assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]], [[1, 0]]])
 
     def test_dict_of_dicts(self):

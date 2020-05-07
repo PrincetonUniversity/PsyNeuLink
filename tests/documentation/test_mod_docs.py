@@ -29,7 +29,6 @@ def test_core_docs(mod, capsys):
 @pytest.mark.parametrize("mod", [# Mechanisms
                                  pnl.library.components.mechanisms.processing.integrator.ddm,
                                  pnl.library.components.mechanisms.processing.objective.comparatormechanism,
-                                 pnl.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism,
                                  # Scheduling
                                  pnl.core.scheduling.scheduler,
                                  # Logs

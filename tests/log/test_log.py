@@ -13,7 +13,7 @@ class TestLog:
 
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
         T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T_1, T_2])
+        PS = pnl.Composition(name='log_test_PS', pathways=[T_1, T_2])
         PJ = T_2.path_afferents[0]
 
         assert T_1.loggable_items == {
@@ -260,7 +260,7 @@ class TestLog:
                                     size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                     size=2)
-        PS = pnl.Process(name='log_test_PS', pathway=[T1, T2])
+        PS = pnl.Composition(name='log_test_PS', pathways=[T1, T2])
         PJ = T2.path_afferents[0]
 
         assert T1.loggable_items == {

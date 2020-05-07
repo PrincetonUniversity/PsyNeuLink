@@ -1041,7 +1041,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             self.reinitialize_when = Never()
 
-        # MODIFIED 4/25/20 NEW:
+        # MODIFIED 4/25/20 NEW:  ELIMINATE SYSTEM
         if not hasattr(self, '_role'):
             self._role = None
         # MODIFIED 4/25/20 END

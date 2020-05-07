@@ -786,13 +786,12 @@ OutputPort(s).
 ...                      "blue": [0, 0, 1]}
 >>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
 ...                             params={pnl.OUTPUT_LABELS_DICT: output_labels_dict})
->>> P = pnl.Process(pathway=[M])
->>> S = pnl.System(processes=[P])
+>>> C = pnl.Composition(pathways=[P])
 >>> input_dictionary =  {M: [[1, 0, 0]]}
->>> results = S.run(inputs=input_dictionary)
+>>> results = C.run(inputs=input_dictionary)
 >>> M.get_output_labels(S)
 ['red']
->>> M.output_ports[0].get_label(S)
+>>> M.output_ports[0].get_label(C)
 'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
