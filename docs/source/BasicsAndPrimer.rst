@@ -134,10 +134,11 @@ the first Mechanism in the pathway (in this case, the input_layer)::
     my_encoder.run([1, 4.7, 3.2, 6, 2])
     [array([0.88079707, 0.88079707, 0.88079707, 0.88079707, 0.88079707])]
 
-The order in which Mechanisms appear in the list of the `add_linear_pathway <Composition.add_linear_pathway>`
-method determines their order in the pathway.  More complicated arrangements can be created by adding nodes
-individually using a Composition's `add_nodes <Composition.add_nodes>` method, and/or by creating intersecting
-pathways, as shown in some of the examples further below.
+The order in which Mechanisms appear in the list of the **pathways** argument of the Composition's constructor
+determines their order in the pathway.  More complicated arrangements can be created by using one of the Compositions
+`pathway addition methods <Composition_Pathway_Addition_Methods>`, by adding nodes individually using a
+Composition's `add_nodes <Composition.add_nodes>` method, and/or by creating intersecting pathways, as shown in some
+of the examples further below.
 
 PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no `Projections
 <Projection>` were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
