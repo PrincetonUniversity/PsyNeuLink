@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ********************************************  System Defaults ********************************************************
+# *************************************************  Context ***********************************************************
 
 """
 .. _Context_Overview:
@@ -142,11 +142,11 @@ class ContextFlags(enum.IntFlag):
 
     # execution_phase flags
     PROCESSING    = 1 << 5  # 32
-    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
+    """Set while `Composition is `executing <Composition_Execution>` `ProcessingMechanisms <ProcessingMechanism>`."""
     LEARNING      = 1 << 6 # 64
-    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
+    """Set while `Composition is `executing <Composition_Execution>` `LearningMechanisms <LearningMechanism>`."""
     CONTROL       = 1 << 7 # 128
-    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
+    """Set while Composition's `controller <Composition.controller>` or its `ObjectiveMechanism` is executing."""
     SIMULATION    = 1 << 8  # 256
     """Set during simulation by Composition.controller"""
     IDLE = 1 << 17
@@ -378,14 +378,12 @@ class Context():
         # if isinstance(composition, Composition):
         if (
             composition is None
-            or composition.__class__.__name__ in {
-                'Composition', 'SystemComposition', 'PathwayComposition', 'AutodiffComposition', 'System', 'Process'
-            }
+            or composition.__class__.__name__ in {'Composition', 'AutodiffComposition'}
         ):
             self._composition = composition
         else:
-            raise ContextError("Assignment to context.composition for {} ({}) "
-                               "must be a Composition (or \'None\').".format(self.owner.name, composition))
+            raise ContextError("Assignment to context.composition for {self.owner.name} ({composition}) "
+                               "must be a Composition (or \'None\').")
 
     @property
     def flags(self):
@@ -553,7 +551,7 @@ def _get_context(context:tc.any(ContextFlags, Context, str)):
 
 
 def _get_time(component, context):
-    """Get time from Scheduler of System in which Component is being executed.
+    """Get time from Scheduler of Composition in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
     Otherwise, returns (None, None, None)
@@ -584,52 +582,24 @@ def _get_time(component, context):
                            format(component.__class__.__name__,
                                   Mechanism.__name__, Port.__name__, Projection.__name__))
 
-    # Get System in which it is being (or was last) executed (if any):
+    # Get Composition in which it is being (or was last) executed (if any):
 
-    system = context.composition
-    if system is None:
+    composition = context.composition
+    if composition is None:
         # If called from COMMAND_LINE, get context for last time value was assigned:
-        system = component.most_recent_context.composition
+        composition = component.most_recent_context.composition
 
-    if system and hasattr(system, 'scheduler'):
+    if composition and hasattr(composition, 'scheduler'):
         execution_flags = context.execution_phase
-        # # MODIFIED 7/15/19 OLD:
-        # try:
-        #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-        #         t = system.scheduler.get_clock(context).time
-        #         t = time(t.run, t.trial, t.pass_, t.time_step)
-        #     elif execution_flags == ContextFlags.CONTROL:
-        #         t = system.scheduler.get_clock(context).time
-        #         t = time(t.run, t.trial, t.pass_, t.time_step)
-        #     elif execution_flags == ContextFlags.LEARNING:
-        #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-        #             t = system.scheduler_learning.get_clock(context).time
-        #             t = time(t.run, t.trial, t.pass_, t.time_step)
-        #         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        #         # Add autoassociative learning mechanism + related projections to composition as processing components
-        #         else:
-        #             t = None
-        #     else:
-        #         t = None
-        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler
         try:
             if execution_flags & (ContextFlags.PROCESSING | ContextFlags.LEARNING | ContextFlags.IDLE):
-                t = system.scheduler.get_clock(context).time
+                t = composition.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags & ContextFlags.CONTROL:
-                t = system.scheduler.get_clock(context).time
+                t = composition.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
-            # elif execution_flags == ContextFlags.LEARNING:
-            #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-            #         t = system.scheduler_learning.get_clock(context).time
-            #         t = time(t.run, t.trial, t.pass_, t.time_step)
-            #     # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-            #     # Add autoassociative learning mechanism + related projections to composition as processing components
-            #     else:
-            #         t = None
             else:
                 t = None
-        # MODIFIED 7/15/19 END:
         except KeyError:
             t = None
 
@@ -638,8 +608,8 @@ def _get_time(component, context):
             offender = "\'{}\'".format(component.name)
             if ref_mech is not component:
                 offender += " [{} of {}]".format(component.__class__.__name__, ref_mech.name)
-            warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
-                          "when running Components within a System".format(offender))
+            warnings.warn("Attempt to log {offender} which is not in a Composition; "
+                          "logging is currently supported only when executing Components within a Composition.")
         t = None
 
     return t or no_time

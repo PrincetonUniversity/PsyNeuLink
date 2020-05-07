@@ -28,11 +28,8 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
-from psyneulink.core.compositions.pathwaycomposition import PathwayComposition
-from psyneulink.core.compositions.systemcomposition import SystemComposition
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, CONTROL, DISABLE, INPUT_PORT, INTERCEPT, \
-    LEARNING, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -4138,457 +4135,6 @@ class TestCallBeforeAfterTimescale:
 #         assert 925 == output[0][0]
 
 
-class TestSystemComposition:
-
-    # def test_run_2_mechanisms_default_input_1(self):
-    #     sys = SystemComposition()
-    #     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-    #     B = TransferMechanism(function=Linear(slope=5.0))
-    #     sys.add_node(A)
-    #     sys.add_node(B)
-    #     sys.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     sched = Scheduler(composition=sys)
-    #     output = sys.run(
-    #         scheduler=sched
-    #     )
-    #     assert 25 == output[0][0]
-
-    def test_run_2_mechanisms_input_5(self):
-        sys = SystemComposition()
-        A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-        B = TransferMechanism(function=Linear(slope=5.0))
-        sys.add_node(A)
-        sys.add_node(B)
-        sys.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        inputs_dict = {A: [[5]]}
-        sched = Scheduler(composition=sys)
-        output = sys.run(inputs=inputs_dict, scheduler=sched)
-        assert np.allclose(125, output[0][0])
-
-    def test_call_beforeafter_values_onepass(self):
-        comp = Composition()
-
-        A = TransferMechanism(name="A [transfer]", function=Linear(slope=2.0))
-        B = TransferMechanism(name="B [transfer]", function=Linear(slope=5.0))
-        comp.add_node(A)
-        comp.add_node(B)
-        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        inputs_dict = {A: [[1], [2], [3], [4]]}
-        sched = Scheduler(composition=comp)
-
-        before = {}
-        after = {}
-
-        before_expected = {
-            TimeScale.TIME_STEP: {
-                A: [0, 2, 2, 4, 4, 6, 6, 8],
-                B: [0, 0, 10, 10, 20, 20, 30, 30]
-            },
-            TimeScale.PASS: {
-                A: [0, 2, 4, 6],
-                B: [0, 10, 20, 30]
-            },
-            TimeScale.TRIAL: {
-                A: [0, 2, 4, 6],
-                B: [0, 10, 20, 30]
-            },
-        }
-
-        after_expected = {
-            TimeScale.TIME_STEP: {
-                A: [2, 2, 4, 4, 6, 6, 8, 8],
-                B: [0, 10, 10, 20, 20, 30, 30, 40]
-            },
-            TimeScale.PASS: {
-                A: [2, 4, 6, 8],
-                B: [10, 20, 30, 40]
-            },
-            TimeScale.TRIAL: {
-                A: [2, 4, 6, 8],
-                B: [10, 20, 30, 40]
-            },
-        }
-
-        comp.run(
-            inputs=inputs_dict,
-            scheduler=sched,
-            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B, comp=comp),
-            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B, comp=comp),
-            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B, comp=comp),
-            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B, comp=comp),
-            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B, comp=comp),
-            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B, comp=comp),
-        )
-
-        for ts in before_expected:
-            for mech in before_expected[ts]:
-                # extra brackets around 'before_expected[ts][mech]' were needed for np assert to work
-                np.testing.assert_allclose([before[ts][mech]], [before_expected[ts][mech]], err_msg='Failed on before[{0}][{1}]'.format(ts, mech))
-
-        for ts in after_expected:
-            for mech in after_expected[ts]:
-                comp = []
-                for x in after[ts][mech]:
-                    try:
-                        comp.append(x[0])
-                    except (TypeError, IndexError):
-                        comp.append(x)
-                np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
-
-    def test_call_beforeafter_values_twopass(self):
-        comp = Composition()
-
-        A = IntegratorMechanism(name="A [transfer]", function=SimpleIntegrator(rate=1))
-        B = IntegratorMechanism(name="B [transfer]", function=SimpleIntegrator(rate=2))
-        comp.add_node(A)
-        comp.add_node(B)
-        comp.add_projection(MappingProjection(sender=A, receiver=B), A, B)
-        inputs_dict = {A: [[1], [2]]}
-        sched = Scheduler(composition=comp)
-        sched.add_condition(B, EveryNCalls(A, 2))
-
-        before = {}
-        after = {}
-
-        before_expected = {
-            TimeScale.TIME_STEP: {
-                A: [
-                    0, 1, 2,
-                    2, 4, 6,
-                ],
-                B: [
-                    0, 0, 0,
-                    4, 4, 4,
-                ]
-            },
-            TimeScale.PASS: {
-                A: [
-                    0, 1,
-                    2, 4,
-                ],
-                B: [
-                    0, 0,
-                    4, 4,
-                ]
-            },
-            TimeScale.TRIAL: {
-                A: [0, 2],
-                B: [0, 4]
-            },
-        }
-
-        after_expected = {
-            TimeScale.TIME_STEP: {
-                A: [
-                    1, 2, 2,
-                    4, 6, 6,
-                ],
-                B: [
-                    0, 0, 4,
-                    4, 4, 16,
-                ]
-            },
-            TimeScale.PASS: {
-                A: [
-                    1, 2,
-                    4, 6,
-                ],
-                B: [
-                    0, 4,
-                    4, 16,
-                ]
-            },
-            TimeScale.TRIAL: {
-                A: [2, 6],
-                B: [4, 16]
-            },
-        }
-
-        comp.run(
-            inputs=inputs_dict,
-            scheduler=sched,
-            call_before_time_step=functools.partial(record_values, before, TimeScale.TIME_STEP, A, B, comp=comp),
-            call_after_time_step=functools.partial(record_values, after, TimeScale.TIME_STEP, A, B, comp=comp),
-            call_before_pass=functools.partial(record_values, before, TimeScale.PASS, A, B, comp=comp),
-            call_after_pass=functools.partial(record_values, after, TimeScale.PASS, A, B, comp=comp),
-            call_before_trial=functools.partial(record_values, before, TimeScale.TRIAL, A, B, comp=comp),
-            call_after_trial=functools.partial(record_values, after, TimeScale.TRIAL, A, B, comp=comp),
-        )
-
-        for ts in before_expected:
-            for mech in before_expected[ts]:
-                np.testing.assert_allclose(before[ts][mech], before_expected[ts][mech], err_msg='Failed on before[{0}][{1}]'.format(ts, mech))
-
-        for ts in after_expected:
-            for mech in after_expected[ts]:
-                comp = []
-                for x in after[ts][mech]:
-                    try:
-                        comp.append(x[0])
-                    except (TypeError, IndexError):
-                        comp.append(x)
-                np.testing.assert_allclose(comp, after_expected[ts][mech], err_msg='Failed on after[{0}][{1}]'.format(ts, mech))
-
-    # when self.sched is ready:
-    # def test_run_default_scheduler(self):
-    #     comp = Composition()
-    #     A = IntegratorMechanism(default_variable=1.0, function=Linear(slope=5.0))
-    #     B = TransferMechanism(function=Linear(slope=5.0))
-    #     comp.add_node(A)
-    #     comp.add_node(B)
-    #     comp.add_projection(A, MappingProjection(sender=A, receiver=B), B)
-    #     inputs_dict = {A: [[5], [4], [3]]}
-    #     output = comp.run(
-    #         inputs=inputs_dict,
-    #         num_trials=3
-    #     )
-    #     assert 75 == output[0][0]
-
-    # def test_multilayer_no_learning(self):
-    #     Input_Layer = TransferMechanism(
-    #         name='Input Layer',
-    #         function=Logistic,
-    #         default_variable=np.zeros((2,)),
-    #     )
-    #
-    #     Hidden_Layer_1 = TransferMechanism(
-    #         name='Hidden Layer_1',
-    #         function=Logistic(),
-    #         default_variable=np.zeros((5,)),
-    #     )
-    #
-    #     Hidden_Layer_2 = TransferMechanism(
-    #         name='Hidden Layer_2',
-    #         function=Logistic(),
-    #         default_variable=[0, 0, 0, 0],
-    #     )
-    #
-    #     Output_Layer = TransferMechanism(
-    #         name='Output Layer',
-    #         function=Logistic,
-    #         default_variable=[0, 0, 0],
-    #     )
-    #
-    #     Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
-    #
-    #     Input_Weights = MappingProjection(
-    #         name='Input Weights',
-    #         matrix=Input_Weights_matrix,
-    #     )
-    #
-    #     comp = Composition()
-    #     comp.add_node(Input_Layer)
-    #     comp.add_node(Hidden_Layer_1)
-    #     comp.add_node(Hidden_Layer_2)
-    #     comp.add_node(Output_Layer)
-    #
-    #     comp.add_projection(Input_Layer, Input_Weights, Hidden_Layer_1)
-    #     comp.add_projection(Hidden_Layer_1, MappingProjection(), Hidden_Layer_2)
-    #     comp.add_projection(Hidden_Layer_2, MappingProjection(), Output_Layer)
-    #
-    #     stim_list = {Input_Layer: [[-1, 30]]}
-    #     sched = Scheduler(composition=comp)
-    #     output = comp.run(
-    #         inputs=stim_list,
-    #         scheduler=sched,
-    #         num_trials=10
-    #     )
-    #
-    #     # p = process(
-    #     #     default_variable=[0, 0],
-    #     #     pathway=[
-    #     #         Input_Layer,
-    #     #         # The following reference to Input_Weights is needed to use it in the pathway
-    #     #         #    since it's sender and receiver args are not specified in its declaration above
-    #     #         Input_Weights,
-    #     #         Hidden_Layer_1,
-    #     #         # No projection specification is needed here since the sender arg for Middle_Weights
-    #     #         #    is Hidden_Layer_1 and its receiver arg is Hidden_Layer_2
-    #     #         # Middle_Weights,
-    #     #         Hidden_Layer_2,
-    #     #         # Output_Weights does not need to be listed for the same reason as Middle_Weights
-    #     #         # If Middle_Weights and/or Output_Weights is not declared above, then the process
-    #     #         #    will assign a default for missing projection
-    #     #         # Output_Weights,
-    #     #         Output_Layer
-    #     #     ],
-    #     #     clamp_input=SOFT_CLAMP,
-    #     #     target=[0, 0, 1]
-    #     #
-    #     #
-    #     # )
-    #     #
-    #     # s.run(
-    #     #     num_executions=10,
-    #     #     inputs=stim_list,
-    #     # )
-    #
-    #     expected_Output_Layer_output = [np.array([0.97988347, 0.97988347, 0.97988347])]
-    #
-    #     np.testing.assert_allclose(expected_Output_Layer_output, Output_Layer.output_values)
-
-
-# Cannot test old syntax until we are ready for the current System and Process classes to create compositions
-# class TestOldSyntax:
-#
-#     # new syntax pathway, old syntax system
-#     def test_one_pathway_inside_one_system_old_syntax(self):
-#         # create a PathwayComposition | blank slate for composition
-#         myPath = PathwayComposition()
-#
-#         # create mechanisms to add to myPath
-#         myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-#         myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-#         myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-#
-#         # add mechanisms to myPath with default MappingProjections between them
-#         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-#
-#         # analyze graph (assign roles)
-#         myPath._analyze_graph()
-#
-#         # Create a system using the old factory method syntax
-#         sys = system(processes=[myPath])
-#
-#         # assign input to origin mech
-#         stimulus = {myMech1: [[1]]}
-#
-#         # schedule = Scheduler(composition=sys)
-#         output = sys.run(
-#             inputs=stimulus,
-#             # scheduler=schedule
-#         )
-#         assert 8 == output[0][0]
-#
-#     # old syntax pathway (process)
-#     def test_one_process_old_syntax(self):
-#
-#         # create mechanisms to add to myPath
-#         myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-#         myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-#         myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-#
-#         # create a PathwayComposition | blank slate for composition
-#         myPath = process(pathway=[myMech1, myMech2, myMech3])
-#
-#         # assign input to origin mech
-#         stimulus = {myMech1: [[1]]}
-#
-#         # schedule = Scheduler(composition=sys)
-#         output = myPath.run(
-#             inputs=stimulus,
-#             # scheduler=schedule
-#         )
-#         assert 8 == output[0][0]
-#
-#     # old syntax pathway (process), old syntax system
-#     def test_one_process_inside_one_system_old_syntax(self):
-#         # create mechanisms to add to myPath
-#         myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-#         myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-#         myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-#
-#         # create a PathwayComposition | blank slate for composition
-#         myPath = process(pathway=[myMech1, myMech2, myMech3])
-#
-#         # Create a system using the old factory method syntax
-#         sys = system(processes=[myPath])
-#
-#         # assign input to origin mech
-#         stimulus = {myMech1: [[1]]}
-#
-#         # schedule = Scheduler(composition=sys)
-#         output = sys.run(
-#             inputs=stimulus,
-#             # scheduler=schedule
-#         )
-#         assert 8 == output[0][0]
-#
-#     # old syntax pathway (process), old syntax system; 2 processes in series
-#     def test_two_processes_in_series_in_system_old_syntax(self):
-#
-#         # create mechanisms to add to myPath
-#         myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-#         myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-#         myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-#         # create a PathwayComposition | blank slate for composition
-#         myPath = process(pathway=[myMech1, myMech2, myMech3])
-#
-#         # create a PathwayComposition | blank slate for composition
-#         myPath2 = PathwayComposition()
-#
-#         # create mechanisms to add to myPath2
-#         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 8 x 2 = 16
-#         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 16 x 2 = 32
-#         myMech6 = TransferMechanism(function=Linear(slope=2.0))  # 32 x 2 = 64
-#
-#         # add mechanisms to myPath2 with default MappingProjections between them
-#         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
-#
-#         # analyze graph (assign roles)
-#         myPath2._analyze_graph()
-#
-#         # Create a system using the old factory method syntax
-#         sys = system(processes=[myPath, myPath2])
-#
-#         # connect the two pathways in series
-#         sys.add_projection(sender=myMech3,
-#                            projection=MappingProjection(sender=myMech3, receiver=myMech4),
-#                            receiver=myMech4)
-#         # assign input to origin mech
-#         stimulus = {myMech1: [[1]]}
-#
-#         # schedule = Scheduler(composition=sys)
-#         output = sys.run(
-#             inputs=stimulus,
-#             # scheduler=schedule
-#         )
-#         assert 64 == output[0][0]
-#
-#     # old syntax pathway (process), old syntax system; 2 processes converge
-#     def test_two_processes_converge_in_system_old_syntax(self):
-#         # create a PathwayComposition | blank slate for composition
-#         myPath = PathwayComposition()
-#
-#         # create mechanisms to add to myPath
-#         myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-#         myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-#         myMech3 = TransferMechanism(function=Linear(slope=2.0))
-#
-#         # add mechanisms to myPath with default MappingProjections between them
-#         myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-#
-#         # analyze graph (assign roles)
-#         myPath._analyze_graph()
-#
-#         # create a PathwayComposition | blank slate for composition
-#         myPath2 = PathwayComposition()
-#
-#         # create mechanisms to add to myPath2
-#         myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-#         myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-#
-#         # add mechanisms to myPath2 with default MappingProjections between them
-#         myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-#
-#         # analyze graph (assign roles)
-#         myPath2._analyze_graph()
-#
-#         # Create a system using the old factory method syntax
-#         sys = system(processes=[myPath, myPath2])
-#
-#         # assign input to origin mech
-#         stimulus = {myMech1: [[1]],
-#                     myMech4: [[1]]}
-#
-#         # schedule = Scheduler(composition=sys)
-#         output = sys.run(
-#             inputs=stimulus,
-#             # scheduler=schedule
-#         )
-#         assert 16 == output[0][0]
-#
-
 
 class TestSchedulerConditions:
     @pytest.mark.composition
@@ -5071,150 +4617,153 @@ class TestNestedCompositions:
             assert len(terminals) == 1
             assert myMech5 in terminals
 
-    def test_one_pathway_inside_one_system(self):
-        # create a PathwayComposition | blank slate for composition
-        myPath = PathwayComposition()
-
-        # create mechanisms to add to myPath
-        myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-        myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-
-        # add mechanisms to myPath with default MappingProjections between them
-        myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-
-        # assign input to origin mech
-        stimulus = {myMech1: [[1]]}
-
-        # execute path (just for comparison)
-        myPath.run(inputs=stimulus)
-
-        # create a SystemComposition | blank slate for composition
-        sys = SystemComposition()
-
-        # add a PathwayComposition [myPath] to the SystemComposition [sys]
-        sys.add_pathway(myPath)
-
-        # execute the SystemComposition
-        output = sys.run(inputs=stimulus)
-        assert np.allclose([8], output)
-
-    def test_two_paths_converge_one_system(self):
-
-        # mech1 ---> mech2 --
-        #                   --> mech3
-        # mech4 ---> mech5 --
-
-        # 1x2=2 ---> 2x2=4 --
-        #                   --> (4+4)x2=16
-        # 1x2=2 ---> 2x2=4 --
-
-        # create a PathwayComposition | blank slate for composition
-        myPath = PathwayComposition()
-
-        # create mechanisms to add to myPath
-        myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-        myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-
-        # add mechanisms to myPath with default MappingProjections between them
-        myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-
-        myPath2 = PathwayComposition()
-        myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-        myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-
-        sys = SystemComposition()
-        sys.add_pathway(myPath)
-        sys.add_pathway(myPath2)
-        # assign input to origin mechs
-        stimulus = {myMech1: [[1]], myMech4: [[1]]}
-
-        # schedule = Scheduler(composition=sys)
-        output = sys.run(inputs=stimulus)
-        assert np.allclose(16, output)
-
-    def test_two_paths_in_series_one_system(self):
-
-        # [ mech1 --> mech2 --> mech3 ] -->   [ mech4  -->  mech5  -->  mech6 ]
-        #   1x2=2 --> 2x2=4 --> 4x2=8   --> (8+1)x2=18 --> 18x2=36 --> 36*2=64
-        #                                X
-        #                                |
-        #                                1
-        # (if mech4 were recognized as an origin mech, and used SOFT_CLAMP, we would expect the final result to be 72)
-        # create a PathwayComposition | blank slate for composition
-        myPath = PathwayComposition()
-
-        # create mechanisms to add to myPath
-        myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-        myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-
-        # add mechanisms to myPath with default MappingProjections between them
-        myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-
-        myPath2 = PathwayComposition()
-        myMech4 = TransferMechanism(function=Linear(slope=2.0))
-        myMech5 = TransferMechanism(function=Linear(slope=2.0))
-        myMech6 = TransferMechanism(function=Linear(slope=2.0))
-        myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
-
-        sys = SystemComposition()
-        sys.add_pathway(myPath)
-        sys.add_pathway(myPath2)
-        sys.add_projection(projection=MappingProjection(sender=myMech3,
-                                                        receiver=myMech4), sender=myMech3, receiver=myMech4)
-
-        # assign input to origin mechs
-        # myMech4 ignores its input from the outside world because it is no longer considered an origin!
-        stimulus = {myMech1: [[1]]}
-
-        # schedule = Scheduler(composition=sys)
-        output = sys.run(inputs=stimulus)
-
-        assert np.allclose([64], output)
-
-    def test_two_paths_converge_one_system_scheduling_matters(self):
-
-        # mech1 ---> mech2 --
-        #                   --> mech3
-        # mech4 ---> mech5 --
-
-        # 1x2=2 ---> 2x2=4 --
-        #                   --> (4+4)x2=16
-        # 1x2=2 ---> 2x2=4 --
-
-        # create a PathwayComposition | blank slate for composition
-        myPath = PathwayComposition()
-
-        # create mechanisms to add to myPath
-        myMech1 = IntegratorMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-        myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
-
-        # add mechanisms to myPath with default MappingProjections between them
-        myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
-
-        myPathScheduler = Scheduler(composition=myPath)
-        myPathScheduler.add_condition(myMech2, AfterNCalls(myMech1, 2))
-
-        myPath.run(inputs={myMech1: [[1]]}, scheduler=myPathScheduler)
-        myPath.run(inputs={myMech1: [[1]]}, scheduler=myPathScheduler)
-        myPath2 = PathwayComposition()
-        myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
-        myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
-        myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
-
-        sys = SystemComposition()
-        sys.add_pathway(myPath)
-        sys.add_pathway(myPath2)
-        # assign input to origin mechs
-        stimulus = {myMech1: [[1]], myMech4: [[1]]}
-
-        # schedule = Scheduler(composition=sys)
-        output = sys.run(inputs=stimulus)
-        assert np.allclose(16, output)
+    # MODIFIED 5/2/20 OLD:  ELIMINATE SYSTEM:
+    # FIX SHOULD THESE BE RE-WRITTEN WITH STANDARD NESTED COMPOSITIONS AND PATHWAYS?
+    # def test_one_pathway_inside_one_system(self):
+    #     # create a PathwayComposition | blank slate for composition
+    #     myPath = PathwayComposition()
+    #
+    #     # create mechanisms to add to myPath
+    #     myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
+    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
+    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
+    #
+    #     # add mechanisms to myPath with default MappingProjections between them
+    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
+    #
+    #     # assign input to origin mech
+    #     stimulus = {myMech1: [[1]]}
+    #
+    #     # execute path (just for comparison)
+    #     myPath.run(inputs=stimulus)
+    #
+    #     # create a SystemComposition | blank slate for composition
+    #     sys = SystemComposition()
+    #
+    #     # add a PathwayComposition [myPath] to the SystemComposition [sys]
+    #     sys.add_pathway(myPath)
+    #
+    #     # execute the SystemComposition
+    #     output = sys.run(inputs=stimulus)
+    #     assert np.allclose([8], output)
+    #
+    # def test_two_paths_converge_one_system(self):
+    #
+    #     # mech1 ---> mech2 --
+    #     #                   --> mech3
+    #     # mech4 ---> mech5 --
+    #
+    #     # 1x2=2 ---> 2x2=4 --
+    #     #                   --> (4+4)x2=16
+    #     # 1x2=2 ---> 2x2=4 --
+    #
+    #     # create a PathwayComposition | blank slate for composition
+    #     myPath = PathwayComposition()
+    #
+    #     # create mechanisms to add to myPath
+    #     myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
+    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
+    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
+    #
+    #     # add mechanisms to myPath with default MappingProjections between them
+    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
+    #
+    #     myPath2 = PathwayComposition()
+    #     myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
+    #     myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
+    #     myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
+    #
+    #     sys = SystemComposition()
+    #     sys.add_pathway(myPath)
+    #     sys.add_pathway(myPath2)
+    #     # assign input to origin mechs
+    #     stimulus = {myMech1: [[1]], myMech4: [[1]]}
+    #
+    #     # schedule = Scheduler(composition=sys)
+    #     output = sys.run(inputs=stimulus)
+    #     assert np.allclose(16, output)
+    #
+    # def test_two_paths_in_series_one_system(self):
+    #
+    #     # [ mech1 --> mech2 --> mech3 ] -->   [ mech4  -->  mech5  -->  mech6 ]
+    #     #   1x2=2 --> 2x2=4 --> 4x2=8   --> (8+1)x2=18 --> 18x2=36 --> 36*2=64
+    #     #                                X
+    #     #                                |
+    #     #                                1
+    #     # (if mech4 were recognized as an origin mech, and used SOFT_CLAMP, we would expect the final result to be 72)
+    #     # create a PathwayComposition | blank slate for composition
+    #     myPath = PathwayComposition()
+    #
+    #     # create mechanisms to add to myPath
+    #     myMech1 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
+    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
+    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
+    #
+    #     # add mechanisms to myPath with default MappingProjections between them
+    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
+    #
+    #     myPath2 = PathwayComposition()
+    #     myMech4 = TransferMechanism(function=Linear(slope=2.0))
+    #     myMech5 = TransferMechanism(function=Linear(slope=2.0))
+    #     myMech6 = TransferMechanism(function=Linear(slope=2.0))
+    #     myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech6])
+    #
+    #     sys = SystemComposition()
+    #     sys.add_pathway(myPath)
+    #     sys.add_pathway(myPath2)
+    #     sys.add_projection(projection=MappingProjection(sender=myMech3,
+    #                                                     receiver=myMech4), sender=myMech3, receiver=myMech4)
+    #
+    #     # assign input to origin mechs
+    #     # myMech4 ignores its input from the outside world because it is no longer considered an origin!
+    #     stimulus = {myMech1: [[1]]}
+    #
+    #     # schedule = Scheduler(composition=sys)
+    #     output = sys.run(inputs=stimulus)
+    #
+    #     assert np.allclose([64], output)
+    #
+    # def test_two_paths_converge_one_system_scheduling_matters(self):
+    #
+    #     # mech1 ---> mech2 --
+    #     #                   --> mech3
+    #     # mech4 ---> mech5 --
+    #
+    #     # 1x2=2 ---> 2x2=4 --
+    #     #                   --> (4+4)x2=16
+    #     # 1x2=2 ---> 2x2=4 --
+    #
+    #     # create a PathwayComposition | blank slate for composition
+    #     myPath = PathwayComposition()
+    #
+    #     # create mechanisms to add to myPath
+    #     myMech1 = IntegratorMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
+    #     myMech2 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
+    #     myMech3 = TransferMechanism(function=Linear(slope=2.0))  # 4 x 2 = 8
+    #
+    #     # add mechanisms to myPath with default MappingProjections between them
+    #     myPath.add_linear_processing_pathway([myMech1, myMech2, myMech3])
+    #
+    #     myPathScheduler = Scheduler(composition=myPath)
+    #     myPathScheduler.add_condition(myMech2, AfterNCalls(myMech1, 2))
+    #
+    #     myPath.run(inputs={myMech1: [[1]]}, scheduler=myPathScheduler)
+    #     myPath.run(inputs={myMech1: [[1]]}, scheduler=myPathScheduler)
+    #     myPath2 = PathwayComposition()
+    #     myMech4 = TransferMechanism(function=Linear(slope=2.0))  # 1 x 2 = 2
+    #     myMech5 = TransferMechanism(function=Linear(slope=2.0))  # 2 x 2 = 4
+    #     myPath2.add_linear_processing_pathway([myMech4, myMech5, myMech3])
+    #
+    #     sys = SystemComposition()
+    #     sys.add_pathway(myPath)
+    #     sys.add_pathway(myPath2)
+    #     # assign input to origin mechs
+    #     stimulus = {myMech1: [[1]], myMech4: [[1]]}
+    #
+    #     # schedule = Scheduler(composition=sys)
+    #     output = sys.run(inputs=stimulus)
+    #     assert np.allclose(16, output)
+    # MODIFIED 5/2/20 END
 
 
 class TestOverloadedCompositions:
