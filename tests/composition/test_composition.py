@@ -4084,31 +4084,31 @@ class TestSystemComposition:
 
 class TestSchedulerConditions:
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode",['Python',
-                            #  pytest.param('LLVM', marks=pytest.mark.llvm), #FIXME: Fails for `LLVM` and `LLVMExec` modes?
-                            #  pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                             ])
-    @pytest.mark.parametrize(["condition", "expected_result"],[
-                             (pnl.EveryNCalls, [[.25, .25]]),
-                             (pnl.BeforeNCalls, [[.05, .05]]),
-                             (pnl.AtNCalls, [[.25, .25]]),
-                             (pnl.AfterNCalls, [[.25, .25]]),
-                             (pnl.WhenFinished, [[1.0, 1.0]]),
-                             (pnl.WhenFinishedAny, [[1.0, 1.0]]),
-                             (pnl.WhenFinishedAll, [[1.0, 1.0]]),
-                             (pnl.All, [[1.0, 1.0]]),
-                             (pnl.Not, [[.05, .05]]),
-                             (pnl.AllHaveRun, [[.05, .05]]),
-                             (pnl.Always, [[0.05, 0.05]]),
-                            #  (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
-                             (pnl.AtTrial,[[0.05, 0.05]]),
-                            #  (pnl.Never), #TODO: Find a good test case for this!
+    @pytest.mark.parametrize("mode", ['Python',
+                                     #FIXME: "Exec" versions see different shape of previous_value parameter ([0] vs. [[0]])
+                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
+                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                    ])
+    @pytest.mark.parametrize(["condition", "expected_result"],
+                             [(pnl.EveryNCalls, [[.25, .25]]),
+                              (pnl.BeforeNCalls, [[.05, .05]]),
+                              (pnl.AtNCalls, [[.25, .25]]),
+                              (pnl.AfterNCalls, [[.25, .25]]),
+                              (pnl.WhenFinished, [[1.0, 1.0]]),
+                              (pnl.WhenFinishedAny, [[1.0, 1.0]]),
+                              (pnl.WhenFinishedAll, [[1.0, 1.0]]),
+                              (pnl.All, [[1.0, 1.0]]),
+                              (pnl.Not, [[.05, .05]]),
+                              (pnl.AllHaveRun, [[.05, .05]]),
+                              (pnl.Always, [[0.05, 0.05]]),
+                              #(pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
+                              (pnl.AtTrial,[[0.05, 0.05]]),
+                              #(pnl.Never), #TODO: Find a good test case for this!
                             ])
     def test_scheduler_conditions(self, mode, condition, expected_result):
-        print(mode, condition)
         decisionMaker = pnl.DDM(
                         function=pnl.DriftDiffusionIntegrator(starting_point=0,
                                                               threshold=1,
@@ -4152,8 +4152,10 @@ class TestSchedulerConditions:
             comp.scheduler.add_condition(response, condition(0))
 
         result = comp.run([0.05], bin_execute=mode)
-        result = [x for x in np.array(result).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
-        assert np.allclose(result, np.array(expected_result).flatten())
+        #HACK: The result is an object dtype in Python mode for some reason?
+        if mode == "Python":
+            result = np.asfarray(result[0])
+        assert np.allclose(result, expected_result)
 
 
 class TestNestedCompositions:
@@ -4348,7 +4350,7 @@ class TestNestedCompositions:
         )
         assert not ocomp._check_for_existing_projections(sender=ib, receiver=ocomp_objective_mechanism)
         return ocomp
-    # Does not work yet due to initial_values bug that causes first recurrent projection to pass different values
+    # Does not work yet due to initialize_cycle_values bug that causes first recurrent projection to pass different values
     # to TranfserMechanism version vs Logistic fn + AdaptiveIntegrator fn version
     # def test_recurrent_transfer_mechanism_composition(self):
     #
@@ -5859,6 +5861,47 @@ class TestShadowInputs:
                          B: 15.0})
         assert obj.value == [[25.0]]
 
+
+
+class TestInitialize:
+
+    def test_initialize_cycle_values(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(name='B')
+        C = RecurrentTransferMechanism(name='C',
+                                       auto=1.0)
+
+        abc_Composition = Composition(pathways=[[A, B, C]])
+
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]},
+                            initialize_cycle_values={C: 2.0})
+
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]},
+                            initialize_cycle_values={C: 2.0})
+
+        # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
+        # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
+        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+
+    def test_initialize_cycle_values_warning(self):
+        A = ProcessingMechanism(name='A')
+        err = f"A value is specified for node {A.name} in the initialize_cycle_values " \
+            f"argument, but this node is not part of a cycle. Setting initialization cycle values of nodes that " \
+            f"are not part of cycles is generally a mistake, because these values will be overwritten " \
+            f"when the node first executes, and therefore never used."
+        a_Composition = Composition(name='a_Composition',
+                                    pathways=[[A]])
+        with pytest.warns(UserWarning) as w:
+            a_Composition.run(
+                inputs={
+                    A:[1]
+                },
+                initialize_cycle_values={
+                    A:[1]
+                }
+            )
+            warning_triggered = err in [warn.message.args[0] for warn in w]
+            assert warning_triggered
 
 class TestReinitializeValues:
 

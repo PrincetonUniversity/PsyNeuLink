@@ -1112,7 +1112,7 @@ COMMENT:
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-    a list or ndarray of **initial_values**[...] The **initial_values** are assigned at the start of a `TRIAL
+    a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at the start of a `TRIAL
     <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
     and listed in the Composition's ?? attribute),
 
@@ -4080,10 +4080,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for nc in nested_comps:
             if node in nc.nodes:
                 # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
-                if role not in nc.nodes_to_roles[node]:
-                    raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                           format(node.name, Composition.__name__, self.name, nc.name,
-                                                  NodeRole.__name__, repr(role)))
+                # This validation does not apply to ParameterPorts. Externally modulated nodes
+                # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes
+                if not isinstance(node_state, ParameterPort):
+                    if role not in nc.nodes_to_roles[node]:
+                        raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
+                                               format(node.name, Composition.__name__, self.name, nc.name,
+                                                      NodeRole.__name__, repr(role)))
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
                 # if CIM_port_for_nested_node:
@@ -4099,14 +4102,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 elif isinstance(node_state, OutputPort):
                     CIM_port_for_nested_node = nc.output_CIM_ports[node_state][1]
                     CIM = nc.output_CIM
-                else:
-                    # IMPLEMENTATION NOTE:  Place marker for future implementation of ParameterPort handling
-                    #                       However, typecheck above should have caught this
-                    assert False
-
+                elif isinstance(node_state, ParameterPort):
+                    # NOTE: there is special casing here for parameter ports. They don't have a node role
+                    # associated with them in the way that input and output nodes do, so we don't know for sure
+                    # if they will have a port in parameter_CIM_ports. If they don't, we just set the
+                    # CIM_port_for_nested_node to the node_state itself, and delegate its routing through the PCIM
+                    # to a future call to create_CIM_ports
+                    if node_state in nc.parameter_CIM_ports:
+                        CIM_port_for_nested_node = nc.parameter_CIM_ports[node_state][0]
+                        CIM = nc.parameter_CIM
+                    else:
+                        CIM_port_for_nested_node = node_state
+                        CIM = nc.parameter_CIM
                 nested_comp = nc
                 break
-
         return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
     def _update_shadows_dict(self, node):
@@ -8079,7 +8088,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             inputs=None,
             num_trials=None,
-            initial_values=None,
+            initialize_cycle_values=None,
             reinitialize_values=None,
             reinitialize_nodes_when=Never(),
             skip_initialization=False,
@@ -8119,17 +8128,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
 
-            COMMENT:
-                FIX 4/28/20 [JDC]: THE FOLLOWING NEED TO BE CORRECTED/ADDED BASED ON REFACTORING OF THIS FUNCTIONALITY
-            COMMENT
+            initialize_cycle_values : Dict { Node: Node Value } : default None
+                sets the values of nodes before the start of the run. This is useful in cases where a node is part of a
+                cycle, because nodes in cycles receive their preceding nodes' values as of the previous trial. Thus,
+                this argument allows you to seed the values of nodes in cycles for use on the initial execution. If this
+                is not specified, the nodes will use their default values.
+                ..technical_note::
+                    the initial value of a node is only relevant when it is embedded in a Cycle, because this
+                    is the only case in which its value Parameter will be used before being updated.
 
-            initial_values : Dict[Node: Node Value] : default None
-                sets the values of nodes before the start of the run. This is useful in cases where a node's value is
-                used before that node executes for the first time (usually due to recurrence or control).
-
-            reinitialize_values : value : default None
+            reinitialize_values : Dict { Node : Object | iterable [Object] } : default None
+                object or iterable of objects to be passed as arguments to nodes' reinitialize methods when their
+                respective reinitialize_when conditions are met. These are used to seed the previous_value parameters
+                of Mechanisms that have active integrator functions.
+                ..technical_note::
+                    reinitialize values are used to seed the previous_value Parameter of Mechanisms with
+                    active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
+                    call to run.
 
             reinitialize_nodes_when :  Condition : default Never()
+                sets the reinitialize_when condition for all nodes in the Composition that currently have their
+                reinitialize_when condition set to `Never <Never>` for the duration of the run.
 
             skip_initialization : bool : default False
 
@@ -8294,15 +8313,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
 
-        if initial_values is not None:
-            for node in initial_values:
+        if initialize_cycle_values is not None:
+            for node in initialize_cycle_values:
                 if node not in self.nodes:
-                    raise CompositionError(f"{node.name} (entry in initial_values arg) is not a node in '{self.name}'")
+                    raise CompositionError(f"{node.name} (entry in initialize_cycle_values arg) is not a node in '{self.name}'")
+                else:
+                    if node not in self.get_nodes_by_role(NodeRole.CYCLE):
+                        warnings.warn(
+                            f"A value is specified for node {node.name} in the initialize_cycle_values "
+                            f"argument, but this node is not part of a cycle. Setting initialization cycle values of nodes that "
+                            f"are not part of cycles is generally a mistake, because these values will be overwritten "
+                            f"when the node first executes, and therefore never used."
+                        )
+                    node.initialize(initialize_cycle_values[node], context)
 
         if reinitialize_values is None:
             reinitialize_values = {}
 
         for node in reinitialize_values:
+            # make sure the args to reinitialize are in the form of an iterable so they can be unpacked
+            try:
+                iter(reinitialize_values[node])
+            except TypeError:
+                reinitialize_values[node] = [reinitialize_values[node]]
             node.reinitialize(*reinitialize_values[node], context=context)
 
         # cache and set reinitialize_when conditions for nodes, matching
@@ -8524,7 +8557,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
                     if node.reinitialize_when.is_satisfied(scheduler=self.scheduler,
                                                            context=context):
-                        node.reinitialize(None, context=context)
+                        if node in reinitialize_values:
+                            node.reinitialize(*reinitialize_values[node], context=context)
+                        else:
+                            node.reinitialize(None, context=context)
 
             # execute processing
             # pass along the stimuli for this trial
