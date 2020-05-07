@@ -230,23 +230,6 @@ class TestLog:
             + ", \'1\', \'0\', \'0\', \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
             + ", \'2\', \'0\', \'0\', \'1\', \'1.0 0.0\' \'0.0 1.0\'\n"
 
-
-        # assert PJ.log.csv(entries='mod_matrix', owner_name=True, quotes=True) == \
-        #     "'Execution Context', 'Data'\n" \
-        #     + "'{PS.default_execution_id}', \'Index\', " \
-        #       "\'MappingProjection from log_test_T_1[RESULT] to log_test_T_2[InputPort-0][mod_matrix]\'\n" \
-        #     + ", \'0\', \'1.0 0.0\' \'0.0 1.0\'\n" \
-        #     + ", \'1\', \'1.0 0.0\' \'0.0 1.0\'\n" \
-        #     + ", \'2\', \'1.0 0.0\' \'0.0 1.0\'\n"
-        #
-        #
-        #     'Execution Context', 'Data'
-        #     'log_test_PS', 'Run', 'Trial', 'Pass', 'Time_step', 'MappingProjection from log_test_T_1[RESULT] to log_test_T_2[InputPort-0][mod_matrix]'
-        #     , '0', '0', '0', '1', '1.0 0.0' '0.0 1.0'
-        #     , '1', '0', '0', '1', '1.0 0.0' '0.0 1.0'
-        #     , '2', '0', '0', '1', '1.0 0.0' '0.0 1.0'
-
-
         result = T_1.log.nparray(entries=['mod_noise', 'RESULT'], header=False, owner_name=True)
         assert result[0] == PS.default_execution_id
         np.testing.assert_array_equal(result[1][0],
@@ -455,9 +438,9 @@ class TestLog:
             'weight': 'OFF'
         }
 
-        PS.execute([1.0, 2.0])
-        PS.execute([3.0, 4.0])
-        PS.execute([5.0, 6.0])
+        PS.run(inputs={T1:[1.0, 2.0]})
+        PS.run(inputs={T1:[3.0, 4.0]})
+        PS.run(inputs={T1:[5.0, 6.0]})
 
         assert T1.logged_items == {'RESULT': 'EXECUTION',
                                    'mod_slope': 'EXECUTION',
@@ -479,11 +462,13 @@ class TestLog:
         assert np.allclose(expected_slopes_T1, log_dict_T1[PS.default_execution_id]['mod_slope'])
         assert np.allclose(expected_results_T1, log_dict_T1[PS.default_execution_id]['RESULT'])
 
-        assert list(log_dict_T1[PS.default_execution_id].keys()) == ['Index', 'value', 'mod_slope', 'RESULT']
+        assert list(log_dict_T1[PS.default_execution_id].keys()) == \
+               ['Run', 'Trial', 'Pass', 'Time_step', 'value', 'mod_slope', 'RESULT']
 
         log_dict_T1_reorder = T1.log.nparray_dictionary(entries=['mod_slope', 'value', 'RESULT'])
 
-        assert list(log_dict_T1_reorder[PS.default_execution_id].keys()) == ['Index', 'mod_slope', 'value', 'RESULT']
+        assert list(log_dict_T1_reorder[PS.default_execution_id].keys()) == \
+               ['Run', 'Trial', 'Pass', 'Time_step', 'mod_slope', 'value', 'RESULT']
 
     def test_run_resets(self):
         import psyneulink as pnl
