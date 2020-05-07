@@ -68,6 +68,21 @@ before_install:
       pip install $EXTRA_PIP
     fi
 
+before_cache:
+  - pip cache info
+  - |
+    for P in `pip list | tail -n+3 | sed 's/  */,/'`; do
+      PKG=`echo $P | cut -f1 -d,`
+      CUR_VER=`echo $P |cut -f2 -d,`
+      IN_CACHE=`pip cache list $PKG | grep -o '[^ ]*.whl'`
+      for PIC in $IN_CACHE; do
+        if echo $PIC | grep -qv $CUR_VER; then
+           pip cache remove -v `echo $PIC | sed 's/.whl//'`
+        fi
+      done
+    done
+  - pip cache info
+
 install:
   - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
