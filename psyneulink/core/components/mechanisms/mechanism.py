@@ -108,8 +108,8 @@ mentioned above, or using one of the following:
           be a legal value for that parameter, using any of the ways allowed for `specifying a parameter
           <ParameterPort_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
           These can be overridden during execution by specifying `Mechanism_Runtime_Parameters`, either when calling
-          the Mechanism's `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method, or where it is
-          specified in the `pathway <Process.pathway>` attribute of a `Process`.
+          the Mechanism's `execute <Mechanism_Base.execute>` method, or where it is specified in the `pathway
+          <Composition.pathway>` attribute of a `Composition`.
 
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
@@ -687,7 +687,7 @@ OutputPort(s):
 The labels specified in these dictionaries can be used to:
 
     - specify items in the `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>` arguments of the
-      `run <System.run>` method of a `System`
+      `run <Composition.run>` method of a `Composition`
     - report the values of the InputPort(s) and OutputPort(s) of a Mechanism
     - visualize the inputs and outputs of the System's Mechanisms
 
@@ -1534,11 +1534,6 @@ class Mechanism_Base(Mechanism):
 
         # IMPLEMENT **kwargs (PER Port)
 
-        # # MODIFIED 4/28/20 OLD: ELIMINATE SYSTEM
-        # self.processes = ReadOnlyOrderedDict() # Note: use _add_process method to add item to processes property
-        # self.systems = ReadOnlyOrderedDict() # Note: use _add_system method to add item to systems property
-        # MODIFIED 4/28/20 END
-
         self.aux_components = []
         self.monitor_for_learning = None
         # Register with MechanismRegistry or create one
@@ -2376,52 +2371,6 @@ class Mechanism_Base(Mechanism):
             )
 
         return value
-
-    def run(
-        self,
-        inputs,
-        num_trials=None,
-        call_before_execution=None,
-        call_after_execution=None,
-    ):
-        """Run a sequence of `executions <Mechanism_Execution>`.
-
-        COMMENT:
-            Call execute method for each in a sequence of executions specified by the `inputs` argument.
-        COMMENT
-
-        Arguments
-        ---------
-
-        inputs : List[input] or ndarray(input) : default default_variable
-            the inputs used for each in a sequence of executions of the Mechanism (see `Composition_Execution_Inputs` for a detailed
-            description of formatting requirements and options).
-
-        num_trials: int
-            number of trials to execute.
-
-        call_before_execution : function : default None
-            called before each execution of the Mechanism.
-
-        call_after_execution : function : default None
-            called after each execution of the Mechanism.
-
-        Returns
-        -------
-
-        Mechanism's output_values : List[value]
-            list with the `value <OutputPort.value>` of each of the Mechanism's `OutputPorts
-            <Mechanism_OutputPorts>` for each execution of the Mechanism.
-
-        """
-        from psyneulink.core.globals.environment import run
-        return run(
-            self,
-            inputs=inputs,
-            num_trials=num_trials,
-            call_before_trial=call_before_execution,
-            call_after_trial=call_after_execution,
-        )
 
     def _get_variable_from_input(self, input, context=None):
         input = np.atleast_2d(input)
@@ -3498,24 +3447,6 @@ class Mechanism_Base(Mechanism):
         for port in ports:
             labels.append(port.get_label(context))
         return labels
-
-    # # MODIFIED 4/28/20 OLD: ELIMINATE SYSTEM
-    # @tc.typecheck
-    # def _add_process(self, process, role:str):
-    #     from psyneulink.core.components.process import Process
-    #     if not isinstance(process, Process):
-    #         raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_process ({}) must be a {}".
-    #                              format(Mechanism.__name__, process, Process.__name__))
-    #     self.processes.__additem__(process, role)
-    #
-    # @tc.typecheck
-    # def _add_system(self, system, role:str):
-    #     from psyneulink.core.components.system import System
-    #     if not isinstance(system, System):
-    #         raise MechanismError("PROGRAM ERROR: First argument of call to {}._add_system ({}) must be a {}".
-    #                              format(Mechanism.__name__, system, System.__name__))
-    #     self.systems.__additem__(system, role)
-    # MODIFIED 4/28/20 END
 
     @property
     def input_port(self):
