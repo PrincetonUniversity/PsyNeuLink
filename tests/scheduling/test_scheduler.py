@@ -179,6 +179,7 @@ class TestScheduler:
         C.run(inputs={D: [[1.0], [2.0]]},
               # termination_processing={TimeScale.TRIAL: WhenFinished(D)},
               call_after_trial=change_termination_processing,
+              reinitialize_nodes_when=pnl.AtTimeStep(0),
               num_trials=4)
         # Trial 0:
         # input = 1.0, termination condition = WhenFinished
