@@ -294,10 +294,6 @@ class TestLCAReinitialize:
                          self_excitation=1.0,
                          time_step_size=1.0,
                          noise=0.0)
-        # P = Process(name="P",
-        #             pathway=[L])
-        # S = System(name="S",
-        #            processes=[P])
         C = Composition(pathways=[L])
 
         L.reinitialize_when = Never()

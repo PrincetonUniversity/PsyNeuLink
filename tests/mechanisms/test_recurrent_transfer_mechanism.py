@@ -295,7 +295,7 @@ class TestRecurrentTransferMechanismMatrix:
         )
         assert isinstance(R.matrix, np.ndarray)
         np.testing.assert_allclose(R.matrix, [[2, 1, 1], [1, 2, 1], [1, 1, 2]])
-        np.testing.assert_allclose(run_twice_in_system(R, [1, 2, 3], [10, 11, 12]), [17, 19, 21])
+        np.testing.assert_allclose(run_twice_in_composition(R, [1, 2, 3], [10, 11, 12]), [17, 19, 21])
 
     def test_recurrent_mech_matrix_hetero_spec(self):
         R = RecurrentTransferMechanism(
@@ -315,7 +315,7 @@ class TestRecurrentTransferMechanismMatrix:
         # Execution 2:
         # Recurrent input =[-12, -12, -12] | New input =  [10, 11, 12] | Total input = [-2, -1, 0]
         # Output 2 =  [-2, -1, 0]
-        np.testing.assert_allclose(run_twice_in_system(R, [1, 2, 3], [10, 11, 12]), [-2., -1.,  0.])
+        np.testing.assert_allclose(run_twice_in_composition(R, [1, 2, 3], [10, 11, 12]), [-2., -1.,  0.])
 
     def test_recurrent_mech_matrix_auto_hetero_spec_size_1(self):
         R = RecurrentTransferMechanism(
@@ -634,11 +634,11 @@ class TestRecurrentTransferMechanismTimeConstant:
         val = R.execute([3, 2, 1, 0])
         np.testing.assert_allclose(val, [[2.2, 1.8, .40000000000000013, .3999999999999999]])
 
-# (7/28/17 CW): the below are used because it's good to test System and Process anyways, and because the recurrent
-# projection won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a System
+# (7/28/17 CW): the below are used because it's good to test Composition anyways, and because the recurrent Projection
+# won't get executed if we only use the execute() method of Mechanism: thus, to test it we must use a Composition
 
 
-def run_twice_in_system(mech, input1, input2=None):
+def run_twice_in_composition(mech, input1, input2=None):
     if input2 is None:
         input2 = input1
     c = Composition(pathways=[mech])
@@ -662,7 +662,7 @@ class TestRecurrentTransferMechanismInProcess:
             size=3,
             function=Linear
         )
-        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.parameters.value.get(c), [[10., 10., 10.]])
@@ -701,7 +701,7 @@ class TestRecurrentTransferMechanismInProcess:
         T = TransferMechanism(
             size=4,
             function=Linear)
-        c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         R.matrix = [[2, 0, 1, 3]] * 4
 
         c.run(inputs={T: [[1, 2, 3, 4]]})
@@ -721,7 +721,7 @@ class TestRecurrentTransferMechanismInProcess:
         T = TransferMechanism(
             size=4,
             function=Linear)
-        c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         R.recurrent_projection.matrix = [[2, 0, 1, 3]] * 4
         c.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.parameters.value.get(c), [[1, 2, 3, 4]])
@@ -732,10 +732,10 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(R.parameters.value.get(c), [[21, 3, 12, 35]])
 
 
-class TestRecurrentTransferMechanismInSystem:
+class TestRecurrentTransferMechanismInComposition:
     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
 
-    def test_recurrent_mech_transfer_mech_system_three_runs(self):
+    def test_recurrent_mech_transfer_mech_composition_three_runs(self):
         # this test ASSUMES that the ParameterPort for auto and hetero is updated one run-cycle AFTER they are set by
         # lines by `R.auto = 0`. If this (potentially buggy) behavior is changed, then change these values
         R = RecurrentTransferMechanism(
@@ -758,7 +758,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(T.parameters.value.get(c), [[16.5, 16.5, 16.5]])
 
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
-    def test_recurrent_mech_system_auto_change(self):
+    def test_recurrent_mech_composition_auto_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
@@ -766,7 +766,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=3,
             function=Linear)
-        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1., 2., 3., 4.]])
         np.testing.assert_allclose(T.parameters.value.get(c), [[10., 10., 10.]])
@@ -780,7 +780,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(T.parameters.value.get(c), [[56, 56, 56]])
 
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
-    def test_recurrent_mech_system_hetero_change(self):
+    def test_recurrent_mech_composition_hetero_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
@@ -788,7 +788,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=5,
             function=Linear)
-        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)        
+        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)        
         c.run(inputs={R: [[1, 2, 3, -0.5]]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1., 2., 3., -0.5]])
         np.testing.assert_allclose(T.parameters.value.get(c), [[5.5, 5.5, 5.5, 5.5, 5.5]])
@@ -802,7 +802,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(T.parameters.value.get(c), [[115.25, 115.25, 115.25, 115.25, 115.25]])
 
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
-    def test_recurrent_mech_system_auto_and_hetero_change(self):
+    def test_recurrent_mech_composition_auto_and_hetero_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=[1, 2, 3, 4],
@@ -810,7 +810,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=5,
             function=Linear)
-        c = Composition(pathways=[R,T], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        c = Composition(pathways=[R,T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, -0.5]]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1., 2., 3., -0.5]])
         np.testing.assert_allclose(T.parameters.value.get(c), [[5.5, 5.5, 5.5, 5.5, 5.5]])
@@ -824,7 +824,7 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(T.parameters.value.get(c), [[42, 42, 42, 42, 42]])
 
     @pytest.mark.xfail(reason='Unsure if this is correct behavior - see note for _recurrent_transfer_mechanism_matrix_setter')
-    def test_recurrent_mech_system_matrix_change(self):
+    def test_recurrent_mech_composition_matrix_change(self):
         R = RecurrentTransferMechanism(
             size=4,
             auto=1,
@@ -832,7 +832,7 @@ class TestRecurrentTransferMechanismInSystem:
         T = TransferMechanism(
             size=4,
             function=Linear)
-        c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInSystem.simple_prefs)
+        c = Composition(pathways=[T, R], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         R.parameters.matrix.set([[2, 0, 1, 3]] * 4, c)
         c.run(inputs={T: [[1, 2, 3, 4]]})
         np.testing.assert_allclose(T.parameters.value.get(c), [[1, 2, 3, 4]])
@@ -901,8 +901,6 @@ class TestRecurrentTransferMechanismInSystem:
                                        learning_rate=0.1
                                        )
 
-        # p = Process(pathway=[R])
-        # s = System(processes=[p])
         c = Composition(pathways=[R])
         assert R.learning_rate == 0.1
         assert R.learning_mechanism.learning_rate == 0.1
@@ -969,26 +967,6 @@ class TestRecurrentTransferMechanismInSystem:
         np.testing.assert_allclose(R.output_port.parameters.value.get(C),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
-# this doesn't work consistently due to EVC's issue with the scheduler
-
-# class TestRecurrentTransferMechanismControl:
-#     simple_prefs = {REPORT_OUTPUT_PREF: False, VERBOSE_PREF: False}
-#     def test_recurrent_mech_EVC(self):
-#         R = RecurrentTransferMechanism(
-#             size=4,
-#             auto=1,
-#             hetero=-1)
-#         T = TransferMechanism(
-#             size=3,
-#             function=Linear)
-#         p = Process(size=4, pathway=[R, T], prefs=TestRecurrentTransferMechanismControl.simple_prefs)
-#         s = System(processes=[p], prefs=TestRecurrentTransferMechanismControl.simple_prefs, controller = EVCControlMechanism,
-#            enable_controller = True, monitor_for_control = [T.output_port], control_signals=[('auto', R), ('hetero', R)])
-#         s.run(inputs = {R: [[1, 3, 2, 5]]})
-#         print('T.value: ', T.value)
-#         np.testing.assert_allclose(T.value, [[-.09645391388158941, -.09645391388158941, -.09645391388158941]])
-#         s.run(inputs = {})
-
 class TestRecurrentTransferMechanismReinitialize:
 
     def test_reinitialize_run(self):
@@ -999,10 +977,6 @@ class TestRecurrentTransferMechanismReinitialize:
                  integration_rate=0.1,
                  auto=1.0,
                  noise=0.0)
-        # P = Process(name="P",
-        #             pathway=[R])
-        # S = System(name="S",
-        #            processes=[P])
         R.reinitialize_when = Never()
         C = Composition(pathways=[R])
         assert np.allclose(R.integrator_function.previous_value, 0.5)
