@@ -1544,8 +1544,8 @@ as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
-five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
-0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
+five times., and num_trials = 7, the Composition executes seven times. The input values from `TRIAL
+<TimeScale.TRIAL>`\\s 0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |5     |6     |
@@ -7757,38 +7757,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
-                                  f"of {repr('run')} ({self._animate_unit}) "
-                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
+                raise CompositionError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+                                       f"of {repr('run')} ({self._animate_unit}) "
+                                       f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
             if not isinstance(self._image_duration, (int, float)):
-                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
-                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
+                raise CompositionError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method "
+                                       f"of {self.name} ({self._image_duration}) must be an int or a float.")
             if not isinstance(self._animate_num_runs, int):
-                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+                raise CompositionError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                       f"method of {self.name} ({self._animate_num_runs}) must an integer.")
             if not isinstance(self._animate_num_trials, int):
-                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
+                raise CompositionError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for "
+                                       f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
+                                       f"must an integer.")
             if not isinstance(self._animate_simulations, bool):
-                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+                raise CompositionError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
+                                       f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
+                                       f"must a boolean.")
             if not isinstance(self._animation_directory, str):
-                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
+                raise CompositionError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                       f"method of {self.name} ({self._animation_directory}) must be a string.")
             if not isinstance(self._movie_filename, str):
-                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
+                raise CompositionError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+                                       f"method of {self.name} ({self._movie_filename}) must be a string.")
             if not isinstance(self._save_images, bool):
-                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
-                                  f"of {self.name} ({self._save_images}) must be a boolean")
+                raise CompositionError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')}"
+                                       f"method of {self.name} ({self._save_images}) must be a boolean")
             if not isinstance(self._show_animation, bool):
-                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
+                raise CompositionError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+                                       f"method of {self.name} ({self._show_animation}) must be a boolean.")
         elif self._animate:
             # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
-                              "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+            raise CompositionError("{} argument for {} method of {} ({}) must be a boolean or "
+                                   "a dictionary of argument specifications for its {} method".
+                                   format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
 
     def _animate_execution(self, active_items, context):
         if self._component_animation_execution_count is None:
@@ -8010,8 +8012,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
                   <Composition.name>` of the  `Composition`, and the gif files are stored there.
 
-                * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
-                  the movie file; it is automatically appended with '.gif'.
+                * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
+                  for the movie file; it is automatically appended with '.gif'.
 
                 * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
                   construct the animation in separate gif files, in addition to the file containing the animation.
@@ -8126,18 +8128,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reinitialize_values[node] = [reinitialize_values[node]]
             node.reinitialize(*reinitialize_values[node], context=context)
 
-        # cache and set reinitialize_when conditions for nodes, matching
-        # old System behavior
+        # cache and set reinitialize_when conditions for nodes, matching old System behavior
         # Validate
         if not isinstance(reinitialize_nodes_when, Condition):
             raise CompositionError(
-                "{} is not a valid specification for "
-                "reinitialize_nodes_when of {}. "
-                "reinitialize_nodes_when must be a Condition.".format(
-                    reinitialize_nodes_when,
-                    self.name
-                )
-            )
+                "{reinitialize_nodes_when} is not a valid specification for reinitialize_nodes_when of {self.name}. "
+                "reinitialize_nodes_when must be a Condition.")
 
         self._reinitialize_nodes_when_cache = {}
         for node in self.nodes:
@@ -9296,7 +9292,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if "KWTA" in str(type(node)):
                             err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
                                                 "(or other values) to represent the outside stimulus for " \
-                                                "the inhibition InputPort, and for systems, put your inputs"
+                                                "the inhibition InputPort, and for Compositions, put your inputs"
                         raise RunError(err_msg)
                     elif check_spec_type == "homogeneous":
                         # np.atleast_2d will catch any single-input ports specified without an outer list
@@ -9693,13 +9689,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def stateful_nodes(self):
         """
-        List of all nodes in the system that are currently marked as stateful. For Mechanisms, statefulness is
+        List of all nodes in the Composition that are currently marked as stateful. For Mechanisms, statefulness is
         determined by checking whether node.has_initializers is True. For Compositions, statefulness is determined
-        by checking whether any of its nodes are stateful.
+        by checking whether any of its `Nodes <Composition_Nodes>` are stateful.
 
         Returns
         -------
-        all stateful nodes in the system : List[Nodes]
+        all stateful nodes in the `Composition` : List[`Node <Composition_Nodes>`]
 
         """
 
