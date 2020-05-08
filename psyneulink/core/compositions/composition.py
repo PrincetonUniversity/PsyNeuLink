@@ -3439,7 +3439,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             or _create_terminal_backprop_learning_components()
           .. note::
              - also assigned LEARNING
-             - ObjectiveMechanism._role == LEARNING
              - must project to a LearningMechanism
 
         OUTPUT:
