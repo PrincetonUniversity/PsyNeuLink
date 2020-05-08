@@ -192,22 +192,23 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 `Parameter` objects, each of which stores a Parameter's values, `default values <Component.defaults>`, and various
 `properties <Parameter_Attributes_Table>` of the parameter.
 
-* `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values that
-    are used for all Components, unless overridden.
+* `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values
+   that are used for all Components, unless overridden.
 
   All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
-  can also be modified by `ControlSignals <ControlSignal>` when a `System executes <System_Execution_Control>`. In
-  general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+  can also be modified by `ControlSignals <ControlSignal>` when a `Composition executes <Composition_Execution>`.
+  In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
   `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
   `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
-  <TransferMechanism.integration_rate>` can all be subject to modulation.
-  Parameters that are subject to modulation have the
-  `modulable <Parameter.modulable>` attribute set to True and are
-  associated with a `ParameterPort` to which the ControlSignals
-  can project (by way of a `ControlProjection`).
+  <TransferMechanism.integration_rate>` can all be subject to modulation. Parameters that are subject to modulation
+  have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
+  the ControlSignals can project (by way of a `ControlProjection`).
+  COMMENT:
+      FIX: ADD COMMENT ABOUT HOW TO ASSIGN DEFAULTS HERE 5/2/20
+  COMMENT
 
 .. _Component_Function_Params:
 
@@ -751,11 +752,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     prefs : PreferenceSet
         see `prefs <Component_Prefs>`
 
-    parameters
-        see `parameters <Component_Parameters>`
+    parameters :  Parameters
+        see `parameters <Component_Parameters>` and `Parameters` for additional information.
 
-    defaults
-        an object that provides access to the default values of a `Component's` `parameters`
+    defaults : Defaults
+        an object that provides access to the default values of a `Component's` `parameters`;
+        see `parameter defaults <Parameter_Defaults>` for additional information.
 
     initialization_status : field of flags attribute
         indicates the state of initialization of the Component;

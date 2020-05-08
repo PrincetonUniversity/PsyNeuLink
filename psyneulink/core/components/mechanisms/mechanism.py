@@ -846,9 +846,20 @@ Mechanism and/or debugging.  However, more typically, Mechanisms are `executed a
 ~~~~~~~~~~~~~~~~~~~~
 
 .. note::
-   This is an advanced feature, and is generally not required for most applications.
+   This is an advanced feature, but is generally not required for most applications.   It is included for convenience;
+   similar functionality can be achieved by setting the values of `parameters <Component_Parameters>` programmatically
+   before the Mechanism is executed and then resetting them afterwards.
 
-The parameters of a Mechanism are usually specified when the Mechanism is `created <Mechanism_Creation>`.  However,
+??INTERACTION WITH MODULATON??
+When a Mechanism is executed, the values used for its `parameters <Component_Parameters>` are either the ones specified
+in the consructor for the Mechanism when it was created, or their `default values <Parameter_Defaults>`.  These can
+be modified for a given `execution context <Composition_Execution_Context>` using a parameter's `set
+<Parameter.set>` method; default values can also be modified for a given parameter in the Mechanism's `defaults
+<Component.defaults>` attribute.
+
+NEED TO RESET.  SO, FOR CONVENIENCE...
+
+However,
 these can be overridden when it is executed.  If it is executed using the Mechanism's `execute
 <Mechanism_Base.execution>`, then parameter values can be specified in a `parameter specification dictionary
 <ParameterPort_Specification>` assigned to the **runtime_param** argument; if it is executed in a `Composition`,
@@ -2719,7 +2730,8 @@ class Mechanism_Base(Mechanism):
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {} parsed value does not match output port: mech value: {} spec: {} parsed {}".format(port, self.defaults.value, port._variable_spec, port.defaults.variable))
+                warnings.warn("Shape mismatch: {port} parsed value does not match output port: mech value: "
+                              "{self.defaults.value} spec: {port._variable_spec} parsed {port.defaults.variable}.")
                 input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)
             return b
@@ -3068,7 +3080,8 @@ class Mechanism_Base(Mechanism):
         output_ports_header    = f'<tr><td colspan="1" valign="middle"><b><i>{OutputPort.__name__}s</i></b></td></tr>'
 
         # Inner Port table (i.e., that contains individual ports in each cell):
-        inner_table_spec = '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
+        inner_table_spec = \
+            '<table border="0" cellborder="2" cellspacing="0" color="LIGHTGOLDENRODYELLOW" bgcolor="PALEGOLDENROD">'
 
         def mech_cell():
             """Return html with name of Mechanism, possibly with function and/or value
