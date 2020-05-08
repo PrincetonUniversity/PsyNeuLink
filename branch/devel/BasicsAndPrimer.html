@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+99.g28bbf0e documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+100.g5c7905e documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+99
+                  0.7.5.4+100
                 </div>
               
             
@@ -274,13 +274,12 @@ encoder network, the first layer of which takes an an array of length 5 as its i
 (the default for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>), and the other two of which take 1d arrays of the specified sizes and use a
 <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
-<span class="n">input_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-<span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
-<span class="n">output_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="n">input_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">)</span>
+<span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;hidden&#39;</span><span class="p">)</span>
+<span class="n">output_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">)</span>
 
 <span class="c1"># Construct the Composition:</span>
-<span class="n">my_encoder</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">()</span>
-<span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<span class="n">my_encoder</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">]])</span>
 </pre></div>
 </div>
 <p>Each of the Mechanisms can be executed individually, by simply calling its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method
@@ -306,10 +305,11 @@ the first Mechanism in the pathway (in this case, the input_layer):</p>
 <span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">])]</span>
 </pre></div>
 </div>
-<p>The order in which Mechanisms appear in the list of the <code class="xref any docutils literal"><span class="pre">add_linear_pathway</span></code>
-method determines their order in the pathway.  More complicated arrangements can be created by adding nodes
-individually using a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_nodes" title="psyneulink.core.compositions.composition.Composition.add_nodes"><code class="xref any py py-meth docutils literal"><span class="pre">add_nodes</span></code></a> method, and/or by creating intersecting
-pathways, as shown in some of the examples further below.</p>
+<p>The order in which Mechanisms appear in the list of the <strong>pathways</strong> argument of the Composition’s constructor
+determines their order in the pathway.  More complicated arrangements can be created by using one of the Compositions
+<a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a>, by adding nodes individually using a
+Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_nodes" title="psyneulink.core.compositions.composition.Composition.add_nodes"><code class="xref any py py-meth docutils literal"><span class="pre">add_nodes</span></code></a> method, and/or by creating intersecting pathways, as shown in some
+of the examples further below.</p>
 <p>PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>), and sized them appropriately to connect each pair of Mechanisms. Each
 Projection has a <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter that weights the connections between the elements of the output
@@ -323,8 +323,10 @@ matrix, simply by inserting them in between the Mechanisms in the pathway:</p>
 </pre></div>
 </div>
 <p>The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
-which is then inserted in the pathway between the <code class="docutils literal"><span class="pre">input_layer</span></code> and <code class="docutils literal"><span class="pre">hiddeen_layer</span></code>.  The matrix itself could also
-have been inserted directly, as follows:</p>
+which is then inserted in the pathway between the <code class="docutils literal"><span class="pre">input_layer</span></code> and <code class="docutils literal"><span class="pre">hiddeen_layer</span></code>.  Note that here, one of the
+Composition’s <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a> is used to create the pathway, as an
+alternative to specifying it in the <strong>pathways</strong> argument of the constructor (as shown in the initial example). The
+Projection’s matrix itself could also have been inserted directly, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="p">(</span><span class="o">.</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">-</span> <span class="o">.</span><span class="mi">1</span><span class="p">)),</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -1043,7 +1045,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+99.g28bbf0e',
+               VERSION:'0.7.5.4+100.g5c7905e',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
