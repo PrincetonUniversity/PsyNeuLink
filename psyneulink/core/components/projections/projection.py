@@ -176,7 +176,7 @@ Projection in context:
       COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
         Note that parameter
         values in the specification dictionary will be used to instantiate the Projection.  These can be overridden
-        during execution by specifying `runtime parameters <Mechanism_Runtime_parameters>` for the Projection,
+        during execution by specifying `runtime parameters <Mechanism_Runtime_Params>` for the Projection,
         either when calling the `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>`
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT

@@ -24,7 +24,7 @@ Contents
       - `Mechanism_Additional_Attributes`
       - `Mechanism_Role_In_Compositions`
   * `Mechanism_Execution`
-      - `Mechanism_Runtime_Parameters`
+      - `Mechanism_Runtime_Params`
   * `Mechanism_Class_Reference`
 
 
@@ -107,7 +107,7 @@ mentioned above, or using one of the following:
           be the name of the argument used to specify the parameter in the Mechanism's constructor, and the value must
           be a legal value for that parameter, using any of the ways allowed for `specifying a parameter
           <ParameterPort_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
-          These can be overridden during execution by specifying `Mechanism_Runtime_Parameters`, either when calling
+          These can be overridden during execution by specifying `Mechanism_Runtime_Params`, either when calling
           the Mechanism's `execute <Mechanism_Base.execute>` method, or in the `execution method
           <Composition_Execution_Methods>` of a Composition.
 
@@ -840,7 +840,7 @@ A Mechanism can be executed using its `execute <Mechanism_Base.execute>` method.
 Mechanism and/or debugging.  However, more typically, Mechanisms are `executed as part of a Composition
 <Composition_Execution>`.
 
-.. _Mechanism_Runtime_Parameters:
+.. _Mechanism_Runtime_Params:
 
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
@@ -850,43 +850,41 @@ Mechanism and/or debugging.  However, more typically, Mechanisms are `executed a
    similar functionality can be achieved by setting the values of `parameters <Component_Parameters>` programmatically
    before the Mechanism is executed and then resetting them afterwards.
 
-??INTERACTION WITH MODULATON??
-When a Mechanism is executed, the values used for its `parameters <Component_Parameters>` are either the ones specified
-in the consructor for the Mechanism when it was created, or their `default values <Parameter_Defaults>`.  These can
-be modified for a given `execution context <Composition_Execution_Context>` using a parameter's `set
-<Parameter.set>` method; default values can also be modified for a given parameter in the Mechanism's `defaults
-<Component.defaults>` attribute.
-
-NEED TO RESET.  SO, FOR CONVENIENCE...
-
-However,
-these can be overridden when it is executed.  If it is executed using the Mechanism's `execute
-<Mechanism_Base.execution>`, then parameter values can be specified in a `parameter specification dictionary
-<ParameterPort_Specification>` assigned to the **runtime_param** argument; if it is executed in a `Composition`,
-the parameter values can be specified in a dictionary assigned to the **runtime_param** argument of the Composition`s
-`execute method <Composition_Execution_Methods>`, in an entry containing the Mechanism as its key and for which the
-value is a tuple the first item of which is the parmater value, and second item is a `Condition` specifying when that
-value should be assigned. Any value assigned to a parameter in a **runtime_params** dictionary will override the
-current value of the parameter for that (and *only* that) execution of the Mechanism; the value will return to its
-previous value following that execution.
-
-The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
-is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's Ports
-<Mechanism_Ports>`. Entries for parameters of the Mechanism or its `function <Mechanism_Base.function>` use the
-standard format for `parameter specification dictionaries <ParameterPort_Specification>`. Entries for the Mechanism's
-Ports can be used to specify runtime parameters of the corresponding Port, its `function <Port_Base.function>`, or
-any of the `Projections to that port <Port_Projections>`. Each entry for the parameters of a Port uses a key
-corresponding to the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
-value that is a sub-dictionary containing a dictionary with the runtime  parameter specifications for all Ports of that
-type). Within that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use
-the  standard format for a `parameter specification dictionary <ParameterPort_Specification>`.  Parameters for all of
-the `Port's Projections <Port_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
-sub-dictionary that contains the parameter specifications;  parameters for Projections of a particular type can be
-placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
-*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*; and parameters for a specific Projection can be placed in
-an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
-
 COMMENT:
+??INTERACTION WITH MODULATON - DO runtime_params SET THE BASE VALUE OR THE mod_value?
+COMMENT
+
+When a Mechanism is executed, the values used for its `parameters <Component_Parameters>` and that of its subcomponents
+(i.e., its `function <Mechanism_Base.function>` and Ports (Mechanism_Ports) are either the ones specified in the
+constructor for the Mechanism, or their `default values <Parameter_Defaults>`.  These values can be modified for a
+given `execution context <Composition_Execution_Context>` using a parameter's `set <Parameter.set>` method; default
+values can also be modified for a given parameter in the Mechanism's `defaults <Component.defaults>` attribute. For
+convenience, values to be used for a particular execution can be specified in the **runtime_params** argument of the
+Mechanism's `execute <Mechanism_Base.execute>` method (see `below <Mechanism_Runtime_Param_Specification>`), or the
+`execution method <Composition_Execution_Methods>` of a `Composition` to which it belongs (see
+`Composition_Runtime_Params`).  Any value assigned using **runtime_params** will override the current value of the
+parameter for that (and *only* that) execution of the Mechanism; the value will return to its previous value following
+that execution.
+
+.. _Mechanism_Runtime_Param_Specification:
+
+In the **runtime_params** argument of a Mechanism's `execute <Mechanism_Base.execution>` method, parameter values
+are specified in a `parameter specification dictionary <ParameterPort_Specification>`, that contains one entry for
+each parameter of the Mechanism or its `function <Mechanism_Base.function>` to be specified.  Entries can also
+be included for `Ports <Mechanism_Ports>` of the Mechanism. Entries for parameters of the Mechanism or its `function
+<Mechanism_Base.function>` use the standard format for `parameter specification dictionaries
+<ParameterPort_Specification>`.  Entries for the Mechanism's Ports can be used to specify runtime parameters of
+the corresponding Port, its `function <Port_Base.function>`, or any of the `Projections to that port
+<Port_Projections>`. Each entry for the parameters of a Port uses a key corresponding to the type of Port
+(*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a value that is a sub-dictionary
+containing a dictionary with the runtime parameter specifications for all Ports of that type. Within that
+sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use the
+standard format for a `parameter specification dictionary <ParameterPort_Specification>`.  Parameters for all of
+the `Port's Projections <Port_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
+sub-dictionary that contains the parameter specifications; parameters for Projections of a particular type can be
+placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
+*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*); and parameters for a specific Projection can be placed
+in an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
 
 INTEGRATE WITH ABOVE
 

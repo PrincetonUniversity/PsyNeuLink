@@ -42,8 +42,9 @@ Contents
           • `Composition_Input_Dictionary`
           • `Composition_Programmatic_Inputs`
           COMMENT:
-          • `Composition_Target_inputs`
+          • `Composition_Target_Inputs`
           COMMENT
+      - `Composition_Runtime_Params`
       COMMENT:
       - `Composition_Initial_Values_and_Feedback`
       COMMENT
@@ -1103,6 +1104,31 @@ Environment.
         return {a: [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]}
 
     comp.run(inputs=input_dictionary)
+COMMENT
+
+COMMENT:
+.. _Composition_Runtime_Params:
+
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
+
+In a Composition's
+`execute method <Composition_Execute_Methods>`, the parameter values are specified in a dictionary assigned to the
+**runtime_param** argument of the Composition`s `execute method <Composition_Execution_Methods>`, in which the key
+of each entry is a Mechanism, and the value is a tuple, the first item of which is a parmater value and second is a
+`Condition` specifying when that value should be assigned (see
+
+
+    Outer dictionary:
+        - *key* - Node
+        - *value* - Runtime Parameter Specification Dictionary
+
+    Runtime Parameter Specification Dictionary:
+        - *key* - keyword corresponding to a parameter of the Node
+        - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
+          a `Condition`
+
+    See `Mechanism_Runtime_Params` for more details and examples of valid dictionaries.
 COMMENT
 
 
@@ -7949,18 +7975,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `RUN` when the specified `Condition` is met.
-
-                Outer dictionary:
-                    - *key* - Node
-                    - *value* - Runtime Parameter Specification Dictionary
-
-                Runtime Parameter Specification Dictionary:
-                    - *key* - keyword corresponding to a parameter of the Node
-                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
-                      a `Condition`
-
-                See `Mechanism_Runtime_Parameters` for more details and examples of valid dictionaries.
+                during this `RUN` when the specified `Condition` is met (see `Composition_Runtime_Params` for
+                additional informaton).
 
             call_before_time_step : callable  : default None
                 will be called before each `TIME_STEP` is executed.
