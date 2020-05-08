@@ -8,13 +8,12 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-# from psyneulink.core.components.system import System
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
 logger = logging.getLogger(__name__)
@@ -1353,21 +1352,27 @@ class TestTrainingTime:
 
         # SET UP SYSTEM
 
-        xor_process = Process(pathway=[xor_in_sys,
+        # xor_process = Process(pathway=[xor_in_sys,
+        #                                hid_map_sys,
+        #                                xor_hid_sys,
+        #                                out_map_sys,
+        #                                xor_out_sys],
+        #                       learning=pnl.LEARNING)
+
+        xor_process = Composition(pathways=([xor_in_sys,
                                        hid_map_sys,
                                        xor_hid_sys,
                                        out_map_sys,
-                                       xor_out_sys],
-                              learning=pnl.LEARNING)
+                                       xor_out_sys], BackPropagation))
 
-       msg = 'Training XOR model as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
+        msg = 'Training XOR model as AutodiffComposition for {eps} epochs took {comp_time} seconds.'
         print(msg)
         print("\n")
         logger.info(msg)
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
-        'eps, opt', [
+            'eps, opt', [
             (1, 'sgd'),
             (10, 'sgd'),
             (100, 'sgd')
