@@ -42,6 +42,7 @@ before_install:
       # There are a lot fewer wheels distributed for non-x86 architectures.
       # We end up building a lot of them locally, install dev packages
       EXTRA_PKGS="build-essential gfortran llvm-8-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
+      # Export LLVM_CONFIG for llvmlite
       export LLVM_CONFIG=llvm-config-8
       # Cython is needed to build scikit-learn
       EXTRA_PIP="cython"
@@ -50,9 +51,10 @@ before_install:
     # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
     sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python3-distutils python3-lib2to3 $EXTRA_PKGS
     python$PYTHON -m venv $HOME/venv
-    # Provide fake xdg-open
-    echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
-    chmod +x $HOME/venv/bin/xdg-open
+
+  # Provide fake xdg-open
+  - echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
+  - chmod +x $HOME/venv/bin/xdg-open
 
   # The rest of the setup is common for all environments
   - source $HOME/venv/bin/activate
@@ -65,6 +67,21 @@ before_install:
     if [ "x$EXTRA_PIP" != "x" ]; then
       pip install $EXTRA_PIP
     fi
+
+before_cache:
+  - pip cache info
+  - |
+    for P in `pip list | tail -n+3 | sed 's/  */,/'`; do
+      PKG=`echo $P | cut -f1 -d,`
+      CUR_VER=`echo $P |cut -f2 -d,`
+      IN_CACHE=`pip cache list $PKG | grep -o '[^ ]*.whl'`
+      for PIC in $IN_CACHE; do
+        if echo $PIC | grep -qv $CUR_VER; then
+           pip cache remove -v `echo $PIC | sed 's/.whl//'`
+        fi
+      done
+    done
+  - pip cache info
 
 install:
   - pip install coveralls
