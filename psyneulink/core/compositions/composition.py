@@ -1106,18 +1106,26 @@ Environment.
     comp.run(inputs=input_dictionary)
 COMMENT
 
-COMMENT:
 .. _Composition_Runtime_Params:
 
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
 
-In a Composition's
-`execute method <Composition_Execute_Methods>`, the parameter values are specified in a dictionary assigned to the
-**runtime_param** argument of the Composition`s `execute method <Composition_Execution_Methods>`, in which the key
-of each entry is a Mechanism, and the value is a tuple, the first item of which is a parmater value and second is a
-`Condition` specifying when that value should be assigned (see
+The **runtime_params** argument of a Composition's `execution method <Composition_Execution_Methods>` can be used to
+specify values for the `parameters <Component_Parameters>` of one or more `Mechanisms <Mechanism>` or its `Components
+<Component>` that will apply for that execution.  A `Condition` can specified the determines when the value is applied,
+and whether the parameter is restored to its previous value following execution (the default behavior), or maintains
+the new value assigned.
 
+COMMENT:
+    CHECK WITH THIS WORKS FOR COMPOSITIONS
+    RECONCILE THIS WITH `runtime parameter specification dictionary <Mechanism_Runtime_Param_Specification>`.
+COMMENT
+
+Parameter values are specified in a dictionary, each entry of which contains a key specifying a `Node
+<Composition_Nodes>` of the Composition, and a value containing a subdictionary. For each entry of the latter,
+the key is a parameter, and the value is a tuple, the first item of which is a paramater value and the second is a
+`Condition` specifying when that  value should be assigned, as follows:
 
     Outer dictionary:
         - *key* - Node
@@ -1128,9 +1136,7 @@ of each entry is a Mechanism, and the value is a tuple, the first item of which 
         - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
           a `Condition`
 
-    See `Mechanism_Runtime_Params` for more details and examples of valid dictionaries.
-COMMENT
-
+See `Mechanism_Runtime_Params` for additional details of runtime parameters.
 
 COMMENT:
 .. _Composition_Initial_Values_and_Feedback:
