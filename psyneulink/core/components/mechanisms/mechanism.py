@@ -3011,40 +3011,12 @@ class Mechanism_Base(Mechanism):
 
             mech_roles = ''
             if composition and show_roles:
-                # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-                # from psyneulink.core.components.system import System
-                # if isinstance(composition, System):
-                #     try:
-                #         mech_roles = f'<br/>[{self.systems[composition]}]'
-                #     except KeyError:
-                #         # # mech_roles = r'\n[{}]'.format(self.system)
-                #         # mech_roles = r'\n[CONTROLLER]'
-                #         from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-                #         from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-                #         if isinstance(self, ControlMechanism) and hasattr(self, 'system'):
-                #             mech_roles = r'\n[CONTROLLER]'
-                #         elif isinstance(self, ObjectiveMechanism) and hasattr(self, '_role'):
-                #             mech_roles = f'\n[{self._role}]'
-                #         else:
-                #             mech_roles = ""
-                # else:
-                #     from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
-                #     if self is composition.controller:
-                #         # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
-                #         mech_roles = f'<br/><i>CONTROLLER</i>'
-                #     elif not isinstance(self, CompositionInterfaceMechanism):
-                #         roles = [role.name for role in list(composition.nodes_to_roles[self])]
-                #         mech_roles = f'<br/><i>{",".join(roles)}</i>'
-                #     assert True
-                # MODIFIED 4/28/20 NEW:
                 from psyneulink.core.compositions.composition import CompositionInterfaceMechanism, NodeRole
                 if self is composition.controller:
-                    # mech_roles = f'<br/><i>{NodeRole.MODEL_BASED_OPTIMIZER.name}</i>'
                     mech_roles = f'<br/><i>CONTROLLER</i>'
                 elif not isinstance(self, CompositionInterfaceMechanism):
                     roles = [role.name for role in list(composition.nodes_to_roles[self])]
                     mech_roles = f'<br/><i>{",".join(roles)}</i>'
-                # MODIFIED 4/28/20 END
 
             mech_condition = ''
             if composition and show_conditions and condition:

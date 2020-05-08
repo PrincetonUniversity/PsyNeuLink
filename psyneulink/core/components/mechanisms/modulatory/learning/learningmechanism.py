@@ -1207,14 +1207,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                     # IMPLEMENTATION NOTE:
                     #    _create_terminal_backprop_sequence_components and _create_multilayer_backprop_components
                     #    in Composition take care of creating projections from _error_sources to LearningMechanisms
-                    # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
-                    # from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
-                    #     import _instantiate_error_signal_projection
-                    # self.error_signal_projection = _instantiate_error_signal_projection(sender=error_source,
-                    #                                                                     receiver=self)
-                    # MODIFIED 5/2/20 NEW:
                     warnings.warn("Instantiation of a LearningMechanism outside of a Composition is tricky!")
-                    # MODIFIED 5/2/20 END
                 if isinstance(error_source, ObjectiveMechanism):
                     self.error_matrices[i] = np.identity(len(error_source.input_ports[SAMPLE].value))
                 else:

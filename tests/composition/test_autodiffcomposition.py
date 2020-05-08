@@ -1246,47 +1246,10 @@ class TestTrainingTime:
         end = timeit.default_timer()
         comp_time = end - start
 
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # # SET UP SYSTEM
-        #
-        # and_process = Process(pathway=[and_in_sys,
-        #                                and_map_sys,
-        #                                and_out_sys],
-        #                       learning=pnl.LEARNING)
-        #
-        # and_sys = System(processes=[and_process],
-        #                  learning_rate=0.1)
-        #
-        # # TIME TRAINING FOR SYSTEM
-        #
-        # start = timeit.default_timer()
-        # results_sys = and_sys.run(inputs={and_in_sys:and_inputs},
-        #                           targets={and_out_sys:and_targets},
-        #                           num_trials=(eps * and_inputs.shape[0] + 1))
-        # end = timeit.default_timer()
-        # sys_time = end - start
-        #
-        #
-        # # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
-        # MODIFIED 4/28/20 END
-
         msg = 'Training XOR model as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
         print(msg)
         print("\n")
         logger.info(msg)
-
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # msg = 'Training XOR model as System for {0} epochs took {1} seconds'.format(eps, sys_time)
-        # print(msg)
-        # print("\n")
-        # logger.info(msg)
-        #
-        # speedup = np.round((sys_time / comp_time), decimals=2)
-        # msg = ('Training XOR model as AutodiffComposition for {0} epochs was {1} times faster than '
-        #        'training it as System for {0} epochs.'.format(eps, speedup))
-        # print(msg)
-        # logger.info(msg)
-        # MODIFIED 4/28/20 END
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
@@ -1397,40 +1360,10 @@ class TestTrainingTime:
                                        xor_out_sys],
                               learning=pnl.LEARNING)
 
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # xor_sys = System(processes=[xor_process],
-        #                  learning_rate=0.1)
-        #
-        # # TIME TRAINING FOR SYSTEM
-        #
-        # start = timeit.default_timer()
-        # results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
-        #                           targets={xor_out_sys:xor_targets},
-        #                           num_trials=(eps * xor_inputs.shape[0] + 1))
-        # end = timeit.default_timer()
-        # sys_time = end - start
-        #
-        # # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
-        # MODIFIED 4/28/20 END
-
-        msg = 'Training XOR model as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
+       msg = 'Training XOR model as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
         print(msg)
         print("\n")
         logger.info(msg)
-
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # msg = 'Training XOR model as System for {0} epochs took {1} seconds'.format(eps, sys_time)
-        # print(msg)
-        # print("\n")
-        # logger.info(msg)
-        #
-        # speedup = np.round((sys_time / comp_time), decimals=2)
-        #
-        # msg = ('Training XOR model as AutodiffComposition for {0} epochs was {1} times faster than '
-        #        'training it as System for {0} epochs.'.format(eps, speedup))
-        # print(msg)
-        # logger.info(msg)
-        # MODIFIED 4/28/20 END
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
@@ -1691,71 +1624,10 @@ class TestTrainingTime:
         end = timeit.default_timer()
         comp_time = end - start
 
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # # SET UP SYSTEM
-        #
-        # p11 = Process(pathway=[nouns_in_sys,
-        #                        map_nouns_h1_sys,
-        #                        h1_sys,
-        #                        map_h1_h2_sys,
-        #                        h2_sys,
-        #                        map_h2_I_sys,
-        #                        out_sig_I_sys],
-        #               learning=pnl.LEARNING)
-        #
-        # p12 = Process(pathway=[rels_in_sys,
-        #                        map_rels_h2_sys,
-        #                        h2_sys,
-        #                        map_h2_is_sys,
-        #                        out_sig_is_sys],
-        #               learning=pnl.LEARNING)
-        #
-        # p21 = Process(pathway=[h2_sys,
-        #                        map_h2_has_sys,
-        #                        out_sig_has_sys],
-        #               learning=pnl.LEARNING)
-        #
-        # p22 = Process(pathway=[h2_sys,
-        #                        map_h2_can_sys,
-        #                        out_sig_can_sys],
-        #               learning=pnl.LEARNING)
-        #
-        # sem_net_sys = System(processes=[p11,
-        #                                 p12,
-        #                                 p21,
-        #                                 p22,
-        #                                 ],
-        #                      learning_rate=0.1)
-        #
-        # # TIME TRAINING FOR SYSTEM
-        #
-        # start = timeit.default_timer()
-        # results = sem_net_sys.run(inputs=inputs_dict_sys,
-        #                           targets=targets_dict_sys,
-        #                           num_trials=(len(inputs_dict[nouns_in]) * eps + 1))
-        # end = timeit.default_timer()
-        # sys_time = end - start
-        #
-        # # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
-        # MODIFIED 4/28/20 END
-
         msg = 'Training Semantic net as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
         print(msg)
         print("\n")
         logger.info(msg)
-
-        # # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # msg = 'Training Semantic net as System for {0} epochs took {1} seconds'.format(eps, sys_time)
-        # print(msg)
-        # print("\n")
-        # logger.info(msg)
-        #
-        # speedup = np.round((sys_time / comp_time), decimals=2)
-        # msg = ('Training Semantic net as AutodiffComposition for {0} epochs was {1} times faster than '
-        #        'training it as System for {0} epochs.'.format(eps, speedup))
-        # print(msg)
-        # logger.info(msg)
-        # MODIFIED 4/28/20 END
 
 
 @pytest.mark.pytorch

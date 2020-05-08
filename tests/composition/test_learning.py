@@ -1891,43 +1891,7 @@ class TestBackProp:
     
         # SET UP MODELS --------------------------------------------------------------------------------
 
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # # System
-        # if pnl.SYSTEM in models:
-        #
-        #     input_sys = pnl.TransferMechanism(name='input_sys',
-        #                                    default_variable=np.zeros(2))
-        #
-        #     hidden_sys = pnl.TransferMechanism(name='hidden_sys',
-        #                                     default_variable=np.zeros(10),
-        #                                     function=pnl.Logistic())
-        #
-        #     output_sys = pnl.TransferMechanism(name='output_sys',
-        #                                     default_variable=np.zeros(1),
-        #                                     function=pnl.Logistic())
-        #
-        #     in_to_hidden_sys = pnl.MappingProjection(name='in_to_hidden_sys',
-        #                                 matrix=in_to_hidden_matrix.copy(),
-        #                                 sender=input_sys,
-        #                                 receiver=hidden_sys)
-        #
-        #     hidden_to_out_sys = pnl.MappingProjection(name='hidden_to_out_sys',
-        #                                 matrix=hidden_to_out_matrix.copy(),
-        #                                 sender=hidden_sys,
-        #                                 receiver=output_sys)
-        #
-        #     xor_process = pnl.Process(pathway=[input_sys,
-        #                                    in_to_hidden_sys,
-        #                                    hidden_sys,
-        #                                    hidden_to_out_sys,
-        #                                    output_sys],
-        #                           learning=pnl.LEARNING)
-        #
-        #     xor_sys = pnl.System(processes=[xor_process],
-        #                      learning_rate=10)
-        # # MODIFIED 4/28/20 END
-
-        # STANDARD Composition
+       # STANDARD Composition
         if pnl.COMPOSITION in models:
     
             input_comp = pnl.TransferMechanism(name='input_comp',
@@ -2001,17 +1965,7 @@ class TestBackProp:
                            "targets": {output_autodiff:xor_targets},
                            "epochs": num_epochs}
         # RUN MODELS -----------------------------------------------------------------------------------
-    
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # if pnl.SYSTEM in models:
-        #     results_sys = xor_sys.run(inputs={input_sys:xor_inputs},
-        #                               targets={output_sys:xor_targets},
-        #                               num_trials=(num_epochs * xor_inputs.shape[0]),
-        #                               )
-        # MODIFIED 4/28/20 END
-
-
-        if pnl.COMPOSITION in models:
+            if pnl.COMPOSITION in models:
             result = xor_comp.learn(inputs={input_comp:xor_inputs,
                                           target_mech:xor_targets},
                                   num_trials=(num_epochs * xor_inputs.shape[0]),
@@ -2021,17 +1975,6 @@ class TestBackProp:
             autodiff_weights = xor_autodiff.get_parameters()
     
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
-    
-        # # MODIFIED 4/28/20 OLD:  ELIMINATE SYSTEM
-        # if all(m in models for m in {pnl.SYSTEM, 'AUTODIFF'}):
-        #     assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_sys.get_mod_matrix(xor_sys))
-        #     assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_sys.get_mod_matrix(xor_sys))
-        #
-        # if all(m in models for m in {pnl.SYSTEM, pnl.COMPOSITION}):
-        #     assert np.allclose(in_to_hidden_comp.get_mod_matrix(xor_comp), in_to_hidden_sys.get_mod_matrix(xor_sys))
-        #     assert np.allclose(hidden_to_out_comp.get_mod_matrix(xor_comp), hidden_to_out_sys.get_mod_matrix(xor_sys))
-        # MODIFIED 4/28/20 END
-
         if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
             assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
             assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
@@ -2750,88 +2693,3 @@ class TestRumelhartSemanticNetwork:
               #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
               )
         print(comp.results)
-
-    # FIX 4/28/20 [JDC]: ELIMINATE SYSTEM
-    #   THESE ARE INHERITED FROM SYSTEM AND NEED TO BE CONVERTED TO COMPOSITION
-    # def test_rumelhart_semantic_network_convergent(self):
-    #
-    #     rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
-    #     rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-    #     rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
-    #     rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
-    #     rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
-    #     prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
-    #     qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
-    #     act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
-    #
-    #     rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
-    #                            learning=pnl.LEARNING,
-    #                            name='REP_PROC')
-    #     rel_proc = pnl.Process(pathway=[rel_in, rel_hidden],
-    #                            learning=pnl.LEARNING,
-    #                            name='REL_PROC')
-    #     rel_prop_proc = pnl.Process(pathway=[rel_hidden, prop_out],
-    #                                 learning=pnl.LEARNING,
-    #                                 name='REL_PROP_PROC')
-    #     rel_qual_proc = pnl.Process(pathway=[rel_hidden, qual_out],
-    #                                 learning=pnl.LEARNING,
-    #                                 name='REL_QUAL_PROC')
-    #     rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
-    #                                learning=pnl.LEARNING,
-    #                                name='REL_ACT_PROC')
-    #     S = pnl.System(processes=[rep_proc,
-    #                               rel_proc,
-    #                               rel_prop_proc,
-    #                               rel_qual_proc,
-    #                               rel_act_proc])
-    #     # S.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-    #     validate_learning_mechs(S)
-    #     print(S.origin_mechanisms)
-    #     print(S.terminal_mechanisms)
-    #     S.run(inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-    #                   rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
-    #           # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-    #           #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-    #           #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-    #           #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
-    #           )
-    #
-    # def test_rumelhart_semantic_network_crossing(self):
-    #
-    #     rep_in = pnl.TransferMechanism(size=10, name='REP_IN')
-    #     rel_in = pnl.TransferMechanism(size=11, name='REL_IN')
-    #     rep_hidden = pnl.TransferMechanism(size=4, function=pnl.Logistic, name='REP_HIDDEN')
-    #     rel_hidden = pnl.TransferMechanism(size=5, function=pnl.Logistic, name='REL_HIDDEN')
-    #     rep_out = pnl.TransferMechanism(size=10, function=pnl.Logistic, name='REP_OUT')
-    #     prop_out = pnl.TransferMechanism(size=12, function=pnl.Logistic, name='PROP_OUT')
-    #     qual_out = pnl.TransferMechanism(size=13, function=pnl.Logistic, name='QUAL_OUT')
-    #     act_out = pnl.TransferMechanism(size=14, function=pnl.Logistic, name='ACT_OUT')
-    #
-    #     rep_proc = pnl.Process(pathway=[rep_in, rep_hidden, rel_hidden, rep_out],
-    #                            learning=pnl.LEARNING,
-    #                            name='REP_PROC')
-    #     rel_proc = pnl.Process(pathway=[rel_in, rel_hidden, prop_out],
-    #                            learning=pnl.LEARNING,
-    #                            name='REL_PROC')
-    #     rel_qual_proc = pnl.Process(pathway=[rel_hidden, qual_out],
-    #                                 learning=pnl.LEARNING,
-    #                                 name='REL_QUAL_PROC')
-    #     rel_act_proc = pnl.Process(pathway=[rel_hidden, act_out],
-    #                                learning=pnl.LEARNING,
-    #                                name='REL_ACT_PROC')
-    #     S = pnl.System(processes=[rep_proc,
-    #                               rel_proc,
-    #                               rel_qual_proc,
-    #                               rel_act_proc])
-    #
-    #     # S.show_graph(show_learning=pnl.ALL, show_dimensions=True)
-    #     validate_learning_mechs(S)
-    #     print(S.origin_mechanisms)
-    #     print(S.terminal_mechanisms)
-    #     S.run(inputs={rel_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-    #                   rep_in: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]},
-    #           # targets={rep_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-    #           #          prop_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-    #           #          qual_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]],
-    #           #          act_out: [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
-    #           )

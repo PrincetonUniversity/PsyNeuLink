@@ -520,20 +520,3 @@ class GatingMechanism(ControlMechanism):
     @gating_signals.setter
     def gating_signals(self, value):
         self._control_signals = value
-
-# # MODIFIED 5/2/20 OLD:  ELIMINATE SYSTEM
-# # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-# def _add_gating_mechanism_to_system(owner:GatingMechanism):
-#
-#     if owner.gating_signals:
-#         for gating_signal in owner.gating_signals:
-#             for mech in [proj.receiver.owner for proj in gating_signal.efferents]:
-#                 for system in mech.systems:
-#                     if owner not in system.execution_list:
-#                         system.execution_list.append(owner)
-#                         system.execution_graph[owner] = set()
-#                         # FIX: NEED TO ALSO ADD SystemInputPort (AND ??ProcessInputPort) PROJECTIONS
-#                         # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
-#                         # if not any(port.path_afferents for port in owner.input_ports):
-#                         #     system.origin_mechanisms.mechs.append(owner)
-# MODIFIED 5/2/20 END

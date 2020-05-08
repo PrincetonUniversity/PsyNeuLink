@@ -1236,11 +1236,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             **kwargs
         )
 
-        # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
-        # if system is not None:
-        #     self._activate_projections_for_compositions(system)
-        # MODIFIED 5/2/20 END
-
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, monitor_for_control, CONTROL_SIGNALS and GATING_SIGNALS
 
@@ -1250,12 +1245,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         super(ControlMechanism, self)._validate_params(request_set=request_set,
                                                        target_set=target_set,
                                                        context=context)
-
-        # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
-        # if SYSTEM in target_set:
-        #     if not isinstance(target_set[SYSTEM], System_Base):
-        #         raise KeyError
-        # MODIFIED 5/2/20 END
 
         if OBJECTIVE_MECHANISM in target_set and \
                 target_set[OBJECTIVE_MECHANISM] is not None and\
@@ -1330,15 +1319,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # GET OutputPorts to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_ports attribute
 
         monitored_output_ports = []
-
-        # # MODIFIED 5/2/20 OLD:  ELIMINATE SYSTEM
-        # # If the ControlMechanism has already been assigned to a System
-        # #    get OutputPorts in System specified as monitor_for_control or already being monitored:
-        # #        do this by calling _get_monitored_output_ports_for_system(),
-        # #        which also gets any OutputPorts already being monitored by the ControlMechanism
-        # if self.system:
-        #     monitored_output_ports.extend(self.system._get_monitored_output_ports_for_system(self,context=context))
-        # MODIFIED 5/2/20 END
 
         self.monitor_for_control = self.monitor_for_control or []
         if not isinstance(self.monitor_for_control, list):
@@ -1635,139 +1615,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
         OutputPorts must belong to Mechanisms in the same `System` as the ControlMechanism.
         """
         output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
-        # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
-        # if self.system:
-        #     self.system._validate_monitored_ports_in_system(output_ports, context=context)
-        # MODIFIED 5/2/20 END
 
     def _add_process(self, process, role:str):
         super()._add_process(process, role)
         if self.objective_mechanism:
             self.objective_mechanism._add_process(process, role)
-
-    # # MODIFIED 5/2/20 OLD: ELIMINATE SYSTEM
-    # # FIX: TBI FOR COMPOSITION
-    # @tc.typecheck
-    # @handle_external_context()
-    # def assign_as_controller(self, system:System_Base, context=None):
-    #     """Assign ControlMechanism as `controller <System.controller>` for a `System`.
-    #
-    #     **system** must be a System for which the ControlMechanism should be assigned as the `controller
-    #     <System.controller>`.
-    #     If the specified System already has a `controller <System.controller>`, it will be replaced by the current
-    #     one, and the current one will inherit any ControlSignals previously specified for the old controller or the
-    #     System itself.
-    #     If the current one is already the `controller <System.controller>` for another System, it will be disabled
-    #     for that System.
-    #     COMMENT:
-    #         [TBI:
-    #         The ControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>`,
-    #         `monitored_output_ports` and `control_signal <ControlMechanism.control_signals>` attributes will also be
-    #         updated to remove any assignments that are not part of the new System, and add any that are specified for
-    #         the new System.]
-    #     COMMENT
-    #
-    #     COMMENT:
-    #         IMPLEMENTATION NOTE:  This is handled as a method on ControlMechanism (rather than System) so that:
-    #
-    #                               - [TBI: if necessary, it can detach itself from a System for which it is already the
-    #                                 `controller <System.controller>`;]
-    #
-    #                               - any class-specific actions that must be taken to instantiate the ControlMechanism
-    #                                 can be handled by subclasses of ControlMechanism (e.g., an EVCControlMechanism must
-    #                                 instantiate its Prediction Mechanisms). However, the actual assignment of the
-    #                                 ControlMechanism the System's `controller <System.controller>` attribute must
-    #                                 be left to the System to avoid recursion, since it is a property, the setter of
-    #                                 which calls the current method.
-    #     COMMENT
-    #     """
-    #
-    #     if context.source == ContextFlags.COMMAND_LINE:
-    #         system.controller = self
-    #         return
-    #
-    #     if self.objective_mechanism is None:
-    #         self._instantiate_objective_mechanism(context=context)
-    #
-    #     # NEED TO BUFFER OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ARGUMENTS FOR USE IN REINSTANTIATION HERE
-    #     # DETACH AS CONTROLLER FOR ANY EXISTING SYSTEM (AND SET THAT ONE'S CONTROLLER ATTRIBUTE TO None)
-    #     # DELETE ALL EXISTING OBJECTIVE_MECHANISM AND CONTROL_SIGNAL ASSIGNMENTS
-    #     # REINSTANTIATE ITS OWN OBJECTIVE_MECHANISM and CONTROL_SIGNAL ARGUMENT AND THOSE OF THE SYSTEM
-    #     # SUBCLASSES SHOULD ADD OVERRIDE FOR ANY CLASS-SPECIFIC ACTIONS (E.G., INSTANTIATING PREDICTION MECHANISMS)
-    #     # DO *NOT* ASSIGN AS CONTROLLER FOR SYSTEM... LET THE SYSTEM HANDLE THAT
-    #     # Assign the current System to the ControlMechanism
-    #
-    #     # Validate that all of the ControlMechanism's monitored_output_ports and controlled parameters
-    #     #    are in the new System
-    #     system._validate_monitored_ports_in_system(self.monitored_output_ports)
-    #     system._validate_control_signals(self.control_signals)
-    #
-    #     # Get any and all OutputPorts specified in:
-    #     # - **monitored_output_ports** argument of the System's constructor
-    #     # - in a monitor_for_control specification for individual OutputPorts and/or Mechanisms
-    #     # - already being montiored by the ControlMechanism being assigned
-    #     monitored_output_ports = list(system._get_monitored_output_ports_for_system(controller=self, context=context))
-    #
-    #     # Don't add any OutputPorts that are already being monitored by the ControlMechanism's ObjectiveMechanism
-    #     for monitored_output_port in monitored_output_ports.copy():
-    #         if monitored_output_port.output_port in self.monitored_output_ports:
-    #             monitored_output_ports.remove(monitored_output_port)
-    #
-    #     # Add all other monitored_output_ports to the ControlMechanism's monitored_output_ports attribute
-    #     #    and to its ObjectiveMechanisms monitored_output_ports attribute
-    #     if monitored_output_ports:
-    #         self.add_to_monitor(monitored_output_ports)
-    #
-    #     # The system does NOT already have a controller,
-    #     #    so assign it ControlSignals for any parameters in the System specified for control
-    #     if system.controller is None:
-    #         system_control_signals = system._get_control_signals_for_system(system.control_signals_arg, context=context)
-    #     # The system DOES already have a controller,
-    #     #    so assign it the old controller's ControlSignals
-    #     else:
-    #         system_control_signals = system.control_signals
-    #         for control_signal in system_control_signals:
-    #             control_signal.owner = None
-    #
-    #     # Get rid of default ControlSignal if it has no ControlProjections
-    #     if (len(self.control_signals)==1
-    #             and self.control_signals[0].name=='ControlSignal-0'
-    #             and not self.control_signals[0].efferents):
-    #         # FIX: REPLACE WITH remove_ports
-    #         del self.output_ports[0]
-    #         # del self.control_signals[0]
-    #
-    #     # Add any ControlSignals specified for System
-    #     for control_signal_spec in system_control_signals:
-    #         control_signal = self._instantiate_control_signal(control_signal=control_signal_spec, context=context)
-    #         # FIX: 1/18/18 - CHECK FOR SAME NAME IN _instantiate_control_signal
-    #         # # Don't add any that are already on the ControlMechanism
-    #         # if control_signal.name in self.control_signals.names and (self.verbosePref or system.verbosePref):
-    #         if ((self.verbosePref or system.verbosePref)
-    #                 and control_signal.name in [cs.name for cs in self.control_signals]):
-    #             warnings.warn("{} specified for {} has same name (\'{}\') "
-    #                           "as one in controller ({}) being assigned to the {}."
-    #                           "".format(ControlSignal.__name__, system.name,
-    #                                     control_signal.name, self.name, system.__class__.__name__))
-    #         self.control.append(control_signal)
-    #
-    #     # If it HAS been assigned a System, make sure it is the current one
-    #     if self.system and not self.system is system:
-    #         raise SystemError("The controller being assigned to {} ({}) already belongs to another System ({})".
-    #                           format(system.name, self.name, self.system.name))
-    #
-    #     # Assign assign the current System to the ControlMechanism's system attribute
-    #     #    (needed for it to validate and instantiate monitored_output_ports and control_signals)
-    #     self.system = system
-    #
-    #     # Flag ObjectiveMechanism as associated with a ControlMechanism that is a controller for the System
-    #     self.objective_mechanism.for_controller = True
-    #
-    #     if context.source != ContextFlags.PROPERTY:
-    #         system._controller = self
-    #
-    #     self._activate_projections_for_compositions(system)
-    # MODIFIED 5/2/20 END
 
     def _remove_default_control_signal(self, type:tc.enum(CONTROL_SIGNAL, GATING_SIGNAL)):
         if type == CONTROL_SIGNAL:
