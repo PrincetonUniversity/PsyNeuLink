@@ -28,7 +28,7 @@ class TestUserDefFunc:
         val = myMech.execute([1, 3])
         assert np.allclose(val, [[5, 9]])
 
-    def test_udf_system_origin(self):
+    def test_udf_composition_origin(self):
         def myFunction(variable, params, context):
             return [variable[0][1], variable[0][0]]
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
@@ -37,7 +37,7 @@ class TestUserDefFunc:
         c.run(inputs = {myMech: [[1, 3, 5]]})
         assert np.allclose(c.results[0][0], [3, 1])
 
-    def test_udf_system_terminal(self):
+    def test_udf_composition_terminal(self):
         def myFunction(variable, params, context):
             return [variable[0][2], variable[0][0]]
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')

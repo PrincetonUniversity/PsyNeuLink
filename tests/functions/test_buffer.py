@@ -155,7 +155,7 @@ class TestBuffer():
         # P.execute(1.0)
 
 
-    def test_buffer_as_function_of_origin_mech_in_system(self):
+    def test_buffer_as_function_of_origin_mech_in_composition(self):
         P = ProcessingMechanism(function=Buffer(default_variable=[[0.0]],
                                 initializer=[[0.0]],
                                 history=3))

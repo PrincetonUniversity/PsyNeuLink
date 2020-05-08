@@ -44,6 +44,10 @@ def is_composition_pref_set(pref):
 
 class CompositionPreferenceSet(BasePreferenceSet):
     """Extends BasePreferenceSet to include Composition-specific preferences
+
+    Implements the following preference:
+        - recordSimulation (bool): uses specification of runtime params to update execute method params.
+
     """
     def __init__(self,
                  record_simulation_pref=recordSimulationPrefInstanceDefault,
@@ -60,7 +64,8 @@ class CompositionPreferenceSet(BasePreferenceSet):
 
     @property
     def recordSimulationPref(self):
-        """Return setting of owner's recordSimulationPref at level specified in its PreferenceEntry.level
+        """Return setting of owner's recordSimulationPref at level specified in
+         recordSimulation PreferenceEntry of owner's Preference object
         :param level:
         :return:
         """
@@ -72,6 +77,8 @@ class CompositionPreferenceSet(BasePreferenceSet):
     @recordSimulationPref.setter
     def recordSimulationPref(self, setting):
         """Assign setting to owner's recordSimulationPref
+        (PreferenceEntry of the owner's Preference object)
+
         :param setting:
         :return:
         """

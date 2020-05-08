@@ -70,7 +70,7 @@ class MechanismPreferenceSet(BasePreferenceSet):
                  log_pref=logPrefInstanceDefault,
                  verbose_pref=verbosePrefInstanceDefault,
                  param_validation_pref=paramValidationPrefInstanceDefault,
-                 level=PreferenceLevel.SYSTEM,
+                 level=PreferenceLevel.COMPOSITION,
                  name=None,
                  **kargs):
         if kargs:

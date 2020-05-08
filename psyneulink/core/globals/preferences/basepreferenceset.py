@@ -24,9 +24,9 @@ __all__ = [
     'CompositionDefaultPreferencesDict',
     'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set',
     'CATEGORY_DEFAULT_PREFERENCES', 'INSTANCE_DEFAULT_PREFERENCES', 'SUBTYPE_DEFAULT_PREFERENCES',
-    'SYSTEM_DEFAULT_PREFERENCES', 'TYPE_DEFAULT_PREFERENCES', 'LOG_PREF', 'PARAM_VALIDATION_PREF',
+    'TYPE_DEFAULT_PREFERENCES', 'LOG_PREF', 'PARAM_VALIDATION_PREF',
     'REPORT_OUTPUT_PREF', 'RUNTIME_PARAM_MODULATION_PREF', 'SubtypeDefaultPreferencesDict',
-    'SystemDefaultPreferencesDict', 'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
+    'TypeDefaultPreferencesDict', 'VERBOSE_PREF',
 ]
 
 # Keypaths for preferences:
@@ -38,7 +38,6 @@ RUNTIME_PARAM_MODULATION_PREF = '_runtime_param_modulation_pref'
 
 # Keywords for generic level default preference sets
 COMPOSITION_DEFAULT_PREFERENCES = 'CompositionDefaultPreferences'
-SYSTEM_DEFAULT_PREFERENCES = 'SystemDefaultPreferences'
 CATEGORY_DEFAULT_PREFERENCES = 'CategoryDefaultPreferences'
 TYPE_DEFAULT_PREFERENCES = 'TypeDefaultPreferences'
 SUBTYPE_DEFAULT_PREFERENCES = 'SubtypeDefaultPreferences'
@@ -56,19 +55,11 @@ BasePreferenceSetPrefs = {
 
 CompositionDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: COMPOSITION_DEFAULT_PREFERENCES,
-    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
+    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.COMPOSITION),
+    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.COMPOSITION),
+    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.COMPOSITION),
     LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
-
-SystemDefaultPreferencesDict = {
-    PREFERENCE_SET_NAME: SYSTEM_DEFAULT_PREFERENCES,
-    VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-    REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-    LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)}
+    RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.COMPOSITION)}
 
 CategoryDefaultPreferencesDict = {
     PREFERENCE_SET_NAME: CATEGORY_DEFAULT_PREFERENCES,
@@ -105,7 +96,6 @@ InstanceDefaultPreferencesDict = {
 # Dict of default dicts
 ComponentDefaultPrefDicts = {
     PreferenceLevel.COMPOSITION: CompositionDefaultPreferencesDict,
-    PreferenceLevel.SYSTEM: SystemDefaultPreferencesDict,
     PreferenceLevel.CATEGORY: CategoryDefaultPreferencesDict,
     PreferenceLevel.TYPE: TypeDefaultPreferencesDict,
     PreferenceLevel.SUBTYPE: SubtypeDefaultPreferencesDict,
@@ -226,11 +216,11 @@ class BasePreferenceSet(PreferenceSet):
     # - a default set of preferences (where defaults are not otherwise specified)
     defaultPreferencesDict = {
             PREFERENCE_SET_NAME: 'BasePreferenceSetDefaults',
-            VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.SYSTEM),
-            PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
-            REPORT_OUTPUT_PREF: PreferenceEntry(True, PreferenceLevel.SYSTEM),
+            VERBOSE_PREF: PreferenceEntry(False, PreferenceLevel.COMPOSITION),
+            PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.COMPOSITION),
+            REPORT_OUTPUT_PREF: PreferenceEntry(True, PreferenceLevel.COMPOSITION),
             LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
-            RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.SYSTEM)
+            RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.COMPOSITION)
 
     }
 
@@ -239,7 +229,7 @@ class BasePreferenceSet(PreferenceSet):
     def __init__(self,
                  owner=None,
                  prefs=None,
-                 level=PreferenceLevel.SYSTEM,
+                 level=PreferenceLevel.COMPOSITION,
                  name=None,
                  **kargs):
         """Instantiate PreferenceSet for owner and/or classPreferences for owner's class

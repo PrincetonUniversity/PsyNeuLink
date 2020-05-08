@@ -947,9 +947,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
-    classPreferenceLevel = PreferenceLevel.SYSTEM
-    # Any preferences specified below will override those specified in SYSTEM_DEFAULT_PREFERENCES
-    # Note: only need to specify setting;  level will be assigned to SYSTEM automatically
+    classPreferenceLevel = PreferenceLevel.COMPOSITION
+    # Any preferences specified below will override those specified in COMPOSITION_DEFAULT_PREFERENCES
+    # Note: only need to specify setting;  level will be assigned to COMPOSITION automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ComponentCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}

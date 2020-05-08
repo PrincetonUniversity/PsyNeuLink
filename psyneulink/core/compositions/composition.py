@@ -41,6 +41,9 @@ Contents
       - `Composition_Execution_Inputs`
           • `Composition_Input_Dictionary`
           • `Composition_Programmatic_Inputs`
+          COMMENT:
+          • `Composition_Target_inputs`
+          COMMENT
       COMMENT:
       - `Composition_Initial_Values_and_Feedback`
       COMMENT
@@ -2292,7 +2295,7 @@ class NodeRole(Enum):
     ORIGIN
         A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
-        receive Projections from the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
+        receive Projections from the outer Composition.  `Execution of a `Composition <Composition_Execution>`
         always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.  This role cannot be
         modified programmatically.
 
@@ -2365,7 +2368,7 @@ class NodeRole(Enum):
         its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
         to the outer Composition. A Composition may have many `TERMINAL` Nodes. The `ObjectiveMechanism` associated
         with the Composition's `controller <Composition.controller>` (assigned the role `CONTROLLER_OBJECTIVE`)
-        cannot be a `TERMINAL` Node of a Composition.  `Execution of a Composition <Compostion_Execution>` itself
+        cannot be a `TERMINAL` Node of a Composition.  `Execution of a Composition <Composition_Execution>` itself
         always ends with a `TERMINAL` Node, although the `controller <Composition.controller>` and its associated
         `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
         belong to a `Pathway` that is shorter than the longest one in the Composition).
@@ -2502,7 +2505,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.external_input_ports>`;  any input to the Composition must be compatible with the shape of this,
         whether received from the **input_ports** argument of oneo f the Composition's`execution methods
         <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
-        Compostion.
+        Composition.
 
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
@@ -3371,7 +3374,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _determine_node_roles(self, context=None):
-        """Assign NodeRoles to Nodes in Compositoin
+        """Assign NodeRoles to Nodes in Composition
 
         .. note::
            Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
@@ -3472,7 +3475,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
                `controller <Composition.controller>` are executed outside of (either before or after)
                all of the other Components of the Composition, as managed directly by the scheduler;
-             - `Execution of a `Composition <Compostion_Execution>` always ends with a `TERMINAL` Node,
+             - `Execution of a `Composition <Composition_Execution>` always ends with a `TERMINAL` Node,
                although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
                is shorter than the longest one in the Composition).
 
@@ -4195,7 +4198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - it is NOT in the Composition:
             - if there is only one, that Projection is used;
             - if there is more than one, the last in the list (presumably the most recent) is used;
-            in either case, processing continues, to activate it for the Compostion,
+            in either case, processing continues, to activate it for the Composition,
             construct any "shadow" projections that may be specified, and assign feedback if specified,
 
         • if the status of **projection** is `deferred_init`:
@@ -7957,7 +7960,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
                       a `Condition`
 
-                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+                See `Mechanism_Runtime_Parameters` for more details and examples of valid dictionaries.
 
             call_before_time_step : callable  : default None
                 will be called before each `TIME_STEP` is executed.

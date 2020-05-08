@@ -38,7 +38,7 @@ The purpose of an InputPort is to receive and combine inputs to a `Mechanism <Me
 and provide them to the Mechanism's `function <Mechanism_Base.function>`. An InputPort receives input to a Mechanism
 provided by the `Projections <Projection>` to that Mechanism from others in a `Composition`.  If the
 InputPort belongs to an `ORIGIN` Mechanism (see `role of Mechanisms in Processes and Systems
-<Mechanism_Role_In_Processes_And_Systems>`), then it receives the input specified when that Process or System is
+<Mechanism_Role_In_Compositions>`), then it receives the input specified when that Process or System is
 `run <Run>`.  The `PathwayProjections <PathWayProjection>` received by an InputPort are listed in its `path_afferents
 <Port.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its `mod_afferents
 <Port.mod_afferents>` attribute.  Its `function <InputPort.function>` combines the values received from its

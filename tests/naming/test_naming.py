@@ -14,7 +14,7 @@ class TestNaming:
     # TEST 1
     # Test that Compositions are given default names with incrementing index, starting at 0
 
-    def test_process_and_system_default_names(self):
+    def test_composition_names(self):
 
         T = pnl.TransferMechanism()
         C1 = pnl.Composition(pathways=[T])
@@ -26,7 +26,7 @@ class TestNaming:
     # TEST 2
     # Test that Processes and Systems assigned duplicate names are indexed starting at 1 (original is not indexed)
 
-    def test_process_and_system_default_names_2(self):
+    def test_composition_default_names_2(self):
 
         T = pnl.TransferMechanism(name='T0')
         C1 = pnl.Composition(name='MY COMPOSITION', pathways=[T])

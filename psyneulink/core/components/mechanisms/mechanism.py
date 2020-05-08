@@ -22,7 +22,7 @@ Contents
           • `Mechanism_ParameterPorts`
           • `Mechanism_OutputPorts`
       - `Mechanism_Additional_Attributes`
-      - `Mechanism_Role_In_Processes_And_Systems`
+      - `Mechanism_Role_In_Compositions`
   * `Mechanism_Execution`
       - `Mechanism_Runtime_Parameters`
   * `Mechanism_Class_Reference`
@@ -37,10 +37,10 @@ A Mechanism takes an input, transforms it in some way, and makes the result avai
 types of Mechanisms in PsyNeuLink:
 
     * `ProcessingMechanisms <ProcessingMechanism>` aggregate the input they receive from other Mechanisms, and/or the
-      input to the `Process` or `System` to which they belong, transform it in some way, and
-      provide the result as input to other Mechanisms in the Process or System, or as the output for a Process or
-      System itself.  There are a variety of different types of ProcessingMechanism, that accept various forms of
-      input and transform them in different ways (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
+      input to the `Composition` to which they belong, transform it in some way, and provide the result as input to
+      other Mechanisms in the Composition, or as the output for the Composition itself.  There are a variety of
+      different types of ProcessingMechanism, that accept various forms of input and transform them in different ways
+      (see `ProcessingMechanisms <ProcessingMechanism>` for a list).
 
       to modulate the parameters of other Mechanisms or Projections.  There are three basic ModulatoryMechanisms:
 
@@ -108,13 +108,13 @@ mentioned above, or using one of the following:
           be a legal value for that parameter, using any of the ways allowed for `specifying a parameter
           <ParameterPort_Specification>`. The parameter values specified will be used to instantiate the Mechanism.
           These can be overridden during execution by specifying `Mechanism_Runtime_Parameters`, either when calling
-          the Mechanism's `execute <Mechanism_Base.execute>` method, or where it is specified in the `pathway
-          <Composition.pathway>` attribute of a `Composition`.
+          the Mechanism's `execute <Mechanism_Base.execute>` method, or in the `execution method
+          <Composition_Execution_Methods>` of a Composition.
 
   * **automatically** -- PsyNeuLink automatically creates one or more Mechanisms under some circumstances. For example,
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
-    specified <Process_Learning_Sequence>` for a Process; and an `ObjectiveMechanism` and `ControlMechanism
-    <ControlMechanism>` are created when the `controller <System.controller>` is specified for a `System`.
+    specified <Composition_Learning>` for a Composition; and an `ObjectiveMechanism` may be created when a
+    `ControlMechanism <ControlMechanism>` is created.
 
 .. _Mechanism_Port_Specification:
 
@@ -587,7 +587,7 @@ Component (see `Mechanism_Function` above).
 OutputPorts
 ^^^^^^^^^^^^
 These represent the output(s) of a Mechanism. A Mechanism can have several `OutputPorts <OutputPort>`, and each can
-send Projections that transmit its value to other Mechanisms and/or as the output of the `Process` or `System` to which
+send Projections that transmit its value to other Mechanisms and/or as the output of the `Composition` to which
 the Mechanism belongs.  Every Mechanism has at least one OutputPort, referred to as its `primary OutputPort
 <OutputPort_Primary>`.  If OutputPorts are not explicitly specified for a Mechanism, a primary OutputPort is
 automatically created and assigned to its `output_port <Mechanism_Base.output_port>` attribute (note the singular),
@@ -638,9 +638,11 @@ attributes are listed below by their argument names / keywords, along with a des
     * **output_ports** / *OUTPUT_PORTS* - specifies specialized OutputPorts required by a Mechanism subclass
       (see `OutputPort_Specification` for details of specification).
     ..
+    COMMENT:
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputPorts is monitored by
-      the `controller` for the System to which the Mechanism belongs (see `specifying monitored OutputPorts
+      the `controller` for the Composition to which the Mechanism belongs (see `specifying monitored OutputPorts
       <ObjectiveMechanism_Monitor>` for details of specification).
+    COMMENT
     ..
     * **monitor_for_learning** / *MONITOR_FOR_LEARNING* - specifies which of the Mechanism's OutputPorts is used for
       learning (see `Learning <LearningMechanism_Activation_Output>` for details of specification).
@@ -686,10 +688,10 @@ OutputPort(s):
 
 The labels specified in these dictionaries can be used to:
 
-    - specify items in the `inputs <Composition_Execution_Inputs>` and `targets <Run_Targets>` arguments of the
-      `run <Composition.run>` method of a `Composition`
+    - specify items in the `inputs <Composition_Execution_Inputs>` argument of the `run <Composition.run>` method of a
+      `Composition`, or the `targets <Composition_Targret_Inputs>` argument of its `learn <Composition.learn>` method.
     - report the values of the InputPort(s) and OutputPort(s) of a Mechanism
-    - visualize the inputs and outputs of the System's Mechanisms
+    - visualize the inputs and outputs of the Composition's Mechanisms
 
 *Specifying Label Dictionaries*
 
@@ -729,11 +731,11 @@ applied to a Mechanism with multiple InputPort, only the index zero InputPort wo
 
 *Using Label Dictionaries*
 
-When using labels to specify items in the `inputs <Composition_Execution_Inputs>` arguments of the `run <System.run>` method, labels may
-directly replace any or all of the `InputPort values <InputPort.value>` in an input specification dictionary. Keep in
-mind that each label must be specified in the `input_labels_dict <Mechanism_Base.input_labels_dict>` of the Origin
-Mechanism to which inputs are being specified, and must map to a value that would have been valid in that position of
-the input dictionary.
+When using labels to specify items in the `inputs <Composition_Execution_Inputs>` arguments of the `run
+<Composition.run>` method, labels may directly replace any or all of the `InputPort values <InputPort.value>` in an
+input specification dictionary. Keep in mind that each label must be specified in the `input_labels_dict
+<Mechanism_Base.input_labels_dict>` of the `INPUT` Mechanism to which inputs are being specified, and must map to a
+value that would have been valid in that position of the input dictionary.
 
         >>> import psyneulink as pnl
         >>> input_labels_dict = {"red": [[1, 0, 0]],
@@ -741,11 +743,10 @@ the input dictionary.
         ...                      "blue": [[0, 0, 1]]}
         >>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
         ...                             params={pnl.INPUT_LABELS_DICT: input_labels_dict})
-        >>> P = pnl.Process(pathway=[M])
-        >>> S = pnl.System(processes=[P])
+        >>> C = pnl.Composition(pathways=[M])
         >>> input_dictionary = {M: ['red', 'green', 'blue', 'red']}
         >>> # (equivalent to {M: [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]]}, which is a valid input specification)
-        >>> results = S.run(inputs=input_dictionary)
+        >>> results = C.run(inputs=input_dictionary)
 
 The same general rules apply when using labels to specify `target values <Run_Targets>` for a pathway with learning.
 With target values, however, the labels must be included in the `output_labels_dict <Mechanism_Base.output_labels_dict>`
@@ -759,16 +760,14 @@ Mechanism used to specify target values for a particular learning pathway in the
         ...                         "green": [0]}
         >>> M1 = pnl.ProcessingMechanism(params={pnl.INPUT_LABELS_DICT: input_labels_dict_M1})
         >>> M2 = pnl.ProcessingMechanism(params={pnl.OUTPUT_LABELS_DICT: output_labels_dict_M2})
-        >>> P = pnl.Process(pathway=[M1, M2],
-        ...                 learning=pnl.ENABLED,
-        ...                 learning_rate=0.25)
-        >>> S = pnl.System(processes=[P])
+        >>> C = pnl.Composition()
+        >>> C.add_backpropagation_learning_pathway(pathway=[M1, M2], learning_rate=0.25)
         >>> input_dictionary = {M1: ['red', 'green', 'green', 'red']}
         >>> # (equivalent to {M1: [[[1]], [[0]], [[0]], [[1]]]}, which is a valid input specification)
         >>> target_dictionary = {M2: ['red', 'green', 'green', 'red']}
         >>> # (equivalent to {M2: [[1], [0], [0], [1]]}, which is a valid target specification)
-        >>> results = S.run(inputs=input_dictionary,
-        ...                 targets=target_dictionary)
+        >>> results = C.learn(inputs=input_dictionary,
+        ...                   targets=target_dictionary)
 
 Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputPort(s) and
 OutputPort(s).
@@ -794,50 +793,52 @@ OutputPort(s).
 >>> M.output_ports[0].get_label(C)
 'red'
 
-Labels may be used to visualize the input and outputs of Mechanisms in a System via the **show_structure** option of the
-System's `show_graph <System.show_graph>` method with the keyword **LABELS**.
+Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
+of the Composition's `show_graph <Composition.show_graph>` method with the keyword **LABELS**.
 
-        >>> S.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
+        >>> C.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
 .. note::
 
     A given label dictionary only applies to the Mechanism to which it belongs, and a given label only applies to its
     corresponding InputPort. For example, the label 'red', may translate to different values on different InputPorts
-    of the same Mechanism, and on different Mechanisms of a System.
+    of the same Mechanism, and on different Mechanisms of a Composition.
 
 
-.. _Mechanism_Role_In_Processes_And_Systems:
+.. _Mechanism_Role_In_Compositions:
 
-*Role in Processes and Systems*
+A Mechanism can be assigned to one or more Compositions;  the values of its `parameters <Component_Parameters>`,
+including its `variable <Mechanism_Base.variable>` and `value <Mechanism_Base.value>` attributes, are maintained
+separately for each `context in which it is executed <Composition_Execution_Context>` which, by default, is distinct
+for each Composition in which it is executed;  these execution-specific values can be accessed using the parameter's
+`get <Paramter.get>` method.  A parameter's value can also be accessed using standard `dot <Parameter_Dot_Notation>`,
+which returns its most recenty assigned value, irrespective of the context (including Composition) in which it was
+assigned.
+
+*Role in Compositions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Mechanisms that are part of one or more `Processes <Process>` are assigned designations that indicate the
-`role <Process_Mechanisms>` they play in those Processes, and similarly for `role <System_Mechanisms>` they play in
-any `Systems <System>` to which they belong. These designations are listed in the Mechanism's `processes
-<Mechanism_Base.processes>` and `systems <Mechanism_Base.systems>` attributes, respectively.  Any Mechanism
-designated as `ORIGIN` receives a `MappingProjection` to its `primary InputPort <InputPort_Primary>` from the
-Process(es) to which it belongs.  Accordingly, when the Process (or System of which the Process is a part) is
-executed, those Mechanisms receive the input provided to the Process (or System).  The `output_values
-<Mechanism_Base.output_values>` of any Mechanism designated as the `TERMINAL` Mechanism for a Process is assigned as
-the `output <Process.output>` of that Process, and similarly for any System to which it belongs.
-
-.. note::
-   A Mechanism that is the `ORIGIN` or `TERMINAL` of a Process does not necessarily have the same role in the
-   System(s) to which the Mechanism or Process belongs (see `example <LearningProjection_Output_vs_Terminal_Figure>`).
-
+When a Mechanism is added to a `Composition_Addition_Methods>`, it is assigned as a `Node <Composition_Nodes>` in the
+`graph <Composition_Graph>` of that Comopsition, and one or more `NodeRoles <NodeRole>` indicating the role(s) that
+the Node play(s) in the Composition.  These can be listed by calling the `Comopsition's `get_roles_by_nodes
+<Comopsition.get_roles_by_nodes>` with the Mechanism as its argument.  The NodeRoles assigned to a Mechanism can
+be different for different Compositions.  If a Mechanism is designated as an `INPUT` Node, it receives a
+`MappingProjection` to its `primary InputPort <InputPort_Primary>` from the Composition.  When the Composition is
+`executed <Composition_Execution>`, that InputPort receives the input specified for the Mechanism in the `inputs
+<Composition_Execution_Inputs>` argument of the Composition's `execution method <Composition_Execution_Methods>`; or,
+if it is a `nested Composition <Composition_Nested>`, then the Mechanism gets its input from a Node that projects to
+it from the outer Composition.  If a Mechanism is designated as an `OUTPUT` Node, its `output_values
+<Mechanism_Base.output_values>` are included in the value returned by its `execution method
+<Composition_Execution_Methods>` and the Composition's `results <Composition.results>` attribute.
 
 .. _Mechanism_Execution:
 
 Execution
 ---------
 
-A Mechanism can be executed using its `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` methods.  This
-can be useful in testing a Mechanism and/or debugging.  However, more typically, Mechanisms are executed as part of a
-`Process <Process_Execution>` or `System <System_Execution>`.  For either of these, the Mechanism must be included in
-the `pathway <Process.pathway>` of a Process.  There, it can be specified on its own, or as the first item of a
-tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Parameters>` (see `Process Mechanisms
-<Process_Mechanisms>` for additional details about specifying a Mechanism in a Process `pathway
-<Process.pathway>`).
+A Mechanism can be executed using its `execute <Mechanism_Base.execute>` method.  This can be useful for testing a
+Mechanism and/or debugging.  However, more typically, Mechanisms are `executed as part of a Composition
+<Composition_Execution>`.
 
 .. _Mechanism_Runtime_Parameters:
 
@@ -848,12 +849,15 @@ tuple that also has an optional set of `runtime parameters <Mechanism_Runtime_Pa
    This is an advanced feature, and is generally not required for most applications.
 
 The parameters of a Mechanism are usually specified when the Mechanism is `created <Mechanism_Creation>`.  However,
-these can be overridden when it `executed <Mechanism_Base.execution>`.  This can be done in a `parameter specification
-dictionary <ParameterPort_Specification>` assigned to the **runtime_param** argument of the Mechanism's `execute
-<Mechanism_Base.execute>` method, or in a `tuple with the Mechanism <Process_Mechanism_Specification>` in the `pathway`
-of a `Process`.  Any value assigned to a parameter in a **runtime_params** dictionary will override the current value of
-the parameter for that (and *only* that) execution of the Mechanism; the value will return to its previous value
-following that execution.
+these can be overridden when it is executed.  If it is executed using the Mechanism's `execute
+<Mechanism_Base.execution>`, then parameter values can be specified in a `parameter specification dictionary
+<ParameterPort_Specification>` assigned to the **runtime_param** argument; if it is executed in a `Composition`,
+the parameter values can be specified in a dictionary assigned to the **runtime_param** argument of the Composition`s
+`execute method <Composition_Execution_Methods>`, in an entry containing the Mechanism as its key and for which the
+value is a tuple the first item of which is the parmater value, and second item is a `Condition` specifying when that
+value should be assigned. Any value assigned to a parameter in a **runtime_params** dictionary will override the
+current value of the parameter for that (and *only* that) execution of the Mechanism; the value will return to its
+previous value following that execution.
 
 The runtime parameters for a Mechanism are specified using a dictionary that contains one or more entries, each of which
 is for a parameter of the Mechanism or its  `function <Mechanism_Base.function>`, or for one of the `Mechanism's Ports
@@ -870,6 +874,81 @@ sub-dictionary that contains the parameter specifications;  parameters for Proje
 placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
 *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*; and parameters for a specific Projection can be placed in
 an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
+
+COMMENT:
+
+INTEGRATE WITH ABOVE
+
+*Runtime Parameters*
+====================
+
+Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
+specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
+parameters of Mechanisms, which is passed into the `runtime_params <Run.runtime_params>` argument of `Run`.
+
+Outer dictionary:
+    - *key* - Mechanism
+    - *value* - Runtime Parameter Specification Dictionary
+
+Runtime Parameter Specification Dictionary:
+    - *key* - keyword corresponding to a parameter of the Mechanism or its Function
+    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
+
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
+`Condition` will be assigned by default:
+
+>>> import psyneulink as pnl
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+>>> T.function.slope  # slope starts out at 1.0
+1.0
+
+>>> # During the following run, 10.0 will be used as the slope
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"slope": 10.0}})
+[ 20.]
+
+>>> T.function.slope  # After the run, T.slope resets to 1.0
+
+Otherwise, the runtime parameter value will be used on all executions of the
+`Run` during which the `Condition` is True:
+
+>>> T = pnl.TransferMechanism()
+>>> P = pnl.Process(pathway=[T])
+>>> S = pnl.System(processes=[P])
+
+>>> T.function.intercept     # intercept starts out at 0.0
+>>> T.function.slope         # slope starts out at 1.0
+
+>>> S.run(inputs={T: 2.0},
+...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
+...                           "slope": (2.0, pnl.AtTrial(3))}},
+...       num_trials=5)
+[[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
+
+The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
+example above.
+
++-------------+--------+--------+--------+--------+--------+
+|             |Trial 0 |Trial 1 |Trial 2 |Trial 3 |Trial 4 |
++=============+========+========+========+========+========+
+| Intercept   |0.0     |0.0     |5.0     |5.0     |5.0     |
++-------------+--------+--------+--------+--------+--------+
+| Slope       |1.0     |1.0     |1.0     |2.0     |0.0     |
++-------------+--------+--------+--------+--------+--------+
+| Value       |2.0     |2.0     |7.0     |9.0     |7.0     |
++-------------+--------+--------+--------+--------+--------+
+
+as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
+the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.
+
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
+
+COMMENT
 
 COMMENT:
     ADD EXAMPLE(S) HERE
@@ -949,7 +1028,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
+    MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
@@ -1136,7 +1215,7 @@ class Mechanism_Base(Mechanism):
     target_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
         in which each label (key) specifies a string associated with a value for the InputPort(s) of the
-        Mechanism if it is the `TARGET` Mechanism for a System; see `Mechanism_Labels_Dicts` and
+        Mechanism if it is the `TARGET` Mechanism for a Composition; see `Mechanism_Labels_Dicts` and
         `target mechanism <LearningMechanism_Targets>` for additional details.
     COMMENT
 
@@ -1268,21 +1347,11 @@ class Mechanism_Base(Mechanism):
         a list of all of the Mechanisms that receive `Projections <Projection>` from the Mechanism (i.e.,
         the receivers of its `efferents <Mechanism_Base.efferents>`.
 
-    processes : Dict[Process, str]
-        a dictionary of the `Processes <Process>` to which the Mechanism belongs, that designates its  `role
-        <Mechanism_Role_In_Processes_And_Systems>` in each.  The key of each entry is a Process to which the Mechansim
-        belongs, and its value is the Mechanism's `role in that Process <Process_Mechanisms>`.
-
-    systems : Dict[System, str]
-        a dictionary of the `Systems <System>` to which the Mechanism belongs, that designates its `role
-        <Mechanism_Role_In_Processes_And_Systems>` in each. The key of each entry is a System to which the Mechanism
-        belongs, and its value is the Mechanism's `role in that System <System_Mechanisms>`.
-
-    condition : Condition : None
+   condition : Condition : None
         condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
-        `System` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
-        Condition for a `Component` is used.  It can be overridden in a given `System` by assigning a Condition for
-        the Mechanism directly to a Scheduler that is then assigned to the System.
+        `Composition` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
+        Condition for a `Component` is used.  It can be overridden in a given `Composition` by assigning a Condition
+        for the Mechanism directly to a Scheduler that is then assigned to the Composition.
 
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
@@ -1330,7 +1399,7 @@ class Mechanism_Base(Mechanism):
         except:
             return []
 
-    #FIX:  WHEN CALLED BY HIGHER LEVEL OBJECTS DURING INIT (e.g., PROCESS AND SYSTEM), SHOULD USE FULL Mechanism.execute
+    #FIX:  WHEN CALLED BY COMPOSITION, SHOULD USE FULL Mechanism.execute
     # By default, init only the _execute method of Mechanism subclass objects when their execute method is called;
     #    that is, DO NOT run the full Mechanism execute Process, since some components may not yet be instantiated
     #    (such as OutputPorts)
@@ -2231,7 +2300,7 @@ class Mechanism_Base(Mechanism):
         # Limit init to scope specified by context
         if self.initialization_status == ContextFlags.INITIALIZING:
             if context.composition:
-                # Run full execute method for init of Process and System
+                # Run full execute method for init of Composition
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
