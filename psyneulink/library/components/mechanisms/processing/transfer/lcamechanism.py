@@ -589,12 +589,3 @@ class LCAMechanism(RecurrentTransferMechanism):
         )
 
         return current_input
-
-    # MODIFIED 4/28/20 NEW: [JDC]
-    def _execute(self, *args, **kwargs):
-        context = kwargs['context']
-        print(f'\nLCA value [{context.flags_string}]: ', self.parameters.value.get(context))
-        print(f'    previous_value [{context.flags_string}]: ',
-              self.integrator_function.parameters.previous_value.get(context))
-        return super()._execute(*args, **kwargs)
-    # MODIFIED 4/28/20 END

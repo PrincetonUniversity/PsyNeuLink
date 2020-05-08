@@ -1965,15 +1965,15 @@ class TestBackProp:
                            "targets": {output_autodiff:xor_targets},
                            "epochs": num_epochs}
         # RUN MODELS -----------------------------------------------------------------------------------
-            if pnl.COMPOSITION in models:
+        if pnl.COMPOSITION in models:
             result = xor_comp.learn(inputs={input_comp:xor_inputs,
-                                          target_mech:xor_targets},
-                                  num_trials=(num_epochs * xor_inputs.shape[0]),
-                                  )
+                                            target_mech:xor_targets},
+                                    num_trials=(num_epochs * xor_inputs.shape[0]),
+                                    )
         if 'AUTODIFF' in models:
             result = xor_autodiff.learn(inputs=inputs_dict)
             autodiff_weights = xor_autodiff.get_parameters()
-    
+
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
         if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
             assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))

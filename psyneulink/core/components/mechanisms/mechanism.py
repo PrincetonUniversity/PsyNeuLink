@@ -761,7 +761,7 @@ Mechanism used to specify target values for a particular learning pathway in the
         >>> M1 = pnl.ProcessingMechanism(params={pnl.INPUT_LABELS_DICT: input_labels_dict_M1})
         >>> M2 = pnl.ProcessingMechanism(params={pnl.OUTPUT_LABELS_DICT: output_labels_dict_M2})
         >>> C = pnl.Composition()
-        >>> C.add_backpropagation_learning_pathway(pathway=[M1, M2], learning_rate=0.25)
+        >>> learning_pathway = C.add_backpropagation_learning_pathway(pathway=[M1, M2], learning_rate=0.25)
         >>> input_dictionary = {M1: ['red', 'green', 'green', 'red']}
         >>> # (equivalent to {M1: [[[1]], [[0]], [[0]], [[1]]]}, which is a valid input specification)
         >>> target_dictionary = {M2: ['red', 'green', 'green', 'red']}
@@ -780,18 +780,18 @@ OutputPort(s).
       OutputPort(s) of the Mechanism, respectively. If the current value of a port does not have a corresponding
       label, then its numeric value is used instead.
 
->>> output_labels_dict = {"red": [1, 0, 0],
-...                      "green": [0, 1, 0],
-...                      "blue": [0, 0, 1]}
->>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
-...                             params={pnl.OUTPUT_LABELS_DICT: output_labels_dict})
->>> C = pnl.Composition(pathways=[P])
->>> input_dictionary =  {M: [[1, 0, 0]]}
->>> results = C.run(inputs=input_dictionary)
->>> M.get_output_labels(S)
-['red']
->>> M.output_ports[0].get_label(C)
-'red'
+        >>> output_labels_dict = {"red": [1, 0, 0],
+        ...                      "green": [0, 1, 0],
+        ...                      "blue": [0, 0, 1]}
+        >>> M = pnl.ProcessingMechanism(default_variable=[[0, 0, 0]],
+        ...                             params={pnl.OUTPUT_LABELS_DICT: output_labels_dict})
+        >>> C = pnl.Composition(pathways=[M])
+        >>> input_dictionary =  {M: [[1, 0, 0]]}
+        >>> results = C.run(inputs=input_dictionary)
+        >>> M.get_output_labels(C)
+        ['red']
+        >>> M.output_ports[0].get_label(C)
+        'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
 of the Composition's `show_graph <Composition.show_graph>` method with the keyword **LABELS**.
@@ -897,36 +897,34 @@ Runtime Parameter Specification Dictionary:
 If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
 `Condition` will be assigned by default:
 
->>> import psyneulink as pnl
+        >>> import psyneulink as pnl
 
->>> T = pnl.TransferMechanism()
->>> P = pnl.Process(pathway=[T])
->>> S = pnl.System(processes=[P])
->>> T.function.slope  # slope starts out at 1.0
-1.0
+        >>> T = pnl.TransferMechanism()
+        >>> C = pnl.Composition(pathways=[T])
+        >>> T.function.slope  # slope starts out at 1.0
+        1.0
 
->>> # During the following run, 10.0 will be used as the slope
->>> S.run(inputs={T: 2.0},
-...       runtime_params={T: {"slope": 10.0}})
-[ 20.]
+        >>> # During the following run, 10.0 will be used as the slope
+        >>> C.run(inputs={T: 2.0},
+        ...       runtime_params={T: {"slope": 10.0}})
+        [ 20.]
 
->>> T.function.slope  # After the run, T.slope resets to 1.0
+        >>> T.function.slope  # After the run, T.slope resets to 1.0
 
 Otherwise, the runtime parameter value will be used on all executions of the
 `Run` during which the `Condition` is True:
 
->>> T = pnl.TransferMechanism()
->>> P = pnl.Process(pathway=[T])
->>> S = pnl.System(processes=[P])
+        >>> T = pnl.TransferMechanism()
+        >>> C = pnl.Composition(pathways=[T])
 
->>> T.function.intercept     # intercept starts out at 0.0
->>> T.function.slope         # slope starts out at 1.0
+        >>> T.function.intercept     # intercept starts out at 0.0
+        >>> T.function.slope         # slope starts out at 1.0
 
->>> S.run(inputs={T: 2.0},
-...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
-...                           "slope": (2.0, pnl.AtTrial(3))}},
-...       num_trials=5)
-[[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
+        >>> C.run(inputs={T: 2.0},
+        ...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
+        ...                           "slope": (2.0, pnl.AtTrial(3))}},
+        ...       num_trials=5)
+        [[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
 
 The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
 example above.
