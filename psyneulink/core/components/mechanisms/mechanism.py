@@ -907,9 +907,10 @@ If a runtime parameter is meant to be used throughout the `Run`, then the `Condi
         >>> # During the following run, 10.0 will be used as the slope
         >>> C.run(inputs={T: 2.0},
         ...       runtime_params={T: {"slope": 10.0}})
-        [ 20.]
+        [array([20.])]
 
         >>> T.function.slope  # After the run, T.slope resets to 1.0
+        1.0
 
 Otherwise, the runtime parameter value will be used on all executions of the
 `Run` during which the `Condition` is True:
@@ -918,13 +919,15 @@ Otherwise, the runtime parameter value will be used on all executions of the
         >>> C = pnl.Composition(pathways=[T])
 
         >>> T.function.intercept     # intercept starts out at 0.0
+        0.0
         >>> T.function.slope         # slope starts out at 1.0
+        1.0
 
         >>> C.run(inputs={T: 2.0},
         ...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
         ...                           "slope": (2.0, pnl.AtTrial(3))}},
         ...       num_trials=5)
-        [[np.array([2.])], [np.array([2.])], [np.array([7.])], [np.array([9.])], [np.array([7.])]]
+        [array([7.])]
 
 The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
 example above.
