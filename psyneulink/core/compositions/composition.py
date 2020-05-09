@@ -8078,6 +8078,68 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._animation.append(image)
 
+    def _infer_target_nodes(self, targets: dict):
+        """
+        Maps targets onto target mechanisms (as needed by learning)
+
+        Returns
+        ---------
+        A dict mapping TargetMechanisms -> target values
+        """
+        ret = {}
+        for node, values in targets.items():
+            if NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node):
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
+                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+                target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self.get_roles_by_node(t) and NodeRole.LEARNING in self.get_roles_by_node(t))]
+
+                if len(target_nodes) != 1:
+                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer learning target node from output node {node}!")
+
+                ret[target_nodes[0]] = values
+            else:
+                ret[node] = values
+        return ret
+
+    def _parse_learning_spec(self, inputs, targets):
+        """
+        Converts learning inputs and targets to a standardized form
+
+        Returns
+        ---------
+        Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
+        """
+        # 1) Convert from key-value representation of values into separated representation
+        if 'targets' in inputs:
+            targets = inputs['targets'].copy()
+
+        if 'inputs' in inputs:
+            inputs = inputs['inputs'].copy()
+
+        # 2) Convert output node keys -> target node keys (learning always needs target nodes!)
+        def _recursive_update(d, u):
+            """
+            Recursively calls update on dictionaries, which prevents deletion of keys
+            """
+            for key, val in u.items():
+                if isinstance(val, collections.abc.Mapping):
+                    d[key] = _recursive_update(d.get(key, {}), val)
+                else:
+                    d[key] = val
+            return d
+
+        if targets is not None:
+            targets = self._infer_target_nodes(targets)
+            inputs = _recursive_update(inputs, targets)
+
+        # 3) Resize inputs to be of the form [[[]]],
+        # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
+        inputs, num_trials = self._parse_dict(inputs)
+
+        return inputs, num_trials
+
     def _parse_generator_function(self, inputs):
         # If a generator function was provided as input, resolve it to a generator and
         # pass to _parse_generator
