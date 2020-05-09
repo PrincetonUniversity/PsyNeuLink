@@ -788,7 +788,7 @@ class TestRecurrentTransferMechanismInComposition:
         T = TransferMechanism(
             size=5,
             function=Linear)
-        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)        
+        c = Composition(pathways=[R, T], prefs=TestRecurrentTransferMechanismInComposition.simple_prefs)
         c.run(inputs={R: [[1, 2, 3, -0.5]]})
         np.testing.assert_allclose(R.parameters.value.get(c), [[1., 2., 3., -0.5]])
         np.testing.assert_allclose(T.parameters.value.get(c), [[5.5, 5.5, 5.5, 5.5, 5.5]])
