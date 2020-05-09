@@ -147,10 +147,8 @@ class TestCompositionRuntimeParams:
         T2 = TransferMechanism()
         C = Composition(pathways=[T1,T2])
 
-        # T2.function.parameters.slope.set(3, C.default_execution_id)
-        # T1.function.slope = 3
-        # T2.input_port.function.scale = 20
-        # runtime param used for noise
+        T1.function.slope = 5
+        T2.input_port.function.scale = 4
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {'slope': 3},                         # Mechanism's function (Linear) parameter
@@ -164,16 +162,19 @@ class TestCompositionRuntimeParams:
               })
         assert T2.parameters.value.get(C.default_execution_id) == [1201.5]
 
-        # all parameters restored to default
-        assert T1.function.slope == 1.0
-        assert T1.parameter_ports['slope'].parameters.value.get(C) == 1.0
-        assert T2.input_port.function.scale == 1.0
+        # all parameters restored to previous values (assigned or defaults)
+        assert T1.function.parameters.slope.get(C) == 5.0
+        assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
+        assert T2.input_port.function.scale == 4.0
+        assert T2.input_port.function.parameters.scale.get(C) == 4.0
+        assert T2.input_port.function.weights == None
+        assert T2.input_port.function.parameters.weights.get(C) == None
 
-        # previous runtime_param for noise not used again
         C.run(inputs={T1: 2.0}, )
-        assert T1.function.slope == 1.0
-        assert T1.parameter_ports['slope'].parameters.value.get(C) == 1.0
-        assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 1.0
+        assert C.results == [[[1201.5]], [[40.]]]
+        assert T1.function.slope == 5.0
+        assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
+        assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 4.0
 
     def test_composition_run_mechanism_runtime_param_with_condition(self):
 
