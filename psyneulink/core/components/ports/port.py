@@ -1858,9 +1858,9 @@ class Port_Base(Port):
         # Get Port-specific param_specs
         try:
             # Get Port params
-            port_runtime_params = params[self.paramsType]
+            runtime_params = params[self.paramsType]
         except (KeyError, TypeError):
-            port_runtime_params = {}
+            runtime_params = {}
         except (AttributeError):
             raise PortError("PROGRAM ERROR: paramsType not specified for {self.name}.")
 
@@ -1874,11 +1874,11 @@ class Port_Base(Port):
 
         # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------
 
-        # Get type-specific params from PROJECTION_PARAMS
-        mapping_params = _merge_param_dicts(port_runtime_params, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        learning_projection_params = _merge_param_dicts(port_runtime_params, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        control_projection_params = _merge_param_dicts(port_runtime_params, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        gating_projection_params = _merge_param_dicts(port_runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        # Generate dicts merging general (PROJECTION_PARAMS) with specific for each type of Projection
+        mapping_params = _merge_param_dicts(runtime_params, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        learning_projection_params = _merge_param_dicts(runtime_params, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        control_projection_params = _merge_param_dicts(runtime_params, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
 
@@ -1912,15 +1912,16 @@ class Port_Base(Port):
             if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
-            # Merge with relevant projection type-specific params
+            # Get any projection-specific param dicts from runtime_params,
+            #     and merge in type-specific and general ones gathered above
             if isinstance(projection, MappingProjection):
-                projection_params = _merge_param_dicts(port_runtime_params, projection.name, mapping_params, )
+                projection_params = _merge_param_dicts(runtime_params, projection.name, mapping_params, )
             elif isinstance(projection, LearningProjection):
-                projection_params = _merge_param_dicts(port_runtime_params, projection.name, learning_projection_params)
+                projection_params = _merge_param_dicts(runtime_params, projection.name, learning_projection_params)
             elif isinstance(projection, ControlProjection):
-                projection_params = _merge_param_dicts(port_runtime_params, projection.name, control_projection_params)
+                projection_params = _merge_param_dicts(runtime_params, projection.name, control_projection_params)
             elif isinstance(projection, GatingProjection):
-                projection_params = _merge_param_dicts(port_runtime_params, projection.name, gating_projection_params)
+                projection_params = _merge_param_dicts(runtime_params, projection.name, gating_projection_params)
             if not projection_params:
                 projection_params = None
 
@@ -2041,10 +2042,10 @@ class Port_Base(Port):
             # Set modulatory parameter's value
             param._set(mod_val, context)
 
-            if not FUNCTION_PARAMS in port_runtime_params:
-                port_runtime_params[FUNCTION_PARAMS] = {mod_param_name: mod_val}
+            if not FUNCTION_PARAMS in runtime_params:
+                runtime_params[FUNCTION_PARAMS] = {mod_param_name: mod_val}
             else:
-                port_runtime_params[FUNCTION_PARAMS].update({mod_param_name: mod_val})
+                runtime_params[FUNCTION_PARAMS].update({mod_param_name: mod_val})
 
         # CALL PORT'S function TO GET ITS VALUE  ----------------------------------------------------------------------
         # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS
@@ -2053,16 +2054,43 @@ class Port_Base(Port):
         # if trying to truly functionalize functions, as they could be passed in as proper arguments
         # (e.g. runtime_params may be {'slope': 2}, which could be passed as **runtime_params to a Linear function
         # with parameter slope)
-        try:
-            # pass only function params (which implement the effects of any ModulatoryProjections)
-            function_params = port_runtime_params[FUNCTION_PARAMS]
-        except (KeyError, TypeError):
-            function_params = None
+        # # MODIFIED 5/8/20 OLD:
+        # try:
+        #     # pass only function params (which implement the effects of any ModulatoryProjections)
+        #     function_params = runtime_params[FUNCTION_PARAMS]
+        # except (KeyError, TypeError):
+        #     function_params = None
+        # MODIFIED 5/8/20 NEW:
+        # Get port's own params and any for its function
+        port_params = {k: v for k,v in runtime_params.items()
+                       if k in self.parameters.names() + self.function.parameters.names()}
+        if FUNCTION_PARAMS in runtime_params:
+            port_params.update(runtime_params[FUNCTION_PARAMS])
+        # MODIFIED 5/8/20 END
+        # FIX: TRY POPPING FROM DICTS
+        #      GENERATE ERRORS FOR UNRECOGNIZING RUNTIME PARAMS
 
+        # # MODIFIED 5/8/20 OLD:
+        # if (
+        #     len(self.all_afferents) == 0
+        #     and self.function._is_identity(context)
+        #     and function_params is None
+        # ):
+        #     variable = self._parse_function_variable(self._get_fallback_variable(context))
+        #     self.parameters.variable._set(variable, context)
+        #     # below conversion really should not be happening ultimately, but it is
+        #     # in _validate_variable. Should be removed eventually
+        #     variable = convert_to_np_array(variable, 1)
+        #     self.parameters.value._set(variable, context)
+        #     self.most_recent_context = context
+        #     self.function.most_recent_context = context
+        # else:
+        #     self.execute(context=context, runtime_params=function_params)
+        # MODIFIED 5/8/20 NEW:
         if (
             len(self.all_afferents) == 0
             and self.function._is_identity(context)
-            and function_params is None
+            and port_params is None
         ):
             variable = self._parse_function_variable(self._get_fallback_variable(context))
             self.parameters.variable._set(variable, context)
@@ -2073,7 +2101,8 @@ class Port_Base(Port):
             self.most_recent_context = context
             self.function.most_recent_context = context
         else:
-            self.execute(context=context, runtime_params=function_params)
+            self.execute(context=context, runtime_params=port_params)
+        # MODIFIED 5/8/20 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:

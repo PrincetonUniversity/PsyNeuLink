@@ -153,11 +153,16 @@ class TestCompositionRuntimeParams:
         # runtime param used for noise
         C.run(inputs={T1: 2.0},
               runtime_params={
-                  T1: {'slope': 3},
-                  T2: {INPUT_PORT_PARAMS: {'weight':4,
-                                           FUNCTION_PARAMS:{'scale':20}}}
+                  T1: {'slope': 3},                         # Mechanism's function (Linear) parameter
+                  T2: {'noise': 0.5,                        # Mechanism's parameter
+                      'intercept': 1,                       # Mechanism's function parameter
+                       INPUT_PORT_PARAMS: {
+                           'weight':5,                      # InputPort's parameter
+                           'scale':20,                      # InputPort's function (LinearCombination) parameter
+                           FUNCTION_PARAMS:{'weights':10}}  # InputPort's function (LinearCombination) parameter
+                       }
               })
-        assert T2.parameters.value.get(C.default_execution_id) == [120.0]
+        assert T2.parameters.value.get(C.default_execution_id) == [1201.5]
 
         # all parameters restored to default
         assert T1.function.slope == 1.0
