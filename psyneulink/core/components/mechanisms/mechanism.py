@@ -236,8 +236,8 @@ itself (see `DDM <DDM_Creation>` for an example).
 COMMENT:
 .. _Mechanism_Function_Attribute:
 
-`function <Mechanism_Base.function>` Attribute
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+`function <Mechanism_Base.function>` *attribute*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `Function <Function>` assigned as the primary function of a Mechanism is assigned to the Mechanism's
 `function <Component.function>` attribute, and its `function <Function_Base.function>` is assigned
@@ -332,8 +332,8 @@ COMMENT
 
 .. _Mechanism_Variable_and_Value:
 
-`variable <Mechanism_Base.variable>` and `value <Mechanism_Base.value>` Attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+`variable <Mechanism_Base.variable>` *and* `value <Mechanism_Base.value>` *attributes*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The input to a Mechanism's `function <Mechanism_Base.function>` is provided by the Mechanism's `variable
 <Mechanism_Base.variable>` attribute.  This is an ndarray that is at least 2d, with one item of its outermost
@@ -553,8 +553,8 @@ in its `path_afferents <Port.path_afferents>` attribute.  If the Mechanism is an
 
 .. _Mechanism_ParameterPorts:
 
-ParameterPorts and Parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*ParameterPorts and Parameters*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `ParameterPorts <ParameterPort>` provide the value for each parameter of a Mechanism and its `function
 <Mechanism_Base.function>`.  One ParameterPort is assigned to each of the parameters of the Mechanism and/or its
@@ -622,8 +622,8 @@ the Mechanism`s `value <Mechanism_Base.value>` to which they refer -- see `Outpu
 
 .. _Mechanism_Constructor_Arguments:
 
-Additional Constructor Arguments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Additional Constructor Arguments*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In addition to the `standard attributes <Component_Structure>` of any `Component <Component>`, Mechanisms have a set of
 Mechanism-specific attributes (listed below). These can be specified in arguments of the Mechanism's constructor,
@@ -649,8 +649,8 @@ attributes are listed below by their argument names / keywords, along with a des
 
 .. _Mechanism_Convenience_Properties:
 
-Projection Convenience Properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Projection Convenience Properties*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A Mechanism also has several convenience properties, listed below, that list its `Projections <Projection>` and the
 Mechanisms that send/receive these:
@@ -672,8 +672,8 @@ appending ``.names`` to the property.  For examples, the names of all of the Mec
 
 .. _Mechanism_Labels_Dicts:
 
-Value Label Dictionaries
-^^^^^^^^^^^^^^^^^^^^^^^^
+*Value Label Dictionaries*
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *Overview*
 
@@ -868,36 +868,34 @@ Mechanism's `defaults <Component.defaults>` attribute.
 
 .. _Mechanism_Runtime_Param_Specification:
 
-COMMENT:
-     WHAT ABOUT ASSIGNMENT IN EXECUTE METHOD OF MECHANISM;  DOES IT STILL NEED OUTER DICT?
-     WHAT ABOUT PORT DICTS??
-COMMENT
+*Assigning runtime values to parameters of a Mechanism and its function*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Runtime parameter values are specified in the **runtime_params** argument of a Mechanism's `execute
-<Mechanism_Base.execution>` method using a dictionary, in which each entry contains the name of the
+<Mechanism_Base.execute>` method using a dictionary, in which each entry contains the name of the
 of a parameter (as the key) and the value to assign to it, as in the following example::
 
         >>> T = pnl.TransferMechanism(function=Linear)
         >>> T.function.slope  #doctest: +SKIP
-        1.0        # Default for slope
+        1.0   # Default for slope
         >>> T.clip #doctest: +SKIP
-        None       # Default for clip is None
+        None  # Default for clip is None
         >>> T.execute(2.0,
         ...          runtime_params={"slope": 3.0,
         ...                           "clip": (0,5)}) #doctest: +SKIP
-        array([[5.]])        # = 2 (input) * 3 (slope) = 6, but clipped at 5
+        array([[5.]])  # = 2 (input) * 3 (slope) = 6, but clipped at 5
         >>> T.function.slope #doctest: +SKIP
-        1.0                  # slope is restored 1.0
-        >>> T.clip           #doctest: +SKIP
-        None                 # clip is restored to None
+        1.0   # slope is restored 1.0
+        >>> T.clip     #doctest: +SKIP
+        None  # clip is restored to None
 
+Note that even though ``slope`` is a paramter of the Mechanism's `function <Mechanism_Base.function>` (in this case,
+`Linear`), the function itself does not have to be specified in the key of the runtime_params dictionary (although it
+does have to be used when accessing or assigning the parameter's value using `dot notation <Parameter_Dot_Notation>`,
+as shown above).
 
-Note that even though ``slope`` is paramter of the Mechanism's `function <Mechanism_Base.function>` (in this case,
-`Linear`), the function itself does not have to be specified in the key of the runtime_params dictionary (although,
-as shown above, it does have to be used when accessing or assigning the parameter's value from the Mechanism).
-
-If a parameter value is assigned before the execution, it is restored to that value after the execution
-(i.e., *not* to its default), as shown below::
+If a parameter is assigned a new value before the execution, that value is restored after the execution;  that is,
+the parameter is assigned its previous value and *not* its default, as shown below::
 
         >>> T.function.slope = 10
         >>> T.clip = (0,3)
@@ -908,33 +906,39 @@ If a parameter value is assigned before the execution, it is restored to that va
         >>> T.execute(3.0,
         ...          runtime_params={"slope": 4.0,
         ...                           "clip": (0,4)}) #doctest: +SKIP
-        array([[4.]])        # = 3 (input) * 4 (slope) = 12, but clipped at 4
+        array([[4.]])  # = 3 (input) * 4 (slope) = 12, but clipped at 4
         >>> T.function.slope #doctest: +SKIP
-        10                   # slope is restored 10.0, its previously assigned value
-        >>> T.clip           # clip is restored to (0,3), its previously assigned value
-        (0, 3)
-
-
-COMMENT:
+        10      # slope is restored 10.0, its previously assigned value
+        >>> T.clip #doctest: +SKIP
+        (0, 3)  # clip is restored to (0,3), its previously assigned value
 
 .. _Mechanism_Runtime_Port_and_Projection_Param_Specification:
 
-Entries can also be included for the `Ports <Mechanism_Ports>` of the Mechanism.
+*Assigning runtime values to parameters of a Mechanism's Ports and Projections*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-<Mechanism_Base.function>` use the standard format for `parameter specification dictionaries
-<ParameterPort_Specification>`.  Entries for the Mechanism's Ports can be used to specify runtime parameters of
-the corresponding Port, its `function <Port_Base.function>`, or any of the `Projections to that port
-<Port_Projections>`. Each entry for the parameters of a Port uses a key corresponding to the type of Port
-(*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a value that is a sub-dictionary
-containing a dictionary with the runtime parameter specifications for all Ports of that type. Within that
-sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use the
-standard format for a `parameter specification dictionary <ParameterPort_Specification>`.  Parameters for all of
-the `Port's Projections <Port_Projections>` can be specified in an entry with the key *PROJECTION_PARAMS*, and a
-sub-dictionary that contains the parameter specifications; parameters for Projections of a particular type can be
-placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
-*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*); and parameters for a specific Projection can be placed
-in an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
+Runtime values can also be assigned to the parameters of a Mechanism's `Port <Port>` and its `Projections <Projection>`
+These are also specified as entries in the **runtime_params** dict,
 
+*Ports*.  Each entry for the parameters of a Port (and/or those of its `function <Port_Base.function>`) uses a key
+corresponding to the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a value
+that is a sub-dictionary containing a dictionary with the runtime parameter specifications for all Ports of that
+type. Within that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>`
+use the standard format for a `parameter specification dictionary <ParameterPort_Specification>`.
+
+COMMENT:
+   EXAMPLES HERE
+COMMENT
+
+*Projections*. Parameters for any of a `Port's Projections <Port_Projections>` can be specified in an entry with
+the key *PROJECTION_PARAMS*, and a sub-dictionary that contains the parameter specifications; parameters for
+Projections of a particular type can be placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*,
+*LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*); and parameters for a
+specific Projection can be placed in an entry with a key specifying the name of the Projection and a sub-dictionary
+with the specifications.
+
+COMMENT:
+   EXAMPLES HERE
 COMMENT
 
 .. note::
@@ -1117,6 +1121,7 @@ class Mechanism_Base(Mechanism):
               a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
+
     Arguments
     ---------
 
@@ -1213,14 +1218,10 @@ class Mechanism_Base(Mechanism):
         <Mechanism_Base.function>` are also accessible as (and can be modified using) attributes of the Mechanism
         (see `Mechanism_ParameterPorts`).
 
-    COMMENT:
-       MOVE function to Component docstring
-    COMMENT
-
     function : Function, function or method
         the primary function for the Mechanism, called when it is `executed <Mechanism_Execution>`.  It takes the
         Mechanism's `variable <Mechanism_Base.variable>` attribute as its input, and its result is assigned to the
-        Mechanism's `value <Mechanism_Base.value>` attribute.
+        Mechanism's `value <Mechanism_Base.value>` attribute (see `Component_Function` for additional details).
 
     function_params : Dict[str, value]
         contains the parameters for the Mechanism's `function <Mechanism_Base.function>`.  The key of each entry is the
@@ -2256,14 +2257,12 @@ class Mechanism_Base(Mechanism):
             specification formats).
 
         # FIX: 5/8/20 [JDC]
-        runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
-            a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
-            its function. Any value assigned to a parameter will override the current value of that parameter for *only
-            the current* execution of the Mechanism. When runtime_params are passed down from the `Composition` level
-            `Run` method, parameters reset to their original values immediately following the execution during which
-            runtime_params were used. When `execute <Mechanism.execute>` is called directly, (such as for debugging),
-            runtime_params exhibit "lazy updating": parameter values will not reset to their original values until the
-            beginning of the next execution.
+        runtime_params : [Dict[str, Dict[str, Dict[str, value]]]] : None
+            a dictionary used to specify values for `Paramters <Parameter>` of the Mechanism or those of any of its
+            `Components <Component>`, including its `function <Mechanism_Base.function>`, `Ports <Mechanism_Ports>`
+            and/or their `Projections <Port_Projections>`, that will temporarily override their current value
+            for the current execution, and then be restored to their previous value (see
+            `Mechanism_Runtime_Param_Specification` for details of specification).
 
         Returns
         -------
