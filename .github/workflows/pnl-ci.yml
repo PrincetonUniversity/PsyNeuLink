@@ -73,6 +73,19 @@ jobs:
         pip install -e .[dev]
         pip install --user git+https://github.com/benureau/leabra.git@master
 
+    - name: Cleanup old wheels
+      shell: bash
+      run: |
+        pip cache info
+        INSTALLED=`pip list | sed 's/-/_/g' | sed 's/  */-/' | tail -n+3`
+        CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
+        for P in $CACHED; do
+          # Remove cached and not installed
+          if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
+            pip cache remove -v $P
+          fi
+        done
+
     - name: Lint with flake8
       shell: bash
       run: |
