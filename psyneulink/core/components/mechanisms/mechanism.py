@@ -875,49 +875,51 @@ COMMENT
 
 Runtime parameter values are specified in the **runtime_params** argument of a Mechanism's `execute
 <Mechanism_Base.execution>` method using a dictionary, in which each entry contains the name of the
-of a parameter (as the key) and the value to assign to it, as in the following example:
+of a parameter (as the key) and the value to assign to it, as in the following example::
 
-        >>> T = pnl.ProcessingMechanism()
-        >>> T.function.intercept
-        0.0                       # intercept starts out at 0.0
+        >>> T = pnl.TransferMechanism(function=Linear)
         >>> T.function.slope
-        1.0                       # slope starts out at 1.0
-
+        1.0                       # Default for `slope <Linear.slope>` parameter of `Linear` Function
+        >>> T.clip
+        None                      # Default for ``clip``
         >>> T.execute(2.0,
-        ...          runtime_params={"intercept": 5.0,
-        ...                          "slope": 2.0})
-        [[9.]]                    # = 2 (input) * 2 (slope) + 5 (intercept)
-        >>> T.function.intercept)
-        0.0                       # intercept is restored to 0.0
+        ...          runtime_params={"slope": 3.0,
+        ...                           "clip": (0,5)})
+        [[5.]]                    # = 2 (input) * 3 (slope) = 6, but clipped at 5
+        >>> T.function.function.slope
+        1.0                       # ``slope`` is restored 1.0
+        >>> T.function.clip
+        None                       # clip is restored to None
+
+Note that even though ``slope`` is paramter of the Mechanism's `function <Mechanism_Base.function>` (in this case,
+`Linear`), the function itself does not have to be specified in the key of the runtime_params dictionary (although,
+as shown above, it does have to be used when accessing or assigning the parameter's value from the Mechanism).
+
+If a parameter value is assigned before the execution, it is restored to that value after the execution
+(i.e., *not* to its default), as shown below::
+
+        >>> T.function.slope = 10
+        >>> T.clip = (0,3)
         >>> T.function.slope
-        1.0                       # slope starts out at 1.0
+        10.0
+        >>> T.clip
+        (0,3)
+        >>> T.execute(3.0,
+        ...          runtime_params={"slope": 4.0,
+        ...                           "clip": (0,4)})
+        [[4.]]                    # = 3 (input) * 4 (slope) = 12, but clipped at 4
+        >>> T.function.slope
+        10.0                      # ``slope`` is restored 10.0, its previously assigned value
+        >>> T.clip
+        (0,3)                    # clip is restored to (0,3), its previously assigned value
 
-
-in the dictionary must be a
-Mechanism,
-and the value a runtime parameter
-specification dictionary, in which the key is the name of the parameter and the value a tuple, the first item of which
-is the value to assign to the parameter, and the second item the `Condition` under which it should be assigned, as
-follows:
-
-.. _Runtime_Parameter_Specification_Dictionary:
-
-    * Dictionary assigned to **runtime_parms** argument: {<Mechanism name>: runtime parameter specification dict}
-
-    * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
-      - *key* - name of a `Parameter` of the Mechanism or its `function <Mechanism_Base.function>`
-      - *value* - tuple, first item of which is the runtime parameter value, and the second the `Condition` under
-        which it should be assigned.
-
-
-.. note::
-    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
-    value.
 
 COMMENT:
 
-Entries can also
-be included for `Ports <Mechanism_Ports>` of the Mechanism. Entries for parameters of the Mechanism or its `function
+.. _Mechanism_Runtime_Port_and_Projection_Param_Specification:
+
+Entries can also be included for the `Ports <Mechanism_Ports>` of the Mechanism.
+
 <Mechanism_Base.function>` use the standard format for `parameter specification dictionaries
 <ParameterPort_Specification>`.  Entries for the Mechanism's Ports can be used to specify runtime parameters of
 the corresponding Port, its `function <Port_Base.function>`, or any of the `Projections to that port
@@ -931,7 +933,12 @@ sub-dictionary that contains the parameter specifications; parameters for Projec
 placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
 *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*); and parameters for a specific Projection can be placed
 in an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
+
 COMMENT
+
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
 
 COMMENT:
 ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??
@@ -2247,6 +2254,7 @@ class Mechanism_Base(Mechanism):
             corresponding InputPort (see `Run Inputs <Composition_Execution_Inputs>` for details of input
             specification formats).
 
+        # FIX: 5/8/20 [JDC]
         runtime_params : Optional[Dict[str, Dict[str, Dict[str, value]]]]:
             a dictionary that can include any of the parameters used as arguments to instantiate the Mechanism or
             its function. Any value assigned to a parameter will override the current value of that parameter for *only
@@ -2283,11 +2291,9 @@ class Mechanism_Base(Mechanism):
                 pass
             # Only call subclass' _execute method and then return (do not complete the rest of this method)
             elif self.initMethod == INIT_EXECUTE_METHOD_ONLY:
-                return_value = self._execute(
-                    variable=self.defaults.variable,
-                    context=context,
-                    runtime_params=runtime_params,
-                )
+                return_value = self._execute(variable=self.defaults.variable,
+                                             context=context,
+                                             runtime_params=runtime_params)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2312,11 +2318,9 @@ class Mechanism_Base(Mechanism):
 
             # Call only subclass' function during initialization (not its full _execute method nor rest of this method)
             elif self.initMethod == INIT_FUNCTION_METHOD_ONLY:
-                return_value = super()._execute(
-                    variable=self.defaults.variable,
-                    context=context,
-                    runtime_params=runtime_params,
-                )
+                return_value = super()._execute(variable=self.defaults.variable,
+                                                context=context,
+                                                runtime_params=runtime_params)
                 return np.atleast_2d(return_value)
 
         # EXECUTE MECHANISM
@@ -2327,14 +2331,17 @@ class Mechanism_Base(Mechanism):
 
             # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
             # VALIDATE InputPort(S) AND RUNTIME PARAMS
-            self._check_args(params=runtime_params, target_set=runtime_params, context=context)
+            self._check_args(params=runtime_params,
+                             target_set=runtime_params,
+                             context=context)
 
             # UPDATE VARIABLE and InputPort(s)
             # Executing or simulating Composition, so get input by updating input_ports
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
-                variable = self._update_input_ports(context=context, runtime_params=runtime_params)
+                variable = self._update_input_ports(runtime_params=runtime_params,
+                                                    context=context)
 
             # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
             else:
@@ -2353,7 +2360,8 @@ class Mechanism_Base(Mechanism):
             self.parameters.variable._set(variable, context=context)
 
             # UPDATE PARAMETERPORT(S)
-            self._update_parameter_ports(context=context, runtime_params=runtime_params)
+            self._update_parameter_ports(runtime_params=runtime_params,
+                                         context=context)
 
             # EXECUTE MECHNISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
@@ -2361,8 +2369,8 @@ class Mechanism_Base(Mechanism):
             #                      to avoid multiple calls to (and potential log entries for) self.value property
 
             value = self._execute(variable=variable,
-                                  context=context,
-                                  runtime_params=runtime_params)
+                                  runtime_params=runtime_params,
+                                  context=context)
 
             # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
             #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2388,7 +2396,8 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(context=context, runtime_params=runtime_params)
+            self._update_output_ports(runtime_params=runtime_params,
+                                      context=context)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
@@ -2454,13 +2463,15 @@ class Mechanism_Base(Mechanism):
 
         for i in range(len(self.input_ports)):
             port= self.input_ports[i]
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params,
+                         context=context)
         return np.array(self.get_input_values(context))
 
     def _update_parameter_ports(self, context=None, runtime_params=None):
 
         for port in self._parameter_ports:
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params,
+                         context=context)
 
     def _get_parameter_port_deferred_init_control_specs(self):
         # FIX: 9/14/19 - THIS ASSUMES THAT ONLY CONTROLPROJECTIONS RELEVANT TO COMPOSITION ARE in DEFERRED INIT;
@@ -2487,7 +2498,8 @@ class Mechanism_Base(Mechanism):
         """
         for i in range(len(self.output_ports)):
             port = self.output_ports[i]
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params,
+                         context=context)
 
     def initialize(self, value, context=None):
         """Assign an initial value to the Mechanism's `value <Mechanism_Base.value>` attribute and update its

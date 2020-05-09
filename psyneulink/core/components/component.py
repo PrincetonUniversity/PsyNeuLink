@@ -2605,18 +2605,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.most_recent_context = context
 
-        # MODIFIED 5/8/20 NEW: [JDC]
-        #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
-        #       ?REPLACE RESET IN check_args
-        # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
-                try:
-                    prev_val = getattr(self.parameters, param).get_previous(context)
-                    self._set_parameter_value(param, prev_val, context)
-                except AttributeError:
-                    prev_val = getattr(self.function.parameters, param).get_previous(context)
-                    self.function._set_parameter_value(param, prev_val, context)
+        # # MODIFIED 5/8/20 NEW: [JDC]
+        # #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
+        # #       ?REPLACE RESET IN check_args
+        # # Restore runtime_params to previous value
+        # if runtime_params:
+        #     for param in runtime_params:
+        #         try:
+        #             prev_val = getattr(self.parameters, param).get_previous(context)
+        #             self._set_parameter_value(param, prev_val, context)
+        #         except AttributeError:
+        #             prev_val = getattr(self.function.parameters, param).get_previous(context)
+        #             self.function._set_parameter_value(param, prev_val, context)
         # MODIFIED 5/8/20 END
 
         return value
