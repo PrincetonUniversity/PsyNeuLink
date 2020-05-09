@@ -95,13 +95,12 @@ encoder network, the first layer of which takes an an array of length 5 as its i
 `Logistic` function::
 
     # Construct the Mechanisms:
-    input_layer = ProcessingMechanism(size=5)
-    hidden_layer = ProcessingMechanism(size=2, function=Logistic)
-    output_layer = ProcessingMechanism(size=5, function=Logistic)
+    input_layer = ProcessingMechanism(size=5, name='Input')
+    hidden_layer = ProcessingMechanism(size=2, function=Logistic, name='hidden')
+    output_layer = ProcessingMechanism(size=5, function=Logistic, name='output')
 
     # Construct the Composition:
-    my_encoder = Composition()
-    my_encoder.add_linear_processing_pathway([input_layer, hidden_layer, output_layer])
+    my_encoder = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
 with an appropriately-sized input array, for example::
@@ -135,10 +134,11 @@ the first Mechanism in the pathway (in this case, the input_layer)::
     my_encoder.run([1, 4.7, 3.2, 6, 2])
     [array([0.88079707, 0.88079707, 0.88079707, 0.88079707, 0.88079707])]
 
-The order in which Mechanisms appear in the list of the `add_linear_pathway <Composition.add_linear_pathway>`
-method determines their order in the pathway.  More complicated arrangements can be created by adding nodes
-individually using a Composition's `add_nodes <Composition.add_nodes>` method, and/or by creating intersecting
-pathways, as shown in some of the examples further below.
+The order in which Mechanisms appear in the list of the **pathways** argument of the Composition's constructor
+determines their order in the pathway.  More complicated arrangements can be created by using one of the Compositions
+`pathway addition methods <Composition_Pathway_Addition_Methods>`, by adding nodes individually using a
+Composition's `add_nodes <Composition.add_nodes>` method, and/or by creating intersecting pathways, as shown in some
+of the examples further below.
 
 PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no `Projections
 <Projection>` were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
@@ -154,8 +154,10 @@ matrix, simply by inserting them in between the Mechanisms in the pathway::
     my_encoder.add_linear_processing_pathway([input_layer, my_projection, hidden_layer, output_layer])
 
 The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
-which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  The matrix itself could also
-have been inserted directly, as follows::
+which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  Note that here, one of the
+Composition's `pathway addition methods <Composition_Pathway_Addition_Methods>` is used to create the pathway, as an
+alternative to specifying it in the **pathways** argument of the constructor (as shown in the initial example). The
+Projection's matrix itself could also have been inserted directly, as follows::
 
     my_encoder.add_linear_processing_pathway([input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
 
