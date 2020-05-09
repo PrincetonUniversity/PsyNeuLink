@@ -2048,49 +2048,19 @@ class Port_Base(Port):
                 runtime_params[FUNCTION_PARAMS].update({mod_param_name: mod_val})
 
         # CALL PORT'S function TO GET ITS VALUE  ----------------------------------------------------------------------
-        # FIX: THIS IS INEFFICIENT;  SHOULD REPLACE WITH IF STATEMENTS
-        # KDM 7/26/18: even though we pass these as runtime_params, those don't actually get used by the function; these
-        # values instead apparently are being set to attributes elsewhere. Though, these runtime_params could be helpful
-        # if trying to truly functionalize functions, as they could be passed in as proper arguments
-        # (e.g. runtime_params may be {'slope': 2}, which could be passed as **runtime_params to a Linear function
-        # with parameter slope)
-        # # MODIFIED 5/8/20 OLD:
-        # try:
-        #     # pass only function params (which implement the effects of any ModulatoryProjections)
-        #     function_params = runtime_params[FUNCTION_PARAMS]
-        # except (KeyError, TypeError):
-        #     function_params = None
-        # MODIFIED 5/8/20 NEW:
-        # Get port's own params and any for its function
-        port_params = {k: v for k,v in runtime_params.items()
-                       if k in self.parameters.names() + self.function.parameters.names()}
-        if FUNCTION_PARAMS in runtime_params:
-            port_params.update(runtime_params[FUNCTION_PARAMS])
-        # MODIFIED 5/8/20 END
-        # FIX: TRY POPPING FROM DICTS
-        #      GENERATE ERRORS FOR UNRECOGNIZING RUNTIME PARAMS
 
-        # # MODIFIED 5/8/20 OLD:
-        # if (
-        #     len(self.all_afferents) == 0
-        #     and self.function._is_identity(context)
-        #     and function_params is None
-        # ):
-        #     variable = self._parse_function_variable(self._get_fallback_variable(context))
-        #     self.parameters.variable._set(variable, context)
-        #     # below conversion really should not be happening ultimately, but it is
-        #     # in _validate_variable. Should be removed eventually
-        #     variable = convert_to_np_array(variable, 1)
-        #     self.parameters.value._set(variable, context)
-        #     self.most_recent_context = context
-        #     self.function.most_recent_context = context
-        # else:
-        #     self.execute(context=context, runtime_params=function_params)
-        # MODIFIED 5/8/20 NEW:
+        # Get port's own params and any for its function
+        port_and_function_params = {k: v for k,v in runtime_params.items()
+                                    if k in self.parameters.names() + self.function.parameters.names()}
+        if FUNCTION_PARAMS in runtime_params:
+            port_and_function_params.update(runtime_params[FUNCTION_PARAMS])
+        # FIX: GENERATE ERRORS FOR UNRECOGNIZING RUNTIME PARAMS (USE POPPING FROM DICTS?)
+
+        # Skip execution and set value directly if function is identity_function and no runtime_params were passed
         if (
             len(self.all_afferents) == 0
             and self.function._is_identity(context)
-            and port_params is None
+            and not port_and_function_params
         ):
             variable = self._parse_function_variable(self._get_fallback_variable(context))
             self.parameters.variable._set(variable, context)
@@ -2101,8 +2071,7 @@ class Port_Base(Port):
             self.most_recent_context = context
             self.function.most_recent_context = context
         else:
-            self.execute(context=context, runtime_params=port_params)
-        # MODIFIED 5/8/20 END
+            self.execute(context=context, runtime_params=port_and_function_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
