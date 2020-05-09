@@ -878,18 +878,18 @@ Runtime parameter values are specified in the **runtime_params** argument of a M
 of a parameter (as the key) and the value to assign to it, as in the following example::
 
         >>> T = pnl.TransferMechanism(function=Linear)
-        >>> T.function.slope      # Default for `slope <Linear.slope>` parameter of `Linear` Function
-        1.0
-        >>> T.clip                #doctest: +SKIP
-        None                      # Default for ``clip`` is None
+        >>> T.function.slope  #doctest: +SKIP
+        1.0        # Default for slope
+        >>> T.clip #doctest: +SKIP
+        None       # Default for clip is None
         >>> T.execute(2.0,
         ...          runtime_params={"slope": 3.0,
-        ...                           "clip": (0,5)}) # = 2 (input) * 3 (slope) = 6, but clipped at 5
-        array([[5.]])
-        >>> T.function.slope       # ``slope`` is restored 1.0
-        1.0
-        >>> T.clip                 #doctest: +SKIP
-        None                       # clip is restored to None
+        ...                           "clip": (0,5)}) #doctest: +SKIP
+        array([[5.]])        # = 2 (input) * 3 (slope) = 6, but clipped at 5
+        >>> T.function.slope #doctest: +SKIP
+        1.0                  # slope is restored 1.0
+        >>> T.clip           #doctest: +SKIP
+        None                 # clip is restored to None
 
 
 Note that even though ``slope`` is paramter of the Mechanism's `function <Mechanism_Base.function>` (in this case,
@@ -907,11 +907,11 @@ If a parameter value is assigned before the execution, it is restored to that va
         (0, 3)
         >>> T.execute(3.0,
         ...          runtime_params={"slope": 4.0,
-        ...                           "clip": (0,4)}) # = 3 (input) * 4 (slope) = 12, but clipped at 4
-        array([[4.]])
-        >>> T.function.slope     # ``slope`` is restored 10.0, its previously assigned value
-        10
-        >>> T.clip               # clip is restored to (0,3), its previously assigned value
+        ...                           "clip": (0,4)}) #doctest: +SKIP
+        array([[4.]])        # = 3 (input) * 4 (slope) = 12, but clipped at 4
+        >>> T.function.slope #doctest: +SKIP
+        10                   # slope is restored 10.0, its previously assigned value
+        >>> T.clip           # clip is restored to (0,3), its previously assigned value
         (0, 3)
 
 
