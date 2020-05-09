@@ -874,9 +874,24 @@ COMMENT:
 COMMENT
 
 Runtime parameter values are specified in the **runtime_params** argument of a Mechanism's `execute
-<Mechanism_Base.execution>` method using a dictionary, in which each entry contains a key that is  the name of the
-of a parameter, and the value is a tuple, the first item of which is the value to assign to the parameter,
-and the second item the `Condition` under which it should be assigned, as follows:
+<Mechanism_Base.execution>` method using a dictionary, in which each entry contains the name of the
+of a parameter (as the key) and the value to assign to it, as in the following example:
+
+        >>> T = pnl.ProcessingMechanism()
+        >>> T.function.intercept
+        0.0                       # intercept starts out at 0.0
+        >>> T.function.slope
+        1.0                       # slope starts out at 1.0
+
+        >>> T.execute(2.0,
+        ...          runtime_params={"intercept": 5.0,
+        ...                          "slope": 2.0})
+        [[9.]]                    # = 2 (input) * 2 (slope) + 5 (intercept)
+        >>> T.function.intercept)
+        0.0                       # intercept is restored to 0.0
+        >>> T.function.slope
+        1.0                       # slope starts out at 1.0
+
 
 in the dictionary must be a
 Mechanism,
