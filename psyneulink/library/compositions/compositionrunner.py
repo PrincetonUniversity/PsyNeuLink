@@ -14,7 +14,7 @@ import inspect
 
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, LEARNING_MECHANISM, LEARNING_OBJECTIVE, TRAINING_SET
+from psyneulink.core.globals.keywords import LEARNING_MECHANISM, LEARNING_OBJECTIVE, OBJECTIVE_MECHANISM, TARGET_MECHANISM, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
 
