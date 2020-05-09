@@ -10,9 +10,8 @@
 import random
 import numpy as np
 
-from psyneulink.core.compositions.composition import Composition, NodeRole
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.globals.keywords import LEARNING_MECHANISM, LEARNING_OBJECTIVE, OBJECTIVE_MECHANISM, TARGET_MECHANISM, TRAINING_SET
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
 
