@@ -184,7 +184,6 @@ class TestCompositionRuntimeParams:
               runtime_params={T: {"noise": (10.0, AfterTrial(1))}},
               num_trials=4)
 
-        # Runtime param NOT used for noise
         C.run(inputs={T: 2.0})
 
         assert np.allclose(C.results, [np.array([[2.]]),      # Trial 0 - condition not satisfied yet

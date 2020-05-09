@@ -856,21 +856,52 @@ COMMENT
 
 When a Mechanism is executed, the values used for its `parameters <Component_Parameters>` and that of its subcomponents
 (i.e., its `function <Mechanism_Base.function>` and Ports (Mechanism_Ports) are either the ones specified in the
-constructor for the Mechanism, or their `default values <Parameter_Defaults>`.  These values can be modified for a
-given `execution context <Composition_Execution_Context>` using a parameter's `set <Parameter.set>` method; default
-values can also be modified for a given parameter in the Mechanism's `defaults <Component.defaults>` attribute. For
-convenience, values to be used for a particular execution can be specified in the **runtime_params** argument of the
-Mechanism's `execute <Mechanism_Base.execute>` method (see `below <Mechanism_Runtime_Param_Specification>`), or the
-`execution method <Composition_Execution_Methods>` of a `Composition` to which it belongs (see
-`Composition_Runtime_Params`).  Any value assigned using **runtime_params** will override the current value of the
-parameter for that (and *only* that) execution of the Mechanism; the value will return to its previous value following
-that execution.
+constructor for the Mechanism, or their `default values <Parameter_Defaults>`.  However, these values can be overidden
+for a particular execution, by specifying the desired values in the **runtime_params** argument of the Mechanism's
+`execute <Mechanism_Base.execute>` method (see `below <Mechanism_Runtime_Param_Specification>`), or the `execution
+method <Composition_Execution_Methods>` of a `Composition` to which it belongs (see `Composition_Runtime_Params`).
+Any value assigned using **runtime_params** will override the current value of the parameter for that (and *only*
+that) execution of the Mechanism; the value will return to its previous value following that execution.  The value of
+a parameter can be modified on a permanent basis, either for a given `execution context <Composition_Execution_Context>`
+using a its `set <Parameter.set>` method; or for all execution contexts, by setting its default value using the
+Mechanism's `defaults <Component.defaults>` attribute.
 
 .. _Mechanism_Runtime_Param_Specification:
 
-In the **runtime_params** argument of a Mechanism's `execute <Mechanism_Base.execution>` method, parameter values
-are specified in a `parameter specification dictionary <ParameterPort_Specification>`, that contains one entry for
-each parameter of the Mechanism or its `function <Mechanism_Base.function>` to be specified.  Entries can also
+COMMENT:
+     WHAT ABOUT ASSIGNMENT IN EXECUTE METHOD OF MECHANISM;  DOES IT STILL NEED OUTER DICT?
+     WHAT ABOUT PORT DICTS??
+COMMENT
+
+Runtime parameter values are specified in the **runtime_params** argument of a Mechanism's `execute
+<Mechanism_Base.execution>` method using a dictionary, in which each entry contains a key that is  the name of the
+of a parameter, and the value is a tuple, the first item of which is the value to assign to the parameter,
+and the second item the `Condition` under which it should be assigned, as follows:
+
+in the dictionary must be a
+Mechanism,
+and the value a runtime parameter
+specification dictionary, in which the key is the name of the parameter and the value a tuple, the first item of which
+is the value to assign to the parameter, and the second item the `Condition` under which it should be assigned, as
+follows:
+
+.. _Runtime_Parameter_Specification_Dictionary:
+
+    * Dictionary assigned to **runtime_parms** argument: {<Mechanism name>: runtime parameter specification dict}
+
+    * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
+      - *key* - name of a `Parameter` of the Mechanism or its `function <Mechanism_Base.function>`
+      - *value* - tuple, first item of which is the runtime parameter value, and the second the `Condition` under
+        which it should be assigned.
+
+
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
+
+COMMENT:
+
+Entries can also
 be included for `Ports <Mechanism_Ports>` of the Mechanism. Entries for parameters of the Mechanism or its `function
 <Mechanism_Base.function>` use the standard format for `parameter specification dictionaries
 <ParameterPort_Specification>`.  Entries for the Mechanism's Ports can be used to specify runtime parameters of
@@ -885,83 +916,6 @@ sub-dictionary that contains the parameter specifications; parameters for Projec
 placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
 *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*); and parameters for a specific Projection can be placed
 in an entry with a key specifying the name of the Projection and a sub-dictionary with the specifications.
-
-INTEGRATE WITH ABOVE
-
-*Runtime Parameters*
-====================
-
-Runtime parameters are alternate parameter values that a Mechanism only uses under certain conditions. They are
-specified in a nested dictionary containing (value, condition) tuples that correspond to parameters and Function
-parameters of Mechanisms, which is passed into the `runtime_params <Run.runtime_params>` argument of `Run`.
-
-Outer dictionary:
-    - *key* - Mechanism
-    - *value* - Runtime Parameter Specification Dictionary
-
-Runtime Parameter Specification Dictionary:
-    - *key* - keyword corresponding to a parameter of the Mechanism or its Function
-    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is a `Condition`
-
-If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
-`Condition` will be assigned by default:
-
-        >>> import psyneulink as pnl
-
-        >>> T = pnl.TransferMechanism()
-        >>> C = pnl.Composition(pathways=[T])
-        >>> T.function.slope  # slope starts out at 1.0
-        1.0
-
-        >>> # During the following run, 10.0 will be used as the slope
-        >>> C.run(inputs={T: 2.0},
-        ...       runtime_params={T: {"slope": 10.0}})
-        [array([20.])]
-
-        >>> T.function.slope  # After the run, T.slope resets to 1.0
-        1.0
-
-Otherwise, the runtime parameter value will be used on all executions of the
-`Run` during which the `Condition` is True:
-
-        >>> T = pnl.TransferMechanism()
-        >>> C = pnl.Composition(pathways=[T])
-
-        >>> T.function.intercept     # intercept starts out at 0.0
-        0.0
-        >>> T.function.slope         # slope starts out at 1.0
-        1.0
-
-        >>> C.run(inputs={T: 2.0},
-        ...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
-        ...                           "slope": (2.0, pnl.AtTrial(3))}},
-        ...       num_trials=5)
-        [array([7.])]
-
-The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
-example above.
-
-+-------------+--------+--------+--------+--------+--------+
-|             |Trial 0 |Trial 1 |Trial 2 |Trial 3 |Trial 4 |
-+=============+========+========+========+========+========+
-| Intercept   |0.0     |0.0     |5.0     |5.0     |5.0     |
-+-------------+--------+--------+--------+--------+--------+
-| Slope       |1.0     |1.0     |1.0     |2.0     |0.0     |
-+-------------+--------+--------+--------+--------+--------+
-| Value       |2.0     |2.0     |7.0     |9.0     |7.0     |
-+-------------+--------+--------+--------+--------+--------+
-
-as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
-the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.
-
-.. note::
-    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
-    value.
-
-COMMENT
-
-COMMENT:
-    ADD EXAMPLE(S) HERE
 COMMENT
 
 COMMENT:

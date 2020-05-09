@@ -13,16 +13,21 @@ and `logged values <Log>`.
 Defaults
 ========
 
-Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class,
-and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class,
-and are used to validate compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
+The Defaults class is used to represent the default values for a `Component's parameters <Component_Parameters>`.
+Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PsyNeuLink
+class, and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PsyNeuLink
+class, and are used to validate compatibility between this instance and other PsyNeuLink objects. For example, given a
+`TransferMechanism` *t*:
 
-    - instance defaults are accessible by ``t.defaults``
-    - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults``
+    - instance defaults are accessible by ``t.defaults`` (e.g., for the `noise <TransferMechanism.noise>` parameter,
+      ``t.defaults.noiset.defaults.noise``)
 
+    - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults`` (e.g.,
+    ``t.class_defaults.noise`` or `TransferMechanism.defaults.noise)
 
 .. note::
-    ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default noise value for *t*
+    ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default
+    ``noise`` value for *t*
 
 
 .. _Parameter_statefulness:

@@ -101,13 +101,13 @@ Parameters can be specified in one of several places:
       (see `Component_Structural_Attributes` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
-      Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
-      (or a corresponding keyword) as its key, and the parameter's specification as its value (see
-      `examples <ParameterPort_Specification_Examples>` below). Parameters for a Component's
-      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*, and a value that
-      is itself a parameter specification dictionary containing an entry for each of the function's parameters to be
-      specified.  When a value is assigned to a parameter in a specification dictionary, it overrides any value
-      assigned to the argument for the parameter in the Component's constructor.
+      Component to which the parameter belongs, or any place else the value of a parameter can be specified.
+      The entry for each parameter must use the name of the parameter (or a corresponding keyword) as its key,
+      and the parameter's specification as its value (see `examples <ParameterPort_Specification_Examples>` below).
+      Parameters for a Component's `function <Component.function>` can be specified in an entry with the key
+      *FUNCTION_PARAMS*, and a value that is itself a parameter specification dictionary containing an entry for
+      each of the function's parameters to be specified.  When a value is assigned to a parameter in a specification
+      dictionary, it overrides any value assigned to the argument for the parameter in the Component's constructor.
     ..
     * By direct assignment to the Component's attribute for the parameter
       (see `below <ParameterPort_Modulable_Parameters>`).
