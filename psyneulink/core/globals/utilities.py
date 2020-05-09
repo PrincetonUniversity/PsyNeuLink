@@ -71,7 +71,6 @@ CONTENTS
 
 * `get_args`
 * `recursive_update`
-* `merge_param_dicts`
 * `multi_getattr`
 * `np_array_less_that_2d`
 * `convert_to_np_array`
@@ -121,7 +120,7 @@ __all__ = [
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec',
     'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
-    'make_readonly_property', 'merge_param_dicts',
+    'make_readonly_property',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
     'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
     'parse_valid_identifier', 'parse_string_to_psyneulink_object_string', 'parameter_spec', 'powerset',
@@ -650,62 +649,6 @@ def recursive_update(d, u, non_destructive=False):
                 continue
             d[k] = u[k]
     return d
-
-
-def merge_param_dicts(source, specific, general):
-    """Search source dict for specific and general dicts, merge specific with general, and return merged
-
-    Description:
-        - used to merge only a subset of dicts in param set (that may have several dicts
-        - allows dicts to be referenced by name (e.g., paramName) rather than by object
-        - searches source dict for specific and general dicts
-        - if both are found, merges them, with entries from specific overwriting any duplicates in general
-        - if only one is found, returns just that dict
-        - if neither are found, returns empty dict
-
-    Arguments:
-        - source (dict): container dict (entries are dicts); search entries for specific and general dicts
-        - specific (dict or str): if str, use as key to look for specific dict in source, and check that it is a dict
-        - general (dict or str): if str, use as key to look for general dict in source, and check that it is a dict
-
-
-    :param source: (dict)
-    :param specific: (dict or str)
-    :param general: (dict or str)
-    :return merged: (dict)
-    """
-
-    # Validate source as dict
-    if not source:
-        return
-    if not isinstance(source, dict):
-        raise UtilitiesError("merge_param_dicts: source {0} must be a dict".format(source))
-
-    # Get specific and make sure it is a dict
-    if isinstance(specific, str):
-        try:
-            specific = source[specific]
-        except (KeyError, TypeError):
-            specific = {}
-    if not isinstance(specific, dict):
-        raise UtilitiesError("merge_param_dicts: specific {0} must be dict or the name of one in {1}".
-                        format(specific, source))
-
-    # Get general and make sure it is a dict
-    if isinstance(general, str):
-        try:
-            general = source[general]
-        except (KeyError, TypeError):
-            general = {}
-    if not isinstance(general, dict):
-        raise UtilitiesError("merge_param_dicts: general {0} must be dict or the name of one in {1}".
-                        format(general, source))
-
-# FIX: SHOULD THIS BE specific, NOT source???
-#     # MODIFIED 7/16/16 OLD:
-#     return general.update(source)
-    # MODIFIED 7/16/16 NEW:
-    return general.update(specific)
 
 
 def multi_getattr(obj, attr, default = None):

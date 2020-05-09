@@ -3,6 +3,7 @@ import numpy as np
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial
+from psyneulink.core.globals.keywords import INPUT_PORT_PARAMS, FUNCTION_PARAMS
 
 class TestMechanismRuntimeParams:
 
@@ -138,6 +139,36 @@ class TestCompositionRuntimeParams:
         assert T.parameters.value.get(C.default_execution_id) == 2.0
         assert T.function.slope == 1.0
         assert T.parameter_ports['slope'].parameters.value.get(C) == 1.0
+
+    def test_composition_run_mechanism_inputport_runtime_param_no_condition(self):
+
+        # Construction
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        C = Composition(pathways=[T1,T2])
+
+        # T2.function.parameters.slope.set(3, C.default_execution_id)
+        # T1.function.slope = 3
+        # T2.input_port.function.scale = 20
+        # runtime param used for noise
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T1: {'slope': 3},
+                  T2: {INPUT_PORT_PARAMS: {'weight':4,
+                                           FUNCTION_PARAMS:{'scale':20}}}
+              })
+        assert T2.parameters.value.get(C.default_execution_id) == [120.0]
+
+        # all parameters restored to default
+        assert T1.function.slope == 1.0
+        assert T1.parameter_ports['slope'].parameters.value.get(C) == 1.0
+        assert T2.input_port.function.scale == 1.0
+
+        # previous runtime_param for noise not used again
+        C.run(inputs={T1: 2.0}, )
+        assert T1.function.slope == 1.0
+        assert T1.parameter_ports['slope'].parameters.value.get(C) == 1.0
+        assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 1.0
 
     def test_composition_run_mechanism_runtime_param_with_condition(self):
 
