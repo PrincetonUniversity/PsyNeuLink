@@ -1628,11 +1628,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # reset any runtime params that were leftover from a direct call to .execute (atypical)
-        if context.execution_id in self._runtime_params_reset:
-            for key in self._runtime_params_reset[context.execution_id]:
-                self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
-        self._runtime_params_reset[context.execution_id] = {}
+        # # reset any runtime params that were leftover from a direct call to .execute (atypical)
+        # if context.execution_id in self._runtime_params_reset:
+        #     for key in self._runtime_params_reset[context.execution_id]:
+        #         self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
+        # self._runtime_params_reset[context.execution_id] = {}
 
         # If params have been passed, treat as runtime params
         runtime_params = params
