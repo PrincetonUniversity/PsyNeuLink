@@ -2402,10 +2402,6 @@ class Mechanism_Base(Mechanism):
                 context=context
             )
 
-        # RESET runtime_params to prior value
-        if runtime_params:
-
-
         return value
 
     def _get_variable_from_input(self, input, context=None):
