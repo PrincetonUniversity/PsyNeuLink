@@ -1625,11 +1625,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # reset any runtime params that were leftover from a direct call to .execute (atypical)
-        if context.execution_id in self._runtime_params_reset:
-            for key in self._runtime_params_reset[context.execution_id]:
-                self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
-        self._runtime_params_reset[context.execution_id] = {}
+        # # reset any runtime params that were leftover from a direct call to .execute (atypical)
+        # if context.execution_id in self._runtime_params_reset:
+        #     for key in self._runtime_params_reset[context.execution_id]:
+        #         self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
+        # self._runtime_params_reset[context.execution_id] = {}
 
         # If params have been passed, treat as runtime params
         runtime_params = params
@@ -2605,18 +2605,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.most_recent_context = context
 
-        # # MODIFIED 5/8/20 NEW: [JDC]
-        # #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
-        # #       ?REPLACE RESET IN check_args
-        # # Restore runtime_params to previous value
-        # if runtime_params:
-        #     for param in runtime_params:
-        #         try:
-        #             prev_val = getattr(self.parameters, param).get_previous(context)
-        #             self._set_parameter_value(param, prev_val, context)
-        #         except AttributeError:
-        #             prev_val = getattr(self.function.parameters, param).get_previous(context)
-        #             self.function._set_parameter_value(param, prev_val, context)
+        # MODIFIED 5/8/20 NEW: [JDC]
+        #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
+        #       ?REPLACE RESET IN check_args
+        # Restore runtime_params to previous value
+        if runtime_params:
+            for param in runtime_params:
+                try:
+                    prev_val = getattr(self.parameters, param).get_previous(context)
+                    # prev_val = getattr(self.parameters, param).values[context.execution_id]
+                    self._set_parameter_value(param, prev_val, context)
+                except AttributeError:
+                    prev_val = getattr(self.function.parameters, param).get_previous(context)
+                    # prev_val = getattr(self.function.parameters, param).values[context.execution_id]
+                    self.function._set_parameter_value(param, prev_val, context)
         # MODIFIED 5/8/20 END
 
         return value
