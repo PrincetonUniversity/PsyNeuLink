@@ -1625,14 +1625,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
-        # MODIFIED 5/8/20 OLD:
-        #  FIX: REPLACED WITH RESTORATION OF VALUES IN execute()
         # reset any runtime params that were leftover from a direct call to .execute (atypical)
         if context.execution_id in self._runtime_params_reset:
             for key in self._runtime_params_reset[context.execution_id]:
                 self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
         self._runtime_params_reset[context.execution_id] = {}
-        # MODIFIED 5/8/20 END
 
         # If params have been passed, treat as runtime params
         runtime_params = params
@@ -2578,16 +2575,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
 
-        # MODIFIED 5/8/20 NEW: [JDC]
-        #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
-        #       REPLACES RESET IN check_args
-        # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
-                prev_val = getattr(self.parameters, param).get_previous(context)
-                self._set_parameter_value(param, prev_val, context)
-        # MODIFIED 5/8/20 END
-
         return value
 
     def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
@@ -2617,6 +2604,21 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             pass
 
         self.most_recent_context = context
+
+        # MODIFIED 5/8/20 NEW: [JDC]
+        #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
+        #       ?REPLACE RESET IN check_args
+        # Restore runtime_params to previous value
+        if runtime_params:
+            for param in runtime_params:
+                try:
+                    prev_val = getattr(self.parameters, param).get_previous(context)
+                    self._set_parameter_value(param, prev_val, context)
+                except AttributeError:
+                    prev_val = getattr(self.function.parameters, param).get_previous(context)
+                    self.function._set_parameter_value(param, prev_val, context)
+        # MODIFIED 5/8/20 END
+
         return value
 
     def is_finished(self, context=None):
