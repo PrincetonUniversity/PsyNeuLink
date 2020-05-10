@@ -1915,9 +1915,9 @@ class Port_Base(Port):
 
         # # Assign port's runtime_params
         # FIX 5/8/20
-        # NEEDED TO ASSIGN ePORT'S PARAMS
-        self._manage_runtime_params(port_params, context)
-        # self._check_args(params=port_params, context=context)
+        # NEEDED TO ASSIGN PORT'S PARAMS
+        # self._manage_runtime_params(port_params, context)
+        self._check_args(params=port_params, context=context)
         # MODIFIED 5/9/20 END
 
 
