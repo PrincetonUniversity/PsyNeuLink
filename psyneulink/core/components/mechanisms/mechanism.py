@@ -846,7 +846,7 @@ Mechanism and/or debugging.  However, more typically, Mechanisms are `executed a
 ~~~~~~~~~~~~~~~~~~~~
 
 .. note::
-   This is an advanced feature, but is generally not required for most applications.   It is included for convenience;
+   This is an advanced feature, but is generally not required for most applications. It is included for convenience;
    similar functionality can be achieved by setting the values of `parameters <Component_Parameters>` programmatically
    before the Mechanism is executed and then resetting them afterwards.
 
@@ -917,28 +917,29 @@ the parameter is assigned its previous value and *not* its default, as shown bel
 *Assigning runtime values to parameters of a Mechanism's Ports and Projections*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Runtime values can also be assigned to the parameters of a Mechanism's `Port <Port>` and its `Projections <Projection>`
-These are also specified as entries in the **runtime_params** dict,
+Runtime values can also be assigned to the parameters of a Mechanism's `Ports <Port>` and/or their `afferent Projections
+<Mechanism_Base.afferents>`. These are also specified as entries in the **runtime_params** dict,
 
-*Ports*.  Each entry for the parameters of a Port (and/or those of its `function <Port_Base.function>`) uses a key
-corresponding to the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a value
-that is a sub-dictionary containing a dictionary with the runtime parameter specifications for all Ports of that
-type. Within that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>`
-use the standard format for a `parameter specification dictionary <ParameterPort_Specification>`.
+*Ports*.  Each entry for the parameters of a Port (and/or those of its `function <Port_Base.function>`) uses as its key
+a keyword designating the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
+value that is a sub-dictionary containing the runtime parameter specifications for all Ports of that type. Within
+that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use the standard
+format for a `parameter specification dictionary <ParameterPort_Specification>`.
 
 COMMENT:
    EXAMPLES HERE
 COMMENT
 
-*Projections*. Parameters for any of a `Port's Projections <Port_Projections>` can be specified in an entry with
-the key *PROJECTION_PARAMS*, and a sub-dictionary that contains the parameter specifications; parameters for
-Projections of a particular type can be placed in an entry with a key specifying the type (*MAPPING_PROJECTION_PARAMS*,
-*LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*); and parameters for a
-specific Projection can be placed in an entry with a key specifying the name of the Projection and a sub-dictionary
-with the specifications.
+*Projections*.  The sub-dictionary specifying the parameters of a Port can also contain entries specifying parameters
+its afferent `Projections <Port_Projections>` Projections.   Parameters for all of its afferent projections are
+specified in an entry with the key *PROJECTION_PARAMS*, and a value that is a sub-dictionary contains the parameter
+specifications for the Projections;  parameters for Projections of a particular type can be placed in an entry with a
+key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*,
+or *GATING_PROJECTION_PARAMS*); and parameters for an individual Projection can be placed in an entry with a key
+specifying the name of the Projection and a sub-dictionary with specifications of its parameters.
 
 COMMENT:
-   EXAMPLES HERE
+   EXAMPLES HERE AND ADD CORRESPONDING TESTS
 COMMENT
 
 .. note::
@@ -1017,11 +1018,12 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
+    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, \
-    NAME, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
-    PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
+    MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, NAME, \
+    OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
+    PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, \
+    PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 
 from psyneulink.core.globals.parameters import Parameter
@@ -2323,6 +2325,40 @@ class Mechanism_Base(Mechanism):
                                                 runtime_params=runtime_params)
                 return np.atleast_2d(return_value)
 
+
+        # # FIX 5/8/20 [JDC]: FROM PORT;  MOVE TO COMPONENT
+        # port_params = {}
+        # function_params = {}
+        # runtime_params_copy = runtime_params.copy()
+        # # for param_name in runtime_params.copy():
+        # for param_name in runtime_params:
+        #     if hasattr(self, param_name):
+        #         # port_and_function_params[param_name] = runtime_params[param_name]
+        #         port_params[param_name] = runtime_params_copy.pop(param_name)
+        #     elif hasattr(self.function, param_name):
+        #         function_params[param_name] = runtime_params_copy.pop(param_name)
+        #     elif param_name == FUNCTION_PARAMS:
+        #         function_params.update(runtime_params_copy.pop(FUNCTION_PARAMS))
+        # # [runtime_params.pop(param) for param in port_and_function_params]
+
+        # PARSE runtime_params
+
+        # Extract runtime_params for each port-type into their own dicts,
+        #    leaving ones for the Mechanism itself and/or its function in runtime_params
+        runtime_input_port_params = {}
+        runtime_output_port_params = {}
+        runtime_parameter_port_params = {}
+        if runtime_params:
+            runtime_input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
+            runtime_parameter_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
+            runtime_output_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
+
+            # # FIX 5/8/20 [JDC]: FROM PORT;  MODIFY FOR MECH
+            # # All remaining runtime_params should be for other Mechanism
+            # if not set(runtime_params.keys()).issubset(PORT_PARAM_KEYWORDS):
+            #     diff = ", ".join(list(set(runtime_params.keys()).difference(PORT_PARAM_KEYWORDS)))
+            #     raise MechanismError(f"Unrecognized argument passed to runtime_params for {self.name}: '{diff}'")
+
         # EXECUTE MECHANISM
 
         if self.parameters.is_finished_flag._get(context) is True:
@@ -2337,10 +2373,11 @@ class Mechanism_Base(Mechanism):
 
             # UPDATE VARIABLE and InputPort(s)
             # Executing or simulating Composition, so get input by updating input_ports
+            # FIX 5/8/20 [JDC]: CHANGE runtime_params TO INPUT_PORT AND PROJECTION-SPECIFIC RUNTIME PARAMS
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
-                variable = self._update_input_ports(runtime_params=runtime_params,
+                variable = self._update_input_ports(runtime_params=runtime_input_port_params,
                                                     context=context)
 
             # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
@@ -2360,10 +2397,11 @@ class Mechanism_Base(Mechanism):
             self.parameters.variable._set(variable, context=context)
 
             # UPDATE PARAMETERPORT(S)
-            self._update_parameter_ports(runtime_params=runtime_params,
+            # FIX 5/8/20 [JDC]: CHANGE runtime_params TO PARAMETER_PORT AND PROJECTION-SPECIFIC RUNTIME PARAMS
+            self._update_parameter_ports(runtime_params=runtime_parameter_port_params,
                                          context=context)
 
-            # EXECUTE MECHNISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
+            # EXECUTE MECHANISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
             # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
             #                      to avoid multiple calls to (and potential log entries for) self.value property
@@ -2396,7 +2434,8 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(runtime_params=runtime_params,
+            # FIX 5/8/20 [JDC]: CHANGE runtime_params TO OUTPUT_PORT AND PROJECTION-SPECIFIC RUNTIME PARAMS
+            self._update_output_ports(runtime_params=runtime_output_port_params,
                                       context=context)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK

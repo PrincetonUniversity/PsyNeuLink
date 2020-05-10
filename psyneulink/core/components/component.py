@@ -458,12 +458,12 @@ from psyneulink.core.globals.context import Context, ContextError, ContextFlags,
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
-    FUNCTION, FUNCTION_COMPONENT_CATEGORY, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
+    FUNCTION, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
+    LEARNING, LEARNING_PROJECTION, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PREFS_ARG, \
-    REINITIALIZE_WHEN, SIZE, VALUE, VARIABLE
+    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
+    REINITIALIZE_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
@@ -1625,31 +1625,50 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
+        # If params have been passed, treat as runtime params
+        self._manage_runtime_params(params, context)
+
+        self.parameters.variable._set(variable, context=context)
+        return variable
+
+    def _manage_runtime_params(self, runtime_params, context):
+        """Validate runtime_params, cache for reset, and assign values
+
+        Check that all params belong either to Component or its function (raise error if any are found that don't)
+        Cache params to reset in _runtime_params_reset
+        """
+
         # # reset any runtime params that were leftover from a direct call to .execute (atypical)
         # if context.execution_id in self._runtime_params_reset:
         #     for key in self._runtime_params_reset[context.execution_id]:
         #         self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
         # self._runtime_params_reset[context.execution_id] = {}
 
-        # If params have been passed, treat as runtime params
-        runtime_params = params
+        from psyneulink.core.components.functions.function import is_function_type, FunctionError
         if isinstance(runtime_params, dict):
             for param_name in runtime_params:
-                # (1) store current attribute value in _runtime_params_reset so that it can be reset later
-                # (2) assign runtime param values to attributes (which calls validation via properties)
-                # (3) update parameter ports if needed
                 if hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
-                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters, param_name)._get(context)
+                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
+                                                                                           param_name)._get(context)
                     self._set_parameter_value(param_name, runtime_params[param_name], context)
-        elif runtime_params:    # not None
-            raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
+                # Any remaining params should either belong to the Component's function
+                #    or, if the Component is a Function, no params should be specified that don't belong to it
+                elif ((hasattr(self, FUNCTION) and not hasattr(self.function, param_name)
+                       or is_function_type(self))):
+                    owner_name = ""
+                    if hasattr(self, OWNER) and self.owner:
+                        owner_name = f" of {self.owner.name}"
+                        if hasattr(self.owner, OWNER) and self.owner.owner:
+                            owner_name = f"{owner_name} of {self.owner.owner.name}"
+                    raise FunctionError(f"Invalid specification of runtime parameter "
+                                         f"for {self.name}{owner_name}: '{param_name}'.")
 
-        self.parameters.variable._set(variable, context=context)
-        return variable
+        elif runtime_params:    # not None
+            raise ComponentError(f"Invalid specification of runtime parameters for {self.name}: {runtime_params}.")
 
     @handle_external_context()
     def _instantiate_defaults(self,
@@ -2582,6 +2601,52 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.variable._set(variable, context=context)
 
+        # FIX 5/8/20:  JUST NEED TO EXTRACT FUNCTION PARAMS;
+        #              NO NEED TO SEPARATE OUT COMPONENT ONES
+        #                 -- CAN KEEP THEM IN RUN_TIME PARAMS, AND USE THAT TO RESET AT END (BELOW)
+        #              REPLACE _manage_runtime_params WITH CALL TO _check_args IN PORT (AS IN MECH AND FUNCTION)
+        #                      (DO SAME FOR PROJECTIONS?)
+        # MODIFIED 5/8/20 NEW:
+        component_and_fct_params = {}
+        component_params = {}
+        function_params = {}
+        if runtime_params:
+            # Get Component and function params from runtime_params
+            # runtime_params_copy = runtime_params.copy()
+            # for param_name in runtime_params:
+            for param_name in runtime_params.copy():
+                if (hasattr(self, param_name)
+                        or (hasattr(self, FUNCTION) and hasattr(self.function, param_name)
+                            or param_name == FUNCTION_PARAMS)):
+                    # component_and_fct_params[param_name] = runtime_params_copy.pop(param_name)
+                    component_and_fct_params[param_name] = runtime_params.pop(param_name)
+                else:
+                    raise ComponentError(f"Unrecognized argument passed to runtime_params "
+                                         f"for {self.name}: '{param_name}'")
+            # SHOULD BE NONE REMAINING
+            # if runtime_params_copy:
+            #     raise ComponentError(f"Unrecognized argument(s) passed to runtime_params "
+            #                          f"for {self.name}: '{runtime_params_copy}'")
+
+            # Parse runtime_params into those for:
+            #    - component, passed to _manage_runtime_params for assignment
+            #    - function, passed in call to it
+            component_params = {}
+            function_params = {}
+            # for param_name in runtime_params.copy():
+            for param_name in component_and_fct_params.copy():
+                if hasattr(self, param_name):
+                    component_params[param_name] = component_and_fct_params.pop(param_name)
+                elif hasattr(self.function, param_name):
+                    function_params[param_name] = component_and_fct_params.pop(param_name)
+                elif param_name == FUNCTION_PARAMS:
+                    function_params.update(component_and_fct_params.pop(FUNCTION_PARAMS))
+                else:
+                    raise ComponentError(f"Unrecognized argument(s) passed to runtime_params "
+                                         f"for {self.name}: '{param_name}'")
+
+        # MODIFIED 5/8/20 END
+
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
@@ -2597,7 +2662,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         function_variable = self._parse_function_variable(variable, context=context)
-        value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
+        value = self.function(variable=function_variable, context=context, params=function_params, **kwargs)
         try:
             self.function.parameters.value._set(value, context)
         except AttributeError:
@@ -2609,8 +2674,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
         #       ?REPLACE RESET IN check_args
         # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
+        # if runtime_params:
+        #     for param in runtime_params:
+        component_and_fct_params.update(component_params)
+        component_and_fct_params.update(function_params)
+        if component_and_fct_params:
+            for param in component_and_fct_params:
                 try:
                     prev_val = getattr(self.parameters, param).get_previous(context)
                     self._set_parameter_value(param, prev_val, context)

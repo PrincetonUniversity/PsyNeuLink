@@ -791,7 +791,7 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_PORTS, OVERRIDE, OWNER, \
     PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
-    PROJECTION_DIRECTION, PROJECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
+    PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
     PORT_COMPONENT_CATEGORY
@@ -810,20 +810,30 @@ __all__ = [
 
 port_keywords = component_keywords.copy()
 port_keywords.update({MECHANISM,
-                       PORT_TYPE,
-                       port_value,
-                       port_params,
+                      PORT_TYPE,
+                      port_value,
+                      port_params,
+                      PATHWAY_PROJECTIONS,
+                      MODULATORY_PROJECTIONS,
+                      PROJECTION_TYPE,
+                      PROJECTION_PARAMS,
+                      LEARNING_PROJECTION_PARAMS,
+                      LEARNING_SIGNAL_SPECS,
+                      CONTROL_PROJECTION_PARAMS,
+                      CONTROL_SIGNAL_SPECS,
+                      GATING_PROJECTION_PARAMS,
+                      GATING_SIGNAL_SPECS})
+
+port_type_keywords = {PORT_TYPE}
+
+# Used for runtime_params
+PORT_PARAM_KEYWORDS = {FUNCTION_PARAMS,
+                       PROJECTION_PARAMS,
                        PATHWAY_PROJECTIONS,
                        MODULATORY_PROJECTIONS,
-                       PROJECTION_TYPE,
-                       LEARNING_PROJECTION_PARAMS,
-                       LEARNING_SIGNAL_SPECS,
                        CONTROL_PROJECTION_PARAMS,
-                       CONTROL_SIGNAL_SPECS,
                        GATING_PROJECTION_PARAMS,
-                       GATING_SIGNAL_SPECS
-                       })
-port_type_keywords = {PORT_TYPE}
+                       LEARNING_PROJECTION_PARAMS}
 
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
@@ -1852,17 +1862,64 @@ class Port_Base(Port):
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
-        """
+        # """
         # SET UP ------------------------------------------------------------------------------------------------
 
-        # Get Port-specific param_specs
-        try:
-            # Get Port params
-            runtime_params = params[self.paramsType]
-        except (KeyError, TypeError):
-            runtime_params = {}
-        except (AttributeError):
-            raise PortError("PROGRAM ERROR: paramsType not specified for {self.name}.")
+        # # MODIFIED 5/8/20 OLD:
+        # # Get Port-specific param_specs
+        # try:
+        #     # Get Port's params
+        #     runtime_params = params[self.paramsType]
+        # except (KeyError, TypeError):
+        #     runtime_params = {}
+        # except (AttributeError):
+        #     raise PortError("PROGRAM ERROR: paramsType not specified for {self.name}.")
+        # MODIFIED 5/8/20 NEW:
+        runtime_params = params or {}
+        # MODIFIED 5/8/20 END
+
+
+        # FIX: GENERATE ERRORS FOR UNRECOGNIZED RUNTIME PARAMS (USE POPPING FROM DICTS?)
+        # # MODIFIED 5/9/20 NEW:
+        # # Get port's own params and any passed in for its function
+        # port_and_function_params = {k: v for k,v in runtime_params.items()
+        #                             if k in self.parameters.names() + self.function.parameters.names()}
+        # MODIFIED 5/9/20 NEWER:
+        # FIX: PARSE AND SEPARATE PORT AND FUNCTON PARAMS:
+        #       - ASSIGN PORT PARAMS
+        #       - PASSING FUNCTION PARAMS TO EXECUTE
+        # FIX: SIMILAR TO PORT:  ??MOVE PORT-SPECIFIC PARAM HANDLING TO Mechanism.execute?
+        # port_and_function_params = {}
+
+        # Get port and function params from runtime_params
+        # FIX 5/8/20 [JDC] MOVE TO COMPONENT; OR ANY NEED TO DO AT ALL? SINCE MECH HAS FILETERED ANY UNECESSARY ONES?
+        port_params = {}
+        function_params = {}
+        runtime_params_copy = runtime_params.copy()
+        # for param_name in runtime_params.copy():
+        for param_name in runtime_params:
+            if hasattr(self, param_name):
+                # port_and_function_params[param_name] = runtime_params[param_name]
+                port_params[param_name] = runtime_params_copy.pop(param_name)
+            elif hasattr(self.function, param_name):
+                function_params[param_name] = runtime_params_copy.pop(param_name)
+            elif param_name == FUNCTION_PARAMS:
+                function_params.update(runtime_params_copy.pop(FUNCTION_PARAMS))
+        # [runtime_params.pop(param) for param in port_and_function_params]
+
+        # All remaining runtime_params should be for other Ports or Projections
+        if not set(runtime_params_copy.keys()).issubset(PORT_PARAM_KEYWORDS):
+            diff = ", ".join(list(set(runtime_params_copy.keys()).difference(PORT_PARAM_KEYWORDS)))
+            raise PortError(f"Unrecognized argument passed to runtime_params "
+                            f"for {self.name} of {self.owner.name}: '{diff}'")
+
+        # # Assign port's runtime_params
+        # FIX 5/8/20
+        # NEEDED TO ASSIGN ePORT'S PARAMS
+        self._manage_runtime_params(port_params, context)
+        # self._check_args(params=port_params, context=context)
+        # MODIFIED 5/9/20 END
+
 
         # # Flag format of input
         # if isinstance(self.value, numbers.Number):
@@ -1874,7 +1931,8 @@ class Port_Base(Port):
 
         # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------
 
-        # Generate dicts merging general (PROJECTION_PARAMS) with specific for each type of Projection
+        # Generate dicts for Projection params (passed to Projection)
+        #    by merging general param dict (PROJECTION_PARAMS) with type-specific ones for each type of Projection
         mapping_params = _merge_param_dicts(runtime_params, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         learning_projection_params = _merge_param_dicts(runtime_params, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = _merge_param_dicts(runtime_params, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
@@ -2042,25 +2100,28 @@ class Port_Base(Port):
             # Set modulatory parameter's value
             param._set(mod_val, context)
 
-            if not FUNCTION_PARAMS in runtime_params:
-                runtime_params[FUNCTION_PARAMS] = {mod_param_name: mod_val}
-            else:
-                runtime_params[FUNCTION_PARAMS].update({mod_param_name: mod_val})
+            # MODIFIED 5/9/20 OLD:
+            # if not FUNCTION_PARAMS in runtime_params:
+            #     runtime_params[FUNCTION_PARAMS] = {mod_param_name: mod_val}
+            # else:
+            #     runtime_params[FUNCTION_PARAMS].update({mod_param_name: mod_val})
+            # MODIFIED 5/9/20 NEW:
+            function_params.update({mod_param_name: mod_val})
+            # MODIFIED 5/9/20 END
+
+        # if FUNCTION_PARAMS in runtime_params:
+        #     function_params.update(runtime_params[FUNCTION_PARAMS])
 
         # CALL PORT'S function TO GET ITS VALUE  ----------------------------------------------------------------------
 
-        # Get port's own params and any for its function
-        port_and_function_params = {k: v for k,v in runtime_params.items()
-                                    if k in self.parameters.names() + self.function.parameters.names()}
-        if FUNCTION_PARAMS in runtime_params:
-            port_and_function_params.update(runtime_params[FUNCTION_PARAMS])
-        # FIX: GENERATE ERRORS FOR UNRECOGNIZING RUNTIME PARAMS (USE POPPING FROM DICTS?)
+        # FIX 5/8/20
+        port_params.update(function_params)
 
         # Skip execution and set value directly if function is identity_function and no runtime_params were passed
         if (
             len(self.all_afferents) == 0
             and self.function._is_identity(context)
-            and not port_and_function_params
+            and not function_params
         ):
             variable = self._parse_function_variable(self._get_fallback_variable(context))
             self.parameters.variable._set(variable, context)
@@ -2071,7 +2132,9 @@ class Port_Base(Port):
             self.most_recent_context = context
             self.function.most_recent_context = context
         else:
-            self.execute(context=context, runtime_params=port_and_function_params)
+            # FIX 5/8/20
+            self.execute(context=context, runtime_params=port_params)
+            # self.execute(context=context, runtime_params=function_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:

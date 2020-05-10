@@ -152,19 +152,30 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {'slope': 3},                         # Mechanism's function (Linear) parameter
-                  T2: {'noise': 0.5,                        # Mechanism's parameter
+                  T2: {
+                      'noise': 0.5,                        # Mechanism's parameter
+                      # 'glorp': 22,  # FIX: MECHANISM PARAM STILL PASSES BUT SHOULDN'T
                       'intercept': 1,                       # Mechanism's function parameter
-                       INPUT_PORT_PARAMS: {
-                           'weight':5,                      # InputPort's parameter
-                           'scale':20,                      # InputPort's function (LinearCombination) parameter
-                           FUNCTION_PARAMS:{'weights':10}}  # InputPort's function (LinearCombination) parameter
-                       }
+                      # FIX: WHAT ABOUT PROJECTION PARAMS?
+                      INPUT_PORT_PARAMS: {
+                          'weight':5,                      # InputPort's parameter
+                          'scale':20,                      # InputPort's function (LinearCombination) parameter
+                          # 'trigot':16,  # THIS FAILS
+                          FUNCTION_PARAMS:{'weights':10,
+                                           # 'flurb': 12,   # FIX: FUNCTION PARAM STILL PASSES BUT SHOULDN'T
+                                           }}  # InputPort's function (LinearCombination) parameter
+                  }
               })
         assert T2.parameters.value.get(C.default_execution_id) == [1201.5]
 
         # all parameters restored to previous values (assigned or defaults)
         assert T1.function.parameters.slope.get(C) == 5.0
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
+        assert T2.parameters.noise.get(C) == 0.0
+        assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
+        assert T2.function.intercept == 0.0
+        assert T2.function.parameters.intercept.get(C) == 0.0
+        assert T2.input_port.weight == None
         assert T2.input_port.function.scale == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
         assert T2.input_port.function.weights == None
