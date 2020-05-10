@@ -2607,43 +2607,24 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #              REPLACE _manage_runtime_params WITH CALL TO _check_args IN PORT (AS IN MECH AND FUNCTION)
         #                      (DO SAME FOR PROJECTIONS?)
         # MODIFIED 5/8/20 NEW:
-        component_and_fct_params = {}
-        component_params = {}
         function_params = {}
         if runtime_params:
-            # Get Component and function params from runtime_params
-            # runtime_params_copy = runtime_params.copy()
-            # for param_name in runtime_params:
-            for param_name in runtime_params.copy():
+            # Validate that all params belong to Component or its function
+            for param_name in runtime_params:
                 if (hasattr(self, param_name)
                         or (hasattr(self, FUNCTION) and hasattr(self.function, param_name)
                             or param_name == FUNCTION_PARAMS)):
-                    # component_and_fct_params[param_name] = runtime_params_copy.pop(param_name)
-                    component_and_fct_params[param_name] = runtime_params.pop(param_name)
+                    continue
                 else:
                     raise ComponentError(f"Unrecognized argument passed to runtime_params "
                                          f"for {self.name}: '{param_name}'")
-            # SHOULD BE NONE REMAINING
-            # if runtime_params_copy:
-            #     raise ComponentError(f"Unrecognized argument(s) passed to runtime_params "
-            #                          f"for {self.name}: '{runtime_params_copy}'")
 
-            # Parse runtime_params into those for:
-            #    - component, passed to _manage_runtime_params for assignment
-            #    - function, passed in call to it
-            component_params = {}
-            function_params = {}
-            # for param_name in runtime_params.copy():
-            for param_name in component_and_fct_params.copy():
-                if hasattr(self, param_name):
-                    component_params[param_name] = component_and_fct_params.pop(param_name)
-                elif hasattr(self.function, param_name):
-                    function_params[param_name] = component_and_fct_params.pop(param_name)
+            # Get function_params
+            for param_name in runtime_params:
+                if hasattr(self.function, param_name):
+                    function_params[param_name] = runtime_params[param_name]
                 elif param_name == FUNCTION_PARAMS:
-                    function_params.update(component_and_fct_params.pop(FUNCTION_PARAMS))
-                else:
-                    raise ComponentError(f"Unrecognized argument(s) passed to runtime_params "
-                                         f"for {self.name}: '{param_name}'")
+                    function_params.update(runtime_params[FUNCTION_PARAMS])
 
         # MODIFIED 5/8/20 END
 
@@ -2673,13 +2654,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # MODIFIED 5/8/20 NEW: [JDC]
         #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
         #       ?REPLACE RESET IN check_args
+        # FIX 5/8/20 [JDC]:  FAILS test_transfer_mechanism:
         # Restore runtime_params to previous value
-        # if runtime_params:
-        #     for param in runtime_params:
-        component_and_fct_params.update(component_params)
-        component_and_fct_params.update(function_params)
-        if component_and_fct_params:
-            for param in component_and_fct_params:
+        if runtime_params:
+            for param in runtime_params:
                 try:
                     prev_val = getattr(self.parameters, param).get_previous(context)
                     self._set_parameter_value(param, prev_val, context)

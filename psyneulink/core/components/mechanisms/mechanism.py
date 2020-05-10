@@ -2343,6 +2343,7 @@ class Mechanism_Base(Mechanism):
 
         # PARSE runtime_params
 
+        # FIX 5/8/20 [JDC]:
         # Extract runtime_params for each port-type into their own dicts,
         #    leaving ones for the Mechanism itself and/or its function in runtime_params
         runtime_input_port_params = {}
@@ -2352,12 +2353,6 @@ class Mechanism_Base(Mechanism):
             runtime_input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
             runtime_parameter_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
             runtime_output_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
-
-            # # FIX 5/8/20 [JDC]: FROM PORT;  MODIFY FOR MECH
-            # # All remaining runtime_params should be for other Mechanism
-            # if not set(runtime_params.keys()).issubset(PORT_PARAM_KEYWORDS):
-            #     diff = ", ".join(list(set(runtime_params.keys()).difference(PORT_PARAM_KEYWORDS)))
-            #     raise MechanismError(f"Unrecognized argument passed to runtime_params for {self.name}: '{diff}'")
 
         # EXECUTE MECHANISM
 
@@ -2373,10 +2368,11 @@ class Mechanism_Base(Mechanism):
 
             # UPDATE VARIABLE and InputPort(s)
             # Executing or simulating Composition, so get input by updating input_ports
-            # FIX 5/8/20 [JDC]: CHANGE runtime_params TO INPUT_PORT AND PROJECTION-SPECIFIC RUNTIME PARAMS
+            # FIX 5/8/20 [JDC]:
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
+                # variable = self._update_input_ports(runtime_params=runtime_params, context=context)
                 variable = self._update_input_ports(runtime_params=runtime_input_port_params,
                                                     context=context)
 
@@ -2397,7 +2393,8 @@ class Mechanism_Base(Mechanism):
             self.parameters.variable._set(variable, context=context)
 
             # UPDATE PARAMETERPORT(S)
-            # FIX 5/8/20 [JDC]: CHANGE runtime_params TO PARAMETER_PORT AND PROJECTION-SPECIFIC RUNTIME PARAMS
+            # FIX 5/8/20 [JDC]:
+            # self._update_parameter_ports(runtime_params=runtime_params, context=context)
             self._update_parameter_ports(runtime_params=runtime_parameter_port_params,
                                          context=context)
 
@@ -2434,7 +2431,8 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
-            # FIX 5/8/20 [JDC]: CHANGE runtime_params TO OUTPUT_PORT AND PROJECTION-SPECIFIC RUNTIME PARAMS
+            # FIX 5/8/20 [JDC]:
+            # self._update_output_ports(runtime_params=runtime_params, context=context)
             self._update_output_ports(runtime_params=runtime_output_port_params,
                                       context=context)
 
