@@ -158,7 +158,7 @@ class TestCompositionRuntimeParams:
                   T2: {
                       'noise': 0.5,                        # Mechanism's parameter
                       'intercept': 1,                       # Mechanism's function parameter
-                      # FIX: WHAT ABOUT PROJECTION PARAMS?
+                      # FIX 5/8/20 [JDC]: WHAT ABOUT PROJECTION PARAMS?
                       INPUT_PORT_PARAMS: {
                           'weight':5,                      # InputPort's parameter
                           'scale':20,                      # InputPort's function (LinearCombination) parameter
@@ -201,10 +201,9 @@ class TestCompositionRuntimeParams:
         with pytest.raises(ComponentError) as error_text:
             C.run(inputs={T1: 2.0},
                   runtime_params={
-                      T1: {'slope': 3},
                       T2: {
                           'noise': 0.5,
-                          'glorp': 22,  # Bad Mechanism arg
+                          'glorp': 22,                        # Bad Mechanism arg
                           'intercept': 1,
                           INPUT_PORT_PARAMS: {
                               'weight':5,
@@ -225,7 +224,7 @@ class TestCompositionRuntimeParams:
                           INPUT_PORT_PARAMS: {
                               'weight':5,
                               'scale':20,
-                              'trigot':16,  # Bad InputPort arg
+                              'trigot':16,                    # Bad InputPort arg
                               FUNCTION_PARAMS:{'weights':10,
                                                }}
                       }
@@ -244,7 +243,7 @@ class TestCompositionRuntimeParams:
                               'weight':5,
                               'scale':20,
                               FUNCTION_PARAMS:{'weights':10,
-                                               'flurb': 12, # Bad InputPort function arg
+                                               'flurb': 12,   # Bad InputPort function arg
                                                }}
                       }
                   })
