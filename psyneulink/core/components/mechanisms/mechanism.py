@@ -927,19 +927,19 @@ that sub-dictionary, specification of parameters for the Port or its `function <
 format for a `parameter specification dictionary <ParameterPort_Specification>`.
 
 COMMENT:
-   EXAMPLES HERE
+   FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
 COMMENT
 
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain entries specifying parameters
-its afferent `Projections <Port_Projections>` Projections.   Parameters for all of its afferent projections are
-specified in an entry with the key *PROJECTION_PARAMS*, and a value that is a sub-dictionary contains the parameter
+for its afferent `Projections <Port_Projections>` Projections.   Parameters for all of its afferent projections are
+specified in an entry with the key *PROJECTION_PARAMS*, and a value that is a sub-dictionary containing the parameter
 specifications for the Projections;  parameters for Projections of a particular type can be placed in an entry with a
 key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*,
 or *GATING_PROJECTION_PARAMS*); and parameters for an individual Projection can be placed in an entry with a key
 specifying the name of the Projection and a sub-dictionary with specifications of its parameters.
 
 COMMENT:
-   EXAMPLES HERE AND ADD CORRESPONDING TESTS
+   FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
 COMMENT
 
 .. note::
