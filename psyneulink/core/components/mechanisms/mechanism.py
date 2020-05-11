@@ -1908,9 +1908,10 @@ class Mechanism_Base(Mechanism):
         if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
             labels_dict = params[INPUT_LABELS_DICT]
             if isinstance(list(labels_dict.values())[0], dict):
-                for key, ld in labels_dict.values():
-                    validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
-                    validate_labels_dict(ld, INPUT_LABELS_DICT)
+                for subdict in labels_dict.values():
+                    for key, ld in subdict.items():
+                        validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
+                        validate_labels_dict(ld, INPUT_LABELS_DICT)
             else:
                 validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
 
