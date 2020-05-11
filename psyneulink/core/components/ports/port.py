@@ -1865,61 +1865,10 @@ class Port_Base(Port):
         # """
         # SET UP ------------------------------------------------------------------------------------------------
 
-        # # MODIFIED 5/8/20 OLD:
-        # # Get Port-specific param_specs
-        # try:
-        #     # Get Port's params
-        #     runtime_params = params[self.paramsType]
-        # except (KeyError, TypeError):
-        #     runtime_params = {}
-        # except (AttributeError):
-        #     raise PortError("PROGRAM ERROR: paramsType not specified for {self.name}.")
-        # MODIFIED 5/8/20 NEW:
         runtime_params = params or {}
-        # MODIFIED 5/8/20 END
-
-
-        # FIX: GENERATE ERRORS FOR UNRECOGNIZED RUNTIME PARAMS (USE POPPING FROM DICTS?)
-        # # MODIFIED 5/9/20 NEW:
-        # # Get port's own params and any passed in for its function
-        # port_and_function_params = {k: v for k,v in runtime_params.items()
-        #                             if k in self.parameters.names() + self.function.parameters.names()}
-        # MODIFIED 5/9/20 NEWER:
-        # FIX: PARSE AND SEPARATE PORT AND FUNCTON PARAMS:
-        #       - ASSIGN PORT PARAMS
-        #       - PASSING FUNCTION PARAMS TO EXECUTE
-        # FIX: SIMILAR TO PORT:  ??MOVE PORT-SPECIFIC PARAM HANDLING TO Mechanism.execute?
-        # port_and_function_params = {}
-
-        # Get port and function params from runtime_params
-        # FIX 5/8/20 [JDC] MOVE TO COMPONENT; OR ANY NEED TO DO AT ALL? SINCE MECH HAS FILETERED ANY UNECESSARY ONES?
-        port_params = {}
-        function_params = {}
-        runtime_params_copy = runtime_params.copy()
-        # for param_name in runtime_params.copy():
-        for param_name in runtime_params:
-            if hasattr(self, param_name):
-                # port_and_function_params[param_name] = runtime_params[param_name]
-                port_params[param_name] = runtime_params_copy.pop(param_name)
-            elif hasattr(self.function, param_name):
-                function_params[param_name] = runtime_params_copy.pop(param_name)
-            elif param_name == FUNCTION_PARAMS:
-                function_params.update(runtime_params_copy.pop(FUNCTION_PARAMS))
-        # [runtime_params.pop(param) for param in port_and_function_params]
-
-        # All remaining runtime_params should be for other Ports or Projections
-        if not set(runtime_params_copy.keys()).issubset(PORT_PARAM_KEYWORDS):
-            diff = ", ".join(list(set(runtime_params_copy.keys()).difference(PORT_PARAM_KEYWORDS)))
-            raise PortError(f"Unrecognized argument passed to runtime_params "
-                            f"for {self.name} of {self.owner.name}: '{diff}'")
-
-        # # Assign port's runtime_params
-        # FIX 5/8/20
-        # NEEDED TO ASSIGN PORT'S PARAMS
-        # self._manage_runtime_params(port_params, context)
-        self._check_args(params=port_params, context=context)
-        # MODIFIED 5/9/20 END
-
+        # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
+        if FUNCTION_PARAMS in runtime_params:
+            runtime_params.update(runtime_params.pop(FUNCTION_PARAMS))
 
         # # Flag format of input
         # if isinstance(self.value, numbers.Number):
@@ -2099,29 +2048,22 @@ class Port_Base(Port):
             # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
             # Set modulatory parameter's value
             param._set(mod_val, context)
-
-            # MODIFIED 5/9/20 OLD:
-            # if not FUNCTION_PARAMS in runtime_params:
-            #     runtime_params[FUNCTION_PARAMS] = {mod_param_name: mod_val}
-            # else:
-            #     runtime_params[FUNCTION_PARAMS].update({mod_param_name: mod_val})
-            # MODIFIED 5/9/20 NEW:
-            function_params.update({mod_param_name: mod_val})
-            # MODIFIED 5/9/20 END
-
-        # if FUNCTION_PARAMS in runtime_params:
-        #     function_params.update(runtime_params[FUNCTION_PARAMS])
+            # Add mod_param and its value to runtime_params for Port's function
+            # FIX 5/8/20
+            runtime_params.update({mod_param_name: mod_val})
 
         # CALL PORT'S function TO GET ITS VALUE  ----------------------------------------------------------------------
 
-        # FIX 5/8/20
-        port_params.update(function_params)
+        # FIX 5/8/20:
+        # First, make sure all params are OK
+        self._manage_runtime_params(runtime_params, context=context)
 
         # Skip execution and set value directly if function is identity_function and no runtime_params were passed
+        # FIX 5/8/20
         if (
             len(self.all_afferents) == 0
             and self.function._is_identity(context)
-            and not function_params
+            and not runtime_params
         ):
             variable = self._parse_function_variable(self._get_fallback_variable(context))
             self.parameters.variable._set(variable, context)
@@ -2133,8 +2075,7 @@ class Port_Base(Port):
             self.function.most_recent_context = context
         else:
             # FIX 5/8/20
-            self.execute(context=context, runtime_params=port_params)
-            # self.execute(context=context, runtime_params=function_params)
+            self.execute(context=context, runtime_params=runtime_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:

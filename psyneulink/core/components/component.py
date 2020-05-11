@@ -1656,16 +1656,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                                                                            param_name)._get(context)
                     self._set_parameter_value(param_name, runtime_params[param_name], context)
                 # Any remaining params should either belong to the Component's function
-                #    or, if the Component is a Function, no params should be specified that don't belong to it
-                elif ((hasattr(self, FUNCTION) and not hasattr(self.function, param_name)
-                       or is_function_type(self))):
+                #    or, if the Component is a Function, to it or its owner
+                # FIX 5/8/20:  BREAK OUT ERRORS FOR COMPONENT AND ITS FUNCTION
+                elif ( # If Component is not a function, and its function doesn't have the parameter or
+                        (not is_function_type(self) and not hasattr(self.function, param_name))
+                       # the Component is a standalone function:
+                       or (is_function_type(self) and not self.owner)):
                     owner_name = ""
                     if hasattr(self, OWNER) and self.owner:
                         owner_name = f" of {self.owner.name}"
                         if hasattr(self.owner, OWNER) and self.owner.owner:
                             owner_name = f"{owner_name} of {self.owner.owner.name}"
-                    raise FunctionError(f"Invalid specification of runtime parameter "
-                                         f"for {self.name}{owner_name}: '{param_name}'.")
+                    err_msg=f"Invalid specification of runtime parameter for {self.name}{owner_name}: '{param_name}'."
+                    if is_function_type(self):
+                        raise FunctionError(err_msg)
+                    else:
+                        raise ComponentError(err_msg)
 
         elif runtime_params:    # not None
             raise ComponentError(f"Invalid specification of runtime parameters for {self.name}: {runtime_params}.")
@@ -2601,34 +2607,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.variable._set(variable, context=context)
 
-        # FIX 5/8/20:  JUST NEED TO EXTRACT FUNCTION PARAMS;
-        #              NO NEED TO SEPARATE OUT COMPONENT ONES
-        #                 -- CAN KEEP THEM IN RUN_TIME PARAMS, AND USE THAT TO RESET AT END (BELOW)
-        #              REPLACE _manage_runtime_params WITH CALL TO _check_args IN PORT (AS IN MECH AND FUNCTION)
-        #                      (DO SAME FOR PROJECTIONS?)
-        # # MODIFIED 5/8/20 EMULATE OLD:
-        # function_params = runtime_params
-        # MODIFIED 5/8/20 NEW:
-        function_params = {}
-        if runtime_params:
-            # Validate that all params belong to Component or its function
-            for param_name in runtime_params:
-                if (hasattr(self, param_name)
-                        or (hasattr(self, FUNCTION) and hasattr(self.function, param_name)
-                            or param_name == FUNCTION_PARAMS)):
-                    continue
-                else:
-                    raise ComponentError(f"Unrecognized argument passed to runtime_params "
-                                         f"for {self.name}: '{param_name}'")
-
-            # Get function_params
-            for param_name in runtime_params:
-                if hasattr(self.function, param_name):
-                    function_params[param_name] = runtime_params[param_name]
-                elif param_name == FUNCTION_PARAMS:
-                    function_params.update(runtime_params[FUNCTION_PARAMS])
-
-        # MODIFIED 5/8/20 END
+        # # MODIFIED 5/8/20 NEW:
+        # function_params = {}
+        # if runtime_params:
+        #     # FIX 5/8/20 [JDC]:  UNNECESSARY SINCE function_params CAN'T BE USED (DUE TO IntegratorFunction
+        #     # Get function_params
+        #     for param_name in runtime_params:
+        #         if hasattr(self.function, param_name):
+        #             function_params[param_name] = runtime_params[param_name]
+        #         elif param_name == FUNCTION_PARAMS:
+        #             function_params.update(runtime_params[FUNCTION_PARAMS])
+        # # MODIFIED 5/8/20 END
 
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
@@ -2645,6 +2634,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         function_variable = self._parse_function_variable(variable, context=context)
+        # FIX 5/8/20 [JDC]:
+        #    NEED TO PASS FULL runtime_params (AND NOT JUST function_params)
+        #    SINCE IntegratorMechanisms SEEM TO NEED THAT
+        # value = self.function(variable=function_variable, context=context, params=function_params, **kwargs)
         value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
         try:
             self.function.parameters.value._set(value, context)
@@ -2654,9 +2647,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self.most_recent_context = context
 
         # MODIFIED 5/8/20 NEW: [JDC]
-        #  FIX: NEEDED SO THAT ACCESS OF VALUES AFTER Mechanism.execute SHOWS RESTORED VALUES
-        #       ?REPLACE RESET IN check_args
-        # FIX 5/8/20 [JDC]:  FAILS test_transfer_mechanism:
         # Restore runtime_params to previous value
         if runtime_params:
             for param in runtime_params:

@@ -1525,7 +1525,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # FIX 5/8/20 [JDC]:
         current_input = self.integrator_function.execute(function_variable,
                                                          context=context,
-                                                         # Should we handle runtime params?
+                                                         # Should we handle runtime paramsd?
                                                          runtime_params={
                                                              INITIALIZER: initial_value,
                                                              NOISE: noise,

@@ -1,5 +1,8 @@
 import numpy as np
+import pytest
 
+from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial
@@ -154,16 +157,13 @@ class TestCompositionRuntimeParams:
                   T1: {'slope': 3},                         # Mechanism's function (Linear) parameter
                   T2: {
                       'noise': 0.5,                        # Mechanism's parameter
-                      # 'glorp': 22,  # FIX: MECHANISM PARAM STILL PASSES BUT SHOULDN'T
                       'intercept': 1,                       # Mechanism's function parameter
                       # FIX: WHAT ABOUT PROJECTION PARAMS?
                       INPUT_PORT_PARAMS: {
                           'weight':5,                      # InputPort's parameter
                           'scale':20,                      # InputPort's function (LinearCombination) parameter
-                          # 'trigot':16,  # THIS FAILS
-                          FUNCTION_PARAMS:{'weights':10,
-                                           # 'flurb': 12,   # FIX: FUNCTION PARAM STILL PASSES BUT SHOULDN'T
-                                           }}  # InputPort's function (LinearCombination) parameter
+                          FUNCTION_PARAMS:{'weights':10,   # InputPort's function (LinearCombination) parameter
+                                           }}
                   }
               })
         assert T2.parameters.value.get(C.default_execution_id) == [1201.5]
@@ -186,6 +186,70 @@ class TestCompositionRuntimeParams:
         assert T1.function.slope == 5.0
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 4.0
+
+    def test_composition_run_mechanism_inputport_runtime_param_errors(self):
+
+        # Construction
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        C = Composition(pathways=[T1,T2])
+
+        T1.function.slope = 5
+        T2.input_port.function.scale = 4
+
+        # Bad Mechanism param specified
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0},
+                  runtime_params={
+                      T1: {'slope': 3},
+                      T2: {
+                          'noise': 0.5,
+                          'glorp': 22,  # Bad Mechanism arg
+                          'intercept': 1,
+                          INPUT_PORT_PARAMS: {
+                              'weight':5,
+                              'scale':20,
+                              FUNCTION_PARAMS:{'weights':10}}
+                      }
+                  })
+        assert ("Invalid specification of runtime parameter for TransferMechanism" in error_text.value.error_value and
+                "'glorp'" in error_text.value.error_value)
+
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0},
+                  runtime_params={
+                      T1: {'slope': 3},
+                      T2: {
+                          'noise': 0.5,
+                          'intercept': 1,
+                          INPUT_PORT_PARAMS: {
+                              'weight':5,
+                              'scale':20,
+                              'trigot':16,  # Bad InputPort arg
+                              FUNCTION_PARAMS:{'weights':10,
+                                               }}
+                      }
+                  })
+        assert ("Invalid specification of runtime parameter for InputPort" in error_text.value.error_value and
+                "'trigot'" in error_text.value.error_value)
+
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0},
+                  runtime_params={
+                      T1: {'slope': 3},
+                      T2: {
+                          'noise': 0.5,
+                          'intercept': 1,
+                          INPUT_PORT_PARAMS: {
+                              'weight':5,
+                              'scale':20,
+                              FUNCTION_PARAMS:{'weights':10,
+                                               'flurb': 12, # Bad InputPort function arg
+                                               }}
+                      }
+                  })
+        assert ("Invalid specification of runtime parameter for InputPort" in error_text.value.error_value and
+                "'flurb'" in error_text.value.error_value)
 
     def test_composition_run_mechanism_runtime_param_with_condition(self):
 
