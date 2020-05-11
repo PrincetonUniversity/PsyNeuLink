@@ -994,9 +994,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         context = Context(
             source=ContextFlags.COMPONENT,
-            # FIX 5/8/20 [JDC]:
-            # execution_phase=ContextFlags.IDLE,
-            execution_phase=ContextFlags.INITIALIZING
+            execution_phase=ContextFlags.IDLE,
         )
 
         try:
