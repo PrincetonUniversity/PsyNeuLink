@@ -1657,7 +1657,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     self._set_parameter_value(param_name, runtime_params[param_name], context)
                 # Any remaining params should either belong to the Component's function
                 #    or, if the Component is a Function, to it or its owner
-                # FIX 5/8/20:  BREAK OUT ERRORS FOR COMPONENT AND ITS FUNCTION
                 elif ( # If Component is not a function, and its function doesn't have the parameter or
                         (not is_function_type(self) and not hasattr(self.function, param_name))
                        # the Component is a standalone function:
@@ -1667,7 +1666,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         owner_name = f" of {self.owner.name}"
                         if hasattr(self.owner, OWNER) and self.owner.owner:
                             owner_name = f"{owner_name} of {self.owner.owner.name}"
-                    err_msg=f"Invalid specification of runtime parameter for {self.name}{owner_name}: '{param_name}'."
+                    err_msg=f"Invalid specification in runtime_params arg for {self.name}{owner_name}: '{param_name}'."
                     if is_function_type(self):
                         raise FunctionError(err_msg)
                     else:

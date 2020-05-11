@@ -212,7 +212,7 @@ class TestCompositionRuntimeParams:
                               FUNCTION_PARAMS:{'weights':10}}
                       }
                   })
-        assert ("Invalid specification of runtime parameter for TransferMechanism" in error_text.value.error_value and
+        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
                 "'glorp'" in error_text.value.error_value)
 
         with pytest.raises(ComponentError) as error_text:
@@ -230,8 +230,8 @@ class TestCompositionRuntimeParams:
                                                }}
                       }
                   })
-        assert ("Invalid specification of runtime parameter for InputPort" in error_text.value.error_value and
-                "'trigot'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
+                "of TransferMechanism" in error_text.value.error_value and "'trigot'" in error_text.value.error_value)
 
         with pytest.raises(ComponentError) as error_text:
             C.run(inputs={T1: 2.0},
@@ -248,8 +248,8 @@ class TestCompositionRuntimeParams:
                                                }}
                       }
                   })
-        assert ("Invalid specification of runtime parameter for InputPort" in error_text.value.error_value and
-                "'flurb'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
+                "of TransferMechanism" in error_text.value.error_value and "'flurb'" in error_text.value.error_value)
 
     def test_composition_run_mechanism_runtime_param_with_condition(self):
 
