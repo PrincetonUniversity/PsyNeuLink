@@ -94,6 +94,21 @@ class TestMechanismRuntimeParams:
         assert T.value == 4.0
         assert T.function.slope == 2.0
 
+    def test_mechanism_execute_mechanism_runtime_param_error(self):
+        T = TransferMechanism()
+        with pytest.raises(ComponentError) as error_text:
+            T.execute(runtime_params={"glunfump": 10.0}, input=2.0)
+        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
+                "'glunfump'" in error_text.value.error_value)
+
+    # def test_mechanism_execute_mechanism_fuction_runtime_param_errors(self):
+    #     # FIX 5/8/20 [JDC]: SHOULD FAIL BUT DOESN'T:
+    #     T = TransferMechanism()
+    #     with pytest.raises(ComponentError) as error_text:
+    #         T.function.execute(runtime_params={"spranit": 23})
+    #     assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
+    #             "'spranit'" in error_text.value.error_value)
+
 class TestCompositionRuntimeParams:
 
     def test_composition_run_mechanism_runtime_param_no_condition(self):
@@ -361,3 +376,131 @@ class TestCompositionRuntimeParams:
                                       np.array([[20.]]),     # Trial 4 - NOT condition 0, condition 1
                                       np.array([[2.]])])     # New run (runtime param no longer applies)
 
+    def test_composition_run_function_runtime_params_with_different_but_overlapping_conditions(self):
+
+        # Construction
+        T = TransferMechanism()
+        C = Composition()
+        C.add_node(T)
+
+        assert T.function.slope == 1.0
+        assert T.parameter_ports['slope'].value == 1.0
+
+        # run with runtime param used for slope only on trial 1 and after 2 (i.e., 3 and 4)
+        C.run(inputs={T: 2.0},
+              runtime_params={T: {"slope": (10.0, Any(AtTrial(1), AfterTrial(2))),
+                                  "intercept": (1.0, AfterTrial(1))}},
+              num_trials=4)
+        # slope restored to default
+        assert T.function.slope == 1.0
+        assert T.parameter_ports['slope'].value == 1.0
+        assert T.function.intercept == 0.0
+        assert T.parameter_ports['intercept'].value == 0.0
+
+        # run again to insure restored default for slope after last run
+        C.run(inputs={T: 2.0})
+
+        # results reflect runtime_param used for slope only on trials 1, 3 and 4
+        assert np.allclose(C.results,[np.array([[2.]]),      # Trial 0 - neither condition met
+                                      np.array([[20.]]),     # Trial 1 - slope condition met, intercept not met
+                                      np.array([[3.]]),      # Trial 2 - slope condition not met, intercept met
+                                      np.array([[21.]]),      # Trial 3 - both conditions met
+                                      np.array([[2.]])])     # New run (runtime param no longer applies)
+
+    def test_composition_run_mechanism_runtime_params_with_combined_conditions_for_all_INPUT_PORT_PARAMS(self):
+        # Construction
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        C = Composition(pathways=[T1,T2])
+
+        T1.function.slope = 5
+        T2.input_port.function.scale = 4
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
+                  T2: {
+                      'noise': 0.5,
+                      'intercept': (1, AtTrial(2)),           # Condition on Mechanism's function parameter
+                      # FIX 5/8/20 [JDC]: WHAT ABOUT PROJECTION PARAMS?
+                      INPUT_PORT_PARAMS: ({
+                          'weight':5,
+                          'scale':20,
+                          FUNCTION_PARAMS:{'weights':10,
+                                           }}, AtTrial(3))    # Condition on INPUT_PORT_PARAMS
+                  }
+              },
+              num_trials=4
+              )
+
+        # all parameters restored to previous values (assigned or defaults)
+        assert T1.function.parameters.slope.get(C) == 5.0
+        assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
+        assert T2.parameters.noise.get(C) == 0.0
+        assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
+        assert T2.function.intercept == 0.0
+        assert T2.function.parameters.intercept.get(C) == 0.0
+        assert T2.input_port.weight == None
+        assert T2.input_port.function.scale == 4.0
+        assert T2.input_port.function.parameters.scale.get(C) == 4.0
+        assert T2.input_port.function.weights == None
+        assert T2.input_port.function.parameters.weights.get(C) == None
+
+        # run again to insure restored default for noise after last run
+        C.run(inputs={T1: 2.0}, )
+
+        assert np.allclose(C.results,[np.array([[40.5]]),   # Trial 0 - no conditions met (2*5*4)+0.5
+                                      np.array([[24.5]]),   # Trial 1 - only T1.slope condition met (2*3*4)+0.5
+                                      np.array([[41.5]]),   # Trial 2 - only T2.intercept condition met (2*5*4)+1+0.5
+                                      np.array([[2000.5]]), # Trial 3 - only T2 INPUT_PORT_PARAMS conditions met
+                                                            #               (2*5*20*10) + 0.5
+                                      np.array([[40.]])]) # New run - revert to assignments before previous run (2*5*4)
+
+    def test_composition_run_mechanism_runtime_params_with_combined_conditions_for_individual_INPUT_PORT_PARAMS(self):
+        # Construction
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        C = Composition(pathways=[T1,T2])
+
+        T1.function.slope = 5
+        T2.input_port.function.scale = 4
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
+                  T2: {
+                      'noise': 0.5,
+                      'intercept': (1, AtTrial(2)),           # Condition on Mechanism's function parameter
+                      # FIX 5/8/20 [JDC]: WHAT ABOUT PROJECTION PARAMS?
+                      INPUT_PORT_PARAMS: {
+                          'weight':5,
+                          # FIX 5/8/20 [JDC] ADD TEST FOR THIS ERROR:
+                          # 'scale': (20, AtTrial(3), 3 ),
+                          'scale': (20, AtTrial(3)),
+                          FUNCTION_PARAMS:{'weights':(10, AtTrial(4))}
+                      }
+                  },
+              },
+              num_trials=4
+              )
+
+        # all parameters restored to previous values (assigned or defaults)
+        assert T1.function.parameters.slope.get(C) == 5.0
+        assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
+        assert T2.parameters.noise.get(C) == 0.0
+        assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
+        assert T2.function.intercept == 0.0
+        assert T2.function.parameters.intercept.get(C) == 0.0
+        assert T2.input_port.weight == None
+        assert T2.input_port.function.scale == 4.0
+        assert T2.input_port.function.parameters.scale.get(C) == 4.0
+        assert T2.input_port.function.weights == None
+        assert T2.input_port.function.parameters.weights.get(C) == None
+
+        # run again to insure restored default for noise after last run
+        C.run(inputs={T1: 2.0}, )
+
+        assert np.allclose(C.results,[np.array([[40.5]]),   # Trial 0 - no conditions met (2*5*4)+0.5
+                                      np.array([[24.5]]),   # Trial 1 - only T1.slope condition met (2*3*4)+0.5
+                                      np.array([[41.5]]),   # Trial 2 - only T2.intercept condition met (2*5*4)+1+0.5
+                                      np.array([[2000.5]]), # Trial 3 - only T2 INPUT_PORT_PARAMS conditions met
+                                                            #               (2*5*20*10) + 0.5
+                                      np.array([[40.]])]) # New run - revert to assignments before previous run (2*5*4)

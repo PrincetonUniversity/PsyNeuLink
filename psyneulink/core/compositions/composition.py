@@ -9032,13 +9032,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, Mechanism):
 
                     execution_runtime_params = {}
-
                     if node in runtime_params:
-                        for param in runtime_params[node]:
-                            if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
-                                               # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                           context=context):
-                                execution_runtime_params[param] = runtime_params[node][param][0]
+                        # # MODIFIED 5/8/20 OLD:
+                        # for param in runtime_params[node]:
+                        #     if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
+                        #                        # KAM 5/15/18 - not sure if this will always be the correct execution id:
+                        #                                                    context=context):
+                        #         execution_runtime_params[param] = runtime_params[node][param][0]
+                        # MODIFIED 5/8/20 NEW:
+                        # FIX 5/8/20 [JDC]: NEED TO RECURSIELY PARSE SUBDICTS HERE AS WELL
+                        execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
+                                                                                                 execution_scheduler,
+                                                                                                 context))
+                        # MODIFIED 5/8/20 END
 
                     # Set context.execution_phase
 
@@ -9056,7 +9062,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
                             context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
-                    # Execute node
+                    # Execute Mechanism
                     if bin_execute:
                         _comp_ex.execute_node(node)
                     else:
@@ -9069,20 +9075,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 runtime_params=execution_runtime_params,
                             )
 
-                    # Reset runtime_params for node and its function if specified
+                        # Reset runtim_params
+                        # Reset any specified for Mechanism
                         if context.execution_id in node._runtime_params_reset:
                             for key in node._runtime_params_reset[context.execution_id]:
                                 node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
                                                           context)
                         node._runtime_params_reset[context.execution_id] = {}
-
+                        # Reset any specified for Mechanism's function
                         if context.execution_id in node.function._runtime_params_reset:
                             for key in node.function._runtime_params_reset[context.execution_id]:
                                 node.function._set_parameter_value(
                                         key,
                                         node.function._runtime_params_reset[context.execution_id][key],
                                         context)
-
                         node.function._runtime_params_reset[context.execution_id] = {}
 
                     # Set execution_phase for node's context back to IDLE
@@ -9502,25 +9508,97 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return []
 
+    # # MODIFIED 5/8/20 OLD:
+    # def _parse_runtime_params(self, runtime_params):
+    #     if runtime_params is None:
+    #         return {}
+    #     for node in runtime_params:
+    #         for param in runtime_params[node]:
+    #             if isinstance(runtime_params[node][param], tuple):
+    #                 if len(runtime_params[node][param]) == 1:
+    #                     runtime_params[node][param] = (runtime_params[node][param], Always())
+    #                 elif len(runtime_params[node][param]) != 2:
+    #                     raise CompositionError(
+    #                         "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
+    #                         "Must be a tuple of the form (parameter value, condition), or simply the "
+    #                         "parameter value. ".format(runtime_params[node][param],
+    #                                                    node.name,
+    #                                                    param,
+    #                                                    self.name))
+    #             else:
+    #                 runtime_params[node][param] = (runtime_params[node][param], Always())
+    #     return runtime_params
+    # MODIFIED 5/8/20 NEW:
     def _parse_runtime_params(self, runtime_params):
+        """Validate runtime_params and assign Always() for any params that don't have a Condition already specified.
+        Recursively process any subdicts (Port- or Project-specific dictionaries of params)
+        # FIX 5/8/20 [JDC] - TBI: USE ANY TO COMBINE Condition SPEC FOR SUBDICT WITH ANY Conditions NESTED WITHIN IT
+        """
+        def validate_and_assign_default_condition(node, entry, param_key, param_value):
+            if not isinstance(param_value, tuple):
+                param_spec = param_value
+                # Default Condition
+                param_condition = Always()
+            # Paramter specified as tuple
+            else:
+                param_spec = param_value[0]
+                if len(param_value)==1:
+                    # Default Condition
+                    param_condition = Always()
+                elif len(param_value)==2:
+                    # Condition specified, so use it
+                    param_condition = param_value[1]
+                else:
+                    # Invalid tuple
+                    raise CompositionError(f"Invalid runtime parameter specification "
+                                           f"for {node.name}'s {param_key} parameter in {self.name}: "
+                                           f"'{entry}: {param_value}'. "
+                                           f"Must be a tuple of the form (parameter value, condition), "
+                                           f"or simply the parameter value.")
+            if isinstance(param_spec, dict):
+                for entry in param_spec:
+                    param_spec[entry] = validate_and_assign_default_condition(node,
+                                                                              entry,
+                                                                              param_key,
+                                                                              param_spec[entry])
+            return (param_spec, param_condition)
+
         if runtime_params is None:
             return {}
         for node in runtime_params:
             for param in runtime_params[node]:
-                if isinstance(runtime_params[node][param], tuple):
-                    if len(runtime_params[node][param]) == 1:
-                        runtime_params[node][param] = (runtime_params[node][param], Always())
-                    elif len(runtime_params[node][param]) != 2:
-                        raise CompositionError(
-                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-                            "Must be a tuple of the form (parameter value, condition), or simply the "
-                            "parameter value. ".format(runtime_params[node][param],
-                                                       node.name,
-                                                       param,
-                                                       self.name))
-                else:
-                    runtime_params[node][param] = (runtime_params[node][param], Always())
+                param_value = runtime_params[node][param]
+                runtime_params[node][param] = validate_and_assign_default_condition(node,
+                                                                                    runtime_params[node],
+                                                                                    param,
+                                                                                    param_value)
         return runtime_params
+    # MODIFIED 5/8/20 END
+
+    def _get_satisfied_runtime_param_values(self, params_dict, scheduler,context):
+        """Return dict with values for all runtime_params the Conditions of which are currently met."""
+
+        def get_satisfied_param_val(param_tuple):
+            param_val, param_condition = param_tuple
+            if isinstance(param_val, dict):
+                # FIX 5/8/20 [JDC]: ?PUT TEST FOR CONDITION MET ON DICT HERE (OR IS THAT TAKEN CARE OF AUTOMATICALLY)?
+                for entry in param_val:
+                    param_val[entry] = get_satisfied_param_val(param_val[entry])
+            # KAM 5/15/18 - not sure if this will always be the correct execution id:
+            if param_condition.is_satisfied(scheduler=scheduler,context=context):
+                return param_val
+            else:
+                return None
+
+        execution_params_for_node = {}
+        for param in params_dict:
+            param_val = get_satisfied_param_val(params_dict[param])
+            if param_val is None:
+                continue
+            execution_params_for_node[param] = param_val
+            # if params_dict[param][1].is_satisfied(scheduler=scheduler,context=context):
+            #     execution_params_for_node[param] = params_dict[param][0]
+        return execution_params_for_node
 
     def _after_agent_rep_execution(self, context=None):
         pass
