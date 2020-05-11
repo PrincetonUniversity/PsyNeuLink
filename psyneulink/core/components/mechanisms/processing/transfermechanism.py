@@ -1522,15 +1522,15 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = self.integrator_function.noise
             self._needs_integrator_function_init = False
 
-        current_input = self.integrator_function.execute(
-            function_variable,
-            context=context,
-            # Should we handle runtime params?
-            runtime_params={
-                INITIALIZER: initial_value,
-                NOISE: noise,
-                RATE: integration_rate
-            },
+        # FIX 5/8/20 [JDC]:
+        current_input = self.integrator_function.execute(function_variable,
+                                                         context=context,
+                                                         # Should we handle runtime params?
+                                                         runtime_params={
+                                                             INITIALIZER: initial_value,
+                                                             NOISE: noise,
+                                                             RATE: integration_rate
+                                                         },
 
         )
 
@@ -1723,7 +1723,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
-        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_PORT
+        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO A STANDARD OUTPUT_PORT
         # Clip outputs
         clip = self._get_current_mechanism_param("clip", context)
 

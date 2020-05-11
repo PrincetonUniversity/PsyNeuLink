@@ -2606,6 +2606,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #                 -- CAN KEEP THEM IN RUN_TIME PARAMS, AND USE THAT TO RESET AT END (BELOW)
         #              REPLACE _manage_runtime_params WITH CALL TO _check_args IN PORT (AS IN MECH AND FUNCTION)
         #                      (DO SAME FOR PROJECTIONS?)
+        # # MODIFIED 5/8/20 EMULATE OLD:
+        # function_params = runtime_params
         # MODIFIED 5/8/20 NEW:
         function_params = {}
         if runtime_params:
@@ -2643,7 +2645,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #                     that are specific to particular class of Functions
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         function_variable = self._parse_function_variable(variable, context=context)
-        value = self.function(variable=function_variable, context=context, params=function_params, **kwargs)
+        value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
         try:
             self.function.parameters.value._set(value, context)
         except AttributeError:
