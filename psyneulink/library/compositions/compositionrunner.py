@@ -10,9 +10,8 @@
 import numpy as np
 import collections.abc
 
-from psyneulink.core.compositions.composition import Composition, NodeRole
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, LEARNING_MECHANISM, LEARNING_OBJECTIVE, TRAINING_SET
+from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
 
@@ -20,70 +19,10 @@ def inf_yield_none():
     while True:
         yield None
 
-def _recursive_update(d, u):
-    """
-    Recursively calls update on dictionaries, which prevents deletion of keys
-    """
-    for key, val in u.items():
-        if isinstance(val, collections.abc.Mapping):
-            d[key] = _recursive_update(d.get(key, {}), val)
-        else:
-            d[key] = val
-    return d
 class CompositionRunner():
 
     def __init__(self, compostion: Composition):
         self._composition = compostion
-
-    def _parse_stim_inputs(self, inputs: dict, targets: dict):
-        """
-        Converts inputs and targets to a standardized form
-
-        Returns
-        ---------
-        Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
-        """
-        # 1) Convert from key-value representation of values into separated representation
-        if 'targets' in inputs:
-            targets = inputs['targets'].copy()
-
-        if 'inputs' in inputs:
-            inputs = inputs['inputs'].copy()
-
-        # 2) Convert output node keys -> target node keys (learning always needs target nodes!)
-        if targets is not None:
-            targets = self._infer_target_nodes(targets)
-            inputs = _recursive_update(inputs, targets)
-
-        # 3) Resize inputs to be of the form [[[]]],
-        # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
-        inputs,_ = self._composition._parse_dict(inputs)
-        return inputs
-
-    def _infer_target_nodes(self, targets: dict):
-        """
-        Maps targets onto target mechanisms (as needed by learning)
-
-        Returns
-        ---------
-        A dict mapping TargetMechanisms -> target values
-        """
-        ret = {}
-        for node, values in targets.items():
-            if NodeRole.TARGET not in self._composition.get_roles_by_node(node) and NodeRole.LEARNING not in self._composition.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
-                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self._composition.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self._composition.get_roles_by_node(t) and NodeRole.LEARNING in self._composition.get_roles_by_node(t))]
-
-                if len(target_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node}!")
-
-                ret[target_nodes[0]] = values
-            else:
-                ret[node] = values
-        return ret
 
     def _calculate_loss(self, num_trials, context):
         """
@@ -182,10 +121,10 @@ class CompositionRunner():
             if 'epochs' in stim_input:
                 stim_epoch = stim_input['epochs']
 
-            stim_input = self._parse_stim_inputs(stim_input, stim_target)
+            stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input, stim_target)
 
             if num_trials is None:
-                num_trials = len(list(stim_input.values())[0])
+                num_trials = num_input_trials
 
             if minibatch_size == TRAINING_SET:
                 minibatch_size = num_trials
