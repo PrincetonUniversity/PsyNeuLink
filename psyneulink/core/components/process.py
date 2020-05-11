@@ -113,7 +113,7 @@ and is assigned to its `terminal_mechanism <Process.terminal_mechanism>` attribu
 
 Any Mechanism that sends a Projection that closes a recurrent loop within the `pathway <Process.pathway>` is
 designated as `INITIALIZE_CYCLE`; whenever that Mechanism is `initialized <Process_Execution_Initialization>`,
-it is assigned the value specified for it in the **initial_values** argument of the Process' `execute
+it is assigned the value specified for it in the **initialize_cycle_values** argument of the Process' `execute
 <Process.execute>` or `run <Process.run>` methods. Mechanisms that receive a Projection from one designated
 `INITIALIZE_CYCLE` are themselves designated as `CYCLE`.  All other Mechanisms in the `pathway <Process.pathway>`
 are designated as `INTERNAL`.
@@ -328,8 +328,8 @@ number, list or ndarray of values that is compatible with the `variable <Mechani
 only a single `TRIAL` is provided, and only a single `TRIAL` is executed.  The `run <System.run>` method can be
 used for a sequence of `TRIAL`\\s, by providing it with a list or ndarray of inputs, one for each `TRIAL`.  In both
 cases, two other types of input can be provided in corresponding arguments of the `execute <Process.execute>`
-and `run <Process.run>` methods: a  list or ndarray of **initial_values**, and a list or ndarray of **target**
-values. The **initial_values** are assigned as input to Mechanisms that close recurrent loops (designated as
+and `run <Process.run>` methods: a  list or ndarray of **initialize_cycle_values**, and a list or ndarray of **target**
+values. The **initialize_cycle_values** are assigned as input to Mechanisms that close recurrent loops (designated as
 `INITIALIZE_CYCLE`) at the start of a `TRIAL` (if **initialize** is set to `True`), and/or whenever the Process`
 `initialize <Process.initialize>` method is called; **target** values are assigned as the *TARGET* input of the
 `target_nodes <Process.target_nodes>` in each `TRIAL` of execution, if `learning
@@ -473,7 +473,7 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import _instantiate_port, _instantiate_port_list
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIAL_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
+    AUTO_ASSIGN_MATRIX, ENABLED, FUNCTION, FUNCTION_PARAMS, INITIALIZE_CYCLE_VALUES, INTERNAL, LEARNING, LEARNING_PROJECTION, \
     MAPPING_PROJECTION, MATRIX, NAME, OBJECTIVE_MECHANISM, ORIGIN, PARAMETER_PORT, PATHWAY, SENDER, SINGLETON, \
     TARGET, TERMINAL, PROCESS_COMPONENT_CATEGORY, RECEIVER_ARG
 from psyneulink.core.globals.parameters import Defaults, Parameter
@@ -533,7 +533,7 @@ class Process(Process_Base):
     Process(process_spec=None,                           \
     default_variable=None,                               \
     pathway=None,                                        \
-    initial_values={},                                   \
+    initialize_cycle_values={},                                   \
     clamp_input:=None,                                   \
     default_projection_matrix=DEFAULT_PROJECTION_MATRIX, \
     learning=None,                                       \
@@ -649,7 +649,7 @@ class Process(Process_Base):
         `initialize <Process.initialize>` method is called. The key for each entry is a ProcessingMechanism, and
         the value is a number, list or np.array that is assigned to that Mechanism's `value <Mechanism_Base.value>`
         attribute whenever it is initialized. `ProcessingMechanisms <ProcessingMechanism>` that are designated as
-        `INITIALIZE_CYCLE` but not included in the **initial_values** specification are initialized with the value of
+        `INITIALIZE_CYCLE` but not included in the **initialize_cycle_values** specification are initialized with the value of
         their `variable <Mechanism_Base.variable>` attribute (i.e., the default input for that Mechanism).
 
     value: 2d np.array
@@ -849,8 +849,8 @@ class Process(Process_Base):
                     :default value: `AUTO_ASSIGN_MATRIX`
                     :type: ``str``
 
-                initial_values
-                    see `initial_values <Process.initial_values>`
+                initialize_cycle_values
+                    see `initialize_cycle_values <Process.initialize_cycle_values>`
 
                     :default value: None
                     :type:
@@ -983,7 +983,7 @@ class Process(Process_Base):
         return super()._parse_arg_variable(convert_to_np_array(variable, dimension=2))
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate initial_values args
+        """Validate initialize_cycle_values args
            Note: validation of target (for learning) is deferred until _instantiate_target since,
                  if it doesn't have a TARGET Mechanism (see _check_for_target_mechanisms),
                  it will not need a target.
@@ -993,10 +993,10 @@ class Process(Process_Base):
 
         # Note: target_set (argument of validate_params) should not be confused with
         #       self.target (process attribute for learning)
-        if INITIAL_VALUES in target_set and target_set[INITIAL_VALUES]:
-            for mech, value in target_set[INITIAL_VALUES].items():
+        if INITIALIZE_CYCLE_VALUES in target_set and target_set[INITIALIZE_CYCLE_VALUES]:
+            for mech, value in target_set[INITIALIZE_CYCLE_VALUES].items():
                 if not isinstance(mech, Mechanism):
-                    raise SystemError("{} (key for entry in initial_values arg for \'{}\') "
+                    raise SystemError("{} (key for entry in initialize_cycle_values arg for \'{}\') "
                                       "is not a Mechanism object".format(mech, self.name))
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -1232,14 +1232,14 @@ class Process(Process_Base):
 
 
         # Validate initial values
-        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIAL_VALUES ENTRY
+        # FIX: CHECK WHETHER ALL MECHANISMS DESIGNATED AS INITALIZE HAVE AN INITIALIZE_CYCLE_VALUES ENTRY
         if self.initial_values:
             for mech, value in self.initial_values.items():
                 if not mech in self.mechanisms:
-                    raise SystemError("{} (entry in initial_values arg) is not a Mechanism in pathway for \'{}\'".
+                    raise SystemError("{} (entry in initialize_cycle_values arg) is not a Mechanism in pathway for \'{}\'".
                                       format(mech.name, self.name))
                 if not iscompatible(value, mech.defaults.variable):
-                    raise SystemError("{} (in initial_values arg for {}) is not a valid value for {}".
+                    raise SystemError("{} (in initialize_cycle_values arg for {}) is not a valid value for {}".
                                       format(value,
                                              append_type_to_name(self),
                                              append_type_to_name(mech)))
@@ -2222,7 +2222,7 @@ class Process(Process_Base):
 
 
     def initialize(self, context=None):
-        """Assign the values specified for each Mechanism in the process' `initial_values` attribute.  This usually
+        """Assign the values specified for each Mechanism in the process' `initialize_cycle_values` attribute.  This usually
         occurs at the beginning of one or a series of executions invoked by a call to the Process` `execute
         <Process.execute>` or `run <Process.run>` methods.
         """
@@ -2502,7 +2502,7 @@ class Process(Process_Base):
             for each entry must be a ProcessingMechanism `designated <Process_Mechanism_Initialize_Cycle>`
             `INITIALIZE_CYCLE`, and the value must be a number, list or np.array that is compatible with the format
             of the ProcessingMechanism's `value <Mechanism_Base.value>` attribute. ProcessingMechanisms designated as
-            `INITIALIZE_CYCLE` but not specified in **initial_values** are initialized with the value of their
+            `INITIALIZE_CYCLE` but not specified in **initialize_cycle_values** are initialized with the value of their
             `variable <Mechanism_Base.variable>` attribute (the default input for that Mechanism).
 
         targets : List[input] or np.ndarray(input) : default None
