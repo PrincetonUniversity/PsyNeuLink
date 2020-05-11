@@ -2260,10 +2260,10 @@ class Mechanism_Base(Mechanism):
 
         # FIX: 5/8/20 [JDC]
         runtime_params : [Dict[str, Dict[str, Dict[str, value]]]] : None
-            a dictionary used to specify values for `Paramters <Parameter>` of the Mechanism or those of any of its
-            `Components <Component>`, including its `function <Mechanism_Base.function>`, `Ports <Mechanism_Ports>`
-            and/or their `Projections <Port_Projections>`, that will temporarily override their current value
-            for the current execution, and then be restored to their previous value (see
+            a dictionary specifying values for `Paramters <Parameter>` of the Mechanism or those of any of its
+            `Components <Component>` (`function <Mechanism_Base.function>`, `Ports <Mechanism_Ports>` and/or
+            `afferent Projections <Port_Projections>`), that temporarily override their values for the current
+            execution, and are then restored to their previous value following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
 
         Returns
