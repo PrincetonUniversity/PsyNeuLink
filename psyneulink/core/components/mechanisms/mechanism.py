@@ -868,17 +868,20 @@ COMMENT:
 ??INTERACTION WITH MODULATON - DO runtime_params SET THE BASE VALUE OR THE mod_value?
 COMMENT
 
-When a Mechanism is executed, the values used for its `parameters <Component_Parameters>` and that of its subcomponents
-(i.e., its `function <Mechanism_Base.function>` and `Ports <Mechanism_Ports` are either the ones specified in the
-constructor for the Mechanism, or their `default values <Parameter_Defaults>`.  However, these values can be overidden
-for a particular execution, by specifying the desired values in the **runtime_params** argument of the Mechanism's
-`execute <Mechanism_Base.execute>` method (see `below <Mechanism_Runtime_Param_Specification>`), or the `execution
-method <Composition_Execution_Methods>` of a `Composition` to which it belongs (see `Composition_Runtime_Params`).
-Any value assigned using **runtime_params** will override the current value of the parameter for that (and *only*
-that) execution of the Mechanism; the value will return to its previous value following that execution.  The value of
-a parameter can be modified on a permanent basis, either for a given `execution context <Composition_Execution_Context>`
-using a its `set <Parameter.set>` method; or for all execution contexts, by setting its default value using the
-Mechanism's `defaults <Component.defaults>` attribute.
+The runtime parameter values are those assigned to a Mechanism and its Components (i.e., its `function
+<Mechanism_Base.function>` and `Ports <Mechanism_Ports`) when they execute.  These are generally the values specified
+in the corresponding constructors, assigned explicitly after construction (see `User_Modifiable_Parameters`), or the
+default values.  However, these values can be overidden for a particular execution, by specifying the desired values
+in the **runtime_params** argument of the Mechanism's `execute <Mechanism_Base.execute>` method (see `below
+<Mechanism_Runtime_Param_Specification>`) or the `execution method <Composition_Execution_Methods>` of a `Composition`
+to which it belongs (see `Composition_Runtime_Params`).  When assigned in the context of a Composition, `Conditions
+<Condition>` can be specified that determine when the values apply. Any values assigned using **runtime_params**
+that apply will override the current value of the parameter for that (and *only* that) execution (if the Mechanism's
+`execute <Mechanism_Base.execute>` is used) or as long as its `Condition` applies (if executed in a Composition),
+after which the value will return to its previous value.  The value of a parameter can be modified on a permanent
+basis, either for a given `execution context <Composition_Execution_Context>` using a its `set <Parameter.set>`
+method; or for all execution contexts, by setting its default value using the Mechanism's `defaults
+<Component.defaults>` attribute.
 
 .. _Mechanism_Runtime_Param_Specification:
 

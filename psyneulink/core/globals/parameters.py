@@ -2,10 +2,11 @@
 
 .. _Parameter_Attributes:
 
-PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`. `Parameter`\\ s have
-names, default values, and other attributes that define how they are used in models. `Parameter` \\s also maintain and provide
-access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_statefulness>`, `previous values <Parameter.history>`,
-and `logged values <Log>`.
+PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`.
+`Parameter`\\ s have names, default values, and other attributes that define how they are used in Compositions.
+`Parameter` \\s also maintain and provide access to the data used in actual computations - `default values
+<Parameter_Defaults>`, `current values <Parameter_statefulness>`, `previous values <Parameter.history>`, and
+`logged values <Log>`.
 
 
 .. _Parameter_Defaults:
