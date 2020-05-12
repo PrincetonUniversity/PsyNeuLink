@@ -1522,10 +1522,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = self.integrator_function.noise
             self._needs_integrator_function_init = False
 
-        # FIX 5/8/20 [JDC]:
         current_input = self.integrator_function.execute(function_variable,
                                                          context=context,
                                                          # Should we handle runtime paramsd?
+                                                         # JDC: NOT SURE THEY ARE NEEDED, PARAMS ASSIGNED VALUES ABOVE
                                                          runtime_params={
                                                              INITIALIZER: initial_value,
                                                              NOISE: noise,

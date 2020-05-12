@@ -207,7 +207,7 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
   the ControlSignals can project (by way of a `ControlProjection`).
   COMMENT:
-      FIX: ADD COMMENT ABOUT HOW TO ASSIGN DEFAULTS HERE 5/2/20
+      FIX: ADD COMMENT ABOUT HOW TO ASSIGN DEFAULTS HERE 5/8/20
   COMMENT
 
 .. _Component_Function_Params:
@@ -2608,18 +2608,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.variable._set(variable, context=context)
 
-        # # MODIFIED 5/8/20 NEW:
-        # function_params = {}
-        # if runtime_params:
-        #     # FIX 5/8/20 [JDC]:  UNNECESSARY SINCE function_params CAN'T BE USED (DUE TO IntegratorFunction
-        #     # Get function_params
-        #     for param_name in runtime_params:
-        #         if hasattr(self.function, param_name):
-        #             function_params[param_name] = runtime_params[param_name]
-        #         elif param_name == FUNCTION_PARAMS:
-        #             function_params.update(runtime_params[FUNCTION_PARAMS])
-        # # MODIFIED 5/8/20 END
-
         if isinstance(self, Function):
             pass # Functions don't have a Logs or maintain execution_counts or time
         else:
@@ -2636,9 +2624,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
         function_variable = self._parse_function_variable(variable, context=context)
         # FIX 5/8/20 [JDC]:
-        #    NEED TO PASS FULL runtime_params (AND NOT JUST function_params)
-        #    SINCE IntegratorMechanisms SEEM TO NEED THAT
-        # value = self.function(variable=function_variable, context=context, params=function_params, **kwargs)
+        #   NEED TO PASS FULL runtime_params (AND NOT JUST function's params) SINCE IntegratorMechanisms SEEM TO NEED IT
         value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
         try:
             self.function.parameters.value._set(value, context)

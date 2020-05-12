@@ -2224,27 +2224,22 @@ class Mechanism_Base(Mechanism):
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
-        COMMENT:
+        .. technical_note:
             Update InputPort(s) and parameter(s), call subclass _execute, update OutputPort(s), and assign self.value
-
             Execution sequence:
-            - Call self.input_port.execute() for each entry in self.input_ports:
-                + execute every self.input_port.path_afferents.[<Projection>.execute()...]
-                + combine results and/or gate portusing self.input_port.function()
-                + assign the result in self.input_port.value
-            - Call every self.<parameterport>.execute(); for each:
-                + execute self.<parameterport>].mod_afferents.[<projection>.execute()...
-                    (usually this is just a single ControlProjection)
-                + combine results for each modulable param or assign value from an OVERRIDE specification
-                + assign the result to self.<parameterport>.value
-            - Call subclass' self.execute(params):
-                - use self.input_port.value as its variable,
-                - use self.<parameterport>.value for each param of subclass' self.function
-                - call self._update_output_ports() to assign the output to each self.output_ports[<OutputPort>].value
+            * Handle initialization if initialization_status is ContextFlags.INITIALIZING
+            * Assign any Port-specific runtime params to corresponding runntime_param dict
+            * While is_finished is not True:
+              - validate variable from InputPorts and runtime_params
+              - update InputPorts
+              - update ParameterPorts
+              - execute Mechanism (calling _execute method) and set value parameter
+              - update OutputPorts
                 Note:
-                * if execution is occurring as part of initialization, each output_port is reset to 0
-                * otherwise, their values are left as is until the next update
-        COMMENT
+                  > if execution is occurring as part of initialization, each output_port is reset to 0
+                  > otherwise, their values are left as is until the next update
+              - update num_executions and check max_executions
+            * Report execution (if pref is set)
 
         Arguments
         ---------
@@ -2254,16 +2249,14 @@ class Mechanism_Base(Mechanism):
             This must be consistent with the format of the Mechanism's `InputPort(s) <Mechanism_InputPorts>`:
             the number of items in the  outermost level of the list, or axis 0 of the ndarray, must equal the number
             of the Mechanism's `input_ports  <Mechanism_Base.input_ports>`, and each item must be compatible with the
-            format (number and type of elements) of the `variable <InputPort.InputPort.variable>` of the
-            corresponding InputPort (see `Run Inputs <Composition_Execution_Inputs>` for details of input
-            specification formats).
+            format (number and type of elements) of the `variable <InputPort.variable>` of the corresponding
+            InputPort (see `Run Inputs <Composition_Execution_Inputs>` for details of input specification formats).
 
-        # FIX: 5/8/20 [JDC]
         runtime_params : [Dict[str, Dict[str, Dict[str, value]]]] : None
-            a dictionary specifying values for `Paramters <Parameter>` of the Mechanism or those of any of its
+            a dictionary specifying values for `Parameters <Parameter>` of the Mechanism or those of any of its
             `Components <Component>` (`function <Mechanism_Base.function>`, `Ports <Mechanism_Ports>` and/or
             `afferent Projections <Port_Projections>`), that temporarily override their values for the current
-            execution, and are then restored to their previous value following execution (see
+            execution, and are then restored to their previous values following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
 
         Returns
@@ -2285,6 +2278,8 @@ class Mechanism_Base(Mechanism):
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()
+
+        # INITIALIZE MECHANISM if needed
 
         # Limit init to scope specified by context
         if self.initialization_status == ContextFlags.INITIALIZING:
@@ -2325,6 +2320,9 @@ class Mechanism_Base(Mechanism):
                                                 runtime_params=runtime_params)
                 return np.atleast_2d(return_value)
 
+
+        # EXECUTE MECHANISM
+
         # Extract runtime_params for each port-type into their own dicts,
         #    leaving ones for the Mechanism itself and/or its function in runtime_params
         runtime_input_port_params = {}
@@ -2334,8 +2332,6 @@ class Mechanism_Base(Mechanism):
             runtime_input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
             runtime_parameter_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
             runtime_output_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
-
-        # EXECUTE MECHANISM
 
         if self.parameters.is_finished_flag._get(context) is True:
             self.parameters.num_executions_before_finished._set(0, override=True, context=context)
