@@ -41,11 +41,13 @@ before_install:
     if [ "$TRAVIS_CPU_ARCH" != "amd64" ]; then
       # There are a lot fewer wheels distributed for non-x86 architectures.
       # We end up building a lot of them locally, install dev packages
-      EXTRA_PKGS="build-essential gfortran llvm-8-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
+      export EXTRA_PKGS="build-essential gfortran llvm-8-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
       # Export LLVM_CONFIG for llvmlite
       export LLVM_CONFIG=llvm-config-8
       # Cython is needed to build scikit-learn
-      EXTRA_PIP="cython"
+      export EXTRA_PIP="cython"
+      # Disable coverage
+      export RUN_COV=""
     fi
     # distutils and lib2to3 are only needed for python3.8
     # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684

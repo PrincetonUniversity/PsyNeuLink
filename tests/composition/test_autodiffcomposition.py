@@ -464,9 +464,9 @@ class TestTrainingCorrectness:
     @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
         'eps, calls, opt, from_pnl_or_not', [
-            (50, 'single', 'adam', True),
+            (100, 'single', 'adam', True),
             # (50, 'multiple', 'adam', True),
-            (50, 'single', 'adam', False),
+            (100, 'single', 'adam', False),
             # (50, 'multiple', 'adam', False)
         ]
     )
@@ -485,8 +485,8 @@ class TestTrainingCorrectness:
                                     default_variable=np.zeros(1),
                                     function=Logistic())
 
-        hid_map = MappingProjection(matrix=np.random.rand(2,10), sender=xor_in, receiver=xor_hid)
-        out_map = MappingProjection(matrix=np.random.rand(10,1))
+        hid_map = MappingProjection(matrix=np.random.rand(2, 10))
+        out_map = MappingProjection(matrix=np.random.rand(10, 1))
 
         xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
                                   optimizer_type=opt,
@@ -507,28 +507,29 @@ class TestTrainingCorrectness:
 
         if calls == 'single':
             results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                      "targets": {xor_out:xor_targets},
-                                      "epochs": eps}, bin_execute=mode)
+                                        "targets": {xor_out:xor_targets},
+                                        "epochs": eps}, bin_execute=mode)
 
-            for i in range(len(results[0])):
-                assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
+            assert len(results) == len(xor_targets)
+            for r, t in zip(results, xor_targets):
+                assert np.allclose(np.round(r[0]), t)
 
         else:
             results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                                      "targets": {xor_out: xor_targets},
-                                      "epochs": 1}, bin_execute=mode)
+                                        "targets": {xor_out: xor_targets},
+                                        "epochs": 1}, bin_execute=mode)
 
             for i in range(eps - 1):
                 results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                                          "targets": {xor_out: xor_targets},
-                                          "epochs": 1}, bin_execute=mode)
+                                            "targets": {xor_out: xor_targets},
+                                            "epochs": 1}, bin_execute=mode)
 
             for i in range(len(results[eps - 1])):
                 assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
 
-        benchmark(xor.learn, inputs={'inputs': {xor_in: xor_inputs},
-                                   'targets': {xor_out: xor_targets},
-                                   'epochs': eps}, bin_execute=mode)
+        benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
+                                     "targets": {xor_out: xor_targets},
+                                     "epochs": eps}, bin_execute=mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly

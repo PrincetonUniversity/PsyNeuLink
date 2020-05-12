@@ -7,10 +7,8 @@
 
 
 # ********************************************* AutodiffComposition *************************************************
-import random
 import numpy as np
 import collections.abc
-import inspect
 
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
@@ -109,7 +107,7 @@ class CompositionRunner():
         for epoch in range(epochs):
             indices = list(range(0, num_trials))
             if randomize:
-                random.shuffle(indices)
+                np.random.shuffle(indices)
             for i in range(0, num_trials, batch_size):
                 if call_before_minibatch:
                     call_before_minibatch()
