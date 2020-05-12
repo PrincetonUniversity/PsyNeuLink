@@ -1114,8 +1114,8 @@ COMMENT
 COMMENT:
     5/8/20
     CHECK THAT runtime_params (AND CONDITIONS) WORK FOR COMPOSITIONS
-    RECONCILE THIS WITH `runtime parameter specification dictionary <Mechanism_Runtime_Param_Specification>`.
     ADD EXAMPLES FROM test_runtime_params
+    runtime_params are passed to the execute method of the Node whenever it is called for execution
 COMMENT
 
 The value of one or more of a Composition's `Nodes <Composition_Nodes>` can be temporarily modified during execution
@@ -1124,10 +1124,6 @@ handled as described for `Mechanism_Runtime_Params` of Mechanisms, with the addi
 <Condition>` can be specified such that a value will apply only when the specificied Conditions are satisfied;
 otherwise the parameter's previously assigned value (or, if none, then its default) will be used, and those values
 are always restored after execution.
-
-COMMENT:
-    runtime_params are passed to the execute method of the Node whenever it is called for execution
-COMMENT
 
 .. _Composition_Runtime_Param_Specification:
 
@@ -1161,12 +1157,6 @@ used to specify those can be placed placed in a tuple, as can any of the specifi
 A tuple used to specify a subdictionary determines when any of the parameters specified within it are eligible to apply:
 If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
 *is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
-
-
-COMMENT:
-    SUBDICTS CAN ALSO BE PLACED IN A TUPLE WITH A CONDITION, INW HICH CASE THAT CONDITOIN MUST APPLY FOR ANY ENTRIES
-    OF THOSE SUBDICTS TO APPLY.
-COMMENT
 
 
 COMMENT:
