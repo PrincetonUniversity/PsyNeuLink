@@ -2020,15 +2020,19 @@ class Port_Base(Port):
             except AttributeError:
                 pass
 
-            # KDM 6/20/18: consider moving handling of Pathway and Modulatory projections
-            # into separate methods
-            if isinstance(projection, PathwayProjection_Base):
-                # Add projection_value to list of PathwayProjection values (for aggregation below)
-                # self._path_proj_values.append(projection_value)
-                variable.append(projection_value)
+            # # KDM 6/20/18: consider moving handling of Pathway and Modulatory projections
+            # # into separate methods
+            # if isinstance(projection, PathwayProjection_Base):
+            #     # Add projection_value to list of PathwayProjection values (for aggregation below)
+            #     # self._path_proj_values.append(projection_value)
+            #
+            #     # MODIFIED 5/8/20 OLD:
+            #     # variable.append(projection_value)
+            #     # MODIFIED 5/8/20 END
+            #     pass
 
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
-            elif isinstance(projection, ModulatoryProjection_Base):
+            if isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
                 #    and get the function parameter to be modulated to type_match the projection value below
                 mod_spec, mod_param_name, mod_param_value = self._get_modulated_param(projection, context=context)
