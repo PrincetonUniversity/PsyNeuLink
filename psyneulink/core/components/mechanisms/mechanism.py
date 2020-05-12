@@ -2225,21 +2225,23 @@ class Mechanism_Base(Mechanism):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
         .. technical_note:
-            Update InputPort(s) and parameter(s), call subclass _execute, update OutputPort(s), and assign self.value
             Execution sequence:
-            * Handle initialization if initialization_status is ContextFlags.INITIALIZING
-            * Assign any Port-specific runtime params to corresponding runntime_param dict
-            * While is_finished is not True:
-              - validate variable from InputPorts and runtime_params
-              - update InputPorts
-              - update ParameterPorts
-              - execute Mechanism (calling _execute method) and set value parameter
-              - update OutputPorts
+            * Handle initialization if `initialization_status <Compoonent.initialization_status> is
+              *ContextFlags.INITIALIZING*
+            * Assign any `Port-specific runtime params <_Mechanism_Runtime_Port_and_Projection_Param_Specification>`
+              to corresponding `runtime_params <Mechanism_Base.runtime_params>` dict.
+            * While `is_finished <Component_Is_Finished> is not True:
+              - validate `variable <Mechanism_Base.variable>` from `InputPorts <Mechanism_Base.input_ports>` and
+                `runtime_params <Mechanism_Base.runtime_params>`.
+              - update `input_ports <Mechanism_Base.input_ports>`
+              - update `parameter_ports <Mechanism_Base.parameter_ports>`
+              - execute Mechanism (calling _execute method) and set `value <Mechanism_Base.value>` parameter
+              - update `output_ports <Mechanism_Base.output_ports>`
                 Note:
                   > if execution is occurring as part of initialization, each output_port is reset to 0
                   > otherwise, their values are left as is until the next update
-              - update num_executions and check max_executions
-            * Report execution (if pref is set)
+              - update `num_executions <Component_Num_Executions>` and check `max_executions <Component_Max_Executions>`
+            * Report execution (if reportOutputPref is set)
 
         Arguments
         ---------

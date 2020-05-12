@@ -1118,6 +1118,7 @@ and whether the parameter is restored to its previous value following execution 
 the new value assigned.
 
 COMMENT:
+    5/8/20
     CHECK WITH THIS WORKS FOR COMPOSITIONS
     RECONCILE THIS WITH `runtime parameter specification dictionary <Mechanism_Runtime_Param_Specification>`.
     ADD EXAMPLES FROM test_runtime_params
