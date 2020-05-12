@@ -6,7 +6,7 @@ from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
-from psyneulink.core.globals.keywords import INPUT_PORT_PARAMS, FUNCTION_PARAMS
+from psyneulink.core.globals.keywords import INPUT_PORT_PARAMS, FUNCTION_PARAMS, PROJECTION_PARAMS
 
 class TestMechanismRuntimeParams:
 
@@ -469,13 +469,16 @@ class TestCompositionRuntimeParams:
                   T2: {
                       'noise': 0.5,
                       'intercept': (1, AtTrial(2)),           # Condition on Mechanism's function parameter
-                      # FIX 5/8/20 [JDC]: WHAT ABOUT PROJECTION PARAMS?
                       INPUT_PORT_PARAMS: {
                           'weight':5,
                           # FIX 5/8/20 [JDC] ADD TEST FOR THIS ERROR:
                           # 'scale': (20, AtTrial(3), 3 ),
                           'scale': (20, AtTrial(3)),
-                          FUNCTION_PARAMS:{'weights':(10, AtTrial(4))}
+                          FUNCTION_PARAMS:{'weights':(10, AtTrial(4))},
+                          # FIX 5/8/20 [JDC]:  THE FOLLOWING FAIL:
+                          PROJECTION_PARAMS:{'matrix':([10], AtTrial(1))}
+                          # PROJECTION_PARAMS:{'variable':(1000, AtTrial(1))}
+                          # PROJECTION_PARAMS:{FUNCTION_PARAMS:{'weights':1000}}
                       }
                   },
               },
@@ -500,7 +503,7 @@ class TestCompositionRuntimeParams:
                       'intercept': (1, AtTrial(0)),
                       INPUT_PORT_PARAMS: ({
                           'scale': (20, AtTrial(0)),
-                          FUNCTION_PARAMS:{'weights':(10, AtTrial(1))}
+                          FUNCTION_PARAMS:{'weights':(10, AtTrial(1))},
                       }, AtTrial(1))
                   },
               },

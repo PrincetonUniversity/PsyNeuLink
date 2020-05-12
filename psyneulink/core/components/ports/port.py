@@ -1865,6 +1865,15 @@ class Port_Base(Port):
         Returns combined values of projections, modulated by any mod_afferents
         """
 
+        from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
+        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+        from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
+        from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
+
+
         # SET UP ------------------------------------------------------------------------------------------------
 
         runtime_params = params or {}
@@ -1883,21 +1892,22 @@ class Port_Base(Port):
         # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------
 
         # Generate dicts for Projection params (passed to Projection)
-        #    by merging general param dict (PROJECTION_PARAMS) with type-specific ones for each type of Projection
-        mapping_params = _merge_param_dicts(runtime_params, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        #    by merging general param dict (PROJECTION_PARAMS) with type-specific ones for each type of Projection.
+        # Remove PROJECTION_PARAMS in final call so that runtime_params is left with only Project-specific entries
+        #    (handled below) and those for the Port itself and its function.
+        mapping_projection_params = _merge_param_dicts(runtime_params, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         learning_projection_params = _merge_param_dicts(runtime_params, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
         control_projection_params = _merge_param_dicts(runtime_params, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS)
+        gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS,
+                                                      remove_general=True)
+
+        # # FIX 5/8/20 [JDC]: POP PROJECT AND PROJECTION-TYPE-SPECIFIC DICTS
+        # runtime_params.pop(mapping_projection_params)
+        # runtime_params.pop(learning_projection_params)
+        # runtime_params.pop(control_projection_params)
+        # runtime_params.pop(gating_projection_params)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
-
-        from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
-        from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 
         modulatory_override = False
 
@@ -1921,10 +1931,12 @@ class Port_Base(Port):
             if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
+            # FIX 5/8/20 [JDC]:  POP STRAIGHT FROM runtime_params TO PROJECTION-SPECIFIC-TYPE DICT
+            # MODIFIED 5/8/20 OLD:
             # Get any projection-specific param dicts from runtime_params,
             #     and merge in type-specific and general ones gathered above
             if isinstance(projection, MappingProjection):
-                projection_params = _merge_param_dicts(runtime_params, projection.name, mapping_params, )
+                projection_params = _merge_param_dicts(runtime_params, projection.name, mapping_projection_params)
             elif isinstance(projection, LearningProjection):
                 projection_params = _merge_param_dicts(runtime_params, projection.name, learning_projection_params)
             elif isinstance(projection, ControlProjection):
@@ -1933,6 +1945,20 @@ class Port_Base(Port):
                 projection_params = _merge_param_dicts(runtime_params, projection.name, gating_projection_params)
             if not projection_params:
                 projection_params = None
+            # # MODIFIED 5/8/20 NEW:
+            # # Get any projection-specific param dicts from runtime_params,
+            # #     and merge in type-specific and general ones gathered above
+            # if isinstance(projection, MappingProjection):
+            #     projection_params = _merge_param_dicts(runtime_params, projection.name, mapping_projection_params)
+            # elif isinstance(projection, LearningProjection):
+            #     projection_params = _merge_param_dicts(runtime_params, projection.name, learning_projection_params)
+            # elif isinstance(projection, ControlProjection):
+            #     projection_params = _merge_param_dicts(runtime_params, projection.name, control_projection_params)
+            # elif isinstance(projection, GatingProjection):
+            #     projection_params = _merge_param_dicts(runtime_params, projection.name, gating_projection_params)
+            # if not projection_params:
+            #     projection_params = None
+            # MODIFIED 5/8/20 END
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
@@ -3443,16 +3469,20 @@ def _is_legal_port_spec_tuple(owner, port_spec, port_type_name=None):
                          format(port_type_name, owner.__class__.__name__, port_spec[1]))
 
 
-def _merge_param_dicts(source, specific, general):
+def _merge_param_dicts(source, specific, general, remove_specific=True, remove_general=False):
     """Search source dict for specific and general dicts, merge specific with general, and return merged
 
-    Used to merge only a subset of dicts in runtime_params (that may have several dicts);
+    Used to merge a subset of dicts in runtime_params (that may have several dicts);
         for example: only the MAPPING_PROJECTION_PARAMS (specific) with PROJECTION_PARAMS (general)
     Allows dicts to be referenced by name (e.g., paramName) rather than by object
     Searches source dict for specific and general dicts
     - if both are found, merges them, with entries from specific overwriting any duplicates in general
     - if only one is found, returns just that dict
     - if neither are found, returns empty dict
+    remove_specific and remove_general args specify whether to remove those from source;
+        if specific and/or general are specified by name (i.e., as keys in source the value of which are subdicts),
+        then the entyr with the subdict is removed from source;  if they are specified as dicts,
+        then the corresponding entires  are removed from source.
 
     Arguments
     _________
@@ -3481,21 +3511,37 @@ def _merge_param_dicts(source, specific, general):
     # Get specific and make sure it is a dict
     if isinstance(specific, str):
         try:
+            specific_name = specific
             specific = source[specific]
         except (KeyError, TypeError):
             specific = {}
     if not isinstance(specific, dict):
-        raise UtilitiesError("merge_param_dicts: specific {specific} must be dict or the name of one in {source}.")
+        raise PortError("merge_param_dicts: specific {specific} must be dict or the name of one in {source}.")
 
     # Get general and make sure it is a dict
     if isinstance(general, str):
         try:
+            general_name = general
             general = source[general]
         except (KeyError, TypeError):
             general = {}
     if not isinstance(general, dict):
-        raise UtilitiesError("merge_param_dicts: general {general} must be dict or the name of one in {source}.")
+        raise PortError("merge_param_dicts: general {general} must be dict or the name of one in {source}.")
 
     general.update(specific)
+
+    if remove_specific:
+        try:
+            source.pop(specific_name, None)
+        except ValueError:
+            for entry in specific:
+                source.pop(entry, None)
+    if remove_general:
+        try:
+            source.pop(general_name, None)
+        except ValueError:
+            for entry in general:
+                source.pop(entry, None)
+
     return general
 
