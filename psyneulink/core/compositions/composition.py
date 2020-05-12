@@ -9573,8 +9573,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             param_val, param_condition = param_tuple
             if isinstance(param_val, dict):
                 # FIX 5/8/20 [JDC]: ?PUT TEST FOR CONDITION MET ON DICT HERE (OR IS THAT TAKEN CARE OF AUTOMATICALLY)?
-                # for entry in param_val:
-                #     param_val[entry] = get_satisfied_param_val(param_val[entry])
                 execution_params = {}
                 for entry in param_val:
                     execution_param = get_satisfied_param_val(param_val[entry])
@@ -9595,8 +9593,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if param_val is None:
                 continue
             execution_params_for_node[param] = param_val
-            # if params_dict[param][1].is_satisfied(scheduler=scheduler,context=context):
-            #     execution_params_for_node[param] = params_dict[param][0]
         return execution_params_for_node
 
     def _after_agent_rep_execution(self, context=None):
