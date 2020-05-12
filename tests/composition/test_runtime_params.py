@@ -476,8 +476,9 @@ class TestCompositionRuntimeParams:
                           'scale': (20, AtTrial(3)),
                           FUNCTION_PARAMS:{'weights':(10, AtTrial(4))},
                           # FIX 5/8/20 [JDC]:  THE FOLLOWING FAIL:
-                          PROJECTION_PARAMS:{'matrix':([10], AtTrial(1))}
+                          # PROJECTION_PARAMS:{'matrix':([10], AtTrial(1))}
                           # PROJECTION_PARAMS:{'variable':(1000, AtTrial(1))}
+                          PROJECTION_PARAMS:{'value':(1000, AtTrial(1))}
                           # PROJECTION_PARAMS:{FUNCTION_PARAMS:{'weights':1000}}
                       }
                   },

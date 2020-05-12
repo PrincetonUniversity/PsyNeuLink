@@ -1901,11 +1901,6 @@ class Port_Base(Port):
         gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS,
                                                       remove_general=True)
 
-        # # FIX 5/8/20 [JDC]: POP PROJECT AND PROJECTION-TYPE-SPECIFIC DICTS
-        # runtime_params.pop(mapping_projection_params)
-        # runtime_params.pop(learning_projection_params)
-        # runtime_params.pop(control_projection_params)
-        # runtime_params.pop(gating_projection_params)
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
 
@@ -1931,21 +1926,7 @@ class Port_Base(Port):
             if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
-            # FIX 5/8/20 [JDC]:  POP STRAIGHT FROM runtime_params TO PROJECTION-SPECIFIC-TYPE DICT
-            # MODIFIED 5/8/20 OLD:
-            # Get any projection-specific param dicts from runtime_params,
-            #     and merge in type-specific and general ones gathered above
-            if isinstance(projection, MappingProjection):
-                projection_params = _merge_param_dicts(runtime_params, projection.name, mapping_projection_params)
-            elif isinstance(projection, LearningProjection):
-                projection_params = _merge_param_dicts(runtime_params, projection.name, learning_projection_params)
-            elif isinstance(projection, ControlProjection):
-                projection_params = _merge_param_dicts(runtime_params, projection.name, control_projection_params)
-            elif isinstance(projection, GatingProjection):
-                projection_params = _merge_param_dicts(runtime_params, projection.name, gating_projection_params)
-            if not projection_params:
-                projection_params = None
-            # # MODIFIED 5/8/20 NEW:
+            # # MODIFIED 5/2/20 OLD:
             # # Get any projection-specific param dicts from runtime_params,
             # #     and merge in type-specific and general ones gathered above
             # if isinstance(projection, MappingProjection):
@@ -1958,16 +1939,38 @@ class Port_Base(Port):
             #     projection_params = _merge_param_dicts(runtime_params, projection.name, gating_projection_params)
             # if not projection_params:
             #     projection_params = None
-            # MODIFIED 5/8/20 END
+            # MODIFIED 5/2/20 NEW:
+            # Get relelvant Projection params (general and type-specific) culled above
+            projection_params = {}
+            if isinstance(projection, MappingProjection):
+                projection_params.update(mapping_projection_params)
+            elif isinstance(projection, LearningProjection):
+                projection_params.update(learning_projection_params)
+            elif isinstance(projection, ControlProjection):
+                projection_params.update(control_projection_params)
+            elif isinstance(projection, GatingProjection):
+                projection_params.update(gating_projection_params)
+            # Merge in projection-specific ones (overriding the general and type-specific ones)
+            projection_params.update(runtime_params.pop(projection, {}))
+            projection_params.update(runtime_params.pop(projection.name, {}))
+            # MODIFIED 5/2/20 END
+
+            # Get Projection's variable and/or value if specified in runtime_params
+            projection_variable = projection_params.pop(VARIABLE, None)
+            projection_value = projection_params.pop(VALUE, None)
+
+            if projection_value:
+                assert True
+
+            # Get Projection's value
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
-            is_learning_projection = isinstance(projection, LearningProjection)
-            if (is_learning_projection and ContextFlags.LEARNING not in context.execution_phase):
-                projection_value = projection.defaults.value * 0.0
+            if (isinstance(projection, LearningProjection) and ContextFlags.LEARNING not in context.execution_phase):
+                projection_value = projection_value or projection.defaults.value * 0.0
             elif (
                 # learning projections add extra behavior in _execute that invalidates identity function
-                not is_learning_projection
+                not isinstance(projection, LearningProjection)
                 # masked mapping projections apply a mask separate from their function - consider replacing it
                 # with a masked linear matrix and removing this special class?
                 and not isinstance(projection, MaskedMappingProjection)
@@ -1977,15 +1980,21 @@ class Port_Base(Port):
                 # matrix ParameterPort may be a non identity Accumulator integrator
                 and all(pport.function._is_identity(context) for pport in projection.parameter_ports)
             ):
-                projection_variable = projection.sender.parameters.value._get(context)
-                # KDM 8/14/19: this fallback seems to always happen on the first execution
-                # of the Projection's function (LinearMatrix). Unsure if this is intended or not
-                if projection_variable is None:
-                    projection_variable = projection.function.defaults.value
+                # # MODIFIED 5/8/20 OLD:
+                # projection_variable = projection.sender.parameters.value._get(context)
+                # # KDM 8/14/19: this fallback seems to always happen on the first execution
+                # # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                # if projection_variable is None:
+                #     projection_variable = projection.function.defaults.value
+                # MODIFIED 5/8/20 NEW:
+                projection_variable = (projection_variable
+                                       or projection.sender.parameters.value._get(context)
+                                       or projection.function.defaults.value)
+                # MODIFIED 5/8/20 END
 
                 projection.parameters.variable._set(projection_variable, context)
 
-                projection_value = projection._parse_function_variable(projection_variable)
+                projection_value = projection_value or projection._parse_function_variable(projection_variable)
                 projection.parameters.value._set(projection_value, context)
 
                 # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
@@ -1998,10 +2007,11 @@ class Port_Base(Port):
                     pport.function.most_recent_context = context
 
             else:
-                projection_value = projection.execute(variable=projection.sender.parameters.value._get(context),
-                                                      context=context,
-                                                      runtime_params=projection_params,
-                                                      )
+                projection_variable = projection_variable or projection.sender.parameters.value._get(context)
+                projection_value = projection_value or projection.execute(variable=projection_variable,
+                                                                          context=context,
+                                                                          runtime_params=projection_params,
+                                                                          )
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
@@ -3504,9 +3514,9 @@ def _merge_param_dicts(source, specific, general, remove_specific=True, remove_g
 
     # Validate source as dict
     if not source:
-        return
+        return {}
     if not isinstance(source, dict):
-        raise UtilitiesError("merge_param_dicts: source {0} must be a dict".format(source))
+        raise PortError("merge_param_dicts: source {0} must be a dict".format(source))
 
     # Get specific and make sure it is a dict
     if isinstance(specific, str):
