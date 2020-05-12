@@ -3,6 +3,7 @@ import pytest
 
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.process import Process
 from psyneulink.core.components.system import System
 from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_LABELS_DICT
@@ -14,20 +15,19 @@ class TestMechanismInputLabels:
                              "green":0}
 
         M = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
         store_input_labels = []
 
         def call_after_trial():
-            store_input_labels.append(M.get_input_labels(S))
+            store_input_labels.append(M.get_input_labels(C))
 
-        S.run(inputs=['red', 'green', 'green', 'red'],
+        C.run(inputs=['red', 'green', 'green', 'red'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+        assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
         assert store_input_labels == [['red'], ['green'], ['green'], ['red']]
-        S.run(inputs=[1, 'green', 0, 'red'])
-        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
+        C.run(inputs=[1, 'green', 0, 'red'])
+        assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
 
     def test_dict_of_arrays(self):
         input_labels_dict = {"red": [1, 0, 0],
@@ -35,24 +35,23 @@ class TestMechanismInputLabels:
                              "blue": [0, 0, 1]}
         M = ProcessingMechanism(default_variable=[[0, 0, 0]],
                                 params={INPUT_LABELS_DICT: input_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
         store_input_labels = []
 
         def call_after_trial():
-            store_input_labels.append(M.get_input_labels(S))
+            store_input_labels.append(M.get_input_labels(C))
 
-        S.run(inputs=['red', 'green', 'blue', 'red'],
+        C.run(inputs=['red', 'green', 'blue', 'red'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]])
+        assert np.allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]]])
         assert store_input_labels == [['red'], ['green'], ['blue'], ['red']]
 
-        S.run(inputs='red')
-        assert np.allclose(S.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]]])
+        C.run(inputs='red')
+        assert np.allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]]])
 
-        S.run(inputs=['red'])
-        assert np.allclose(S.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]])
+        C.run(inputs=['red'])
+        assert np.allclose(C.results, [[[1, 0, 0]], [[0, 1, 0]], [[0, 0, 1]], [[1, 0, 0]], [[1, 0, 0]], [[1, 0, 0]]])
 
     # def test_dict_of_arrays_2_input_ports(self):
     #     input_labels_dict = {"red": [0],
@@ -110,24 +109,22 @@ class TestMechanismInputLabels:
 
         M = TransferMechanism(default_variable=[[0, 0]],
                               params={INPUT_LABELS_DICT: input_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
-
+        C = Composition(pathways=[M])
         store_input_labels = []
 
         def call_after_trial():
-            store_input_labels.append(M.get_input_labels(S))
+            store_input_labels.append(M.get_input_labels(C))
 
-        S.run(inputs=[['red'], ['green'], ['green']],
+        C.run(inputs=[['red'], ['green'], ['green']],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1, 0]], [[0, 1]], [[0, 1]]])
+        assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]]])
         assert [['red'], ['green'], ['green']] == store_input_labels
 
-        S.run(inputs='red')
-        assert np.allclose(S.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]]])
+        C.run(inputs='red')
+        assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]]])
 
-        S.run(inputs=['red'])
-        assert np.allclose(S.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]], [[1, 0]]])
+        C.run(inputs=['red'])
+        assert np.allclose(C.results, [[[1, 0]], [[0, 1]], [[0, 1]], [[1, 0]], [[1, 0]]])
 
     def test_dict_of_dicts(self):
         input_labels_dict = {0: {"red": [1, 0],
@@ -138,14 +135,14 @@ class TestMechanismInputLabels:
 
         M = TransferMechanism(default_variable=[[0, 0], [0, 0]],
                               params={INPUT_LABELS_DICT: input_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
-        S.run(inputs=[['red', 'green'], ['green', 'red'], ['green', 'green']])
-        assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
-        S.run(inputs=[['red', [1, 0]], ['green', 'red'], [[0,1], 'green']])
-        assert np.allclose(S.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
+        C.run(inputs=[['red', 'green'], ['green', 'red'], ['green', 'green']])
+        assert np.allclose(C.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
+
+        C.run(inputs=[['red', [1, 0]], ['green', 'red'], [[0,1], 'green']])
+        assert np.allclose(C.results, [[[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]], [[1, 0], [1, 0]], [[0, 1], [0, 1]], [[0, 1], [1, 0]]])
 
     def test_3_input_ports_2_label_dicts(self):
         input_labels_dict = {0: {"red": [1, 0],
@@ -156,14 +153,13 @@ class TestMechanismInputLabels:
 
         M = TransferMechanism(default_variable=[[0, 0], [0, 0], [0, 0]],
                               params={INPUT_LABELS_DICT: input_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
-        S.run(inputs=[['red', [0, 0], 'green'], ['green', [1, 1], 'red'], ['green', [2, 2], 'green']])
-        assert np.allclose(S.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
+        C.run(inputs=[['red', [0, 0], 'green'], ['green', [1, 1], 'red'], ['green', [2, 2], 'green']])
+        assert np.allclose(C.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
 
-        S.run(inputs=[['red', [0, 0], [1, 0]], ['green', [1, 1], 'red'], [[0,1], [2, 2], 'green']])
-        assert np.allclose(S.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]], [[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
+        C.run(inputs=[['red', [0, 0], [1, 0]], ['green', [1, 1], 'red'], [[0,1], [2, 2], 'green']])
+        assert np.allclose(C.results, [[[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]], [[1, 0], [0, 0], [1, 0]], [[0, 1], [1, 1], [0, 1]], [[0, 1], [2, 2], [1, 0]]])
 
 class TestMechanismTargetLabels:
     def test_dict_of_floats(self):
@@ -172,21 +168,37 @@ class TestMechanismTargetLabels:
         output_labels_dict_M2 = {"red": 0,
                                 "green": 1}
 
-        M1 = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict_M1})
-        M2 = ProcessingMechanism(params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
-        P = Process(pathway=[M1, M2],
-                    learning=ENABLED,
-                    learning_rate=0.25)
-        S = System(processes=[P])
+        M1 = ProcessingMechanism(
+            name='M1',
+            params={INPUT_LABELS_DICT: input_labels_dict_M1}
+        )
+        M2 = ProcessingMechanism(
+            name='M2',
+            params={OUTPUT_LABELS_DICT: output_labels_dict_M2}
+        )
+        C = Composition()
+        # from psyneulink import SSE
+        from torch import nn
+        sse = nn.MSELoss(reduction='sum')
+        C.add_backpropagation_learning_pathway([M1, M2],
+                                               0.25,
+                                               loss_function=sse)
 
+        custom_loss = lambda x, y: sse(x, y)/2
         learned_matrix = []
         def record_matrix_after_trial():
-            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(S))
-        S.run(inputs=['red', 'green', 'green', 'red'],
-              targets=['red', 'green', 'green', 'red'],
-              call_after_trial=record_matrix_after_trial)
-
-        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[0.75]]])
+            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(C))
+        # C.learn(
+        #     inputs=['red', 'green', 'green', 'red'],
+        #     targets=['red', 'green', 'green', 'red'],
+        #     call_after_trial=record_matrix_after_trial
+        # )
+        C.learn(
+            inputs = {M1:[1, 0, 0, 1]},
+            targets = {M2:[0, 1, 1, 0]},
+            call_after_trial=record_matrix_after_trial
+        )
+        assert np.allclose(C.results,      [[[1.]], [[0.]], [[0.]], [[0.75]]])
         assert np.allclose(learned_matrix, [[[0.75]], [[0.75]], [[0.75]], [[0.5625]]])
 
     def test_dict_of_arrays(self):
@@ -199,22 +211,20 @@ class TestMechanismTargetLabels:
                                  params={INPUT_LABELS_DICT: input_labels_dict_M1})
         M2 = ProcessingMechanism(size=2,
                                  params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
-        P = Process(pathway=[M1, M2],
-                    learning=ENABLED,
-                    learning_rate=0.25)
-        S = System(processes=[P])
+        C = Composition()
+        C.add_backpropagation_learning_pathway([M1, M2], 0.25)
 
         learned_matrix = []
         count = []
         def record_matrix_after_trial():
-            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(S))
+            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(C))
             count.append(1)
 
 
-        S.run(inputs=['red', 'green', 'green', 'red'],
+        C.run(inputs=['red', 'green', 'green', 'red'],
               targets=['red', 'green', 'green', 'red'],
               call_after_trial=record_matrix_after_trial)
-        assert np.allclose(S.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
+        assert np.allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
@@ -231,23 +241,20 @@ class TestMechanismTargetLabels:
                                  params={INPUT_LABELS_DICT: input_labels_dict_M1})
         M2 = ProcessingMechanism(size=2,
                                  params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
-        P = Process(pathway=[M1, M2],
-                    learning=ENABLED,
-                    learning_rate=0.25)
-        S = System(processes=[P])
-
+        C = Composition()
+        C.add_backpropagation_learning_pathway([M1, M2], 0.25)
         learned_matrix = []
         count = []
         def record_matrix_after_trial():
-            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(S))
+            learned_matrix.append(M2.path_afferents[0].get_mod_matrix(C))
             count.append(1)
 
 
-        S.run(inputs=['red', 'green', 'green', 'red'],
+        C.run(inputs=['red', 'green', 'green', 'red'],
               targets=['red', 'green', 'green', 'red'],
               call_after_trial=record_matrix_after_trial)
 
-        assert np.allclose(S.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
+        assert np.allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
@@ -263,23 +270,22 @@ class TestMechanismOutputLabels:
                              "green":0}
         M = ProcessingMechanism(params={INPUT_LABELS_DICT: input_labels_dict,
                                         OUTPUT_LABELS_DICT: output_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
         store_output_labels = []
 
         def call_after_trial():
-            store_output_labels.append(M.get_output_labels(S))
+            store_output_labels.append(M.get_output_labels(C))
 
-        S.run(inputs=['red', 'green', 'green', 'red'],
+        C.run(inputs=['red', 'green', 'green', 'red'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
+        assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]]])
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 
         store_output_labels = []
-        S.run(inputs=[1, 'green', 0, 'red'],
+        C.run(inputs=[1, 'green', 0, 'red'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
+        assert np.allclose(C.results, [[[1.]], [[0.]], [[0.]], [[1.]], [[1.]], [[0.]], [[0.]], [[1.]]])
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 
     def test_dict_of_arrays(self):
@@ -290,23 +296,22 @@ class TestMechanismOutputLabels:
         M = ProcessingMechanism(size=2,
                                 params={INPUT_LABELS_DICT: input_labels_dict,
                                         OUTPUT_LABELS_DICT: output_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
         store_output_labels = []
 
         def call_after_trial():
-            store_output_labels.append(M.get_output_labels(S))
+            store_output_labels.append(M.get_output_labels(C))
 
-        S.run(inputs=['red', 'green', 'green', 'red'],
+        C.run(inputs=['red', 'green', 'green', 'red'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
+        assert np.allclose(C.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
 
         store_output_labels = []
-        S.run(inputs=[[1.0, 0.0], 'green', [0.0, 1.0], 'red'],
+        C.run(inputs=[[1.0, 0.0], 'green', [0.0, 1.0], 'red'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
+        assert np.allclose(C.results, [[[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]], [[1.0, 0.0]], [[0.0, 1.0]], [[0.0, 1.0]], [[1.0, 0.0]]])
         assert store_output_labels == [['red'], ['green'], ['green'], ['red']]
         # S.show_graph(show_mechanism_structure="labels")
 
@@ -319,17 +324,16 @@ class TestMechanismOutputLabels:
         M = ProcessingMechanism(size=2,
                                 params={INPUT_LABELS_DICT: input_labels_dict,
                                         OUTPUT_LABELS_DICT: output_labels_dict})
-        P = Process(pathway=[M])
-        S = System(processes=[P])
+        C = Composition(pathways=[M])
 
         store_output_labels = []
 
         def call_after_trial():
-            store_output_labels.append(M.get_output_labels(S))
+            store_output_labels.append(M.get_output_labels(C))
 
-        S.run(inputs=['red', 'blue', 'green', 'blue'],
+        C.run(inputs=['red', 'blue', 'green', 'blue'],
               call_after_trial=call_after_trial)
-        assert np.allclose(S.results, [[[1.0, 0.0]], [[2.0, 2.0]], [[0.0, 1.0]], [[2.0, 2.0]]])
+        assert np.allclose(C.results, [[[1.0, 0.0]], [[2.0, 2.0]], [[0.0, 1.0]], [[2.0, 2.0]]])
 
         assert store_output_labels[0] == ['red']
         assert np.allclose(store_output_labels[1], [[2.0, 2.0]])

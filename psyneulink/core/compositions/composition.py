@@ -1787,7 +1787,6 @@ import enum
 import inspect
 import itertools
 import logging
-
 import networkx
 import warnings
 import sys
@@ -1795,7 +1794,6 @@ import sys
 import numpy as np
 import typecheck as tc
 
-from numbers import Number
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
@@ -1834,12 +1832,12 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INPUT_LABELS_DICT, LABELS, \
+    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
     LEARNING, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_LABELS_DICT, OUTPUT_PORTS, OWNER_VALUE, \
+    OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -8167,6 +8165,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
         return self._parse_dict(_inputs)
 
+    def _parse_string(self, inputs):
+        # Strings can only be used as inputs in the case where there is a single input node, and that node's default
+        # input port has a label matching the provided string.
+        # Validate that this is true. If so, resolve the string into a dict and parse it.
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        if len(input_nodes) == 1:
+            if inputs in input_nodes[0]._get_standardized_label_dict(INPUT_PORTS)[0]:
+                _inputs = {next(iter(input_nodes)): [inputs]}
+        else:
+            raise CompositionError(
+                f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
+        return self._parse_dict(_inputs)
+
     def _parse_function(self, inputs):
         # functions used as inputs must always return a single trial's worth of inputs on each call,
         # so just return the function and 1 as the number of trials
@@ -8266,27 +8278,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _inputs.update({node:inp})
         return _inputs
 
-    def _parse_input_labels(self, inputs):
-        _inputs = {}
-        for node, node_val in inputs.items():
-            if hasattr(node, 'input_labels_dict') and node.input_labels_dict:
-                if type(node_val) == list:
-                    _inputs[node] = [node.input_labels_dict[val] if isinstance(val, str) else val for val in node_val]
-                elif type(node_val) == dict:
-                    # determine number of trials
-                    num_trials = len(next(iter(node_val.values())))
-                    # set up blank input array
-                    _inputs[node] = [[[] for port in node.input_ports] for trial in range(num_trials)]
-                    for trial in range(num_trials):
-                        for port, port_val in node_val.items():
-                            i = node.input_ports[port].position_in_mechanism
-                            label = port_val[trial]
-                            _inputs[node][trial][i] = np.squeeze(node.input_labels_dict[port][label])
-            else:
-                _inputs[node] = node_val
+    def _parse_input_labels(self, inputs, mech=None):
+        if mech:
+            labels = mech._get_standardized_label_dict(INPUT_PORTS)
+        if type(inputs) == dict:
+            _inputs = {}
+            for k,v in inputs.items():
+                if isinstance(k, Mechanism) and k.input_labels_dict:
+                    _inputs.update({k:self._parse_input_labels(v, k)})
+                else:
+                    _inputs.update({k:v})
+        elif type(inputs) == list or type(inputs) == np.ndarray:
+            _inputs = []
+            for i in range(len(inputs)):
+                port = 0 if len(labels) == 1 else i
+                stimulus = inputs[i]
+                if type(stimulus) == list:
+                    _inputs.append(self._parse_input_labels(inputs[i], mech))
+                elif type(stimulus) == str or type(stimulus) == np.ndarray:
+                    _inputs.append(labels[port][stimulus])
+                else:
+                    _inputs.append(stimulus)
         return _inputs
 
-    def _parse_dict(self, inputs):
+    def _parse_dict(self, inputs: object) -> object:
         # parse a user-provided input dict to format it properly for execution. compute number of trials and return that
         # as well
         _inputs = self._parse_input_labels(inputs)
@@ -8325,6 +8340,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _inputs, num_inputs_sets = self._parse_list(inputs)
         elif type(inputs) == dict:
             _inputs, num_inputs_sets = self._parse_dict(inputs)
+        elif type(inputs) == str:
+            _inputs, num_inputs_sets = self._parse_string(inputs)
         else:
             raise CompositionError(
                 f"Provided inputs {inputs} is in a disallowed format. Inputs must be provided in the form of "
@@ -8792,7 +8809,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # execute processing
             # pass along the stimuli for this trial
-
 
             trial_output = self.execute(inputs=execution_stimuli,
                                         scheduler=scheduler,
