@@ -1638,11 +1638,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Cache params to reset in _runtime_params_reset
         """
 
+        # MODIFIED 5/8/20 OLD:
         # # reset any runtime params that were leftover from a direct call to .execute (atypical)
         # if context.execution_id in self._runtime_params_reset:
         #     for key in self._runtime_params_reset[context.execution_id]:
         #         self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
         # self._runtime_params_reset[context.execution_id] = {}
+        # MODIFIED 5/8/20 END
 
         from psyneulink.core.components.functions.function import is_function_type, FunctionError
         if isinstance(runtime_params, dict):

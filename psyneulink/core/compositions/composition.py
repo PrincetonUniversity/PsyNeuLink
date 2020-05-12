@@ -1120,6 +1120,8 @@ the new value assigned.
 COMMENT:
     CHECK WITH THIS WORKS FOR COMPOSITIONS
     RECONCILE THIS WITH `runtime parameter specification dictionary <Mechanism_Runtime_Param_Specification>`.
+    ADD EXAMPLES FROM test_runtime_params
+
 Runtime parameter values are specified in a dictionary assigned to the **runtime_params** argument of a Mechanism's
 `execute <Mechanism_Base.execution>` method, or the `execution method <Composition_Execution_Methods>` of a Composition
 to which it belongs. The key to each entry in the dictionary must be a Mechanism, and the value a runtime parameter
@@ -1135,6 +1137,7 @@ follows:
       - *key* - name of a `Parameter` of the Mechanism or its `function <Mechanism_Base.function>`
       - *value* - tuple, first item of which is the runtime parameter value, and the second the `Condition` under
         which it should be assigned.
+
 
 COMMENT
 
@@ -9501,8 +9504,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_runtime_params(self, runtime_params):
         """Validate runtime_params and assign Always() for any params that don't have a Condition already specified.
-        Recursively process any subdicts (Port- or Project-specific dictionaries of params)
-        # FIX 5/8/20 [JDC] - TBI: USE ANY TO COMBINE Condition SPEC FOR SUBDICT WITH ANY Conditions NESTED WITHIN IT
+        Recursively process subdicts (Port- or Project-specific dictionaries of params).
         """
         def validate_and_assign_default_condition(node, entry, param_key, param_value):
             if not isinstance(param_value, tuple):
@@ -9546,7 +9548,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
         """Return dict with values for all runtime_params the Conditions of which are currently satisfied.
-        Recursively parse nested dictionaries, and """
+        Recursively parse nested dictionaries for which Condition on dict is satisfied."""
 
         def get_satisfied_param_val(param_tuple):
             """Return param value if Condition is satisfied, else None."""

@@ -2325,25 +2325,6 @@ class Mechanism_Base(Mechanism):
                                                 runtime_params=runtime_params)
                 return np.atleast_2d(return_value)
 
-
-        # # FIX 5/8/20 [JDC]: FROM PORT;  MOVE TO COMPONENT
-        # port_params = {}
-        # function_params = {}
-        # runtime_params_copy = runtime_params.copy()
-        # # for param_name in runtime_params.copy():
-        # for param_name in runtime_params:
-        #     if hasattr(self, param_name):
-        #         # port_and_function_params[param_name] = runtime_params[param_name]
-        #         port_params[param_name] = runtime_params_copy.pop(param_name)
-        #     elif hasattr(self.function, param_name):
-        #         function_params[param_name] = runtime_params_copy.pop(param_name)
-        #     elif param_name == FUNCTION_PARAMS:
-        #         function_params.update(runtime_params_copy.pop(FUNCTION_PARAMS))
-        # # [runtime_params.pop(param) for param in port_and_function_params]
-
-        # PARSE runtime_params
-
-        # FIX 5/8/20 [JDC]:
         # Extract runtime_params for each port-type into their own dicts,
         #    leaving ones for the Mechanism itself and/or its function in runtime_params
         runtime_input_port_params = {}
@@ -2368,13 +2349,10 @@ class Mechanism_Base(Mechanism):
 
             # UPDATE VARIABLE and InputPort(s)
             # Executing or simulating Composition, so get input by updating input_ports
-            # FIX 5/8/20 [JDC]:
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
-                # variable = self._update_input_ports(runtime_params=runtime_params, context=context)
-                variable = self._update_input_ports(runtime_params=runtime_input_port_params,
-                                                    context=context)
+                variable = self._update_input_ports(runtime_params=runtime_input_port_params, context=context)
 
             # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
             else:
@@ -2393,10 +2371,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.variable._set(variable, context=context)
 
             # UPDATE PARAMETERPORT(S)
-            # FIX 5/8/20 [JDC]:
-            # self._update_parameter_ports(runtime_params=runtime_params, context=context)
-            self._update_parameter_ports(runtime_params=runtime_parameter_port_params,
-                                         context=context)
+            self._update_parameter_ports(runtime_params=runtime_parameter_port_params, context=context)
 
             # EXECUTE MECHANISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
@@ -2431,10 +2406,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
-            # FIX 5/8/20 [JDC]:
-            # self._update_output_ports(runtime_params=runtime_params, context=context)
-            self._update_output_ports(runtime_params=runtime_output_port_params,
-                                      context=context)
+            self._update_output_ports(runtime_params=runtime_output_port_params, context=context)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)

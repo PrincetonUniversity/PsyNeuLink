@@ -1858,11 +1858,13 @@ class Port_Base(Port):
     def _update(self, context=None, params=None):
         """Update each projection, combine them, and assign return result
 
+        Assign any runtime_params specified for Port, its function, and any of its afferent projections
         Call _update for each projection in self.path_afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
-        # """
+        """
+
         # SET UP ------------------------------------------------------------------------------------------------
 
         runtime_params = params or {}
@@ -2049,17 +2051,14 @@ class Port_Base(Port):
             # Set modulatory parameter's value
             param._set(mod_val, context)
             # Add mod_param and its value to runtime_params for Port's function
-            # FIX 5/8/20
             runtime_params.update({mod_param_name: mod_val})
 
         # CALL PORT'S function TO GET ITS VALUE  ----------------------------------------------------------------------
 
-        # FIX 5/8/20:
-        # First, make sure all params are OK
+        # Assign param values
         self._manage_runtime_params(runtime_params, context=context)
 
         # Skip execution and set value directly if function is identity_function and no runtime_params were passed
-        # FIX 5/8/20
         if (
             len(self.all_afferents) == 0
             and self.function._is_identity(context)
@@ -2074,7 +2073,6 @@ class Port_Base(Port):
             self.most_recent_context = context
             self.function.most_recent_context = context
         else:
-            # FIX 5/8/20
             self.execute(context=context, runtime_params=runtime_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
@@ -3498,18 +3496,6 @@ def _merge_param_dicts(source, specific, general):
     if not isinstance(general, dict):
         raise UtilitiesError("merge_param_dicts: general {general} must be dict or the name of one in {source}.")
 
-    # FIX: SHOULD THIS BE specific, NOT source???
-
-    # # MODIFIED 7/16/16 OLD:
-    # return general.update(source)
-    # # MODIFIED 7/16/16 NEW:
-    # return general.update(specific)
-    # # MODIFIED 5/8/20 NEWER:
     general.update(specific)
     return general
-    # # MODIFIED 5/8/20 NEWEST:
-    # specific.update(source)
-    # general.update(specific)
-    # return general
-    # MODIFIED 5/8/20 END
 
