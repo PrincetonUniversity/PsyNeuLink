@@ -1074,7 +1074,7 @@ Complete input specification:
 
 ..
 
-COMMENT:
+COMMENT`:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
 Environment.
 
@@ -1111,53 +1111,62 @@ COMMENT
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
 
-The **runtime_params** argument of a Composition's `execution method <Composition_Execution_Methods>` can be used to
-specify values for the `parameters <Component_Parameters>` of one or more `Mechanisms <Mechanism>` or its `Components
-<Component>` that will apply for that execution.  A `Condition` can specified the determines when the value is applied,
-and whether the parameter is restored to its previous value following execution (the default behavior), or maintains
-the new value assigned.
-
 COMMENT:
     5/8/20
-    CHECK WITH THIS WORKS FOR COMPOSITIONS
+    CHECK THAT runtime_params (AND CONDITIONS) WORK FOR COMPOSITIONS
     RECONCILE THIS WITH `runtime parameter specification dictionary <Mechanism_Runtime_Param_Specification>`.
     ADD EXAMPLES FROM test_runtime_params
-
-Runtime parameter values are specified in a dictionary assigned to the **runtime_params** argument of a Mechanism's
-`execute <Mechanism_Base.execution>` method, or the `execution method <Composition_Execution_Methods>` of a Composition
-to which it belongs. The key to each entry in the dictionary must be a Mechanism, and the value a runtime parameter
-specification dictionary, in which the key is the name of the parameter and the value a tuple, the first item of which
-is the value to assign to the parameter, and the second item the `Condition` under which it should be assigned, as
-follows:
-
-.. _Runtime_Parameter_Specification_Dictionary:
-
-    * Dictionary assigned to **runtime_parms** argument: {<Mechanism name>: runtime parameter specification dict}
-
-    * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
-      - *key* - name of a `Parameter` of the Mechanism or its `function <Mechanism_Base.function>`
-      - *value* - tuple, first item of which is the runtime parameter value, and the second the `Condition` under
-        which it should be assigned.
-
-
 COMMENT
 
-Parameter values are specified in a dictionary, each entry of which contains a key specifying a `Node
-<Composition_Nodes>` of the Composition, and a value containing a subdictionary. For each entry of the latter,
-the key is a parameter, and the value is a tuple, the first item of which is a paramater value and the second is a
-`Condition` specifying when that  value should be assigned, as follows:
+The value of one or more of a Composition's `Nodes <Composition_Nodes>` can be temporarily modified during execution
+using the **runtime_params** argument of one of its `execution methods <Composition_Execution_Methods>`.  These are
+handled as described for `Mechanism_Runtime_Params` of Mechanisms, with the addition that one or more `Conditions
+<Condition>` can be specified such that a value will apply only when the specificied Conditions are satisfied;
+otherwise the parameter's previously assigned value (or, if none, then its default) will be used, and those values
+are always restored after execution.
 
-    Outer dictionary:
-        - *key* - Node
-        - *value* - Runtime Parameter Specification Dictionary
+COMMENT:
+    runtime_params are passed to the execute method of the Node whenever it is called for execution
+COMMENT
 
-    Runtime Parameter Specification Dictionary:
-        - *key* - keyword corresponding to a parameter of the Node
-        - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
-          a `Condition`
+.. _Composition_Runtime_Param_Specification:
 
-See `Mechanism_Runtime_Params` for additional details of runtime parameters.
+Runtime parameter values for a Composition are specified in a dictionary assigned to the **runtime_params** argument
+of a Composition's `execution method <Composition_Execution_Methods>`.  The key of each entry is a Node of the
+Composition, and the value is a subdictionary specifying the **runtime_params** argument that will be passed to the
+Node when it is executed.  The format of the dictionary for each node follows that for a Mechanism's `runtime
+specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the value
+of a parameter directly (in which case, the value will apply throughout the execution), its value can also be placed
+in a tuple together with a `Condition` specifying when that value should be applied, as follows:
 
+    * Dictionary assigned to **runtime_parms** argument: {<Node>: Runtime Parameter Specification Dictionary}
+       - *key* - Node
+       - *value* - Runtime Parameter Specification Dictionary
+
+    * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
+       - *key* - str
+          name of a `Parameter` of the Node, its `function <Mechanism_Base.function>`, or a keyword specifying a
+          subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);
+       - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below)
+          `Condition` specifies when the value is applied;  otherwise, its previously assigned value or default
+          is used;  if the parameter values appears alone in a tuple or outside of one, then the Condtion `Always`
+          is applied.
+
+    See `Runtime Parameter Specification Dictionary <Mechanism_Runtime_Param_Specification>` for additional details.
+
+As in a standard runtime parameter specification dictionary, the key for an entry can be used to specify a subdictionary
+specifying the runtime parameters for a Mechanism's `Ports <Mechanism_Ports>`, and/or any of their `afferent Projections
+<Mechanism_Base.afferents>` (see `Mechanism_Runtime_Port_and_Projection_Param_Specification`).  The subdictionaries
+used to specify those can be placed placed in a tuple, as can any of the specification of parameter values within them.
+A tuple used to specify a subdictionary determines when any of the parameters specified within it are eligible to apply:
+If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
+*is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
+
+
+COMMENT:
+    SUBDICTS CAN ALSO BE PLACED IN A TUPLE WITH A CONDITION, INW HICH CASE THAT CONDITOIN MUST APPLY FOR ANY ENTRIES
+    OF THOSE SUBDICTS TO APPLY.
+COMMENT
 
 
 COMMENT:
@@ -9512,7 +9521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 param_spec = param_value
                 # Default Condition
                 param_condition = Always()
-            # Paramter specified as tuple
+            # Parameter specified as tuple
             else:
                 param_spec = param_value[0]
                 if len(param_value)==1:

@@ -220,7 +220,7 @@ Types of Modulation
 ^^^^^^^^^^^^^^^^^^^
 
 The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines the way in which it
-modulates the `value <Port_Base.value>` of a `Port <Port>`, by specifying which paramter of the Port's `function
+modulates the `value <Port_Base.value>` of a `Port <Port>`, by specifying which parameter of the Port's `function
 <Port_Base.function>` that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
 in a tuple containing the Port and the name of the parameter to be modified (see `example
 <ControlSignal_Example_Modulate_Costs>`). Alternatively, a keyword can be used in place of the parameter's name.

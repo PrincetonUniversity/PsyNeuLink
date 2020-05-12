@@ -22,8 +22,9 @@ Contents
           • `Mechanism_ParameterPorts`
           • `Mechanism_OutputPorts`
       - `Mechanism_Additional_Attributes`
-      - `Mechanism_Role_In_Compositions`
+      - `Mechanism_in_Composition`
   * `Mechanism_Execution`
+      - `Mechanism_Execution_Composition`
       - `Mechanism_Runtime_Params`
   * `Mechanism_Class_Reference`
 
@@ -804,19 +805,18 @@ of the Composition's `show_graph <Composition.show_graph>` method with the keywo
     corresponding InputPort. For example, the label 'red', may translate to different values on different InputPorts
     of the same Mechanism, and on different Mechanisms of a Composition.
 
+.. _Mechanism_in_Composition:
+
+*Mechanisms in Compositions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Mechanisms are most commonly used as `Nodes <Composition_Nodes>` in a `Composition's graph <Composition_Graph>`,
+where they are connected to other Nodes using `Projections <Projection>`.
 
 .. _Mechanism_Role_In_Compositions:
 
-A Mechanism can be assigned to one or more Compositions;  the values of its `parameters <Component_Parameters>`,
-including its `variable <Mechanism_Base.variable>` and `value <Mechanism_Base.value>` attributes, are maintained
-separately for each `context in which it is executed <Composition_Execution_Context>` which, by default, is distinct
-for each Composition in which it is executed;  these execution-specific values can be accessed using the parameter's
-`get <Paramter.get>` method.  A parameter's value can also be accessed using standard `dot <Parameter_Dot_Notation>`,
-which returns its most recenty assigned value, irrespective of the context (including Composition) in which it was
-assigned.
-
 *Role in Compositions*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^
 
 When a Mechanism is added to a `Composition_Addition_Methods>`, it is assigned as a `Node <Composition_Nodes>` in the
 `graph <Composition_Graph>` of that Comopsition, and one or more `NodeRoles <NodeRole>` indicating the role(s) that
@@ -840,6 +840,20 @@ A Mechanism can be executed using its `execute <Mechanism_Base.execute>` method.
 Mechanism and/or debugging.  However, more typically, Mechanisms are `executed as part of a Composition
 <Composition_Execution>`.
 
+.. _Mechanism_Execution_Composition:
+
+*Execution in a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Mechanism can be assigned to one or more Compositions;  the values of its `parameters <Component_Parameters>`,
+including its `variable <Mechanism_Base.variable>` and `value <Mechanism_Base.value>` attributes, are maintained
+separately for each `context in which it is executed <Composition_Execution_Context>` which, by default, is distinct
+for each Composition in which it is executed;  these execution-specific values can be accessed using the parameter's
+`get <Parameter.get>` method.  A parameter's value can also be accessed using standard `dot <Parameter_Dot_Notation>`,
+which returns its most recenty assigned value, irrespective of the context (including Composition) in which it was
+assigned.
+
+
 .. _Mechanism_Runtime_Params:
 
 *Runtime Parameters*
@@ -855,7 +869,7 @@ COMMENT:
 COMMENT
 
 When a Mechanism is executed, the values used for its `parameters <Component_Parameters>` and that of its subcomponents
-(i.e., its `function <Mechanism_Base.function>` and Ports (Mechanism_Ports) are either the ones specified in the
+(i.e., its `function <Mechanism_Base.function>` and `Ports <Mechanism_Ports` are either the ones specified in the
 constructor for the Mechanism, or their `default values <Parameter_Defaults>`.  However, these values can be overidden
 for a particular execution, by specifying the desired values in the **runtime_params** argument of the Mechanism's
 `execute <Mechanism_Base.execute>` method (see `below <Mechanism_Runtime_Param_Specification>`), or the `execution
@@ -868,8 +882,8 @@ Mechanism's `defaults <Component.defaults>` attribute.
 
 .. _Mechanism_Runtime_Param_Specification:
 
-*Assigning runtime values to parameters of a Mechanism and its function*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Runtime specification ditionary: parameters of a Mechanism and its function*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Runtime parameter values are specified in the **runtime_params** argument of a Mechanism's `execute
 <Mechanism_Base.execute>` method using a dictionary, in which each entry contains the name of the
@@ -889,7 +903,7 @@ of a parameter (as the key) and the value to assign to it, as in the following e
         >>> T.clip     #doctest: +SKIP
         None  # clip is restored to None
 
-Note that even though ``slope`` is a paramter of the Mechanism's `function <Mechanism_Base.function>` (in this case,
+Note that even though ``slope`` is a parameter of the Mechanism's `function <Mechanism_Base.function>` (in this case,
 `Linear`), the function itself does not have to be specified in the key of the runtime_params dictionary (although it
 does have to be used when accessing or assigning the parameter's value using `dot notation <Parameter_Dot_Notation>`,
 as shown above).
@@ -914,8 +928,8 @@ the parameter is assigned its previous value and *not* its default, as shown bel
 
 .. _Mechanism_Runtime_Port_and_Projection_Param_Specification:
 
-*Assigning runtime values to parameters of a Mechanism's Ports and Projections*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Runtime specification ditionary: parameters of a Mechanism's Ports and Projections*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Runtime values can also be assigned to the parameters of a Mechanism's `Ports <Port>` and/or their `afferent Projections
 <Mechanism_Base.afferents>`. These are also specified as entries in the **runtime_params** dict,
