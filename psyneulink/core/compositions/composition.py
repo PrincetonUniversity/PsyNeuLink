@@ -9566,34 +9566,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return runtime_params
     # MODIFIED 5/8/20 END
 
-    def _get_satisfied_runtime_param_values(self, params_dict, scheduler,context):
-        """Return dict with values for all runtime_params the Conditions of which are currently met."""
+    def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
+        """Return dict with values for all runtime_params the Conditions of which are currently satisfied."""
 
         def get_satisfied_param_val(param_tuple):
+            """Return param value if Condition is satisfied, else None."""
             param_val, param_condition = param_tuple
             if isinstance(param_val, dict):
-                # FIX 5/8/20 [JDC]: ?PUT TEST FOR CONDITION MET ON DICT HERE (OR IS THAT TAKEN CARE OF AUTOMATICALLY)?
-                execution_params = {}
-                for entry in param_val:
-                    execution_param = get_satisfied_param_val(param_val[entry])
-                    if execution_param is None:
-                        continue
-                    execution_params[entry] = execution_param
-                param_val = execution_params
+                execution_params = parse_params_dict(param_val)
+                if execution_params:
+                    param_val = execution_params
+                else:
+                    return None
             # KAM 5/15/18 - not sure if this will always be the correct execution id:
             if param_condition.is_satisfied(scheduler=scheduler,context=context):
                 return param_val
             else:
                 return None
 
-        execution_params_for_node = {}
-        for param in params_dict:
-            param_val = get_satisfied_param_val(params_dict[param])
-            # If Condition was not satified, None is returned, so don't include in execution_params_for_node
-            if param_val is None:
-                continue
-            execution_params_for_node[param] = param_val
-        return execution_params_for_node
+        def parse_params_dict(params_dict):
+            """Return dict with param:value entries only for Conditions that are satisfied."""
+            execution_params = {}
+            for entry in params_dict:
+                execution_param = get_satisfied_param_val(params_dict[entry])
+                if execution_param is None:
+                    continue
+                execution_params[entry] = execution_param
+            return execution_params
+
+        return parse_params_dict(runtime_params)
 
     def _after_agent_rep_execution(self, context=None):
         pass
