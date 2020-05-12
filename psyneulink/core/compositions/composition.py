@@ -9033,18 +9033,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     execution_runtime_params = {}
                     if node in runtime_params:
-                        # # MODIFIED 5/8/20 OLD:
-                        # for param in runtime_params[node]:
-                        #     if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
-                        #                        # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                        #                                                    context=context):
-                        #         execution_runtime_params[param] = runtime_params[node][param][0]
-                        # MODIFIED 5/8/20 NEW:
-                        # FIX 5/8/20 [JDC]: NEED TO RECURSIELY PARSE SUBDICTS HERE AS WELL
                         execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
                                                                                                  execution_scheduler,
                                                                                                  context))
-                        # MODIFIED 5/8/20 END
 
                     # Set context.execution_phase
 
@@ -9582,8 +9573,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             param_val, param_condition = param_tuple
             if isinstance(param_val, dict):
                 # FIX 5/8/20 [JDC]: ?PUT TEST FOR CONDITION MET ON DICT HERE (OR IS THAT TAKEN CARE OF AUTOMATICALLY)?
+                # for entry in param_val:
+                #     param_val[entry] = get_satisfied_param_val(param_val[entry])
+                execution_params = {}
                 for entry in param_val:
-                    param_val[entry] = get_satisfied_param_val(param_val[entry])
+                    execution_param = get_satisfied_param_val(param_val[entry])
+                    if execution_param is None:
+                        continue
+                    execution_params[entry] = execution_param
+                param_val = execution_params
             # KAM 5/15/18 - not sure if this will always be the correct execution id:
             if param_condition.is_satisfied(scheduler=scheduler,context=context):
                 return param_val
@@ -9593,6 +9591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         execution_params_for_node = {}
         for param in params_dict:
             param_val = get_satisfied_param_val(params_dict[param])
+            # If Condition was not satified, None is returned, so don't include in execution_params_for_node
             if param_val is None:
                 continue
             execution_params_for_node[param] = param_val

@@ -479,7 +479,7 @@ class TestCompositionRuntimeParams:
                       }
                   },
               },
-              num_trials=4
+              num_trials=5
               )
 
         # all parameters restored to previous values (assigned or defaults)
@@ -501,6 +501,7 @@ class TestCompositionRuntimeParams:
         assert np.allclose(C.results,[np.array([[40.5]]),   # Trial 0 - no conditions met (2*5*4)+0.5
                                       np.array([[24.5]]),   # Trial 1 - only T1.slope condition met (2*3*4)+0.5
                                       np.array([[41.5]]),   # Trial 2 - only T2.intercept condition met (2*5*4)+1+0.5
-                                      np.array([[2000.5]]), # Trial 3 - only T2 INPUT_PORT_PARAMS conditions met
-                                                            #               (2*5*20*10) + 0.5
+                                      np.array([[200.5]]), # Trial 3 - only T2 scale condition met (2*5*20) + 0.5
+                                      np.array([[400.5]]), # Trial 4 - only T2.function.weights condition met
+                                                            #               (2*5*4*10) + 0.5
                                       np.array([[40.]])]) # New run - revert to assignments before previous run (2*5*4)
