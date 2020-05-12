@@ -9499,27 +9499,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return []
 
-    # # MODIFIED 5/8/20 OLD:
-    # def _parse_runtime_params(self, runtime_params):
-    #     if runtime_params is None:
-    #         return {}
-    #     for node in runtime_params:
-    #         for param in runtime_params[node]:
-    #             if isinstance(runtime_params[node][param], tuple):
-    #                 if len(runtime_params[node][param]) == 1:
-    #                     runtime_params[node][param] = (runtime_params[node][param], Always())
-    #                 elif len(runtime_params[node][param]) != 2:
-    #                     raise CompositionError(
-    #                         "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-    #                         "Must be a tuple of the form (parameter value, condition), or simply the "
-    #                         "parameter value. ".format(runtime_params[node][param],
-    #                                                    node.name,
-    #                                                    param,
-    #                                                    self.name))
-    #             else:
-    #                 runtime_params[node][param] = (runtime_params[node][param], Always())
-    #     return runtime_params
-    # MODIFIED 5/8/20 NEW:
     def _parse_runtime_params(self, runtime_params):
         """Validate runtime_params and assign Always() for any params that don't have a Condition already specified.
         Recursively process any subdicts (Port- or Project-specific dictionaries of params)
@@ -9564,10 +9543,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                     param,
                                                                                     param_value)
         return runtime_params
-    # MODIFIED 5/8/20 END
 
     def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
-        """Return dict with values for all runtime_params the Conditions of which are currently satisfied."""
+        """Return dict with values for all runtime_params the Conditions of which are currently satisfied.
+        Recursively parse nested dictionaries, and """
 
         def get_satisfied_param_val(param_tuple):
             """Return param value if Condition is satisfied, else None."""

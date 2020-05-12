@@ -5,7 +5,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial
+from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
 from psyneulink.core.globals.keywords import INPUT_PORT_PARAMS, FUNCTION_PARAMS
 
 class TestMechanismRuntimeParams:
@@ -481,7 +481,31 @@ class TestCompositionRuntimeParams:
               },
               num_trials=5
               )
-
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T2: {
+                      'noise': 0.5,
+                      INPUT_PORT_PARAMS: ({
+                          'scale': (20, AtTrial(0)),
+                          FUNCTION_PARAMS:{'weights':(10, AtTrial(1))}
+                      }, Never())
+                  },
+              },
+              num_trials=2
+              )
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T2: {
+                      'noise': 0.5,
+                      'intercept': (1, AtTrial(0)),
+                      INPUT_PORT_PARAMS: ({
+                          'scale': (20, AtTrial(0)),
+                          FUNCTION_PARAMS:{'weights':(10, AtTrial(1))}
+                      }, AtTrial(1))
+                  },
+              },
+              num_trials=2
+              )
         # all parameters restored to previous values (assigned or defaults)
         assert T1.function.parameters.slope.get(C) == 5.0
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
@@ -498,10 +522,15 @@ class TestCompositionRuntimeParams:
         # run again to insure restored default for noise after last run
         C.run(inputs={T1: 2.0}, )
 
-        assert np.allclose(C.results,[np.array([[40.5]]),   # Trial 0 - no conditions met (2*5*4)+0.5
-                                      np.array([[24.5]]),   # Trial 1 - only T1.slope condition met (2*3*4)+0.5
-                                      np.array([[41.5]]),   # Trial 2 - only T2.intercept condition met (2*5*4)+1+0.5
-                                      np.array([[200.5]]), # Trial 3 - only T2 scale condition met (2*5*20) + 0.5
-                                      np.array([[400.5]]), # Trial 4 - only T2.function.weights condition met
-                                                            #               (2*5*4*10) + 0.5
-                                      np.array([[40.]])]) # New run - revert to assignments before previous run (2*5*4)
+        assert np.allclose(C.results,[   # Conditions satisfied:
+            np.array([[40.5]]), # Trial 0: no conditions (2*5*4)+0.5
+            np.array([[24.5]]), # Trial 1: only T1.slope condition (2*3*4)+0.5
+            np.array([[41.5]]), # Trial 2: only T2.intercept condition (2*5*4)+1+0.5
+            np.array([[200.5]]),# Trial 3: only T2 scale condition (2*5*20) + 0.5
+            np.array([[400.5]]),# Trial 4: only T2.function.weights condition (2*5*4*10)+0.5
+            np.array([[40.5]]), # Run 2, Tria1 1: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
+            np.array([[40.5]]), # Run 2: Trial 2: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
+            np.array([[41.5]]), # Run 3, Tria1 1: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
+            np.array([[400.5]]),# Run 3: Trial 2: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
+            np.array([[40.]])   # Final run: revert to assignments before previous run (2*5*4)
+        ])
