@@ -4,6 +4,7 @@ import pytest
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
 from psyneulink.core.globals.keywords import \
@@ -460,10 +461,12 @@ class TestCompositionRuntimeParams:
         # Construction
         T1 = TransferMechanism()
         T2 = TransferMechanism()
-        C = Composition(pathways=[T1,T2])
+        P = MappingProjection(sender=T1, receiver=T2, name='MY PROJECTION')
+        C = Composition(pathways=[[T1,P,T2]])
 
         T1.function.slope = 5
         T2.input_port.function.scale = 4
+        # Run 1: Test INPUT_PORT_PARAMS for InputPort function directly (scale) and in FUNCTION_PARAMS dict (weights)
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
@@ -476,15 +479,12 @@ class TestCompositionRuntimeParams:
                           # 'scale': (20, AtTrial(3), 3 ),
                           'scale': (20, AtTrial(3)),
                           FUNCTION_PARAMS:{'weights':(10, AtTrial(4))},
-                          # FIX 5/8/20 [JDC]:  THE FOLLOWING FAIL:
-                          # PROJECTION_PARAMS:{'matrix':([10], AtTrial(1))}
-                          PROJECTION_PARAMS:{'variable':(1000, AtTrial(5))},
-                          MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(6))}
                       }
                   },
               },
               num_trials=5
               )
+        # Run 2:  Test INPUT_PORT_PARAMS override by Never() Condition
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -497,6 +497,7 @@ class TestCompositionRuntimeParams:
               },
               num_trials=2
               )
+        # Run 3:  Test INPUT_PORT_PARAMS constraint to Trial 1 assignements
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -509,6 +510,19 @@ class TestCompositionRuntimeParams:
                   },
               },
               num_trials=2
+              )
+        # Run 4: Test Projection params
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T2: {
+                      'noise': 0.5,
+                      INPUT_PORT_PARAMS: {
+                          PROJECTION_PARAMS:{'variable':(1000, AtTrial(0))},
+                          MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(1))},
+                          P:{'value':(3000, AtTrial(2))},
+                          'MY PROJECTION':{'value':(4000, AtTrial(3))}
+                      }}},
+              num_trials=4
               )
         # all parameters restored to previous values (assigned or defaults)
         assert T1.function.parameters.slope.get(C) == 5.0
@@ -523,7 +537,7 @@ class TestCompositionRuntimeParams:
         assert T2.input_port.function.weights == None
         assert T2.input_port.function.parameters.weights.get(C) == None
 
-        # run again to insure restored default for noise after last run
+        # Final Run: insure restored default for noise after last run
         C.run(inputs={T1: 2.0}, )
 
         assert np.allclose(C.results,[   # Conditions satisfied:
@@ -536,5 +550,9 @@ class TestCompositionRuntimeParams:
             np.array([[40.5]]), # Run 2: Trial 2: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
             np.array([[41.5]]), # Run 3, Tria1 1: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
             np.array([[400.5]]),# Run 3: Trial 2: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
+            np.array([[4000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*1000)+0.5
+            np.array([[8000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*2000)+0.5
+            np.array([[12000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*3000)+0.5
+            np.array([[16000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*4000)+0.5
             np.array([[40.]])   # Final run: revert to assignments before previous run (2*5*4)
         ])
