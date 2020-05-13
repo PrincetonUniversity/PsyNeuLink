@@ -8171,7 +8171,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Validate that this is true. If so, resolve the string into a dict and parse it.
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         if len(input_nodes) == 1:
-            if inputs in input_nodes[0]._get_standardized_label_dict(INPUT_PORTS)[0]:
+            if inputs in input_nodes[0]._get_standardized_label_dict(INPUT)[0]:
                 _inputs = {next(iter(input_nodes)): [inputs]}
         else:
             raise CompositionError(
@@ -8278,14 +8278,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _inputs.update({node:inp})
         return _inputs
 
-    def _parse_input_labels(self, inputs, mech=None):
+    def _parse_labels(self, inputs, mech=None):
+        # the nested list comp below is necessary to retrieve output nodes of learning pathways, because the PathwayRole
+        # enum is not importable into this module
+        # it's necessary, because if the in
+        target_to_output = {path.target: path.output for path in self.pathways}
         if mech:
-            labels = mech._get_standardized_label_dict(INPUT_PORTS)
+            target_nodes_of_learning_pathways = [path.target for path in self.pathways]
+            label_type = INPUT if not mech in target_nodes_of_learning_pathways else OUTPUT
+            label_mech = mech if not mech in target_to_output else target_to_output[mech]
+            labels = label_mech._get_standardized_label_dict(label_type)
         if type(inputs) == dict:
             _inputs = {}
             for k,v in inputs.items():
-                if isinstance(k, Mechanism) and k.input_labels_dict:
-                    _inputs.update({k:self._parse_input_labels(v, k)})
+                if isinstance(k, Mechanism) and \
+                   (target_to_output[k].output_labels_dict if k in target_to_output else k.input_labels_dict):
+                    _inputs.update({k:self._parse_labels(v, k)})
                 else:
                     _inputs.update({k:v})
         elif type(inputs) == list or type(inputs) == np.ndarray:
@@ -8293,18 +8301,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for i in range(len(inputs)):
                 port = 0 if len(labels) == 1 else i
                 stimulus = inputs[i]
-                if type(stimulus) == list:
-                    _inputs.append(self._parse_input_labels(inputs[i], mech))
-                elif type(stimulus) == str or type(stimulus) == np.ndarray:
+                if type(stimulus) == list or type(stimulus) == np.ndarray:
+                    _inputs.append(self._parse_labels(inputs[i], mech))
+                elif type(stimulus) == str:
                     _inputs.append(labels[port][stimulus])
                 else:
                     _inputs.append(stimulus)
         return _inputs
 
-    def _parse_dict(self, inputs: object) -> object:
+    def _parse_dict(self, inputs):
         # parse a user-provided input dict to format it properly for execution. compute number of trials and return that
         # as well
-        _inputs = self._parse_input_labels(inputs)
+        _inputs = self._parse_labels(inputs)
         _inputs = self._validate_input_dict_node_roles(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)

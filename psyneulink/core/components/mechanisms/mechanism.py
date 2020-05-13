@@ -948,11 +948,11 @@ from psyneulink.core.components.ports.port import REMOVE_PORTS, PORT_SPEC, _pars
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
+    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORTS, INPUT_PORT_VARIABLES, \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
-    NAME, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
+    NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 
@@ -3485,15 +3485,15 @@ class Mechanism_Base(Mechanism):
         }
 
         """
-        input_labels = self._get_standardized_label_dict(INPUT_PORTS)
-        output_labels = self._get_standardized_label_dict(OUTPUT_PORTS)
+        input_labels = self._get_standardized_label_dict(INPUT)
+        output_labels = self._get_standardized_label_dict(INPUT)
         port_labels = {
             INPUT_PORTS: input_labels,
             OUTPUT_PORTS: output_labels
         }
         return port_labels
 
-    def _get_standardized_label_dict(self, port_type):
+    def _get_standardized_label_dict(self, label_type):
         """
         Parses input or output label dicts into a standardized form
 
@@ -3513,10 +3513,10 @@ class Mechanism_Base(Mechanism):
                 }
         }
         """
-        if port_type == INPUT_PORTS:
+        if label_type == INPUT:
             label_dict = self.input_labels_dict
             ports = self.input_ports
-        elif port_type == OUTPUT_PORTS:
+        elif label_type == OUTPUT:
             label_dict = self.output_labels_dict
             ports = self.output_ports
         _label_dict = {}
