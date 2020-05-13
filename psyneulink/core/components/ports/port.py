@@ -1980,17 +1980,12 @@ class Port_Base(Port):
                 # matrix ParameterPort may be a non identity Accumulator integrator
                 and all(pport.function._is_identity(context) for pport in projection.parameter_ports)
             ):
-                # # MODIFIED 5/8/20 OLD:
-                # projection_variable = projection.sender.parameters.value._get(context)
-                # # KDM 8/14/19: this fallback seems to always happen on the first execution
-                # # of the Projection's function (LinearMatrix). Unsure if this is intended or not
-                # if projection_variable is None:
-                #     projection_variable = projection.function.defaults.value
-                # MODIFIED 5/8/20 NEW:
-                projection_variable = (projection_variable
-                                       or projection.sender.parameters.value._get(context)
-                                       or projection.function.defaults.value)
-                # MODIFIED 5/8/20 END
+                if projection_variable is None:
+                    projection_variable = projection.sender.parameters.value._get(context)
+                    # KDM 8/14/19: this fallback seems to always happen on the first execution
+                    # of the Projection's function (LinearMatrix). Unsure if this is intended or not
+                    if projection_variable is None:
+                        projection_variable = projection.function.defaults.value
 
                 projection.parameters.variable._set(projection_variable, context)
 
@@ -2007,7 +2002,8 @@ class Port_Base(Port):
                     pport.function.most_recent_context = context
 
             else:
-                projection_variable = projection_variable or projection.sender.parameters.value._get(context)
+                if projection_variable is None:
+                    projection_variable = projection.sender.parameters.value._get(context)
                 projection_value = projection_value or projection.execute(variable=projection_variable,
                                                                           context=context,
                                                                           runtime_params=projection_params,
