@@ -8116,6 +8116,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
         Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
         """
+
         # 1) Convert from key-value representation of values into separated representation
         if 'targets' in inputs:
             targets = inputs['targets'].copy()
@@ -8141,24 +8142,53 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
-        inputs, num_trials = self._parse_dict(inputs)
+        inputs, num_inputs_sets = self._parse_dict(inputs)
 
-        return inputs, num_trials
+        return inputs, num_inputs_sets
 
     def _parse_generator_function(self, inputs):
+        """
+        Instantiates and parses generator from generator function
+
+        Returns
+        -------
+        generator instance that will be used to yield inputs
+
+        a large int (sys.maxsize), used in place of num_inputs_sets since it is impossible to determine a priori how many
+            times a generator will yield
+        """
         # If a generator function was provided as input, resolve it to a generator and
         # pass to _parse_generator
         _inputs = inputs()
-        return self._parse_generator(_inputs)
+        gen, num_inputs_sets = self._parse_generator(_inputs)
+        return gen, num_inputs_sets
 
     def _parse_generator(self, inputs):
+        """
+        Returns
+        -------
+        generator instance that will be used to yield inputs
+
+        a large int (sys.maxsize), used in place of num_inputs_sets since it is impossible to determine a priori how many
+            times a generator will yield
+        """
         # It is impossible to determine the number of yields a generator will support, so we return the maximum
         # allowed integer for num_trials here. During execution, we will determine empirically if the generator has
         # yielded to exhaustion by catching StopIteration errors
-        num_trials = sys.maxsize
-        return inputs, num_trials
+        num_inputs_sets = sys.maxsize
+        return inputs, num_inputs_sets
 
     def _parse_list(self, inputs):
+        """
+        Validates that conditions are met to use a list as input, i.e. that there is only one input node. If so, convert
+            list to input dict and parse
+
+        Returns
+        -------
+        parsed input dict
+
+        number of input sets in the parsed dict
+        """
         # Lists can only be used as inputs in the case where there is a single input node.
         # Validate that this is true. If so, resolve the list into a dict and parse it.
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
@@ -8168,9 +8198,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        return self._parse_dict(_inputs)
+        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        return input_dict, num_inputs_sets
 
     def _parse_string(self, inputs):
+        """
+        Validates that conditions are met to use a string as input, i.e. that there is only one input node and that node's default
+            input port has a label matching the provided string. If so, convert the string to an input dict and parse
+
+        Returns
+        -------
+        parsed input dict
+
+        number of input sets in the parsed dict
+        """
         # Strings can only be used as inputs in the case where there is a single input node, and that node's default
         # input port has a label matching the provided string.
         # Validate that this is true. If so, resolve the string into a dict and parse it.
@@ -8182,15 +8223,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        return self._parse_dict(_inputs)
+        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        return input_dict, num_inputs_sets
 
     def _parse_function(self, inputs):
+        """
+        Returns
+        -------
+        function that will be used to yield inputs
+
+        num_inputs_sets, which is always 1, as functions must always return 1 trial of input per call
+        """
         # functions used as inputs must always return a single trial's worth of inputs on each call,
         # so just return the function and 1 as the number of trials
         num_trials = 1
         return inputs, num_trials
 
     def _validate_single_input(self, node, input):
+        """
+        validates a single input for a single node. if the input is specified without an outer list (i.e.
+            Composition.run(inputs = [1, 1]) instead of Composition.run(inputs = [[1], [1]]), add an extra dimension
+            to the input
+
+        Returns
+        -------
+        the input, with an added dimension if necessary, if the input is valid. None if the input is not valid.
+        """
         # Validate that a single input is properly formatted for a node.
         _input = []
         node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
@@ -8205,6 +8263,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return _input
 
     def _validate_input_shapes(self, inputs):
+        """
+        Validates that all inputs provided in input dict are valid
+
+        Returns
+        -------
+
+        Validated input dict
+        """
          # Loop over all dictionary entries to validate their content and adjust any convenience notations:
 
          # (1) Replace any user provided convenience notations with values that match the following specs:
@@ -8250,6 +8316,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return _inputs
 
     def _flatten_nested_dicts(self, inputs):
+        """
+        Converts inputs provided in the form of a dict for a nested Composition to a list corresponding to the
+            Composition's input CIM ports
+
+        Returns
+        -------
+
+        Input dict, with nested dicts corresponding to nested Compositions converted to lists
+        """
         # Inputs provided for nested compositions in the form of a nested dict need to be converted into a list,
         # to be provided to the outer Composition's input port that corresponds to the nested Composition
         _inputs = {}
@@ -8284,6 +8359,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return _inputs
 
     def _parse_labels(self, inputs, mech=None):
+        """
+        Traverse input dict and replace any inputs that are in the form of their input or output label representations
+              to their numeric representations
+
+        Returns
+        -------
+
+        Input dict with labels replaced by numeric representation
+        """
         # the nested list comp below is necessary to retrieve target nodes of learning pathways, because the PathwayRole
         # enum is not importable into this module
         target_to_output = {path.target: path.output for path in self.pathways if 'LEARNING' in [role.name for role in path.roles]}
@@ -8314,16 +8398,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return _inputs
 
     def _parse_dict(self, inputs):
-        # parse a user-provided input dict to format it properly for execution. compute number of trials and return that
+        """
+        Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout
+            its execution
+
+        Returns
+        -------
+
+        Parsed input dict
+
+        the number of input sets provided for each input node
+        """
+        # parse a user-provided input dict to format it properly for execution. compute number of input sets and return that
         # as well
         _inputs = self._parse_labels(inputs)
         _inputs = self._validate_input_dict_node_roles(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
-        num_trials = len(next(iter(_inputs.values())))
-        return _inputs, num_trials
+        num_inputs_sets = len(next(iter(_inputs.values())))
+        return _inputs, num_inputs_sets
 
     def _validate_input_dict_node_roles(self, inputs):
+        """
+        Validates that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
+            included, adds them to the input dict using their default values as entries
+
+        Returns
+        -------
+
+        Input dict including all of a Composition's input nodes
+        """
         # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in inputs.keys():
@@ -8341,6 +8445,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return inputs
 
     def _parse_run_inputs(self, inputs):
+        """
+        Takes user-provided input for entire run and parses it in the appropriate way given its form
+
+        Returns
+        -------
+
+        Inputs parsed and ready to be used further down the line in execution
+
+        The number of inputs sets included in the input
+        """
         # handle user-provided input based on input type. return processd inputs and num_inputs_sets
         if not inputs:
             _inputs, num_inputs_sets = self._parse_dict({})
@@ -8366,6 +8480,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return _inputs, num_inputs_sets
 
     def _parse_trial_inputs(self, inputs, trial_num):
+        """
+        Takes input for single trial run and parses it in the appropriate way given its form
+
+        Returns
+        -------
+
+        Inputs parsed and ready to be used further down the line in execution
+        """
         # parse and return a single trial's worth of inputs.
         # this method is intended to run BEFORE a call to Composition.execute
         if callable(inputs):
@@ -8381,6 +8503,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return next_inputs
 
     def _validate_execution_inputs(self, inputs):
+        """
+        Validates and returns the input sets for a single execution of the Composition
+
+        Returns
+        -------
+
+        Validated inputs
+        """
         # validate a single execution's worth of inputs
         # this method is intended to run DURING a call to Composition.execute
         _inputs = {}
