@@ -139,7 +139,7 @@ class TestLCControlMechanism:
                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
                                                   modulates=(pnl.SLOPE, Tz)))
         comp=pnl.Composition(pathways=[[Tx, Tz],[Ty, C]])
-        comp.show_graph()
+        # comp.show_graph()
 
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
         result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})

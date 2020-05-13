@@ -1873,7 +1873,7 @@ class Port_Base(Port):
         ):
             variable = self._parse_function_variable(self._get_fallback_variable(context))
             self.parameters.variable._set(variable, context)
-            # below conversion really should not be happening ultimately, but it is
+            # FIX: below conversion really should not be happening ultimately, but it is
             # in _validate_variable. Should be removed eventually
             variable = convert_to_np_array(variable, 1)
             self.parameters.value._set(variable, context)
@@ -1881,14 +1881,24 @@ class Port_Base(Port):
             self.function.most_recent_context = context
             return
 
-
-        from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
         from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
         from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
         from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
+
+        def set_projection_value(projection, value, context):
+            """Manually set Projection value"""
+            projection.parameters.value._set(projection_value, context)
+            # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
+            # should these be manually set despite it not actually being executed?
+            # explicitly getting/setting based on context will be more clear
+            projection.most_recent_context = context
+            projection.function.most_recent_context = context
+            for pport in projection.parameter_ports:
+                pport.most_recent_context = context
+                pport.function.most_recent_context = context
 
         # GET RUNTIME PARAMS ----------------------------------------------------------------------------------------
 
@@ -1908,18 +1918,6 @@ class Port_Base(Port):
                                                       remove_general=True)
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
-
-        def set_projection_value(projection, value, context):
-            """Manually set Projection value"""
-            projection.parameters.value._set(projection_value, context)
-            # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
-            # should these be manually set despite it not actually being executed?
-            # explicitly getting/setting based on context will be more clear
-            projection.most_recent_context = context
-            projection.function.most_recent_context = context
-            for pport in projection.parameter_ports:
-                pport.most_recent_context = context
-                pport.function.most_recent_context = context
 
         modulatory_override = False
         mod_proj_values = {}
