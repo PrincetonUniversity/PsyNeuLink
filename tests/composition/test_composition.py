@@ -2641,6 +2641,38 @@ class TestRun:
                 and "to InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
 
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      ])
+    def test_execute_no_inputs(self, mode):
+        m_inner = ProcessingMechanism(size=2)
+        inner_comp = Composition(pathways=[m_inner])
+        m_outer = ProcessingMechanism(size=2)
+        outer_comp = Composition(pathways=[m_outer, inner_comp])
+        result = outer_comp.execute(bin_execute=mode)
+        assert np.allclose(result, [[0.0],[0.0]])
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      ])
+    def test_run_no_inputs(self, mode):
+        m_inner = ProcessingMechanism(size=2)
+        inner_comp = Composition(pathways=[m_inner])
+        m_outer = ProcessingMechanism(size=2)
+        outer_comp = Composition(pathways=[m_outer, inner_comp])
+        result = outer_comp.run(bin_execute=mode)
+        assert np.allclose(result, [[0.0],[0.0]])
+
     def test_lpp_invalid_matrix_keyword(self):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))

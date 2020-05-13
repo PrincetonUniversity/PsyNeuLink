@@ -177,25 +177,15 @@ class TestMechanismTargetLabels:
             params={OUTPUT_LABELS_DICT: output_labels_dict_M2}
         )
         C = Composition()
-        # from psyneulink import SSE
-        from torch import nn
-        sse = nn.MSELoss(reduction='sum')
         C.add_backpropagation_learning_pathway([M1, M2],
                                                0.25,
-                                               loss_function=sse)
-
-        custom_loss = lambda x, y: sse(x, y)/2
+                                               loss_function='sse')
         learned_matrix = []
         def record_matrix_after_trial():
             learned_matrix.append(M2.path_afferents[0].get_mod_matrix(C))
-        # C.learn(
-        #     inputs=['red', 'green', 'green', 'red'],
-        #     targets=['red', 'green', 'green', 'red'],
-        #     call_after_trial=record_matrix_after_trial
-        # )
         C.learn(
-            inputs = {M1:[1, 0, 0, 1]},
-            targets = {M2:[0, 1, 1, 0]},
+            inputs = {M1:['red', 'green', 'green', 'red']},
+            targets = {M2:['red', 'green', 'green', 'red']},
             call_after_trial=record_matrix_after_trial
         )
         assert np.allclose(C.results,      [[[1.]], [[0.]], [[0.]], [[0.75]]])
@@ -212,7 +202,9 @@ class TestMechanismTargetLabels:
         M2 = ProcessingMechanism(size=2,
                                  params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
         C = Composition()
-        C.add_backpropagation_learning_pathway([M1, M2], 0.25)
+        C.add_backpropagation_learning_pathway([M1, M2],
+                                               0.25,
+                                               loss_function='sse')
 
         learned_matrix = []
         count = []
@@ -221,9 +213,11 @@ class TestMechanismTargetLabels:
             count.append(1)
 
 
-        C.run(inputs=['red', 'green', 'green', 'red'],
-              targets=['red', 'green', 'green', 'red'],
-              call_after_trial=record_matrix_after_trial)
+        C.learn(
+            inputs={M1: ['red', 'green', 'green', 'red']},
+            targets={M2: ['red', 'green', 'green', 'red']},
+            call_after_trial=record_matrix_after_trial
+        )
         assert np.allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
                                             np.array([[0.75, -0.25], [-0.25,  0.75]]),
@@ -242,7 +236,9 @@ class TestMechanismTargetLabels:
         M2 = ProcessingMechanism(size=2,
                                  params={OUTPUT_LABELS_DICT: output_labels_dict_M2})
         C = Composition()
-        C.add_backpropagation_learning_pathway([M1, M2], 0.25)
+        C.add_backpropagation_learning_pathway([M1, M2],
+                                               0.25,
+                                               loss_function='sse')
         learned_matrix = []
         count = []
         def record_matrix_after_trial():
@@ -250,9 +246,11 @@ class TestMechanismTargetLabels:
             count.append(1)
 
 
-        C.run(inputs=['red', 'green', 'green', 'red'],
-              targets=['red', 'green', 'green', 'red'],
-              call_after_trial=record_matrix_after_trial)
+        C.learn(
+            inputs={M1: ['red', 'green', 'green', 'red']},
+            targets={M2: ['red', 'green', 'green', 'red']},
+            call_after_trial=record_matrix_after_trial
+        )
 
         assert np.allclose(C.results, [[[1, 1]], [[0., 0.]], [[0., 0.]], [[0.5, 0.5]]])
         assert np.allclose(learned_matrix, [np.array([[0.75, -0.25], [-0.25,  0.75]]),
