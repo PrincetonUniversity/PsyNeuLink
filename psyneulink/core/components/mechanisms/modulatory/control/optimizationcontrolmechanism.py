@@ -889,7 +889,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._objective_projection = projection_from_objective
 
-    def _update_input_ports(self, context=None, runtime_params=None):
+    def _update_input_ports(self, runtime_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
 
         Call execute method for all (MappingProjection) Projections in Port.path_afferents
@@ -898,11 +898,11 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_port = self.input_port
-        outcome_input_port._update(context=context, params=runtime_params)
+        outcome_input_port._update(params=runtime_params, context=context)
         port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
         return np.array(port_values)
 

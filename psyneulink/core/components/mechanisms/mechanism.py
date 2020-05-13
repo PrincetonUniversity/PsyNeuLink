@@ -2112,7 +2112,6 @@ class Mechanism_Base(Mechanism):
             or process InputPorts before and/or after call to _instantiate_output_ports
         """
         from psyneulink.core.components.ports.outputport import _instantiate_output_ports
-        # self._update_parameter_ports(context=context)
         _instantiate_output_ports(owner=self, output_ports=self.output_ports, context=context)
 
     def _add_projection_to_mechanism(self, port, projection, context=None):
@@ -2349,8 +2348,20 @@ class Mechanism_Base(Mechanism):
         runtime_parameter_port_params = {}
         if runtime_params:
             runtime_input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
-            runtime_parameter_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
-            runtime_output_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
+            runtime_parameter_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
+            runtime_output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
+
+            # FIX 5/8/20 [JDC]:
+            #    CHECK FOR ANY PROJECTION-SPECIFIC PARAMS AND PUT THEM IN PROJECTION_SPECIFIC_PARAMS
+            #       (SO THEY ARE NOT TREATED AS PARAMS OF THE PORT OR ITS FUNCTION)
+            #    DELETE EACH AS IT IS USED IN _update_port
+            #    CHECK FOR ANY REMAINING PROJECTION_SPECIFIC_PARAMS AFTER LOOP, AND RAISE PROGRAM ERROR FOR ANY
+
+            #    CHECK FOR ANY PORT-SPECIFIC PARAMS AND PUT THEM IN PORT_SPECIFIC_PARAMS
+            #       (SO THEY ARE NOT TREATED AS PARAMS OF THE MECH OR ITS FUNCTION)
+            #    DELETE EACH AS IT IS USED IN _update_port
+            #    CHECK FOR ANY REMAINING PORT_SPECIFIC_PARAMS AFTER EXECUTE, AND RAISE PROGRAM ERROR FOR ANY
+
 
         if self.parameters.is_finished_flag._get(context) is True:
             self.parameters.num_executions_before_finished._set(0, override=True, context=context)
@@ -2367,7 +2378,7 @@ class Mechanism_Base(Mechanism):
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
-                variable = self._update_input_ports(runtime_params=runtime_input_port_params, context=context)
+                variable = self._update_input_ports(runtime_input_port_params, context)
 
             # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
             else:
@@ -2386,7 +2397,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.variable._set(variable, context=context)
 
             # UPDATE PARAMETERPORT(S)
-            self._update_parameter_ports(runtime_params=runtime_parameter_port_params, context=context)
+            self._update_parameter_ports(runtime_parameter_port_params, context)
 
             # EXECUTE MECHANISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
@@ -2421,7 +2432,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(runtime_params=runtime_output_port_params, context=context)
+            self._update_output_ports(runtime_output_port_params, context)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
@@ -2477,7 +2488,7 @@ class Mechanism_Base(Mechanism):
 
         return np.array(self.get_input_values(context))
 
-    def _update_input_ports(self, context=None, runtime_params=None):
+    def _update_input_ports(self, runtime_input_port_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
 
         Call execute method for all (MappingProjection) Projections in Port.path_afferents
@@ -2487,14 +2498,14 @@ class Mechanism_Base(Mechanism):
 
         for i in range(len(self.input_ports)):
             port= self.input_ports[i]
-            port._update(params=runtime_params,
+            port._update(params=runtime_input_port_params,
                          context=context)
         return np.array(self.get_input_values(context))
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_parameter_port_params=None, context=None):
 
         for port in self._parameter_ports:
-            port._update(params=runtime_params,
+            port._update(params=runtime_parameter_port_params,
                          context=context)
 
     def _get_parameter_port_deferred_init_control_specs(self):
@@ -2513,7 +2524,7 @@ class Mechanism_Base(Mechanism):
                     ctl_specs.append(proj_control_signal_specs)
         return ctl_specs
 
-    def _update_output_ports(self, context=None, runtime_params=None):
+    def _update_output_ports(self, runtime_output_port_params=None, context=None):
         """Execute function for each OutputPort and assign result of each to corresponding item of self.output_values
 
         owner_value arg can be used to override existing (or absent) value of owner as variable for OutputPorts
@@ -2522,7 +2533,7 @@ class Mechanism_Base(Mechanism):
         """
         for i in range(len(self.output_ports)):
             port = self.output_ports[i]
-            port._update(params=runtime_params,
+            port._update(params=runtime_output_port_params,
                          context=context)
 
     def initialize(self, value, context=None):

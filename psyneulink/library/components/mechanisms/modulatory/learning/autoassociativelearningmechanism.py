@@ -425,14 +425,14 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         return value
 
-    def _update_output_ports(self, context=None, runtime_params=None):
+    def _update_output_ports(self, runtime_params=None, context=None):
         """Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism
 
         Must do this here, so it occurs after LearningMechanism's OutputPort has been updated.
         This insures that weights are updated within the same trial in which they have been learned
         """
 
-        super()._update_output_ports(context, runtime_params)
+        super()._update_output_ports(runtime_params, context)
         if self.parameters.learning_enabled._get(context):
             learned_projection = self.activity_source.recurrent_projection
             old_exec_phase = context.execution_phase

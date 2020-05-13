@@ -565,19 +565,17 @@ class TestCompositionRuntimeParams:
         CTL = ControlMechanism(control=ControlSignal(projections=('slope',T2),name='CTL SIGNAL'))
         C = Composition(pathways=[[T1,T2,CTL]])
 
-        T1.function.slope = 5
-        T2.input_port.function.scale = 4
         C.run(inputs={T1: 2.0},
               runtime_params={
-                  T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
                   T2: {
                       'noise': 0.5,
                       PARAMETER_PORT_PARAMS: {
                           PROJECTION_PARAMS: {'value':(10, AtTrial(0))},
                           CONTROL_PROJECTION_PARAMS: {'value':(20, AtTrial(0))},
-                          'CTL SIGNAL': {'value':(20, AtTrial(0))},
+                          # 'CTL SIGNAL': {'value':(30, AtTrial(0))},
                       }
                   },
               },
               num_trials=3
               )
+        print(C.results)

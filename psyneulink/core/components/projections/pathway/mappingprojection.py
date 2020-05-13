@@ -613,7 +613,7 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        self._update_parameter_ports(context=context, runtime_params=runtime_params)
+        self._update_parameter_ports(runtime_params=runtime_params, context=context)
 
         value = super()._execute(
                 variable=variable,

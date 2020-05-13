@@ -1855,7 +1855,7 @@ class Port_Base(Port):
         raise PortError("PROGRAM ERROR: {} does not implement _parse_port_specific_specs method".
                          format(self.__class__.__name__))
 
-    def _update(self, context=None, params=None):
+    def _update(self, params=None, context=None):
         """Update each projection, combine them, and assign return result
 
         Assign any runtime_params specified for Port, its function, and any of its afferent projections
@@ -1902,7 +1902,12 @@ class Port_Base(Port):
 
         # GET RUNTIME PARAMS ----------------------------------------------------------------------------------------
 
-        runtime_params = params or {}
+        # runtime_params = params or {}
+        if params:
+            runtime_params = params.copy()
+        else:
+            runtime_params = {}
+
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
         if FUNCTION_PARAMS in runtime_params:
             runtime_params.update(runtime_params.pop(FUNCTION_PARAMS))

@@ -901,10 +901,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_params=None, context=None):
         for port in self._parameter_ports:
             port_Name = port.name
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params, context=context)
 
             # Assign version of ParameterPort.value matched to type of template
             #    to runtime param

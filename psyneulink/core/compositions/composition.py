@@ -6673,7 +6673,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_ports(context, runtime_params)
+        self.controller._update_input_ports(runtime_params, context)
         outcome = self.controller.input_port.parameters.value._get(context)
 
         if outcome is None:
@@ -8880,7 +8880,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Update nested compositions
             for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
                 for port in comp.input_ports:
-                    port._update(context)
+                    port._update(context=context)
 
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)

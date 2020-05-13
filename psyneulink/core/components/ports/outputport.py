@@ -1584,7 +1584,7 @@ class StandardOutputPorts():
         for port in dict_list:
             if INDEX in port:
                 if port[INDEX] in ALL:
-                    port._update({VARIABLE:OWNER_VALUE})
+                    port._update(params={VARIABLE:OWNER_VALUE})
                 elif port[INDEX] in PRIMARY:
                     port_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
                 elif port[INDEX] in SEQUENTIAL:

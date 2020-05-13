@@ -1676,8 +1676,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         value = [np.atleast_1d(a) for a in control_allocation]
         self.parameters.value._set(value, context)
-        self._update_output_ports(context=context,
-                                   runtime_params=runtime_params,)
+        self._update_output_ports(runtime_params, context)
 
     @property
     def monitored_output_ports(self):
