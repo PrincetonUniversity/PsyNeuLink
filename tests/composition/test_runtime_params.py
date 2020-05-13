@@ -9,7 +9,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
 from psyneulink.core.globals.keywords import CONTROL_PROJECTION_PARAMS, INPUT_PORT_PARAMS, FUNCTION_PARAMS, \
-    PARAMETER_PORT_PARAMS, PROJECTION_PARAMS, MAPPING_PROJECTION_PARAMS
+    OVERRIDE, PARAMETER_PORT_PARAMS, PROJECTION_PARAMS, MAPPING_PROJECTION_PARAMS
 
 class TestMechanismRuntimeParams:
 
@@ -565,22 +565,54 @@ class TestCompositionRuntimeParams:
         # Construction
         T1 = TransferMechanism()
         T2 = TransferMechanism()
-        CTL = ControlMechanism(control=ControlSignal(projections=('slope',T2),name='CTL SIGNAL'))
+        CTL = ControlMechanism(control=ControlSignal(projections=('slope',T2)))
         C = Composition(pathways=[[T1,T2,CTL]])
 
         C.run(inputs={T1: 2.0},
-
               runtime_params={
                   T2: {
-                      'noise': 0.5,
                       PARAMETER_PORT_PARAMS: {
-                          PROJECTION_PARAMS: {'value':(10, AtTrial(0)),
-                                              CONTROL_PROJECTION_PARAMS: {'value':(20, AtTrial(0))},
-                                              'CTL SIGNAL': {'value':(30, AtTrial(0))},
-                                              },
+                          PROJECTION_PARAMS: {
+                              'variable':(5, AtTrial(0)), # variable of all Projection to all ParameterPorts
+                              'value':(10, AtTrial(1)),
+                              CONTROL_PROJECTION_PARAMS: {'value':(21, AtTrial(2))},
+                              'ControlProjection for TransferMechanism-1[slope]': {'value':(32, AtTrial(3))},
+                              CTL.control_signals[0].efferents[0]: {'value':(43, AtTrial(4))},
+                          },
                       }
                   },
               },
-              num_trials=3
+              num_trials=5
               )
+        CTL.control_signals[0].modulation = OVERRIDE
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T2: {
+                      PARAMETER_PORT_PARAMS: {
+                          PROJECTION_PARAMS: {
+                              'value':(5, AtTrial(0)),
+                              'value':(10, AtTrial(1)),
+                              CONTROL_PROJECTION_PARAMS: {'value':(21, AtTrial(2))},
+                              'ControlProjection for TransferMechanism-1[slope]': {'value':(32, AtTrial(3))},
+                              CTL.control_signals[0].efferents[0]: {'value':(43, AtTrial(4))},
+                          },
+                      }
+                  },
+              },
+              num_trials=5
+              )
+
         print(C.results)
+        assert np.allclose(C.results,[   # Conditions satisfied:
+            np.array([[10]]), # Run1, Trial 0: 2*5
+            np.array([[20]]), # Run1, Trial 1: only T1.slope condition (2*3*4)+0.5
+            np.array([[42]]), # Run1, Trial 2: only T2.intercept condition (2*5*4)+1+0.5
+            np.array([[64]]),# Run1, Trial 3: only T2 scale condition (2*5*20) + 0.5
+            np.array([[86]]),# Run1, Trial 4: only T2.function.weights condition (2*5*4*10)+0.5
+            np.array([[172]]), # Run 2, Tria1 0: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
+            np.array([[20]]), # Run 2, Tria1 1: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
+            np.array([[42]]), # Run 2: Trial 2: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
+            np.array([[64]]), # Run 3, Tria1 3: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
+            np.array([[86]]),# Run 3: Trial 4: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
+        ])
+

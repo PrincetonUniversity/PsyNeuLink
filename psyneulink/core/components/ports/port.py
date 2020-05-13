@@ -770,6 +770,7 @@ import numbers
 import types
 import warnings
 
+from copy import deepcopy
 from collections.abc import Iterable
 from collections import defaultdict
 
@@ -1901,35 +1902,31 @@ class Port_Base(Port):
                 pport.most_recent_context = context
                 pport.function.most_recent_context = context
 
-        # GET RUNTIME PARAMS ----------------------------------------------------------------------------------------
+        # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
-        # runtime_params = params or {}
-        # if params:
-        #     runtime_params = params.copy()
-        # else:
-        #     runtime_params = {}
-        runtime_params = defaultdict(lambda:{}, params or {})
+        # Copy params, since general and type-specific Params may be needed by other Ports;
+        #              (though parameters specifiied for individual Projections are deleted from params itself)
+        if params:
+            p_copy = deepcopy(params)
+        else:
+            p_copy = None
+        port_params = defaultdict(lambda:{}, p_copy or {})
 
-        # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
-        if FUNCTION_PARAMS in runtime_params:
-            runtime_params.update(runtime_params.pop(FUNCTION_PARAMS))
+        # Move any params specified for Port's function in FUNCTION_PARAMS dict into port_params
+        if FUNCTION_PARAMS in port_params:
+            port_params.update(port_params.pop(FUNCTION_PARAMS))
 
-        # # Generate dicts for Projection params (passed to Projection)
-        # #    by merging general param dict (PROJECTION_PARAMS) with type-specific ones for each type of Projection.
-        # # Remove PROJECTION_PARAMS in final call so that runtime_params is left with only Project-specific entries
-        # #    (handled below) and those for the Port itself and its function.
-        # mapping_projection_params = _merge_param_dicts(runtime_params, MAPPING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        # learning_projection_params = _merge_param_dicts(runtime_params, LEARNING_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        # control_projection_params = _merge_param_dicts(runtime_params, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
-        # gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS,
-        #                                               remove_general=True)
-
-        # Generate default dict that returns empty dict for any unrecognized keys
-        #  - pop PROJECTION_PARAMS so that only params for Port or its Mechanism are passed to its execute method
+        # Generate default dict for projection_params that returns empty dict for any missing entries
         projection_params = defaultdict(lambda:{})
+        # Pop type-specific Projection params from port_params so that only params for Port or its Mechanism
+        #     remain to be passed to the Port's execute method
         for projection_type in projection_type_keyword_mapping.values():
-            projection_params[projection_type] = runtime_params[PROJECTION_PARAMS].pop(projection_type,{})
-        projection_params[PROJECTION_PARAMS].update(runtime_params.pop(PROJECTION_PARAMS, {}))
+            projection_params[projection_type] = port_params[PROJECTION_PARAMS].pop(projection_type,{})
+        # Get general Projection params into a dedicated PROJECTION_PARAMS dict for them;
+        #     note: this will also include any params specified for individual Projections, but are not needed here;
+        #           they will be popped from the main params dict, which is examined by Mechanism to detect
+        #           any unclaimed param specifications that will generate an error.
+        projection_params[PROJECTION_PARAMS].update(port_params.pop(PROJECTION_PARAMS, {}))
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -1950,41 +1947,30 @@ class Port_Base(Port):
                                   f"of {self.owner.name} ignored [has no sender].")
                 continue
 
-            # # Get relelvant Projection params (general and type-specific) culled above
-            # if isinstance(projection, MappingProjection):
-            #     projection_type = MAPPING_PROJECTION_PARAMS
-            # elif isinstance(projection, LearningProjection):
-            #     projection_type = LEARNING_PROJECTION_PARAMS
-            # elif isinstance(projection, ControlProjection):
-            #     projection_type = CONTROL_PROJECTION_PARAMS
-            # elif isinstance(projection, GatingProjection):
-            #     projection_type = GATING_PROJECTION_PARAMS
+            # Get relelvant Projection params (general, type-specific and individual)
 
-            projection_type_keyword = projection_type_keyword_mapping[projection.__class__]
-            # First get params that apply to all Projections
+            # First get general Projection params (that apply to all Projections)
+            #     from 'PROJECTION_PARAMS' subdict in projection_params
             projection_type_params = {k:v for k,v in projection_params[PROJECTION_PARAMS].items()
-                                      if k not in {projection,projection.name}}
-            # Then get params that apply to this particular type (overrides general ones)
+                                                  if k not in {projection, projection,projection.name}}
+            # Then get type-specific params that apply for type of current Projection (override general ones)
+            #    from type-specific sub-dicts in projection_params)
+            projection_type_keyword = projection_type_keyword_mapping[projection.__class__]
             projection_type_params.update(projection_params[projection_type_keyword])
-            # Then get ones specific to this Projection
-            #   - overrides any specified for the Projection type or all Projections
-            #   - removes from projection_params (to pass check in Mechanism for any spurious ones)
-            # projection_type_params.update(projection_params.pop(projection, {}))
-            # projection_type_params.update(projection_params.pop(projection.name, {}))
+            # Finally, get params specific to this Projection from params
+            #   - overrides any specified general and/or type-specific params
+            #   - removes from params (to pass check in Mechanism for any spurious ones)
+            if params and PROJECTION_PARAMS in params and projection in params[PROJECTION_PARAMS]:
+                projection_type_params.update(params[PROJECTION_PARAMS].pop(projection, {}))
+            if params and PROJECTION_PARAMS in params and projection.name in params[PROJECTION_PARAMS]:
+                projection_type_params.update(params[PROJECTION_PARAMS].pop(projection.name, {}))
 
-            projection_type_params.update(projection_params[PROJECTION_PARAMS].pop(projection, {}))
-            projection_type_params.update(projection_params[PROJECTION_PARAMS].pop(projection.name, {}))
 
-            # # Merge in projection-specific ones (overriding the general and type-specific ones)
-            # projection_params.update(runtime_params.pop(projection, {}))
-            # projection_params.update(runtime_params.pop(projection.name, {}))
-
-            # Get Projection's variable and/or value if specified in runtime_params
+            # Get Projection's variable and/or value if specified in port_params
             projection_variable = projection_type_params.pop(VARIABLE, None)
             projection_value = projection_type_params.pop(VALUE, None)
 
-
-            # Projection value specifed in runtime_params, so just assign its value
+            # Projection value specifed in port_params, so just assign its value
             if projection_value:
                 set_projection_value(projection, projection_value, context)
 
@@ -2051,6 +2037,7 @@ class Port_Base(Port):
                         continue
                     # Otherwise, for efficiency, assign first OVERRIDE value encountered and return
                     else:
+                        # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
                         return
                 else:
@@ -2073,6 +2060,7 @@ class Port_Base(Port):
         if modulatory_override:
             # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
             # a bit handwavy just to make stuff work
+            # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
             self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), context)
             return
 
@@ -2090,15 +2078,15 @@ class Port_Base(Port):
             # FIX: SHOULD THIS REALLY BE GETTING SET HERE??
             # Set modulatory parameter's value
             param._set(mod_val, context)
-            # Add mod_param and its value to runtime_params for Port's function
-            runtime_params.update({mod_param_name: mod_val})
+            # Add mod_param and its value to port_params for Port's function
+            port_params.update({mod_param_name: mod_val})
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
         # Assign param values
-        self._validate_and_assign_runtime_params(runtime_params, context=context)
+        self._validate_and_assign_runtime_params(port_params, context=context)
         # Execute Port
-        self.execute(context=context, runtime_params=runtime_params)
+        self.execute(context=context, runtime_params=port_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
