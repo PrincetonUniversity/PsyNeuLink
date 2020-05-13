@@ -14,12 +14,12 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 def test_basic(benchmark, mode):
     variable = np.random.rand(1)
     f = DefaultAllocationFunction()
-    if mode == "Python":
+    if mode == 'Python':
         res = benchmark(f.function, variable)
-    elif mode == "LLVM":
+    elif mode == 'LLVM':
         m = pnlvm.execution.FuncExecution(f)
         res = benchmark(m.execute, variable)
-    elif mode == "PTX":
+    elif mode == 'PTX':
         m = pnlvm.execution.FuncExecution(f)
         res = benchmark(m.cuda_execute, variable)
     assert np.allclose(res, variable)
