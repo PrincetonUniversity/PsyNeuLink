@@ -569,6 +569,7 @@ class TestCompositionRuntimeParams:
         C = Composition(pathways=[[T1,T2,CTL]])
 
         C.run(inputs={T1: 2.0},
+
               runtime_params={
                   T2: {
                       'noise': 0.5,

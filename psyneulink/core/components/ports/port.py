@@ -827,14 +827,6 @@ port_keywords.update({MECHANISM,
 
 port_type_keywords = {PORT_TYPE}
 
-# Used for runtime_params
-PORT_PARAM_KEYWORDS = {FUNCTION_PARAMS,
-                       PROJECTION_PARAMS,
-                       PATHWAY_PROJECTIONS,
-                       MODULATORY_PROJECTIONS,
-                       CONTROL_PROJECTION_PARAMS,
-                       GATING_PROJECTION_PARAMS,
-                       LEARNING_PROJECTION_PARAMS}
 
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
@@ -1889,6 +1881,14 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
         from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 
+        # Mapping from Projection types to param keywords
+        #  used in _update for processing runtime_params
+        projection_type_keyword_mapping = {MappingProjection: MAPPING_PROJECTION_PARAMS,
+                                           ControlProjection: CONTROL_PROJECTION_PARAMS,
+                                           GatingProjection: GATING_PROJECTION_PARAMS,
+                                           LearningProjection: LEARNING_PROJECTION_PARAMS}
+
+
         def set_projection_value(projection, value, context):
             """Manually set Projection value"""
             projection.parameters.value._set(projection_value, context)
@@ -1904,11 +1904,11 @@ class Port_Base(Port):
         # GET RUNTIME PARAMS ----------------------------------------------------------------------------------------
 
         # runtime_params = params or {}
-        if params:
-            runtime_params = params.copy()
-        else:
-            runtime_params = {}
-        # runtime_params = defaultdict(lambda:{}, params or {})
+        # if params:
+        #     runtime_params = params.copy()
+        # else:
+        #     runtime_params = {}
+        runtime_params = defaultdict(lambda:{}, params or {})
 
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
         if FUNCTION_PARAMS in runtime_params:
@@ -1923,8 +1923,13 @@ class Port_Base(Port):
         # control_projection_params = _merge_param_dicts(runtime_params, CONTROL_PROJECTION_PARAMS, PROJECTION_PARAMS)
         # gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS,
         #                                               remove_general=True)
-        projection_params = defaultdict(lambda:{}, runtime_params.pop(PROJECTION_PARAMS,{}))
 
+        # Generate default dict that returns empty dict for any unrecognized keys
+        #  - pop PROJECTION_PARAMS so that only params for Port or its Mechanism are passed to its execute method
+        projection_params = defaultdict(lambda:{})
+        for projection_type in projection_type_keyword_mapping.values():
+            projection_params.update(runtime_params[PROJECTION_PARAMS].pop(projection_type,{}))
+        projection_params[PROJECTION_PARAMS].update(runtime_params.pop(PROJECTION_PARAMS))
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -1945,18 +1950,21 @@ class Port_Base(Port):
                                   f"of {self.owner.name} ignored [has no sender].")
                 continue
 
-            # Get relelvant Projection params (general and type-specific) culled above
-            if isinstance(projection, MappingProjection):
-                projection_type = MAPPING_PROJECTION_PARAMS
-            elif isinstance(projection, LearningProjection):
-                projection_type = LEARNING_PROJECTION_PARAMS
-            elif isinstance(projection, ControlProjection):
-                projection_type = CONTROL_PROJECTION_PARAMS
-            elif isinstance(projection, GatingProjection):
-                projection_type = GATING_PROJECTION_PARAMS
+            # # Get relelvant Projection params (general and type-specific) culled above
+            # if isinstance(projection, MappingProjection):
+            #     projection_type = MAPPING_PROJECTION_PARAMS
+            # elif isinstance(projection, LearningProjection):
+            #     projection_type = LEARNING_PROJECTION_PARAMS
+            # elif isinstance(projection, ControlProjection):
+            #     projection_type = CONTROL_PROJECTION_PARAMS
+            # elif isinstance(projection, GatingProjection):
+            #     projection_type = GATING_PROJECTION_PARAMS
 
-            projection_type_params = projection_params[projection_type]
-            # Merge in any for this projection
+            # First get params that apply to all Projections
+            projection_type_params = projection_params[PROJECTION_PARAMS]
+            # Then get params that apply to this particular type (overrides general ones)
+            projection_type_params = projection_params[projection_type_keyword_mapping[projection.__class__]]
+            # Then get ones specific to this Projection
             #   - overrides any specified for the Projection type or all Projections
             #   - removes from projection_params (to pass check in Mechanism for any spurious ones)
             projection_type_params.update(projection_params.pop(projection, {}))
