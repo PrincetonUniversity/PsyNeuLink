@@ -28,8 +28,7 @@ import types
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
-from psyneulink.core.components.functions.transferfunctions import get_matrix
+from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, CROSS_ENTROPY, \

@@ -190,10 +190,10 @@ import warnings
 from collections.abc import Iterable
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function, is_function_type
+from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
-from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \

@@ -40,9 +40,8 @@ All TransferFunctions have the following attributes:
 
 """
 
-import itertools
 import numbers
-from enum import Enum, IntEnum
+from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
@@ -51,28 +50,28 @@ import warnings
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import \
-    Function, Function_Base, FunctionError, function_keywords, is_function_type
+from psyneulink.core.components.functions.function import (
+    Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
+)
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
-    FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
-    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
-    LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
-    OFF, OFFSET, ON, PARAMETER_PORT_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
+    ADDITIVE_PARAM, ALL, BIAS, EXPONENTIAL_FUNCTION, \
+    GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
+    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
+    OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    Parameter, ParameterError, get_validator_by_function
+    Parameter, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
-__all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity', 'Linear', 'LinearMatrix',
+__all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
-]
+           ]
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
@@ -3011,86 +3010,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #         return True
 #     return False
 
-
-def get_matrix(specification, rows=1, cols=1, context=None):
-    """Returns matrix conforming to specification with dimensions = rows x cols or None
-
-     Specification can be a matrix keyword, filler value or np.ndarray
-
-     Specification (validated in _validate_params):
-        + single number (used to fill self.matrix)
-        + matrix keyword:
-            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
-            + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
-            + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
-            + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
-            + FULL_CONNECTIVITY_MATRIX: all 1's
-            + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
-        + 2D list or np.ndarray of numbers
-
-     Returns 2D array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
-    """
-
-    # Matrix provided (and validated in _validate_params); convert to array
-    if isinstance(specification, (list, np.matrix)):
-        specification = np.array(specification)
-
-    if isinstance(specification, np.ndarray):
-        if specification.ndim == 2:
-            return specification
-        # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
-        elif specification.ndim < 2:
-            return np.atleast_2d(specification)
-        else:
-            raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
-                                format(specification))
-
-    if specification == AUTO_ASSIGN_MATRIX:
-        if rows == cols:
-            specification = IDENTITY_MATRIX
-        else:
-            specification = FULL_CONNECTIVITY_MATRIX
-
-    if specification == FULL_CONNECTIVITY_MATRIX:
-        return np.full((rows, cols), 1.0)
-
-    if specification == IDENTITY_MATRIX:
-        if rows != cols:
-            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
-                                format(rows, cols, specification))
-        return np.identity(rows)
-
-    if specification == HOLLOW_MATRIX:
-        if rows != cols:
-            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
-                                format(rows, cols, specification))
-        return 1 - np.identity(rows)
-
-    if specification == INVERSE_HOLLOW_MATRIX:
-        if rows != cols:
-            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
-                                format(rows, cols, specification))
-        return (1 - np.identity(rows)) * -1
-
-    if specification == RANDOM_CONNECTIVITY_MATRIX:
-        return np.random.rand(rows, cols)
-
-    # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, types.FunctionType):
-        return specification(rows, cols)
-
-    # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
-    # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
-    if type(specification) == str:
-        try:
-            return np.array(np.matrix(specification))
-        except (ValueError, NameError, TypeError):
-            # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
-            #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
-            pass
-
-    # Specification not recognized
-    return None
 
 # **********************************************************************************************************************
 #                                             TransferWithCosts

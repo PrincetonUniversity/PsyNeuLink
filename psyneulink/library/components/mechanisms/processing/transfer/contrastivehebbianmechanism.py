@@ -333,10 +333,10 @@ from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
