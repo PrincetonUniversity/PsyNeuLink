@@ -8905,8 +8905,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Compile all mechanism wrappers
                 for m in mechanisms:
                     _comp_ex._set_bin_node(m)
-
-                bin_execute = True
             except Exception as e:
                 if bin_execute is not True:
                     raise e from None
