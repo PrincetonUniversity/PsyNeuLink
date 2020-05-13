@@ -2,13 +2,14 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
-from psyneulink.core.globals.keywords import \
-    INPUT_PORT_PARAMS, FUNCTION_PARAMS, PROJECTION_PARAMS, MAPPING_PROJECTION_PARAMS
+from psyneulink.core.globals.keywords import CONTROL_PROJECTION_PARAMS, INPUT_PORT_PARAMS, FUNCTION_PARAMS, \
+    PARAMETER_PORT_PARAMS, PROJECTION_PARAMS, MAPPING_PROJECTION_PARAMS
 
 class TestMechanismRuntimeParams:
 
@@ -556,3 +557,27 @@ class TestCompositionRuntimeParams:
             np.array([[16000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*4000)+0.5
             np.array([[40.]])   # Final run: revert to assignments before previous run (2*5*4)
         ])
+
+    def test_composition_run_mechanism_runtime_params_for_modulatory_projection(self):
+        # Construction
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        CTL = ControlMechanism(control=ControlSignal(projections=('slope',T2),name='CTL SIGNAL'))
+        C = Composition(pathways=[[T1,T2,CTL]])
+
+        T1.function.slope = 5
+        T2.input_port.function.scale = 4
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
+                  T2: {
+                      'noise': 0.5,
+                      PARAMETER_PORT_PARAMS: {
+                          PROJECTION_PARAMS: {'value':(10, AtTrial(0))},
+                          CONTROL_PROJECTION_PARAMS: {'value':(20, AtTrial(0))},
+                          'CTL SIGNAL': {'value':(20, AtTrial(0))},
+                      }
+                  },
+              },
+              num_trials=3
+              )
