@@ -518,11 +518,14 @@ class TestCompositionRuntimeParams:
                   T2: {
                       'noise': 0.5,
                       INPUT_PORT_PARAMS: {
-                          PROJECTION_PARAMS:{'variable':(1000, AtTrial(0))},
-                          MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(1))},
-                          P:{'value':(3000, AtTrial(2))},
-                          'MY PROJECTION':{'value':(4000, AtTrial(3))}
-                      }}},
+                          PROJECTION_PARAMS:{'variable':(1000, AtTrial(0)),
+                                             MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(1))},
+                                             P:{'value':(3000, AtTrial(2))},
+                                             'MY PROJECTION':{'value':(4000, AtTrial(3))}
+                                             }
+                      }
+                  }
+              },
               num_trials=4
               )
         # all parameters restored to previous values (assigned or defaults)
@@ -570,9 +573,10 @@ class TestCompositionRuntimeParams:
                   T2: {
                       'noise': 0.5,
                       PARAMETER_PORT_PARAMS: {
-                          PROJECTION_PARAMS: {'value':(10, AtTrial(0))},
-                          CONTROL_PROJECTION_PARAMS: {'value':(20, AtTrial(0))},
-                          # 'CTL SIGNAL': {'value':(30, AtTrial(0))},
+                          PROJECTION_PARAMS: {'value':(10, AtTrial(0)),
+                                              CONTROL_PROJECTION_PARAMS: {'value':(20, AtTrial(0))},
+                                              'CTL SIGNAL': {'value':(30, AtTrial(0))},
+                                              },
                       }
                   },
               },
