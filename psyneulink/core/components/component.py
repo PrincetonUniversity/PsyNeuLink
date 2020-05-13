@@ -1626,12 +1626,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #     self._validate_params(request_set=params, target_set=target_set, context=context)
 
         # If params have been passed, treat as runtime params
-        self._manage_runtime_params(params, context)
+        self._validate_and_assign_runtime_params(params, context)
 
         self.parameters.variable._set(variable, context=context)
         return variable
 
-    def _manage_runtime_params(self, runtime_params, context):
+    def _validate_and_assign_runtime_params(self, runtime_params, context):
         """Validate runtime_params, cache for reset, and assign values
 
         Check that all params belong either to Component or its function (raise error if any are found that don't)

@@ -944,6 +944,18 @@ that sub-dictionary, specification of parameters for the Port or its `function <
 format for a `parameter specification dictionary <ParameterPort_Specification>`.
 
 COMMENT:
+  NEW
+*Ports*.  Runtime values are assigned to the parameters of Ports (and/or their `function <Port_Base.function>`\\s) in
+entries that use a keyword designating the type of Port as their key (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or
+*PARAMETER_PORT_PARAMS*) and a sub-dictionary containing the specifications for that type of Port as the value.
+That sub-dictionary can contain specifications that apply to *all* Ports of that type, or and/or individual Ports.
+If the key is a the name of a Port parameter (or its `function <Port_Base.function>`, its value applies to *all*
+Ports of that type; specifications for individual Ports are made in an entry with a key that is  either the
+Port or its `name <Port_Base.name>`, and a sub-dictionary containing the specifications as its value.
+
+COMMENT
+
+COMMENT:
    FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
 COMMENT
 
@@ -952,8 +964,23 @@ for its afferent `Projections <Port_Projections>` Projections. Specifications th
 made in an entry with the key *PROJECTION_PARAMS* and a sub-dictionary containing the parameter specifications;
 specifications for Projections of a particular type are made in an entry with a key designating the type
 (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*);
-and specifications for an individual Projection are placed in an entry with a key that is either the Projection or its
-name, and a sub-dictionary with specifications for its parameters.
+specifications for an individual Projection are made by including an entry in any of the sub-dictionaries above with a
+key that is either the Projection or its name, and a sub-dictionary with specifications for its parameters.
+
+COMMENT:
+  NEW
+*Projections*.  The sub-dictionary specifying the parameters of a Port can also contain specifications for parameters
+of its afferent `Projections <Port_Projections>` Projections.  These are placed in an entry with the keyword
+*PROJECTION_PARAMS* as its key, and a sub-dicionary containing those specifications as its value.  That sub-dictionary
+can contain specifications that apply to *all* of the Port's afferent Projections, only ones of a particular type,
+and/or individual Projections:  If the key is a the name of a Projection parameter, its value applies to *all*
+afferent Projections of the Port;  specifications for Projections of a particular type are made in an entry with one
+of the following keywords as its key -- *MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
+*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS* -- and a sub-dictionary containing the parameter
+specifications as its value;  specifications for individual Projections are made in an entry that with a key that is
+either the Projection or its `name <Projection.name>`, and a sub-dictionary containing the specifications as its value.
+COMMENT
+
 
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
@@ -2341,8 +2368,9 @@ class Mechanism_Base(Mechanism):
 
         # EXECUTE MECHANISM
 
-        # Extract runtime_params for each port-type into their own dicts,
-        #    leaving ones for the Mechanism itself and/or its function in runtime_params
+        # Extract runtime_params for each port-type into their own dicts;
+        #    do this here, so that only params for the Mechanism itself and/or its function are in runtime_params
+        #    when it executes (_validate_and_assign_runtime_params will throw an error for any others found)
         runtime_input_port_params = {}
         runtime_output_port_params = {}
         runtime_parameter_port_params = {}
@@ -2352,15 +2380,17 @@ class Mechanism_Base(Mechanism):
             runtime_output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
 
             # FIX 5/8/20 [JDC]:
+            #    CHECK FOR ANY PORT-SPECIFIC PARAMS AND PUT THEM IN PORT_SPECIFIC_PARAMS
+            #       (SO THEY ARE NOT TREATED AS PARAMS OF THE MECH OR ITS FUNCTION)
+            #    DELETE EACH AS IT IS USED IN _update_port
+            #    CHECK FOR ANY REMAINING PORT_SPECIFIC_PARAMS AFTER EXECUTE, AND RAISE PROGRAM ERROR FOR ANY
+
+            # ???:
             #    CHECK FOR ANY PROJECTION-SPECIFIC PARAMS AND PUT THEM IN PROJECTION_SPECIFIC_PARAMS
             #       (SO THEY ARE NOT TREATED AS PARAMS OF THE PORT OR ITS FUNCTION)
             #    DELETE EACH AS IT IS USED IN _update_port
             #    CHECK FOR ANY REMAINING PROJECTION_SPECIFIC_PARAMS AFTER LOOP, AND RAISE PROGRAM ERROR FOR ANY
 
-            #    CHECK FOR ANY PORT-SPECIFIC PARAMS AND PUT THEM IN PORT_SPECIFIC_PARAMS
-            #       (SO THEY ARE NOT TREATED AS PARAMS OF THE MECH OR ITS FUNCTION)
-            #    DELETE EACH AS IT IS USED IN _update_port
-            #    CHECK FOR ANY REMAINING PORT_SPECIFIC_PARAMS AFTER EXECUTE, AND RAISE PROGRAM ERROR FOR ANY
 
 
         if self.parameters.is_finished_flag._get(context) is True:

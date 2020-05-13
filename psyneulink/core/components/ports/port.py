@@ -2072,7 +2072,7 @@ class Port_Base(Port):
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
         # Assign param values
-        self._manage_runtime_params(runtime_params, context=context)
+        self._validate_and_assign_runtime_params(runtime_params, context=context)
         # Execute Port
         self.execute(context=context, runtime_params=runtime_params)
 

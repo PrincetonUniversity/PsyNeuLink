@@ -8727,7 +8727,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
 
-        runtime_params = self._parse_runtime_params(runtime_params)
+        runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
         # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
         self._assign_execution_ids(context)
@@ -9064,10 +9064,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for port in node.input_ports:
                                     port._update(context=context)
-                            node.execute(
-                                context=context,
-                                runtime_params=execution_runtime_params,
-                            )
+                            node.execute(context=context,
+                                         runtime_params=execution_runtime_params,
+                                         )
 
                         # Reset runtim_params
                         # Reset any specified for Mechanism
@@ -9502,7 +9501,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return []
 
-    def _parse_runtime_params(self, runtime_params):
+    def _parse_runtime_params_conditions(self, runtime_params):
         """Validate runtime_params and assign Always() for any params that don't have a Condition already specified.
         Recursively process subdicts (Port- or Project-specific dictionaries of params).
         """
