@@ -1928,8 +1928,8 @@ class Port_Base(Port):
         #  - pop PROJECTION_PARAMS so that only params for Port or its Mechanism are passed to its execute method
         projection_params = defaultdict(lambda:{})
         for projection_type in projection_type_keyword_mapping.values():
-            projection_params.update(runtime_params[PROJECTION_PARAMS].pop(projection_type,{}))
-        projection_params[PROJECTION_PARAMS].update(runtime_params.pop(PROJECTION_PARAMS))
+            projection_params[projection_type] = runtime_params[PROJECTION_PARAMS].pop(projection_type,{})
+        projection_params[PROJECTION_PARAMS].update(runtime_params.pop(PROJECTION_PARAMS, {}))
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -1960,15 +1960,20 @@ class Port_Base(Port):
             # elif isinstance(projection, GatingProjection):
             #     projection_type = GATING_PROJECTION_PARAMS
 
+            projection_type_keyword = projection_type_keyword_mapping[projection.__class__]
             # First get params that apply to all Projections
-            projection_type_params = projection_params[PROJECTION_PARAMS]
+            projection_type_params = {k:v for k,v in projection_params[PROJECTION_PARAMS].items()
+                                      if k not in {projection,projection.name}}
             # Then get params that apply to this particular type (overrides general ones)
-            projection_type_params = projection_params[projection_type_keyword_mapping[projection.__class__]]
+            projection_type_params.update(projection_params[projection_type_keyword])
             # Then get ones specific to this Projection
             #   - overrides any specified for the Projection type or all Projections
             #   - removes from projection_params (to pass check in Mechanism for any spurious ones)
-            projection_type_params.update(projection_params.pop(projection, {}))
-            projection_type_params.update(projection_params.pop(projection.name, {}))
+            # projection_type_params.update(projection_params.pop(projection, {}))
+            # projection_type_params.update(projection_params.pop(projection.name, {}))
+
+            projection_type_params.update(projection_params[PROJECTION_PARAMS].pop(projection, {}))
+            projection_type_params.update(projection_params[PROJECTION_PARAMS].pop(projection.name, {}))
 
             # # Merge in projection-specific ones (overriding the general and type-specific ones)
             # projection_params.update(runtime_params.pop(projection, {}))
