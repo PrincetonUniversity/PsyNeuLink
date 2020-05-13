@@ -53,6 +53,8 @@ from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import (
     Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
 )
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, ALL, BIAS, EXPONENTIAL_FUNCTION, \
@@ -3478,9 +3480,6 @@ class TransferWithCosts(TransferFunction):
         determines the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
-    from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-    from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-
     componentName = TRANSFER_WITH_COSTS_FUNCTION
 
     bounds = None
@@ -3693,7 +3692,6 @@ class TransferWithCosts(TransferFunction):
                                                   setter=_adjustment_cost_fct_add_param_setter)
 
         duration_cost = None
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
         duration_cost_fct_mult_param = Parameter(modulable=True,
@@ -3708,7 +3706,6 @@ class TransferWithCosts(TransferFunction):
                                                 setter=_duration_cost_fct_add_param_setter)
 
         combined_costs = None
-        from psyneulink.core.components.functions.combinationfunctions import LinearCombination
         combine_costs_fct = Parameter(LinearCombination, stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
         combine_costs_fct_mult_param=Parameter(modulable=True,
