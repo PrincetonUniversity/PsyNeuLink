@@ -6,7 +6,8 @@ from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
-from psyneulink.core.globals.keywords import INPUT_PORT_PARAMS, FUNCTION_PARAMS, PROJECTION_PARAMS
+from psyneulink.core.globals.keywords import \
+    INPUT_PORT_PARAMS, FUNCTION_PARAMS, PROJECTION_PARAMS, MAPPING_PROJECTION_PARAMS
 
 class TestMechanismRuntimeParams:
 
@@ -477,9 +478,8 @@ class TestCompositionRuntimeParams:
                           FUNCTION_PARAMS:{'weights':(10, AtTrial(4))},
                           # FIX 5/8/20 [JDC]:  THE FOLLOWING FAIL:
                           # PROJECTION_PARAMS:{'matrix':([10], AtTrial(1))}
-                          # PROJECTION_PARAMS:{'variable':(1000, AtTrial(1))}
-                          PROJECTION_PARAMS:{'value':(1000, AtTrial(1))}
-                          # PROJECTION_PARAMS:{FUNCTION_PARAMS:{'weights':1000}}
+                          PROJECTION_PARAMS:{'variable':(1000, AtTrial(5))},
+                          MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(6))}
                       }
                   },
               },

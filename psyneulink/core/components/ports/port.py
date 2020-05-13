@@ -1865,6 +1865,23 @@ class Port_Base(Port):
         Returns combined values of projections, modulated by any mod_afferents
         """
 
+        # Skip execution and set value directly if function is identity_function and no runtime_params were passed
+        if (
+            len(self.all_afferents) == 0
+            and self.function._is_identity(context)
+            and not params
+        ):
+            variable = self._parse_function_variable(self._get_fallback_variable(context))
+            self.parameters.variable._set(variable, context)
+            # below conversion really should not be happening ultimately, but it is
+            # in _validate_variable. Should be removed eventually
+            variable = convert_to_np_array(variable, 1)
+            self.parameters.value._set(variable, context)
+            self.most_recent_context = context
+            self.function.most_recent_context = context
+            return
+
+
         from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -1874,22 +1891,12 @@ class Port_Base(Port):
         from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 
 
-        # SET UP ------------------------------------------------------------------------------------------------
+        # GET RUNTIME PARAMS ----------------------------------------------------------------------------------------
 
         runtime_params = params or {}
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
         if FUNCTION_PARAMS in runtime_params:
             runtime_params.update(runtime_params.pop(FUNCTION_PARAMS))
-
-        # # Flag format of input
-        # if isinstance(self.value, numbers.Number):
-        #     # Treat as single real value
-        #     value_is_number = True
-        # else:
-        #     # Treat as vector (list or np.array)
-        #     value_is_number = False
-
-        # AGGREGATE INPUT FROM PROJECTIONS -----------------------------------------------------------------------
 
         # Generate dicts for Projection params (passed to Projection)
         #    by merging general param dict (PROJECTION_PARAMS) with type-specific ones for each type of Projection.
@@ -1901,6 +1908,8 @@ class Port_Base(Port):
         gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS,
                                                       remove_general=True)
 
+
+        # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
         #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
 
@@ -1926,20 +1935,6 @@ class Port_Base(Port):
             if not self.afferents_info[projection].is_active_in_composition(context.composition):
                 continue
 
-            # # MODIFIED 5/2/20 OLD:
-            # # Get any projection-specific param dicts from runtime_params,
-            # #     and merge in type-specific and general ones gathered above
-            # if isinstance(projection, MappingProjection):
-            #     projection_params = _merge_param_dicts(runtime_params, projection.name, mapping_projection_params)
-            # elif isinstance(projection, LearningProjection):
-            #     projection_params = _merge_param_dicts(runtime_params, projection.name, learning_projection_params)
-            # elif isinstance(projection, ControlProjection):
-            #     projection_params = _merge_param_dicts(runtime_params, projection.name, control_projection_params)
-            # elif isinstance(projection, GatingProjection):
-            #     projection_params = _merge_param_dicts(runtime_params, projection.name, gating_projection_params)
-            # if not projection_params:
-            #     projection_params = None
-            # MODIFIED 5/2/20 NEW:
             # Get relelvant Projection params (general and type-specific) culled above
             projection_params = {}
             if isinstance(projection, MappingProjection):
@@ -1953,20 +1948,27 @@ class Port_Base(Port):
             # Merge in projection-specific ones (overriding the general and type-specific ones)
             projection_params.update(runtime_params.pop(projection, {}))
             projection_params.update(runtime_params.pop(projection.name, {}))
-            # MODIFIED 5/2/20 END
 
             # Get Projection's variable and/or value if specified in runtime_params
             projection_variable = projection_params.pop(VARIABLE, None)
             projection_value = projection_params.pop(VALUE, None)
 
             if projection_value:
-                assert True
+                projection.parameters.value._set(projection_value, context)
+                # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
+                # should these be manually set despite it not actually being executed?
+                # explicitly getting/setting based on context will be more clear
+                projection.most_recent_context = context
+                projection.function.most_recent_context = context
+                for pport in projection.parameter_ports:
+                    pport.most_recent_context = context
+                    pport.function.most_recent_context = context
 
             # Get Projection's value
 
             # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
-            if (isinstance(projection, LearningProjection) and ContextFlags.LEARNING not in context.execution_phase):
+            elif (isinstance(projection, LearningProjection) and ContextFlags.LEARNING not in context.execution_phase):
                 projection_value = projection_value or projection.defaults.value * 0.0
             elif (
                 # learning projections add extra behavior in _execute that invalidates identity function
@@ -2016,17 +2018,7 @@ class Port_Base(Port):
             except AttributeError:
                 pass
 
-            # # KDM 6/20/18: consider moving handling of Pathway and Modulatory projections
-            # # into separate methods
-            # if isinstance(projection, PathwayProjection_Base):
-            #     # Add projection_value to list of PathwayProjection values (for aggregation below)
-            #     # self._path_proj_values.append(projection_value)
-            #
-            #     # MODIFIED 5/8/20 OLD:
-            #     # variable.append(projection_value)
-            #     # MODIFIED 5/8/20 END
-            #     pass
-
+            # # KDM 6/20/18: consider moving handling of Modulatory projections into separate method
             # If it is a ModulatoryProjection, add its value to the list in the dict entry for the relevant mod_param
             if isinstance(projection, ModulatoryProjection_Base):
                 # Get the meta_param to be modulated from modulation attribute of the  projection's ModulatorySignal
@@ -2089,27 +2081,12 @@ class Port_Base(Port):
             # Add mod_param and its value to runtime_params for Port's function
             runtime_params.update({mod_param_name: mod_val})
 
-        # CALL PORT'S function TO GET ITS VALUE  ----------------------------------------------------------------------
+        # EXECUTE PORT  -------------------------------------------------------------------------------------
 
         # Assign param values
         self._manage_runtime_params(runtime_params, context=context)
-
-        # Skip execution and set value directly if function is identity_function and no runtime_params were passed
-        if (
-            len(self.all_afferents) == 0
-            and self.function._is_identity(context)
-            and not runtime_params
-        ):
-            variable = self._parse_function_variable(self._get_fallback_variable(context))
-            self.parameters.variable._set(variable, context)
-            # below conversion really should not be happening ultimately, but it is
-            # in _validate_variable. Should be removed eventually
-            variable = convert_to_np_array(variable, 1)
-            self.parameters.value._set(variable, context)
-            self.most_recent_context = context
-            self.function.most_recent_context = context
-        else:
-            self.execute(context=context, runtime_params=runtime_params)
+        # Execute Port
+        self.execute(context=context, runtime_params=runtime_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
