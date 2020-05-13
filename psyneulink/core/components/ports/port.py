@@ -1890,7 +1890,6 @@ class Port_Base(Port):
         from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
         from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 
-
         # GET RUNTIME PARAMS ----------------------------------------------------------------------------------------
 
         runtime_params = params or {}
@@ -1908,31 +1907,35 @@ class Port_Base(Port):
         gating_projection_params = _merge_param_dicts(runtime_params, GATING_PROJECTION_PARAMS, PROJECTION_PARAMS,
                                                       remove_general=True)
 
-
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
-        #For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
+        def set_projection_value(projection, value, context):
+            """Manually set Projection value"""
+            projection.parameters.value._set(projection_value, context)
+            # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
+            # should these be manually set despite it not actually being executed?
+            # explicitly getting/setting based on context will be more clear
+            projection.most_recent_context = context
+            projection.function.most_recent_context = context
+            for pport in projection.parameter_ports:
+                pport.most_recent_context = context
+                pport.function.most_recent_context = context
 
         modulatory_override = False
-
-        # Get values of all Projections
-        variable = []
-        # self._path_proj_values = []
         mod_proj_values = {}
 
+        # For each projection: get its params, pass them to it, get the projection's value, and append to relevant list
         for projection in self.all_afferents:
+
+            if not self.afferents_info[projection].is_active_in_composition(context.composition):
+                continue
 
             if hasattr(projection, 'sender'):
                 sender = projection.sender
             else:
                 if self.verbosePref:
-                    warnings.warn("{} to {} {} of {} ignored [has no sender]".format(projection.__class__.__name__,
-                                                                                     self.name,
-                                                                                     self.__class__.__name__,
-                                                                                     self.owner.name))
-                continue
-
-            if not self.afferents_info[projection].is_active_in_composition(context.composition):
+                    warnings.warn(f"{projection.__class__.__name__} to {self.name} {self.__class__.__name__} "
+                                  f"of {self.owner.name} ignored [has no sender].")
                 continue
 
             # Get relelvant Projection params (general and type-specific) culled above
@@ -1953,23 +1956,16 @@ class Port_Base(Port):
             projection_variable = projection_params.pop(VARIABLE, None)
             projection_value = projection_params.pop(VALUE, None)
 
+
+            # Projection value specifed in runtime_params, so just assign its value
             if projection_value:
-                projection.parameters.value._set(projection_value, context)
-                # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
-                # should these be manually set despite it not actually being executed?
-                # explicitly getting/setting based on context will be more clear
-                projection.most_recent_context = context
-                projection.function.most_recent_context = context
-                for pport in projection.parameter_ports:
-                    pport.most_recent_context = context
-                    pport.function.most_recent_context = context
+                set_projection_value(projection, projection_value, context)
 
-            # Get Projection's value
-
-            # Update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
+            # Handle LearningProjection
+            #  - update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
             # IMPLEMENTATION NOTE: done here rather than in its own method in order to exploit parsing of params above
             elif (isinstance(projection, LearningProjection) and ContextFlags.LEARNING not in context.execution_phase):
-                projection_value = projection_value or projection.defaults.value * 0.0
+                projection_value = projection.defaults.value * 0.0
             elif (
                 # learning projections add extra behavior in _execute that invalidates identity function
                 not isinstance(projection, LearningProjection)
@@ -1988,28 +1984,18 @@ class Port_Base(Port):
                     # of the Projection's function (LinearMatrix). Unsure if this is intended or not
                     if projection_variable is None:
                         projection_variable = projection.function.defaults.value
-
                 projection.parameters.variable._set(projection_variable, context)
+                projection_value = projection._parse_function_variable(projection_variable)
+                set_projection_value(projection,projection_value, context)
 
-                projection_value = projection_value or projection._parse_function_variable(projection_variable)
-                projection.parameters.value._set(projection_value, context)
-
-                # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
-                # should these be manually set despite it not actually being executed?
-                # explicitly getting/setting based on context will be more clear
-                projection.most_recent_context = context
-                projection.function.most_recent_context = context
-                for pport in projection.parameter_ports:
-                    pport.most_recent_context = context
-                    pport.function.most_recent_context = context
-
+            # Actually execute Projection to get its value
             else:
                 if projection_variable is None:
                     projection_variable = projection.sender.parameters.value._get(context)
-                projection_value = projection_value or projection.execute(variable=projection_variable,
-                                                                          context=context,
-                                                                          runtime_params=projection_params,
-                                                                          )
+                projection_value = projection.execute(variable=projection_variable,
+                                                      context=context,
+                                                      runtime_params=projection_params,
+                                                      )
 
             # If this is initialization run and projection initialization has been deferred, pass
             try:
@@ -2055,12 +2041,11 @@ class Port_Base(Port):
                     else:
                         mod_proj_values[mod_param_name].append(mod_value)
 
-        # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
-        # a bit handwavy just to make stuff work
-
         # Handle ModulatoryProjection OVERRIDE
         #    if there is one and it wasn't been handled above (i.e., if paramValidation is set)
         if modulatory_override:
+            # KDM 6/20/18: consider defining exactly when and how type_match occurs, now it seems
+            # a bit handwavy just to make stuff work
             self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), context)
             return
 

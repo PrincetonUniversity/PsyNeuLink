@@ -948,12 +948,12 @@ COMMENT:
 COMMENT
 
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain entries specifying parameters
-for its afferent `Projections <Port_Projections>` Projections.   Parameters for all of its afferent projections are
-specified in an entry with the key *PROJECTION_PARAMS*, and a value that is a sub-dictionary containing the parameter
-specifications for the Projections;  parameters for Projections of a particular type can be placed in an entry with a
-key specifying the type (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*,
-or *GATING_PROJECTION_PARAMS*); and parameters for an individual Projection can be placed in an entry with a key
-specifying the name of the Projection and a sub-dictionary with specifications of its parameters.
+for its afferent `Projections <Port_Projections>` Projections. Specifications that apply to *all* of its afferents are
+made in an entry with the key *PROJECTION_PARAMS* and a sub-dictionary containing the parameter specifications;
+specifications for Projections of a particular type are made in an entry with a key designating the type
+(*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*);
+and specifications for an individual Projection are placed in an entry with a key that is either the Projection or its
+name, and a sub-dictionary with specifications for its parameters.
 
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
