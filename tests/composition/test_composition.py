@@ -4153,7 +4153,7 @@ class TestSchedulerConditions:
 
         result = comp.run([0.05], bin_execute=mode)
         #HACK: The result is an object dtype in Python mode for some reason?
-        if mode == "Python":
+        if mode == 'Python':
             result = np.asfarray(result[0])
         assert np.allclose(result, expected_result)
 
