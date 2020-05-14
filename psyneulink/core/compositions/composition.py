@@ -1795,6 +1795,7 @@ import logging
 import networkx
 import warnings
 import sys
+import math
 
 import numpy as np
 import typecheck as tc
@@ -8116,6 +8117,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
         Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
         """
+
+        # Special case for callable inputs
+        if callable(inputs):
+            return inputs, math.inf
 
         # 1) Convert from key-value representation of values into separated representation
         if 'targets' in inputs:
