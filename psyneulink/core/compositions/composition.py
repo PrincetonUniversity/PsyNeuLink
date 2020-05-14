@@ -8962,7 +8962,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs = self._adjust_execution_stimuli(inputs)
             build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
-        if nested:
+        if bin_execute:
+            _comp_ex.execute_node(self.input_CIM, inputs)
+            # FIXME: parameter_CIM should be executed here as well,
+            #        but node execution of nested compositions with
+            #        outside control is not supported yet.
+            assert not nested or len(self.parameter_CIM.afferents) == 0
+        elif nested:
             # check that inputs are specified - autodiff does not in some cases
             if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
                 self.input_CIM.execute(build_CIM_input, context=context)
@@ -8970,18 +8976,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert inputs is None, "Ignoring composition input!"
                 self.input_CIM.execute(context=context)
             self.parameter_CIM.execute(context=context)
-        elif not bin_execute:
+        else:
             self.input_CIM.execute(build_CIM_input, context=context)
 
             # Update nested compositions
             for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
                 for port in comp.input_ports:
                     port._update(context)
-
-        # compiled node execution relies on the above to update afferent
-        # projections to nested input_CIM.
-        if bin_execute:
-            _comp_ex.execute_node(self.input_CIM, inputs)
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
@@ -9212,6 +9213,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for op, v in zip(srnode.output_ports, data):
                                 op.parameters.value._set(
                                   v, context, skip_history=True, skip_log=True)
+
+                        # Update afferent projections and input ports.
+                        node.input_CIM._update_input_ports(context)
 
                     # Pass outer context to nested Composition
                     context.composition = node
