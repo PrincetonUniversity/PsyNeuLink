@@ -1795,7 +1795,6 @@ import logging
 import networkx
 import warnings
 import sys
-import math
 
 import numpy as np
 import typecheck as tc
@@ -8127,7 +8126,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Special case for callable inputs
         if callable(inputs):
-            return inputs, math.inf
+            return inputs, sys.maxsize
 
         # 1) Convert from key-value representation of values into separated representation
         if 'targets' in inputs:
