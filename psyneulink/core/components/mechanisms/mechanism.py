@@ -2563,24 +2563,88 @@ class Mechanism_Base(Mechanism):
         # Move any specifications for individual Ports into a consolidated PORT_SPECIFIC sub-dict
         """
 
-        input_port_params = {}
-        output_port_params = {}
-        parameter_port_params = {}
+        # MODIFIED 5/13/20 OLD:
+        # input_port_params = {}
+        # output_port_params = {}
+        # parameter_port_params = {}
+        #
+        # if runtime_params:
+        #
+        #     input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
+        #     self._parse_runtime_port_projection_params(input_port_params,context)
+        #
+        #     parameter_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
+        #     self._parse_runtime_port_projection_params(parameter_port_params,context)
+        #
+        #     output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
+        #     self._parse_runtime_port_projection_params(output_port_params,context)
+        #
+        # return {INPUT_PORT_PARAMS: input_port_params,
+        #         PARAMETER_PORT_PARAMS: parameter_port_params,
+        #         OUTPUT_PORT_PARAMS: output_port_params}
+        #
+        # MODIFIED 5/13/20 NEW:
+        from psyneulink.core.components.projections.projection import \
+            PROJECTION_SPECIFIC_PARAMS, projection_param_keywords
+        PORT_SPECIFIC_PARAMS = 'PORT_SPECIFIC_PARAMS'
+        port_param_keywords = {INPUT_PORT_PARAMS, PARAMETER_PORT_PARAMS, OUTPUT_PORT_PARAMS}
+
+        # Move any specifications for individual Ports or Projections into a consolidated SPECIFIC sub-dict
+        def move_item_specific_params_to_their_own_sub_dict(port_params_dict,
+                                                            sub_dict,
+                                                            keywords,
+                                                            item_list,
+                                                            specific_dict_name):
+            # keywords = port_param_keywords or projection_param_keywords
+            # item_list = self.ports or self.afferents
+            # specific_dict_name = PORT_SPECIFIC_PARAMS or PROJECTION_SPECIFIC_PARAMS
+            for key in sub_dict.copy():
+                # Recursively check Port-specific entries for references to individual Ports;
+                #    note: even though the search is recursive, the move is still to the PORT_SPECIFIC sub-dict
+                #          in Port dict
+                if key in keywords:
+                    move_item_specific_params_to_their_own_sub_dict(port_params_dict,
+                                                                    sub_dict[key],
+                                                                    keywords,
+                                                                    item_list,
+                                                                    specific_dict_name)
+                    continue
+                # Reference can be the Projection itself...
+                elif key in item_list:
+                    item = key
+                # or the Projection's name
+                elif key in item_list.names:
+                    item = item_list[item]
+                else:
+                    continue
+                # Move specification for Projection to entry with same key in PROJECTION_SPECIFIC_PARAMS
+                item_specific_dict = {key : sub_dict.pop(key)}
+                if specific_dict_name in port_params_dict:
+                    port_params_dict[specific_dict_name].update(item_specific_dict)
+                else:
+                    port_params_dict[specific_dict_name] = item_specific_dict
+
+        port_param_dicts = {INPUT_PORT_PARAMS: {},
+                            PARAMETER_PORT_PARAMS: {},
+                            OUTPUT_PORT_PARAMS: {}}
 
         if runtime_params:
+            for port_param_dict in port_param_dicts:
+                port_param_dicts[port_param_dict] = runtime_params.pop(port_param_dict, {})
+                move_item_specific_params_to_their_own_sub_dict(port_param_dicts[port_param_dict],
+                                                                port_param_dicts[port_param_dict],
+                                                                port_param_keywords,
+                                                                self.ports,
+                                                                PORT_SPECIFIC_PARAMS)
+                move_item_specific_params_to_their_own_sub_dict(port_param_dicts[port_param_dict],
+                                                                port_param_dicts[port_param_dict],
+                                                                projection_param_keywords(),
+                                                                self.afferents,
+                                                                PROJECTION_SPECIFIC_PARAMS)
+                # self._parse_runtime_port_projection_params(port_param_dicts[port_param_dict], context)
 
-            input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
-            self._parse_runtime_port_projection_params(input_port_params,context)
-
-            parameter_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
-            self._parse_runtime_port_projection_params(parameter_port_params,context)
-
-            output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
-            self._parse_runtime_port_projection_params(output_port_params,context)
-
-        return {INPUT_PORT_PARAMS: input_port_params,
-                PARAMETER_PORT_PARAMS: parameter_port_params,
-                OUTPUT_PORT_PARAMS: output_port_params}
+        return port_param_dicts
+        # MODIFIED 5/13/20 END
 
     def _parse_runtime_port_projection_params(self, runtime_port_params, context):
         """Place any specifications for individual Projections into PROJECDTION_SPECIFIC sub-dict"""
@@ -2590,7 +2654,9 @@ class Mechanism_Base(Mechanism):
             from psyneulink.core.components.projections.projection import \
                 PROJECTION_SPECIFIC_PARAMS, projection_param_keywords
             for key in sub_dict.copy():
-                # Recursively check Projection-specific dicts for references to individual Projections
+                # Recursively check Projection-specific entries for references to individual Projections;
+                #    note: even though the search is recursive, the move is still to the PROJECTION_SPECIFIC sub-dict
+                #          in runtime_params (i.e., the outermost dict)
                 if key in projection_param_keywords():
                     move_projection_specific_params_to_their_own_sub_dict(sub_dict[key])
                     continue

@@ -2072,7 +2072,6 @@ class Port_Base(Port):
         # - params for individual Projections were removed above
         # - skip any params for Projection types here
         # and include mod_params
-        from psyneulink import ProjectionRegistry
         port_params = {k:v for k,v in runtime_params.items()
                        if k not in projection_param_keywords() and k != PROJECTION_SPECIFIC_PARAMS}
         port_params.update(mod_params)
