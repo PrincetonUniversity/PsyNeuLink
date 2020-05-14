@@ -1028,7 +1028,7 @@ import logging
 import types
 import warnings
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from inspect import isclass
 
 import numpy as np
@@ -1043,7 +1043,8 @@ from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_ME
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import REMOVE_PORTS, PORT_SPEC, _parse_port_spec
+from psyneulink.core.components.ports.port import \
+    REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
@@ -2354,8 +2355,8 @@ class Mechanism_Base(Mechanism):
 
         # SET UP RUNTIME PARAMS if any
 
-        # Extract all specifications not related to the Mechanism itself or its function and place in subdicts;
-        #    when Mechanism executes, _validate_and_assign_runtime_params will throw an error for any others found
+        # Extract all param specifications not related to the Mechanism itself or its function and place in subdicts;
+        #    when Mechanism executes, _validate_and_assign_runtime_params will throw an error for any others found.
         runtime_port_params = self._parse_runtime_port_params(runtime_params, context)
 
         # EXECUTE MECHANISM
@@ -2560,12 +2561,11 @@ class Mechanism_Base(Mechanism):
     def _parse_runtime_port_params(self, runtime_params, context):
         """Move Port param specifications and nested Project-specific specifications into sub-dicts.
 
-        Move any specifications for Port types into type-specific subdicts
-        Move any specifications for individual Ports into PORT_SPECIFIC sub-dict
-
-        For each Port type,
-            move any specifications for Projections types into type-specific subdicts of Port's type-specific dict
-            move any specifications for individual Projections into PORT_SPECIFIC sub-dict of Port's type-specific dict
+        Move any specifications for Port types into type-specific sub-dicts
+        For each type-specific sub-dict,
+          - move any specifications for individual Ports into PORT_SPECIFIC sub-dict
+          - move any specifications for Projection types into type-specific subdicts
+          - move any specifications for individual Projections into PORT_SPECIFIC sub-dict
 
         Returns
         -------
@@ -2580,9 +2580,7 @@ class Mechanism_Base(Mechanism):
 
         """
 
-        from psyneulink.core.components.projections.projection import \
-            PROJECTION_SPECIFIC_PARAMS, projection_param_keywords
-        PORT_SPECIFIC_PARAMS = 'PORT_SPECIFIC_PARAMS'
+        from psyneulink.core.components.projections.projection import projection_param_keywords
         port_param_keywords = {INPUT_PORT_PARAMS, PARAMETER_PORT_PARAMS, OUTPUT_PORT_PARAMS}
 
         def move_item_specific_params_to_their_own_sub_dict(port_params_dict,
@@ -2631,7 +2629,7 @@ class Mechanism_Base(Mechanism):
                 if specific_dict_name in port_params_dict:
                     port_params_dict[specific_dict_name].update(item_specific_dict)
                 else:
-                    port_params_dict[specific_dict_name] = item_specific_dict
+                    port_params_dict[specific_dict_name] = defaultdict(lambda:{}, item_specific_dict)
 
         port_param_dicts = {INPUT_PORT_PARAMS: {},
                             PARAMETER_PORT_PARAMS: {},

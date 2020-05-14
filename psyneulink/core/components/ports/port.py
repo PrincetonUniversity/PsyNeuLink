@@ -827,6 +827,9 @@ port_keywords.update({MECHANISM,
 
 port_type_keywords = {PORT_TYPE}
 
+PORT_SPECIFIC_PARAMS = 'PORT_SPECIFIC_PARAMS'
+PROJECTION_SPECIFIC_PARAMS = 'PROJECTION_SPECIFIC_PARAMS'
+
 
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
@@ -849,31 +852,6 @@ class PortError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-
-# Port factory method:
-# def port(name=NotImplemented, params=NotImplemented, context=None):
-#         """Instantiates default or specified subclass of Port
-#
-#        If called w/o arguments or 1st argument=NotImplemented, instantiates default subclass (ParameterPort)
-#         If called with a name string:
-#             - if registered in owner Mechanism's port_registry as name of a subclass, instantiates that class
-#             - otherwise, uses it as the name for an instantiation of the default subclass, and instantiates that
-#         If a params dictionary is included, it is passed to the subclass
-#
-#         :param name:
-#         :param param_defaults:
-#         :return:
-#         """
-#
-#         # Call to instantiate a particular subclass, so look up in MechanismRegistry
-#         if name in Mechanism's _portRegistry:
-#             return _portRegistry[name].mechanismSubclass(params)
-#         # Name is not in MechanismRegistry or is not provided, so instantiate default subclass
-#         else:
-#             # from Components.Defaults import DefaultPort
-#             return DefaultPort(name, params)
-
 
 
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
@@ -1877,23 +1855,10 @@ class Port_Base(Port):
             return
 
         from psyneulink.core.components.projections.projection import \
-            projection_param_keywords, projection_param_keyword_mapping, PROJECTION_SPECIFIC_PARAMS
+            projection_param_keywords, projection_param_keyword_mapping
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
         from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
-
-        # # MODIFIED 5/14/20 OLD:
-        # # Mapping from Projection types to param keywords
-        # #  used in _update for processing runtime_params
-        # projection_type_keyword_mapping = {PATHWAY_PROJECTION: MAPPING_PROJECTION_PARAMS,
-        #                                    MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
-        #                                    MASKED_MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
-        #                                    AUTO_ASSOCIATIVE_PROJECTION: MAPPING_PROJECTION_PARAMS,
-        #                                    CONTROL_PROJECTION: CONTROL_PROJECTION_PARAMS,
-        #                                    GATING_PROJECTION: GATING_PROJECTION_PARAMS,
-        #                                    LEARNING_PROJECTION: LEARNING_PROJECTION_PARAMS}
-        # MODIFIED 5/14/20 END
-
 
         def set_projection_value(projection, value, context):
             """Manually set Projection value"""
@@ -1934,19 +1899,10 @@ class Port_Base(Port):
                 continue
 
             # Get type-specific params that apply for type of current
-            # FIX 5/8/20: THIS SHOULD SHOULD PROBABLY BE DONE AT THE PORT LEVEL (FOR EFFICIENCY) FOR ALL PORT TYPES
-            #             ALSO, SHOULD ONLY INCLUDE TYPE-SPECIFIC AND NOT PROJECTION-SPECIFIC ENTRIES
-            #             THE LATTER SHOULD BE RETRIEVED DIRECTLY FROM runtime_params??
-            #             FILTER BY LOOKING FOR PROJECTION OR ITS NAME IN LIST OF PORT'S AFFERENTS?
-            # projection_type_params = defaultdict(lambda:{}, runtime_params[projection_type_keyword])
             projection_type_params = runtime_params[projection_param_keyword_mapping()[projection.componentType]]
-            # Then get params specific to this Projection from runtime_params or from type-specific sub-dict
-            #   - overrides any specified any specified for type of Projection
+            # Then get params specific to this Projection from runtime_params
+            #   - overrides any specified for type of Projection
             #   - removes from runtime_params (so not passed to Port)
-            # projection_type_params.update(runtime_params.pop(projection, {}))
-            # projection_type_params.update(runtime_params.pop(projection.name, {}))
-            # projection_type_params.update(projection_type_params.pop(projection, {}))
-            # projection_type_params.update(projection_type_params.pop(projection.name, {}))
             projection_type_params.update(runtime_params[PROJECTION_SPECIFIC_PARAMS].pop(projection, {}))
             projection_type_params.update(runtime_params[PROJECTION_SPECIFIC_PARAMS].pop(projection.name, {}))
 
@@ -2068,12 +2024,19 @@ class Port_Base(Port):
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
-        # Port params are any that remain after
-        # - params for individual Projections were removed above
-        # - skip any params for Projection types here
-        # and include mod_params
+        # Get any parameters specific for this particular Port, removing from runtime_params if found
+        port_specific_params = {runtime_params[PORT_SPECIFIC_PARAMS].pop(k, None) for k in {self, self.name} if k}
+
+        # Port params are:
+        # - any that remain after:
+        #   - params for individual Projections were removed (above)
+        #   - ones that remain in PROJECcTION_SPECIFIC_PARAMS are skipped (below)
+        # - include mod_params
+        # - include an specific to the current port
         port_params = {k:v for k,v in runtime_params.items()
-                       if k not in projection_param_keywords() and k != PROJECTION_SPECIFIC_PARAMS}
+                       if (k not in projection_param_keywords()
+                           and k != PROJECTION_SPECIFIC_PARAMS
+                           and k != PORT_SPECIFIC_PARAMS)}
         port_params.update(mod_params)
         # Assign param values
         self._validate_and_assign_runtime_params(port_params, context=context)

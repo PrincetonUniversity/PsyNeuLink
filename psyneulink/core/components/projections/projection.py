@@ -447,7 +447,6 @@ def projection_param_keyword_mapping():
 def projection_param_keywords():
     return set(projection_param_keyword_mapping().values())
 
-PROJECTION_SPECIFIC_PARAMS = 'PROJECTION_SPECIFIC_PARAMS'
 
 from collections import namedtuple
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
