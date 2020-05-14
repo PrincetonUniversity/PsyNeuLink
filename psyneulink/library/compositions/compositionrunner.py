@@ -70,18 +70,29 @@ class CompositionRunner():
     def _batch_function_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
         for epoch in range(epochs):
             for i in range(0, num_trials, batch_size):
+                batch_ran = False
+
                 if call_before_minibatch:
                     call_before_minibatch()
+
                 for idx in range(i, i + batch_size):
-                    trial_input = inputs(idx)
+                    try:
+                        trial_input, _ = self._composition._parse_learning_spec(inputs(idx), None)
+                    except:
+                        break
                     if trial_input is None:
                         break
+                    batch_ran = True
                     yield trial_input
-                if call_after_minibatch:
-                    call_after_minibatch()
-                
-                if not self._is_llvm_mode:
-                    self._composition._update_learning_parameters(context)
+
+                if batch_ran:
+                    if call_after_minibatch:
+                        call_after_minibatch()
+                    
+                    if not self._is_llvm_mode:
+                        self._composition._update_learning_parameters(context)
+                else:
+                    break
 
             if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
                 # end early if patience exceeded
