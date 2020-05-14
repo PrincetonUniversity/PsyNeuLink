@@ -2357,7 +2357,6 @@ class Mechanism_Base(Mechanism):
         # Extract all specifications not related to the Mechanism itself or its function and place in subdicts;
         #    when Mechanism executes, _validate_and_assign_runtime_params will throw an error for any others found
         runtime_port_params = self._parse_runtime_port_params(runtime_params, context)
-        assert True
 
         # EXECUTE MECHANISM
 
@@ -2620,7 +2619,7 @@ class Mechanism_Base(Mechanism):
                     continue
                 # Move specification for Projection to entry with same key in PROJECTION_SPECIFIC_PARAMS
                 item_specific_dict = {key : sub_dict.pop(key)}
-                if specific_dict_name in runtime_params:
+                if specific_dict_name in port_params_dict:
                     port_params_dict[specific_dict_name].update(item_specific_dict)
                 else:
                     port_params_dict[specific_dict_name] = item_specific_dict
@@ -2631,7 +2630,7 @@ class Mechanism_Base(Mechanism):
 
         if runtime_params:
             for port_param_dict in port_param_dicts:
-                port_param_dicts[port_param_dict] = runtime_params.pop(INPUT_PORT_PARAMS, {})
+                port_param_dicts[port_param_dict] = runtime_params.pop(port_param_dict, {})
                 move_item_specific_params_to_their_own_sub_dict(port_param_dicts[port_param_dict],
                                                                 port_param_dicts[port_param_dict],
                                                                 port_param_keywords,
