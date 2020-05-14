@@ -959,32 +959,14 @@ COMMENT:
    FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
 COMMENT
 
-COMMENT:
-  OLD
-*Projections*.  The sub-dictionary specifying the parameters of a Port can also contain entries specifying parameters
-for its afferent `Projections <Port_Projections>` Projections. Specifications that apply to *all* of its afferents are
-made in an entry with the key *PROJECTION_PARAMS* and a sub-dictionary containing the parameter specifications;
-specifications for Projections of a particular type are made in an entry with a key designating the type
-(*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*);
-specifications for an individual Projection are made by including an entry in any of the sub-dictionaries above with a
-key that is either the Projection or its name, and a sub-dictionary with specifications for its parameters.
-COMMENT
-
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain specifications for parameters
 of its afferent `Projections <Port_Projections>` Projections.  These are placed in entries for each type of Projection,
-using Projection `componentType <Component_Type>`\\s as the keys (e.g., MAPPING_PROJECTION, CONTROL_PROJECTION,
-etc.), and a subdictionary of parameter specifications as its value, that apply to all Projections of that type.
-
-    .. hint::
-       For clarify of the script, the plural form of Projection `componentType <Component_Type>`\\s can be used
-       as the key of entries for type-specific Projection parameter specifications (e.g., *MAPPING_PROJECTIONS*
-       or *CONTROL_PROJECTIONS*
-
-Parameters can also be specified for individual Projections, using either the Projection or its `name
-<Projection_Base.name>` as the key, and a subdictionary of parameter specifications that apply to only that Projection
-as the value.  This can be included either in the Port's runtime parameter specification dictionary or in one for
-that Projection's componentType.
-
+using Projection `componentType <Component_Type>` appended with "_PARAMS" as the keys (e.g., MAPPING_PROJECTION_PARAMS,
+CONTROL_PROJECTION_PARAMS, etc.), and a subdictionary of parameter specifications as its value that are applied to
+to all Projections of that type.  Parameters can also be specified for individual Projections, using either the
+Projection or its `name <Projection_Base.name>` as the key, and a subdictionary of parameter specifications as its
+value that apply to only that Projection. This can be an entry of either the Port's runtime parameter specification
+dictionary or in the sub-dictionary for the Projection's type.
 
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
@@ -2379,23 +2361,17 @@ class Mechanism_Base(Mechanism):
         runtime_output_port_params = {}
         runtime_parameter_port_params = {}
         if runtime_params:
+            # MODIFIED 5/8/20 OLD:
             runtime_input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
+            self._parse_runtime_port_projection_params(runtime_input_port_params,context)
+
             runtime_parameter_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
+            self._parse_runtime_port_projection_params(runtime_parameter_port_params,context)
+
             runtime_output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
+            self._parse_runtime_port_projection_params(runtime_output_port_params,context)
 
-            # FIX 5/8/20 [JDC]:
-            #    CHECK FOR ANY PORT-SPECIFIC PARAMS AND PUT THEM IN PORT_SPECIFIC_PARAMS
-            #       (SO THEY ARE NOT TREATED AS PARAMS OF THE MECH OR ITS FUNCTION)
-            #    DELETE EACH AS IT IS USED IN _update_port
-            #    CHECK FOR ANY REMAINING PORT_SPECIFIC_PARAMS AFTER EXECUTE, AND RAISE PROGRAM ERROR FOR ANY
-
-            # ???:
-            #    CHECK FOR ANY PROJECTION-SPECIFIC PARAMS AND PUT THEM IN PROJECTION_SPECIFIC_PARAMS
-            #       (SO THEY ARE NOT TREATED AS PARAMS OF THE PORT OR ITS FUNCTION)
-            #    DELETE EACH AS IT IS USED IN _update_port
-            #    CHECK FOR ANY REMAINING PROJECTION_SPECIFIC_PARAMS AFTER LOOP, AND RAISE PROGRAM ERROR FOR ANY
-
-
+            # MODIFIED 5/8/20 END
 
         if self.parameters.is_finished_flag._get(context) is True:
             self.parameters.num_executions_before_finished._set(0, override=True, context=context)
@@ -2591,6 +2567,46 @@ class Mechanism_Base(Mechanism):
                                      format(value, append_type_to_name(self)))
         self.parameters.value.set(np.atleast_1d(value), context, override=True)
         self._update_output_ports(context=context)
+
+    def _parse_runtime_port_projection_params(self, runtime_port_params, context):
+        """Validate type-specific sub-dicts, and move any specifications for individual parameters into them
+
+        Move any subdicts using plural of `componentType <Component_ComponentType>`\\s into correponding sub-dict.
+        Move any specifications for individual Projections not in type-specific subdicts into them.
+
+        """
+
+        if not runtime_port_params:
+            return
+
+        # # Move any type-specific sub-dicts using plural of componentType as the key into corresponding sub-dict
+
+        # for key in runtime_port_params:
+        #     if isinstance(key, str) and (key in projection_types or
+        #                                  key+'S' in projection_types):
+        #         runtime_port_params[key+'_PARAMS'].update(runtime_port_params.pop(key+'S', {}))
+
+        # Move any sub-dicts for individual Projections in runtime_params into a consolidated PROJECTION-SPECIFIC dict
+        def move_projection_specific_params_to_their_own_sub_dict(sub_dict):
+            from psyneulink.core.components.projections.projection import \
+                PROJECTION_SPECIFIC_PARAMS, projection_param_keywords
+            for key in sub_dict.copy():
+                if key in projection_param_keywords():
+                    move_projection_specific_params_to_their_own_sub_dict(sub_dict[key])
+                    continue
+                elif key in self.afferents:
+                    projection = key
+                elif key in self.afferents.names:
+                    projection = self.afferents[projection]
+                else:
+                    continue
+                projection_specific_dict = {key : sub_dict.pop(key)}
+                if PROJECTION_SPECIFIC_PARAMS in runtime_port_params:
+                    runtime_port_params[PROJECTION_SPECIFIC_PARAMS].update(projection_specific_dict)
+                else:
+                    runtime_port_params[PROJECTION_SPECIFIC_PARAMS] = projection_specific_dict
+
+        move_projection_specific_params_to_their_own_sub_dict(runtime_port_params)
 
     def _get_param_ids(self):
         #FIXME: ports and function should be part of generated params

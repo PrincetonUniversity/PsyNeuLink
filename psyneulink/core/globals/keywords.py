@@ -116,7 +116,6 @@ __all__ = [
     'VECTOR', 'WALD_DIST_FUNCTION', 'WEIGHT', 'WEIGHTS', 'X_0',
 ]
 
-
 # **********************************************************************************************************************
 # ******************************************  KEYWORD CLASSES **********************************************************
 # **********************************************************************************************************************
@@ -831,11 +830,13 @@ DISABLE = DISABLE_PARAM = 'DISABLE'
 # Attributes / KVO keypaths / Parameters
 PROJECTION = "Projection"
 PROJECTION_TYPE = "PROJECTION_TYPE"
-PROJECTION_PARAMS = "ProjectionParams"
-MAPPING_PROJECTION_PARAMS = "MappingProjectionParams"
-LEARNING_PROJECTION_PARAMS = 'LearningProjectionParams'
-CONTROL_PROJECTION_PARAMS = "ControlProjectionParams"
-GATING_PROJECTION_PARAMS = 'GatingProjectionParams'
+PROJECTION_PARAMS = "PROJECTION_PARAMS"
+MAPPING_PROJECTION_PARAMS = 'MAPPING_PROJECTION_PARAMS'
+LEARNING_PROJECTION_PARAMS = 'LEARNING_PROJECTION_PARAMS'
+CONTROL_PROJECTION_PARAMS = "CONTROL_PROJECTION_PARAMS"
+GATING_PROJECTION_PARAMS = 'GATING_PROJECTION_PARAMS'
+
+
 PROJECTION_SENDER = 'projection_sender'
 SENDER = 'sender'
 RECEIVER = "receiver"
