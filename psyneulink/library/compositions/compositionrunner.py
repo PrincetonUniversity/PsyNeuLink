@@ -140,6 +140,9 @@ class CompositionRunner():
         skip_initialization = False
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
+            if not callable(stim_input) and 'epochs' in stim_input:
+                    stim_epoch = stim_input['epochs']
+
             stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input, stim_target)
 
             if num_trials is None:
@@ -158,8 +161,6 @@ class CompositionRunner():
             if callable(stim_input):
                 minibatched_input = self._batch_function_inputs(stim_input, stim_epoch, num_trials, minibatch_size, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
             else:
-                if 'epochs' in stim_input:
-                    stim_epoch = stim_input['epochs']
                 minibatched_input = self._batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
 
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
