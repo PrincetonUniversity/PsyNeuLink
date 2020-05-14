@@ -959,6 +959,8 @@ COMMENT:
    FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
 COMMENT
 
+COMMENT:
+  OLD
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain entries specifying parameters
 for its afferent `Projections <Port_Projections>` Projections. Specifications that apply to *all* of its afferents are
 made in an entry with the key *PROJECTION_PARAMS* and a sub-dictionary containing the parameter specifications;
@@ -966,9 +968,8 @@ specifications for Projections of a particular type are made in an entry with a 
 (*MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS*);
 specifications for an individual Projection are made by including an entry in any of the sub-dictionaries above with a
 key that is either the Projection or its name, and a sub-dictionary with specifications for its parameters.
+COMMENT
 
-COMMENT:
-  NEW
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain specifications for parameters
 of its afferent `Projections <Port_Projections>` Projections.  These are placed in an entry with the keyword
 *PROJECTION_PARAMS* as its key, and a sub-dicionary containing those specifications as its value.  That sub-dictionary
@@ -979,7 +980,6 @@ of the following keywords as its key -- *MAPPING_PROJECTION_PARAMS*, *LEARNING_P
 *CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS* -- and a sub-dictionary containing the parameter
 specifications as its value;  specifications for individual Projections are made in an entry that with a key that is
 either the Projection or its `name <Projection.name>`, and a sub-dictionary containing the specifications as its value.
-COMMENT
 
 
 COMMENT:

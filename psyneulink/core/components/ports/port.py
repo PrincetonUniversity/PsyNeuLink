@@ -786,13 +786,15 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, AUTO_ASSOCIATIVE_PROJECTION, \
+    CONTEXT, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
     DEFERRED_INITIALIZATION, DISABLE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
-    GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
-    LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, MAPPING_PROJECTION_PARAMS, MATRIX, MECHANISM, \
+    GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
+    LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    MAPPING_PROJECTION, MAPPING_PROJECTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX, MECHANISM, \
     MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_PORTS, OVERRIDE, OWNER, \
-    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
+    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTION, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
@@ -1875,8 +1877,9 @@ class Port_Base(Port):
             self.function.most_recent_context = context
             return
 
-        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
         from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
         from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
@@ -1884,10 +1887,13 @@ class Port_Base(Port):
 
         # Mapping from Projection types to param keywords
         #  used in _update for processing runtime_params
-        projection_type_keyword_mapping = {MappingProjection: MAPPING_PROJECTION_PARAMS,
-                                           ControlProjection: CONTROL_PROJECTION_PARAMS,
-                                           GatingProjection: GATING_PROJECTION_PARAMS,
-                                           LearningProjection: LEARNING_PROJECTION_PARAMS}
+        projection_type_keyword_mapping = {PATHWAY_PROJECTION: MAPPING_PROJECTION_PARAMS,
+                                           MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
+                                           MASKED_MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
+                                           AUTO_ASSOCIATIVE_PROJECTION: MAPPING_PROJECTION_PARAMS,
+                                           CONTROL_PROJECTION: CONTROL_PROJECTION_PARAMS,
+                                           GATING_PROJECTION: GATING_PROJECTION_PARAMS,
+                                           LEARNING_PROJECTION: LEARNING_PROJECTION_PARAMS}
 
 
         def set_projection_value(projection, value, context):
@@ -1953,9 +1959,8 @@ class Port_Base(Port):
             #     from 'PROJECTION_PARAMS' subdict in projection_params
             projection_type_params = {k:v for k,v in projection_params[PROJECTION_PARAMS].items()
                                                   if k not in {projection, projection,projection.name}}
-            # Then get type-specific params that apply for type of current Projection (override general ones)
-            #    from type-specific sub-dicts in projection_params)
-            projection_type_keyword = projection_type_keyword_mapping[projection.__class__]
+            # Then get type-specific params that apply for type of current Projection (override general ones            #    from type-specific sub-dicts in projection_params)
+            projection_type_keyword = projection_type_keyword_mapping[projection.componentType]
             projection_type_params.update(projection_params[projection_type_keyword])
             # Finally, get params specific to this Projection from params
             #   - overrides any specified general and/or type-specific params

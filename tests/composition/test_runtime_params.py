@@ -555,9 +555,9 @@ class TestCompositionRuntimeParams:
             np.array([[41.5]]), # Run 3, Tria1 1: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
             np.array([[400.5]]),# Run 3: Trial 2: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
             np.array([[4000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*1000)+0.5
-            np.array([[8000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*2000)+0.5
-            np.array([[12000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*3000)+0.5
-            np.array([[16000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*4000)+0.5
+            np.array([[8000.5]]),# Run 4: Trial 1: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*2000)+0.5
+            np.array([[12000.5]]),# Run 4: Trial 2: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*3000)+0.5
+            np.array([[16000.5]]),# Run 4: Trial 3: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*4000)+0.5
             np.array([[40.]])   # Final run: revert to assignments before previous run (2*5*4)
         ])
 
@@ -573,16 +573,16 @@ class TestCompositionRuntimeParams:
                   T2: {
                       PARAMETER_PORT_PARAMS: {
                           PROJECTION_PARAMS: {
-                              'variable':(5, AtTrial(0)), # variable of all Projection to all ParameterPorts
-                              'value':(10, AtTrial(1)),
-                              CONTROL_PROJECTION_PARAMS: {'value':(21, AtTrial(2))},
-                              'ControlProjection for TransferMechanism-1[slope]': {'value':(32, AtTrial(3))},
-                              CTL.control_signals[0].efferents[0]: {'value':(43, AtTrial(4))},
+                              'variable':(5, AtTrial(3)), # variable of all Projection to all ParameterPorts
+                              'value':(10, AtTrial(4)),
+                              CONTROL_PROJECTION_PARAMS: {'value':(21, AtTrial(5))},
+                              CTL.control_signals[0].efferents[0]: {'value':(32, AtTrial(6))},
+                              'ControlProjection for TransferMechanism-1[slope]': {'value':(43, AtTrial(7))},
                           },
                       }
                   },
               },
-              num_trials=5
+              num_trials=8
               )
         CTL.control_signals[0].modulation = OVERRIDE
         C.run(inputs={T1: 2.0},
@@ -591,10 +591,10 @@ class TestCompositionRuntimeParams:
                       PARAMETER_PORT_PARAMS: {
                           PROJECTION_PARAMS: {
                               'value':(5, AtTrial(0)),
-                              'value':(10, AtTrial(1)),
+                              'variable':(10, AtTrial(1)),
                               CONTROL_PROJECTION_PARAMS: {'value':(21, AtTrial(2))},
-                              'ControlProjection for TransferMechanism-1[slope]': {'value':(32, AtTrial(3))},
-                              CTL.control_signals[0].efferents[0]: {'value':(43, AtTrial(4))},
+                              'ControlProjection for TransferMechanism-1[slope]': {'value':(19, AtTrial(3))},
+                              CTL.control_signals[0].efferents[0]: {'value':(33, AtTrial(4))},
                           },
                       }
                   },
@@ -603,16 +603,19 @@ class TestCompositionRuntimeParams:
               )
 
         print(C.results)
-        assert np.allclose(C.results,[   # Conditions satisfied:
-            np.array([[10]]), # Run1, Trial 0: 2*5
-            np.array([[20]]), # Run1, Trial 1: only T1.slope condition (2*3*4)+0.5
-            np.array([[42]]), # Run1, Trial 2: only T2.intercept condition (2*5*4)+1+0.5
-            np.array([[64]]),# Run1, Trial 3: only T2 scale condition (2*5*20) + 0.5
-            np.array([[86]]),# Run1, Trial 4: only T2.function.weights condition (2*5*4*10)+0.5
-            np.array([[172]]), # Run 2, Tria1 0: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
-            np.array([[20]]), # Run 2, Tria1 1: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
-            np.array([[42]]), # Run 2: Trial 2: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
-            np.array([[64]]), # Run 3, Tria1 3: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
-            np.array([[86]]),# Run 3: Trial 4: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
+        assert np.allclose(C.results,[         # Conditions satisfied:
+            np.array([[2]]),   # Run 1, Trial 0: None (2 input; no control since that requires a cycle)
+            np.array([[4]]),   # Run 1, Trial 1: None (2 input * 2 control gathered last cycle)
+            np.array([[8]]),   # Run 1, Trial 2: None (2 input * 4 control gathered last cycle)
+            np.array([[10]]),  # Run 1, Trial 3: ControlProjection variable (2*5)
+            np.array([[20]]),  # Run 1, Trial 4: ControlProjection value (2*10)
+            np.array([[42]]),  # Run 1, Trial 5: ControlProjection value using Projection type-specific keyword (2*210)
+            np.array([[64]]),  # Run 1, Trial 6: ControlProjection value using specific Projection (2*32)
+            np.array([[86]]),  # Run 1, Trial 7: ControlProjection value using specific Projection's name (2*43)
+            np.array([[10]]), # Run 2, Tria1 0: ControlProjection value with OVERRIDE (2*5)
+            np.array([[20]]),  # Run 2, Tria1 1: ControlProjection value with OVERRIDE (2*10)
+            np.array([[42]]),  # Run 2: Trial 2: ControlProjection value with OVERRIDE (2*21)
+            np.array([[38]]),  # Run 2, Tria1 3: ControlProjection value with OVERRIDE (2*19)
+            np.array([[66]]),  # Run 2: Trial 4: ControlProjection value with OVERRIDE (2*33)
         ])
 
