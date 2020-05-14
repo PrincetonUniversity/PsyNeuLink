@@ -9194,20 +9194,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 elif isinstance(node, Composition):
 
-                    # Set up compilation
                     if bin_execute:
-                        # Values of Mechanisms are in binary data structure
-                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents if
-                                proj.sender.owner in self._all_nodes and
-                                isinstance(proj.sender.owner, Mechanism))
+                        # Invoking nested composition passes data via Python
+                        # structures. Make sure all sources get their latest values
+                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
                         for srnode in srcs:
-                            assert srnode in self.nodes or srnode is self.input_CIM, \
-                                "{} is not a valid source node".format(srnode)
-                            data = _comp_ex.extract_frozen_node_output(srnode)
-                            for i, v in enumerate(data):
-                                # This sets frozen values
-                                srnode.output_ports[i].parameters.value._set(v, context, skip_history=True,
-                                                                             skip_log=True)
+                            if srnode is self.input_CIM or srnode in self.nodes:
+                                data_loc = srnode
+                            else:
+                                # Consuming output from another nested composition
+                                assert srnode.composition in self.nodes
+                                assert srnode is srnode.composition.output_CIM
+                                data_loc = srnode.composition
+
+                            # Set current Python values to LLVM results
+                            data = _comp_ex.extract_frozen_node_output(data_loc)
+                            for op, v in zip(srnode.output_ports, data):
+                                op.parameters.value._set(
+                                  v, context, skip_history=True, skip_log=True)
 
                     # Pass outer context to nested Composition
                     context.composition = node
@@ -9224,19 +9228,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     ret = node.execute(context=context,
                                        bin_execute=nested_bin_execute)
 
+                    # Get output info from nested execution
+                    if bin_execute:
+                        # Update result in binary data structure
+                        _comp_ex.insert_node_output(node, ret)
+
                     if is_simulating:
                         context.add_flag(ContextFlags.SIMULATION)
 
                     context.composition = self
-
-                    # Get output info from compiled execution
-                    if bin_execute:
-                        # Update result in binary data structure
-                        _comp_ex.insert_node_output(node, ret)
-                        for i, v in enumerate(ret):
-                            # Set current output. This will be stored to "new_values" below
-                            node.output_CIM.output_ports[i].parameters.value._set(v, context, skip_history=True,
-                                                                                  skip_log=True)
 
                 # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if self._animate is not False and self._animate_unit == COMPONENT:
