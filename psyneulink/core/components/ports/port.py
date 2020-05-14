@@ -770,7 +770,6 @@ import numbers
 import types
 import warnings
 
-from copy import deepcopy
 from collections.abc import Iterable
 from collections import defaultdict
 

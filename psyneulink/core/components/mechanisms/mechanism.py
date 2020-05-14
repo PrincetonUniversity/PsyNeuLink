@@ -1046,7 +1046,7 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import REMOVE_PORTS, PORT_SPEC, _parse_port_spec
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
+    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
@@ -1055,12 +1055,13 @@ from psyneulink.core.globals.keywords import \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, \
     PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
-
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, iscompatible, kwCompatibilityNumeric
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
+    iscompatible, kwCompatibilityNumeric
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2351,30 +2352,17 @@ class Mechanism_Base(Mechanism):
                                                 runtime_params=runtime_params)
                 return np.atleast_2d(return_value)
 
+        # SET UP RUNTIME PARAMS if any
+
+        # Extract all specifications not related to the Mechanism itself or its function and place in subdicts;
+        #    when Mechanism executes, _validate_and_assign_runtime_params will throw an error for any others found
+        runtime_port_params = self._parse_runtime_port_params(runtime_params, context)
 
         # EXECUTE MECHANISM
 
-        # Extract runtime_params for each port-type into their own dicts;
-        #    do this here, so that only params for the Mechanism itself and/or its function are in runtime_params
-        #    when it executes (_validate_and_assign_runtime_params will throw an error for any others found)
-        runtime_input_port_params = {}
-        runtime_output_port_params = {}
-        runtime_parameter_port_params = {}
-        if runtime_params:
-            # MODIFIED 5/8/20 OLD:
-            runtime_input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
-            self._parse_runtime_port_projection_params(runtime_input_port_params,context)
-
-            runtime_parameter_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
-            self._parse_runtime_port_projection_params(runtime_parameter_port_params,context)
-
-            runtime_output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
-            self._parse_runtime_port_projection_params(runtime_output_port_params,context)
-
-            # MODIFIED 5/8/20 END
-
         if self.parameters.is_finished_flag._get(context) is True:
             self.parameters.num_executions_before_finished._set(0, override=True, context=context)
+
         while True:
 
             # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
@@ -2388,7 +2376,7 @@ class Mechanism_Base(Mechanism):
             if (input is None
                 and (context.execution_phase is not ContextFlags.IDLE)
                 and (self.input_port.path_afferents != [])):
-                variable = self._update_input_ports(runtime_input_port_params, context)
+                variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
             # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
             else:
@@ -2407,7 +2395,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.variable._set(variable, context=context)
 
             # UPDATE PARAMETERPORT(S)
-            self._update_parameter_ports(runtime_parameter_port_params, context)
+            self._update_parameter_ports(runtime_port_params[PARAMETER_PORT_PARAMS], context)
 
             # EXECUTE MECHANISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
 
@@ -2442,7 +2430,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
-            self._update_output_ports(runtime_output_port_params, context)
+            self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
 
             # MANAGE MAX_EXECUTIONS_BEFORE_FINISHED AND DETERMINE WHETHER TO BREAK
             max_executions = self.parameters.max_executions_before_finished._get(context)
@@ -2568,25 +2556,36 @@ class Mechanism_Base(Mechanism):
         self.parameters.value.set(np.atleast_1d(value), context, override=True)
         self._update_output_ports(context=context)
 
-    def _parse_runtime_port_projection_params(self, runtime_port_params, context):
-        """Validate type-specific sub-dicts, and move any specifications for individual parameters into them
 
-        Move any subdicts using plural of `componentType <Component_ComponentType>`\\s into correponding sub-dict.
-        Move any specifications for individual Projections not in type-specific subdicts into them.
+    def _parse_runtime_port_params(self, runtime_params, context):
+        """Move Port param specifications (and nested Project-specific specifications) into sub-dicts.
 
+        # Move any specifications for individual Ports into a consolidated PORT_SPECIFIC sub-dict
         """
 
-        if not runtime_port_params:
-            return
+        input_port_params = {}
+        output_port_params = {}
+        parameter_port_params = {}
 
-        # # Move any type-specific sub-dicts using plural of componentType as the key into corresponding sub-dict
+        if runtime_params:
 
-        # for key in runtime_port_params:
-        #     if isinstance(key, str) and (key in projection_types or
-        #                                  key+'S' in projection_types):
-        #         runtime_port_params[key+'_PARAMS'].update(runtime_port_params.pop(key+'S', {}))
+            input_port_params = runtime_params.pop(INPUT_PORT_PARAMS, None)
+            self._parse_runtime_port_projection_params(input_port_params,context)
 
-        # Move any sub-dicts for individual Projections in runtime_params into a consolidated PROJECTION-SPECIFIC dict
+            parameter_port_params = runtime_params.pop(PARAMETER_PORT_PARAMS, None)
+            self._parse_runtime_port_projection_params(parameter_port_params,context)
+
+            output_port_params = runtime_params.pop(OUTPUT_PORT_PARAMS, None)
+            self._parse_runtime_port_projection_params(output_port_params,context)
+
+        return {INPUT_PORT_PARAMS: input_port_params,
+                PARAMETER_PORT_PARAMS: parameter_port_params,
+                OUTPUT_PORT_PARAMS: output_port_params}
+
+    def _parse_runtime_port_projection_params(self, runtime_port_params, context):
+        """Place any specifications for individual Projections into PROJECDTION_SPECIFIC sub-dict"""
+
+        # Move any specifications for individual Projections into a consolidated PROJECTION_SPECIFIC sub-dict
         def move_projection_specific_params_to_their_own_sub_dict(sub_dict):
             from psyneulink.core.components.projections.projection import \
                 PROJECTION_SPECIFIC_PARAMS, projection_param_keywords
@@ -2606,7 +2605,8 @@ class Mechanism_Base(Mechanism):
                 else:
                     runtime_port_params[PROJECTION_SPECIFIC_PARAMS] = projection_specific_dict
 
-        move_projection_specific_params_to_their_own_sub_dict(runtime_port_params)
+        if runtime_port_params:
+            move_projection_specific_params_to_their_own_sub_dict(runtime_port_params)
 
     def _get_param_ids(self):
         #FIXME: ports and function should be part of generated params
