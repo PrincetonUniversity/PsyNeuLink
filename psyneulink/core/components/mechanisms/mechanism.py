@@ -971,15 +971,19 @@ key that is either the Projection or its name, and a sub-dictionary with specifi
 COMMENT
 
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain specifications for parameters
-of its afferent `Projections <Port_Projections>` Projections.  These are placed in an entry with the keyword
-*PROJECTION_PARAMS* as its key, and a sub-dicionary containing those specifications as its value.  That sub-dictionary
-can contain specifications that apply to *all* of the Port's afferent Projections, only ones of a particular type,
-and/or individual Projections:  If the key is a the name of a Projection parameter, its value applies to *all*
-afferent Projections of the Port;  specifications for Projections of a particular type are made in an entry with one
-of the following keywords as its key -- *MAPPING_PROJECTION_PARAMS*, *LEARNING_PROJECTION_PARAMS*,
-*CONTROL_PROJECTION_PARAMS*, or *GATING_PROJECTION_PARAMS* -- and a sub-dictionary containing the parameter
-specifications as its value;  specifications for individual Projections are made in an entry that with a key that is
-either the Projection or its `name <Projection.name>`, and a sub-dictionary containing the specifications as its value.
+of its afferent `Projections <Port_Projections>` Projections.  These are placed in entries for each type of Projection,
+using Projection `componentType <Component_Type>`\\s as the keys (e.g., MAPPING_PROJECTION, CONTROL_PROJECTION,
+etc.), and a subdictionary of parameter specifications as its value, that apply to all Projections of that type.
+
+    .. hint::
+       For clarify of the script, the plural form of Projection `componentType <Component_Type>`\\s can be used
+       as the key of entries for type-specific Projection parameter specifications (e.g., *MAPPING_PROJECTIONS*
+       or *CONTROL_PROJECTIONS*
+
+Parameters can also be specified for individual Projections, using either the Projection or its `name
+<Projection_Base.name>` as the key, and a subdictionary of parameter specifications that apply to only that Projection
+as the value.  This can be included either in the Port's runtime parameter specification dictionary or in one for
+that Projection's componentType.
 
 
 COMMENT:
