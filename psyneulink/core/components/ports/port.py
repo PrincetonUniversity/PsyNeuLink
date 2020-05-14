@@ -1926,7 +1926,7 @@ class Port_Base(Port):
         projection_params = defaultdict(lambda:{})
         # Pop type-specific Projection params from port_params so that only params for Port or its Mechanism
         #     remain to be passed to the Port's execute method
-        for projection_type in projection_type_keyword_mapping.values():
+        for projection_type in set(projection_type_keyword_mapping.values()):
             projection_params[projection_type] = port_params[PROJECTION_PARAMS].pop(projection_type,{})
         # Get general Projection params into a dedicated PROJECTION_PARAMS dict for them;
         #     note: this will also include any params specified for individual Projections, but are not needed here;

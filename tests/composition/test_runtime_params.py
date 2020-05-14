@@ -602,7 +602,6 @@ class TestCompositionRuntimeParams:
               num_trials=5
               )
 
-        print(C.results)
         assert np.allclose(C.results,[         # Conditions satisfied:
             np.array([[2]]),   # Run 1, Trial 0: None (2 input; no control since that requires a cycle)
             np.array([[4]]),   # Run 1, Trial 1: None (2 input * 2 control gathered last cycle)
