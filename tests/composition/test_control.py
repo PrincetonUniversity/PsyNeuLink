@@ -390,7 +390,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ['Python'])
     def test_multilevel_ocm_gridsearch_conflicting_directions(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -451,7 +451,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ['Python'])
     def test_multilevel_ocm_gridsearch_maximize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -516,7 +516,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ['Python'])
     def test_multilevel_ocm_gridsearch_minimize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -753,10 +753,10 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_multilevel_control(self, mode, benchmark):
         oA = pnl.TransferMechanism(
@@ -812,10 +812,10 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_recurrent_control(self, mode):
         monitor = pnl.TransferMechanism(default_variable=[[0.0]],
@@ -1418,10 +1418,10 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_model_based_ocm_after(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
@@ -1458,10 +1458,10 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm)])
     def test_model_based_ocm_before(self, benchmark, mode):
 
         A = pnl.ProcessingMechanism(name='A')
@@ -1806,10 +1806,10 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_grid_search_random_selection(self, mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
@@ -1843,7 +1843,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        if mode == "Python":
+        if mode == 'Python':
             log_arr = A.log.nparray_dictionary()
             assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
@@ -1856,8 +1856,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_input_CIM_assignment(self, mode):
         input_a = pnl.ProcessingMechanism(name='oa', function=pnl.Linear(slope=1))

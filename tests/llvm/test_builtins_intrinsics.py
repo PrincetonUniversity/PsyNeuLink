@@ -17,15 +17,15 @@ pow_res = np.power(x, y)
                          (np.log, (x,), "__pnl_builtin_log", log_res),
                          (np.power, (x,y), "__pnl_builtin_pow", pow_res),
                          ], ids=["EXP", "LOG", "POW"])
-@pytest.mark.parametrize("mode", ["Python",
-                                  pytest.param("LLVM", marks=pytest.mark.llvm),
-                                  pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda])])
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_builtin_op(benchmark, op, args, builtin, result, mode):
-    if mode == "Python":
+    if mode == 'Python':
         f = op
-    elif mode == "LLVM":
+    elif mode == 'LLVM':
         f = pnlvm.LLVMBinaryFunction.get(builtin)
-    elif mode == "PTX":
+    elif mode == 'PTX':
         wrap_name = builtin + "_test_wrapper"
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             intrin = ctx.import_llvm_function(builtin)
