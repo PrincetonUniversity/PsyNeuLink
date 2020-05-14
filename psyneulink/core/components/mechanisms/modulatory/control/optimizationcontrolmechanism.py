@@ -900,11 +900,17 @@ class OptimizationControlMechanism(ControlMechanism):
         outcome_input_port = self.input_port
         outcome_input_port._update(params=runtime_params, context=context)
         port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
+        # MODIFIED 5/13/20 OLD:
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
         return np.array(port_values)
+        # # MODIFIED 5/13/20 NEW:
+        # input_port_values = super()._update_input_ports(runtime_params, context)
+        # port_values.append(input_port_values)
+        # return np.array(port_values)
+        # MODIFIED 5/8/20 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""

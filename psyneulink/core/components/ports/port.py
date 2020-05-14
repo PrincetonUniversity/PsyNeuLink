@@ -1959,7 +1959,8 @@ class Port_Base(Port):
             #     from 'PROJECTION_PARAMS' subdict in projection_params
             projection_type_params = {k:v for k,v in projection_params[PROJECTION_PARAMS].items()
                                                   if k not in {projection, projection,projection.name}}
-            # Then get type-specific params that apply for type of current Projection (override general ones            #    from type-specific sub-dicts in projection_params)
+            # Then get type-specific params that apply for type of current Projection (override general ones
+            #    from type-specific sub-dicts in projection_params)
             projection_type_keyword = projection_type_keyword_mapping[projection.componentType]
             projection_type_params.update(projection_params[projection_type_keyword])
             # Finally, get params specific to this Projection from params
