@@ -12,6 +12,7 @@ import collections.abc
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
+from inspect import isgeneratorfunction
 
 __all__ = ["CompositionRunner"]
 
@@ -61,10 +62,31 @@ class CompositionRunner():
                 
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
+
             if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
                 # end early if patience exceeded
                 pass
 
+    def _batch_function_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+        for epoch in range(epochs):
+            for i in range(0, num_trials, batch_size):
+                if call_before_minibatch:
+                    call_before_minibatch()
+                for idx in range(i, i+batch_size):
+                    trial_input = inputs(idx)
+                    if trial_input is None:
+                        break
+                    yield trial_input
+                if call_after_minibatch:
+                    call_after_minibatch()
+                
+                if not self._is_llvm_mode:
+                    self._composition._update_learning_parameters(context)
+
+            if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+                # end early if patience exceeded
+                pass
+    
     def run_learning(self,
                      inputs: dict,
                      targets: dict = None,
@@ -93,24 +115,24 @@ class CompositionRunner():
             self._is_llvm_mode = True
 
         # Handle function and generator inputs
-        if callable(inputs):
+        if isgeneratorfunction(inputs):
             inputs = inputs()
 
-        if isinstance(inputs, dict):
+        if isinstance(inputs, dict) or callable(inputs):
             inputs = [inputs]
 
-        if callable(targets):
+        if isgeneratorfunction(targets):
             targets = targets()
 
-        if isinstance(targets, dict):
+        if isinstance(targets, dict) or callable(targets):
             targets = [targets]
         elif targets is None:
             targets = inf_yield_none()
 
-        if callable(epochs):
+        if isgeneratorfunction(epochs):
             epochs = epochs()
 
-        if not isinstance(epochs, list) and not isinstance(epochs, tuple):
+        if (not isinstance(epochs, list) and not isinstance(epochs, tuple)):
             epochs = [epochs]
         elif epochs is None:
             epochs = inf_yield_none()
@@ -118,9 +140,6 @@ class CompositionRunner():
         skip_initialization = False
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
-            if 'epochs' in stim_input:
-                stim_epoch = stim_input['epochs']
-
             stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input, stim_target)
 
             if num_trials is None:
@@ -135,8 +154,13 @@ class CompositionRunner():
             early_stopper = None
             if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
-
-            minibatched_input = self._batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+            
+            if callable(stim_input):
+                minibatched_input = self._batch_function_inputs(stim_input, stim_epoch, num_trials, minibatch_size, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+            else:
+                if 'epochs' in stim_input:
+                    stim_epoch = stim_input['epochs']
+                minibatched_input = self._batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
 
             self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
             skip_initialization = True
