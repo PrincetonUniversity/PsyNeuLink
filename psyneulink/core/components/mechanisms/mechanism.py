@@ -2590,15 +2590,19 @@ class Mechanism_Base(Mechanism):
             from psyneulink.core.components.projections.projection import \
                 PROJECTION_SPECIFIC_PARAMS, projection_param_keywords
             for key in sub_dict.copy():
+                # Recursively check Projection-specific dicts for references to individual Projections
                 if key in projection_param_keywords():
                     move_projection_specific_params_to_their_own_sub_dict(sub_dict[key])
                     continue
+                # Reference can be the Projection itself...
                 elif key in self.afferents:
                     projection = key
+                # or the Projection's name
                 elif key in self.afferents.names:
                     projection = self.afferents[projection]
                 else:
                     continue
+                # Move specification for Projection to entry with same key in PROJECTION_SPECIFIC_PARAMS
                 projection_specific_dict = {key : sub_dict.pop(key)}
                 if PROJECTION_SPECIFIC_PARAMS in runtime_port_params:
                     runtime_port_params[PROJECTION_SPECIFIC_PARAMS].update(projection_specific_dict)
