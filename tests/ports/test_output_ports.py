@@ -41,7 +41,7 @@ class TestOutputPorts:
         EX([[1.],[2.],[3.]])
         EX([[1.],[2.],[3.]])
         res = EX([[1.],[2.],[3.]])
-        if mode == "Python":
+        if mode == 'Python':
             res = mech.output_values
         expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [4]]
         for i, e in zip(res, expected):

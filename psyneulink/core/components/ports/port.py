@@ -770,7 +770,6 @@ import numbers
 import types
 import warnings
 
-from copy import deepcopy
 from collections.abc import Iterable
 from collections import defaultdict
 
@@ -778,27 +777,25 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import \
-    Component, ComponentError, DefaultsFlexibility, component_keywords
+from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
 from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, AUTO_ASSOCIATIVE_PROJECTION, \
-    CONTEXT, CONTROL_PROJECTION, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
-    DEFERRED_INITIALIZATION, DISABLE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
-    GATING_PROJECTION, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
-    LEARNING_PROJECTION, LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
-    MAPPING_PROJECTION, MAPPING_PROJECTION_PARAMS, MASKED_MAPPING_PROJECTION, MATRIX, MECHANISM, \
-    MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, \
+    CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, DISABLE, EXPONENT, \
+    FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
+    LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
+    MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
+    MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_PORTS, OVERRIDE, OWNER, \
-    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTION, PATHWAY_PROJECTIONS, PREFS_ARG, \
+    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
-    PORT, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, VALUE, VARIABLE, WEIGHT, \
-    PORT_COMPONENT_CATEGORY
+    PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
+    VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -834,7 +831,6 @@ port_type_keywords = {PORT_TYPE}
 STANDARD_PORT_ARGS = {PORT_TYPE, OWNER, REFERENCE_VALUE, VARIABLE, NAME, PARAMS, PREFS_ARG}
 PORT_SPEC = 'port_spec'
 REMOVE_PORTS = 'REMOVE_PORTS'
-
 
 def _is_port_class(spec):
     if inspect.isclass(spec) and issubclass(spec, Port):
@@ -1854,7 +1850,10 @@ class Port_Base(Port):
     def _update(self, params=None, context=None):
         """Update each projection, combine them, and assign return result
 
-        Assign any runtime_params specified for Port, its function, and any of its afferent projections
+        Assign any runtime_params specified for Port, its function, and any of its afferent projections;
+          - assumes that type-specific sub-dicts have been created for each Projection type for which there are params
+          - and that specifications for individual Projections have been put in their own PROJECTION-SPECIFIC sub-dict
+          - specifications for individual Projections are removed from that as used (for check by Mechanism at end)
         Call _update for each projection in self.path_afferents (passing specified params)
         Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
         Call self.function (default: LinearCombination function) to combine their values
@@ -1877,23 +1876,23 @@ class Port_Base(Port):
             self.function.most_recent_context = context
             return
 
-        from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.projections.projection import \
+            projection_param_keywords, projection_param_keyword_mapping, PROJECTION_SPECIFIC_PARAMS
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
         from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-        from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-        from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
         from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
 
-        # Mapping from Projection types to param keywords
-        #  used in _update for processing runtime_params
-        projection_type_keyword_mapping = {PATHWAY_PROJECTION: MAPPING_PROJECTION_PARAMS,
-                                           MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
-                                           MASKED_MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
-                                           AUTO_ASSOCIATIVE_PROJECTION: MAPPING_PROJECTION_PARAMS,
-                                           CONTROL_PROJECTION: CONTROL_PROJECTION_PARAMS,
-                                           GATING_PROJECTION: GATING_PROJECTION_PARAMS,
-                                           LEARNING_PROJECTION: LEARNING_PROJECTION_PARAMS}
+        # # MODIFIED 5/14/20 OLD:
+        # # Mapping from Projection types to param keywords
+        # #  used in _update for processing runtime_params
+        # projection_type_keyword_mapping = {PATHWAY_PROJECTION: MAPPING_PROJECTION_PARAMS,
+        #                                    MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
+        #                                    MASKED_MAPPING_PROJECTION: MAPPING_PROJECTION_PARAMS,
+        #                                    AUTO_ASSOCIATIVE_PROJECTION: MAPPING_PROJECTION_PARAMS,
+        #                                    CONTROL_PROJECTION: CONTROL_PROJECTION_PARAMS,
+        #                                    GATING_PROJECTION: GATING_PROJECTION_PARAMS,
+        #                                    LEARNING_PROJECTION: LEARNING_PROJECTION_PARAMS}
+        # MODIFIED 5/14/20 END
 
 
         def set_projection_value(projection, value, context):
@@ -1910,29 +1909,10 @@ class Port_Base(Port):
 
         # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
-        # Copy params, since general and type-specific Params may be needed by other Ports;
-        #              (though parameters specifiied for individual Projections are deleted from params itself)
-        if params:
-            p_copy = deepcopy(params)
-        else:
-            p_copy = None
-        port_params = defaultdict(lambda:{}, p_copy or {})
-
-        # Move any params specified for Port's function in FUNCTION_PARAMS dict into port_params
-        if FUNCTION_PARAMS in port_params:
-            port_params.update(port_params.pop(FUNCTION_PARAMS))
-
-        # Generate default dict for projection_params that returns empty dict for any missing entries
-        projection_params = defaultdict(lambda:{})
-        # Pop type-specific Projection params from port_params so that only params for Port or its Mechanism
-        #     remain to be passed to the Port's execute method
-        for projection_type in set(projection_type_keyword_mapping.values()):
-            projection_params[projection_type] = port_params[PROJECTION_PARAMS].pop(projection_type,{})
-        # Get general Projection params into a dedicated PROJECTION_PARAMS dict for them;
-        #     note: this will also include any params specified for individual Projections, but are not needed here;
-        #           they will be popped from the main params dict, which is examined by Mechanism to detect
-        #           any unclaimed param specifications that will generate an error.
-        projection_params[PROJECTION_PARAMS].update(port_params.pop(PROJECTION_PARAMS, {}))
+        runtime_params = defaultdict(lambda:{}, params or {})
+        # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
+        if FUNCTION_PARAMS in runtime_params:
+            runtime_params.update(runtime_params.pop(FUNCTION_PARAMS))
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -1953,30 +1933,28 @@ class Port_Base(Port):
                                   f"of {self.owner.name} ignored [has no sender].")
                 continue
 
-            # Get relelvant Projection params (general, type-specific and individual)
+            # Get type-specific params that apply for type of current
+            # FIX 5/8/20: THIS SHOULD SHOULD PROBABLY BE DONE AT THE PORT LEVEL (FOR EFFICIENCY) FOR ALL PORT TYPES
+            #             ALSO, SHOULD ONLY INCLUDE TYPE-SPECIFIC AND NOT PROJECTION-SPECIFIC ENTRIES
+            #             THE LATTER SHOULD BE RETRIEVED DIRECTLY FROM runtime_params??
+            #             FILTER BY LOOKING FOR PROJECTION OR ITS NAME IN LIST OF PORT'S AFFERENTS?
+            # projection_type_params = defaultdict(lambda:{}, runtime_params[projection_type_keyword])
+            projection_type_params = runtime_params[projection_param_keyword_mapping()[projection.componentType]]
+            # Then get params specific to this Projection from runtime_params or from type-specific sub-dict
+            #   - overrides any specified any specified for type of Projection
+            #   - removes from runtime_params (so not passed to Port)
+            # projection_type_params.update(runtime_params.pop(projection, {}))
+            # projection_type_params.update(runtime_params.pop(projection.name, {}))
+            # projection_type_params.update(projection_type_params.pop(projection, {}))
+            # projection_type_params.update(projection_type_params.pop(projection.name, {}))
+            projection_type_params.update(runtime_params[PROJECTION_SPECIFIC_PARAMS].pop(projection, {}))
+            projection_type_params.update(runtime_params[PROJECTION_SPECIFIC_PARAMS].pop(projection.name, {}))
 
-            # First get general Projection params (that apply to all Projections)
-            #     from 'PROJECTION_PARAMS' subdict in projection_params
-            projection_type_params = {k:v for k,v in projection_params[PROJECTION_PARAMS].items()
-                                                  if k not in {projection, projection,projection.name}}
-            # Then get type-specific params that apply for type of current Projection (override general ones
-            #    from type-specific sub-dicts in projection_params)
-            projection_type_keyword = projection_type_keyword_mapping[projection.componentType]
-            projection_type_params.update(projection_params[projection_type_keyword])
-            # Finally, get params specific to this Projection from params
-            #   - overrides any specified general and/or type-specific params
-            #   - removes from params (to pass check in Mechanism for any spurious ones)
-            if params and PROJECTION_PARAMS in params and projection in params[PROJECTION_PARAMS]:
-                projection_type_params.update(params[PROJECTION_PARAMS].pop(projection, {}))
-            if params and PROJECTION_PARAMS in params and projection.name in params[PROJECTION_PARAMS]:
-                projection_type_params.update(params[PROJECTION_PARAMS].pop(projection.name, {}))
-
-
-            # Get Projection's variable and/or value if specified in port_params
+            # Get Projection's variable and/or value if specified in runtime_params
             projection_variable = projection_type_params.pop(VARIABLE, None)
             projection_value = projection_type_params.pop(VALUE, None)
 
-            # Projection value specifed in port_params, so just assign its value
+            # Projection value specifed in runtime_params, so just assign its value
             if projection_value:
                 set_projection_value(projection, projection_value, context)
 
@@ -2072,6 +2050,7 @@ class Port_Base(Port):
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
+        mod_params = {}
         for mod_param_name, value_list in mod_proj_values.items():
             param = getattr(self.function.parameters, mod_param_name)
             # If the param has a single modulatory value, use that
@@ -2085,10 +2064,18 @@ class Port_Base(Port):
             # Set modulatory parameter's value
             param._set(mod_val, context)
             # Add mod_param and its value to port_params for Port's function
-            port_params.update({mod_param_name: mod_val})
+            mod_params.update({mod_param_name: mod_val})
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
+        # Port params are any that remain after
+        # - params for individual Projections were removed above
+        # - skip any params for Projection types here
+        # and include mod_params
+        from psyneulink import ProjectionRegistry
+        port_params = {k:v for k,v in runtime_params.items()
+                       if k not in projection_param_keywords() and k != PROJECTION_SPECIFIC_PARAMS}
+        port_params.update(mod_params)
         # Assign param values
         self._validate_and_assign_runtime_params(port_params, context=context)
         # Execute Port
@@ -3537,4 +3524,3 @@ def _merge_param_dicts(source, specific, general, remove_specific=True, remove_g
                 source.pop(entry, None)
 
     return general
-

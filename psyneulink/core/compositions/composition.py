@@ -8807,8 +8807,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Compile all mechanism wrappers
                 for m in mechanisms:
                     _comp_ex._set_bin_node(m)
-
-                bin_execute = True
             except Exception as e:
                 if bin_execute is not True:
                     raise e from None
@@ -8874,7 +8872,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert inputs is None, "Ignoring composition input!"
                 self.input_CIM.execute(context=context)
             self.parameter_CIM.execute(context=context)
-        else:
+        elif not bin_execute:
             self.input_CIM.execute(build_CIM_input, context=context)
 
             # Update nested compositions
@@ -8882,9 +8880,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for port in comp.input_ports:
                     port._update(context=context)
 
+        # compiled node execution relies on the above to update afferent
+        # projections to nested input_CIM.
         if bin_execute:
             _comp_ex.execute_node(self.input_CIM, inputs)
-        #              WHY DO BOTH?  WHY NOT if-else?
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping

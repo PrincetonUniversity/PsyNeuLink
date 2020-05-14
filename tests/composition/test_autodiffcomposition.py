@@ -540,7 +540,7 @@ class TestTrainingCorrectness:
             # (300, 'adam', False)
         ]
     )
-    @pytest.mark.parametrize("mode", ["Python",
+    @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_not, mode, benchmark):
@@ -728,7 +728,7 @@ class TestTrainingCorrectness:
                                        'targets': targets_dict,
                                        'epochs': eps}, bin_execute=mode)
 
-    @pytest.mark.parametrize("mode", ["Python",
+    @pytest.mark.parametrize("mode", ['Python',
                                 pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                 ])
     def test_pytorch_equivalence_with_autodiff_composition(self, mode):

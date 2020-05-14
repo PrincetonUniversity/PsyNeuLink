@@ -82,6 +82,10 @@ Component Structure
 Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
 user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
 
+.. _Component_Type:
+
+* **componentType** - species the type of Component.
+
 .. _Component_Variable:
 
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**

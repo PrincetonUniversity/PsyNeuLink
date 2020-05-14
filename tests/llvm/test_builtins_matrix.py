@@ -44,7 +44,7 @@ ct_tvec_res = llvm_tvec_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
                          (np.subtract, "__pnl_builtin_mat_sub", mat_sub_res),
                          (np.multiply, "__pnl_builtin_mat_hadamard", mat_mul_res),
                          ], ids=["ADD", "SUB", "MUL"])
-@pytest.mark.parametrize("mode", ["Python",
+@pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm)])
 def test_mat_hadamard(benchmark, op, builtin, result, mode):
     if mode == 'Python':
@@ -61,7 +61,7 @@ def test_mat_hadamard(benchmark, op, builtin, result, mode):
                          (np.add, "__pnl_builtin_mat_scalar_add", mat_sadd_res),
                          (np.multiply, "__pnl_builtin_mat_scalar_mult", mat_smul_res),
                          ], ids=["ADD", "MUL"])
-@pytest.mark.parametrize("mode", ["Python",
+@pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm)])
 def test_mat_scalar(benchmark, op, builtin, result, mode):
     if mode == 'Python':

@@ -208,7 +208,7 @@ class TestLCA:
         comp.add_node(lca)
         result = comp.run(inputs={lca:[0,1,2]}, bin_execute=mode)
         assert np.allclose(result, [[0.19153799, 0.5, 0.80846201]])
-        if mode == "Python":
+        if mode == 'Python':
             assert lca.num_executions_before_finished == 18
         benchmark(comp.run, inputs={lca:[0,1,2]}, bin_execute=mode)
 
