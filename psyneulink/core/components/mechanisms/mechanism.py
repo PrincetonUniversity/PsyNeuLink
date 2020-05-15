@@ -2592,22 +2592,22 @@ class Mechanism_Base(Mechanism):
             Arguments
             ---------
             outer_dict : dict
-                outer-most Port-type dict from port_param_dicts below
+                outer-most dict to be searched;
+                runtime_params for port params; a port_params_dict for projection params
             dest_dict : dict
-                outer-most Port-type dict (initial call) or a sub-dict of it (recursive calls)
+                dict where <COMPONENT>_SPECIFIC_PARAMS will be created; (always a Port type-specific dict)
             sub_dict_names : list(str)
                 port_param_keywords or projection_param_keywords()
             item_list : ContentAddressableList
-                self.ports or self.afferents
+                attribute with list of items to search for specific item being specified;
+                self.<port_type> for port param, self.afferents for for projection params
             specific_dict_name : str
-                PORT_SPECIFIC_PARAMS or PROJECTION_SPECIFIC_PARAMS
+                <COMPONENT>_SPECIFIC_PARAMS:  PORT_SPECIFIC_PARAMS or PROJECTION_SPECIFIC_PARAMS
 
             """
-            # for key in dest_dict.copy():
             for key in outer_dict.copy():
-                # Recursively check Port-specific entries for references to individual Ports;
-                #    note: even though the search is recursive, the move is still to the PORT_SPECIFIC sub-dict
-                #          in Port dict
+                # Recursively check Port or Projection type-specific sub-dicts for entries to be moved; even though
+                #    the search is recursive, the move is always to the <COMPONENT>_SPECIFIC_PARAMS dict in dest_dict
                 if key in sub_dict_names:
                     move_item_specific_params_to_specific_sub_dict(outer_dict[key],
                                                                    dest_dict,
@@ -2616,18 +2616,21 @@ class Mechanism_Base(Mechanism):
                                                                    specific_dict_name)
                     continue
 
+                # Skip if entry is not a paramater specification dict;
+                #  this is so that a key being used as the name of a parameter itself to be specified, is not treated
+                #  below as a specification for the corresponding ParameterPort (which has the key as its name)
                 if not isinstance(outer_dict[key], dict):
                     continue
 
-                # Reference can be the Projection itself...
+                # Reference can be the Port or Projection itself...
                 elif key in item_list:
                     item = key
-                # or the Projection's name
+                # or the Port or Projection's name
                 elif key in item_list.names:
                     item = item_list[item]
                 else:
                     continue
-                # Move specification for item to entry with same key in SPECIFIC_PARAMS dict
+                # Move param specification dict for item to entry with same key in <COMPONENT>_SPECIFIC_PARAMS dict
                 item_specific_dict = {key : outer_dict.pop(key)}
                 if specific_dict_name in dest_dict:
                     dest_dict[specific_dict_name].update(item_specific_dict)
