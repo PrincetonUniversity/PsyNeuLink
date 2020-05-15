@@ -1874,10 +1874,10 @@ class Port_Base(Port):
 
         # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
-        runtime_params = defaultdict(lambda:{}, params or {})
-        # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_params
-        if FUNCTION_PARAMS in runtime_params:
-            runtime_params.update(runtime_params.pop(FUNCTION_PARAMS))
+        runtime_port_params = defaultdict(lambda:{}, params or {})
+        # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_port_params
+        if FUNCTION_PARAMS in runtime_port_params:
+            runtime_port_params.update(runtime_port_params.pop(FUNCTION_PARAMS))
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -1899,18 +1899,20 @@ class Port_Base(Port):
                 continue
 
             # Get type-specific params that apply for type of current
-            projection_type_params = runtime_params[projection_param_keyword_mapping()[projection.componentType]]
-            # Then get params specific to this Projection from runtime_params
+            projection_params_keyword = projection_param_keyword_mapping()[projection.componentType]
+            projection_type_params = runtime_port_params[projection_params_keyword].copy()
+            # Then get params specific to this Projection from runtime_port_params
             #   - overrides any specified for type of Projection
-            #   - removes from runtime_params (so not passed to Port)
-            projection_type_params.update(runtime_params[PROJECTION_SPECIFIC_PARAMS].pop(projection, {}))
-            projection_type_params.update(runtime_params[PROJECTION_SPECIFIC_PARAMS].pop(projection.name, {}))
+            #   - removes from runtime_port_params (so not passed to Port)
+            if PROJECTION_SPECIFIC_PARAMS in runtime_port_params:
+                projection_type_params.update(runtime_port_params[PROJECTION_SPECIFIC_PARAMS].pop(projection, {}))
+                projection_type_params.update(runtime_port_params[PROJECTION_SPECIFIC_PARAMS].pop(projection.name, {}))
 
-            # Get Projection's variable and/or value if specified in runtime_params
+            # Get Projection's variable and/or value if specified in runtime_port_params
             projection_variable = projection_type_params.pop(VARIABLE, None)
             projection_value = projection_type_params.pop(VALUE, None)
 
-            # Projection value specifed in runtime_params, so just assign its value
+            # Projection value specifed in runtime_port_params, so just assign its value
             if projection_value:
                 set_projection_value(projection, projection_value, context)
 
@@ -2024,20 +2026,25 @@ class Port_Base(Port):
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
-        # Get any parameters specific for this particular Port, removing from runtime_params if found
-        port_specific_params = {runtime_params[PORT_SPECIFIC_PARAMS].pop(k, None) for k in {self, self.name} if k}
+        # Get any parameters specific for this particular Port, removing from runtime_port_params if found
+        if PORT_SPECIFIC_PARAMS in runtime_port_params:
+            port_specific_params = runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self, {})
+            port_specific_params.update(runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self.name, {}))
+        else:
+            port_specific_params = {}
 
         # Port params are:
         # - any that remain after:
         #   - params for individual Projections were removed (above)
         #   - ones that remain in PROJECcTION_SPECIFIC_PARAMS are skipped (below)
         # - include mod_params
-        # - include an specific to the current port
-        port_params = {k:v for k,v in runtime_params.items()
+        # - include an specific to the current port (from runtime_port_params)
+        port_params = {k:v for k,v in runtime_port_params.items()
                        if (k not in projection_param_keywords()
                            and k != PROJECTION_SPECIFIC_PARAMS
                            and k != PORT_SPECIFIC_PARAMS)}
         port_params.update(mod_params)
+        port_params.update(port_specific_params)
         # Assign param values
         self._validate_and_assign_runtime_params(port_params, context=context)
         # Execute Port

@@ -1651,9 +1651,23 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # MODIFIED 5/8/20 END
 
         from psyneulink.core.components.functions.function import is_function_type, FunctionError
+        def generate_error(param_name):
+            owner_name = ""
+            if hasattr(self, OWNER) and self.owner:
+                owner_name = f" of {self.owner.name}"
+                if hasattr(self.owner, OWNER) and self.owner.owner:
+                    owner_name = f"{owner_name} of {self.owner.owner.name}"
+            err_msg=f"Invalid specification in runtime_params arg for {self.name}{owner_name}: '{param_name}'."
+            if is_function_type(self):
+                raise FunctionError(err_msg)
+            else:
+                raise ComponentError(err_msg)
+
         if isinstance(runtime_params, dict):
             for param_name in runtime_params:
-                if hasattr(self, param_name):
+                if not isinstance(param_name, str):
+                    generate_error(param_name)
+                elif hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
@@ -1667,16 +1681,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         (not is_function_type(self) and not hasattr(self.function, param_name))
                        # the Component is a standalone function:
                        or (is_function_type(self) and not self.owner)):
-                    owner_name = ""
-                    if hasattr(self, OWNER) and self.owner:
-                        owner_name = f" of {self.owner.name}"
-                        if hasattr(self.owner, OWNER) and self.owner.owner:
-                            owner_name = f"{owner_name} of {self.owner.owner.name}"
-                    err_msg=f"Invalid specification in runtime_params arg for {self.name}{owner_name}: '{param_name}'."
-                    if is_function_type(self):
-                        raise FunctionError(err_msg)
-                    else:
-                        raise ComponentError(err_msg)
+                    generate_error(param_name)
 
         elif runtime_params:    # not None
             raise ComponentError(f"Invalid specification of runtime parameters for {self.name}: {runtime_params}.")
