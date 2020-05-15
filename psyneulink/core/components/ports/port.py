@@ -1911,7 +1911,7 @@ class Port_Base(Port):
 
         Returns
         -------
-        mod_params : dict or OVERRIDE
+        mod_params : dict or OVERRIDE
 
         """
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
