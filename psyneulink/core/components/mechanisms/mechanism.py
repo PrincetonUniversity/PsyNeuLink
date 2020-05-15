@@ -2583,8 +2583,8 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.projections.projection import projection_param_keywords
         port_param_keywords = {INPUT_PORT_PARAMS, PARAMETER_PORT_PARAMS, OUTPUT_PORT_PARAMS}
 
-        def move_item_specific_params_to_specific_sub_dict(port_params_dict,
-                                                           sub_dict,
+        def move_item_specific_params_to_specific_sub_dict(outer_dict,
+                                                           dest_dict,
                                                            keywords,
                                                            item_list,
                                                            specific_dict_name):
@@ -2592,9 +2592,9 @@ class Mechanism_Base(Mechanism):
 
             Arguments
             ---------
-            port_params_dict : dict
+            outer_dict : dict
                 outer-most Port-type dict from port_param_dicts below
-            sub_dict : dict
+            dest_dict : dict
                 outer-most Port-type dict (initial call) or a sub-dict of it (recursive calls)
             keywords : list(str)
                 port_param_keywords or projection_param_keywords()
@@ -2604,16 +2604,17 @@ class Mechanism_Base(Mechanism):
                 PORT_SPECIFIC_PARAMS or PROJECTION_SPECIFIC_PARAMS
 
             """
-            for key in sub_dict.copy():
+            # for key in dest_dict.copy():
+            for key in outer_dict.copy():
                 # Recursively check Port-specific entries for references to individual Ports;
                 #    note: even though the search is recursive, the move is still to the PORT_SPECIFIC sub-dict
                 #          in Port dict
                 if key in keywords:
-                    move_item_specific_params_to_specific_sub_dict(port_params_dict,
-                                                                    sub_dict[key],
-                                                                    keywords,
-                                                                    item_list,
-                                                                    specific_dict_name)
+                    move_item_specific_params_to_specific_sub_dict(outer_dict[key],
+                                                                   dest_dict,
+                                                                   keywords,
+                                                                   item_list,
+                                                                   specific_dict_name)
                     continue
                 # Reference can be the Projection itself...
                 elif key in item_list:
@@ -2624,34 +2625,45 @@ class Mechanism_Base(Mechanism):
                 else:
                     continue
                 # Move specification for item to entry with same key in SPECIFIC_PARAMS dict
-                item_specific_dict = {key : sub_dict.pop(key)}
-                if specific_dict_name in port_params_dict:
-                    port_params_dict[specific_dict_name].update(item_specific_dict)
+                item_specific_dict = {key : outer_dict.pop(key)}
+                if specific_dict_name in dest_dict:
+                    dest_dict[specific_dict_name].update(item_specific_dict)
                 else:
-                    port_params_dict[specific_dict_name] = defaultdict(lambda:{}, item_specific_dict)
+                    dest_dict[specific_dict_name] = defaultdict(lambda:{}, item_specific_dict)
 
         port_param_dicts = {INPUT_PORT_PARAMS: {},
                             PARAMETER_PORT_PARAMS: {},
                             OUTPUT_PORT_PARAMS: {}}
 
         if runtime_params:
+            port_param_dicts = {INPUT_PORT_PARAMS: INPUT_PORTS,
+                    PARAMETER_PORT_PARAMS: PARAMETER_PORTS,
+                    OUTPUT_PORT_PARAMS: OUTPUT_PORTS}
+
             for port_param_dict_name in port_param_dicts:
                 # Create Port-type sub-dict
+                port_name = port_param_dicts[port_param_dict_name]
                 port_param_dicts[port_param_dict_name] = defaultdict(lambda:{}, 
                                                                      runtime_params.pop(port_param_dict_name, {}))
                 # move_item_specific_params_to_specific_sub_dict(port_param_dicts[port_param_dict_name],
                 #                                                 port_param_dicts[port_param_dict_name],
-                move_item_specific_params_to_specific_sub_dict(port_params_dict = port_param_dicts[port_param_dict_name],
-                                                               sub_dict = port_param_dicts[port_param_dict_name],
-                                                               keywords = port_param_keywords,
-                                                               item_list = self.ports,
-                                                               specific_dict_name = PORT_SPECIFIC_PARAMS)
+                if not port_param_dict_name is PARAMETER_PORT_PARAMS:
+                    move_item_specific_params_to_specific_sub_dict(outer_dict = runtime_params,
+                                                                   dest_dict = port_param_dicts[port_param_dict_name],
+                                                                   keywords = [port_param_dict_name],
+                                                                   item_list = getattr(self, port_name),
+                                                                   specific_dict_name = PORT_SPECIFIC_PARAMS)
+                    move_item_specific_params_to_specific_sub_dict(outer_dict = port_param_dicts[port_param_dict_name],
+                                                                   dest_dict = port_param_dicts[port_param_dict_name],
+                                                                   keywords = [port_param_dict_name],
+                                                                   item_list = getattr(self, port_name),
+                                                                   specific_dict_name = PORT_SPECIFIC_PARAMS)
                 # Create Projection-type sub-dicts within Port type-specific dicts
-                move_item_specific_params_to_specific_sub_dict(port_params_dict = port_param_dicts[port_param_dict_name],
-                                                                sub_dict = port_param_dicts[port_param_dict_name],
-                                                                keywords = projection_param_keywords(),
-                                                                item_list = self.afferents,
-                                                                specific_dict_name = PROJECTION_SPECIFIC_PARAMS)
+                move_item_specific_params_to_specific_sub_dict(outer_dict = port_param_dicts[port_param_dict_name],
+                                                               dest_dict = port_param_dicts[port_param_dict_name],
+                                                               keywords = projection_param_keywords(),
+                                                               item_list = self.afferents,
+                                                               specific_dict_name = PROJECTION_SPECIFIC_PARAMS)
         return port_param_dicts
 
     def _get_param_ids(self):
