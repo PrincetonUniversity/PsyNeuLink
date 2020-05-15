@@ -441,6 +441,9 @@ PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             }
 
 def projection_param_keyword_mapping():
+    """Maps Projection type (key) to Projection parameter keywords (value) used for runtime_params specification
+    Projection type is one specified in its componentType attribute, and registered in ProjectionRegistry
+    """
     return {k: (k[:k.find('PROJECTION')-9] + '_' + k[k.find('PROJECTION')-9:]).upper() + '_PARAMS'
             for k in list(ProjectionRegistry.keys())}
 

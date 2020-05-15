@@ -772,6 +772,7 @@ import warnings
 
 from collections.abc import Iterable
 from collections import defaultdict
+from copy import deepcopy
 
 import numpy as np
 import typecheck as tc
@@ -1837,7 +1838,8 @@ class Port_Base(Port):
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
         """
-        from psyneulink.core.components.projections.projection import  projection_param_keywords
+        from psyneulink.core.components.projections.projection import \
+            projection_param_keywords, projection_param_keyword_mapping
 
         # Skip execution and set value directly if function is identity_function and no runtime_params were passed
         if (
@@ -1857,60 +1859,78 @@ class Port_Base(Port):
 
         # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
+        # params (ones passed from Mechanism that should be kept intact for other Ports):
+        #  - remove any found in PORT_SPECIFIC_PARAMS specific to this port
+        #      (Mechanism checks for errant ones after all ports have been executed)
+        #  - remove any found in PROJECTION_SPECIFIC for Projections to this port
+        #      (Mechanism checks for errant ones after all ports have been executed)
+
+        # local_params (ones that will be passed to Port's execute method):
+        #  - copy of ones params outer dict
+        #  - ones for this Port from params PARAMS_SPECIFIC_DICT (override "general" ones from outer dict)
+        #  - mod_params (from _execute_afferent_projections)
+
+        # projection_params (ones that will passed to _execute_afferent_projections() method):
+        #  - copy of ones from <PROJECTION_TYPE>_PROJECTION_PARAMS
+        #  - ones from PROJECTION_SPECIFIC_PARAMS relevant to Projections to this Port
+        #    (override more "general" ones specified for the type of Projection)
+
+        # params = params or {}
+        params = defaultdict(lambda:{}, params or {})
+
+        # FIX 5/8/20 [JDC]:
+        #    ADD IF STATEMENT HERE TO ASSIGN EMPTY DICTS TO local_params AND projection_params IF params is EMPTY
+
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_port_params
         # Do this on params so it holds for all subsequents ports processed
         if FUNCTION_PARAMS in params:
             params.update(params.pop(FUNCTION_PARAMS))
 
-        # FIX 5/8/20 [JDC]: SHOULD DOCUMENT WHETHER runtime_port_params IS USED ACROSS PORTS, OR CREATED JUST FOR THIS
-        # This keeps links to any sub-dicts of runtime_params passed from Mechanism
-        runtime_port_params = defaultdict(lambda:{}, params or {})
-        # FIX 5/8/20 [JDC]: MAY NOT WANT TO POP THIS, AS FUNCTION_PARAMS MAY BE NEEDED BY OTHER PORTS OF CURRENT TYPE:
-        #                   BUT DO WANT TO GET THEM OUT OF FUNCTION_PARAMS sub-dict FOR port_params
+        # Copy all items in outer level of params to local_params (i.e., excluding its subdicts)
+        local_params = defaultdict(lambda:{}, {k:v for k,v in params.items() if not isinstance(v,dict)})
+        # Get rid of items in params specific to this Port
+        for entry in params[PORT_SPECIFIC_PARAMS].copy():
+            if entry in {self, self.name}:
+                # Move param from params to local_params
+                local_params.update(params[PORT_SPECIFIC_PARAMS].pop(entry))
 
-        # FIX 5/8/20 [JDC]: MERGE WITH runtime_params or maybe create port_params HERE,
-        #                   SINCE VARIABLE OR VALUE COULD BE SPECIFIED IN port_speific_params,
-        #                   BUT ONLY runtime_port_params IS TESTED BELOW
-        # Get any parameters specific for this particular Port, removing from runtime_port_params if found
-        if PORT_SPECIFIC_PARAMS in runtime_port_params:
-            port_specific_params = runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self, {})
-            port_specific_params.update(runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self.name, {}))
-        else:
-            port_specific_params = {}
+        # Put copy of all type-specific Projection dicts from params into local_params
+        projection_params = defaultdict(lambda:{}, {proj_type:params[proj_type]
+                                                    for proj_type in projection_param_keywords()})
+
+        for entry in params[PROJECTION_SPECIFIC_PARAMS].copy():
+            if self.all_afferents and entry in self.all_afferents + [p.name for p in self.all_afferents]:
+                if isinstance(entry, str):
+                    projection_type = next(p for p in self.all_afferents if p.name ==entry).componentType
+                else:
+                    projection_type = entry.componentType
+                # Get key for type-specific dict in params in which to place it in local_params
+                projection_param_type = projection_param_keyword_mapping()[projection_type]
+                # Move from params into relevant type-specific dict in local_params
+                projection_params[projection_param_type].update(params[PROJECTION_SPECIFIC_PARAMS].pop(entry))
+
+        # Note:  having removed all Port- and Projection-specific entries on params, no longer concerned with it;
+        #        now only care about local_params and projection_params
 
         # If either the Port's variable or value is specified in runtime_params, skip executing Projections
-        if runtime_port_params and any(var_or_val in runtime_port_params for var_or_val in {VARIABLE, VALUE}):
+        if local_params and any(var_or_val in local_params for var_or_val in {VARIABLE, VALUE}):
             mod_params = {}
         else:
             # Otherwise, execute afferent Projections
-            mod_params = self._execute_afferent_projections(runtime_port_params, context)
+            mod_params = self._execute_afferent_projections(projection_params, context)
             if mod_params == OVERRIDE:
                 return
+        local_params.update(mod_params)
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
-        # FIX 5/8/20 [JDC]: MOVE ABOVE, SO THAT TEST FOR EXECUTING PROJECTIONS CAN USE local_port_params
-        #                   HOWEVER, MAY NEED PROJECTION-SPECIFIC ONES REMOVED?
-        # local_port_params:
-        # - are any that remain after:
-        #   - params for individual Projections were removed (above)
-        #   - ones that remain in PROJECTION_SPECIFIC_PARAMS are skipped (below)
-        # - include mod_params
-        # - include any specific to the current port (in port_specific_params)
-        local_port_params = {k:v for k,v in runtime_port_params.items()
-                             if (k not in projection_param_keywords()
-                                 and k != PROJECTION_SPECIFIC_PARAMS
-                                 and k != PORT_SPECIFIC_PARAMS)}
-        local_port_params.update(mod_params)
-        local_port_params.update(port_specific_params)
-        # Assign param values
-        self._validate_and_assign_runtime_params(local_port_params, context=context)
-        variable = local_port_params.pop(VARIABLE, None)
+        self._validate_and_assign_runtime_params(local_params, context=context)
+        variable = local_params.pop(VARIABLE, None)
 
         # Execute Port
-        self.execute(variable, context=context, runtime_params=local_port_params)
+        self.execute(variable, context=context, runtime_params=local_params)
 
-    def _execute_afferent_projections(self, runtime_port_params, context):
+    def _execute_afferent_projections(self, projection_params, context):
         """Execute all afferent Projections for Port
 
         Returns
@@ -1956,13 +1976,7 @@ class Port_Base(Port):
 
             # Get type-specific params that apply for type of current
             projection_params_keyword = projection_param_keyword_mapping()[projection.componentType]
-            projection_type_params = runtime_port_params[projection_params_keyword].copy()
-            # Then get params specific to this Projection from runtime_port_params
-            #   - overrides any specified for type of Projection
-            #   - removes from runtime_port_params (so not passed to Port)
-            if PROJECTION_SPECIFIC_PARAMS in runtime_port_params:
-                projection_type_params.update(runtime_port_params[PROJECTION_SPECIFIC_PARAMS].pop(projection, {}))
-                projection_type_params.update(runtime_port_params[PROJECTION_SPECIFIC_PARAMS].pop(projection.name, {}))
+            projection_type_params = projection_params[projection_params_keyword].copy()
 
             # Get Projection's variable and/or value if specified in runtime_port_params
             projection_variable = projection_type_params.pop(VARIABLE, None)
@@ -1971,6 +1985,8 @@ class Port_Base(Port):
             # Projection value specifed in runtime_port_params, so just assign its value
             if projection_value:
                 set_projection_value(projection, projection_value, context)
+
+            # ----------------------
 
             # Handle LearningProjection
             #  - update LearningSignals only if context == LEARNING;  otherwise, assign zero for projection_value
