@@ -2626,19 +2626,39 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                                [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
             self._update_current_execution_time(context=context)
 
-        # CALL FUNCTION
+        # # MODIFIED 5/8/20 OLD:
+        # # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
+        # #                     that are specific to particular class of Functions
+        # #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
+        # function_variable = self._parse_function_variable(variable, context=context)
+        # # FIX 5/8/20 [JDC]:
+        # #   NEED TO PASS FULL runtime_params (AND NOT JUST function's params) SINCE IntegratorMechanisms SEEM TO NEED IT
+        # value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
+        # try:
+        #     self.function.parameters.value._set(value, context)
+        # except AttributeError:
+        #     pass
+        # MODIFIED 5/8/20 NEW:
+        value = None
 
-        # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
-        #                     that are specific to particular class of Functions
-        #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        function_variable = self._parse_function_variable(variable, context=context)
-        # FIX 5/8/20 [JDC]:
-        #   NEED TO PASS FULL runtime_params (AND NOT JUST function's params) SINCE IntegratorMechanisms SEEM TO NEED IT
-        value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
-        try:
-            self.function.parameters.value._set(value, context)
-        except AttributeError:
-            pass
+        # GET VALUE if specified in runtime_params
+        if runtime_params and VALUE in runtime_params:
+            value = np.atleast_1d(runtime_params.pop(VALUE))
+
+        # CALL FUNCTION if value is not specified
+        if value is None:
+            # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
+            #                     that are specific to particular class of Functions
+            #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
+            function_variable = self._parse_function_variable(variable, context=context)
+            # FIX 5/8/20 [JDC]:
+            #   NEED TO PASS FULL runtime_params (AND NOT JUST function's params) SINCE IntegratorMechanisms SEEM TO NEED IT
+            value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
+            try:
+                self.function.parameters.value._set(value, context)
+            except AttributeError:
+                pass
+        # MODIFIED 5/8/20 END
 
         self.most_recent_context = context
 

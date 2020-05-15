@@ -1837,6 +1837,7 @@ class Port_Base(Port):
         Call self.function (default: LinearCombination function) to combine their values
         Returns combined values of projections, modulated by any mod_afferents
         """
+        from psyneulink.core.components.projections.projection import  projection_param_keywords
 
         # Skip execution and set value directly if function is identity_function and no runtime_params were passed
         if (
@@ -1854,24 +1855,6 @@ class Port_Base(Port):
             self.function.most_recent_context = context
             return
 
-        from psyneulink.core.components.projections.projection import \
-            projection_param_keywords, projection_param_keyword_mapping
-        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-        from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
-
-        def set_projection_value(projection, value, context):
-            """Manually set Projection value"""
-            projection.parameters.value._set(projection_value, context)
-            # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
-            # should these be manually set despite it not actually being executed?
-            # explicitly getting/setting based on context will be more clear
-            projection.most_recent_context = context
-            projection.function.most_recent_context = context
-            for pport in projection.parameter_ports:
-                pport.most_recent_context = context
-                pport.function.most_recent_context = context
-
         # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
         runtime_port_params = defaultdict(lambda:{}, params or {})
@@ -1888,9 +1871,65 @@ class Port_Base(Port):
         else:
             port_specific_params = {}
 
-        # FIX 5/8/20 [JDC]:
-        #   IF PORT'S VARIABLE IS SET HERE, BYPASS LOOKING AT PROJECTIONS (SHOULD THEY BE EXECUTED ANYHOW?)
-        #   IF PORT'S VALUE IS SET, BYPASS EXECUTION (BUT MAKE SURE ANY HOUSE KEEPING IS STILL DONE
+        # MODIFIED 5/8/20 OLD:
+        mod_params = self._execute_afferent_projections(runtime_port_params, context)
+        if mod_params == OVERRIDE:
+            return
+        # # MODIFIED 5/8/20 NEW:
+        # If either the Port's variable or value is specified in runtime_params, skip executing Projections
+        # if not [var_or_val in runtime_port_params for var_or_val in {VARIABLE, VALUE}]:
+        #     mod_params = self._execute_afferent_projections(runtime_port_params, context)
+        #     if mod_params == OVERRIDE:
+        #         return
+        # else:
+        #     mod_params = {}
+        # MODIFIED 5/8/20 END
+
+        # EXECUTE PORT  -------------------------------------------------------------------------------------
+
+        # Port params are:
+        # - any that remain after:
+        #   - params for individual Projections were removed (above)
+        #   - ones that remain in PROJECcTION_SPECIFIC_PARAMS are skipped (below)
+        # - include mod_params
+        # - include an specific to the current port (from runtime_port_params)
+        port_params = {k:v for k,v in runtime_port_params.items()
+                       if (k not in projection_param_keywords()
+                           and k != PROJECTION_SPECIFIC_PARAMS
+                           and k != PORT_SPECIFIC_PARAMS)}
+        port_params.update(mod_params)
+        port_params.update(port_specific_params)
+        # Assign param values
+        self._validate_and_assign_runtime_params(port_params, context=context)
+        variable = port_params.pop(VARIABLE, None)
+
+        # Execute Port
+        self.execute(variable, context=context, runtime_params=port_params)
+
+    def _execute_afferent_projections(self, runtime_port_params, context):
+        """Execute all afferent Projections for Port
+
+        Returns
+        -------
+        mod_params : dict or OVERRIDE
+
+        """
+        from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
+        from psyneulink.library.components.projections.pathway.maskedmappingprojection import MaskedMappingProjection
+        from psyneulink.core.components.projections.projection import projection_param_keyword_mapping
+
+        def set_projection_value(projection, value, context):
+            """Manually set Projection value"""
+            projection.parameters.value._set(value, context)
+            # KDM 8/14/19: a caveat about the dot notation/most_recent_context here!
+            # should these be manually set despite it not actually being executed?
+            # explicitly getting/setting based on context will be more clear
+            projection.most_recent_context = context
+            projection.function.most_recent_context = context
+            for pport in projection.parameter_ports:
+                pport.most_recent_context = context
+                pport.function.most_recent_context = context
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -1994,7 +2033,7 @@ class Port_Base(Port):
                     else:
                         # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
                         self.parameters.value._set(type_match(projection_value, type(self.defaults.value)), context)
-                        return
+                        return OVERRIDE
                 else:
                     try:
                         mod_value = type_match(projection_value, type(mod_param_value))
@@ -2017,7 +2056,7 @@ class Port_Base(Port):
             # a bit handwavy just to make stuff work
             # FIX 5/8/20 [JDC]: SHOULD THIS USE set_projection_value()??
             self.parameters.value._set(type_match(modulatory_override[1], type(self.defaults.value)), context)
-            return
+            return OVERRIDE
 
         # AGGREGATE ModulatoryProjection VALUES  -----------------------------------------------------------------------
 
@@ -2036,27 +2075,7 @@ class Port_Base(Port):
             param._set(mod_val, context)
             # Add mod_param and its value to port_params for Port's function
             mod_params.update({mod_param_name: mod_val})
-
-        # EXECUTE PORT  -------------------------------------------------------------------------------------
-
-        # Port params are:
-        # - any that remain after:
-        #   - params for individual Projections were removed (above)
-        #   - ones that remain in PROJECcTION_SPECIFIC_PARAMS are skipped (below)
-        # - include mod_params
-        # - include an specific to the current port (from runtime_port_params)
-        port_params = {k:v for k,v in runtime_port_params.items()
-                       if (k not in projection_param_keywords()
-                           and k != PROJECTION_SPECIFIC_PARAMS
-                           and k != PORT_SPECIFIC_PARAMS)}
-        port_params.update(mod_params)
-        port_params.update(port_specific_params)
-        # Assign param values
-        self._validate_and_assign_runtime_params(port_params, context=context)
-        variable = port_params.pop(VARIABLE, None)
-
-        # Execute Port
-        self.execute(variable, context=context, runtime_params=port_params)
+        return mod_params
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
