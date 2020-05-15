@@ -9113,7 +9113,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   v, context, skip_history=True, skip_log=True)
 
                         # Update afferent projections and input ports.
-                        node.input_CIM._update_input_ports(context)
+                        node.input_CIM._update_input_ports(context=context)
 
                     # Pass outer context to nested Composition
                     context.composition = node
