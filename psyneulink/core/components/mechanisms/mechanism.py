@@ -2633,23 +2633,26 @@ class Mechanism_Base(Mechanism):
             for port_type in self.portListAttr:
                 port_param_dict_name = port_type.paramsType
                 ports_attr = getattr(self, self.portListAttr[port_type])
+
+                # Create port_param_dict if it doesn't yet exist
                 if port_param_dict_name not in runtime_params:
                     runtime_params[port_param_dict_name] = defaultdict(lambda:{})
 
-                # if not port_param_dict_name is PARAMETER_PORT_PARAMS:
+                # Move any specifications of individual Ports of this type to PORT_SPECIFIC_PARAMS dict
                 move_item_specific_params_to_specific_sub_dict(outer_dict = runtime_params,
                                                                dest_dict = runtime_params[port_param_dict_name],
                                                                sub_dict_names = [port_param_dict_name],
                                                                item_list = ports_attr,
                                                                specific_dict_name = PORT_SPECIFIC_PARAMS)
 
-                # Create Projection-type sub-dicts within Port type-specific dicts
+                # Move any specifications of individual Projections for this Port type to PROJECTION_SPECIFIC_PARAMS
                 move_item_specific_params_to_specific_sub_dict(outer_dict = runtime_params[port_param_dict_name],
                                                                dest_dict = runtime_params[port_param_dict_name],
                                                                sub_dict_names = projection_param_keywords(),
                                                                item_list = self.afferents,
                                                                specific_dict_name = PROJECTION_SPECIFIC_PARAMS)
 
+                # Move the port_specific_param dicts to port_param_dicts for return
                 port_param_dicts[port_param_dict_name] = defaultdict(lambda:{},
                                                                      runtime_params.pop(port_param_dict_name, {}))
 
