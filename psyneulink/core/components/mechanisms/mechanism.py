@@ -2487,9 +2487,6 @@ class Mechanism_Base(Mechanism):
             port= self.input_ports[i]
             port._update(params=runtime_input_port_params,
                          context=context)
-        # # FIX 5/8/20 [JDC]:
-        # if runtime_input_port_params:
-        #     assert True
         return np.array(self.get_input_values(context))
 
     def _update_parameter_ports(self, runtime_parameter_port_params=None, context=None):

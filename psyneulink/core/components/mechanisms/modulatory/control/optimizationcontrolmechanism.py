@@ -726,7 +726,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
-        # MODIFIED 5/2/20 NEW:
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep==None:
             if context.source==ContextFlags.COMMAND_LINE:
@@ -743,7 +742,6 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 assert False, f"PROGRAM ERROR: 'agent_rep' arg should have been specified " \
                               f"in internal call to constructor for {self.name}."
-        # MODIFIED 5/2/20 END
 
         super().__init__(
             function=function,
@@ -900,13 +898,14 @@ class OptimizationControlMechanism(ControlMechanism):
         outcome_input_port = self.input_port
         outcome_input_port._update(params=runtime_params, context=context)
         port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
-        # MODIFIED 5/13/20 OLD:
+        # MODIFIED 5/8/20 OLD:
+        # FIX 5/8/20 [JDC]: THIS DOESN'T CALL SUPER, SO NOT IDEAL HOWEVER, REVISION BELOW CRASHES... NEEDS TO BE FIXED
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
         return np.array(port_values)
-        # # MODIFIED 5/13/20 NEW:
+        # # MODIFIED 5/8/20 NEW:
         # input_port_values = super()._update_input_ports(runtime_params, context)
         # port_values.append(input_port_values)
         # return np.array(port_values)

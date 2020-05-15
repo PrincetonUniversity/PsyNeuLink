@@ -1857,6 +1857,7 @@ class Port_Base(Port):
 
         # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
+        # FIX 5/8/20 [JDC]: SHOULD DOCUMENT WHETHER runtime_port_params IS USED ACROSS PORTS, OR CREATED JUST FOR THIS
         runtime_port_params = defaultdict(lambda:{}, params or {})
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_port_params
         # FIX 5/8/20 [JDC]: MAY NOT WANT TO POP THIS, AS FUNCTION_PARAMS MAY BE NEEDED BY OTHER PORTS OF CURRENT TYPE:
@@ -1864,6 +1865,9 @@ class Port_Base(Port):
         if FUNCTION_PARAMS in runtime_port_params:
             runtime_port_params.update(runtime_port_params.pop(FUNCTION_PARAMS))
 
+        # FIX 5/8/20 [JDC]: MERGE WITH runtime_params or maybe create port_params HERE,
+        #                   SINCE VARIABLE OR VALUE COULD BE SPECIFIED IN port_speific_params,
+        #                   BUT ONLY runtime_port_params IS TESTED BELOW
         # Get any parameters specific for this particular Port, removing from runtime_port_params if found
         if PORT_SPECIFIC_PARAMS in runtime_port_params:
             port_specific_params = runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self, {})
@@ -1871,47 +1875,44 @@ class Port_Base(Port):
         else:
             port_specific_params = {}
 
-        # MODIFIED 5/8/20 OLD:
-        mod_params = self._execute_afferent_projections(runtime_port_params, context)
-        if mod_params == OVERRIDE:
-            return
-        # # MODIFIED 5/8/20 NEW:
         # If either the Port's variable or value is specified in runtime_params, skip executing Projections
-        # if not [var_or_val in runtime_port_params for var_or_val in {VARIABLE, VALUE}]:
-        #     mod_params = self._execute_afferent_projections(runtime_port_params, context)
-        #     if mod_params == OVERRIDE:
-        #         return
-        # else:
-        #     mod_params = {}
-        # MODIFIED 5/8/20 END
+        if runtime_port_params and any(var_or_val in runtime_port_params for var_or_val in {VARIABLE, VALUE}):
+            mod_params = {}
+        else:
+            # Otherwise, execute afferent Projections
+            mod_params = self._execute_afferent_projections(runtime_port_params, context)
+            if mod_params == OVERRIDE:
+                return
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
-        # Port params are:
-        # - any that remain after:
+        # FIX 5/8/20 [JDC]: MOVE ABOVE, SO THAT TEST FOR EXECUTING PROJECTIONS CAN USE local_port_params
+        #                   HOWEVER, MAY NEED PROJECTION-SPECIFIC ONES REMOVED?
+        # local_port_params:
+        # - are any that remain after:
         #   - params for individual Projections were removed (above)
-        #   - ones that remain in PROJECcTION_SPECIFIC_PARAMS are skipped (below)
+        #   - ones that remain in PROJECTION_SPECIFIC_PARAMS are skipped (below)
         # - include mod_params
-        # - include an specific to the current port (from runtime_port_params)
-        port_params = {k:v for k,v in runtime_port_params.items()
-                       if (k not in projection_param_keywords()
-                           and k != PROJECTION_SPECIFIC_PARAMS
-                           and k != PORT_SPECIFIC_PARAMS)}
-        port_params.update(mod_params)
-        port_params.update(port_specific_params)
+        # - include any specific to the current port (in port_specific_params)
+        local_port_params = {k:v for k,v in runtime_port_params.items()
+                             if (k not in projection_param_keywords()
+                                 and k != PROJECTION_SPECIFIC_PARAMS
+                                 and k != PORT_SPECIFIC_PARAMS)}
+        local_port_params.update(mod_params)
+        local_port_params.update(port_specific_params)
         # Assign param values
-        self._validate_and_assign_runtime_params(port_params, context=context)
-        variable = port_params.pop(VARIABLE, None)
+        self._validate_and_assign_runtime_params(local_port_params, context=context)
+        variable = local_port_params.pop(VARIABLE, None)
 
         # Execute Port
-        self.execute(variable, context=context, runtime_params=port_params)
+        self.execute(variable, context=context, runtime_params=local_port_params)
 
     def _execute_afferent_projections(self, runtime_port_params, context):
         """Execute all afferent Projections for Port
 
         Returns
         -------
-        mod_params : dict or OVERRIDE
+        mod_params : dict or OVERRIDE
 
         """
         from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base

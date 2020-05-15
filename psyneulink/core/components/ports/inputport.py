@@ -980,7 +980,7 @@ class InputPort(Port_Base):
         ]
 
         if len(path_proj_values) > 0:
-            return  (path_proj_values)
+            return  np.asarray(path_proj_values)
         else:
             return None
 

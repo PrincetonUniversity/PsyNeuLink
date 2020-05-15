@@ -4617,7 +4617,7 @@ class TestNestedCompositions:
             assert len(terminals) == 1
             assert myMech5 in terminals
 
-    # MODIFIED 5/2/20 OLD:  ELIMINATE SYSTEM:
+    # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM:
     # FIX SHOULD THESE BE RE-WRITTEN WITH STANDARD NESTED COMPOSITIONS AND PATHWAYS?
     # def test_one_pathway_inside_one_system(self):
     #     # create a PathwayComposition | blank slate for composition
@@ -4763,7 +4763,7 @@ class TestNestedCompositions:
     #     # schedule = Scheduler(composition=sys)
     #     output = sys.run(inputs=stimulus)
     #     assert np.allclose(16, output)
-    # MODIFIED 5/2/20 END
+    # MODIFIED 5/8/20 END
 
 
 class TestOverloadedCompositions:

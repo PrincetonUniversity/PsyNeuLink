@@ -287,7 +287,7 @@ class TestModels:
             # which WILL FAIL unless you gather higher precision values to use as reference
             np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-    # FIX: 5/2/20 [JDC] Needs assertions
+    # FIX: 5/8/20 [JDC] Needs assertions
     def test_bustamante_Stroop_model(self):
         #  INPUT UNITS
 
