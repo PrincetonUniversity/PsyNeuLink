@@ -9243,7 +9243,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+            bin_execute : bool or Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **bin_execute** argument of `run <Composition.run>` method for additional details.
 
