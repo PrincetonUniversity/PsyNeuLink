@@ -1857,13 +1857,16 @@ class Port_Base(Port):
 
         # GET RUNTIME PARAMS FOR PORT AND ITS PROJECTIONS ---------------------------------------------------------
 
-        # FIX 5/8/20 [JDC]: SHOULD DOCUMENT WHETHER runtime_port_params IS USED ACROSS PORTS, OR CREATED JUST FOR THIS
-        runtime_port_params = defaultdict(lambda:{}, params or {})
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_port_params
+        # Do this on params so it holds for all subsequents ports processed
+        if FUNCTION_PARAMS in params:
+            params.update(params.pop(FUNCTION_PARAMS))
+
+        # FIX 5/8/20 [JDC]: SHOULD DOCUMENT WHETHER runtime_port_params IS USED ACROSS PORTS, OR CREATED JUST FOR THIS
+        # This keeps links to any sub-dicts of runtime_params passed from Mechanism
+        runtime_port_params = defaultdict(lambda:{}, params or {})
         # FIX 5/8/20 [JDC]: MAY NOT WANT TO POP THIS, AS FUNCTION_PARAMS MAY BE NEEDED BY OTHER PORTS OF CURRENT TYPE:
         #                   BUT DO WANT TO GET THEM OUT OF FUNCTION_PARAMS sub-dict FOR port_params
-        if FUNCTION_PARAMS in runtime_port_params:
-            runtime_port_params.update(runtime_port_params.pop(FUNCTION_PARAMS))
 
         # FIX 5/8/20 [JDC]: MERGE WITH runtime_params or maybe create port_params HERE,
         #                   SINCE VARIABLE OR VALUE COULD BE SPECIFIED IN port_speific_params,
