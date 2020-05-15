@@ -1844,7 +1844,7 @@ class Port_Base(Port):
             and self.function._is_identity(context)
             and not params
         ):
-            variable = self._parse_function_variable(self._get_fallback_variable(context))
+            variable = self._parse_function_variable(self._get_variable_from_projections(context))
             self.parameters.variable._set(variable, context)
             # FIX: below conversion really should not be happening ultimately, but it is
             # in _validate_variable. Should be removed eventually
@@ -2060,7 +2060,7 @@ class Port_Base(Port):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
-            variable = self._get_fallback_variable(context)
+            variable = self._get_variable_from_projections(context)
 
             # if the fallback is also None
             # return None, so that this port is ignored
@@ -2122,7 +2122,7 @@ class Port_Base(Port):
                           f'for {mod_param_name} {Parameter.__name__} of {self.name}'
 
     @abc.abstractmethod
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         """
             Return a variable to be used for self.execute when the variable passed in is None
         """

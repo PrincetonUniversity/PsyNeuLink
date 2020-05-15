@@ -965,7 +965,7 @@ class InputPort(Port_Base):
             pass
         return variable
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         """
             Call self.function with self._path_proj_values
 

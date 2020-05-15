@@ -1181,7 +1181,7 @@ class OutputPort(Port_Base):
         )
         return np.atleast_1d(value)
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         # fall back to specified item(s) of owner's value
         try:
             return self.parameters.variable._get(context)

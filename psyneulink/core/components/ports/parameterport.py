@@ -750,7 +750,7 @@ class ParameterPort(Port_Base):
         """Return parameter variable (since ParameterPort's function never changes the form of its variable"""
         return variable
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterPort belongs.
         """
