@@ -2344,7 +2344,7 @@ class Mechanism_Base(Mechanism):
 
         # Extract all param specifications not related to the Mechanism itself or its function and place in subdicts;
         #    when Mechanism executes, _validate_and_assign_runtime_params will throw an error for any others found.
-        runtime_port_params = self._parse_runtime_port_params(runtime_params, context)
+        runtime_port_params = self._parse_runtime_params(runtime_params, context)
 
         # EXECUTE MECHANISM
 
@@ -2545,7 +2545,7 @@ class Mechanism_Base(Mechanism):
         self._update_output_ports(context=context)
 
 
-    def _parse_runtime_port_params(self, runtime_params, context):
+    def _parse_runtime_params(self, runtime_params, context):
         """Move Port param specifications and nested Project-specific specifications into sub-dicts.
 
         Move any specifications for Port types into type-specific sub-dicts

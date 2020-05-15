@@ -1876,8 +1876,21 @@ class Port_Base(Port):
 
         runtime_port_params = defaultdict(lambda:{}, params or {})
         # Move any params specified for Port's function in FUNCTION_PARAMS dict into runtime_port_params
+        # FIX 5/8/20 [JDC]: MAY NOT WANT TO POP THIS, AS FUNCTION_PARAMS MAY BE NEEDED BY OTHER PORTS OF CURRENT TYPE:
+        #                   BUT DO WANT TO GET THEM OUT OF FUNCTION_PARAMS sub-dict FOR port_params
         if FUNCTION_PARAMS in runtime_port_params:
             runtime_port_params.update(runtime_port_params.pop(FUNCTION_PARAMS))
+
+        # Get any parameters specific for this particular Port, removing from runtime_port_params if found
+        if PORT_SPECIFIC_PARAMS in runtime_port_params:
+            port_specific_params = runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self, {})
+            port_specific_params.update(runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self.name, {}))
+        else:
+            port_specific_params = {}
+
+        # FIX 5/8/20 [JDC]:
+        #   IF PORT'S VARIABLE IS SET HERE, BYPASS LOOKING AT PROJECTIONS (SHOULD THEY BE EXECUTED ANYHOW?)
+        #   IF PORT'S VALUE IS SET, BYPASS EXECUTION (BUT MAKE SURE ANY HOUSE KEEPING IS STILL DONE
 
         # EXECUTE AFFERENT PROJECTIONS ------------------------------------------------------------------------------
 
@@ -2026,13 +2039,6 @@ class Port_Base(Port):
 
         # EXECUTE PORT  -------------------------------------------------------------------------------------
 
-        # Get any parameters specific for this particular Port, removing from runtime_port_params if found
-        if PORT_SPECIFIC_PARAMS in runtime_port_params:
-            port_specific_params = runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self, {})
-            port_specific_params.update(runtime_port_params[PORT_SPECIFIC_PARAMS].pop(self.name, {}))
-        else:
-            port_specific_params = {}
-
         # Port params are:
         # - any that remain after:
         #   - params for individual Projections were removed (above)
@@ -2047,8 +2053,10 @@ class Port_Base(Port):
         port_params.update(port_specific_params)
         # Assign param values
         self._validate_and_assign_runtime_params(port_params, context=context)
+        variable = port_params.pop(VARIABLE, None)
+
         # Execute Port
-        self.execute(context=context, runtime_params=port_params)
+        self.execute(variable, context=context, runtime_params=port_params)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         if variable is None:
