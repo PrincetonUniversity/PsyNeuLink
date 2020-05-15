@@ -864,10 +864,6 @@ assigned.
    similar functionality can be achieved by setting the values of `parameters <Component_Parameters>` programmatically
    before the Mechanism is executed and then resetting them afterwards.
 
-COMMENT:
-??INTERACTION WITH MODULATON - DO runtime_params SET THE BASE VALUE OR THE mod_value?
-COMMENT
-
 The runtime parameter values are those assigned to a Mechanism and its Components (i.e., its `function
 <Mechanism_Base.function>` and `Ports <Mechanism_Ports`) when they execute.  These are generally the values specified
 in the corresponding constructors, assigned explicitly after construction (see `User_Modifiable_Parameters`), or the
@@ -934,39 +930,30 @@ the parameter is assigned its previous value and *not* its default, as shown bel
 *Runtime specification ditionary: parameters of a Mechanism's Ports and Projections*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Runtime values can also be assigned to the parameters of a Mechanism's `Ports <Port>` and/or their `afferent Projections
-<Mechanism_Base.afferents>`. These are also specified as entries in the **runtime_params** dict,
+Runtime values can also be assigned to the parameters of a Mechanism's `Ports <Port>` and/or their `afferent
+Projections <Mechanism_Base.afferents>` in entries of a **runtime_params** dict,
 
-*Ports*.  Each entry for the parameters of a Port (and/or those of its `function <Port_Base.function>`) uses as its key
-a keyword designating the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or *PARAMETER_PORT_PARAMS*), and a
-value that is a sub-dictionary containing the runtime parameter specifications for all Ports of that type. Within
-that sub-dictionary, specification of parameters for the Port or its `function <Port_Base.function>` use the standard
-format for a `parameter specification dictionary <ParameterPort_Specification>`.
-
-COMMENT:
-  NEW
-*Ports*.  Runtime values are assigned to the parameters of Ports (and/or their `function <Port_Base.function>`\\s) in
-entries that use a keyword designating the type of Port as their key (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or
-*PARAMETER_PORT_PARAMS*) and a sub-dictionary containing the specifications for that type of Port as the value.
-That sub-dictionary can contain specifications that apply to *all* Ports of that type, or and/or individual Ports.
-If the key is a the name of a Port parameter (or its `function <Port_Base.function>`, its value applies to *all*
-Ports of that type; specifications for individual Ports are made in an entry with a key that is  either the
-Port or its `name <Port_Base.name>`, and a sub-dictionary containing the specifications as its value.
-
-COMMENT
+*Ports*.  Runtime values are assigned to the parameters of Ports (and/or their `function <Port_Base.function>`\\s)
+in entries with a key that designates the type of Port (*INPUT_PORT_PARAMS*, *OUTPUT_PORT_PARAMS* or
+*PARAMETER_PORT_PARAMS*), and a sub-dictionary containing the specifications for that type of Port as the value.
+The sub-dictionary can contain entries with specification that apply to *all* Ports of that type and/or individual
+Ports. If the key of an entry is the name of a parameter of the Port (or its `function <Port_Base.function>`), the
+specified value applies to *all* Ports of that type.  Parameters for individual Ports are specified using the Port
+or its `name <Port_Base.name>` as the key, and a dictionary containing parameter specifications as its value.
 
 COMMENT:
    FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
 COMMENT
 
 *Projections*.  The sub-dictionary specifying the parameters of a Port can also contain specifications for parameters
-of its afferent `Projections <Port_Projections>` Projections.  These are placed in entries for each type of Projection,
-using Projection `componentType <Component_Type>` appended with "_PARAMS" as the keys (e.g., MAPPING_PROJECTION_PARAMS,
-CONTROL_PROJECTION_PARAMS, etc.), and a subdictionary of parameter specifications as its value that are applied to
-to all Projections of that type.  Parameters can also be specified for individual Projections, using either the
-Projection or its `name <Projection_Base.name>` as the key, and a subdictionary of parameter specifications as its
-value that apply to only that Projection. This can be an entry of either the Port's runtime parameter specification
-dictionary or in the sub-dictionary for the Projection's type.
+of its afferent `Projections <Port_Projections>` Projections.  These are placed in entries with a key that designates
+the type of Projection, and a sub-dictionary containing the specifications for that type of Port as the value.  The
+key for each type of projecction is its `componentType <Component_Type>` appended with ``_PARAMS`` (e.g.,
+*MAPPING_PROJECTION_PARAMS*, *CONTROL_PROJECTION_PARAMS*, etc.).  The sub-dictionary can contain specifications that
+apply to *all* Projections of that type and/or individual Projections. If the key of an entryis the name of a parameter
+of the Projection (or its `function <Port_Base.function>`), the specified value applies to *all* Projections of that
+type. Parameters for individual Projections are specified using the Projections or its `name <Projection_Base.name>
+as the key, and a dictionary containing parameter specifications as its value.
 
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
