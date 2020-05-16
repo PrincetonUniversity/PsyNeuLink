@@ -3755,7 +3755,7 @@ class TransferWithCosts(TransferFunction):
         )
 
         # # MODIFIED 6/12/19 NEW: [JDC]
-        # self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        # self._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
         # # MODIFIED 6/12/19 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):

@@ -1076,7 +1076,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]])
                     #       before the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -1605,7 +1605,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(

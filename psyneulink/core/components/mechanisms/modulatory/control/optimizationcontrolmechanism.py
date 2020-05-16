@@ -833,7 +833,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Workaround this issue here, and explicitly allow the function's
         # default variable to be modified
         if isinstance(function, Function):
-            function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            function._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
         super()._instantiate_function(function, function_params, context)
 

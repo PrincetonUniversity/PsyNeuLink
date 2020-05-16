@@ -262,7 +262,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
                     #       case, the StatefulFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -335,7 +335,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
             if isinstance(rate, np.ndarray) and not iscompatible(rate, self.defaults.variable):
                 if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
                             warnings.warn(
@@ -350,7 +350,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 self.defaults.variable,
                             )
                         self._instantiate_value()
-                        self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+                        self._variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
                     else:
                         raise FunctionError(
                             "The length of the array specified for the rate parameter of {} ({})"

@@ -1406,9 +1406,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if default_variable is None or default_variable is NotImplemented:
                 return None
             else:
-                self._default_variable_flexibility = DefaultsFlexibility.RIGID
+                self._variable_shape_flexibility = DefaultsFlexibility.RIGID
         else:
-            self._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self._variable_shape_flexibility = DefaultsFlexibility.RIGID
 
         return convert_to_np_array(default_variable, dimension=1)
 
@@ -1426,7 +1426,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
         if size is not NotImplemented:
-            self._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self._variable_shape_flexibility = DefaultsFlexibility.RIGID
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.class_defaults.variable
@@ -2550,12 +2550,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 owner_str = ''
                 if hasattr(self, 'owner') and self.owner is not None:
                     owner_str = f' of {repr(self.owner.name)}'
-                if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
+                if function._variable_shape_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
                                          f'is not compatible with the variable format ({function_variable}) '
                                          f'of {repr(self.name)}{owner_str} to which it is being assigned.')
                                          # f'Make sure variable for {function.name} is 2d.')
-                elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
+                elif function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
                     if not iscompatible(function_variable, function_increased_dim):
                         raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
@@ -3168,16 +3168,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return [param.name for param in self.parameters if param.loggable and param.user]
 
     @property
-    def _default_variable_flexibility(self):
+    def _variable_shape_flexibility(self):
         try:
-            return self.__default_variable_flexibility
+            return self.__variable_shape_flexibility
         except AttributeError:
-            self.__default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
-            return self.__default_variable_flexibility
+            self.__variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
+            return self.__variable_shape_flexibility
 
-    @_default_variable_flexibility.setter
-    def _default_variable_flexibility(self, value):
-        self.__default_variable_flexibility = value
+    @_variable_shape_flexibility.setter
+    def _variable_shape_flexibility(self, value):
+        self.__variable_shape_flexibility = value
 
     @classmethod
     def get_constructor_defaults(cls):

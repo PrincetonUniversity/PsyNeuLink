@@ -909,9 +909,9 @@ class InputPort(Port_Base):
         self._use_1d_variable = False
         if not isinstance(self.function, CombinationFunction):
             self._use_1d_variable = True
-            self.function._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self.function._variable_shape_flexibility = DefaultsFlexibility.RIGID
         else:
-            self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            self.function._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
