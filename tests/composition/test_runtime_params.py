@@ -592,8 +592,8 @@ class TestCompositionRuntimeParams:
                               FUNCTION_PARAMS:{'weights':10}}
                       }
                   })
-        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
-                "'glorp'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value
+                and "'glorp'" in error_text.value.error_value)
 
         # Bad param specified in INPUT_PORT_PARAMS
         with pytest.raises(ComponentError) as error_text:

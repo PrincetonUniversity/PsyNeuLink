@@ -12,7 +12,7 @@ import collections.abc
 
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.globals.keywords import TARGET_MECHANISM, LEARNING_MECHANISM, LEARNING_OBJECTIVE, TRAINING_SET
+from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 
 __all__ = ["CompositionRunner"]
 
@@ -70,14 +70,19 @@ class CompositionRunner():
         """
         ret = {}
         for node, values in targets.items():
-            if NodeRole.TARGET not in self._composition.get_roles_by_node(node) and NodeRole.LEARNING not in self._composition.get_roles_by_node(node):
+            if (NodeRole.TARGET not in self._composition.get_roles_by_node(node)
+                    and NodeRole.LEARNING not in self._composition.get_roles_by_node(node)):
                 node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
-                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self._composition.get_roles_by_node(x))]
+                comparators = [x for x in node_efferent_mechanisms
+                               if ((isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in
+                                    self._composition.get_roles_by_node(x)))]
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self._composition.get_roles_by_node(t) and NodeRole.LEARNING in self._composition.get_roles_by_node(t))]
-
+                target_nodes = [t for t in comparator_afferent_mechanisms
+                                if (NodeRole.TARGET in self._composition.get_roles_by_node(t)
+                                    and NodeRole.LEARNING in self._composition.get_roles_by_node(t))]
                 if len(target_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
+                    # Invalid specification! Either we have no valid target nodes,
+                    #     or there is ambiguity in which target node to choose
                     raise Exception(f"Unable to infer learning target node from output node {node}!")
 
                 ret[target_nodes[0]] = values
@@ -99,11 +104,22 @@ class CompositionRunner():
 
         return total_loss
 
-    def _batch_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, randomize: bool = True, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+    def _batch_inputs(self,
+                      inputs: dict,
+                      epochs: int,
+                      num_trials: int,
+                      batch_size: int = 1,
+                      randomize: bool = True,
+                      call_before_minibatch=None,
+                      call_after_minibatch=None,
+                      early_stopper=None,
+                      context=None):
         """
-        Chunks input dict into pieces where each chunk is a dict with values of length batch_size (or for the last chunk, the remainder)
+        Chunks input dict into pieces where each chunk is a dict with values of length batch_size
+        (or for the last chunk, the remainder)
         """
-        #This is a generator for performance reasons, since we don't want to copy any data (especially for very large inputs or epoch counts!)
+        #This is a generator for performance reasons,
+        #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
             indices = list(range(0, num_trials))
             if randomize:
@@ -122,7 +138,8 @@ class CompositionRunner():
                 
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
-            if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+            if (not self._is_llvm_mode and early_stopper is not None
+                    and early_stopper.step(self._calculate_loss(num_trials, context))):
                 # end early if patience exceeded
                 pass
 
@@ -197,13 +214,28 @@ class CompositionRunner():
             if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
-            minibatched_input = self._batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+            minibatched_input = self._batch_inputs(stim_input,
+                                                   stim_epoch,
+                                                   num_trials,
+                                                   minibatch_size,
+                                                   randomize_minibatches,
+                                                   call_before_minibatch=call_before_minibatch,
+                                                   call_after_minibatch=call_after_minibatch,
+                                                   early_stopper=early_stopper,
+                                                   context=context)
 
-            self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
+            self._composition.run(inputs=minibatched_input,
+                                  skip_initialization=skip_initialization,
+                                  skip_analyze_graph=True,
+                                  bin_execute=bin_execute,
+                                  context=context,
+                                  *args,
+                                  **kwargs)
             skip_initialization = True
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:] # return results from last epoch
+        # return results from last epoch
+        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
 
         return results
 
