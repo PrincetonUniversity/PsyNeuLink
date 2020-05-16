@@ -2552,7 +2552,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):
-            if not iscompatible(function_variable, function.defaults.variable):
+            if function_variable.shape != function.defaults.variable.shape:
                 owner_str = ''
                 if hasattr(self, 'owner') and self.owner is not None:
                     owner_str = f' of {repr(self.owner.name)}'
@@ -2563,7 +2563,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                          # f'Make sure variable for {function.name} is 2d.')
                 elif function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
-                    if not iscompatible(function_variable, function_increased_dim):
+                    if function_variable.shape != function_increased_dim.shape:
                         raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
                                              f'is not compatible with the variable format ({function_variable})'
                                              f' of {repr(self.name)}{owner_str} to which it is being assigned.')
