@@ -504,7 +504,47 @@ class TestCompositionRuntimeParams:
         ])
 
 
-    def test_params_for_modulatory_projection(self):
+    def test_params_for_input_port_and_projection_variable_and_value(self):
+
+        # Construction
+        SAMPLE_INPUT = TransferMechanism()
+        TARGET_INPUT = TransferMechanism()
+        CM = ComparatorMechanism()
+        P1 = MappingProjection(sender=SAMPLE_INPUT, receiver=CM.input_ports[SAMPLE], name='SAMPLE PROJECTION')
+        P2 = MappingProjection(sender=TARGET_INPUT, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
+        C = Composition(nodes=[SAMPLE_INPUT, TARGET_INPUT, CM], projections=[P1,P2])
+
+        SAMPLE_INPUT.function.slope = 3
+        CM.input_ports[SAMPLE].function.scale = 2
+
+        TARGET_INPUT.input_port.function.scale = 4
+        CM.input_ports[TARGET].function.scale = 1.5
+
+        C.run(inputs={SAMPLE_INPUT: 2.0,
+                      TARGET_INPUT: 5.0},
+              runtime_params={
+                  CM: {
+                      CM.input_ports[SAMPLE]: {'variable':(83,AtTrial(0))}, # InputPort object outside INPUT_PORT_PARAMS
+                      'TARGET': {'value':(999, Any(AtTrial(1),AtTrial(2)))},# InputPort by name outsideINPUT_PORT_PARAMS
+                      INPUT_PORT_PARAMS: {
+                          'scale': (20, AtTrial(2)),                       # all InputPorts
+                          MAPPING_PROJECTION_PARAMS:{'value':(20, Any(AtTrial(3), AtTrial(4))), # all MappingProjections
+                                                     'SAMPLE PROJECTION': {'value':(42, AfterTrial(3))}, # By name
+                                                     P2:{'value':(156, AtTrial(5))}}                     # By Projection
+                      }}},
+              num_trials=6
+              )
+        # FIX 5/8/20 [JDC]:  CM.input_ports[TARGET].function.scale NOT BEING RESET to 1.5
+        assert np.allclose(C.results,[   # Conditions satisfied:          CM calculates: TARGET-SAMPLE:
+            np.array([[-136.0]]), # Trial 0: CM SAMPLE InputPort variable (5*4*2.5 - 83*2)
+            np.array([[987]]),    # Trial 1: CM TARGET InputPort value    (999 - 2*3*2)
+            np.array([[879]]),    # Trial 2: CM TARGET InputPort value + CM Inputports fct scale: (999 - 2*3*2*20)
+            np.array([[-10]]),    # Trial 3: Both MappingProjections to CM value (20*1.5 - 20*2) FIX
+            np.array([[-54]]),    # Trial 4: Same as 3, but superceded by value for SAMPLE Projection (20*1.5 - 42*2) FIX
+            np.array([[150]]),    # Trial 5: Same as 4, but superceded by value for TARGET Projection ((156*1.5-42*2)) FIX
+        ])
+
+    def test_params_for_modulatory_projection_in_parameter_port(self):
         # Construction
         T1 = TransferMechanism()
         T2 = TransferMechanism()
