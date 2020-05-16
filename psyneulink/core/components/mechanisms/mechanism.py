@@ -941,6 +941,13 @@ Ports. If the key of an entry is the name of a parameter of the Port (or its `fu
 specified value applies to *all* Ports of that type.  Parameters for individual Ports are specified using the Port
 or its `name <Port_Base.name>` as the key, and a dictionary containing parameter specifications as its value.
 
+  .. note::
+     If the `variable <Port_base.variable>` of a Port is specified as a runtime parameter, then its afferent
+     Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>` will
+     be. If the `value <Port_Base.value>` of a Port is specified, *neither its afferent Projections nor it `function
+     <Port_Base.function>` will be executed. As expected, specifying `value <Port_Base.value>` supercedes any
+     specification of `variable <Port_Base.variable>` or of the parameters of its `function <Port_Base.function>`.
+
 COMMENT:
    FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
 COMMENT
@@ -955,13 +962,18 @@ of the Projection (or its `function <Port_Base.function>`), the specified value 
 type. Parameters for individual Projections are specified using the Projections or its `name <Projection_Base.name>
 as the key, and a dictionary containing parameter specifications as its value.
 
+   .. note::
+     If the `value <Projection_Base.value>` of a Projection is specified as a runtime parameter, then it will not be
+     executed (see `Lazy Evaluation <LINK>`); accordingly, specifying `value <Port_Base.value>` supercedes any
+     specification of `variable <Port_Base.variable>` or of the parameters of its `function <Projection_Base.function>.`
+
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
-COMMENT
-
 .. note::
     Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
     value.
+COMMENT
+
 
 COMMENT:
 ?? DO PROJECTION DICTIONARIES PERTAIN TO INCOMING OR OUTGOING PROJECTIONS OR BOTH??

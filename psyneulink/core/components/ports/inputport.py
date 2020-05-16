@@ -1384,7 +1384,8 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     if not variable_item_is_OK:
         old_variable = owner.defaults.variable
-        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value for port in owner.input_ports])
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value
+                                                                                   for port in owner.input_ports])
 
         if owner.verbosePref:
             warnings.warn(f"Variable for {old_variable} ({append_type_to_name(owner)}) has been adjusted to match "

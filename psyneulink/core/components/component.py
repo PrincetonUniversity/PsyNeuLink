@@ -13,7 +13,7 @@
 Contents
 --------
 
-* `Component_Overview`
+* `Component_Overview
 * `Component_Creation`
     * `Component_Deferred_Init`
 * `Component_Structure`
