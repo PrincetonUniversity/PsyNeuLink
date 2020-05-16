@@ -534,6 +534,7 @@ class TestCompositionRuntimeParams:
                       }}},
               num_trials=6
               )
+
         # FIX 5/8/20 [JDC]:  CM.input_ports[TARGET].function.scale NOT BEING RESET to 1.5
         assert np.allclose(C.results,[   # Conditions satisfied:          CM calculates: TARGET-SAMPLE:
             np.array([[-136.0]]), # Trial 0: CM SAMPLE InputPort variable (5*4*2.5 - 83*2)
