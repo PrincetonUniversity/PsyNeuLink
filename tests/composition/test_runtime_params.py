@@ -510,6 +510,7 @@ class TestCompositionRuntimeParams:
         CTL = ControlMechanism(control=ControlSignal(projections=('slope',T2)))
         C = Composition(pathways=[[T1,T2,CTL]])
 
+        # Run 1
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -528,14 +529,14 @@ class TestCompositionRuntimeParams:
               num_trials=8
               )
         CTL.control_signals[0].modulation = OVERRIDE
+        # Run 2
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
                       PARAMETER_PORT_PARAMS: {
                           CONTROL_PROJECTION_PARAMS: {
-                              'value':(5, AtTrial(0)),
+                              'value':(5, Any(AtTrial(0), AtTrial(2))),
                               'variable':(10, AtTrial(1)),
-                              'value':(21, AtTrial(2)),
                               # Test individual Projection specifications inside of type-specific dict
                               'ControlProjection for TransferMechanism-1[slope]': {'value':(19, AtTrial(3))},
                               CTL.control_signals[0].efferents[0]: {'value':(33, AtTrial(4))},
@@ -553,14 +554,15 @@ class TestCompositionRuntimeParams:
             np.array([[10]]),  # Run 1, Trial 3: ControlProjection variable (2*5)
             np.array([[20]]),  # Run 1, Trial 4: ControlProjection value (2*10)
             np.array([[42]]),  # Run 1, Trial 5: ControlProjection value using Projection type-specific keyword (2*210)
-            np.array([[64]]),  # Run 1, Trial 6: ControlProjection value using specific Projection (2*32)
-            np.array([[86]]),  # Run 1, Trial 7: ControlProjection value using specific Projection's name (2*43)
-            np.array([[10]]), # Run 2, Tria1 0: ControlProjection value with OVERRIDE (2*5)
-            np.array([[20]]),  # Run 2, Tria1 1: ControlProjection value with OVERRIDE (2*10)
-            np.array([[42]]),  # Run 2: Trial 2: ControlProjection value with OVERRIDE (2*21)
-            np.array([[38]]),  # Run 2, Tria1 3: ControlProjection value with OVERRIDE (2*19)
-            np.array([[66]]),  # Run 2: Trial 4: ControlProjection value with OVERRIDE (2*33)
+            np.array([[64]]),  # Run 1, Trial 6: ControlProjection value using individual Projection (2*32)
+            np.array([[86]]),  # Run 1, Trial 7: ControlProjection value using individual Projection by name (2*43)
+            np.array([[10]]),  # Run 2, Tria1 0: ControlProjection value with OVERRIDE using value (2*5)
+            np.array([[20]]),  # Run 2, Tria1 1: ControlProjection value with OVERRIDE using variable (2*10)
+            np.array([[10]]),  # Run 2, Tria1 2: ControlProjection value with OVERRIDE using value again (in Any) (2*5)
+            np.array([[38]]),  # Run 2, Tria1 3: ControlProjection value with OVERRIDE using individ Proj by name (2*19)
+            np.array([[66]]),  # Run 2: Trial 4: ControlProjection value with OVERRIDE using individ Proj  (2*33)
         ])
+
 
     # # ------------------------------------------------------------------------
     #
