@@ -886,7 +886,7 @@ class InputPort(Port_Base):
 
         if EXPONENT in target_set and target_set[EXPONENT] is not None:
             if not isinstance(target_set[EXPONENT], (int, float)):
-                raise InputPortError(f"'{EXPONENT}' parameter of {self.name} for self.owner.name} "
+                raise InputPortError(f"'{EXPONENT}' parameter of {self.name} for {self.owner.name}"
                                      f"({ target_set[EXPONENT]}) must be an int or float.")
 
     def _validate_against_reference_value(self, reference_value):
@@ -1047,7 +1047,7 @@ class InputPort(Port_Base):
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
                     elif  not iscompatible(port_spec, reference_value):
-                        raise PortError(f"Value in first item of 2-item tuple specification InputPort.__name__} of "
+                        raise PortError(f"Value in first item of 2-item tuple specification {InputPort.__name__} of "
                                         f"{owner.name} ({port_spec}) is not compatible with its {REFERENCE_VALUE} "
                                         f"({reference_value}).")
                     projections_spec = tuple_spec[1]
