@@ -503,7 +503,7 @@ class TestCompositionRuntimeParams:
         ])
 
 
-    def test_composition_run_mechanism_runtime_params_for_modulatory_projection(self):
+    def test_params_for_modulatory_projection(self):
         # Construction
         T1 = TransferMechanism()
         T2 = TransferMechanism()
@@ -564,137 +564,100 @@ class TestCompositionRuntimeParams:
         ])
 
 
-    # # ------------------------------------------------------------------------
-    #
-    #     T1 = TransferMechanism()
-    #     T2 = TransferMechanism()
-    #     CM = ComparatorMechanism()
-    #     P1 = MappingProjection(sender=T1, receiver=CM.input_ports[SAMPLE], name='SAMPLE PROJECTION')
-    #     P2 = MappingProjection(sender=T2, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
-    #     C = Composition(nodes=[T1,T2,CM], projections=[P1,P2])
-    #
-    # def test_mechanism_params_for_modulatory_projection(self):
-    #     T1.function.slope = 3
-    #     T2.input_port.function.scale = 4
-    #
-    #     C.run(inputs={T1: 2.0,
-    #                  T2: 4.0},
-    #          # runtime_params=rt_dict,
-    #          runtime_params={
-    #              CM: {
-    #                  # 'variable' : 1000
-    #                  CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
-    #                  CM.output_port : {'value':(1000, AtTrial(0))},
-    #                  CM.output_port : {'value':1000},
-    #                  INPUT_PORT_PARAMS: {
-    #                      MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
-    #                                                 'glarfip' : 2,
-    #                                                 P1:{'value':(3000, AtTrial(2)),
-    #                                                     # 'glarfip' : 2,
-    #                                                     },
-    #                                                 'MY PROJECTION':{'value':(4000, AtTrial(3))}
-    #                                                 }
-    #                  }
-    #              }
-    #          },
-    #          num_trials=2
-    #          )
-    #
-    #
-    # def test_composition_runtime_param_errors(self):
-    #
-    #     # Construction
-    #     T1 = TransferMechanism()
-    #     T2 = TransferMechanism()
-    #     C = Composition(pathways=[T1,T2])
-    #
-    #     T1.function.slope = 5
-    #     T2.input_port.function.scale = 4
-    #
-    #     # Bad Mechanism param specified
-    #     with pytest.raises(ComponentError) as error_text:
-    #         C.run(inputs={T1: 2.0},
-    #               runtime_params={
-    #                   T2: {
-    #                       'noise': 0.5,
-    #                       'glorp': 22,                        # Bad Mechanism arg
-    #                       'intercept': 1,
-    #                       INPUT_PORT_PARAMS: {
-    #                           'weight':5,
-    #                           'scale':20,
-    #                           FUNCTION_PARAMS:{'weights':10}}
-    #                   }
-    #               })
-    #     assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
-    #             "'glorp'" in error_text.value.error_value)
-    #
-    #     # Bad param specified in INPUT_PORT_PARAMS
-    #     with pytest.raises(ComponentError) as error_text:
-    #         C.run(inputs={T1: 2.0},
-    #               runtime_params={
-    #                   T1: {'slope': 3},
-    #                   T2: {
-    #                       'noise': 0.5,
-    #                       'intercept': 1,
-    #                       INPUT_PORT_PARAMS: {
-    #                           'weight':5,
-    #                           'scale':20,
-    #                           'trigot':16,                    # Bad InputPort arg
-    #                           FUNCTION_PARAMS:{'weights':10,
-    #                                            }}
-    #                   }
-    #               })
-    #     assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
-    #             "of TransferMechanism" in error_text.value.error_value and "'trigot'" in error_text.value.error_value)
-    #
-    #     # Bad param specified in FUNCTION_PARAMS of INPUT_PORT_PARAMS
-    #     with pytest.raises(ComponentError) as error_text:
-    #         C.run(inputs={T1: 2.0},
-    #               runtime_params={
-    #                   T1: {'slope': 3},
-    #                   T2: {
-    #                       'noise': 0.5,
-    #                       'intercept': 1,
-    #                       INPUT_PORT_PARAMS: {
-    #                           'weight':5,
-    #                           'scale':20,
-    #                           FUNCTION_PARAMS:{'weights':10,
-    #                                            'flurb': 12,   # Bad InputPort function arg
-    #                                            }}
-    #                   }
-    #               })
-    #     assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
-    #             "of TransferMechanism" in error_text.value.error_value and "'flurb'" in error_text.value.error_value)
-    #
-    #     T1 = TransferMechanism()
-    #     T2 = TransferMechanism()
-    #     CM = ComparatorMechanism()
-    #     P1 = MappingProjection(sender=T1, receiver=CM.input_ports[SAMPLE], name='SAMPLE PROJECTION')
-    #     P2 = MappingProjection(sender=T2, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
-    #     C = Composition(nodes=[T1,T2,CM], projections=[P1,P2])
-    #
-    #     T1.function.slope = 3
-    #     T2.input_port.function.scale = 4
-    #
-    #     C.run(inputs={T1: 2.0,
-    #                  T2: 4.0},
-    #          # runtime_params=rt_dict,
-    #          runtime_params={
-    #              CM: {
-    #                  # 'variable' : 1000
-    #                  CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
-    #                  CM.output_port : {'value':(1000, AtTrial(0))},
-    #                  CM.output_port : {'value':1000},
-    #                  INPUT_PORT_PARAMS: {
-    #                      MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
-    #                                                 'glarfip' : 2,
-    #                                                 P1:{'value':(3000, AtTrial(2)),
-    #                                                     # 'glarfip' : 2,
-    #                                                     },
-    #                                                 'MY PROJECTION':{'value':(4000, AtTrial(3))}
-    #                                                 }
-    #                  }
-    #              }
-    #          },
-    #          num_trials=2
-    #          )
+    def test_composition_runtime_param_errors(self):
+
+        # Construction
+        T1 = TransferMechanism()
+        T2 = TransferMechanism()
+        C = Composition(pathways=[T1,T2])
+
+        T1.function.slope = 5
+        T2.input_port.function.scale = 4
+
+        # Bad Mechanism param specified
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0},
+                  runtime_params={
+                      T2: {
+                          'noise': 0.5,
+                          'glorp': 22,                        # Bad Mechanism arg
+                          'intercept': 1,
+                          INPUT_PORT_PARAMS: {
+                              'weight':5,
+                              'scale':20,
+                              FUNCTION_PARAMS:{'weights':10}}
+                      }
+                  })
+        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
+                "'glorp'" in error_text.value.error_value)
+
+        # Bad param specified in INPUT_PORT_PARAMS
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0},
+                  runtime_params={
+                      T1: {'slope': 3},
+                      T2: {
+                          'noise': 0.5,
+                          'intercept': 1,
+                          INPUT_PORT_PARAMS: {
+                              'weight':5,
+                              'scale':20,
+                              'trigot':16,                    # Bad InputPort arg
+                              FUNCTION_PARAMS:{'weights':10,
+                                               }}
+                      }
+                  })
+        assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
+                "of TransferMechanism" in error_text.value.error_value and "'trigot'" in error_text.value.error_value)
+
+        # Bad param specified in FUNCTION_PARAMS of INPUT_PORT_PARAMS
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0},
+                  runtime_params={
+                      T1: {'slope': 3},
+                      T2: {
+                          'noise': 0.5,
+                          'intercept': 1,
+                          INPUT_PORT_PARAMS: {
+                              'weight':5,
+                              'scale':20,
+                              FUNCTION_PARAMS:{'weights':10,
+                                               'flurb': 12,   # Bad InputPort function arg
+                                               }}
+                      }
+                  })
+        assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
+                "of TransferMechanism" in error_text.value.error_value and "'flurb'" in error_text.value.error_value)
+
+        # T1 = TransferMechanism()
+        # T2 = TransferMechanism()
+        # CM = ComparatorMechanism()
+        # P1 = MappingProjection(sender=T1, receiver=CM.input_ports[SAMPLE], name='SAMPLE PROJECTION')
+        # P2 = MappingProjection(sender=T2, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
+        # C = Composition(nodes=[T1,T2,CM], projections=[P1,P2])
+        #
+        # T1.function.slope = 3
+        # T2.input_port.function.scale = 4
+        #
+        # C.run(inputs={T1: 2.0,
+        #              T2: 4.0},
+        #      # runtime_params=rt_dict,
+        #      runtime_params={
+        #          CM: {
+        #              # 'variable' : 1000
+        #              CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
+        #              CM.output_port : {'value':(1000, AtTrial(0))},
+        #              CM.output_port : {'value':1000},
+        #              INPUT_PORT_PARAMS: {
+        #                  MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
+        #                                             'glarfip' : 2,
+        #                                             P1:{'value':(3000, AtTrial(2)),
+        #                                                 # 'glarfip' : 2,
+        #                                                 },
+        #                                             'MY PROJECTION':{'value':(4000, AtTrial(3))}
+        #                                             }
+        #              }
+        #          }
+        #      },
+        #      num_trials=2
+        #      )
