@@ -178,9 +178,8 @@ class TestCompositionRuntimeParams:
                   T2: {
                       'noise': 0.5,                        # Mechanism's parameter
                       'intercept': 1,                       # Mechanism's function parameter
-                      # FIX 5/8/20 [JDC]: WHAT ABOUT PROJECTION PARAMS?
                       INPUT_PORT_PARAMS: {
-                          'weight':5,                      # InputPort's parameter
+                          'weight':5,                      # InputPort's parameter (NOT USED)
                           'scale':20,                      # InputPort's function (LinearCombination) parameter
                           FUNCTION_PARAMS:{'weights':10,   # InputPort's function (LinearCombination) parameter
                                            }}
@@ -202,7 +201,8 @@ class TestCompositionRuntimeParams:
         assert T2.input_port.function.parameters.weights.get(C) == None
 
         C.run(inputs={T1: 2.0}, )
-        assert C.results == [[[1201.5]], [[40.]]]
+        assert C.results == [[[1201.5]], # (2*3*20*10)+1+0.5
+                             [[40.]]]    # 2*5*4
         assert T1.function.slope == 5.0
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 4.0
@@ -492,10 +492,10 @@ class TestCompositionRuntimeParams:
             np.array([[41.5]]), # Trial 2: only T2.intercept condition (2*5*4)+1+0.5
             np.array([[200.5]]),# Trial 3: only T2 scale condition (2*5*20) + 0.5
             np.array([[400.5]]),# Trial 4: only T2.function.weights condition (2*5*4*10)+0.5
-            np.array([[40.5]]), # Run 2, Tria1 1: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
-            np.array([[40.5]]), # Run 2: Trial 2: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
-            np.array([[41.5]]), # Run 3, Tria1 1: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
-            np.array([[400.5]]),# Run 3: Trial 2: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
+            np.array([[40.5]]), # Run 2, Tria1 0: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
+            np.array([[40.5]]), # Run 2: Trial 1: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
+            np.array([[41.5]]), # Run 3, Tria1 0: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
+            np.array([[400.5]]),# Run 3: Trial 1: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
             np.array([[4000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*1000)+0.5
             np.array([[8000.5]]),# Run 4: Trial 1: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*2000)+0.5
             np.array([[12000.5]]),# Run 4: Trial 2: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*3000)+0.5
@@ -527,7 +527,7 @@ class TestCompositionRuntimeParams:
                       CM.input_ports[SAMPLE]: {'variable':(83,AtTrial(0))}, # InputPort object outside INPUT_PORT_PARAMS
                       'TARGET': {'value':(999, Any(AtTrial(1),AtTrial(2)))},# InputPort by name outsideINPUT_PORT_PARAMS
                       INPUT_PORT_PARAMS: {
-                          'scale': (20, AtTrial(2)),                       # all InputPorts
+                          'scale': (15, AtTrial(2)),                       # all InputPorts
                           MAPPING_PROJECTION_PARAMS:{'value':(20, Any(AtTrial(3), AtTrial(4))), # all MappingProjections
                                                      'SAMPLE PROJECTION': {'value':(42, AfterTrial(3))}, # By name
                                                      P2:{'value':(156, AtTrial(5))}}                     # By Projection
@@ -535,12 +535,15 @@ class TestCompositionRuntimeParams:
               num_trials=6
               )
 
-        # FIX 5/8/20 [JDC]:  CM.input_ports[TARGET].function.scale NOT BEING RESET to 1.5
+        # FIX 5/8/20 [JDC]: CM.input_ports[TARGET].function.scale NOT BEING RESET to 1.5
+        # FIX 5/8/20 [JDC]: WITH 5/16/20 MOD in component.py, CM.input_ports[SAMPLE].function.scale NOW NOT BEING RESET
+        #                   BUT THAT FAILS OTHER TESTS, SO RESTORED
+        #                   ALSO, SPECIFICATION OF 42 for SAMPLE PROJECTION IN TRIAL 4 IS ALSO BEING ASSIGNED TO TARGET
         assert np.allclose(C.results,[   # Conditions satisfied:          CM calculates: TARGET-SAMPLE:
             np.array([[-136.0]]), # Trial 0: CM SAMPLE InputPort variable (5*4*2.5 - 83*2)
             np.array([[987]]),    # Trial 1: CM TARGET InputPort value    (999 - 2*3*2)
-            np.array([[879]]),    # Trial 2: CM TARGET InputPort value + CM Inputports fct scale: (999 - 2*3*2*20)
-            np.array([[-10]]),    # Trial 3: Both MappingProjections to CM value (20*1.5 - 20*2) FIX
+            np.array([[909]]),    # Trial 2: CM TARGET InputPort value + CM Inputports SAMPLE fct scale: (999 - 2*3*15)
+            np.array([[-10]]),    # Trial 3: Both CM MappingProjections value, scale default (20*1.5 - 20*2) FIX
             np.array([[-54]]),    # Trial 4: Same as 3, but superceded by value for SAMPLE Projection (20*1.5 - 42*2) FIX
             np.array([[150]]),    # Trial 5: Same as 4, but superceded by value for TARGET Projection ((156*1.5-42*2)) FIX
         ])

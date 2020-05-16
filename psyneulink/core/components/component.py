@@ -1642,7 +1642,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Cache params to reset in _runtime_params_reset
         """
 
-        # MODIFIED 5/8/20 OLD:
+        # # MODIFIED 5/8/20 OLD:
         # # reset any runtime params that were leftover from a direct call to .execute (atypical)
         # if context.execution_id in self._runtime_params_reset:
         #     for key in self._runtime_params_reset[context.execution_id]:
@@ -1669,6 +1669,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     generate_error(param_name)
                 elif hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
+                        assert False, f'FOUND FUNCTION, INPUT_PORTS or OUTPUT_PORTS in runtimeparams for {self.name}'
                         continue
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
@@ -2630,7 +2631,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # GET VALUE if specified in runtime_params
         if runtime_params and VALUE in runtime_params:
-            value = np.atleast_1d(runtime_params.pop(VALUE))
+            # # MODIFIED 5/16/20 OLD:
+            # value = np.atleast_1d(runtime_params.pop(VALUE))
+            # MODIFIED 5/16/20 NEW:
+            value = np.atleast_1d(runtime_params[VALUE])
+            # FIX 5/16/20 [JDC]: REMOVE THESE SINCE THEY WILL NOT BE ASSIGNED,
+            #  AND SO SHOULD BE RESTORED TO PREVIOUS VALUE IN ._execute
+            # Eliminate any other params (including ones for function), since they will not be assigned
+            #    and therefore should not be restored to previous value (below).
+            runtime_params = {}
+            # MODIFIED 5/16/20 END
 
         # CALL FUNCTION if value is not specified
         if value is None:

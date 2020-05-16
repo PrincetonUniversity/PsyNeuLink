@@ -1895,7 +1895,8 @@ class Port_Base(Port):
                 local_params.update(params[PORT_SPECIFIC_PARAMS].pop(entry))
 
         # Put copy of all type-specific Projection dicts from params into local_params
-        projection_params = defaultdict(lambda:{}, {proj_type:params[proj_type]
+        # FIX: ON FIRST PASS ALSO CREATES THOSE DICTS IN params IF THEY DON'T ALREADY EXIST
+        projection_params = defaultdict(lambda:{}, {proj_type:params[proj_type].copy()
                                                     for proj_type in projection_param_keywords()})
 
         for entry in params[PROJECTION_SPECIFIC_PARAMS].copy():
@@ -1926,9 +1927,8 @@ class Port_Base(Port):
 
         self._validate_and_assign_runtime_params(local_params, context=context)
         variable = local_params.pop(VARIABLE, None)
-
-        # Execute Port
         self.execute(variable, context=context, runtime_params=local_params)
+        assert True # 5/16/20
 
     def _execute_afferent_projections(self, projection_params, context):
         """Execute all afferent Projections for Port
