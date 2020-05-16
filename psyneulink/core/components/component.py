@@ -2631,11 +2631,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # GET VALUE if specified in runtime_params
         if runtime_params and VALUE in runtime_params:
-            # value = np.atleast_1d(runtime_params.pop(VALUE))
-            value = np.atleast_1d(runtime_params[VALUE])
+            # Get value and then pop from runtime_param, as no need to restore to previous value
+            value = np.atleast_1d(runtime_params.pop(VALUE))
             # Eliminate any other params (including ones for function),
-            #     since they will not be assigned and therefore should not be restored to previous value below
-            #     (doing so would restore them to previous previous value)
+            #  since they will not be assigned and therefore should not be restored to previous value below
+            #  (doing so would restore them to the previous previous value)
             runtime_params = {}
 
         # CALL FUNCTION if value is not specified
