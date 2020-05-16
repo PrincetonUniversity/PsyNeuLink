@@ -283,6 +283,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import inspect
 
 import numpy as np
@@ -497,16 +498,19 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_ports[MATRIX].value)
-        initial_rate = matrix * 0.0
+        # TODO: why is this using the value not the variable? if there isn't a
+        # specific reason, it should be variable, but this affects the values
+        # tests/mechanisms/test_gating_mechanism.py::test_gating_with_composition
+        new_variable = copy.deepcopy(self._parameter_ports[MATRIX].defaults.value)
+        initial_rate = new_variable * 0.0
 
         # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
         # new defaults get set properly
         self._parameter_ports[MATRIX]._instantiate_function(
             function=AccumulatorIntegrator(
                 owner=self._parameter_ports[MATRIX],
-                default_variable=matrix,
-                initializer=matrix,
+                default_variable=new_variable,
+                initializer=new_variable,
                 # rate=initial_rate
             ),
             context=context
