@@ -9,7 +9,8 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
 from psyneulink.core.globals.keywords import CONTROL_PROJECTION_PARAMS, INPUT_PORT_PARAMS, FUNCTION_PARAMS, \
-    OVERRIDE, PARAMETER_PORT_PARAMS, MAPPING_PROJECTION_PARAMS
+    OVERRIDE, PARAMETER_PORT_PARAMS, MAPPING_PROJECTION_PARAMS, SAMPLE, TARGET
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
 class TestMechanismRuntimeParams:
 
@@ -569,9 +570,12 @@ class TestCompositionRuntimeParams:
         # Construction
         T1 = TransferMechanism()
         T2 = TransferMechanism()
-        C = Composition(pathways=[T1,T2])
+        CM = ComparatorMechanism()
+        P1 = MappingProjection(sender=T1, receiver=CM.input_ports[SAMPLE], name='SAMPLE PROJECTION')
+        P2 = MappingProjection(sender=T2, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
+        C = Composition(nodes=[T1,T2,CM], projections=[P1,P2])
 
-        T1.function.slope = 5
+        T1.function.slope = 3
         T2.input_port.function.scale = 4
 
         # Bad Mechanism param specified
@@ -629,35 +633,76 @@ class TestCompositionRuntimeParams:
         assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
                 "of TransferMechanism" in error_text.value.error_value and "'flurb'" in error_text.value.error_value)
 
-        # T1 = TransferMechanism()
-        # T2 = TransferMechanism()
-        # CM = ComparatorMechanism()
-        # P1 = MappingProjection(sender=T1, receiver=CM.input_ports[SAMPLE], name='SAMPLE PROJECTION')
-        # P2 = MappingProjection(sender=T2, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
-        # C = Composition(nodes=[T1,T2,CM], projections=[P1,P2])
-        #
-        # T1.function.slope = 3
-        # T2.input_port.function.scale = 4
-        #
-        # C.run(inputs={T1: 2.0,
-        #              T2: 4.0},
-        #      # runtime_params=rt_dict,
-        #      runtime_params={
-        #          CM: {
-        #              # 'variable' : 1000
-        #              CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
-        #              CM.output_port : {'value':(1000, AtTrial(0))},
-        #              CM.output_port : {'value':1000},
-        #              INPUT_PORT_PARAMS: {
-        #                  MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
-        #                                             'glarfip' : 2,
-        #                                             P1:{'value':(3000, AtTrial(2)),
-        #                                                 # 'glarfip' : 2,
-        #                                                 },
-        #                                             'MY PROJECTION':{'value':(4000, AtTrial(3))}
-        #                                             }
-        #              }
-        #          }
-        #      },
-        #      num_trials=2
-        #      )
+
+        # Bad param specified in Projection in <TYPE>_PROJECTION_PARAMS
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0,
+                         T2: 4.0},
+                 # runtime_params=rt_dict,
+                 runtime_params={
+                     CM: {
+                         # 'variable' : 1000
+                         CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
+                         CM.output_port : {'value':(1000, AtTrial(0))},
+                         INPUT_PORT_PARAMS: {
+                             MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
+                                                        'glarfip' : 2,                    # Bad arg in Projection type
+                                                        P1:{'value':(3000, AtTrial(2))},
+                                                        'MY PROJECTION':{'value':(4000, AtTrial(3))}
+                                                        }
+                         }
+                     }
+                 },
+                 num_trials=2
+                 )
+        assert ("Invalid specification in runtime_params arg for matrix of SAMPLE PROJECTION: 'glarfip'."
+                in error_text.value.error_value)
+
+        # Bad param specified in Projection entry within <TYPE>_PROJECTION_PARAMS
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0,
+                         T2: 4.0},
+                 runtime_params={
+                     CM: {
+                         # 'variable' : 1000
+                         CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
+                         CM.output_port : {'value':(1000, AtTrial(0))},
+                         INPUT_PORT_PARAMS: {
+                             MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
+                                                        P1:{'value':(3000, AtTrial(2)),
+                                                            'scrulip' : 2,              # Bad Projection specific arg
+                                                            },
+                                                        'MY PROJECTION':{'value':(4000, AtTrial(3))}
+                                                        }
+                         }
+                     }
+                 },
+                 num_trials=2
+                 )
+        assert ("Invalid specification in runtime_params arg for matrix of SAMPLE PROJECTION: 'scrulip'."
+                in error_text.value.error_value)
+
+        # Bad param specified in Projection specified by name \within <TYPE>_PROJECTION_PARAMS
+        with pytest.raises(ComponentError) as error_text:
+            C.run(inputs={T1: 2.0,
+                         T2: 4.0},
+                 runtime_params={
+                     CM: {
+                         # 'variable' : 1000
+                         CM.input_ports[TARGET] : {'variable':(1000, AtTrial(0))},
+                         CM.output_port : {'value':(1000, AtTrial(0))},
+                         INPUT_PORT_PARAMS: {
+                             MAPPING_PROJECTION_PARAMS:{'value':(2000, AtTrial(0)),
+                                                        P1:{'value':(3000, AtTrial(2)),
+                                                            },
+                                                        'TARGET PROJECTION':{'value':(4000, AtTrial(3)),
+                                                                             'amiby': 4}
+                                                        }
+                         }
+                     }
+                 },
+                 num_trials=2
+                 )
+        assert ("Invalid specification in runtime_params arg for matrix of TARGET PROJECTION: 'amiby'."
+                in error_text.value.error_value)
+
