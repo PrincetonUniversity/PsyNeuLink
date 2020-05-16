@@ -875,6 +875,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         False otherwise
     """
 
+    _specified_variable_shape_flexibility = DefaultsFlexibility.RIGID
+    """
+        The `DefaultsFlexibility` ._variable_shape_flexibility takes on
+        when variable shape was manually specified
+    """
+
     class Parameters(ParametersBase):
         """
             The `Parameters` that are associated with all `Components`
@@ -1406,9 +1412,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if default_variable is None or default_variable is NotImplemented:
                 return None
             else:
-                self._variable_shape_flexibility = DefaultsFlexibility.RIGID
+                self._variable_shape_flexibility = self._specified_variable_shape_flexibility
         else:
-            self._variable_shape_flexibility = DefaultsFlexibility.RIGID
+            self._variable_shape_flexibility = self._specified_variable_shape_flexibility
 
         return convert_to_np_array(default_variable, dimension=1)
 
@@ -1426,7 +1432,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
         if size is not NotImplemented:
-            self._variable_shape_flexibility = DefaultsFlexibility.RIGID
+            self._variable_shape_flexibility = self._specified_variable_shape_flexibility
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.class_defaults.variable
