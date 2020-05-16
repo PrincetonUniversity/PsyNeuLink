@@ -320,7 +320,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample = self.input_ports[SAMPLE].parameters.value._get(context)
         reward = self.input_ports[TARGET].parameters.value._get(context)
 
-        return [sample, reward]
+        return np.array([sample, reward])
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         delta = super()._execute(variable=variable, context=context, runtime_params=runtime_params)
