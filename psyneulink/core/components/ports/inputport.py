@@ -866,7 +866,7 @@ class InputPort(Port_Base):
                         del self.combine_function_args
                 # combine assumes LinearCombination, but Function other than LinearCombination specified for function
                 elif isinstance(function, Function):
-                    raise InputPortError(f"Specification of {repr(COMBINE)} argument ({combine.upper()})"
+                    raise InputPortError(f"Specification of {repr(COMBINE)} argument ({combine.upper()}) "
                                          f"conflicts with Function specified in {repr(FUNCTION)} argument "
                                          f"({function.name}){owner_name}.")
                 # combine assumes LinearCombination, but class other than LinearCombination specified for function
