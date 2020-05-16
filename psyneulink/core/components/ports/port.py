@@ -1928,7 +1928,6 @@ class Port_Base(Port):
         self._validate_and_assign_runtime_params(local_params, context=context)
         variable = local_params.pop(VARIABLE, None)
         self.execute(variable, context=context, runtime_params=local_params)
-        assert True # 5/16/20
 
     def _execute_afferent_projections(self, projection_params, context):
         """Execute all afferent Projections for Port

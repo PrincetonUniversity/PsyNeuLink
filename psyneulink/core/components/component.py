@@ -2631,16 +2631,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # GET VALUE if specified in runtime_params
         if runtime_params and VALUE in runtime_params:
-            # # MODIFIED 5/16/20 OLD:
             # value = np.atleast_1d(runtime_params.pop(VALUE))
-            # MODIFIED 5/16/20 NEW:
             value = np.atleast_1d(runtime_params[VALUE])
-            # FIX 5/16/20 [JDC]: REMOVE THESE SINCE THEY WILL NOT BE ASSIGNED,
-            #  AND SO SHOULD BE RESTORED TO PREVIOUS VALUE IN ._execute
-            # Eliminate any other params (including ones for function), since they will not be assigned
-            #    and therefore should not be restored to previous value (below).
+            # Eliminate any other params (including ones for function),
+            #     since they will not be assigned and therefore should not be restored to previous value below
+            #     (doing so would restore them to previous previous value)
             runtime_params = {}
-            # MODIFIED 5/16/20 END
 
         # CALL FUNCTION if value is not specified
         if value is None:
@@ -2648,8 +2644,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             #                     that are specific to particular class of Functions
             #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
             function_variable = self._parse_function_variable(variable, context=context)
-            # FIX 5/8/20 [JDC]:
-            #   NEED TO PASS FULL runtime_params (AND NOT JUST function's params) SINCE IntegratorMechanisms SEEM TO NEED IT
+            # IMPLEMENTATION NOTE: Need to pass full runtime_params (and not just function's params) since
+            #                      Mechanisms with secondary functions (e.g., IntegratorMechanism) seem them
             value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
             try:
                 self.function.parameters.value._set(value, context)

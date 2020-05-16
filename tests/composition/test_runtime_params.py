@@ -534,18 +534,13 @@ class TestCompositionRuntimeParams:
                       }}},
               num_trials=6
               )
-
-        # FIX 5/8/20 [JDC]: CM.input_ports[TARGET].function.scale NOT BEING RESET to 1.5
-        # FIX 5/8/20 [JDC]: WITH 5/16/20 MOD in component.py, CM.input_ports[SAMPLE].function.scale NOW NOT BEING RESET
-        #                   BUT THAT FAILS OTHER TESTS, SO RESTORED
-        #                   ALSO, SPECIFICATION OF 42 for SAMPLE PROJECTION IN TRIAL 4 IS ALSO BEING ASSIGNED TO TARGET
         assert np.allclose(C.results,[   # Conditions satisfied:          CM calculates: TARGET-SAMPLE:
             np.array([[-136.0]]), # Trial 0: CM SAMPLE InputPort variable (5*4*2.5 - 83*2)
             np.array([[987]]),    # Trial 1: CM TARGET InputPort value    (999 - 2*3*2)
             np.array([[909]]),    # Trial 2: CM TARGET InputPort value + CM Inputports SAMPLE fct scale: (999 - 2*3*15)
-            np.array([[-10]]),    # Trial 3: Both CM MappingProjections value, scale default (20*1.5 - 20*2) FIX
-            np.array([[-54]]),    # Trial 4: Same as 3, but superceded by value for SAMPLE Projection (20*1.5 - 42*2) FIX
-            np.array([[150]]),    # Trial 5: Same as 4, but superceded by value for TARGET Projection ((156*1.5-42*2)) FIX
+            np.array([[-10]]),    # Trial 3: Both CM MappingProjections value, scale default (20*1.5 - 20*2)
+            np.array([[-54]]),    # Trial 4: Same as 3, but superceded by value for SAMPLE Projection (20*1.5 - 42*2)
+            np.array([[150]]),    # Trial 5: Same as 4, but superceded by value for TARGET Projection ((156*1.5-42*2))
         ])
 
     def test_params_for_modulatory_projection_in_parameter_port(self):
