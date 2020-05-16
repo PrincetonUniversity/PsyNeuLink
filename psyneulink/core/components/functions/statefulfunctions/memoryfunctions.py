@@ -192,6 +192,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: 1.0
                     :type: ``float``
         """
+        variable = Parameter([], pnl_internal=True, constructor_argument='default_variable')
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -219,9 +220,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        if default_variable is None:
-            default_variable = []
 
         super().__init__(
             default_variable=default_variable,
