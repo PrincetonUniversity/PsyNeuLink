@@ -942,11 +942,21 @@ specified value applies to *all* Ports of that type.  Parameters for individual 
 or its `name <Port_Base.name>` as the key, and a dictionary containing parameter specifications as its value.
 
   .. note::
-     If the `variable <Port_base.variable>` of a Port is specified as a runtime parameter, then its afferent
-     Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>` will
-     be. If the `value <Port_Base.value>` of a Port is specified, *neither its afferent Projections nor it `function
-     <Port_Base.function>` will be executed. As expected, specifying `value <Port_Base.value>` supercedes any
-     specification of `variable <Port_Base.variable>` or of the parameters of its `function <Port_Base.function>`.
+
+     - If the `variable <Port_base.variable>` of a Port is specified as a runtime parameter, then its afferent
+       Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>`
+       will be.
+
+     - If the `value <Port_Base.value>` of a Port is specified, *neither its afferent Projections nor it `function
+       <Port_Base.function>` will be executed.
+
+     - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
+       OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
+       will retain its previous value (again in accord with Lazy Evaluation), though its OutputPorts *will* be
+       executed using the assigned values.
+
+     - As expected, specifying `value <Port_Base.value>` supercedes any specification of `variable
+       <Port_Base.variable>` or of the parameters of its `function <Port_Base.function>`.
 
 COMMENT:
    FIX 5/8/20 [JDC]: GET EXAMPLES FROM test_runtime_params
