@@ -805,11 +805,14 @@ class LCControlMechanism(ControlMechanism):
         self.aux_components.append(self.control_projections)
 
     def _check_for_composition(self, context=None):
-        # FIX 5/17/20:  ADD CALL TO ADD mechanisms_to_modulate IF ALL option is chosen
-        from psyneulink.core.compositions.composition import Composition
-        if self.modulated_mechanisms == ALL:
-            raise LCControlMechanismError(f"'ALL' not currently supported for '{MODULATED_MECHANISMS}' argument "
-                                          f"of {self.__class__.__name__} in context of a {Composition.__name__}")
+        # FIX 5/17/20:
+        #  IN _instantiate_output_ports:
+        #     BREAK OUT NEW METHOD:  _add_modulated_mechanisms
+        #     IF modulated_mechanisms IS SPECIFICED AS A COMPOSITION, SET FLAG;
+        #  HERE:
+        #     IF FLAG IS FOUND HERE, GO THROUGH ALL MECHANISMS OF COMP AGAIN AND ADD ANY THAT ARE NOT ARLREADY ASSIGNED
+        #     ONLY NOW, CALL COMPOSITION TO CREATE THE PROJECTIONS
+        pass
 
     def _execute(
         self,
