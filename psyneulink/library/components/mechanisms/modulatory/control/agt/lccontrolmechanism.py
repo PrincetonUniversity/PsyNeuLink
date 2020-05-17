@@ -890,6 +890,7 @@ class LCControlMechanism(ControlMechanism):
         return new_out, builder
 
     # 5/8/20: ELIMINATE SYSTEM
+    # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
     # @tc.typecheck
     # def _add_system(self, system, role:str):
     #     super()._add_system(system, role)

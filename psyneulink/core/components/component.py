@@ -1344,6 +1344,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return convert_to_np_array(default_variable, dimension=1)
 
+    # ELIMINATE SYSTEM
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().

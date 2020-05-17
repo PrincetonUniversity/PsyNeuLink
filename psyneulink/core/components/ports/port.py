@@ -867,19 +867,18 @@ class Port_Base(Port):
        by calling the constructor for a `subclass <Port_Subtypes>`, or by using any of the other methods for `specifying
        a Port <Port_Specification>`.
 
-    COMMENT:
-    PortRegistry
-    -------------
-        Used by .__init__.py to assign default projection types to each Port subclass
-        Note:
-        * All Ports that belong to a given owner are registered in the owner's _portRegistry,
-            which maintains a dict for each Port type that it uses, a count for all instances of that type,
-            and a dictionary of those instances;  NONE of these are registered in the PortRegistry
-            This is so that the same name can be used for instances of a Port type by different owners
-                without adding index suffixes for that name across owners,
-                while still indexing multiple uses of the same base name within an owner
+    .. technical_note::
 
-    COMMENT
+        PortRegistry
+        -------------
+            Used by .__init__.py to assign default Projection types to each Port subclass
+
+            .. note::
+              All Ports that belong to a given owner are registered in the owner's _portRegistry, which maintains a
+              dict for each Port type that it uses, a count for all instances of that type, and a dictionary of those
+              instances;  **none** of these are registered in the PortRegistry This. is so that the same name can be
+              used for instances of a Port type by different owners without adding index suffixes for that name across
+              owners, while still indexing multiple uses of the same base name within an owner
 
     Arguments
     ---------
@@ -1036,7 +1035,7 @@ class Port_Base(Port):
                             + PROJECTION_TYPE:<Projection class> - must be a subclass of Projection
                             + PROJECTION_PARAMS:<dict> - must be dict of params for PROJECTION_TYPE
             - name (str): string with name of Port (default: name of owner + suffix + instanceIndex)
-            - prefs (dict): dictionary containing system preferences (default: Prefs.DEFAULTS)
+            - prefs (dict): dictionary containing preferences (default: Prefs.DEFAULTS)
             - context (str)
             - **kwargs (dict): dictionary of arguments using the following keywords for each of the above kwargs:
                 # port_params is not handled here like the others are

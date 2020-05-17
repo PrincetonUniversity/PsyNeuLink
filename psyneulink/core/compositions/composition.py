@@ -639,8 +639,8 @@ If the learning Pathway <Composition_Learning_Pathway>` involves more than two P
 `add_backpropagation_learning_pathway` for a multilayered neural network), then multiple LearningMechanisms are
 created, along with MappingProjections that provide them with the `error_signal <LearningMechanism.error_signal>`
 from the preceding LearningMechanism, and `LearningProjections <LearningProjection>` that modify the corresponding
-MappingProjections (*LEARNED_PROJECTION*\\s) in the `learning Pathway <Component_Learning_Pathway>`, as shown for an
-example in the figure below. These additional learning components are listed in the *LEARNING_MECHANISMS* and
+MappingProjections (*LEARNED_PROJECTION*\\s) in the `learning Pathway <Composition_Learning_Pathway>`, as shown for
+an example in the figure below. These additional learning components are listed in the *LEARNING_MECHANISMS* and
 *LEARNED_PROJECTIONS* entries of the dictionary assigned to the `learning_components <Pathway.learning_components>`
 attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the learning method.
 
@@ -842,7 +842,7 @@ can also be called directly, but this is useful mostly for debugging.
    has executed previously, the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
    of execution is returned; otherwise it None is returned.  If it is called with arguments, then either `run
    <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
-   Composition has any `learning_pathways <Composition_Learning_Pathways>`, and the relevant `TARGET_MECHANISM
+   Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISM
    <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
