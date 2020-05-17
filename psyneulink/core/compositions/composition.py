@@ -5031,7 +5031,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # MODIFIED 5/17/20 OLD:
         # if isinstance(pathways, list) and all(_is_node_spec(p) for p in pathways):
         # MODIFIED 5/17/20 NEW:
-        if isinstance(pathways, list) and all(_is_pathway_entry_spec(p, ANY) for p in pathways):
+        if (isinstance(pathways, list)
+                and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
         # MODIFIED 5/17/20 END
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
