@@ -2365,69 +2365,84 @@ class Mechanism_Base(Mechanism):
 
         while True:
 
-            # FIX: ??MAKE CONDITIONAL ON self.prefs.paramValidationPref??
-            # VALIDATE InputPort(S) AND RUNTIME PARAMS
-            self._check_args(params=runtime_params,
-                             target_set=runtime_params,
-                             context=context)
+            # FIX 5/16/20 [JDC]: NEED TO SET FIGURE OUT HOW TO SET RETURN VALUE
+            # Don't bother executing Mechanism if variable or value has been specified for all of its OutputPorts
+            # Mechanism value is set to None, since it was not executed (in according with Lazy Evaluation)
+            if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
+                    or
+                    (PORT_SPECIFIC_PARAMS in runtime_port_params
+                     and ((all(p==VARIABLE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
+                               if p in {self, self.name}))
+                          or
+                          (all(p==VALUE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
+                               if p in {self, self.name}))))
+            ):
+                self.parameters.is_finished_flag._set(True, context)
+                value = None
 
-            # UPDATE VARIABLE and InputPort(s)
-            # Executing or simulating Composition, so get input by updating input_ports
-            if (input is None
-                and (context.execution_phase is not ContextFlags.IDLE)
-                and (self.input_port.path_afferents != [])):
-                variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
-
-            # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
             else:
-                if context.source & ContextFlags.COMMAND_LINE:
-                    context.execution_phase = ContextFlags.PROCESSING
+                # VALIDATE InputPort(S) AND RUNTIME PARAMS
+                self._check_args(params=runtime_params,
+                                 target_set=runtime_params,
+                                 context=context)
 
-                    if input is not None:
-                        input = convert_all_elements_to_np_array(input)
+                # UPDATE VARIABLE and InputPort(s)
+                # Executing or simulating Composition, so get input by updating input_ports
+                if (input is None
+                    and (context.execution_phase is not ContextFlags.IDLE)
+                    and (self.input_port.path_afferents != [])):
+                    variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
-                if input is None:
-                    input = self.defaults.variable
-                #     FIX:  this input value is sent to input CIMs when compositions are nested
-                #           variable should be based on afferent projections
-                variable = self._get_variable_from_input(input, context)
-
-            self.parameters.variable._set(variable, context=context)
-
-            # UPDATE PARAMETERPORT(S)
-            self._update_parameter_ports(runtime_port_params[PARAMETER_PORT_PARAMS], context)
-
-            # EXECUTE MECHANISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
-
-            # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
-            #                      to avoid multiple calls to (and potential log entries for) self.value property
-
-            value = self._execute(variable=variable,
-                                  runtime_params=runtime_params,
-                                  context=context)
-
-            # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
-            #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
-            #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
-            if (isinstance(value, list) and
-                (all(isinstance(item, np.ndarray) for item in value) and
-                    all(
-                            all(item.shape[i]==value[0].shape[0]
-                                for i in range(len(item.shape)))
-                            for item in value))):
-                    pass
-            else:
-                converted_to_2d = np.atleast_2d(value)
-                # If return_value is a list of heterogenous elements, return as is
-                #     (satisfies requirement that return_value be an array of possibly multidimensional values)
-                if converted_to_2d.dtype == object:
-                    pass
-                # Otherwise, return value converted to 2d np.array
+                # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
                 else:
-                    # return converted_to_2d
-                    value = converted_to_2d
+                    if context.source & ContextFlags.COMMAND_LINE:
+                        context.execution_phase = ContextFlags.PROCESSING
 
-            self.parameters.value._set(value, context=context)
+                        if input is not None:
+                            input = convert_all_elements_to_np_array(input)
+
+                    if input is None:
+                        input = self.defaults.variable
+                    #     FIX:  this input value is sent to input CIMs when compositions are nested
+                    #           variable should be based on afferent projections
+                    variable = self._get_variable_from_input(input, context)
+
+                self.parameters.variable._set(variable, context=context)
+
+                # UPDATE PARAMETERPORT(S)
+                self._update_parameter_ports(runtime_port_params[PARAMETER_PORT_PARAMS], context)
+
+                # EXECUTE MECHANISM BY CALLING SUBCLASS _execute method AND ASSIGN RESULT TO self.value
+
+                # IMPLEMENTATION NOTE: use value as buffer variable until it has been fully processed
+                #                      to avoid multiple calls to (and potential log entries for) self.value property
+
+                value = self._execute(variable=variable,
+                                      runtime_params=runtime_params,
+                                      context=context)
+
+                # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
+                #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
+                #                       ARRAY OF LENGTH 2), np.array (AS WELL AS np.atleast_2d) GENERATES A ValueError
+                if (isinstance(value, list) and
+                    (all(isinstance(item, np.ndarray) for item in value) and
+                        all(
+                                all(item.shape[i]==value[0].shape[0]
+                                    for i in range(len(item.shape)))
+                                for item in value))):
+                        pass
+                else:
+                    converted_to_2d = np.atleast_2d(value)
+                    # If return_value is a list of heterogenous elements, return as is
+                    #     (satisfies requirement that return_value be an array of possibly multidimensional values)
+                    if converted_to_2d.dtype == object:
+                        pass
+                    # Otherwise, return value converted to 2d np.array
+                    else:
+                        # return converted_to_2d
+                        value = converted_to_2d
+
+                self.parameters.value._set(value, context=context)
 
             # UPDATE OUTPUTPORT(S)
             self._update_output_ports(runtime_port_params[OUTPUT_PORT_PARAMS], context)
@@ -2446,6 +2461,7 @@ class Mechanism_Base(Mechanism):
             if self.is_finished(context):
                 self.parameters.is_finished_flag._set(True, context)
                 break
+
             self.parameters.is_finished_flag._set(False, context)
             if not self.parameters.execute_until_finished._get(context):
                 break

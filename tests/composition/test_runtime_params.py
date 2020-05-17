@@ -9,7 +9,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import AfterTrial, Any, AtTrial, Never
 from psyneulink.core.globals.keywords import CONTROL_PROJECTION_PARAMS, INPUT_PORT_PARAMS, FUNCTION_PARAMS, \
-    OVERRIDE, PARAMETER_PORT_PARAMS, MAPPING_PROJECTION_PARAMS, SAMPLE, TARGET
+    OUTPUT_PORT_PARAMS, OVERRIDE, PARAMETER_PORT_PARAMS, MAPPING_PROJECTION_PARAMS, SAMPLE, TARGET
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
 class TestMechanismRuntimeParams:
@@ -589,6 +589,54 @@ class TestCompositionRuntimeParams:
             np.array([[10]]),  # Run 2, Tria1 2: ControlProjection value with OVERRIDE using value again (in Any) (2*5)
             np.array([[38]]),  # Run 2, Tria1 3: ControlProjection value with OVERRIDE using individ Proj by name (2*19)
             np.array([[66]]),  # Run 2: Trial 4: ControlProjection value with OVERRIDE using individ Proj  (2*33)
+        ])
+
+    def test_params_for_output_port_variable_and_value(self):
+
+        T1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
+        T2 = TransferMechanism()
+        T3 = TransferMechanism()
+        # FIX: NEED TO ADD PROJECTIONS SINCE CAN'T SPECIFIY OUTPUT PORT IN PATHWAY
+        C = Composition(pathways=[[T1.output_ports['FIRST'],T2],
+                                  [T1.output_ports['SECOND'],T3]])
+
+        # FIX: DO SOLO RUN TO VERIFY THAT value OF MECH IS NONE IF BOTH VARIABLE OR VALUE ARE SPECIFIED
+        # Run 1
+        C.run(inputs={T1: 2.0},
+              runtime_params={
+                  T1: {
+                      OUTPUT_PORT_PARAMS: {
+                          'variable':(2, AtTrial(1)), # variable of all Projection to all ParameterPorts
+                          'value':(3, AtTrial(2)),
+                          'FIRST': {'variable':(5, Any(AtTrial(3),AtTrial(5),AtTrial(9),AtTrial(11))),
+                                    'value':(7, Any(AtTrial(6),AtTrial(8),AtTrial(10),AtTrial(12)))
+                                    },
+                          'SECOND': {'variable': (5, Any(AtTrial(4),AtTrial(5),AtTrial(10),AtTrial(11),AtTrial(12))),
+                                     'value': (7, Any(AtTrial(7),AtTrial(8),AtTrial(9),AtTrial(11),AtTrial(12)))
+                                     },
+                      },
+                  },
+                  T2: {
+                      'slope': 3
+                  },
+              },
+              num_trials=8
+              )
+
+        assert np.allclose(C.results,[         # OutputPort Conditions satisfied:
+            np.array([[6]]),   # Trial 0:  None (2*3)
+            np.array([[4]]),   # Trial 1:  variable general
+            np.array([[8]]),   # Trial 2:  value general
+            np.array([[10]]),  # Trial 3:  FIRST variable
+            np.array([[20]]),  # Trial 4:  SECOND variable
+            np.array([[42]]),  # Trial 5:  FIRST and SECOND variable
+            np.array([[64]]),  # Trial 6:  FIRST value
+            np.array([[86]]),  # Trial 7:  SECOND value
+            np.array([[86]]),  # Trial 8:  FIRST and SECOND value
+            np.array([[86]]),  # Trial 9:  FIRST variable and SECOND value
+            np.array([[86]]),  # Trial 10: FIRST value and SECOND variable
+            np.array([[86]]),  # Trial 11: FIRST and SECOND variable and SECOND value
+            np.array([[86]]),  # Trial 12: FIRST and SECOND value and SECOND variable
         ])
 
     def test_composition_runtime_param_errors(self):

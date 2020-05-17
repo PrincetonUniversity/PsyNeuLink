@@ -1622,13 +1622,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # PARAMS ------------------------------------------------------------
 
-        # # MODIFIED 11/27/16 OLD:
-        # # If parameter_validation is set, the function was called with params,
-        # #   and they have changed, then validate requested values and assign to target_set
-        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
-        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
-        #     self._validate_params(request_set=params, target_set=target_set, context=context)
-
         # If params have been passed, treat as runtime params
         self._validate_and_assign_runtime_params(params, context)
 
@@ -1669,8 +1662,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     generate_error(param_name)
                 elif hasattr(self, param_name):
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
-                        assert False, f'FOUND FUNCTION, INPUT_PORTS or OUTPUT_PORTS in runtimeparams for {self.name}'
-                        continue
+                        generate_error(param_name)
                     if context.execution_id not in self._runtime_params_reset:
                         self._runtime_params_reset[context.execution_id] = {}
                     self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
