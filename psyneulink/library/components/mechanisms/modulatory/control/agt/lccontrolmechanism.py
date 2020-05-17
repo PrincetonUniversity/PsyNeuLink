@@ -303,7 +303,7 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.components.shellclasses import Mechanism, System_Base
+from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
@@ -667,7 +667,6 @@ class LCControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 system:tc.optional(System_Base)=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
                  # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
@@ -700,7 +699,6 @@ class LCControlMechanism(ControlMechanism):
                  ):
 
         super().__init__(
-            system=system,
             default_variable=default_variable,
             objective_mechanism=objective_mechanism,
             monitor_for_control=monitor_for_control,
@@ -735,11 +733,11 @@ class LCControlMechanism(ControlMechanism):
         )
 
     def _validate_params(self, request_set, target_set=None, context=None):
-        """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
+        """Validate modulated_mechanisms argument.
 
-        Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputPorts for Mechanisms in self.system
-        Check that every item in `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` is a Mechanism
-            and that its function has a multiplicative_param
+        Validate that **modulated_mechanisms** is either a Composition or a list of eligible Mechanisms .
+        Eligible Mechanisms are ones with a `function <Mechanism_Base>` that has a multiplicative_param.
+
         """
 
         super()._validate_params(request_set=request_set,
@@ -756,13 +754,6 @@ class LCControlMechanism(ControlMechanism):
                 if not isinstance(spec, list):
                     spec = [spec]
                     for mech in spec:
-                        # # MODIFIED 5/17/20 OLD:
-                        # if isinstance (mech, str):
-                        #     if not mech == ALL:
-                        #         raise LCControlMechanismError("A string other than the keyword {} was specified "
-                        #                                       "for the {} argument the constructor for {}".
-                        #                                       format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
-                        # MODIFIED 5/17/20 END
                         if not isinstance(mech, Mechanism):
                             raise LCControlMechanismError("The specification of the {} argument for {} "
                                                           "contained an item ({}) that is not a Mechanism.".
@@ -782,54 +773,8 @@ class LCControlMechanism(ControlMechanism):
         """
         from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 
-        # *ALL* is specified for modulated_mechanisms:
-        # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
-        #
-        # # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM
-        # FIX: REPLACE WITH ASSIGNMENT OF DUMMY AUX_COMPONENT AND/OR
-        #      IMPLEMENTATION OF NodeRole.MODULABLE and MODULATED AND USE OF THESE TO MAKE ASSIGNMENTS IN COMPOSITION
-        # if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
-        #     if self.systems:
-        #         for system in self.systems:
-        #             self.modulated_mechanisms = []
-        #             for mech in system.mechanisms:
-        #                 if (mech not in self.modulated_mechanisms and
-        #                         isinstance(mech, ProcessingMechanism_Base) and
-        #                         not (isinstance(mech, ObjectiveMechanism) and mech._role == CONTROL) and
-        #                         hasattr(mech.function, MULTIPLICATIVE_PARAM)):
-        #                     self.modulated_mechanisms.append(mech)
-        #     else:
-        #         # If LCControlMechanism is not in a Process or System, defer implementing OutputPorts until it is
-        #         return
-        #
-        # # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
-        # if self.modulated_mechanisms:
-        #     # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
-        #     self.modulated_mechanisms = convert_to_list(self.modulated_mechanisms)
-        #     multiplicative_param_names = []
-        #     for mech in self.modulated_mechanisms:
-        #         if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
-        #             multiplicative_param_names.append(mech.function.parameters.multiplicative_param.source.name)
-        #         else:
-        #             multiplicative_param_names.append(mech.function.parameters.multiplicative_param.name)
-        #     ctl_sig_projs = []
-        #     for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
-        #         ctl_sig_projs.append((mult_param_name, mech))
-        #     self.control = [{PROJECTIONS: ctl_sig_projs}]
-        #     self.parameters.control_allocation.default_value = self.value[0]
-
-        # # MODIFIED 5/8/20 NEW:
-        # if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
-        #     def get_modulated_mechanisms(self):
-        #         for mech in [m for m in self.nodes if (isinstance(m, ProcessingMechanism_Base) and
-        #                                             not (isinstance(m, ObjectiveMechanism)
-        #                                                  and self.get_roles_for_node(m) != NodeRole.CONTROL)
-        #                                             and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
-        #
-        #             self.modulated_mechanisms.append(mech)
-        #     self.aux_components = get_modulated_mechanisms
-        #
-        # MODIFIED 5/8/20 NEWER:
+        # A Composition is specified for modulated_mechanisms, so assign all Processing Mechanisms in composition
+        #     to its modulated_mechanisms attribute
         from psyneulink.core.compositions.composition import Composition, NodeRole
         if isinstance(self.modulated_mechanisms, Composition):
             comp = self.modulated_mechanisms
@@ -855,12 +800,12 @@ class LCControlMechanism(ControlMechanism):
                 ctl_sig_projs.append((mult_param_name, mech))
             self.control = [{PROJECTIONS: ctl_sig_projs}]
             self.parameters.control_allocation.default_value = self.value[0]
-        # MODIFIED 5/8/20 END
 
         super()._instantiate_output_ports(context=context)
-        self.aux_components = self.control_projections
+        self.aux_components.append(self.control_projections)
 
     def _check_for_composition(self, context=None):
+        # FIX 5/17/20:  ADD CALL TO ADD mechanisms_to_modulate IF ALL option is chosen
         from psyneulink.core.compositions.composition import Composition
         if self.modulated_mechanisms == ALL:
             raise LCControlMechanismError(f"'ALL' not currently supported for '{MODULATED_MECHANISMS}' argument "
@@ -941,12 +886,13 @@ class LCControlMechanism(ControlMechanism):
 
         return new_out, builder
 
-    @tc.typecheck
-    def _add_system(self, system, role:str):
-        super()._add_system(system, role)
-        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
-            # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
-            self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
+    # 5/8/20: ELIMINATE SYSTEM
+    # @tc.typecheck
+    # def _add_system(self, system, role:str):
+    #     super()._add_system(system, role)
+    #     if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
+    #         # Call with ContextFlags.COMPONENT so that OutputPorts are replaced rather than added
+    #         self._instantiate_output_ports(context=Context(source=ContextFlags.COMPONENT))
 
     @tc.typecheck
     def add_modulated_mechanisms(self, mechanisms:list):

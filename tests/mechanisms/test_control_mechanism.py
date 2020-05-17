@@ -12,7 +12,7 @@ class TestLCControlMechanism:
     @pytest.mark.control_mechanism
     @pytest.mark.benchmark(group="LCControlMechanism Default")
     @pytest.mark.parametrize("mode", ['Python'])
-    def test_default_lc_control_mechanism(self, benchmark, mode):
+    def test_lc_control_mechanism_as_controller(self, benchmark, mode):
         G = 1.0
         k = 0.5
         starting_value_LC = 2.0
@@ -20,7 +20,6 @@ class TestLCControlMechanism:
 
         A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
         B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
-
         C = pnl.Composition()
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
@@ -34,7 +33,6 @@ class TestLCControlMechanism:
         )
         C.add_linear_processing_pathway([A,B])
         C.add_controller(LC)
-
 
         for output_port in LC.output_ports:
             output_port.parameters.value.set(output_port.value * starting_value_LC, C, override=True)
