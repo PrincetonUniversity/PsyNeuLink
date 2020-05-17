@@ -82,16 +82,23 @@ LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phas
 The Mechanisms to be modulated by an LCControlMechanism are specified in the **modulated_mechanisms** argument of its
 constructor. An LCControlMechanism controls a `Mechanism <Mechanism>` by modifying the `multiplicative_param
 <Function_Modulatory_Params>` of the Mechanism's `function <Mechanism_Base.function>`.  Therefore, any Mechanism
-specified for control by an LCControlMechanism must be either a `TransferMechanism`, or a Mechanism that uses a
-`TransferFunction` or a class of `Function <Function>` that implements a `multiplicative_param
-<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be a list of such Mechanisms. The keyword
-*ALL* can also be used to specify all of the eligible `ProcessMechanisms <ProcessingMechanism>` in all of the
-`Compositions <Composition>` to which the LCControlMechanism belongs.  If a Mechanism specified in the
-**modulated_mechanisms** argument does not implement a multiplicative_param, it is ignored. A `ControlProjection` is
-automatically created that projects from the LCControlMechanism to the `ParameterPort` for the `multiplicative_param
-<Function_Modulatory_Params>` of every Mechanism specified in the **modulated_mechanisms** argument.  The Mechanisms
-modulated by an LCControlMechanism are listed in its `modulated_mechanisms <LCControlMechanism.modulated_mechanisms>`
-attribute).
+specified for control by an LCControlMechanism must be either a `ProcessingMechanism`, or a Mechanism that uses as its
+`function <Mechanism_Base.function>` a class of `Function <Function>` that implements a `multiplicative_param
+<Function_Modulatory_Params>`.  The **modulate_mechanisms** argument must be either a list of such Mechanisms, or
+a `Composition` (to modulate all of the `ProcessingMechanisms <ProcessingMechanism>` in a Composition -- see below).
+see below). If a Mechanism specified in the **modulated_mechanisms** argument does not implement a multiplicative_param,
+it is ignored. A `ControlProjection` is automatically created that projects from the LCControlMechanism to the
+`ParameterPort` for the `multiplicative_param <Function_Modulatory_Params>` of every Mechanism specified in the
+**modulated_mechanisms** argument.  The Mechanisms modulated by an LCControlMechanism are listed in its
+`modulated_mechanisms <LCControlMechanism.modulated_mechanisms>` attribute).
+
+If `Composition` is assigned as the value of **modulate_mechanisms**, then the LCControlMechanism will modulate all
+of the `ProcessingMechanisms` in that Composition, with the exception of any `ObjectiveMechanism`\\s that are assigned
+a the `objective_mechanism <ControlMechanism.objective_mechanism>` of another `ControlMechanism`.  Note that only the
+Mechanisms that already belong to that Composition are included at the time the LCControlMechanism is constructed.
+Therefore, to include *all* Mechanisms in the Composition at the time it is run, the LCControlMechanism should be
+constructed and `added to the Composition using the Composition's `add_node <Composition.add_node>` method) after all
+of the other Mechanisms have been added.
 
 .. _LCControlMechanism_Structure:
 
@@ -744,25 +751,28 @@ class LCControlMechanism(ControlMechanism):
         if MODULATED_MECHANISMS in target_set and target_set[MODULATED_MECHANISMS]:
             spec = target_set[MODULATED_MECHANISMS]
 
-            if not isinstance(spec, list):
-                spec = [spec]
-
-            for mech in spec:
-                if isinstance (mech, str):
-                    if not mech == ALL:
-                        raise LCControlMechanismError("A string other than the keyword {} was specified "
-                                                      "for the {} argument the constructor for {}".
-                                                      format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
-                elif not isinstance(mech, Mechanism):
-                    raise LCControlMechanismError("The specification of the {} argument for {} "
-                                                  "contained an item ({}) that is not a Mechanism.".
-                                                  format(repr(MODULATED_MECHANISMS), self.name, mech))
-                elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
-                    raise LCControlMechanismError("The specification of the {} argument for {} "
-                                                  "contained a Mechanism ({}) that does not have a {}.".
-                                           format(repr(MODULATED_MECHANISMS),
-                                                  self.name, mech,
-                                                  repr(MULTIPLICATIVE_PARAM)))
+            from psyneulink.core.compositions.composition import Composition
+            if isinstance(spec, Composition):
+                pass
+            else:
+                if not isinstance(spec, list):
+                    spec = [spec]
+                    for mech in spec:
+                        # # MODIFIED 5/17/20 OLD:
+                        # if isinstance (mech, str):
+                        #     if not mech == ALL:
+                        #         raise LCControlMechanismError("A string other than the keyword {} was specified "
+                        #                                       "for the {} argument the constructor for {}".
+                        #                                       format(repr(ALL), repr(MODULATED_MECHANISMS), self.name))
+                        # MODIFIED 5/17/20 END
+                        if not isinstance(mech, Mechanism):
+                            raise LCControlMechanismError("The specification of the {} argument for {} "
+                                                          "contained an item ({}) that is not a Mechanism.".
+                                                          format(repr(MODULATED_MECHANISMS), self.name, mech))
+                        elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
+                            raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "                                                          
+                                                          f"argument for {self.name} contained a Mechanism ({mech}) "
+                                                          f"that does not have a {repr(MULTIPLICATIVE_PARAM)}.")
 
     def _instantiate_output_ports(self, context=None):
         """Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms
@@ -776,23 +786,61 @@ class LCControlMechanism(ControlMechanism):
 
         # *ALL* is specified for modulated_mechanisms:
         # assign all Processing Mechanisms in LCControlMechanism's Composition(s) to its modulated_mechanisms attribute
-        # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM
+        #
+        # # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM
         # FIX: REPLACE WITH ASSIGNMENT OF DUMMY AUX_COMPONENT AND/OR
         #      IMPLEMENTATION OF NodeRole.MODULABLE and MODULATED AND USE OF THESE TO MAKE ASSIGNMENTS IN COMPOSITION
-        if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
-            if self.systems:
-                for system in self.systems:
-                    self.modulated_mechanisms = []
-                    for mech in system.mechanisms:
-                        if (mech not in self.modulated_mechanisms and
-                                isinstance(mech, ProcessingMechanism_Base) and
-                                not (isinstance(mech, ObjectiveMechanism) and mech._role == CONTROL) and
-                                hasattr(mech.function, MULTIPLICATIVE_PARAM)):
-                            self.modulated_mechanisms.append(mech)
-            else:
-                # If LCControlMechanism is not in a Process or System, defer implementing OutputPorts until it is
-                return
-        # MODIFIED 5/8/20 END
+        # if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
+        #     if self.systems:
+        #         for system in self.systems:
+        #             self.modulated_mechanisms = []
+        #             for mech in system.mechanisms:
+        #                 if (mech not in self.modulated_mechanisms and
+        #                         isinstance(mech, ProcessingMechanism_Base) and
+        #                         not (isinstance(mech, ObjectiveMechanism) and mech._role == CONTROL) and
+        #                         hasattr(mech.function, MULTIPLICATIVE_PARAM)):
+        #                     self.modulated_mechanisms.append(mech)
+        #     else:
+        #         # If LCControlMechanism is not in a Process or System, defer implementing OutputPorts until it is
+        #         return
+        #
+        # # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
+        # if self.modulated_mechanisms:
+        #     # Create (param_name, Mechanism) specification for **control_signals** argument of ControlSignal constructor
+        #     self.modulated_mechanisms = convert_to_list(self.modulated_mechanisms)
+        #     multiplicative_param_names = []
+        #     for mech in self.modulated_mechanisms:
+        #         if isinstance(mech.function.parameters.multiplicative_param, ParameterAlias):
+        #             multiplicative_param_names.append(mech.function.parameters.multiplicative_param.source.name)
+        #         else:
+        #             multiplicative_param_names.append(mech.function.parameters.multiplicative_param.name)
+        #     ctl_sig_projs = []
+        #     for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
+        #         ctl_sig_projs.append((mult_param_name, mech))
+        #     self.control = [{PROJECTIONS: ctl_sig_projs}]
+        #     self.parameters.control_allocation.default_value = self.value[0]
+
+        # # MODIFIED 5/8/20 NEW:
+        # if isinstance(self.modulated_mechanisms, str) and self.modulated_mechanisms == ALL:
+        #     def get_modulated_mechanisms(self):
+        #         for mech in [m for m in self.nodes if (isinstance(m, ProcessingMechanism_Base) and
+        #                                             not (isinstance(m, ObjectiveMechanism)
+        #                                                  and self.get_roles_for_node(m) != NodeRole.CONTROL)
+        #                                             and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
+        #
+        #             self.modulated_mechanisms.append(mech)
+        #     self.aux_components = get_modulated_mechanisms
+        #
+        # MODIFIED 5/8/20 NEWER:
+        from psyneulink.core.compositions.composition import Composition, NodeRole
+        if isinstance(self.modulated_mechanisms, Composition):
+            comp = self.modulated_mechanisms
+            self.modulated_mechanisms = []
+            for mech in [m for m in comp.nodes if (isinstance(m, ProcessingMechanism_Base) and
+                                                   not (isinstance(m, ObjectiveMechanism)
+                                                        and comp.get_roles_for_node(m) != NodeRole.CONTROL)
+                                                   and hasattr(m.function, MULTIPLICATIVE_PARAM))]:
+                self.modulated_mechanisms.append(mech)
 
         # Get the name of the multiplicative_param of each Mechanism in self.modulated_mechanisms
         if self.modulated_mechanisms:
@@ -809,8 +857,10 @@ class LCControlMechanism(ControlMechanism):
                 ctl_sig_projs.append((mult_param_name, mech))
             self.control = [{PROJECTIONS: ctl_sig_projs}]
             self.parameters.control_allocation.default_value = self.value[0]
+        # MODIFIED 5/8/20 END
 
         super()._instantiate_output_ports(context=context)
+        self.aux_components = self.control_projections
 
     def _check_for_composition(self, context=None):
         from psyneulink.core.compositions.composition import Composition

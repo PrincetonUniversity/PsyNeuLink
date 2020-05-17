@@ -3119,9 +3119,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj_spec in projections:
                 # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
                 # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
-                # we instantiate a new projection between sender and receiver instead of using the original spec.
+                # a new projection is instantiated between sender and receiver instead of using the original spec.
                 # If the sender or receiver is an AutoAssociativeProjection, then the owner will be another projection
-                # instead of a mechanism, so we need to use owner_mech instead.
+                # instead of a mechanism, so owner_mech instead needs to be used instead.
                 sender_node = proj_spec[0].sender.owner
                 receiver_node = proj_spec[0].receiver.owner
                 if isinstance(sender_node, AutoAssociativeProjection):
@@ -6330,11 +6330,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not invalid_aux_components:
             if self.controller.objective_mechanism:
-                # # MODIFIED 4/25/20 OLD:
-                # self.add_node(self.controller.objective_mechanism)
-                # MODIFIED 4/25/20 NEW:
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-                # MODIFIED 4/25/20 END
 
             self.node_ordering.append(controller)
 
@@ -6415,10 +6411,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
                 controller._activate_projections_for_compositions(self)
             self._controller_initialization_status = ContextFlags.INITIALIZED
-            # MODIFIED 4/25/20 NEW:
-            # self._analyze_graph()
             self._analyze_graph(context=Context(source=ContextFlags.METHOD))
-            # MODIFIED 4/25/20 END
         else:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 

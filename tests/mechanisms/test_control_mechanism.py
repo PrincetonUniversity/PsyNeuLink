@@ -116,11 +116,11 @@ class TestLCControlMechanism:
         T_1 = pnl.TransferMechanism(name='T_1')
         T_2 = pnl.TransferMechanism(name='T_2')
 
-        LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
-                                    modulated_mechanisms=pnl.ALL
-                                    )
         # S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
-        C = pnl.Composition(pathways=[T_1, T_2, LC])
+        C = pnl.Composition(pathways=[T_1, T_2])
+        LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
+                                    modulated_mechanisms=C)
+        C.add_node(LC)
 
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
