@@ -2380,21 +2380,6 @@ class Mechanism_Base(Mechanism):
             # Don't bother executing Mechanism if variable and/or value has been specified for all of its OutputPorts
             # Mechanism value is set to None, so its previous value will be retained (in accord with Lazy Evaluation)
             # However, num_executions and execution_count will be incremented (since the Mechanism was in fact executed)
-            # if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
-            #         or
-            #         (PORT_SPECIFIC_PARAMS in runtime_port_params
-            #          and ((all(p==VARIABLE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
-            #                    if p in {self, self.name}))
-            #               or
-            #               (all(p==VALUE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
-            #                    if p in {self, self.name}))))
-            # ):
-            # if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
-            #         or
-            #         (PORT_SPECIFIC_PARAMS in runtime_port_params
-            #          and (all(p in {VARIABLE, VALUE} for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
-            #                    if p in {self, self.name})))
-            # ):
             if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
                     or
                     (PORT_SPECIFIC_PARAMS in runtime_port_params[OUTPUT_PORT_PARAMS]
