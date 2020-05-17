@@ -4995,12 +4995,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Possible specifications for **pathways** arg:
         # 1  Single node:  NODE
         #    Single pathway spec (list, tuple or dict):
-        # 2   single list:    PWAY = [NODE] or [NODE...] in which *all* are NODES
-        # 3   single tuple:   (PWAY, LearningFunction) = (NODE, LearningFunction) or
+        # 2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
+        # 3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
         #                                                ([NODE...], LearningFunction)
-        # 4   single dict:    {NAME: PWAY} = {NAME: NODE} or
-        #                                    {NAME: [NODE...]} or
-        #                                    {NAME: ([NODE...], LearningFunction)}
+        # 4   single dict:   {NAME: PWAY} = {NAME: NODE} or
+        #                                   {NAME: [NODE...]} or
+        #                                   {NAME: ([NODE...], LearningFunction)}
         #   Multiple pathway specs (outer list):
         # 5   list with list: [PWAY] = [NODE, [NODE]] or [[NODE...]...]
         # 6   list with tuple:  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
@@ -5028,7 +5028,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = convert_to_list(pathways)
 
         # Possibility 2 (list is a single pathway spec):
-        if isinstance(pathways, list) and all(_is_node_spec(p) for p in pathways):
+        # # MODIFIED 5/17/20 OLD:
+        # if isinstance(pathways, list) and all(_is_node_spec(p) for p in pathways):
+        # MODIFIED 5/17/20 NEW:
+        if isinstance(pathways, list) and all(_is_pathway_entry_spec(p, ANY) for p in pathways):
+        # MODIFIED 5/17/20 END
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
