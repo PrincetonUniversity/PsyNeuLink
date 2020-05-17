@@ -596,15 +596,22 @@ class TestCompositionRuntimeParams:
         T1 = TransferMechanism(output_ports=['FIRST', 'SECOND'])
         T2 = TransferMechanism()
         T3 = TransferMechanism()
+        # C = Composition(pathways=[[T1.output_ports['FIRST'],T2],
+        #                           [T1.output_ports['SECOND'],T3]])
+        # FIX 5/8/20 [JDC]: NEED TO ADD PROJECTIONS SINCE CAN'T SPECIFIY OUTPUT PORT IN PATHWAY
         P1 = MappingProjection(sender=T1.output_ports['FIRST'], receiver=T2)
         P2 = MappingProjection(sender=T1.output_ports['SECOND'], receiver=T2)
         C = Composition(nodes=[T1,T2], projections=[P1,P2])
-        # FIX: NEED TO ADD PROJECTIONS SINCE CAN'T SPECIFIY OUTPUT PORT IN PATHWAY
-        # C = Composition(pathways=[[T1.output_ports['FIRST'],T2],
-        #                           [T1.output_ports['SECOND'],T3]])
-        # FIX: DO SOLO RUN TO VERIFY THAT value OF MECH IS NONE IF BOTH VARIABLE OR VALUE ARE SPECIFIED
-        # Run 1
+
         T1.output_ports['SECOND'].function.slope = 1.5
+
+        C.run(inputs={T1: 10.0},
+              runtime_params={
+                  T1: {OUTPUT_PORT_PARAMS: {'variable': 2}}}
+              )
+        assert T1.value == 0.0 # T1 did not execute since both of its OutputPorts were assigned a variable
+        assert T2.value == 5   # (2*1 + 2*1.5) * 3
+
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {
@@ -625,21 +632,21 @@ class TestCompositionRuntimeParams:
               },
               num_trials=13
               )
-
         assert np.allclose(C.results,[         # OutputPort Conditions satisfied:
-            np.array([[15]]),   # Trial 0:  None (2*1 + 2*1.5) * 3
-            np.array([[12.75]]),   # Trial 1:  variable general (1.7*1 + 1.7*1.5) * 3
-            np.array([[18]]),   # Trial 2:  value general (3*1 + 3*1) * 3
-            np.array([[24]]),  # Trial 3:  FIRST variable (5*1 + 2*1.5) * 3
-            np.array([[55.5]]),  # Trial 4:  SECOND variable (2*1 + 11*1.5) * 3
-            np.array([[64.5]]),  # Trial 5:  FIRST and SECOND variable (5*1 + 11*1.5) * 3
-            np.array([[30]]),  # Trial 6:  FIRST value (7 + 2*1.5) * 3
-            np.array([[45]]),  # Trial 7:  SECOND value (2*1 + 13) * 3
-            np.array([[60]]),  # Trial 8:  FIRST and SECOND value (7+13) * 3
-            np.array([[54]]),  # Trial 9:  FIRST variable and SECOND value (5*1 + 13) * 3
-            np.array([[70.5]]),  # Trial 10: FIRST value and SECOND variable (7 + 11*1.5) * 3
-            np.array([[54]]),  # Trial 11: FIRST and SECOND variable and SECOND value (5*1 + 13) * 3
-            np.array([[60]]),  # Trial 12: FIRST and SECOND value and SECOND variable (7+13) * 3
+            np.array([[5]]),      # Run 1, Trial 0:  See above
+            np.array([[15]]),     # Run 2, Trial 0:  None (2*1 + 2*1.5) * 3
+            np.array([[12.75]]),  # Run 2, Trial 1:  variable general (1.7*1 + 1.7*1.5) * 3
+            np.array([[18]]),     # Run 2, Trial 2:  value general (3*1 + 3*1) * 3
+            np.array([[24]]),     # Run 2, Trial 3:  FIRST variable (5*1 + 2*1.5) * 3
+            np.array([[55.5]]),   # Run 2, Trial 4:  SECOND variable (2*1 + 11*1.5) * 3
+            np.array([[64.5]]),   # Run 2, Trial 5:  FIRST and SECOND variable (5*1 + 11*1.5) * 3
+            np.array([[30]]),     # Run 2, Trial 6:  FIRST value (7 + 2*1.5) * 3
+            np.array([[45]]),     # Run 2, Trial 7:  SECOND value (2*1 + 13) * 3
+            np.array([[60]]),     # Run 2, Trial 8:  FIRST and SECOND value (7+13) * 3
+            np.array([[54]]),     # Run 2, Trial 9:  FIRST variable and SECOND value (5*1 + 13) * 3
+            np.array([[70.5]]),   # Run 2, Trial 10: FIRST value and SECOND variable (7 + 11*1.5) * 3
+            np.array([[54]]),     # Run 2, Trial 11: FIRST and SECOND variable and SECOND value (5*1 + 13) * 3
+            np.array([[60]]),     # Run 2, Trial 12: FIRST and SECOND value and SECOND variable (7+13) * 3
         ])
 
     def test_composition_runtime_param_errors(self):
