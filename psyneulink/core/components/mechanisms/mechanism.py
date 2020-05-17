@@ -2365,17 +2365,30 @@ class Mechanism_Base(Mechanism):
 
         while True:
 
-            # FIX 5/16/20 [JDC]: NEED TO SET FIGURE OUT HOW TO SET RETURN VALUE
-            # Don't bother executing Mechanism if variable or value has been specified for all of its OutputPorts
-            # Mechanism value is set to None, since it was not executed (in according with Lazy Evaluation)
+            # Don't bother executing Mechanism if variable and/or value has been specified for all of its OutputPorts
+            # Mechanism value is set to None, so its previous value will be retained (in accord with Lazy Evaluation)
+            # However, num_executions and execution_count will be incremented (since the Mechanism was in fact executed)
+            # if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
+            #         or
+            #         (PORT_SPECIFIC_PARAMS in runtime_port_params
+            #          and ((all(p==VARIABLE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
+            #                    if p in {self, self.name}))
+            #               or
+            #               (all(p==VALUE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
+            #                    if p in {self, self.name}))))
+            # ):
+            # if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
+            #         or
+            #         (PORT_SPECIFIC_PARAMS in runtime_port_params
+            #          and (all(p in {VARIABLE, VALUE} for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
+            #                    if p in {self, self.name})))
+            # ):
             if (any(var_or_val in runtime_port_params[OUTPUT_PORT_PARAMS] for var_or_val in {VARIABLE, VALUE})
                     or
-                    (PORT_SPECIFIC_PARAMS in runtime_port_params
-                     and ((all(p==VARIABLE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
-                               if p in {self, self.name}))
-                          or
-                          (all(p==VALUE for p in runtime_port_params[PORT_SPECIFIC_PARAMS]
-                               if p in {self, self.name}))))
+                    (PORT_SPECIFIC_PARAMS in runtime_port_params[OUTPUT_PORT_PARAMS]
+                     and (all((var_or_val in p for var_or_val in {VARIABLE, VALUE})
+                              for p in runtime_port_params[OUTPUT_PORT_PARAMS][PORT_SPECIFIC_PARAMS]
+                              if p in {self, self.name})))
             ):
                 self.parameters.is_finished_flag._set(True, context)
                 value = None

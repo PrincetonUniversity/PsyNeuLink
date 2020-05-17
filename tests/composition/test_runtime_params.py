@@ -397,7 +397,7 @@ class TestCompositionRuntimeParams:
 
         T1.function.slope = 5
         T2.input_port.function.scale = 4
-        # Run 1: Test INPUT_PORT_PARAMS for InputPort function directly (scale) and in FUNCTION_PARAMS dict (weights)
+        # Run 0: Test INPUT_PORT_PARAMS for InputPort function directly (scale) and in FUNCTION_PARAMS dict (weights)
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
@@ -415,7 +415,7 @@ class TestCompositionRuntimeParams:
               },
               num_trials=5
               )
-        # Run 2:  Test INPUT_PORT_PARAMS override by Never() Condition
+        # Run 1:  Test INPUT_PORT_PARAMS override by Never() Condition
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -428,7 +428,7 @@ class TestCompositionRuntimeParams:
               },
               num_trials=2
               )
-        # Run 3:  Test INPUT_PORT_PARAMS constraint to Trial 1 assignements
+        # Run 2:  Test INPUT_PORT_PARAMS constraint to Trial 1 assignements
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -442,7 +442,7 @@ class TestCompositionRuntimeParams:
               },
               num_trials=2
               )
-        # Run 4: Test Projection params
+        # Run 3: Test Projection params
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -476,19 +476,19 @@ class TestCompositionRuntimeParams:
         C.run(inputs={T1: 2.0}, )
 
         assert np.allclose(C.results,[   # Conditions satisfied:
-            np.array([[40.5]]), # Trial 0: no conditions (2*5*4)+0.5
-            np.array([[24.5]]), # Trial 1: only T1.slope condition (2*3*4)+0.5
-            np.array([[41.5]]), # Trial 2: only T2.intercept condition (2*5*4)+1+0.5
-            np.array([[200.5]]),# Trial 3: only T2 scale condition (2*5*20) + 0.5
-            np.array([[400.5]]),# Trial 4: only T2.function.weights condition (2*5*4*10)+0.5
-            np.array([[40.5]]), # Run 2, Tria1 0: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
-            np.array([[40.5]]), # Run 2: Trial 1: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
-            np.array([[41.5]]), # Run 3, Tria1 0: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
-            np.array([[400.5]]),# Run 3: Trial 1: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
-            np.array([[4000.5]]),# Run 4: Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*1000)+0.5
-            np.array([[8000.5]]),# Run 4: Trial 1: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*2000)+0.5
-            np.array([[12000.5]]),# Run 4: Trial 2: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*3000)+0.5
-            np.array([[16000.5]]),# Run 4: Trial 3: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*4000)+0.5
+            np.array([[40.5]]),  # Run 0 Trial 0: no conditions (2*5*4)+0.5
+            np.array([[24.5]]),  # Run 0 Trial 1: only T1.slope condition (2*3*4)+0.5
+            np.array([[41.5]]),  # Run 0 Trial 2: only T2.intercept condition (2*5*4)+1+0.5
+            np.array([[200.5]]), # Run 0 Trial 3: only T2 scale condition (2*5*20) + 0.5
+            np.array([[400.5]]), # Run 0 Trial 4: only T2.function.weights condition (2*5*4*10)+0.5
+            np.array([[40.5]]),  # Run 1 Tria1 0: INPUT_PORT_PARAMS Never() takes precedence over scale (2*5*4)+0.5
+            np.array([[40.5]]),  # Run 1 Trial 1: INPUT_PORT_PARAMS Never() takes precedence over weights (2*5*4)+0.5
+            np.array([[41.5]]),  # Run 2 Tria1 0: INPUT_PORT_PARAMS AtTrial(1) takes precedence over scale (2*5*4)+1+0.5
+            np.array([[400.5]]), # Run 2 Trial 1: INPUT_PORT_PARAMS AtTrial(1) consistent with weights (2*5*4*10)+0.5
+            np.array([[4000.5]]), # Run 3 Trial 0: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*1000)+0.5
+            np.array([[8000.5]]), # Run 3 Trial 1: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*2000)+0.5
+            np.array([[12000.5]]),# Run 3 Trial 2: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*3000)+0.5
+            np.array([[16000.5]]),# Run 3 Trial 3: INPUT_PORT_PARAMS AtTrial(0) Projection variable (2*5*4*4000)+0.5
             np.array([[40.]])   # Final run: revert to assignments before previous run (2*5*4)
         ])
 
@@ -538,7 +538,7 @@ class TestCompositionRuntimeParams:
         CTL = ControlMechanism(control=ControlSignal(projections=('slope',T2)))
         C = Composition(pathways=[[T1,T2,CTL]])
 
-        # Run 1
+        # Run 0
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -557,7 +557,7 @@ class TestCompositionRuntimeParams:
               num_trials=8
               )
         CTL.control_signals[0].modulation = OVERRIDE
-        # Run 2
+        # Run 1
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T2: {
@@ -576,19 +576,19 @@ class TestCompositionRuntimeParams:
               )
 
         assert np.allclose(C.results,[         # Conditions satisfied:
-            np.array([[2]]),   # Run 1, Trial 0: None (2 input; no control since that requires a cycle)
-            np.array([[4]]),   # Run 1, Trial 1: None (2 input * 2 control gathered last cycle)
-            np.array([[8]]),   # Run 1, Trial 2: None (2 input * 4 control gathered last cycle)
-            np.array([[10]]),  # Run 1, Trial 3: ControlProjection variable (2*5)
-            np.array([[20]]),  # Run 1, Trial 4: ControlProjection value (2*10)
-            np.array([[42]]),  # Run 1, Trial 5: ControlProjection value using Projection type-specific keyword (2*210)
-            np.array([[64]]),  # Run 1, Trial 6: ControlProjection value using individual Projection (2*32)
-            np.array([[86]]),  # Run 1, Trial 7: ControlProjection value using individual Projection by name (2*43)
-            np.array([[10]]),  # Run 2, Tria1 0: ControlProjection value with OVERRIDE using value (2*5)
-            np.array([[20]]),  # Run 2, Tria1 1: ControlProjection value with OVERRIDE using variable (2*10)
-            np.array([[10]]),  # Run 2, Tria1 2: ControlProjection value with OVERRIDE using value again (in Any) (2*5)
-            np.array([[38]]),  # Run 2, Tria1 3: ControlProjection value with OVERRIDE using individ Proj by name (2*19)
-            np.array([[66]]),  # Run 2: Trial 4: ControlProjection value with OVERRIDE using individ Proj  (2*33)
+            np.array([[2]]),   # Run 0, Trial 0: None (2 input; no control since that requires a cycle)
+            np.array([[4]]),   # Run 0, Trial 1: None (2 input * 2 control gathered last cycle)
+            np.array([[8]]),   # Run 0, Trial 2: None (2 input * 4 control gathered last cycle)
+            np.array([[10]]),  # Run 0, Trial 3: ControlProjection variable (2*5)
+            np.array([[20]]),  # Run 0, Trial 4: ControlProjection value (2*10)
+            np.array([[42]]),  # Run 0, Trial 5: ControlProjection value using Projection type-specific keyword (2*210)
+            np.array([[64]]),  # Run 0, Trial 6: ControlProjection value using individual Projection (2*32)
+            np.array([[86]]),  # Run 0, Trial 7: ControlProjection value using individual Projection by name (2*43)
+            np.array([[10]]),  # Run 1, Tria1 0: ControlProjection value with OVERRIDE using value (2*5)
+            np.array([[20]]),  # Run 1, Tria1 1: ControlProjection value with OVERRIDE using variable (2*10)
+            np.array([[10]]),  # Run 1, Tria1 2: ControlProjection value with OVERRIDE using value again (in Any) (2*5)
+            np.array([[38]]),  # Run 1, Tria1 3: ControlProjection value with OVERRIDE using individ Proj by name (2*19)
+            np.array([[66]]),  # Run 1: Trial 4: ControlProjection value with OVERRIDE using individ Proj  (2*33)
         ])
 
     def test_params_for_output_port_variable_and_value(self):
@@ -605,13 +605,33 @@ class TestCompositionRuntimeParams:
 
         T1.output_ports['SECOND'].function.slope = 1.5
 
+        # Run 0: Test of both OutputPort variables assigned
         C.run(inputs={T1: 10.0},
               runtime_params={
                   T1: {OUTPUT_PORT_PARAMS: {'variable': 2}}}
               )
         assert T1.value == 0.0 # T1 did not execute since both of its OutputPorts were assigned a variable
-        assert T2.value == 5   # (2*1 + 2*1.5) * 3
+        assert T2.value == 5   # (2*1 + 2*1.5)
 
+        # Run 1: Test of both OutputPort values assigned
+        C.run(inputs={T1: 11.0},
+              runtime_params={
+                  T1: {OUTPUT_PORT_PARAMS: {'value': 3}}}
+              )
+        assert T1.value == 0.0 # T1 did not execute since both of its OutputPorts were assigned a value
+        assert T2.value == 6   # (3 + 3)
+
+        # Run 2: Test of on OutputPort variable and the other value assigned
+        C.run(inputs={T1: 12.0},
+              runtime_params={
+                  T1: {OUTPUT_PORT_PARAMS: {
+                          'FIRST': {'value': 5},
+                          'SECOND': {'variable': 13}}}}
+              )
+        assert T1.value == 0.0 # T1 did not execute since both of its OutputPorts were assigned a variable or value
+        assert T2.value == 24.5   # (5 + 13*1.5)
+
+        # Run 3: Tests of numerical accuracy over all permutations of assignments
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {
@@ -633,20 +653,22 @@ class TestCompositionRuntimeParams:
               num_trials=13
               )
         assert np.allclose(C.results,[         # OutputPort Conditions satisfied:
-            np.array([[5]]),      # Run 1, Trial 0:  See above
-            np.array([[15]]),     # Run 2, Trial 0:  None (2*1 + 2*1.5) * 3
-            np.array([[12.75]]),  # Run 2, Trial 1:  variable general (1.7*1 + 1.7*1.5) * 3
-            np.array([[18]]),     # Run 2, Trial 2:  value general (3*1 + 3*1) * 3
-            np.array([[24]]),     # Run 2, Trial 3:  FIRST variable (5*1 + 2*1.5) * 3
-            np.array([[55.5]]),   # Run 2, Trial 4:  SECOND variable (2*1 + 11*1.5) * 3
-            np.array([[64.5]]),   # Run 2, Trial 5:  FIRST and SECOND variable (5*1 + 11*1.5) * 3
-            np.array([[30]]),     # Run 2, Trial 6:  FIRST value (7 + 2*1.5) * 3
-            np.array([[45]]),     # Run 2, Trial 7:  SECOND value (2*1 + 13) * 3
-            np.array([[60]]),     # Run 2, Trial 8:  FIRST and SECOND value (7+13) * 3
-            np.array([[54]]),     # Run 2, Trial 9:  FIRST variable and SECOND value (5*1 + 13) * 3
-            np.array([[70.5]]),   # Run 2, Trial 10: FIRST value and SECOND variable (7 + 11*1.5) * 3
-            np.array([[54]]),     # Run 2, Trial 11: FIRST and SECOND variable and SECOND value (5*1 + 13) * 3
-            np.array([[60]]),     # Run 2, Trial 12: FIRST and SECOND value and SECOND variable (7+13) * 3
+            np.array([[5]]),      # Run 0, Trial 0:  See above
+            np.array([[6]]),      # Run 1, Trial 0:  See above
+            np.array([[24.5]]),   # Run 2, Trial 0:  See above
+            np.array([[15]]),     # Run 3, Trial 0:  None (2*1 + 2*1.5) * 3
+            np.array([[12.75]]),  # Run 3, Trial 1:  variable general (1.7*1 + 1.7*1.5) * 3
+            np.array([[18]]),     # Run 3, Trial 2:  value general (3*1 + 3*1) * 3
+            np.array([[24]]),     # Run 3, Trial 3:  FIRST variable (5*1 + 2*1.5) * 3
+            np.array([[55.5]]),   # Run 3, Trial 4:  SECOND variable (2*1 + 11*1.5) * 3
+            np.array([[64.5]]),   # Run 3, Trial 5:  FIRST and SECOND variable (5*1 + 11*1.5) * 3
+            np.array([[30]]),     # Run 3, Trial 6:  FIRST value (7 + 2*1.5) * 3
+            np.array([[45]]),     # Run 3, Trial 7:  SECOND value (2*1 + 13) * 3
+            np.array([[60]]),     # Run 3, Trial 8:  FIRST and SECOND value (7+13) * 3
+            np.array([[54]]),     # Run 3, Trial 9:  FIRST variable and SECOND value (5*1 + 13) * 3
+            np.array([[70.5]]),   # Run 3, Trial 10: FIRST value and SECOND variable (7 + 11*1.5) * 3
+            np.array([[54]]),     # Run 3, Trial 11: FIRST and SECOND variable and SECOND value (5*1 + 13) * 3
+            np.array([[60]]),     # Run 3, Trial 12: FIRST and SECOND value and SECOND variable (7+13) * 3
         ])
 
     def test_composition_runtime_param_errors(self):
