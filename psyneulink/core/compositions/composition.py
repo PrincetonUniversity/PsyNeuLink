@@ -2395,8 +2395,9 @@ PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
     Composition(                           \
-        nodes=None,                        \
         pathways=None,                     \
+        nodes=None,                        \
+        projections=None,                  \
         disable_learning=False,            \
         controller=None,                   \
         enable_controller=None,            \
@@ -2412,6 +2413,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     Arguments
     ---------
 
+    pathways : Pathway specification or list[Pathway specification...]
+        specifies one or more Pathways to add to the Compositions (see **pathways** argument of `add_pathways
+        `Composition.add_pathways` for specification format).
+
     nodes : `Mechanism <Mechanism>`, `Composition` or list[`Mechanism <Mechanism>`, `Composition`] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
         `SINGLETONs <NodeRole.SINGLETON>` unless they are explicitly assigned `Projections <Projection>`.
@@ -2419,10 +2424,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     projections : `Projection <Projection>` or list[`Projection <Projection>`] : default None
         specifies one or more `Projections <Projection>` to add to the Composition;  these are not functional
         unless they are explicitly assigned a `sender <Projection.sender>` and `receiver <Projection.receiver>`.
-
-    pathways : Pathway specification or list[Pathway specification...]
-        specifies one or more Pathways to add to the Compositions (see **pathways** argument of `add_pathways
-        `Composition.add_pathways` for specification format).
 
     disable_learning: bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
@@ -2653,10 +2654,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def __init__(
             self,
-            # nodes:tc.optional(_is_node_spec)=None,
+            pathways=None,
             nodes=None,
             projections=None,
-            pathways=None,
             disable_learning:bool=False,
             controller:ControlMechanism=None,
             enable_controller=None,
