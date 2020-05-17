@@ -58,21 +58,19 @@ Mechanisms that it controls.
 *ObjectiveMechanism and Monitored OutputPorts*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Like any ControlMechanisms, when an LCControlMechanism is created it may `automatically create
-<`ControlMechanism_ObjectiveMechanism`> an `ObjectiveMechanism` from which it receives its input. The
-ObjectiveMechanism receives its input from any `OutputPorts <OutputPort>` specified in **monitor_for_control**
-argument of the constructor for LCControlMechanism
-COMMENT:
-TBI FOR COMPOSITION
-(or of a `System` for which
-it is assigned as a `controller <System.controller>`; see `ControlMechanism_ObjectiveMechanism`).
-COMMENT
-By default, the ObjectiveMechanism of an LCControlMechanism is assigned a `CombineMeans` Function  as its `function
-<ObjectiveMechanism.function>` (see `LCControlMechanism_ObjectiveMechanism`).  The ObjectiveMechanism can be
-customized using the **objective_mechanism** argument of the LCControlMechanism's constructor; however, the `value
-<OutputPort.value>` of its *OUTCOME* `OutputPort` must be a scalar value (that is used as the input to the
-LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phasic response
-<LCControlMechanism_Modes_Of_Operation>`.
+If the **objective_mechanism** argument is specified then, as with a standard ControlMechanism, the specified
+`ObjectiveMechanism` is assigned to its `objective_mechanism <ControlMechanism.objective_mechanism>` attribute. The
+`value <OutputPort.value>` of the ObjectiveMechanism's *OUTCOME* `OutputPort` must be a scalar (that is used as the
+input to the LCControlMechanism's `function <LCControlMechanism.function>` to drive its `phasic response
+<LCControlMechanism_Modes_Of_Operation>`.  An ObjectiveMechanism can also be constructed automatically, by specifying
+**objective_mechanism** as True; that is assigned a `CombineMeans` Function  as its `function
+<ObjectiveMechanism.function>` (see `LCControlMechanism_ObjectiveMechanism`).
+
+If an ObjectiveMechanism is assigned to the LCControlMechanism (whether by specifying one explicitly or that it be
+created automatically), the LCControlMechanism receives its input from that ObjectiveMechanism, which receives its
+input from any `OutputPorts <OutputPort>` specified in **monitor_for_control** argument of the constructor for
+LCControlMechanism.
+
 
 .. _LCControlMechanism_Modulated_Mechanisms:
 
