@@ -340,7 +340,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
 
 
 class ParametersTemplate:
-    _deepcopy_shared_keys = ['_parent', '_params', '_owner', '_children']
+    _deepcopy_shared_keys = ['_parent', '_params', '_owner_ref', '_children']
     _values_default_excluded_attrs = {'user': False}
 
     def __init__(self, owner, parent=None):
@@ -440,14 +440,14 @@ class ParametersTemplate:
 
     @property
     def _owner(self):
-        return unproxy_weakproxy(self.__owner)
+        return unproxy_weakproxy(self._owner_ref)
 
     @_owner.setter
     def _owner(self, value):
         try:
-            self.__owner = weakref.proxy(value)
+            self._owner_ref = weakref.proxy(value)
         except TypeError:
-            self.__owner = value
+            self._owner_ref = value
 
 
 class Defaults(ParametersTemplate):
