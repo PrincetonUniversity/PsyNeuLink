@@ -2861,7 +2861,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         except AttributeError:
             if self.initialization_status == ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
-                                     "or appropriately configuring a system to which it belongs".
+                                     "or appropriately configuring a Composition to which it belongs".
                                      format(self.name, 'log'))
             else:
                 raise AttributeError

@@ -802,7 +802,7 @@ class LCControlMechanism(ControlMechanism):
             self.parameters.control_allocation.default_value = self.value[0]
 
         super()._instantiate_output_ports(context=context)
-        self.aux_components.append(self.control_projections)
+        self.aux_components.extend(self.control_projections)
 
     def _check_for_composition(self, context=None):
         # FIX 5/17/20:
