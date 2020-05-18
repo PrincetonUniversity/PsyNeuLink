@@ -1165,8 +1165,39 @@ COMMENT:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a Composition has any recurrent Projections, these form cycles in its `graph <Composition_Graph> — loops of
-execution — that require some nodes in the be initialzed when it is executed
-see `Composition_Acyclic_Cyclic`
+execution — that one or more `Nodes <Composition_Nodes>` in the cycle to be initialized when the Composition executes
+(see `Composition_Acyclic_Cyclic`).  Cycles are handled by a Composition in one of two ways, based on whether any
+Projections in the cycle are designated as `feeedback <LINK>`:
+
+* No feedback Projections.  In this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
+  treated equally, and executed in the same `TIME_STEP <TimseScale.TIME_STEP>`.  The input that each receives from
+  the preceding Node in the cycle is based on that Node's `previous value
+  <LINK>`;  on the first cycle,
+  - NESTED CYCLES ARE TREATED AS ONE BIG CYCLE
+  - ALL ARE INITIALIZED
+  - ON FIRST CYCLE (FIRST TRIAL OF FIRST RUN), OR AFTER REINITIALIXE), USE "INITAL_CYCLE_VALUES"
+    (IF SPECIFIED IN RUN), ELSE DEFAULT VALUE
+  - ALL NODES ARE GIVEN NodeRole.CYCLE
+
+* Feedback Projection in cycles.
+  - CAN BE DESIGNATED IN add_projection;  ?ANY OTHER WAY
+  - IF NOT DESIGNATED, INFERED USING FOLLOWING RULES:
+    - CONTROL PROJECTIONS THAT ARE IN A CYCLE ARE ALWAYS ASSIGNED FEEDBACK BY DEFAULT,
+      MAKING CONTROLMECHANISM FEEDBACK_SENDER
+  - USED TO "BREAK" CYCLE
+  - ONLY ONE PER CYCLE
+  - ?NESTED CYCLES ARE TREATED AS ONE BIG CYCLE, AND ALLOWED ONLY ONE FEEDBACK?
+  - NodeRole.FEEDBACK_SENDER AND NodeRole.FEEDBACK_RECEIVER ARE ASSIGNED
+  - FEEDBACK SENDER IS INITIALIZED;  ALL OTHER ARE TREATED IN THE STANDARD ACYCLIC / FEEDFORWARD MANNER
+
+* RecurrentTransferMechanisms and AutoassociativeProjections.
+   - ??
+
+INITIALIZATION
+  - INITIAL VALUES
+  - RE-INITIATILIZE
+  - DIFERENCE FROM INTEGRATOR REINITIALIZATION
+
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
@@ -1247,9 +1278,10 @@ When `run <Composition.run>` is called by a Composition, it calls that Compositi
 method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
 <Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
 the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
-in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
-<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
-`Condition` specifications for individual Components to execute different Components at different time scales.
+in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been executed at least once or another
+`termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
+used in combination with `Condition` specifications for individual Components to execute different Components at
+different time scales.
 
 Runtime Params
 COMMENT
