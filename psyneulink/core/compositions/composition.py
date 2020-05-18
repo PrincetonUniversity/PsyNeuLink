@@ -1074,7 +1074,7 @@ Complete input specification:
 
 ..
 
-COMMENT`:
+COMMENT:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
 Environment.
 
