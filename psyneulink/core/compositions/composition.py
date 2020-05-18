@@ -1178,31 +1178,49 @@ any of the Projections in a cycle are designated as `feeedback <LINK>`:
   treated equally, and executed in the same `TIME_STEP <TimseScale.TIME_STEP>`.  The input that each receives from
   the preceding Node in the cycle is based on that Node's `previous value
   <LINK>`;  on the first cycle,
-  - NESTED CYCLES ARE TREATED AS ONE BIG CYCLE
-  - ALL ARE INITIALIZED
-  - ON FIRST CYCLE (FIRST TRIAL OF FIRST RUN), OR AFTER REINITIALIXE), USE "INITAL_CYCLE_VALUES"
-    (IF SPECIFIED IN RUN), ELSE DEFAULT VALUE
+  - ?NESTED CYCLES ARE TREATED AS ONE BIG CYCLE
+  [- ALL NODES ARE INITIALIZED USING THEIR DEFAULT VALUES ON CONSTRUCTION]
+  - ON THE FIRST CALL TO RUN, OR ANY ONE THEREAFETER, NODES IN A CYCLE ARE ASSIGNED ANY ONES PASSED IN THE
+    "initialize_cycle_values" BEFORE THAT RUN IS EXEUTED (A WARNING IS ISSUED FOR ATTEMPTS TO ASSIGN TO ANY
+    NODES NOT IN CYCLE) (ONES NOT ASSIGNED A VALUE IN "initialize_cycle_values" USE DEFAULT
+    VALUE: <object>.defaults.value
+  - ANY NODES NOT ASSIGNED A VALUE IN "initialize_cycle_values" (AS ARGUMENT TO RUN) USE, ON SUBSEQUENT TRIALS (AND
+    RUNS) THE PREVIOUS VALUE OF THEIR VALUE ATTRIBUTE (AS DISTINCT FROM THE previous_value ATTRIBUTE WHICH BELONGS
+    TO AN INTEGRATOR).
   - ALL NODES ARE GIVEN NodeRole.CYCLE
 
 * Feedback Projection in cycles.
-  - CAN BE DESIGNATED IN add_projection;  ?ANY OTHER WAY
+  - CAN BE DESIGNATED IN add_projection;  FIX: ??ANY OTHER WAY?  IN A TUPLE?
   - IF NOT DESIGNATED, INFERED USING FOLLOWING RULES:
     - CONTROL PROJECTIONS THAT ARE IN A CYCLE ARE ALWAYS ASSIGNED FEEDBACK BY DEFAULT,
       MAKING CONTROLMECHANISM FEEDBACK_SENDER
+    - FIX: ??OTHER RULES??
   - USED TO "BREAK" CYCLE
-  - ONLY ONE PER CYCLE
-  - ?NESTED CYCLES ARE TREATED AS ONE BIG CYCLE, AND ALLOWED ONLY ONE FEEDBACK?
+  - FIX: ??ONLY ONE PER CYCLE
+  - FIX: ??NESTED CYCLES ARE TREATED AS ONE BIG CYCLE, AND ALLOWED ONLY ONE FEEDBACK? -- SEE FIGURE
   - NodeRole.FEEDBACK_SENDER AND NodeRole.FEEDBACK_RECEIVER ARE ASSIGNED
   - FEEDBACK SENDER IS INITIALIZED;  ALL OTHER ARE TREATED IN THE STANDARD ACYCLIC / FEEDFORWARD MANNER
 
 * RecurrentTransferMechanisms and AutoassociativeProjections.
-   - ??
+   - FIX: ??TREATED AS FLATTENED CYCLE?
 
-INITIALIZATION
-  - INITIAL VALUES
-  - RE-INITIATILIZE
-  - DIFERENCE FROM INTEGRATOR REINITIALIZATION
+  - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
+    - reset_integrator_nodes_to:  DICT of {node: value} paris
+                               THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
+                               IF NOT SPECIIFED, THEN REINITIALIZED TO previous_value ATTRIBUTE, WHICH IS SET TO THE
+                               MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
+    FIX: ?? CONSIDER MAKING REINITIALIZE_NODES_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+    - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
+                                                 IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
+                                                                       THEIR reset_integrator_when ATTRIBUTE IS None
+                                                 IF A DICT: IT SETS THE CONDITION FOR ALL SPECIFIFED NODES
+                                                            OVERRIDING THEIR SPEC IF THEY HAVE ONE, AND LEAVING ANY
+                                                            NOT SPECIFIED IN THE DICT WITH THEIR CURRENT ASSIGNMENT
+    - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
+                                                               INCLUDED IN reset_integrator_nodes_when ARG OF RUN
+    - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
 
+---------
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
