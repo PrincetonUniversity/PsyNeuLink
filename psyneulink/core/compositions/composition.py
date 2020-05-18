@@ -1165,9 +1165,9 @@ COMMENT:
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a Composition has any recurrent Projections, these form cycles in its `graph <Composition_Graph> — loops of
-execution — that one or more `Nodes <Composition_Nodes>` in the cycle to be initialized when the Composition executes
-(see `Composition_Acyclic_Cyclic`).  Cycles are handled by a Composition in one of two ways, based on whether any
-Projections in the cycle are designated as `feeedback <LINK>`:
+execution — that require one or more `Nodes <Composition_Nodes>` in the cycle be initialized when the Composition
+executes (see `Composition_Acyclic_Cyclic`).  This is handled by a Composition in one of two ways, based on whether
+any of the Projections in a cycle are designated as `feeedback <LINK>`:
 
 * No feedback Projections.  In this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
   treated equally, and executed in the same `TIME_STEP <TimseScale.TIME_STEP>`.  The input that each receives from
