@@ -32,7 +32,7 @@ from .core import *
 from .library import *
 
 _pnl_global_names = [
-    'primary_registries',
+    'primary_registries', 'System', 'Process'
 ]
 
 __all__ = list(_pnl_global_names)
@@ -81,9 +81,7 @@ primary_registries = [
     PathwayRegistry,
     PortRegistry,
     PreferenceSetRegistry,
-    ProcessRegistry,
     ProjectionRegistry,
-    SystemRegistry
 ]
 
 for reg in primary_registries:
@@ -92,3 +90,13 @@ for reg in primary_registries:
             obj._is_pnl_inherent = True
 
     process_registry_object_instances(reg, func)
+
+def System(*args, **kwars):
+    show_warning_sys_and_proc_warning()
+
+def Process(*args, **kwars):
+    show_warning_sys_and_proc_warning()
+
+def show_warning_sys_and_proc_warning():
+    raise ComponentError(f"'System' and 'Process' are no longer supported in PsyNeuLink; "
+                         f"use 'Composition' and/or 'Pathway' instead")

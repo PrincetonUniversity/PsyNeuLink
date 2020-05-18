@@ -726,7 +726,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
-        # MODIFIED 5/2/20 NEW:
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep==None:
             if context.source==ContextFlags.COMMAND_LINE:
@@ -743,10 +742,8 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 assert False, f"PROGRAM ERROR: 'agent_rep' arg should have been specified " \
                               f"in internal call to constructor for {self.name}."
-        # MODIFIED 5/2/20 END
 
         super().__init__(
-            system=None,
             function=function,
             input_ports=features,
             features=features,
@@ -890,7 +887,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._objective_projection = projection_from_objective
 
-    def _update_input_ports(self, context=None, runtime_params=None):
+    def _update_input_ports(self, runtime_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
 
         Call execute method for all (MappingProjection) Projections in Port.path_afferents
@@ -899,13 +896,20 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_port = self.input_port
-        outcome_input_port._update(context=context, params=runtime_params)
+        outcome_input_port._update(params=runtime_params, context=context)
         port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
+        # MODIFIED 5/8/20 OLD:
+        # FIX 5/8/20 [JDC]: THIS DOESN'T CALL SUPER, SO NOT IDEAL HOWEVER, REVISION BELOW CRASHES... NEEDS TO BE FIXED
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
         return np.array(port_values)
+        # # MODIFIED 5/8/20 NEW:
+        # input_port_values = super()._update_input_ports(runtime_params, context)
+        # port_values.append(input_port_values)
+        # return np.array(port_values)
+        # MODIFIED 5/8/20 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""

@@ -4,7 +4,7 @@ import pytest
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
-from psyneulink.core.components.component import ComponentError
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
@@ -14,8 +14,6 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import \
     IntegratorMechanism, IntegratorMechanismError
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
 from psyneulink.core.globals.context import Context
 from psyneulink.core.scheduling.condition import AtTrial
 from psyneulink.core.scheduling.condition import Never
@@ -1265,14 +1263,12 @@ class TestStatefulness:
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()
         I2.reinitialize_when = AtTrial(2)
-        P1 = Process(pathway=[I1])
-        P2 = Process(pathway=[I2])
-        S = System(processes=[P1, P2],
-                   reinitialize_mechanisms_when=AtTrial(3))
+        C = Composition(pathways=[[I1], [I2]])
 
-        S.run(inputs={I1: [[1.0]],
+        C.run(inputs={I1: [[1.0]],
                       I2: [[1.0]]},
-              num_trials=7)
+              num_trials=7,
+              reinitialize_nodes_when=AtTrial(3))
 
         expected_results = [[np.array([0.5]), np.array([0.5])],
                             [np.array([0.75]), np.array([0.75])],
@@ -1282,7 +1278,7 @@ class TestStatefulness:
                             [np.array([0.875]), np.array([0.9375])],
                             [np.array([0.9375]), np.array([0.96875])]]
 
-        assert np.allclose(expected_results, S.results)
+        assert np.allclose(expected_results, C.results)
 
 
 class TestDualAdaptiveIntegrator:

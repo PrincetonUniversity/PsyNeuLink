@@ -988,13 +988,13 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_params=None, context=None):
         for port in self._parameter_ports:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param ports are updated in the
             # projection's _update_parameter_ports, and accordingly are not updated here
             if port.name != AUTO and port.name != HETERO:
-                port._update(context=context, params=runtime_params)
+                port._update(params=runtime_params, context=context)
 
     @property
     def recurrent_size(self):

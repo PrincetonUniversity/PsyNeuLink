@@ -247,7 +247,6 @@ class AGTControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System_Base)=None,
                  monitored_output_ports=None,
                  function=None,
                  # control_signals:tc.optional(list) = None,
@@ -258,7 +257,6 @@ class AGTControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None):
 
         super().__init__(
-            system=system,
             objective_mechanism=ObjectiveMechanism(
                 monitored_output_ports=monitored_output_ports,
                 function=DualAdaptiveIntegrator

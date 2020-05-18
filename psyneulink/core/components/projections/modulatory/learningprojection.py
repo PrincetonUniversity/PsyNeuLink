@@ -179,6 +179,7 @@ Class Reference
 """
 
 import inspect
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -555,12 +556,7 @@ class LearningProjection(ModulatoryProjection_Base):
         self.sender = sender
 
         if not isinstance(self.sender, (OutputPort, LearningMechanism)):
-            from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
-                import _instantiate_learning_components
-            context.source = ContextFlags.METHOD
-            _instantiate_learning_components(learning_projection=self,
-                                             # TODO: do we need this argument?
-                                             context=context)
+            warnings.warn("Instantiation of a LearningProjection outside of a Composition is tricky!")
 
         if isinstance(self.sender, OutputPort) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -611,22 +607,6 @@ class LearningProjection(ModulatoryProjection_Base):
         # Set learning_enabled to value of its LearningMechanism sender if it was not specified in the constructor
         if self.learning_enabled is None:
             self.learning_enabled = self.parameters.learning_enabled.default_value = learning_mechanism.learning_enabled
-
-        # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
-        #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-
-        # FIX: REMOVE WHEN System IS FULLY DEPRECATED
-        # MODIFIED 7/15/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP)
-        # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
-        try:
-            candidate_objective_mech = learning_mechanism.input_ports[ERROR_SIGNAL].path_afferents[0].sender.owner
-            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role == LEARNING:
-                learned_projection.objective_mechanism = candidate_objective_mech
-        except TypeError:
-            # learning_mechanism does not receive from an ObjectiveMechanism
-            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
-            pass
-        # MODIFIED 7/15/19 END
 
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self

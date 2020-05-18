@@ -13,7 +13,7 @@
 Contents
 --------
 
-* `Component_Overview`
+* `Component_Overview
 * `Component_Creation`
     * `Component_Deferred_Init`
 * `Component_Structure`
@@ -81,6 +81,10 @@ Component Structure
 
 Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
 user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
+
+.. _Component_Type:
+
+* **componentType** - species the type of Component.
 
 .. _Component_Variable:
 
@@ -192,22 +196,23 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 `Parameter` objects, each of which stores a Parameter's values, `default values <Component.defaults>`, and various
 `properties <Parameter_Attributes_Table>` of the parameter.
 
-* `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values that
-    are used for all Components, unless overridden.
+* `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values
+   that are used for all Components, unless overridden.
 
   All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
-  can also be modified by `ControlSignals <ControlSignal>` when a `System executes <System_Execution_Control>`. In
-  general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+  can also be modified by `ControlSignals <ControlSignal>` when a `Composition executes <Composition_Execution>`.
+  In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
   or format of the values associated with a Component can be subject to modulation.  For example, for a
   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
   `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
   `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
-  <TransferMechanism.integration_rate>` can all be subject to modulation.
-  Parameters that are subject to modulation have the
-  `modulable <Parameter.modulable>` attribute set to True and are
-  associated with a `ParameterPort` to which the ControlSignals
-  can project (by way of a `ControlProjection`).
+  <TransferMechanism.integration_rate>` can all be subject to modulation. Parameters that are subject to modulation
+  have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
+  the ControlSignals can project (by way of a `ControlProjection`).
+  COMMENT:
+      FIX: ADD COMMENT ABOUT HOW TO ASSIGN DEFAULTS HERE 5/8/20
+  COMMENT
 
 .. _Component_Function_Params:
 
@@ -457,12 +462,12 @@ from psyneulink.core.globals.context import Context, ContextError, ContextFlags,
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
-    FUNCTION, FUNCTION_COMPONENT_CATEGORY, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
-    LEARNING, LEARNING_PROJECTION, LOG_ENTRIES, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
+    FUNCTION, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
+    LEARNING, LEARNING_PROJECTION, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, PARAMS, PREFS_ARG, \
-    REINITIALIZE_WHEN, SIZE, VALUE, VARIABLE
+    MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
+    REINITIALIZE_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
@@ -751,11 +756,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     prefs : PreferenceSet
         see `prefs <Component_Prefs>`
 
-    parameters
-        see `parameters <Component_Parameters>`
+    parameters :  Parameters
+        see `parameters <Component_Parameters>` and `Parameters` for additional information.
 
-    defaults
-        an object that provides access to the default values of a `Component's` `parameters`
+    defaults : Defaults
+        an object that provides access to the default values of a `Component's` `parameters`;
+        see `parameter defaults <Parameter_Defaults>` for additional information.
 
     initialization_status : field of flags attribute
         indicates the state of initialization of the Component;
@@ -947,9 +953,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     initMethod = INIT_FULL_EXECUTE_METHOD
 
-    classPreferenceLevel = PreferenceLevel.SYSTEM
-    # Any preferences specified below will override those specified in SYSTEM_DEFAULT_PREFERENCES
-    # Note: only need to specify setting;  level will be assigned to SYSTEM automatically
+    classPreferenceLevel = PreferenceLevel.COMPOSITION
+    # Any preferences specified below will override those specified in COMPOSITION_DEFAULT_PREFERENCES
+    # Note: only need to specify setting;  level will be assigned to COMPOSITION automatically
     # classPreferences = {
     #     PREFERENCE_SET_NAME: 'ComponentCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
@@ -1040,11 +1046,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.reinitialize_when = reinitialize_when
         else:
             self.reinitialize_when = Never()
-
-        # MODIFIED 4/25/20 NEW:
-        if not hasattr(self, '_role'):
-            self._role = None
-        # MODIFIED 4/25/20 END
 
         # self.componentName = self.componentType
         try:
@@ -1343,6 +1344,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return convert_to_np_array(default_variable, dimension=1)
 
+    # ELIMINATE SYSTEM
     # IMPLEMENTATION NOTE: (7/7/17 CW) Due to System and Process being initialized with size at the moment (which will
     # be removed later), I’m keeping _handle_size in Component.py. I’ll move the bulk of the function to Mechanism
     # through an override, when Composition is done. For now, only Port.py overwrites _handle_size().
@@ -1621,38 +1623,62 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # PARAMS ------------------------------------------------------------
 
-        # # MODIFIED 11/27/16 OLD:
-        # # If parameter_validation is set, the function was called with params,
-        # #   and they have changed, then validate requested values and assign to target_set
-        # if self.prefs.paramValidationPref and params and not params is None and not params is target_set:
-        #     # self._validate_params(params, target_set, context=FUNCTION_CHECK_ARGS)
-        #     self._validate_params(request_set=params, target_set=target_set, context=context)
-
-        # reset any runtime params that were leftover from a direct call to .execute (atypical)
-        if context.execution_id in self._runtime_params_reset:
-            for key in self._runtime_params_reset[context.execution_id]:
-                self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
-        self._runtime_params_reset[context.execution_id] = {}
-
         # If params have been passed, treat as runtime params
-        runtime_params = params
-        if isinstance(runtime_params, dict):
-            for param_name in runtime_params:
-                # (1) store current attribute value in _runtime_params_reset so that it can be reset later
-                # (2) assign runtime param values to attributes (which calls validation via properties)
-                # (3) update parameter ports if needed
-                if hasattr(self, param_name):
-                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
-                        continue
-                    if context.execution_id not in self._runtime_params_reset:
-                        self._runtime_params_reset[context.execution_id] = {}
-                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters, param_name)._get(context)
-                    self._set_parameter_value(param_name, runtime_params[param_name], context)
-        elif runtime_params:    # not None
-            raise ComponentError("Invalid specification of runtime parameters for {}".format(self.name))
+        self._validate_and_assign_runtime_params(params, context)
 
         self.parameters.variable._set(variable, context=context)
         return variable
+
+    def _validate_and_assign_runtime_params(self, runtime_params, context):
+        """Validate runtime_params, cache for reset, and assign values
+
+        Check that all params belong either to Component or its function (raise error if any are found that don't)
+        Cache params to reset in _runtime_params_reset
+        """
+
+        # # MODIFIED 5/8/20 OLD:
+        # # reset any runtime params that were leftover from a direct call to .execute (atypical)
+        # if context.execution_id in self._runtime_params_reset:
+        #     for key in self._runtime_params_reset[context.execution_id]:
+        #         self._set_parameter_value(key, self._runtime_params_reset[context.execution_id][key], context)
+        # self._runtime_params_reset[context.execution_id] = {}
+        # MODIFIED 5/8/20 END
+
+        from psyneulink.core.components.functions.function import is_function_type, FunctionError
+        def generate_error(param_name):
+            owner_name = ""
+            if hasattr(self, OWNER) and self.owner:
+                owner_name = f" of {self.owner.name}"
+                if hasattr(self.owner, OWNER) and self.owner.owner:
+                    owner_name = f"{owner_name} of {self.owner.owner.name}"
+            err_msg=f"Invalid specification in runtime_params arg for {self.name}{owner_name}: '{param_name}'."
+            if is_function_type(self):
+                raise FunctionError(err_msg)
+            else:
+                raise ComponentError(err_msg)
+
+        if isinstance(runtime_params, dict):
+            for param_name in runtime_params:
+                if not isinstance(param_name, str):
+                    generate_error(param_name)
+                elif hasattr(self, param_name):
+                    if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
+                        generate_error(param_name)
+                    if context.execution_id not in self._runtime_params_reset:
+                        self._runtime_params_reset[context.execution_id] = {}
+                    self._runtime_params_reset[context.execution_id][param_name] = getattr(self.parameters,
+                                                                                           param_name)._get(context)
+                    self._set_parameter_value(param_name, runtime_params[param_name], context)
+                # Any remaining params should either belong to the Component's function
+                #    or, if the Component is a Function, to it or its owner
+                elif ( # If Component is not a function, and its function doesn't have the parameter or
+                        (not is_function_type(self) and not hasattr(self.function, param_name))
+                       # the Component is a standalone function:
+                       or (is_function_type(self) and not self.owner)):
+                    generate_error(param_name)
+
+        elif runtime_params:    # not None
+            raise ComponentError(f"Invalid specification of runtime parameters for {self.name}: {runtime_params}.")
 
     @handle_external_context()
     def _instantiate_defaults(self,
@@ -2577,6 +2603,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
+
         return value
 
     def _execute(self, variable=None, context=None, runtime_params=None, **kwargs):
@@ -2593,19 +2620,46 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                                [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
             self._update_current_execution_time(context=context)
 
-        # CALL FUNCTION
+        value = None
 
-        # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
-        #                     that are specific to particular class of Functions
-        #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
-        function_variable = self._parse_function_variable(variable, context=context)
-        value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
-        try:
-            self.function.parameters.value._set(value, context)
-        except AttributeError:
-            pass
+        # GET VALUE if specified in runtime_params
+        if runtime_params and VALUE in runtime_params:
+            # Get value and then pop from runtime_param, as no need to restore to previous value
+            value = np.atleast_1d(runtime_params.pop(VALUE))
+            # Eliminate any other params (including ones for function),
+            #  since they will not be assigned and therefore should not be restored to previous value below
+            #  (doing so would restore them to the previous previous value)
+            runtime_params = {}
+
+        # CALL FUNCTION if value is not specified
+        if value is None:
+            # IMPLEMENTATION NOTE:  **kwargs is included to accommodate required arguments
+            #                     that are specific to particular class of Functions
+            #                     (e.g., error_matrix for LearningMechanism and controller for EVCControlMechanism)
+            function_variable = self._parse_function_variable(variable, context=context)
+            # IMPLEMENTATION NOTE: Need to pass full runtime_params (and not just function's params) since
+            #                      Mechanisms with secondary functions (e.g., IntegratorMechanism) seem them
+            value = self.function(variable=function_variable, context=context, params=runtime_params, **kwargs)
+            try:
+                self.function.parameters.value._set(value, context)
+            except AttributeError:
+                pass
 
         self.most_recent_context = context
+
+        # Restore runtime_params to previous value
+        if runtime_params:
+            for param in runtime_params:
+                try:
+                    prev_val = getattr(self.parameters, param).get_previous(context)
+                    self._set_parameter_value(param, prev_val, context)
+                except AttributeError:
+                    try:
+                        prev_val = getattr(self.function.parameters, param).get_previous(context)
+                        self.function._set_parameter_value(param, prev_val, context)
+                    except:
+                        pass
+
         return value
 
     def is_finished(self, context=None):
@@ -2808,7 +2862,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         except AttributeError:
             if self.initialization_status == ContextFlags.DEFERRED_INIT:
                 raise ComponentError("Initialization of {} is deferred; try assigning {} after it is complete "
-                                     "or appropriately configuring a system to which it belongs".
+                                     "or appropriately configuring a Composition to which it belongs".
                                      format(self.name, 'log'))
             else:
                 raise AttributeError

@@ -13,7 +13,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, RunError
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 from psyneulink.core.globals.keywords import INTERCEPT, NOISE, SLOPE
@@ -735,7 +735,7 @@ class TestInputSpec:
         inputs_to_A = [[1.0], [2.0]]                    # 2 input specs
         inputs_to_B = [[1.0], [2.0], [3.0], [4.0]]      # 4 input specs
 
-        with pytest.raises(CompositionError) as error_text:
+        with pytest.raises(RunError) as error_text:
             comp.run(inputs={A: inputs_to_A,
                              B: inputs_to_B})
         assert "input dictionary for COMP contains input specifications of different lengths" in str(error_text.value)

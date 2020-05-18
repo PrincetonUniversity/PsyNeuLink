@@ -91,9 +91,6 @@ class DefaultControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 # default_variable=None,
-                 # size=None,
-                 system=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  control_signals:tc.optional(list)=None,
                  params=None,
@@ -104,8 +101,6 @@ class DefaultControlMechanism(ControlMechanism):
                  ):
 
         super(DefaultControlMechanism, self).__init__(
-                # default_variable=default_variable,
-                # size=size,
                 objective_mechanism=objective_mechanism,
                 control_signals=control_signals,
                 function=function,

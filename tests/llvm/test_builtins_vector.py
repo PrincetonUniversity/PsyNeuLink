@@ -32,12 +32,12 @@ ct_res = llvm_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
                          (np.multiply, v, ct_v, "__pnl_builtin_vec_hadamard", mul_res),
                          (np.multiply, scalar, scalar, "__pnl_builtin_vec_scalar_mult", smul_res),
                          ], ids=["ADD", "SUB", "MUL", "SMUL"])
-@pytest.mark.parametrize("mode", ["Python",
+@pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm)])
 def test_vector_op(benchmark, op, y, llvm_y, builtin, result, mode):
-    if mode == "Python":
+    if mode == 'Python':
         res = benchmark(op, u, y)
-    elif mode == "LLVM":
+    elif mode == 'LLVM':
         llvm_fun = pnlvm.LLVMBinaryFunction.get(builtin)
         benchmark(llvm_fun, ct_u, llvm_y, DIM_X, ct_res)
         res = llvm_res
