@@ -1190,7 +1190,6 @@ any of the Projections in a cycle are designated as `feeedback <LINK>`:
   - NodeRole.FEEDBACK_SENDER AND NodeRole.FEEDBACK_RECEIVER ARE ASSIGNED
   - FEEDBACK SENDER IS INITIALIZED;  ALL OTHER ARE TREATED IN THE STANDARD ACYCLIC / FEEDFORWARD MANNER
 
-
 * RecurrentTransferMechanisms and AutoassociativeProjections.
    - ??
 
