@@ -47,7 +47,6 @@ Temporary Items
 .idea/other.xml
 .idea/codeStyleSettings.xml
 .idea/inspectionProfiles/Project_Default.xml
-.idea/runConfigurations
 
 # Sensitive or high-churn files:
 .idea/**/dataSources/
