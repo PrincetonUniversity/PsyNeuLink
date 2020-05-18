@@ -854,6 +854,11 @@ set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified us
 can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
 The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
 (in which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed).
+If the **inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>`
+methods, the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL
+<TimeScale.TRIAL>`.  if it is not specified for the `learn <Composition.learn>` method, an error is generated
+(since it requires the target for learning that is specified in **inputs**).
+
 
 .. _Composition_Execution_Results:
 
@@ -8017,6 +8022,509 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self._animation.append(image)
 
+    def _infer_target_nodes(self, targets: dict):
+        """
+        Maps targets onto target mechanisms (as needed by learning)
+
+        Returns
+        ---------
+
+        `dict`:
+            Dict mapping TargetMechanisms -> target values
+        """
+        ret = {}
+        for node, values in targets.items():
+            if NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node):
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
+                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+                target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self.get_roles_by_node(t) and NodeRole.LEARNING in self.get_roles_by_node(t))]
+
+                if len(target_nodes) != 1:
+                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer learning target node from output node {node}!")
+
+                ret[target_nodes[0]] = values
+            else:
+                ret[node] = values
+        return ret
+
+    def _parse_learning_spec(self, inputs, targets):
+        """
+        Converts learning inputs and targets to a standardized form
+
+        Returns
+        ---------
+
+        `dict` :
+            Dict mapping mechanisms to values (with TargetMechanisms inferred from output nodes if needed)
+
+        `int` :
+            Number of input sets in dict for each input node in the Composition
+        """
+
+        # Special case for callable inputs
+        if callable(inputs):
+            return inputs, sys.maxsize
+
+        # 1) Convert from key-value representation of values into separated representation
+        if 'targets' in inputs:
+            targets = inputs['targets'].copy()
+
+        if 'inputs' in inputs:
+            inputs = inputs['inputs'].copy()
+
+        # 2) Convert output node keys -> target node keys (learning always needs target nodes!)
+        def _recursive_update(d, u):
+            """
+            Recursively calls update on dictionaries, which prevents deletion of keys
+            """
+            for key, val in u.items():
+                if isinstance(val, collections.abc.Mapping):
+                    d[key] = _recursive_update(d.get(key, {}), val)
+                else:
+                    d[key] = val
+            return d
+
+        if targets is not None:
+            targets = self._infer_target_nodes(targets)
+            inputs = _recursive_update(inputs, targets)
+
+        # 3) Resize inputs to be of the form [[[]]],
+        # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
+        inputs, num_inputs_sets = self._parse_dict(inputs)
+
+        return inputs, num_inputs_sets
+
+    def _parse_generator_function(self, inputs):
+        """
+        Instantiates and parses generator from generator function
+
+        Returns
+        -------
+
+        `generator` :
+            Generator instance that will be used to yield inputs
+
+        `int` :
+            a large int (sys.maxsize), used in place of the number of input sets, since it is impossible to determine
+            a priori how many times a generator will yield
+        """
+        # If a generator function was provided as input, resolve it to a generator and
+        # pass to _parse_generator
+        _inputs = inputs()
+        gen, num_inputs_sets = self._parse_generator(_inputs)
+        return gen, num_inputs_sets
+
+    def _parse_generator(self, inputs):
+        """
+        Returns
+        -------
+        `generator` :
+            Generator instance that will be used to yield inputs
+
+        `int` :
+            a large int (sys.maxsize), used in place of the number of input sets, since it is impossible to determine
+            a priori how many times a generator will yield
+        """
+        # It is impossible to determine the number of yields a generator will support, so we return the maximum
+        # allowed integer for num_trials here. During execution, we will determine empirically if the generator has
+        # yielded to exhaustion by catching StopIteration errors
+        num_inputs_sets = sys.maxsize
+        return inputs, num_inputs_sets
+
+    def _parse_list(self, inputs):
+        """
+        Validates that conditions are met to use a list as input, i.e. that there is only one input node. If so, convert
+            list to input dict and parse
+
+        Returns
+        -------
+        `dict` :
+            Parsed and standardized input dict
+
+        `int` :
+            Number of input sets in dict for each input node in the Composition
+
+        """
+        # Lists can only be used as inputs in the case where there is a single input node.
+        # Validate that this is true. If so, resolve the list into a dict and parse it.
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        if len(input_nodes) == 1:
+            _inputs = {next(iter(input_nodes)): inputs}
+        else:
+            raise CompositionError(
+                f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
+        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        return input_dict, num_inputs_sets
+
+    def _parse_string(self, inputs):
+        """
+        Validates that conditions are met to use a string as input, i.e. that there is only one input node and that node's default
+            input port has a label matching the provided string. If so, convert the string to an input dict and parse
+
+        Returns
+        -------
+        `dict` :
+            Parsed and standardized input dict
+
+        `int` :
+            Number of input sets in dict for each input node in the Composition
+
+        """
+        # Strings can only be used as inputs in the case where there is a single input node, and that node's default
+        # input port has a label matching the provided string.
+        # Validate that this is true. If so, resolve the string into a dict and parse it.
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        if len(input_nodes) == 1:
+            if inputs in input_nodes[0]._get_standardized_label_dict(INPUT)[0]:
+                _inputs = {next(iter(input_nodes)): [inputs]}
+        else:
+            raise CompositionError(
+                f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
+                f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
+        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        return input_dict, num_inputs_sets
+
+    def _parse_function(self, inputs):
+        """
+        Returns
+        -------
+        `function` :
+            Function that will be used to yield inputs
+
+        `int` :
+            Functions must always return 1 trial of input per call, so this always returns 1
+
+        """
+        # functions used as inputs must always return a single trial's worth of inputs on each call,
+        # so just return the function and 1 as the number of trials
+        num_trials = 1
+        return inputs, num_trials
+
+    def _validate_single_input(self, node, input):
+        """
+        validates a single input for a single node. if the input is specified without an outer list (i.e.
+            Composition.run(inputs = [1, 1]) instead of Composition.run(inputs = [[1], [1]]), add an extra dimension
+            to the input
+
+        Returns
+        -------
+
+        `None` or `np.ndarray` or `list` :
+            The input, with an added dimension if necessary, if the input is valid. `None` if the input is not valid.
+
+        """
+        # Validate that a single input is properly formatted for a node.
+        _input = []
+        node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
+        match_type = self._input_matches_variable(input, node_variable)
+        if match_type == 'homogeneous':
+            # np.atleast_2d will catch any single-input ports specified without an outer list
+            _input = np.atleast_2d(input)
+        elif match_type == 'heterogeneous':
+            _input = input
+        else:
+            _input = None
+        return _input
+
+    def _validate_input_shapes(self, inputs):
+        """
+        Validates that all inputs provided in input dict are valid
+
+        Returns
+        -------
+
+        `dict` :
+            The input dict, with shapes corrected if necessary.
+
+        """
+         # Loop over all dictionary entries to validate their content and adjust any convenience notations:
+
+         # (1) Replace any user provided convenience notations with values that match the following specs:
+         # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
+         # b - each input value is a 2d array that matches variable
+         # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
+         #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
+         # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
+        _inputs = {}
+        input_lengths = set()
+        inputs_to_duplicate = []
+        # loop through input dict
+        for node, stimulus in inputs.items():
+            # see if the entire stimulus set provided is a valid input for the node (i.e. in the case of a call with a
+            # single trial of provided input)
+            node_input = self._validate_single_input(node, stimulus)
+            if not node_input is None:
+                node_input = [node_input]
+            else:
+                # if node_input is None, it means there are multiple trials of input in the stimulus set, so loop
+                # through and validate each individual input
+                node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
+                if True in [i is None for i in node_input]:
+                    incompatible_stimulus = stimulus[node_input.index(None)]
+                    node_name = node.name
+                    node_variable = [input_port.defaults.value for input_port in node.input_ports
+                                if not input_port.internal_only]
+                    err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
+                              f"its external_input_values ({node_variable})."
+                    # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
+                    # for "functionality" but rather a hack for user clarity
+                    if "KWTA" in str(type(node)):
+                        err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
+                                            "(or other values) to represent the outside stimulus for " \
+                                            "the inhibition InputPort, and for Compositions, put your inputs"
+                    raise RunError(err_msg)
+            _inputs[node] = node_input
+            input_length = len(node_input)
+            if input_length == 1:
+                inputs_to_duplicate.append(node)
+            # track input lengths. stimulus sets of length 1 can be duplicated to match another stimulus set length.
+            # there can be at maximum 1 other stimulus set length besides 1.
+            input_lengths.add(input_length)
+        if 1 in input_lengths:
+            input_lengths.remove(1)
+        if len(input_lengths) > 1:
+            raise CompositionError(f"The input dictionary for {self.name} contains input specifications of different "
+                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each node "
+                                    f"in a Composition.")
+        elif len(input_lengths) > 0:
+            num_trials = list(input_lengths)[0]
+            for mechanism in inputs_to_duplicate:
+                # hacky, but need to convert to list to use * syntax to duplicate element
+                if type(_inputs[mechanism]) == np.ndarray:
+                    _inputs[mechanism] = _inputs[mechanism].tolist()
+                _inputs[mechanism] *= num_trials
+        return _inputs
+
+    def _flatten_nested_dicts(self, inputs):
+        """
+        Converts inputs provided in the form of a dict for a nested Composition to a list corresponding to the
+            Composition's input CIM ports
+
+        Returns
+        -------
+
+        `dict` :
+            The input dict, with nested dicts corresponding to nested Compositions converted to lists
+
+        """
+        # Inputs provided for nested compositions in the form of a nested dict need to be converted into a list,
+        # to be provided to the outer Composition's input port that corresponds to the nested Composition
+        _inputs = {}
+        for node, inp in inputs.items():
+            if node.componentType == 'Composition' and type(inp) == dict:
+                # If there are multiple levels of nested dicts, we need to convert them starting from the deepest level,
+                # so recurse down the chain here
+                inp, num_trials = node._parse_dict(inp)
+                translated_stimulus_dict = {}
+
+                # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
+                # InputPorts and the values are lists containing the first input value
+                for nested_input_node, values in inp.items():
+                    first_value = values[0]
+                    for i in range(len(first_value)):
+                        input_port = nested_input_node.external_input_ports[i]
+                        input_cim_input_port = node.input_CIM_ports[input_port][0]
+                        translated_stimulus_dict[input_cim_input_port] = [first_value[i]]
+                        # then loop through the stimulus dictionary again for each remaining trial
+                        for trial in range(1, num_trials):
+                            translated_stimulus_dict[input_cim_input_port].append(values[trial][i])
+
+                adjusted_stimulus_list = []
+                for trial in range(num_trials):
+                    trial_adjusted_stimulus_list = []
+                    for port in node.external_input_ports:
+                        trial_adjusted_stimulus_list.append(translated_stimulus_dict[port][trial])
+                    adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
+                _inputs[node] = adjusted_stimulus_list
+            else:
+                _inputs.update({node:inp})
+        return _inputs
+
+    def _parse_labels(self, inputs, mech=None):
+        """
+        Traverse input dict and replace any inputs that are in the form of their input or output label representations
+              to their numeric representations
+
+        Returns
+        -------
+
+        `dict` :
+            The input dict, with inputs in the form of their label representations replaced by their numeric representations
+
+        """
+        # the nested list comp below is necessary to retrieve target nodes of learning pathways, because the PathwayRole
+        # enum is not importable into this module
+        target_to_output = {path.target: path.output for path in self.pathways if 'LEARNING' in [role.name for role in path.roles]}
+        if mech:
+            target_nodes_of_learning_pathways = [path.target for path in self.pathways]
+            label_type = INPUT if not mech in target_nodes_of_learning_pathways else OUTPUT
+            label_mech = mech if not mech in target_to_output else target_to_output[mech]
+            labels = label_mech._get_standardized_label_dict(label_type)
+        if type(inputs) == dict:
+            _inputs = {}
+            for k,v in inputs.items():
+                if isinstance(k, Mechanism) and \
+                   (target_to_output[k].output_labels_dict if k in target_to_output else k.input_labels_dict):
+                    _inputs.update({k:self._parse_labels(v, k)})
+                else:
+                    _inputs.update({k:v})
+        elif type(inputs) == list or type(inputs) == np.ndarray:
+            _inputs = []
+            for i in range(len(inputs)):
+                port = 0 if len(labels) == 1 else i
+                stimulus = inputs[i]
+                if type(stimulus) == list or type(stimulus) == np.ndarray:
+                    _inputs.append(self._parse_labels(inputs[i], mech))
+                elif type(stimulus) == str:
+                    _inputs.append(labels[port][stimulus])
+                else:
+                    _inputs.append(stimulus)
+        return _inputs
+
+    def _parse_dict(self, inputs):
+        """
+        Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout
+            its execution
+
+        Returns
+        -------
+        `dict` :
+            Parsed and standardized input dict
+
+        `int` :
+            Number of input sets in dict for each input node in the Composition
+
+        """
+        # parse a user-provided input dict to format it properly for execution. compute number of input sets and return that
+        # as well
+        _inputs = self._parse_labels(inputs)
+        _inputs = self._validate_input_dict_node_roles(_inputs)
+        _inputs = self._flatten_nested_dicts(_inputs)
+        _inputs = self._validate_input_shapes(_inputs)
+        num_inputs_sets = len(next(iter(_inputs.values())))
+        return _inputs, num_inputs_sets
+
+    def _validate_input_dict_node_roles(self, inputs):
+        """
+        Validates that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
+            included, adds them to the input dict using their default values as entries
+
+        Returns
+        -------
+
+        `dict` :
+            The input dict, with added entries for any input nodes for which input was not provided
+
+        """
+        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
+        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        for node in inputs.keys():
+            if not node in input_nodes:
+                if not isinstance(node, (Mechanism, Composition)):
+                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
+                                           f'{Mechanism.__name__} or {Composition.__name__}.')
+                else:
+                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+
+        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
+        for node in input_nodes:
+            if not node in inputs:
+                inputs[node] = node.default_external_input_values
+        return inputs
+
+    def _parse_run_inputs(self, inputs):
+        """
+        Takes user-provided input for entire run and parses it according to its type
+
+        Returns
+        -------
+
+        Parsed input dict
+
+        The number of inputs sets included in the input
+        """
+        # handle user-provided input based on input type. return processd inputs and num_inputs_sets
+        if not inputs:
+            _inputs, num_inputs_sets = self._parse_dict({})
+        elif isgeneratorfunction(inputs):
+            _inputs, num_inputs_sets = self._parse_generator_function(inputs)
+        elif isgenerator(inputs):
+            _inputs, num_inputs_sets = self._parse_generator(inputs)
+        elif callable(inputs):
+            _inputs, num_inputs_sets = self._parse_function(inputs)
+        elif type(inputs) == list:
+            _inputs, num_inputs_sets = self._parse_list(inputs)
+        elif type(inputs) == dict:
+            _inputs, num_inputs_sets = self._parse_dict(inputs)
+        elif type(inputs) == str:
+            _inputs, num_inputs_sets = self._parse_string(inputs)
+        else:
+            raise CompositionError(
+                f"Provided inputs {inputs} is in a disallowed format. Inputs must be provided in the form of "
+                f"a dict, list, function, or generator. "
+                f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run for details and "
+                f"formatting instructions for each input type."
+            )
+        return _inputs, num_inputs_sets
+
+    def _parse_trial_inputs(self, inputs, trial_num):
+        """
+        Extracts inputs for a single trial and parses it in accordance with its type
+
+        Returns
+        -------
+
+        `dict` :
+            Input dict parsed for a single trial of a Composition's execution
+
+        """
+        # parse and return a single trial's worth of inputs.
+        # this method is intended to run BEFORE a call to Composition.execute
+        if callable(inputs):
+            try:
+                inputs, _ = self._parse_dict(inputs(trial_num))
+                i = 0
+            except TypeError as e:
+                error_text = e.args[0]
+                if f" takes 0 positional arguments but 1 was given" in error_text:
+                    raise CompositionError(f"{error_text}: requires arg for trial number")
+                else:
+                    raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
+        elif isgenerator(inputs):
+            inputs, _ = self._parse_dict(inputs.__next__())
+            i = 0
+        else:
+            num_inputs_sets = len(next(iter(inputs.values())))
+            i = trial_num % num_inputs_sets
+        next_inputs = {node:inp[i] for node, inp in inputs.items()}
+        return next_inputs
+
+    def _validate_execution_inputs(self, inputs):
+        """
+        Validates and returns the formatted input dict for a single execution
+
+        Returns
+        -------
+
+        `dict` :
+            Input dict parsed for a single trial of a Composition's execution
+
+        """
+        # validate a single execution's worth of inputs
+        # this method is intended to run DURING a call to Composition.execute
+        _inputs = {}
+        for node, inp in inputs.items():
+            if isinstance(node, Composition) and type(inp) == dict:
+                inp = node._parse_dict(inp)
+            inp = self._validate_single_input(node, inp)
+            if inp is None:
+                raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
+                                       f"with its variable ({node.default_external_input_values}).")
+            _inputs[node] = inp
+        return _inputs
 
     # ******************************************************************************************************************
     #                                           EXECUTION
@@ -8057,10 +8565,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` : list } or { `Composition <Composition>` : list } : default None
-                a dictionary containing a key-value pair for each Node in the composition that receives inputs from
-                the user. For each pair, the key is the Node and the value is a list of inputs. Each input in the
-                list corresponds to a certain `TRIAL <TimeScale.TRIAL>`.
+            inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None
+                specifies the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL
+                <TimeScale.TRIAL>` executed during the run;  see `Composition_Execution_Inputs` for additional
+                information about format.  If **inputs** is not specified, the `default_variable
+                <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`
 
             num_trials : int : default 1
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -8180,7 +8689,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 CUDA compilation.
 
             context : `Context.execution_id>` : default `default_execution_id`
-                context in which the `Composition` will be eecuted;  set to self.default_execution_id ifunspecified.
+                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
             base_context : `Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the execution context from which this execution will be initialized,
@@ -8343,39 +8852,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # if inputs is a generator function, we should instantiate it now so that it will be properly handled
-        # below
-        if isgeneratorfunction(inputs):
-            inputs = inputs()
-
-        # if there is only one INPUT Node, allow inputs to be specified in a list
-        if isinstance(inputs, (list, np.ndarray)):
-            if len(input_nodes) == 1:
-                inputs = {next(iter(input_nodes)): inputs}
-            else:
-                raise CompositionError(
-                    f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
-                    f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        elif callable(inputs):
-            num_inputs_sets = 1
-        elif hasattr(inputs, '__next__'):
-            num_inputs_sets = sys.maxsize
-        elif not isinstance(inputs, dict):
-            if len(input_nodes) == 1:
-                raise CompositionError(
-                    "Inputs to {} must be specified in a list or in a dictionary "
-                    "with the INPUT node ({}) as its only key".
-                        format(self.name, next(iter(input_nodes)).name))
-            else:
-                input_node_names = ", ".join([i.name for i in input_nodes])
-                raise CompositionError(
-                    "Inputs to {} must be specified in a dictionary "
-                    "with its {} INPUT nodes ({}) as the keys and their inputs as the values".
-                    format(self.name, len(input_nodes), input_node_names))
-        if not callable(inputs) \
-                and not hasattr(inputs, '__next__'):
-            # Currently, no validation if 'inputs' arg is a function
-            inputs, num_inputs_sets = self._adjust_stimulus_dict(inputs)
+        inputs, num_inputs_sets = self._parse_run_inputs(inputs)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -8447,43 +8924,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            if callable(inputs):
-                try:
-                    next_inputs = inputs(trial_num)
-                except TypeError as e:
-                    error_text = e.args[0]
-                    if f" takes 0 positional arguments but 1 was given" in error_text:
-                        raise CompositionError(f"{error_text}: requires arg for trial number")
-                    else:
-                        raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
-            elif isgenerator(inputs):
-                try:
-                    next_inputs = inputs.__next__()
-                except StopIteration:
-                    break
-            # else:
-            #     raise <ClassTypeError>(f"<message>")
-
-            if callable(inputs) or isgenerator(inputs):
-                next_inputs, num_inputs_sets = self._adjust_stimulus_dict(next_inputs)
-                execution_stimuli = {}
-                for node in next_inputs:
-                    if len(next_inputs[node]) == 1:
-                        execution_stimuli[node] = next_inputs[node][0]
-                        continue
-                    else:
-                        input_type = 'Generator' if isgenerator(inputs) else 'Function'
-                        raise CompositionError(f"{input_type}s used for Composition input must return one trial's "
-                                               f"worth of input on each call. Current generator returned "
-                                               f"{len(next_inputs[node])} trials' worth of input on its last call.")
-            else:
-                execution_stimuli = {}
-                stimulus_index = trial_num % num_inputs_sets
-                for node in inputs:
-                    if len(inputs[node]) == 1:
-                        execution_stimuli[node] = inputs[node][0]
-                        continue
-                    execution_stimuli[node] = inputs[node][stimulus_index]
+            try:
+                execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
+            except StopIteration:
+                break
 
             for node in self.nodes:
                 if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
@@ -8701,37 +9145,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
+            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list } : default None
                 a dictionary containing a key-value pair for each node in the composition that receives inputs from
-                the user. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
-                the shape of which must match the node's default variable.
+                the user. For each pair, the key is the Node <Compositon_Nodes>` (A `Mechanism <Mechanism>` or
+                `Composition`) and the value is an input, the shape of which must match the Node's default variable.
+                if **inputs** is not specified, the `default_variable <Component_Variable>` for each `INPUT` Node
+                is used as its input;  see
 
-            scheduler : Scheduler
+            clamp_input : SOFT_CLAMP : default SOFT_CLAMP
+
+            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
+                specifies alternate parameter values to be used only during this `EXECUTION` when the specified
+                `Condition` is met. See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+
+            skip_initialization :  : default False
+
+            scheduler : Scheduler : default None
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            context
-                context will be set to self.default_execution_id if unspecified
+            context : `Context.execution_id>` : default `default_execution_id`
+                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
-            base_context
+            base_context : `Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the execution context from which this execution will be initialized,
                 if values currently do not exist for **context**
 
-            call_before_time_step : callable
+            call_before_time_step : callable : default None
                 called before each `TIME_STEP` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            call_after_time_step : callable
+            call_after_time_step : callable : default None
                 called after each `TIME_STEP` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            call_before_pass : callable
+            call_before_pass : callable : default None
                 called before each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
 
-            call_after_pass : callable
+            call_after_pass : callable : default None
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take)
+
+            bin_execute : bool or Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
+                specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
+                see **bin_execute** argument of `run <Composition.run>` method for additional details.
 
             Returns
             ---------
@@ -8771,6 +9229,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if termination_processing is None:
             termination_processing = self.termination_processing
 
+        # if execute was called from command line and no inputs were specified, assign default inputs to highest level
+        # composition (i.e. not on any nested Compositions)
+        if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
+            inputs = self._validate_input_dict_node_roles({})
         # Skip initialization if possible (for efficiency):
         # - and(context has not changed
         # -     structure of the graph has not changed
@@ -8809,12 +9271,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert not is_simulation
                 try:
                     if bin_execute is True or bin_execute.startswith('LLVM'):
-                        llvm_inputs = self._adjust_execution_stimuli(inputs)
+                        llvm_inputs = self._validate_execution_inputs(inputs)
                         _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                         _comp_ex.execute(llvm_inputs)
                         return _comp_ex.extract_node_output(self.output_CIM)
                     elif bin_execute.startswith('PTX'):
-                        llvm_inputs = self._adjust_execution_stimuli(inputs)
+                        llvm_inputs = self._validate_execution_inputs(inputs)
                         self.__ptx_initialize(context)
                         __execution = self._compilation_data.ptx_execution._get(context)
                         __execution.cuda_execute(llvm_inputs)
@@ -8889,9 +9351,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
         # method to properly validate input for those nodes.
         # -DS
+
         context.add_flag(ContextFlags.PROCESSING)
         if inputs is not None:
-            inputs = self._adjust_execution_stimuli(inputs)
+            inputs = self._validate_execution_inputs(inputs)
             build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
         if bin_execute:
@@ -9340,142 +9803,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _is_learning(self, context):
         """Returns true if the composition can learn in the given context"""
         return (not self.disable_learning) and (ContextFlags.LEARNING_MODE in context.runmode)
-
-    def _adjust_stimulus_dict(self, stimuli):
-
-        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
-        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-        for node in stimuli.keys():
-            if not node in input_nodes:
-                if not isinstance(node, (Mechanism, Composition)):
-                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
-                                           f'{Mechanism.__name__} or {Composition.__name__}.')
-                else:
-                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
-
-        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
-        for node in input_nodes:
-            if not node in stimuli:
-                stimuli[node] = node.default_external_input_values
-
-        # STEP 2: Loop over all dictionary entries to validate their content and adjust any convenience notations:
-
-        # (1) Replace any user provided convenience notations with values that match the following specs:
-        # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
-        # b - each input value is a 2d array that matches variable
-        # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
-        #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
-        # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
-
-        adjusted_stimuli = {}
-        nums_input_sets = set()
-        for node, stim_list in stimuli.items():
-            if isinstance(node, Composition):
-                if isinstance(stim_list, dict):
-
-                    adjusted_stimulus_dict, num_trials = node._adjust_stimulus_dict(stim_list)
-                    translated_stimulus_dict = {}
-
-                    # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
-                    # InputPorts and the values are lists containing the first input value
-                    for nested_input_node, values in adjusted_stimulus_dict.items():
-                        first_value = values[0]
-                        for i in range(len(first_value)):
-                            input_port = nested_input_node.external_input_ports[i]
-                            input_cim_input_port = node.input_CIM_ports[input_port][0]
-                            translated_stimulus_dict[input_cim_input_port] = [first_value[i]]
-                            # then loop through the stimulus dictionary again for each remaining trial
-                            for trial in range(1, num_trials):
-                                translated_stimulus_dict[input_cim_input_port].append(values[trial][i])
-
-                    adjusted_stimulus_list = []
-                    for trial in range(num_trials):
-                        trial_adjusted_stimulus_list = []
-                        for port in node.external_input_ports:
-                            trial_adjusted_stimulus_list.append(translated_stimulus_dict[port][trial])
-                        adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
-                    stimuli[node] = adjusted_stimulus_list
-                    stim_list = adjusted_stimulus_list  # ADDED CW 12/21/18: This line fixed a bug, but might be a hack
-
-            # excludes any input ports marked "internal_only" (usually recurrent)
-            # KDM 3/29/19: changed to use defaults equivalent of node.external_input_values
-            input_must_match = [input_port.defaults.value for input_port in node.input_ports
-                                if not input_port.internal_only]
-
-            if input_must_match == []:
-                # all input ports are internal_only
-                continue
-
-            check_spec_type = self._input_matches_variable(stim_list, input_must_match)
-            # If a node provided a single input, wrap it in one more list in order to represent trials
-            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
-                if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input ports specified without an outer list
-                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                    adjusted_stimuli[node] = [np.atleast_2d(stim_list)]
-                else:
-                    adjusted_stimuli[node] = [stim_list]
-                nums_input_sets.add(1)
-
-            else:
-                adjusted_stimuli[node] = []
-                for stim in stimuli[node]:
-                    check_spec_type = self._input_matches_variable(stim, input_must_match)
-                    # loop over each input to verify that it matches variable
-                    if check_spec_type == False:
-                        err_msg = f"Input stimulus ({stim}) for {node.name} is incompatible " \
-                                  f"with its external_input_values ({input_must_match})."
-                        # 8/3/17 CW: I admit the error message implementation here is very hacky;
-                        # but it's at least not a hack for "functionality" but rather a hack for user clarity
-                        if "KWTA" in str(type(node)):
-                            err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
-                                                "(or other values) to represent the outside stimulus for " \
-                                                "the inhibition InputPort, and for Compositions, put your inputs"
-                        raise RunError(err_msg)
-                    elif check_spec_type == "homogeneous":
-                        # np.atleast_2d will catch any single-input ports specified without an outer list
-                        # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                        adjusted_stimuli[node].append(np.atleast_2d(stim))
-                    else:
-                        adjusted_stimuli[node].append(stim)
-                nums_input_sets.add(len(stimuli[node]))
-
-        num_trials = max(nums_input_sets)
-        for node, stim in adjusted_stimuli.items():
-            if len(stim) == 1:
-                adjusted_stimuli[node] *= max(nums_input_sets)
-        nums_input_sets.discard(1)
-        if len(nums_input_sets) > 1:
-            raise RunError(f"The input dictionary for {self.name} contains input specifications of different "
-                           f"lengths ({nums_input_sets}). The same number of inputs must be provided for each node "
-                           f"in a Composition.")
-        return adjusted_stimuli, num_trials
-
-    def _adjust_execution_stimuli(self, stimuli):
-        adjusted_stimuli = {}
-        for node, stimulus in stimuli.items():
-            if isinstance(node, Composition):
-                input_must_match = node.default_external_input_values
-                if isinstance(stimulus, dict):
-                    adjusted_stimulus_dict = node._adjust_stimulus_dict(stimulus)
-                    adjusted_stimuli[node] = adjusted_stimulus_dict
-                    continue
-            else:
-                input_must_match = node.default_external_input_values
-
-            check_spec_type = self._input_matches_variable(stimulus, input_must_match)
-            # If a node provided a single input, wrap it in one more list in order to represent trials
-            if check_spec_type == "homogeneous" or check_spec_type == "heterogeneous":
-                if check_spec_type == "homogeneous":
-                    # np.atleast_2d will catch any single-input ports specified without an outer list
-                    # e.g. [2.0, 2.0] --> [[2.0, 2.0]]
-                    adjusted_stimuli[node] = np.atleast_2d(stimulus)
-                else:
-                    adjusted_stimuli[node] = stimulus
-            else:
-                raise CompositionError("Input stimulus ({}) for {} is incompatible with its variable ({})."
-                                       .format(stimulus, node.name, input_must_match))
-        return adjusted_stimuli
 
     def _build_variable_for_input_CIM(self, inputs):
         """

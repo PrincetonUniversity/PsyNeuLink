@@ -2070,13 +2070,13 @@ class TestTrainingIdenticalness():
                  [1],
                  [0]])
 
-        def get_inputs():
+        def get_inputs(idx):
             return {
                 "inputs": {
-                    xor_in_func: xor_inputs_func
+                    xor_in_func: xor_inputs_func[idx]
                 },
                 "targets": {
-                    xor_out_func: xor_targets_func
+                    xor_out_func: xor_targets_func[idx]
                 }
             }
 
