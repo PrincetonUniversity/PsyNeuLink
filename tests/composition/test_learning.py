@@ -7,7 +7,7 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
-from psyneulink.core.compositions.composition import Composition, CompositionError
+from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
 class TestTargetSpecs:
