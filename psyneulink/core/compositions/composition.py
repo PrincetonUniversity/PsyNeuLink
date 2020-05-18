@@ -240,15 +240,14 @@ Acyclic and Cyclic Graphs
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
 Composition has no recurrent Projections then its structure is a `directed acyclic graph (DAG)
-<https://en.wikipedia.org/wiki/Acyclic_graph>`_, the order in which its nodes are executed can be determined by
+<https://en.wikipedia.org/wiki/Acyclic_graph>`_, and the order in which its Nodes are executed can be determined by
 the structure of the graph itself.  However if the Composition contains recurrent Projections, then its structure
 is a `cyclic graph <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and the value of some nodes must be initialized
 (i.e., "break" the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
 determinining which nodes need be initialized and initializing them when the Composition is `run <Composition>`,
-and also for allowing the user specify how this is done
+and also for allowing the user specify how this is done (see `Composition_Initial_Values_and_Feedback`).
 
 COMMENT:
-    XXX (see `Composition_Initial_Values_and_Feedback`)
     XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
 COMMENT
 
@@ -1097,7 +1096,7 @@ Environment.
         done = env_step[2]
         if not done:
             # NEW: This function MUST return a dictionary of input values for a single `TRIAL <TimeScale.TRIAL>`
-            for each INPUT node
+            for each INPUT Node
             return {player: [observation[player_coord_idx]],
                     prey: [observation[prey_coord_idx]]}
         return done
@@ -1130,10 +1129,10 @@ are always restored after execution.
 Runtime parameter values for a Composition are specified in a dictionary assigned to the **runtime_params** argument
 of a Composition's `execution method <Composition_Execution_Methods>`.  The key of each entry is a Node of the
 Composition, and the value is a subdictionary specifying the **runtime_params** argument that will be passed to the
-Node when it is executed.  The format of the dictionary for each node follows that for a Mechanism's `runtime
-specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the value
-of a parameter directly (in which case, the value will apply throughout the execution), its value can also be placed
-in a tuple together with a `Condition` specifying when that value should be applied, as follows:
+Node when it is executed.  The format of the dictionary for each `Node <Component_Nodes>` follows that for a Mechanism's
+`runtime specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the
+value of a parameter directly (in which case, the value will apply throughout the execution), its value can also be
+placed in a tuple together with a `Condition` specifying when that value should be applied, as follows:
 
     * Dictionary assigned to **runtime_parms** argument: {<Node>: Runtime Parameter Specification Dictionary}
        - *key* - Node
@@ -1165,6 +1164,9 @@ COMMENT:
 *Cycles, Feedback, and Initialization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+If a Composition has any recurrent Projections, then its `graph <Composition_Graph> has one or more cycles — loops of
+execution — that require some nodes Composition_Acyclic_Cyclic
+se form a cycle
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
@@ -2249,7 +2251,7 @@ class Graph(object):
             that are `potentially feedback <EdgeType.FLEXIBLE>` that are
             in cycles. After these edges are removed, if cycles still
             remain, they are "flattened." That is, each edge in the
-            cycle is pruned, and each the dependencies of each node in
+            cycle is pruned, and each the dependencies of each Node in
             the cycle are set to the pre-flattened union of all cyclic
             nodes' parents that are themselves not in a cycle.
 
@@ -2337,7 +2339,7 @@ class Graph(object):
             new_cycles = cycle_dicts
             cycles_changed = True
 
-            # repeatedly join cycles that have a node in common
+            # repeatedly join cycles that have a Node in common
             while cycles_changed:
                 cycles_changed = False
                 i = 0
@@ -2954,14 +2956,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         Assigns `NodeRoles <NodeRole>` to nodes based on the structure of the `Graph`.
 
-        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
-        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        By default, if _analyze_graph determines that a Node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a Node is `TERMINAL
         <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
 
-        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any node in the
+        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any Node in the
         Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
         <NodeRole.INPUT>` by default. If the **required_roles** argument of `add_node <Composition.add_node>` is used
-        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        to set any Node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
 
@@ -3034,10 +3036,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ---------
 
             node : `Mechanism <Mechanism>` or `Composition`
-                the node to be added to the Composition
+                the Node to be added to the Composition
 
             required_roles : `NodeRole` or list of NodeRoles
-                any NodeRoles roles that this node should have in addition to those determined by analyze graph.
+                any NodeRoles roles that this Node should have in addition to those determined by analyze graph.
         """
 
         self._update_shadows_dict(node)
