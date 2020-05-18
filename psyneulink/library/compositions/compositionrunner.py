@@ -39,11 +39,22 @@ class CompositionRunner():
 
         return total_loss
 
-    def _batch_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, randomize: bool = True, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+    def _batch_inputs(self,
+                      inputs: dict,
+                      epochs: int,
+                      num_trials: int,
+                      batch_size: int = 1,
+                      randomize: bool = True,
+                      call_before_minibatch=None,
+                      call_after_minibatch=None,
+                      early_stopper=None,
+                      context=None):
         """
-        Chunks input dict into pieces where each chunk is a dict with values of length batch_size (or for the last chunk, the remainder)
+        Chunks input dict into pieces where each chunk is a dict with values of length batch_size
+        (or for the last chunk, the remainder)
         """
-        #This is a generator for performance reasons, since we don't want to copy any data (especially for very large inputs or epoch counts!)
+        #This is a generator for performance reasons,
+        #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
             indices = list(range(0, num_trials))
             if randomize:
@@ -62,8 +73,8 @@ class CompositionRunner():
                 
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
-
-            if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
+            if (not self._is_llvm_mode and early_stopper is not None
+                    and early_stopper.step(self._calculate_loss(num_trials, context))):
                 # end early if patience exceeded
                 pass
 
@@ -88,7 +99,7 @@ class CompositionRunner():
                 if batch_ran:
                     if call_after_minibatch:
                         call_after_minibatch()
-                    
+
                     if not self._is_llvm_mode:
                         self._composition._update_learning_parameters(context)
                 else:
@@ -97,7 +108,7 @@ class CompositionRunner():
             if not self._is_llvm_mode and early_stopper is not None and early_stopper.step(self._calculate_loss(num_trials, context)):
                 # end early if patience exceeded
                 pass
-    
+
     def run_learning(self,
                      inputs: dict,
                      targets: dict = None,
@@ -168,17 +179,32 @@ class CompositionRunner():
             early_stopper = None
             if patience is not None and (bin_execute is False or bin_execute == 'Python'):
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
-            
+
             if callable(stim_input) and not isgeneratorfunction(stim_input):
                 minibatched_input = self._batch_function_inputs(stim_input, stim_epoch, num_trials, minibatch_size, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
             else:
-                minibatched_input = self._batch_inputs(stim_input, stim_epoch, num_trials, minibatch_size, randomize_minibatches, call_before_minibatch=call_before_minibatch, call_after_minibatch=call_after_minibatch, early_stopper=early_stopper, context=context)
+                minibatched_input = self._batch_inputs(stim_input,
+                                                       stim_epoch,
+                                                       num_trials,
+                                                       minibatch_size,
+                                                       randomize_minibatches,
+                                                       call_before_minibatch=call_before_minibatch,
+                                                       call_after_minibatch=call_after_minibatch,
+                                                       early_stopper=early_stopper,
+                                                       context=context)
 
-            self._composition.run(inputs=minibatched_input, skip_initialization=skip_initialization, context=context, skip_analyze_graph=True, bin_execute=bin_execute, *args, **kwargs)
+            self._composition.run(inputs=minibatched_input,
+                                  skip_initialization=skip_initialization,
+                                  skip_analyze_graph=True,
+                                  bin_execute=bin_execute,
+                                  context=context,
+                                  *args,
+                                  **kwargs)
             skip_initialization = True
 
         num_epoch_results = num_trials // minibatch_size # number of results expected from final epoch
-        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:] # return results from last epoch
+        # return results from last epoch
+        results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
 
         return results
 

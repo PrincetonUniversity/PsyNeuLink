@@ -76,25 +76,8 @@ See documentation for individual subtypes of ProcessingMechanism for more specif
 Execution
 ---------
 
-Three main tasks are completed each time a ProcessingMechanism executes:
-
-1. The ProcessingMechanism updates its `InputPort`(s), and their values are used to assemble `variable
-<Mechanism_Base.variable>`. Each InputPort `value <InputPort.value>` (often there is only one `InputPort`) is
-added to an outer array, such that each item of variable corresponds to an InputPort `value <InputPort.value>`.
-
-2. The ProcessingMechanism's `variable <Mechanism_Base.variable>` is handed off as the input to the
-ProcessingMechanism's `function <Mechanism_Base.function>`, and the function executes.
-
-3. The result of the ProcessingMechanism's `function <Mechanism_Base.function>` is placed in the Mechanism's
-`value <Mechanism_Base.value>` attribute, and OutputPorts are generated based on `value <Mechanism_Base.value>`.
-
-A ProcessingMechanism may be executed by calling its execute method directly:
-
-    >>> my_simple_processing_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
-    >>> my_simple_processing_mechanism.execute(1.0)                     #doctest: +SKIP
-
-This option is intended for testing and debugging purposes.  More commonly, a Mechanism is executed when the
-`Composition` to which it belongs is `executed <Composition_Execution>`.
+The execution of a ProcessingMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
+(see `Mechanism_Execution`).
 
 .. _ProcessingMechanism_Class_Reference:
 
@@ -204,8 +187,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
         :param prefs: (PreferenceSet)
         :param context: (str)
         """
-
-        self.system = None
 
         super().__init__(default_variable=default_variable,
                          size=size,

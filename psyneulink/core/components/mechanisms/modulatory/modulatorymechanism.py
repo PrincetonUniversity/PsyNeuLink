@@ -89,14 +89,11 @@ Modulatory Components and their attributes are named according to the type of mo
 Creating a ModulatoryMechanism
 ------------------------------
 
-A ModulatoryMechanism can be created by using the standard Python method of calling the constructor for the desired type.
-ModulatoryMechanisms of the appropriate subtype are also created automatically when other Components are created that
-require them, or a form of modulation is specified for them. For example, a `ControlMechanism <ControlMechanism>` is
-automatically created as part of a `System <System_Creation>` (for use as its `controller
-<System.controller>`), or when `control is specified <ControlMechanism_ControlSignals>` for the parameter of a
-`Mechanism <Mechanism>`; and one or more `LearningMechanism <LearningMechanism>` are created when learning is
-specified for a `Process <Process_Learning_Sequence>` or a `System <System_Learning>` (see the documentation for
-`subtypes <ModulatoryMechanism_Subtypes>` of ModulatoryMechanisms for more specific information about how to create them).
+A ModulatoryMechanism is created by calling the constructor for the desired type. ModulatoryMechanisms of the
+appropriate subtype can also be created automatically when other Components are created that require them (for
+example, one or more `LearningMechanism <LearningMechanism>` are created when a `learning pathway
+<Component_Learning_Pathway>` is specified for a `Composition` (see `subtypes <ModulatoryMechanism_Subtypes>` of
+ModulatoryMechanisms for more specific information about how to create them).
 
 .. _ModulatoryMechanism_Structure:
 
@@ -114,13 +111,25 @@ subtypes of ModulatoryMechanism for more specific information about their struct
 Execution
 ---------
 
-LearningMechanism and ControlMechanism are always executed at the end of a `TRIAL <TimeScale.TRIAL>`, after all
-`ProcessingMechanisms <ProcessingMechanism>` in the `Process` or `System` to which they belong have been executed;
-all LearningMechanism executed first, and then ControlMechanism.  All modifications made are available during the
-next `TRIAL <TimeScale.TRIAL>`. GatingMechanism are executed in the same manner as ProcessingMechanisms;  however,
-because they almost invariably introduce recurrent connections, care must be given to their `initialization and/or
-scheduling <GatingMechanism_Execution>`).
+The execution of a ModulatoryMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
+(`Mechanism_Execution`).  However, in the context of a Composition, its `ModulatoryProjection`\\s are often feedback
+connections to other Mechanisms in the Composition, forming a `cycle <Composition_Acyclic_Cyclic>` in the Composition,
+and thus the ModulatoryMechanism may need to be properly initialized (see `Composition_Initial_Values_and_Feedback`).
+Also, a `ControlMechanism` can be the `controller <Composition.controller>` of a `Composition` in which case its
+execution is handled separately from other Mechanisms in the Composition (see `Composition_Controller_Execution`).
+As noted below, the modifications made by a ModulatoryMechanism to a parameter that it modulates are not available to
+that parameter's Component until *after* the Modulatory executes, which may not be until the next `TRIAL
+<TimeScale.TRIAL>` (e.g., the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` that is subject
+to `learning <Composition_Learning>` in a Composition; or a parameter modulated by a `ControlMechanism` that is the
+`controller <Composition_Controller>` of a Composition that executes last (see `Composition_Controller_Execution`).
 
+.. ModulatoryMechanism_Lazy_Evaluation_Note:
+
+.. note::
+   A `Port` that receives a `ModulatoryProjection` from a ModulatoryMechanism does not update its value until its
+   owner Mechanism executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that
+   even if a ModulatoryMechanism has executed, a parameter that it modulates will not assume its new value until
+   the Mechanism to which it belongs has executed.
 
 .. _ModulatoryMechanism_Class_Reference:
 

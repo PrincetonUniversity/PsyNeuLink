@@ -3,8 +3,7 @@ import numpy as np
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism
 
 
@@ -49,8 +48,7 @@ class TestGilzenratMechanisms:
                          competition=-1.0,
                          initial_value=np.array([[1.0]]))
 
-        P = Process(pathway=[G])
-        S = System(processes=[P])
+        C = Composition(pathways=[G])
         G.output_port.value = [0.0]
 
         # - - - - - LCAMechanism integrator functions - - - - -
@@ -62,17 +60,17 @@ class TestGilzenratMechanisms:
         # previous_value = initial_value = 1.0
         # single_run = S.execute([[1.0]])
         # np.testing.assert_allclose(single_run, np.array([[2.0]]))
-        np.testing.assert_allclose(S.execute([[1.0]]), np.array([[2.0]]))
+        np.testing.assert_allclose(C.execute(inputs={G:[[1.0]]}), np.array([[2.0]]))
         # X = 1.0 + (-1.0 + 1.0)*0.02 + 0.0
         # X = 1.0 + 0.0 + 0.0 = 1.0 <--- previous value 1.0
         # f(X) = 2.0*1.0  <--- return 2.0, recurrent projection 2.0
 
-        np.testing.assert_allclose(S.execute([[1.0]]), np.array([[2.08]]))
+        np.testing.assert_allclose(C.execute(inputs={G:[[1.0]]}), np.array([[2.08]]))
         # X = 1.0 + (-1.0 + 3.0)*0.02 + 0.0
         # X = 1.0 + 0.04 = 1.04 <--- previous value 1.04
         # f(X) = 2.0*1.04  <--- return 2.08
 
-        np.testing.assert_allclose(S.execute([[1.0]]), np.array([[2.1616]]))
+        np.testing.assert_allclose(C.execute(inputs={G:[[1.0]]}), np.array([[2.1616]]))
         # X = 1.04 + (-1.04 + 3.08)*0.02 + 0.0
         # X = 1.04 + 0.0408 = 1.0808 <--- previous value 1.0808
         # f(X) = 2.1616  <--- return 2.1616

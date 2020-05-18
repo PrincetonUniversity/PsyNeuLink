@@ -43,14 +43,11 @@ or by including it in a `tuple <ParameterPort_Tuple_Specification>` that specifi
 <Mechanism>`, `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection
 is created explicitly (using its constructor), and either its **receiver** or **sender** argument is not specified,
 its initialization is `deferred <ControlProjection_Deferred_Initialization>`.  If it is included in a `parameter
-specification <ParameterPort_Specification>`, the  `ParameterPort` for the parameter being specified will be assigned
-as the ControlProjection's `receiver <ControlProjection.receiver>`.
-COMMENT:
-TBI FOR COMPOSITION
-If the **receiver** belongs to a Mechanism that is part of a `System`, then the ControlProjection's
-`sender <ControlProjection.sender>` is assigned to a `ControlSignal` of the System's `controller`.  Otherwise,
-its initialization is `deferred <ControlProjection_Deferred_Initialization>`.
-COMMENT
+specification <ParameterPort_Specification>`, the `ParameterPort` for the parameter being specified will be assigned
+as the ControlProjection's `receiver <ControlProjection.receiver>`. If the **receiver** belongs to a Mechanism that
+is part of a `Composition`, then the ControlProjection's `sender <ControlProjection.sender>` is assigned to a
+`ControlSignal` of the Composition's `controller <Composition.controller>`.  Otherwise, its initialization is
+`deferred <ControlProjection_Deferred_Initialization>`.
 
 .. _ControlProjection_Deferred_Initialization:
 

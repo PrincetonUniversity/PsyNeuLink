@@ -208,7 +208,7 @@ def is_function_type(x):
         return False
     elif isinstance(x, (Function, types.FunctionType, types.MethodType, types.BuiltinFunctionType, types.BuiltinMethodType)):
         return True
-    elif issubclass(x, Function):
+    elif isinstance(x, type) and issubclass(x, Function):
         return True
     else:
         return False

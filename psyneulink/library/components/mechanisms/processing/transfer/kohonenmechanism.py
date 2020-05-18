@@ -86,7 +86,6 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
