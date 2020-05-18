@@ -9546,7 +9546,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
         """Return dict with values for all runtime_params the Conditions of which are currently satisfied.
-        Recursively parse nested dictionaries for which Condition on dict is satisfied."""
+        Recursively parse nested dictionaries for which Condition on dict is satisfied.
+        """
 
         def get_satisfied_param_val(param_tuple):
             """Return param value if Condition is satisfied, else None."""
