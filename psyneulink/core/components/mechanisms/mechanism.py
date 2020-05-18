@@ -836,6 +836,33 @@ it from the outer Composition.  If a Mechanism is designated as an `OUTPUT` Node
 Execution
 ---------
 
+When a Mechanism executes, the following sequence of actions is carried out:
+
+    - The Mechanism updates its `InputPort`(s) by executing the `function <InputPort.function>` of each.  The resulting
+      `value <InputPort.value>`\\(s) are used to assemble the Mechanism's `variable<Mechanism_Base.variable>`. Each
+      `value <InputPort.value>` is added to an outer array, such that each item of the Mechanism's `variable
+      <Mechanism_Base.variable>` corresponds to an InputPort `value <InputPort.value>`.  The array is placed in
+      the Mechanism's `input_values <Mechanism_Base.input_values>` attribute, and also passed as the input to the
+      Mechanism's `function <Mechanism_Base.function>` after updating its `ParameterPorts <ParamterPorts>`.
+
+    - The Mechanism updates its `ParameterPort`(s) by executing each of their `functions <ParameterPort.function>`,
+      the results of which are assigned as the values used for the corresponding Parameters, which include those of the
+      Mechanism's `function <Mechanism_Base.function>`.
+
+    - The Mechanism's `variable <Mechanism_Base.variable>` is passed as the input to the its `function
+      <Mechanism_Base.function>`, and the function is execute using the parameter values generating by the execution
+      of its ParameterPorts. The result of the Mechanism's `function <Mechanism_Base.function>` is placed in the
+      Mechanism's `value <Mechanism_Base.value>` attribute.
+
+    - The Mechanism its OutputPorts are updated based on `value <Mechanism_Base.value>`, by executing the `function
+      `OutputPort.function>` of each. The resulting `value <OUtputPort.value>` for each Outport is placed in the
+      Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
+
+A Mechanism may be executed by calling its execute method directly:
+
+    >>> my_simple_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
+    >>> my_simple_mechanism.execute(1.0)                     #doctest: +SKIP
+
 A Mechanism can be executed using its `execute <Mechanism_Base.execute>` method.  This can be useful for testing a
 Mechanism and/or debugging.  However, more typically, Mechanisms are `executed as part of a Composition
 <Composition_Execution>`.
