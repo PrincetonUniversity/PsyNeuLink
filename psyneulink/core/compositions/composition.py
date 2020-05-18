@@ -1164,15 +1164,15 @@ COMMENT:
 *Cycles, Feedback, and Initialization*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If a Composition has any recurrent Projections, then its `graph <Composition_Graph> has one or more cycles — loops of
-execution — that require some nodes Composition_Acyclic_Cyclic
-se form a cycle
+If a Composition has any recurrent Projections, these form cycles in its `graph <Composition_Graph> — loops of
+execution — that require some nodes in the be initialzed when it is executed
+see `Composition_Acyclic_Cyclic`
     FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
     MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
     ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-    a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at the start of a `TRIAL
-    <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
-    and listed in the Composition's ?? attribute),
+    a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at
+    the start of a `TRIAL <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as
+    `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
 
 COMMENT
 
