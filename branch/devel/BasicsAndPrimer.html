@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -240,7 +240,7 @@ each type.  For example, there is a variety of ProcessingMechanisms that can be 
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
 drift diffusion decision process); and there are <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>, including
 <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>  that can be used modulate the functioning of ProcessingMechanisms, and
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> that can be used to modify Projections, respectively.  The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich <a class="reference internal" href="Functions.html"><span class="doc">library</span></a> of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> that can be used to modify Projections, respectively.  The <code class="xref any docutils literal"><span class="pre">function</span></code> of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich <a class="reference internal" href="Functions.html"><span class="doc">library</span></a> of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
 assigned any Python function that is consistent with that Mechanism’s type (see <a class="reference internal" href="#basicsandprimer-customization"><span class="std std-ref">Customization</span></a>).
 Since Mechanisms can implement virtually any function, Projections ensure that they can “communicate” with each other
 seamlessly.</p>
@@ -650,9 +650,9 @@ These features are supported by methods on the Parameter class, as described bel
 <h4>Accessing Parameter Values<a class="headerlink" href="#accessing-parameter-values" title="Permalink to this headline">¶</a></h4>
 <p>The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
 by using “dot notation” – that is, <code class="docutils literal"><span class="pre">&lt;Component&gt;.&lt;parameter&gt;</span></code>. For instance, the print statements in the
-<code class="docutils literal"><span class="pre">print_after</span></code> function of the example above use <code class="docutils literal"><span class="pre">output.value</span></code> and <code class="docutils literal"><span class="pre">decision.value</span></code> to access the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> parameter of the <code class="docutils literal"><span class="pre">output</span></code> and <code class="docutils literal"><span class="pre">decision</span></code> Mechanisms, respectively (more specifically, they
+<code class="docutils literal"><span class="pre">print_after</span></code> function of the example above use <code class="docutils literal"><span class="pre">output.value</span></code> and <code class="docutils literal"><span class="pre">decision.value</span></code> to access the <code class="xref any docutils literal"><span class="pre">value</span></code> parameter of the <code class="docutils literal"><span class="pre">output</span></code> and <code class="docutils literal"><span class="pre">decision</span></code> Mechanisms, respectively (more specifically, they
 access the first element of the output Mechanism’s value, <code class="docutils literal"><span class="pre">output.value[0]</span></code>, and the first and second elements of the
-decison Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>).  This returns their most recently assigned values. However, as an
+decison Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code>).  This returns their most recently assigned values. However, as an
 instance of the <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, a parameter can be <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a>, which means it can have more
 than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
 different <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">contexts</span></a>, either as part of different Compositions or, within the same
@@ -676,12 +676,12 @@ notation.</p>
 <p>Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
 (Trial 3).  By default, stateful parameters preserve only one previous value.  However, a parameter can be
 specified to have a longer <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal"><span class="pre">history</span></code></a>, in which case <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get_previous" title="psyneulink.core.globals.parameters.Parameter.get_previous"><code class="xref any py py-meth docutils literal"><span class="pre">get_previous</span></code></a> can
-be used to access earlier values.  For example, the following sets output Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+be used to access earlier values.  For example, the following sets output Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code>
 parameter to store up to three previous values:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">history_max_length</span> <span class="o">=</span> <span class="mi">3</span>
 </pre></div>
 </div>
-<p>If included in the script above, then the following would return the <code class="docutils literal"><span class="pre">output</span></code> Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> from two trials before the last one run:</p>
+<p>If included in the script above, then the following would return the <code class="docutils literal"><span class="pre">output</span></code> Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> from two trials before the last one run:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get_previous</span><span class="p">(</span><span class="s1">&#39;Stroop Model - Conflict Monitoring&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="go">[ 0.38 0.62]</span>
 </pre></div>
@@ -711,7 +711,7 @@ a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">M
 of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is modulable, it is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> – this is a
 Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
 another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
-a Mechanism or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and similarly for Projections.  These determine the value
+a Mechanism or its <code class="xref any docutils literal"><span class="pre">function</span></code>, and similarly for Projections.  These determine the value
 of the parameter that is actually used when the Component is executed, which may be different than the base value
 returned by accessing the parameter directly (as in the examples above); see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more
 complete description of modulation.  The current <em>modulated</em> value of a parameter can be accessed from the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding ParameterPort.  For instance, the print statement in the example above
@@ -725,7 +725,7 @@ the <a class="reference internal" href="ParameterPort.html#psyneulink.core.compo
 <span class="go">[0.62]</span>
 </pre></div>
 </div>
-<p>This works for any modulable parameters of the Mechanism or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Note that,
+<p>This works for any modulable parameters of the Mechanism or its <code class="xref any docutils literal"><span class="pre">function</span></code>.  Note that,
 here, neither the <code class="docutils literal"><span class="pre">parameters</span></code> nor the <code class="docutils literal"><span class="pre">function</span></code> atributes of the Mechanism need to be included in the reference.
 Note also that, as explained above, the value returned is different from the base value of the function’s gain
 parameter:</p>
@@ -936,7 +936,7 @@ returns the amplitude of a sinusoid with a specified frequency at a specified ti
 <p>Note that the first argument is specified as a 2d variable that contains the frequency and time values as its elements
 – this matches the definition of the ProcessingMechanism’s <strong>default_variable</strong>, which the Mechanism will expect to
 receive as input from any other Mechanisms that project to it.  When a Python function is specified as the
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of Mechanism (or any other Component in PsyNeuLink), it is automatically
+<code class="xref any docutils literal"><span class="pre">function</span></code> of Mechanism (or any other Component in PsyNeuLink), it is automatically
 “wrapped” as a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, a special class of PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Function</span></a> that integrates it with
 PsyNeuLink:  in addition to making its first argument available as the input to the Component to which it is assigned,
 it also makes its parameters available for modulation by <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>.  For example,
@@ -949,7 +949,7 @@ As a result, the phase and amplitude of <code class="docutils literal"><span cla
 </div>
 <p>This facility not only makes PsyNeuLink flexible, but can be used to extend it in powerful ways.  For example, as
 mentioned under <a class="reference internal" href="#basicsandprimer-learning"><span class="std std-ref">Learning</span></a>, functions from other environments that implement complex learning models
-can be assigned as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism, and in that way integrated into a
+can be assigned as the <code class="xref any docutils literal"><span class="pre">function</span></code> of a Mechanism, and in that way integrated into a
 PsyNeuLink model.</p>
 </div>
 <div class="section" id="conclusion">
@@ -1045,7 +1045,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

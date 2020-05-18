@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -296,7 +296,7 @@ with that of the other InputPorts to generate the ObjectiveMechanism’s <a clas
 <div class="section" id="function">
 <span id="objectivemechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p>The ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> uses the values of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> to compute an <a class="reference external" href="https://en.wikipedia.org/wiki/Loss_function">objective (or “loss”) function</a>, that is assigned as the value of its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>.  By default, it uses a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a> function to sum the values of the values of
-the items in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. However, by assigning values to the ‘weight
+the items in its <code class="xref any docutils literal"><span class="pre">variable</span></code>. However, by assigning values to the ‘weight
 &lt;InputPort.weight&gt;` and/or ‘exponent &lt;InputPort.exponent&gt;` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see <a class="reference internal" href="#objectivemechanism-weights-and-exponents-example"><span class="std std-ref">example</span></a> below).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>  can also
 be replaced with any <code class="xref any docutils literal"><span class="pre">CombinationFunction</span></code>, or any python function that takes an 2d array as its input (with a number
@@ -313,7 +313,7 @@ result of its <a class="reference internal" href="#psyneulink.core.components.me
 <span id="objectivemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an ObjectiveMechanism is executed, it updates its input_ports with the values of the OutputPorts listed in
 its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> attribute, and then uses its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-to evaluate these.  The result is assigned as to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute as the value of its
+to evaluate these.  The result is assigned as to its <code class="xref any docutils literal"><span class="pre">value</span></code> attribute as the value of its
 <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.</p>
 <p class="rubric" id="objectivemechanism-examples">Examples</p>
 <p id="objectivemechanism-monitor-examples"><em>Specifying</em> the <strong>variable</strong> for the InputPorts of an ObjectiveMechanism</p>
@@ -409,7 +409,7 @@ OutputPorts for the DDM that report its response time and accuracy:</p>
 </div>
 <p>This specifies that the ObjectiveMechanism should multiply the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <code class="docutils literal"><span class="pre">my_reward_mech</span></code>’s
 <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> by the <code class="xref any docutils literal"><span class="pre">value</span></code> of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s
-<em>PROBABILITY_UPPER_THRESHOLD</em>, and divide the result by <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s <em>RESPONSE_TIME</em> <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The two OutputPorts of <code class="docutils literal"><span class="pre">my_decision_mech</span></code> are referenced as items in the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> list of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>.  However, a <a class="reference internal" href="InputPort.html#inputport-port-mechanism-tuple"><span class="std std-ref">2-item (Port name, Mechanism) tuple</span></a> can be used to reference them more simply, as follows:</p>
+<em>PROBABILITY_UPPER_THRESHOLD</em>, and divide the result by <code class="docutils literal"><span class="pre">my_decision_mech</span></code>’s <em>RESPONSE_TIME</em> <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The two OutputPorts of <code class="docutils literal"><span class="pre">my_decision_mech</span></code> are referenced as items in the <code class="xref any docutils literal"><span class="pre">output_ports</span></code> list of <code class="docutils literal"><span class="pre">my_decision_mech</span></code>.  However, a <a class="reference internal" href="InputPort.html#inputport-port-mechanism-tuple"><span class="std std-ref">2-item (Port name, Mechanism) tuple</span></a> can be used to reference them more simply, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_objective_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">monitor</span><span class="o">=</span><span class="p">[</span>
 <span class="gp">... </span>                                          <span class="n">my_reward_mech</span><span class="p">,</span>
 <span class="gp">... </span>                                          <span class="p">(</span><span class="n">pnl</span><span class="o">.</span><span class="n">PROBABILITY_UPPER_THRESHOLD</span><span class="p">,</span> <span class="n">my_decision_mech</span><span class="p">),</span>
@@ -509,7 +509,7 @@ input_ports) and returns a 1d array.</p>
 <code class="descname">output_port</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>OutputPort</em> – contains the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the ObjectiveMechanism; the default is
 its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>, the value of which is equal to the
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute of the ObjectiveMechanism.</p>
+<code class="xref any docutils literal"><span class="pre">value</span></code> attribute of the ObjectiveMechanism.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -528,7 +528,7 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports">
 <code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>list[str]</em> – list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPort</span></a> that includes the following in addition to
-the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
+the <code class="xref any docutils literal"><span class="pre">standard_output_ports</span></code> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
 <dl class="docutils">
 <dt><em>OUTCOME</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d np.array</span></dt>
 <dd>the value of the objective or “loss” function computed by the
@@ -633,7 +633,7 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputPort.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -255,7 +255,7 @@ value received from its <a class="reference internal" href="#psyneulink.core.com
 <p>MappingProjections are also generated automatically in the following circumstances, using a value for its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter appropriate to the circumstance:</p>
 <blockquote>
 <div><ul class="simple">
-<li>by a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, when two adjacent <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in its <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> do not already
+<li>by a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, when two adjacent <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in its <code class="xref any docutils literal"><span class="pre">pathway</span></code> do not already
 have a Projection assigned between them (<a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a> is used as the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 specification, which determines the appropriate matrix by context);</li>
 </ul>
@@ -330,11 +330,11 @@ the constructor for a <a class="reference internal" href="LearningSignal.html#le
 the constructor for a <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">LearningMechanism</span></a></li>
 </ul>
 <ul class="simple">
-<li>specifying a MappingProjection in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>  for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
+<li>specifying a MappingProjection in the <code class="xref any docutils literal"><span class="pre">pathway</span></code>  for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
 using the <a class="reference internal" href="#mappingprojection-learning-tuple-specification"><span class="std std-ref">tuple format</span></a> to include a learning specification;</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">specifying learning</span></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process’ <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>;</li>
+<li><code class="xref any docutils literal"><span class="pre">specifying</span> <span class="pre">learning</span></code> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process’ <code class="xref any docutils literal"><span class="pre">pathway</span></code>;</li>
 </ul>
 </div></blockquote>
 <p>See <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> documentation for an overview of <a class="reference internal" href="LearningMechanism.html#learningmechanism-overview"><span class="std std-ref">learning components</span></a> and a
@@ -342,7 +342,7 @@ detailed description of <a class="reference internal" href="LearningMechanism.ht
 description of how learning modifies a MappingProjection.</p>
 <div class="section" id="specifying-learning-in-a-tuple">
 <span id="mappingprojection-learning-tuple-specification"></span><h4>Specifying Learning in a Tuple<a class="headerlink" href="#specifying-learning-in-a-tuple" title="Permalink to this headline">¶</a></h4>
-<p>A tuple can be used to specify learning for a MappingProjection in the <strong>matrix</strong> <a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">argument of its constructor</span></a> or in the <a class="reference internal" href="Process.html#process-projections"><span class="std std-ref">pathway of a Process</span></a>.  In both cases,
+<p>A tuple can be used to specify learning for a MappingProjection in the <strong>matrix</strong> <a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">argument of its constructor</span></a> or in the <code class="xref any docutils literal"><span class="pre">pathway</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">Process</span></code>.  In both cases,
 the second item of the tuple must be a learning specification, which can be any of the following:</p>
 <blockquote>
 <div><ul class="simple">
@@ -617,7 +617,7 @@ then the parenthesized name of class is used in place of the unassigned attribut
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

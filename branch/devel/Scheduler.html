@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -205,17 +205,18 @@
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Scheduler is used to generate the order in which the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> are
 executed. By default, a Scheduler executes Components in an order determined by the pattern of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> among the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, with each Mechanism executed once
-per <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the Composition. For example, in a <a class="reference internal" href="System.html"><span class="doc">System</span></a> in which a Mechanism A projects to a Mechanism B that
-projects to a Mechanism C, A will execute first followed by B, and then C in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the System.  However,
-a Scheduler can be used to implement more complex patterns of execution, by specifying <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that
-determine when and how many times individual Components execute, and whether and how this depends on the execution of
-other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined
-in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically possible.</p>
+per <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the Composition. For example, in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> in which a Mechanism A projects to a Mechanism B
+that projects to a Mechanism C, A will execute first followed by B, and then C in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> through the Composition.
+However, a Scheduler can be used to implement more complex patterns of execution, by specifying <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>
+that determine when and how many times individual Components execute, and whether and how this depends on the execution
+of other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be
+combined in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically
+possible.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">In general, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> are the Components of a Composition that are most commonly associated with
 Conditions, and assigned to a Scheduler for execution.  However, in some circumstances, <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>
-can also be assigned for execution (e.g., during <a class="reference internal" href="Process.html#process-execution-learning"><span class="std std-ref">learning</span></a> to insure that
+can also be assigned for execution (e.g., during <code class="xref any docutils literal"><span class="pre">learning</span></code> to insure that
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> are updated in the proper order).</p>
 </div>
 </div>
@@ -439,11 +440,11 @@ specification dictionary, possibly determined by a set of <a class="reference in
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>composition</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – specifies the Components to be ordered for execution, and any dependencies among them, based on the
-Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>.</li>
-<li><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual Components in <strong>composition</strong>
-execute and any dependencies among them</li>
-<li><strong>graph</strong> (<em>Dict</em><em>[</em><em>Component: set</em><em>(</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>)</em><em>]</em>) – a graph specification dictionary - each entry of the dictionary must be a Component,
+<li><strong>composition</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – specifies the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be ordered for execution, and any dependencies among them,
+based on the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal"><span class="pre">graph</span></code></a>.</li>
+<li><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual <a class="reference internal" href="Components.html"><span class="doc">Components</span></a> &lt;Component&gt;` in <strong>composition</strong>
+execute and any dependencies among them.</li>
+<li><strong>graph</strong> (<em>Dict</em><em>[</em><em>Component: set</em><em>(</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>)</em><em>]</em>) – a graph specification dictionary - each entry of the dictionary must be a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>,
 and the value of each entry must be a set of zero or more Components that project directly to the key.</li>
 </ul>
 </td>
@@ -629,7 +630,7 @@ terminate the execution of the specified <a class="reference internal" href="Tim
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

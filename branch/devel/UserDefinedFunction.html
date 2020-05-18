@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -269,7 +269,7 @@ OutputPort that receives one more more <a class="reference internal" href="Gatin
 </pre></div>
 </div>
 <p>Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
-This is because  the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <code class="docutils literal"><span class="pre">my_mech</span></code> is defined in the <strong>size</strong> argument of
+This is because  the <code class="xref any docutils literal"><span class="pre">variable</span></code> of <code class="docutils literal"><span class="pre">my_mech</span></code> is defined in the <strong>size</strong> argument of
 its constructor as having a single item (a 1d array of length 3;  (see <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal"><span class="pre">size</span></code></a>).  In the
 following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
 the function:</p>
@@ -330,7 +330,7 @@ that don’t define default values.  For example:</p>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">my_sinusoidal_UDF</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for <code class="docutils literal"><span class="pre">my_mech</span></code>, but with the default
+<p>assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> as the <code class="xref any docutils literal"><span class="pre">function</span></code> for <code class="docutils literal"><span class="pre">my_mech</span></code>, but with the default
 values of its <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code> parameters assigned new values.  This can be useful for assigning the
 same function to different Mechanisms with different default values.</p>
 <p id="udf-control-signal-example">Explicitly defining the UDF can also be used to <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">specify control</span></a> for parameters of
@@ -356,7 +356,7 @@ indirectly, such as:</p>
 <p id="udf-assign-to-port-examples"><strong>Assigning of a custom function to a Port</strong></p>
 <p>A custom function can also be assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.
 For example, the following assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an OutputPort
-of <code class="docutils literal"><span class="pre">my_mech</span></code>, rather the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:</p>
+of <code class="docutils literal"><span class="pre">my_mech</span></code>, rather the Mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code>:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;SINUSOIDAL OUTPUT&#39;</span><span class="p">,</span>
@@ -506,7 +506,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

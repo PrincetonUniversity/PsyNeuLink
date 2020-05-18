@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -198,7 +198,7 @@
 <p>[DOCUMENTATION COMING…]</p>
 <span class="target" id="module-psyneulink.core.globals.preferences"></span><dl class="class">
 <dt id="psyneulink.core.globals.preferences.BasePreferenceSet">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">BasePreferenceSet</code><span class="sig-paren">(</span><em>owner=None</em>, <em>prefs=None</em>, <em>level=&lt;PreferenceLevel.SYSTEM: 5&gt;</em>, <em>name=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.BasePreferenceSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">BasePreferenceSet</code><span class="sig-paren">(</span><em>owner=None</em>, <em>prefs=None</em>, <em>level=&lt;PreferenceLevel.COMPOSITION: 5&gt;</em>, <em>name=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.BasePreferenceSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement and manage PreferenceSets for Component class hierarchy</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -422,49 +422,40 @@ of owner’s Preference object</dd>
 </dd></dl>
 
 <dl class="class">
-<dt id="psyneulink.core.globals.preferences.SystemPreferenceSet">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">SystemPreferenceSet</code><span class="sig-paren">(</span><em>record_simulation_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.SystemPreferenceSet" title="Permalink to this definition">¶</a></dt>
-<dd><p>Extends BasePreferenceSet to include Mechanism-specific preferences</p>
+<dt id="psyneulink.core.globals.preferences.CompositionPreferenceSet">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">CompositionPreferenceSet</code><span class="sig-paren">(</span><em>record_simulation_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.CompositionPreferenceSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extends BasePreferenceSet to include Composition-specific preferences</p>
 <dl class="docutils">
-<dt>Description:</dt>
-<dd><dl class="first last docutils">
 <dt>Implements the following preference:</dt>
 <dd><ul class="first last simple">
-<li>recordSimulation (bool): uses specification of run-time params to update execute method params</li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt>Class methods:</dt>
-<dd><ul class="first last simple">
-<li><dl class="first docutils">
-<dt>recordSimulationPref():</dt>
-<dd>returns setting for recordSimulation preference at level specified in recordSimulation
-PreferenceEntry of owner’s Preference object</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt>recordSimulationPref(setting=&lt;value&gt;):</dt>
-<dd>assigns the value of the setting item in the recordSimulationPref PreferenceEntry of the
-owner’s Preference object</dd>
-</dl>
-</li>
+<li>recordSimulation (bool): uses specification of runtime params to update execute method params.</li>
 </ul>
 </dd>
 </dl>
 <dl class="attribute">
-<dt id="psyneulink.core.globals.preferences.SystemPreferenceSet.recordSimulationPref">
-<code class="descname">recordSimulationPref</code><a class="headerlink" href="#psyneulink.core.globals.preferences.SystemPreferenceSet.recordSimulationPref" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return setting of owner’s recordSimulationPref at level specified in its PreferenceEntry.level
-:param level:
-:return:</p>
+<dt id="psyneulink.core.globals.preferences.CompositionPreferenceSet.recordSimulationPref">
+<code class="descname">recordSimulationPref</code><a class="headerlink" href="#psyneulink.core.globals.preferences.CompositionPreferenceSet.recordSimulationPref" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Return setting of owner’s recordSimulationPref at level specified in</dt>
+<dd>recordSimulation PreferenceEntry of owner’s Preference object</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>level</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="psyneulink.core.globals.preferences.MechanismPreferenceSet">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">MechanismPreferenceSet</code><span class="sig-paren">(</span><em>owner=None</em>, <em>reportOutput_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>runtimeParamModulation_pref=PreferenceEntry(setting=&lt;function Modulation.&lt;lambda&gt;&gt;</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>log_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>verbose_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>param_validation_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>level=&lt;PreferenceLevel.SYSTEM: 5&gt;</em>, <em>name=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.MechanismPreferenceSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">MechanismPreferenceSet</code><span class="sig-paren">(</span><em>owner=None</em>, <em>reportOutput_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>runtimeParamModulation_pref=PreferenceEntry(setting=&lt;function Modulation.&lt;lambda&gt;&gt;</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>log_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>verbose_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>param_validation_pref=PreferenceEntry(setting=False</em>, <em>level=&lt;PreferenceLevel.INSTANCE: 1&gt;)</em>, <em>level=&lt;PreferenceLevel.COMPOSITION: 5&gt;</em>, <em>name=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.MechanismPreferenceSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extends BasePreferenceSet to include Mechanism-specific preferences</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -563,7 +554,7 @@ owner’s Preference object</dd>
 
 <dl class="class">
 <dt id="psyneulink.core.globals.preferences.PreferenceSet">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">PreferenceSet</code><span class="sig-paren">(</span><em>owner</em>, <em>level=&lt;PreferenceLevel.SYSTEM: 5&gt;</em>, <em>prefs=None</em>, <em>name=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.PreferenceSet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.preferences.</code><code class="descname">PreferenceSet</code><span class="sig-paren">(</span><em>owner</em>, <em>level=&lt;PreferenceLevel.COMPOSITION: 5&gt;</em>, <em>prefs=None</em>, <em>name=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.preferences.PreferenceSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class for PreferenceSets that stores preferences and provides access to level-specific settings</p>
 <dl class="docutils">
 <dt>Description:</dt>
@@ -930,7 +921,7 @@ pref_ivar_name=&lt;str&gt;):</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

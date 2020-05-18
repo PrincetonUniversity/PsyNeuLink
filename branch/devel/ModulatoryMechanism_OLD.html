@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>ModulatoryMechanism &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -282,13 +282,10 @@ be assigned the same <code class="xref any docutils literal"><span class="pre">v
 </div>
 <div class="section" id="creating-a-modulatorymechanism">
 <span id="modulatorymechanism-creation"></span><h2>Creating a ModulatoryMechanism<a class="headerlink" href="#creating-a-modulatorymechanism" title="Permalink to this headline">¶</a></h2>
-<p>A ModulatoryMechanism can be created by using the standard Python method of calling the constructor for the desired type.
-ModulatoryMechanisms of the appropriate subtype are also created automatically when other Components are created that
-require them, or a form of modulation is specified for them. For example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> is
-automatically created as part of a <a class="reference internal" href="System.html#system-creation"><span class="std std-ref">System</span></a> (for use as its <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a>), or when <a class="reference internal" href="ControlMechanism.html#controlmechanism-controlsignals"><span class="std std-ref">control is specified</span></a> for the parameter of a
-<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; and one or more <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> are created when learning is
-specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or a <a class="reference internal" href="System.html#system-learning"><span class="std std-ref">System</span></a> (see the documentation for
-<a class="reference internal" href="ModulatoryMechanisms_OLD.html#modulatorymechanism-subtypes"><span class="std std-ref">subtypes</span></a> of ModulatoryMechanisms for more specific information about how to create them).</p>
+<p>A ModulatoryMechanism is created by calling the constructor for the desired type. ModulatoryMechanisms of the
+appropriate subtype can also be created automatically when other Components are created that require them (for
+example, one or more <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> are created when a <code class="xref any docutils literal"><span class="pre">learning</span> <span class="pre">pathway</span></code> is specified for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (see <a class="reference internal" href="ModulatoryMechanisms_OLD.html#modulatorymechanism-subtypes"><span class="std std-ref">subtypes</span></a> of
+ModulatoryMechanisms for more specific information about how to create them).</p>
 </div>
 <div class="section" id="structure">
 <span id="modulatorymechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
@@ -299,12 +296,23 @@ subtypes of ModulatoryMechanism for more specific information about their struct
 </div>
 <div class="section" id="execution">
 <span id="modulatorymechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>LearningMechanism and ControlMechanism are always executed at the end of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, after all
-<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> or <a class="reference internal" href="System.html"><span class="doc">System</span></a> to which they belong have been executed;
-all LearningMechanism executed first, and then ControlMechanism.  All modifications made are available during the
-next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. GatingMechanism are executed in the same manner as ProcessingMechanisms;  however,
-because they almost invariably introduce recurrent connections, care must be given to their <code class="xref any docutils literal"><span class="pre">initialization</span> <span class="pre">and/or</span>
-<span class="pre">scheduling</span></code>).</p>
+<p>The execution of a ModulatoryMechanism follows the same sequence of actions as a standard <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
+(<a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">Execution</span></a>).  However, in the context of a Composition, its <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">Modulatory Projections</span></a>s are often feedback
+connections to other Mechanisms in the Composition, forming a <a class="reference internal" href="Composition.html#composition-acyclic-cyclic"><span class="std std-ref">cycle</span></a> in the Composition,
+and thus the ModulatoryMechanism may need to be properly initialized (see <code class="xref any docutils literal"><span class="pre">Composition_Initial_Values_and_Feedback</span></code>).
+Also, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> can be the <code class="xref any docutils literal"><span class="pre">controller</span></code> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> in which case its
+execution is handled separately from other Mechanisms in the Composition (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a>).
+As noted below, the modifications made by a ModulatoryMechanism to a parameter that it modulates are not available to
+that parameter’s Component until <em>after</em> the Modulatory executes, which may not be until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> (e.g., the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is subject
+to <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a> in a Composition; or a parameter modulated by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> that is the
+<a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a> of a Composition that executes last (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">A <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> that receives a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">Modulatory Projections</span></a> from a ModulatoryMechanism does not update its value until its
+owner Mechanism executes (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code> for an explanation of “lazy” updating).  This means that
+even if a ModulatoryMechanism has executed, a parameter that it modulates will not assume its new value until
+the Mechanism to which it belongs has executed.</p>
+</div>
 </div>
 <div class="section" id="class-reference">
 <span id="modulatorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
@@ -393,7 +401,7 @@ modulate the value of the Port(s) to which their <a class="reference internal" h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -388,7 +388,7 @@ See <a class="reference internal" href="Mechanism.html#mechanism-class-reference
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>default_variable</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><em>value</em></a><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> or
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> methods; also serves as a template to specify the length of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of the
+<code class="xref any docutils literal"><span class="pre">run</span></code> methods; also serves as a template to specify the length of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of the
 DDM (see <code class="xref any docutils literal"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</li>
 <li><strong>function</strong> (<em>IntegratorFunction : default DriftDiffusionAnalytical</em>) – specifies the function to use to <a class="reference internal" href="#ddm-execution"><span class="std std-ref">execute</span></a> the decision process; determines the mode of
 execution (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> for additional information).</li>
@@ -450,7 +450,7 @@ ones may be included, based on the <a class="reference internal" href="#psyneuli
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports">
 <code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>list[str]</em> – list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> that includes the following addition to the
-<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
+<code class="xref any docutils literal"><span class="pre">standard_output_ports</span></code> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
 <dl class="docutils" id="ddm-decision-variable">
 <dt><em>DECISION_VARIABLE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
 <dd><ul class="first simple">
@@ -729,7 +729,7 @@ towards a specified threshold</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

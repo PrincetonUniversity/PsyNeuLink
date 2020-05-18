@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -258,7 +258,7 @@ created for each modulable Parameter of its owner, as well as for each modulable
 are listed in its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, and have the attribute
 <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> set to True.)
 Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
-ParameterPorts for the parameters of a Mechanism or Projection are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_ports</span></code></a> attribute.</p>
+ParameterPorts for the parameters of a Mechanism or Projection are listed in its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.parameter_ports" title="psyneulink.core.components.projections.projection.Projection_Base.parameter_ports"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_ports</span></code></a> attribute.</p>
 <div class="section" id="specifying-parameters">
 <span id="parameterport-specification"></span><h3><em>Specifying Parameters</em><a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several places:</p>
@@ -269,13 +269,13 @@ ParameterPorts for the parameters of a Mechanism or Projection are listed in its
 </ul>
 <ul class="simple">
 <li>In a <em>parameter specification dictionary</em> assigned to the <strong>params</strong> argument in the constructor for the
-Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
-(or a corresponding keyword) as its key, and the parameter’s specification as its value (see
-<a class="reference internal" href="#parameterport-specification-examples"><span class="std std-ref">examples</span></a> below). Parameters for a Component’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be specified in an entry with the key <em>FUNCTION_PARAMS</em>, and a value that
-is itself a parameter specification dictionary containing an entry for each of the function’s parameters to be
-specified.  When a value is assigned to a parameter in a specification dictionary, it overrides any value
-assigned to the argument for the parameter in the Component’s constructor.</li>
+Component to which the parameter belongs, or any place else the value of a parameter can be specified.
+The entry for each parameter must use the name of the parameter (or a corresponding keyword) as its key,
+and the parameter’s specification as its value (see <a class="reference internal" href="#parameterport-specification-examples"><span class="std std-ref">examples</span></a> below).
+Parameters for a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be specified in an entry with the key
+<em>FUNCTION_PARAMS</em>, and a value that is itself a parameter specification dictionary containing an entry for
+each of the function’s parameters to be specified.  When a value is assigned to a parameter in a specification
+dictionary, it overrides any value assigned to the argument for the parameter in the Component’s constructor.</li>
 </ul>
 <ul class="simple">
 <li>By direct assignment to the Component’s attribute for the parameter
@@ -330,7 +330,7 @@ argument of a call to a Mechanism’s <a class="reference internal" href="Mechan
 </ul>
 </div></blockquote>
 <p>The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the Component or
-of the Component’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to which the parameter belongs.  The attribute has the same
+of the Component’s <code class="xref any docutils literal"><span class="pre">function</span></code> to which the parameter belongs.  The attribute has the same
 name as the parameter, and can be referenced using standard Python attribute (“dot”) notation;  for example, the value
 of a parameter named <em>param</em> is assigned to an attribute named <code class="docutils literal"><span class="pre">param</span></code> that can be referenced as
 <code class="docutils literal"><span class="pre">my_component.param</span></code>). The parameter’s value is assigned as the <strong>default value</strong> for the ParameterPort.</p>
@@ -641,7 +641,7 @@ ParmeterPort is responsible.  Note that this is not necessarily the same as the 
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

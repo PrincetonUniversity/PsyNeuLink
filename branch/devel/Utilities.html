@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Utilities &mdash; PsyNeuLink 0.7.5.4+121.gbb91573 documentation</title>
+  <title>Utilities &mdash; PsyNeuLink 0.7.5.4+122.ge954832 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+121
+                  0.7.5.4+122
                 </div>
               
             
@@ -270,7 +270,6 @@ are not constrained to be used by PsyNeuLink objects</dd>
 <ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">get_args</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">recursive_update</span></code></li>
-<li><a class="reference internal" href="#psyneulink.core.globals.utilities.merge_param_dicts" title="psyneulink.core.globals.utilities.merge_param_dicts"><code class="xref any py py-func docutils literal"><span class="pre">merge_param_dicts</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.multi_getattr" title="psyneulink.core.globals.utilities.multi_getattr"><code class="xref any py py-func docutils literal"><span class="pre">multi_getattr</span></code></a></li>
 <li><code class="xref any docutils literal"><span class="pre">np_array_less_that_2d</span></code></li>
 <li><a class="reference internal" href="#psyneulink.core.globals.utilities.convert_to_np_array" title="psyneulink.core.globals.utilities.convert_to_np_array"><code class="xref any py py-func docutils literal"><span class="pre">convert_to_np_array</span></code></a></li>
@@ -319,7 +318,7 @@ Notes:
 <dd><p>Implements dict-like list, that can be keyed by a specified attribute of the <a class="reference internal" href="Component.html"><span class="doc">Compoments</span></a> in its
 entries.</p>
 <p>The key with which it is created is also assigned as a property of the class, that returns a list
-with the keyed attribute of its entries.  For example, the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a> attribute
+with the keyed attribute of its entries.  For example, the <code class="xref any docutils literal"><span class="pre">output_ports</span></code> attribute
 of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is a ContentAddressableList of the Mechanism’s <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, keyed by
 their names.  Therefore, <code class="docutils literal"><span class="pre">my_mech.output_ports.names</span></code> returns the names of all of the Mechanism’s OutputPorts:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
@@ -743,43 +742,6 @@ Return True only if both are instances or classes of a PsyNeuLink Function;  oth
 <dd><p>Return property that provides read-only access to its value</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="psyneulink.core.globals.utilities.merge_param_dicts">
-<code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">merge_param_dicts</code><span class="sig-paren">(</span><em>source</em>, <em>specific</em>, <em>general</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.merge_param_dicts" title="Permalink to this definition">¶</a></dt>
-<dd><p>Search source dict for specific and general dicts, merge specific with general, and return merged</p>
-<dl class="docutils">
-<dt>Description:</dt>
-<dd><ul class="first last simple">
-<li>used to merge only a subset of dicts in param set (that may have several dicts</li>
-<li>allows dicts to be referenced by name (e.g., paramName) rather than by object</li>
-<li>searches source dict for specific and general dicts</li>
-<li>if both are found, merges them, with entries from specific overwriting any duplicates in general</li>
-<li>if only one is found, returns just that dict</li>
-<li>if neither are found, returns empty dict</li>
-</ul>
-</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>source</strong> (<em>-</em>) – container dict (entries are dicts); search entries for specific and general dicts</li>
-<li><strong>specific</strong> (<em>-</em>) – if str, use as key to look for specific dict in source, and check that it is a dict</li>
-<li><strong>general</strong> (<em>-</em>) – if str, use as key to look for general dict in source, and check that it is a dict</li>
-<li><strong>source</strong> – (dict)</li>
-<li><strong>specific</strong> – (dict or str)</li>
-<li><strong>general</strong> – (dict or str)</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return merged:</th><td class="field-body"><p class="first last">(dict)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="class">
 <dt id="psyneulink.core.globals.utilities.Modulation">
 <em class="property">class </em><code class="descclassname">psyneulink.core.globals.utilities.</code><code class="descname">Modulation</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.utilities.Modulation" title="Permalink to this definition">¶</a></dt>
@@ -1072,7 +1034,7 @@ original values</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+121.gbb91573',
+               VERSION:'0.7.5.4+122.ge954832',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
