@@ -117,10 +117,19 @@ connections to other Mechanisms in the Composition, forming a `cycle <Compositio
 and thus the ModulatoryMechanism may need to be properly initialized (see `Composition_Initial_Values_and_Feedback`).
 Also, a `ControlMechanism` can be the `controller <Composition.controller>` of a `Composition` in which case its
 execution is handled separately from other Mechanisms in the Composition (see `Composition_Controller_Execution`).
-All modifications to the Parameters modulated by a ModulatoryMechanism are available to Components that execute
-*after* the Modulatory has executed, which may not be until the next `TRIAL <TimeScale.TRIAL>` (e.g., the `matrix
-<MappingProjection.matrix>` parameter of a `MappingProjection` that is subject to `learning <Composition_Learning>`
-in a Composition).
+As noted below, the modifications made by a ModulatoryMechanism to a parameter that it modulates are not available to
+that parameter's Component until *after* the Modulatory executes, which may not be until the next `TRIAL
+<TimeScale.TRIAL>` (e.g., the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` that is subject
+to `learning <Composition_Learning>` in a Composition; or a parameter modulated by a `ControlMechanism` that is the
+`controller <Composition_Controller>` of a Composition that executes last (see `Composition_Controller_Execution`).
+
+.. ModulatoryMechanism_Lazy_Evaluation_Note:
+
+.. note::
+   A `Port` that receives a `ModulatoryProjection` from a ModulatoryMechanism does not update its value until its
+   owner Mechanism executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that
+   even if a ModulatoryMechanism has executed, a parameter that it modulates will not assume its new value until
+   the Mechanism to which it belongs has executed.
 
 .. _ModulatoryMechanism_Class_Reference:
 

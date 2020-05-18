@@ -145,6 +145,10 @@ gates (see `GatingSignal_Modulation` for description of how a GatingSignal modul
 Execution
 ---------
 
+COMMENT:
+    FIX 5/8/20: REWORK TO FOLLOW CONTROLMECHANISM
+COMMENT
+
 A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
 Composition's `graph <Composition.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce
 cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally

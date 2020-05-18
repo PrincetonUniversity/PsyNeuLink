@@ -351,6 +351,8 @@ multiplied by the base value of the `bias <Logistic.bias>` parameter, before tha
 
 COMMENT
 
+# FIX 5/8/20 -- REWORK TO BE ALIGNED WITH ModulatoryMechanism
+
 .. note::
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
    which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).

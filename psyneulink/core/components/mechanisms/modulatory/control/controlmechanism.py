@@ -436,21 +436,8 @@ ControlMechanism.control_allocation>` from the last execution, that will be appl
 Execution
 ---------
 
-If a ControlMechanism is assigned as the `controller` of a `Composition`, then it is executed either before or after
-all of the other  `Mechanisms <Mechanism>` executed in a `TRIAL <TimeScale.TRIAL>` for that Composition, depending
-on the value assigned to the Composition's `controller_mode <Composition.controller_mode>` attribute (see
-`Composition_Controller_Execution`).  If a ControlMechanism is added to a Composition for which it is not a `controller
-<Composition.controller>`, then it executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on
-its place in the Composition's `graph <Composition.graph>`.  Because `ControlProjections <ControlProjection>` are
-likely to introduce cycles (recurrent connection loops) in the graph, the effects of a ControlMechanism and its
-projections will generally not be applied in the first `TRIAL <TimeScale.TRIAL>` (see
-COMMENT:
-FIX 8/27/19 [JDC]:
-`Composition_Initial_Values_and_Feedback` and
-COMMENT
-**feedback** argument for the `add_projection <Composition.add_projection>` method of `Composition` for a
-description of how to configure the initialization of feedback loops in a Composition; also see `Scheduler` for a
-description of detailed ways in which a GatingMechanism and its dependents can be scheduled to execute).
+A ControlMechanism is executed using the same sequence of actions as any `Mechanism <Mechanism_Execution>`, with the
+following additions.
 
 The ControlMechanism's `function <ControlMechanism.function>` takes as its input the `value <InputPort.value>` of
 its *OUTCOME* `input_port <ControlMechanism.input_port>` (also contained in `outcome <ControlSignal.outcome>`).
@@ -458,18 +445,15 @@ It uses that to determine the `control_allocation <ControlMechanism.control_allo
 assigned to the `allocation <ControlSignal.allocation>` of each of its `ControlSignals <ControlSignal>`.  Each
 ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, as well as its `cost
 <ControlSignal.cost>.  The `intensity <ControlSignal.intensity>`is used by its `ControlProjection(s)
-<ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it controls, which are then
-used in the subsequent `TRIAL <TimeScale.TRIAL>` of execution.
-
-.. note::
-   `Ports <Port>` that receive a `ControlProjection` does not update its value until its owner Mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
-   to which it belongs has executed.
+<ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it controls.  Note that
+the modulated value of the parameter may not be used until the subsequent `TRIAL <TimeScale.TRIAL>` of execution,
+if the ControlMechansim is not executed until after the Component to which the paramter belongs is executed
+(see `note <ModulatoryMechanism_Lazy_Evaluation_Note>`).
 
 .. _ControlMechanism_Costs_Computation:
 
 *Computation of Costs and Net_Outcome*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once the ControlMechanism's `function <ControlMechanism.function>` has executed, if `compute_reconfiguration_cost
 <ControlMechanism.compute_reconfiguration_cost>` has been specified, then it is used to compute the
@@ -484,6 +468,23 @@ to compute a `net_outcome <ControlMechanism.net_outcome>` using its `compute_net
 <ControlMechanism.compute_net_outcome>` function.  This is used by some subclasses of ControlMechanism
 (e.g., `OptimizationControlMechanism`) to  compute its `control_allocation <ControlMechanism.control_allocation>`
 for the next `TRIAL <TimeScale.TRIAL>` of execution.
+
+.. _ControlMechanism_Controller_Execution:
+
+*Execution as Controller of a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if a ControlMechanism is assigned as the `controller of a `Composition <ControlMechanism_Composition_Controller>`,
+then it is executed either before or after all of the other  `Mechanisms <Mechanism>` executed in a `TRIAL
+<TimeScale.TRIAL>` for that Composition, depending on the value assigned to the Composition's `controller_mode
+<Composition.controller_mode>` attribute (see `Composition_Controller_Execution`).  If a ControlMechanism is added to
+a Composition for which it is not a `controller <Composition.controller>`, then it executes in the same way as any
+`Mechanism <Mechanism>`, based on its place in the Composition's `graph <Composition.graph>`.  Because
+`ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the
+graph, the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL
+<TimeScale.TRIAL>` (see `Composition_Initial_Values_and_Feedback` for configuring the initialization of feedback
+loops in a Composition; also see `Scheduler` for a description of additional ways in which a ControlMechanism and its
+dependents can be scheduled to execute).
 
 .. _ControlMechanism_Examples:
 

@@ -11,7 +11,8 @@ import psyneulink as pnl
                                  pnl.core.components.ports.modulatorysignals.controlsignal,
                                  pnl.core.components.ports.modulatorysignals.gatingsignal,
                                  # Mechanisms
-                                 pnl.core.components.mechanisms.mechanism,
+                                 # FIX 5/8/20 ELIMINATE SYSTEM [JDC] -- REFERENCES TO LABELS REQUIRE REFACTORING
+                                 # pnl.core.components.mechanisms.mechanism,
                                  pnl.core.components.mechanisms.processing.transfermechanism,
                                  pnl.core.components.mechanisms.processing.integratormechanism,
                                  pnl.core.components.mechanisms.processing.objectivemechanism,
