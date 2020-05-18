@@ -759,7 +759,7 @@ class LCControlMechanism(ControlMechanism):
                                                           "contained an item ({}) that is not a Mechanism.".
                                                           format(repr(MODULATED_MECHANISMS), self.name, mech))
                         elif not hasattr(mech.function, MULTIPLICATIVE_PARAM):
-                            raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "                                                          
+                            raise LCControlMechanismError(f"The specification of the {repr(MODULATED_MECHANISMS)} "
                                                           f"argument for {self.name} contained a Mechanism ({mech}) "
                                                           f"that does not have a {repr(MULTIPLICATIVE_PARAM)}.")
 
