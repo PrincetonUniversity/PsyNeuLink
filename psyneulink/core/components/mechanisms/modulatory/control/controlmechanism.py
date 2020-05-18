@@ -764,7 +764,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     Subclass of `ModulatoryMechanism <ModulatoryMechanism>` that modulates the parameter(s) of one or more
     `Component(s) <Component>`.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
-    COMMENT:
+    COMMENT: FIX 5/8/20
         Description:
             Protocol for instantiating unassigned ControlProjections (i.e., w/o a sender specified):
                If sender is not specified for a ControlProjection (e.g., in a parameter specification tuple)
@@ -1655,6 +1655,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             for eff in ms.efferents:
                 dependent_projections.add(eff)
 
+        # ??ELIMINATE SYSTEM
         # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
         # assign any deferred init objective mech monitored OutputPort projections to this system
         if self.objective_mechanism:
@@ -1662,6 +1663,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 for eff in output_port.efferents:
                     dependent_projections.add(eff)
 
+        # ??ELIMINATE SYSTEM
         # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
         for eff in self.efferents:
             dependent_projections.add(eff)
