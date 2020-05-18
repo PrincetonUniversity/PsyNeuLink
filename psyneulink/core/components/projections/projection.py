@@ -55,21 +55,24 @@ each of which has subtypes that differ in the type of information they transmit,
     that project to different types of `Ports <Port>`:
 
   * `LearningProjection`
-      takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits
-      this to the `ParameterPort` of a `MappingProjection` that uses this to modify its `matrix
-      <MappingProjection.matrix>` parameter. LearningProjections are used when learning has
-      been specified for a `Process <Process_Learning_Sequence>` or `System <System_Execution_Learning>`.
+      takes the `value <LearningSignal.value>` of a `LearningSignal` of a `LearningMechanism`, and transmits this
+      to the `ParameterPort` of a `MappingProjection` that uses it to modify its `matrix <MappingProjection.matrix>`
+      parameter. LearningProjections are used in the `learning Pathway(s) <Composition_Learning_Pathway>` of a
+      `Composition`.
   ..
   * `ControlProjection`
       takes the `value <ControlSignal.value>` of a `ControlSignal` of a `ControlMechanism <ControlMechanism>`, and
-      transmit this to the `ParameterPort of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify
-      the parameter of the (or its `function <Mechanism_Base.function>`) for which it is responsible.
-      ControlProjections are used when control has been used specified for a `System`.
+      transmit this to the `ParameterPort of a `ProcessingMechanism <ProcessingMechanism>` that uses it to modify
+      the parameter of the `Mechanism <Mechanism>` (or its `function <Mechanism_Base.function>`) for which it is
+      responsible.
+      COMMENT:
+      ControlProjections are used in the `control Pathway(s) <Composition_Control_Pathway>` of a `Composition`.
+      COMMENT
   ..
   * `GatingProjection`
       takes the `value <GatingSignal.value>` of a `GatingSignal` of a `GatingMechanism`, and transmits this to
       the `InputPort` or `OutputPort` of a `ProcessingMechanism <ProcessingMechanism>` that uses this to modify the
-      Port's `value <Port_Base.value>`
+      Port's `value <Port_Base.value>`.  GatingProjections are a special subclass of ControlProjections.
 
 .. _Projection_Creation:
 
@@ -119,13 +122,14 @@ Projection in context:
         <LearningProjection.sender>`. See `LearningMechanism_Learning_Configurations` for additional details.
       COMMENT
 
+      # FIX 5/8/20 [JDC] ELIMINATE SYSTEM:  IS IT TRUE THAT CONTROL SIGNALS ARE AUTOMATICALLY CREATED BY COMPOSITIONS?
       * *CONTROL_PROJECTION* (or *CONTROL*) -- this can be used when specifying a parameter using the `tuple format
         <ParameterPort_Tuple_Specification>`, to create a default `ControlProjection` to the `ParameterPort` for that
-        parameter.  If the `Component <Component>` to which the parameter belongs is part of a `System`, then a
-        `ControlSignal` is added to the System's `controller <System.controller>` and assigned as the
+        parameter.  If the `Component <Component>` to which the parameter belongs is part of a `Composition`, then a
+        `ControlSignal` is added to the Composition's `controller <Composition.controller>` and assigned as the
         ControlProjection's `sender <ControlProjection.sender>`;  otherwise, the ControlProjection's `initialization
-        is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a System,
-        at which time the ControlSignal is added to the System's `controller <System.controller>` and assigned
+        is deferred <ControlProjection_Deferred_Initialization>` until the Mechanism is assigned to a Composition, at
+        which time the ControlSignal is added to the Composition's `controller <Composition.controller>` and assigned
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_ControlSignals` for
         additional details.
 
@@ -176,7 +180,7 @@ Projection in context:
       COMMENT:  ??IMPLEMENTED FOR PROJECTION PARAMS??
         Note that parameter
         values in the specification dictionary will be used to instantiate the Projection.  These can be overridden
-        during execution by specifying `runtime parameters <Mechanism_Runtime_parameters>` for the Projection,
+        during execution by specifying `runtime parameters <Mechanism_Runtime_Params>` for the Projection,
         either when calling the `execute <Mechanism_Base.execute>` or `run <Mechanism_Base.run>`
         method for a Mechanism directly, or where it is specified in the `pathway` of a Process.
       COMMENT
@@ -220,11 +224,11 @@ Projection in context:
 *Automatic creation*
 ~~~~~~~~~~~~~~~~~~~~
 
-Under some circumstances Projections are created automatically. For example, a `Process` automatically creates a
-`MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` in its `pathway
-<Process.pathway>` if none is specified; and `LearningProjections <LearningProjection>` are automatically created
-when :keyword:`learning` is specified for a `Process <Process_Learning_Sequence>` or `System
-<System_Execution_Learning>`).
+Under some circumstances Projections are created automatically. For example, a `Composition` automatically creates
+a `MappingProjection` between adjacent `ProcessingMechanisms <ProcessingMechanism>` specified in the **pathways**
+argument of its constructor (if none is specified) or in its `add_linear_processing_pathway
+<Composition.add_linear_processing_pathway>` method;  and, similarly, `LearningProjections <LearningProjection>` are
+automatically created when a `learning pathway <Composition_Learning_Pathway>` is added to a Composition.
 
 .. _Projection_Deferred_Initialization:
 
@@ -394,7 +398,6 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -439,6 +442,17 @@ PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             GATING_SIGNAL: GATING_PROJECTION,
                             GATING_PROJECTION: GATING_PROJECTION
                             }
+
+def projection_param_keyword_mapping():
+    """Maps Projection type (key) to Projection parameter keywords (value) used for runtime_params specification
+    Projection type is one specified in its componentType attribute, and registered in ProjectionRegistry
+    """
+    return {k: (k[:k.find('PROJECTION') - 9] + '_' + k[k.find('PROJECTION') - 9:]).upper() + '_PARAMS'
+            for k in list(ProjectionRegistry.keys())}
+
+def projection_param_keywords():
+    return set(projection_param_keyword_mapping().values())
+
 
 from collections import namedtuple
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
@@ -901,10 +915,10 @@ class Projection_Base(Projection):
         else:
             raise ProjectionError("Unrecognized receiver specification ({0}) for {1}".format(self.receiver, self.name))
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_params=None, context=None):
         for port in self._parameter_ports:
             port_Name = port.name
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params, context=context)
 
             # Assign version of ParameterPort.value matched to type of template
             #    to runtime param
@@ -1892,7 +1906,7 @@ def _validate_receiver(sender_mech:Mechanism,
                        expected_owner_type:type,
                        spec_type=None,
                        context=None):
-    """Check that Projection is to expected_receiver_type and in the same System as the sender_mech (if specified)
+    """Check that Projection is to expected_receiver_type.
 
     expected_owner_type must be a Mechanism or a Projection
     spec_type should be LEARNING_SIGNAL, CONTROL_SIGNAL or GATING_SIGNAL
@@ -1928,38 +1942,6 @@ def _validate_receiver(sender_mech:Mechanism,
                                            receiver,
                                            port.__class__.__name__,
                                            expected_owner_type.__name__))
-
-    # Check if receiver_mech is in the same system as sender_mech;
-    #    if either has not been assigned a system, return
-
-    # Check whether mech is in the same system as sender_mech
-    receiver_systems = set()
-    # receiver_mech is a ControlMechanism (which has a system but no systems attribute)
-    if hasattr(receiver_mech, 'system') and receiver_mech.system:
-        receiver_systems.update({receiver_mech.system})
-    # receiver_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
-    elif hasattr(receiver_mech, 'systems') and receiver_mech.systems:
-        receiver_systems.update(set(receiver_mech.systems))
-    else:
-        return
-
-    sender_systems = set()
-    # sender_mech is a ControlMechanism (which has a system but no systems attribute)
-    if hasattr(sender_mech, 'system') and sender_mech.system:
-        sender_systems.update({sender_mech.system})
-    # sender_mech is a ProcessingMechanism (which has a systems but system attribute is usually None)
-    elif hasattr(sender_mech, 'systems')and sender_mech.systems:
-        sender_systems.update(set(sender_mech.systems))
-    else:
-        return
-
-    #  Check that projection is to a (projection to a) mechanisms in the same system as sender_mech
-    if not receiver_systems & sender_systems:
-        raise ProjectionError("A {} specified {}for {} projects to a Component that is not in the same System".
-                                    format(projection.__class__.__name__,
-                                           spec_type,
-                                           sender_mech.name))
-
 
 # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
 def _add_projection_to(receiver, port, projection_spec, context=None):

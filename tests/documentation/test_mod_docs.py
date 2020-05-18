@@ -11,7 +11,8 @@ import psyneulink as pnl
                                  pnl.core.components.ports.modulatorysignals.controlsignal,
                                  pnl.core.components.ports.modulatorysignals.gatingsignal,
                                  # Mechanisms
-                                 pnl.core.components.mechanisms.mechanism,
+                                 # FIX 5/8/20 ELIMINATE SYSTEM [JDC] -- REFERENCES TO LABELS REQUIRE REFACTORING
+                                 # pnl.core.components.mechanisms.mechanism,
                                  pnl.core.components.mechanisms.processing.transfermechanism,
                                  pnl.core.components.mechanisms.processing.integratormechanism,
                                  pnl.core.components.mechanisms.processing.objectivemechanism,
@@ -29,7 +30,6 @@ def test_core_docs(mod, capsys):
 @pytest.mark.parametrize("mod", [# Mechanisms
                                  pnl.library.components.mechanisms.processing.integrator.ddm,
                                  pnl.library.components.mechanisms.processing.objective.comparatormechanism,
-                                 pnl.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism,
                                  # Scheduling
                                  pnl.core.scheduling.scheduler,
                                  # Logs

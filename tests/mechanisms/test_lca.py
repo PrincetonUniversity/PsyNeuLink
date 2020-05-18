@@ -1,15 +1,13 @@
 import numpy as np
 import pytest
 
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.selectionfunctions import max_vs_next
-from psyneulink.core.components.functions.selectionfunctions import max_vs_avg
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
-from psyneulink.core.scheduling.condition import Never, WhenFinished
+from psyneulink.core.scheduling.condition import Never, WhenFinished, AtRunStart, AtTrialStart
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import \
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT, CONVERGENCE
 
@@ -296,20 +294,18 @@ class TestLCAReinitialize:
                          self_excitation=1.0,
                          time_step_size=1.0,
                          noise=0.0)
-        P = Process(name="P",
-                    pathway=[L])
-        S = System(name="S",
-                   processes=[P])
+        C = Composition(pathways=[L])
 
         L.reinitialize_when = Never()
         assert np.allclose(L.integrator_function.previous_value, 0.5)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 
-        S.run(inputs={L: 1.0},
+        C.run(inputs={L: 1.0},
               num_trials=2,
-              initialize=True,
-              initial_values={L: 0.0})
+              # reinitialize_nodes_when=AtRunStart(),
+              # reinitialize_nodes_when=AtTrialStart(),
+              initialize_cycle_values={L: [0.0]})
 
         # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
 
@@ -319,19 +315,19 @@ class TestLCAReinitialize:
         # Trial 2    |   variable = 1.0 + 1.55
         # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
         #  linear fn: 4.255*1.0 = 4.255
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 3.755)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 3.755)
 
-        L.integrator_function.reinitialize(0.9, context=S)
+        L.integrator_function.reinitialize(0.9, context=C)
 
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 0.9)
-        assert np.allclose(L.parameters.value.get(S), 3.755)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.9)
+        assert np.allclose(L.parameters.value.get(C), 3.755)
 
-        L.reinitialize(0.5, context=S)
+        L.reinitialize(0.5, context=C)
 
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 0.5)
-        assert np.allclose(L.parameters.value.get(S), 0.5)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.5)
+        assert np.allclose(L.parameters.value.get(C), 0.5)
 
-        S.run(inputs={L: 1.0},
+        C.run(inputs={L: 1.0},
               num_trials=2)
         # Trial 3    |   variable = 1.0 + 0.5
         # integration: 0.5 + (0.1*0.5 + 1.5)*1.0 + 0.0 = 2.05
@@ -339,7 +335,7 @@ class TestLCAReinitialize:
         # Trial 4    |   variable = 1.0 + 2.05
         # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
         #  linear fn: 5.305*1.0 = 5.305
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(S), 4.705)
+        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 4.705)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 

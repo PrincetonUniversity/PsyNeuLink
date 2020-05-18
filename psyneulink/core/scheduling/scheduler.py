@@ -16,12 +16,13 @@ Overview
 A Scheduler is used to generate the order in which the `Components <Component>` of a `Composition <Composition>` are
 executed. By default, a Scheduler executes Components in an order determined by the pattern of `Projections
 <Projection>` among the `Mechanisms <Mechanism>` in the `Composition <Composition>`, with each Mechanism executed once
-per `PASS` through the Composition. For example, in a `System` in which a Mechanism A projects to a Mechanism B that
-projects to a Mechanism C, A will execute first followed by B, and then C in each `PASS` through the System.  However,
-a Scheduler can be used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that
-determine when and how many times individual Components execute, and whether and how this depends on the execution of
-other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined
-in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically possible.
+per `PASS` through the Composition. For example, in a `Composition` in which a Mechanism A projects to a Mechanism B
+that projects to a Mechanism C, A will execute first followed by B, and then C in each `PASS` through the Composition.
+However, a Scheduler can be used to implement more complex patterns of execution, by specifying `Conditions <Condition>`
+that determine when and how many times individual Components execute, and whether and how this depends on the execution
+of other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be
+combined in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically
+possible.
 
 .. note::
    In general, `Mechanisms <Mechanism>` are the Components of a Composition that are most commonly associated with
@@ -311,25 +312,15 @@ class Scheduler(JSONDumpable):
     ---------
 
     composition : Composition
-        specifies the Components to be ordered for execution, and any dependencies among them, based on the
-        Composition's `graph <Composition.graph_processing>`.
-
-    COMMENT:
-        [**??IS THE FOLLOWING CORRECT]:
-        K: not correct, there are no implicit System Conditions
-        JDC: I WAS REFERRING TO THE DEPENDENCIES IN THE SYSTEM'S GRAPH.  THE FACT THAT conditions IS AN
-             OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A System IS SUFFICIENT TO GENERATE A SCHEDULE,
-             MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE System.
-        K: it's not that they're implicit, it's that we just set defaults to match the behavior of the
-            naive scheduler
-    COMMENT
+        specifies the `Components <Component>` to be ordered for execution, and any dependencies among them,
+        based on the `Composition <Composition>`\\'s `graph <Composition.graph_processing>`.
 
     conditions  : ConditionSet
-        set of `Conditions <Condition>` that specify when individual Components in **composition**
-        execute and any dependencies among them
+        set of `Conditions <Condition>` that specify when individual `Components` <Component>` in **composition**
+        execute and any dependencies among them.
 
     graph : Dict[Component: set(Component)]
-        a graph specification dictionary - each entry of the dictionary must be a Component,
+        a graph specification dictionary - each entry of the dictionary must be a `Component`,
         and the value of each entry must be a set of zero or more Components that project directly to the key.
 
     Attributes
@@ -383,23 +374,11 @@ class Scheduler(JSONDumpable):
 
         self.cycle_nodes = set()
 
-        # can remove this once system is fully eliminated from tests/support
-        try:
-            system = kwargs['system']
-            warnings.warn('Systems are no longer updated, new code should use Compositions.', DeprecationWarning)
-        except KeyError:
-            system = None
-
         if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
-        elif system is not None:
-            self.nodes = [m for m in system.execution_list]
-            self._init_consideration_queue_from_system(system)
-            if default_execution_id is None:
-                default_execution_id = system.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -425,15 +404,6 @@ class Scheduler(JSONDumpable):
 
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_system(self, system):
-        dependencies = []
-        for dependency_set in list(toposort(system.execution_graph)):
-            new_set = set()
-            for d in dependency_set:
-                new_set.add(d)
-            dependencies.append(new_set)
-        self.consideration_queue = dependencies
-
     def _init_consideration_queue_from_graph(self, graph):
         self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
         self.consideration_queue = list(toposort(self.dependency_dict))

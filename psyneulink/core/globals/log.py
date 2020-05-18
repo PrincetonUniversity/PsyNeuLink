@@ -162,15 +162,14 @@ is `OFF`.
 Examples
 --------
 
-The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
+The following example creates a Composition with two `TransferMechanisms <TransferMechanism>`, one that projects to
 another, and logs the `noise <TransferMechanism.noise>` and *RESULT* `OutputPort` of the first and the
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
-    >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-    >>> my_system = pnl.System(processes=[my_process])
+    >>> my_composition = pnl.Composition(pathways=[my_mech_A, my_mech_B])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
     COMMENT:

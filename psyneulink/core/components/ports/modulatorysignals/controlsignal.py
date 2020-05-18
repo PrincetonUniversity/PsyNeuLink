@@ -1104,10 +1104,10 @@ class ControlSignal(ModulatorySignal):
 
         return port_spec, params_dict
 
-    def _update(self, context=None, params=None):
+    def _update(self, params=None, context=None):
         """Update value (intensity) and costs
         """
-        super()._update(context=context, params=params)
+        super()._update(params=params, context=context)
 
         if self.parameters.cost_options._get(context):
             intensity = self.parameters.value._get(context)

@@ -10,35 +10,29 @@ class TestNaming:
 
     # NAMING CONVENTIONS
 
-    # ------------------------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------
     # TEST 1
-    # Test that Processes and Systems are given default names with incrementing index, starting at 0
-    def test_process_and_system_default_names(self):
+    # Test that Compositions are given default names with incrementing index, starting at 0
+
+    def test_composition_names(self):
 
         T = pnl.TransferMechanism()
-        P1 = pnl.Process(pathway=[T])
-        P2 = pnl.Process(pathway=[T])
-        assert P1.name == 'Process-0'
-        assert P2.name == 'Process-1'
-        S1 = pnl.System(processes=[P1])
-        S2 = pnl.System(processes=[P1])
-        assert S1.name == 'System-0'
-        assert S2.name == 'System-1'
+        C1 = pnl.Composition(pathways=[T])
+        C2 = pnl.Composition(pathway=[T])
+        assert C1.name == 'Composition-0'
+        assert C2.name == 'Composition-1'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 2
     # Test that Processes and Systems assigned duplicate names are indexed starting at 1 (original is not indexed)
-    def test_process_and_system_default_names_2(self):
+
+    def test_composition_default_names_2(self):
 
         T = pnl.TransferMechanism(name='T0')
-        P1 = pnl.Process(name='MY PROCESS', pathway=[T])
-        P2 = pnl.Process(name='MY PROCESS', pathway=[T])
-        assert P1.name == 'MY PROCESS'
-        assert P2.name == 'MY PROCESS-1'
-        S1 = pnl.System(name='MY SYSTEM', processes=[P1])
-        S2 = pnl.System(name='MY SYSTEM', processes=[P1])
-        assert S1.name == 'MY SYSTEM'
-        assert S2.name == 'MY SYSTEM-1'
+        C1 = pnl.Composition(name='MY COMPOSITION', pathways=[T])
+        C2 = pnl.Composition(name='MY COMPOSITION', pathways=[T])
+        assert C1.name == 'MY COMPOSITION'
+        assert C2.name == 'MY COMPOSITION-1'
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3

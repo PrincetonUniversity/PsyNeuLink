@@ -36,8 +36,7 @@ class PreferenceLevel(IntEnum):
     SUBTYPE     = 2
     TYPE        = 3
     CATEGORY    = 4
-    SYSTEM      = 5
-    COMPOSITION = 6
+    COMPOSITION = 5
 
 class PreferenceSetError(Exception):
      def __init__(self, error_value):
@@ -153,7 +152,7 @@ class PreferenceSet(object):
 
     def __init__(self,
                  owner,
-                 level=PreferenceLevel.SYSTEM,
+                 level=PreferenceLevel.COMPOSITION,
                  prefs=None,
                  name=None,
                  context=None

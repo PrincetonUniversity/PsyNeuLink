@@ -222,11 +222,11 @@ class MaskedMappingProjection(MappingProjection):
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_params=None, context=None):
 
         # Update parameters first, to be sure mask that has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
-        super()._update_parameter_ports(context=context, runtime_params=runtime_params)
+        super()._update_parameter_ports(runtime_params=runtime_params, context=context)
 
         mask = self.parameters.mask._get(context)
         mask_operation = self.parameters.mask_operation._get(context)

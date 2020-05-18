@@ -29,20 +29,16 @@ from psyneulink.core.globals.registry import register_category
 from . import component
 from . import functions
 from . import mechanisms
-from . import process
 from . import projections
 from . import shellclasses
 from . import ports
-from . import system
 
 from .component import *
 from .functions import *
 from .mechanisms import *
-from .process import *
 from .projections import *
 from .shellclasses import *
 from .ports import *
-from .system import *
 
 __all__ = [
     'InitError'
@@ -50,11 +46,9 @@ __all__ = [
 __all__.extend(component.__all__)
 __all__.extend(functions.__all__)
 __all__.extend(mechanisms.__all__)
-__all__.extend(process.__all__)
 __all__.extend(projections.__all__)
 __all__.extend(shellclasses.__all__)
 __all__.extend(ports.__all__)
-__all__.extend(system.__all__)
 
 kwInitPy = '__init__.py'
 
@@ -139,20 +133,6 @@ register_category(entry=ParameterPort,
 # OutputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 register_category(entry=OutputPort,
-                  base_class=Port_Base,
-                  registry=PortRegistry,
-                  context=kwInitPy)
-
-# ProcessInputPort
-from psyneulink.core.components.process import ProcessInputPort
-register_category(entry=ProcessInputPort,
-                  base_class=Port_Base,
-                  registry=PortRegistry,
-                  context=kwInitPy)
-
-# ProcessInputPort
-from psyneulink.core.components.system import SystemInputPort
-register_category(entry=SystemInputPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
                   context=kwInitPy)

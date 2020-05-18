@@ -297,7 +297,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
     HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_PORT, PROCESS_INPUT_PORT, PROJECTION_SENDER, SYSTEM_INPUT_PORT, VALUE
+    OUTPUT_PORT, PROJECTION_SENDER, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -436,7 +436,7 @@ class MappingProjection(PathwayProjection_Base):
 
 
     class sockets:
-        sender=[OUTPUT_PORT, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
+        sender=[OUTPUT_PORT]
         receiver=[INPUT_PORT]
 
 
@@ -613,7 +613,7 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        self._update_parameter_ports(context=context, runtime_params=runtime_params)
+        self._update_parameter_ports(runtime_params=runtime_params, context=context)
 
         value = super()._execute(
                 variable=variable,

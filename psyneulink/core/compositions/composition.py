@@ -41,6 +41,10 @@ Contents
       - `Composition_Execution_Inputs`
           • `Composition_Input_Dictionary`
           • `Composition_Programmatic_Inputs`
+          COMMENT:
+          • `Composition_Target_Inputs`
+          COMMENT
+      - `Composition_Runtime_Params`
       COMMENT:
       - `Composition_Initial_Values_and_Feedback`
       COMMENT
@@ -635,8 +639,8 @@ If the learning Pathway <Composition_Learning_Pathway>` involves more than two P
 `add_backpropagation_learning_pathway` for a multilayered neural network), then multiple LearningMechanisms are
 created, along with MappingProjections that provide them with the `error_signal <LearningMechanism.error_signal>`
 from the preceding LearningMechanism, and `LearningProjections <LearningProjection>` that modify the corresponding
-MappingProjections (*LEARNED_PROJECTION*\\s) in the `learning Pathway <Component_Learning_Pathway>`, as shown for an
-example in the figure below. These additional learning components are listed in the *LEARNING_MECHANISMS* and
+MappingProjections (*LEARNED_PROJECTION*\\s) in the `learning Pathway <Composition_Learning_Pathway>`, as shown for
+an example in the figure below. These additional learning components are listed in the *LEARNING_MECHANISMS* and
 *LEARNED_PROJECTIONS* entries of the dictionary assigned to the `learning_components <Pathway.learning_components>`
 attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the learning method.
 
@@ -838,7 +842,7 @@ can also be called directly, but this is useful mostly for debugging.
    has executed previously, the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
    of execution is returned; otherwise it None is returned.  If it is called with arguments, then either `run
    <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
-   Composition has any `learning_pathways <Composition_Learning_Pathways>`, and the relevant `TARGET_MECHANISM
+   Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISM
    <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
@@ -1070,7 +1074,7 @@ Complete input specification:
 
 ..
 
-COMMENT:
+COMMENT`:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
 Environment.
 
@@ -1101,6 +1105,58 @@ Environment.
 
     comp.run(inputs=input_dictionary)
 COMMENT
+
+.. _Composition_Runtime_Params:
+
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+    5/8/20
+    CHECK THAT runtime_params (AND CONDITIONS) WORK FOR COMPOSITIONS
+    ADD EXAMPLES FROM test_runtime_params
+    runtime_params are passed to the execute method of the Node whenever it is called for execution
+COMMENT
+
+The value of one or more of a Composition's `Nodes <Composition_Nodes>` can be temporarily modified during execution
+using the **runtime_params** argument of one of its `execution methods <Composition_Execution_Methods>`.  These are
+handled as described for `Mechanism_Runtime_Params` of Mechanisms, with the addition that one or more `Conditions
+<Condition>` can be specified such that a value will apply only when the specificied Conditions are satisfied;
+otherwise the parameter's previously assigned value (or, if none, then its default) will be used, and those values
+are always restored after execution.
+
+.. _Composition_Runtime_Param_Specification:
+
+Runtime parameter values for a Composition are specified in a dictionary assigned to the **runtime_params** argument
+of a Composition's `execution method <Composition_Execution_Methods>`.  The key of each entry is a Node of the
+Composition, and the value is a subdictionary specifying the **runtime_params** argument that will be passed to the
+Node when it is executed.  The format of the dictionary for each node follows that for a Mechanism's `runtime
+specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the value
+of a parameter directly (in which case, the value will apply throughout the execution), its value can also be placed
+in a tuple together with a `Condition` specifying when that value should be applied, as follows:
+
+    * Dictionary assigned to **runtime_parms** argument: {<Node>: Runtime Parameter Specification Dictionary}
+       - *key* - Node
+       - *value* - Runtime Parameter Specification Dictionary
+
+    * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
+       - *key* - str
+          name of a `Parameter` of the Node, its `function <Mechanism_Base.function>`, or a keyword specifying a
+          subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);
+       - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below)
+          `Condition` specifies when the value is applied;  otherwise, its previously assigned value or default
+          is used;  if the parameter values appears alone in a tuple or outside of one, then the Condtion `Always`
+          is applied.
+
+    See `Runtime Parameter Specification Dictionary <Mechanism_Runtime_Param_Specification>` for additional details.
+
+As in a standard runtime parameter specification dictionary, the key for an entry can be used to specify a subdictionary
+specifying the runtime parameters for a Mechanism's `Ports <Mechanism_Ports>`, and/or any of their `afferent Projections
+<Mechanism_Base.afferents>` (see `Mechanism_Runtime_Port_and_Projection_Param_Specification`).  The subdictionaries
+used to specify those can be placed placed in a tuple, as can any of the specification of parameter values within them.
+A tuple used to specify a subdictionary determines when any of the parameters specified within it are eligible to apply:
+If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
+*is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
 
 
 COMMENT:
@@ -1544,8 +1600,8 @@ as each other (or length 1).
 
 If num_trials is in use, `run` iterates over the inputs until num_trials is reached. For example, if five inputs
 are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not specified, the Composition executes
-five times., and num_trials = 7, the system executes seven times. The input values from `TRIAL <TimeScale.TRIAL>`\\s
-0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
+five times., and num_trials = 7, the Composition executes seven times. The input values from `TRIAL
+<TimeScale.TRIAL>`\\s 0 and 1 are used again on `TRIAL <TimeScale.TRIAL>`\\s 5 and 6, respectively.
 
 +----------------------+-------+------+------+------+------+------+------+
 | Trial #              |0      |1     |2     |3     |4     |5     |6     |
@@ -1773,6 +1829,70 @@ When looking for values after a run, it's important to know the execution contex
         [[10.]]
         >>> print(t.parameters.value.get('custom execution id'))
         [[20.]]Composition_Controller
+
+
+*Runtime Parameters*
+~~~~~~~~~~~~~~~~~~~~
+
+.. _Composition_Examples_Runtime_Params
+
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
+`Condition` will be assigned by default:
+
+        >>> import psyneulink as pnl
+
+        >>> T = pnl.TransferMechanism()
+        >>> C = pnl.Composition(pathways=[T])
+        >>> T.function.slope  # slope starts out at 1.0
+        1.0
+
+        >>> # During the following run, 10.0 will be used as the slope
+        >>> C.run(inputs={T: 2.0},
+        ...       runtime_params={T: {"slope": 10.0}})
+        [array([20.])]
+
+        >>> T.function.slope  # After the run, T.slope resets to 1.0
+        1.0
+
+Otherwise, the runtime parameter value will be used on all executions of the
+`Run` during which the `Condition` is True:
+
+        >>> T = pnl.TransferMechanism()
+        >>> C = pnl.Composition(pathways=[T])
+
+        >>> T.function.intercept     # intercept starts out at 0.0
+        0.0
+        >>> T.function.slope         # slope starts out at 1.0
+        1.0
+
+        >>> C.run(inputs={T: 2.0},
+        ...       runtime_params={T: {"intercept": (5.0, pnl.AfterTrial(1)),
+        ...                           "slope": (2.0, pnl.AtTrial(3))}},
+        ...       num_trials=5)
+        [array([7.])]
+        >>> C.results
+        [[array([2.])], [array([2.])], [array([7.])], [array([9.])], [array([7.])]]
+
+
+The table below shows how runtime parameters were applied to the intercept and slope parameters of Mechanism T in the
+example above.
+
++-------------+--------+--------+--------+--------+--------+
+|             |Trial 0 |Trial 1 |Trial 2 |Trial 3 |Trial 4 |
++=============+========+========+========+========+========+
+| Intercept   |0.0     |0.0     |5.0     |5.0     |5.0     |
++-------------+--------+--------+--------+--------+--------+
+| Slope       |1.0     |1.0     |1.0     |2.0     |0.0     |
++-------------+--------+--------+--------+--------+--------+
+| Value       |2.0     |2.0     |7.0     |9.0     |7.0     |
++-------------+--------+--------+--------+--------+--------+
+
+as indicated by the results of S.run(), the original parameter values were used on trials 0 and 1,
+the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was used on trial 3.
+
+.. note::
+    Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
+    value.
 
 
 .. _Composition_Class_Reference:
@@ -2292,7 +2412,7 @@ class NodeRole(Enum):
     ORIGIN
         A `Node <Composition_Nodes>` that does not receive any `Projections <Projection>` from any other Nodes
         within its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may
-        receive Projections from the outer Composition.  `Execution of a `Composition <Compostion_Execution>`
+        receive Projections from the outer Composition.  `Execution of a `Composition <Composition_Execution>`
         always begins with an `ORIGIN` Node.  A Composition may have many `ORIGIN` Nodes.  This role cannot be
         modified programmatically.
 
@@ -2365,7 +2485,7 @@ class NodeRole(Enum):
         its own `Composition`, though if it is in a `nested Composition <Composition_Nested>` it may send Projections
         to the outer Composition. A Composition may have many `TERMINAL` Nodes. The `ObjectiveMechanism` associated
         with the Composition's `controller <Composition.controller>` (assigned the role `CONTROLLER_OBJECTIVE`)
-        cannot be a `TERMINAL` Node of a Composition.  `Execution of a Composition <Compostion_Execution>` itself
+        cannot be a `TERMINAL` Node of a Composition.  `Execution of a Composition <Composition_Execution>` itself
         always ends with a `TERMINAL` Node, although the `controller <Composition.controller>` and its associated
         `ObjectiveMechanism` may execute after that; some `TERMINAL` Nodes may also execute earlier (i.e., if they
         belong to a `Pathway` that is shorter than the longest one in the Composition).
@@ -2503,7 +2623,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.external_input_ports>`;  any input to the Composition must be compatible with the shape of this,
         whether received from the **input_ports** argument of oneo f the Composition's`execution methods
         <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
-        Compostion.
+        Composition.
 
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
@@ -2773,10 +2893,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
 
-        # MODIFIED 5/2/20 NEW:
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
-        # MODIFIED 5/2/20 END
 
     @property
     def graph_processing(self):
@@ -3001,9 +3119,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj_spec in projections:
                 # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
                 # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
-                # we instantiate a new projection between sender and receiver instead of using the original spec.
+                # a new projection is instantiated between sender and receiver instead of using the original spec.
                 # If the sender or receiver is an AutoAssociativeProjection, then the owner will be another projection
-                # instead of a mechanism, so we need to use owner_mech instead.
+                # instead of a mechanism, so owner_mech instead needs to be used instead.
                 sender_node = proj_spec[0].sender.owner
                 receiver_node = proj_spec[0].receiver.owner
                 if isinstance(sender_node, AutoAssociativeProjection):
@@ -3371,7 +3489,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _determine_node_roles(self, context=None):
-        """Assign NodeRoles to Nodes in Compositoin
+        """Assign NodeRoles to Nodes in Composition
 
         .. note::
            Assignments are **not** subject to user-modification (i.e., "programmatic assignment")
@@ -3439,7 +3557,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             or _create_terminal_backprop_learning_components()
           .. note::
              - also assigned LEARNING
-             - ObjectiveMechanism._role == LEARNING
              - must project to a LearningMechanism
 
         OUTPUT:
@@ -3473,7 +3590,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
              - an ObjectiveMechanism assigned CONTROLLER_OBJECTIVE is prohibited since it and the Composition's
                `controller <Composition.controller>` are executed outside of (either before or after)
                all of the other Components of the Composition, as managed directly by the scheduler;
-             - `Execution of a `Composition <Compostion_Execution>` always ends with a `TERMINAL` Node,
+             - `Execution of a `Composition <Composition_Execution>` always ends with a `TERMINAL` Node,
                although some `TERMINAL` Nodes may execute earlier (i.e., if they belong to a `Pathway` that
                is shorter than the longest one in the Composition).
 
@@ -4196,7 +4313,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - it is NOT in the Composition:
             - if there is only one, that Projection is used;
             - if there is more than one, the last in the list (presumably the most recent) is used;
-            in either case, processing continues, to activate it for the Compostion,
+            in either case, processing continues, to activate it for the Composition,
             construct any "shadow" projections that may be specified, and assign feedback if specified,
 
         • if the status of **projection** is `deferred_init`:
@@ -6213,11 +6330,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not invalid_aux_components:
             if self.controller.objective_mechanism:
-                # # MODIFIED 4/25/20 OLD:
-                # self.add_node(self.controller.objective_mechanism)
-                # MODIFIED 4/25/20 NEW:
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-                # MODIFIED 4/25/20 END
 
             self.node_ordering.append(controller)
 
@@ -6298,10 +6411,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
                 controller._activate_projections_for_compositions(self)
             self._controller_initialization_status = ContextFlags.INITIALIZED
-            # MODIFIED 4/25/20 NEW:
-            # self._analyze_graph()
             self._analyze_graph(context=Context(source=ContextFlags.METHOD))
-            # MODIFIED 4/25/20 END
         else:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
@@ -6559,7 +6669,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_ports(context, runtime_params)
+        self.controller._update_input_ports(runtime_params, context)
         outcome = self.controller.input_port.parameters.value._get(context)
 
         if outcome is None:
@@ -7707,218 +7817,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except:
             raise CompositionError(f"Problem displaying graph for {self.name}")
 
-    @tc.typecheck
-    def _show_structure(self,
-                        # direction = 'BT',
-                        show_functions:bool=False,
-                        show_values:bool=False,
-                        use_labels:bool=False,
-                        show_headers:bool=False,
-                        show_roles:bool=False,
-                        show_conditions:bool=False,
-                        system=None,
-                        composition=None,
-                        condition:tc.optional(Condition)=None,
-                        compact_cim:tc.optional(tc.enum(INPUT, OUTPUT))=None,
-                        output_fmt:tc.enum('pdf','struct')='pdf',
-                        context=None
-                        ):
-        """Generate a detailed display of a the structure of a Mechanism.
-
-        .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
-
-        Displays the structure of a Mechanism using the GraphViz `record
-        <http://graphviz.readthedocs.io/en/stable/examples.html#structs-revisited-py>`_ shape.  This method is called
-        by `System.show_graph` if its **show_mechanism_structure** argument is specified as `True` when it is called.
-
-        Arguments
-        ---------
-
-        show_functions : bool : default False
-            show the `function <Component.function>` of the Mechanism and each of its Ports.
-
-        show_mech_function_params : bool : default False
-            show the parameters of the Mechanism's `function <Component.function>` if **show_functions** is True.
-
-        show_port_function_params : bool : default False
-            show parameters for the `function <Component.function>` of the Mechanism's Ports if **show_functions** is
-            True).
-
-        show_values : bool : default False
-            show the `value <Component.value>` of the Mechanism and each of its Ports (prefixed by "=").
-
-        use_labels : bool : default False
-            use labels for values if **show_values** is `True`; labels must be specified in the `input_labels_dict
-            <Mechanism.input_labels_dict>` (for InputPort values) and `output_labels_dict
-            <Mechanism.output_labels_dict>` (for OutputPort values); otherwise it is ignored.
-
-        show_headers : bool : default False
-            show the Mechanism, InputPort, ParameterPort and OutputPort headers.
-
-        show_roles : bool : default False
-            show the `roles <NodeRole>` of each Mechanism in the `Composition`.
-
-        show_conditions : bool : default False
-            show the `conditions <Condition>` used by `Composition` to determine whether/when to execute each Mechanism.
-
-        system : System : default None
-            specifies the `System` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
-
-        composition : Composition : default None
-            specifies the `Composition` (to which the Mechanism must belong) for which to show its role (see **roles**);
-            if this is not specified, the **show_roles** argument is ignored.
-
-        compact_cim : *INPUT* or *OUTUPT* : default None
-            specifies whether to suppress InputPort fields for input_CIM and OutputPort fields for output_CIM.
-
-        output_fmt : keyword : default 'pdf'
-            'pdf': generate and open a pdf with the visualization;\n
-            'jupyter': return the object (ideal for working in jupyter/ipython notebooks)\n
-            'struct': return a string that specifies the structure of a mechanism,
-            for use in a GraphViz node specification.
-
-        """
-        if composition:
-            system = composition
-        open_bracket = r'{'
-        pipe = r' | '
-        close_bracket = r'}'
-        mechanism_header = r'COMPOSITION:\n'
-        input_ports_header = r'______CIMInputPortS______\n' \
-                              r'/\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ' \
-                              r'\ \ \ \ \ \ \ \ \ \ \\'
-        output_ports_header = r'\\______\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ ______/' \
-                               r'\nCIMOutputPortS'
-
-        def mech_string(mech):
-            """Return string with name of mechanism possibly with function and/or value
-            Inclusion of role, function and/or value is determined by arguments of call to _show_structure
-            """
-            if show_headers:
-                mech_header = mechanism_header
-            else:
-                mech_header = ''
-            mech_name = r' <{0}> {1}{0}'.format(mech.name, mech_header)
-            mech_role = ''
-            if system and show_roles:
-                try:
-                    mech_role = r'\n[{}]'.format(self.systems[system])
-                except KeyError:
-                    # # mech_role = r'\n[{}]'.format(self.system)
-                    # mech_role = r'\n[CONTROLLER]'
-                    from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
-                        ControlMechanism
-                    from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-                        ObjectiveMechanism
-                    if isinstance(mech, ControlMechanism) and hasattr(mech, 'system'):
-                        mech_role = r'\n[CONTROLLER]'
-                    elif isinstance(mech, ObjectiveMechanism) and hasattr(mech, '_role'):
-                        mech_role = r'\n[{}]'.format(mech._role)
-                    else:
-                        mech_role = ""
-
-            mech_function = ''
-            if show_functions:
-                mech_function = r'\n({})'.format(mech.function.__class__.__name__)
-            mech_value = ''
-            if show_values:
-                mech_value = r'\n={}'.format(mech.value)
-            return mech_name + mech_role + mech_function + mech_value
-
-        from psyneulink.core.globals.utilities import ContentAddressableList
-        def states_string(port_list: ContentAddressableList,
-                          port_type,
-                          include_function: bool = False,
-                          include_value: bool = False,
-                          use_label: bool = False):
-            """Return string with name of ports in ContentAddressableList with functions and/or values as specified"""
-            states = open_bracket
-            for i, port in enumerate(port_list):
-                if i:
-                    states += pipe
-                function = ''
-                if include_function:
-                    function = r'\n({})'.format(port.function.__class__.__name__)
-                value = ''
-                if include_value:
-                    if use_label:
-                        value = r'\n={}'.format(port.label)
-                    else:
-                        value = r'\n={}'.format(port.value)
-                states += r'<{0}-{1}> {1}{2}{3}'.format(port_type.__name__,
-                                                        port.name,
-                                                        function,
-                                                        value)
-            states += close_bracket
-            return states
-
-        # Construct Mechanism specification
-        mech = mech_string(self)
-
-        # Construct InputPorts specification
-        if len(self.input_ports) and compact_cim is not INPUT:
-            if show_headers:
-                input_ports = input_ports_header + pipe + states_string(self.input_ports,
-                                                                          InputPort,
-                                                                          include_function=show_functions,
-                                                                          include_value=show_values,
-                                                                          use_label=use_labels)
-            else:
-                input_ports = states_string(self.input_ports,
-                                             InputPort,
-                                             include_function=show_functions,
-                                             include_value=show_values,
-                                             use_label=use_labels)
-            input_ports = pipe + input_ports
-        else:
-            input_ports = ''
-
-        # Construct OutputPorts specification
-        if len(self.output_ports) and compact_cim is not OUTPUT:
-            if show_headers:
-                output_ports = states_string(self.output_ports,
-                                              OutputPort,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels) + pipe + output_ports_header
-            else:
-                output_ports = states_string(self.output_ports,
-                                              OutputPort,
-                                              include_function=show_functions,
-                                              include_value=show_values,
-                                              use_label=use_labels)
-
-            output_ports = output_ports + pipe
-        else:
-            output_ports = ''
-
-        m_node_struct = open_bracket + \
-                        output_ports + \
-                        open_bracket + mech + close_bracket + \
-                        input_ports + \
-                        close_bracket
-
-        if output_fmt == 'struct':
-            # return m.node
-            return m_node_struct
-
-        # Make node
-        import graphviz as gv
-        m = gv.Digraph(  # 'mechanisms',
-            # filename='mechanisms_revisited.gv',
-            node_attr={'shape': 'record'},
-        )
-        m.node(self.name, m_node_struct, shape='record')
-
-        if output_fmt == 'pdf':
-            m.view(self.name.replace(" ", "-"), cleanup=True)
-
-        elif output_fmt == 'jupyter':
-            return m
-
     def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
         if not isinstance(item, (Mechanism, Composition, Projection)):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
@@ -7974,38 +7872,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._save_images = self._animate.pop(SAVE_IMAGES, False)
             self._show_animation = self._animate.pop(SHOW, False)
             if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise SystemError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
-                                  f"of {repr('run')} ({self._animate_unit}) "
-                                  f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
+                raise CompositionError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+                                       f"of {repr('run')} ({self._animate_unit}) "
+                                       f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
             if not isinstance(self._image_duration, (int, float)):
-                raise SystemError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method of "
-                                  f"{self.name} ({self._image_duration}) must be an int or a float.")
+                raise CompositionError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method "
+                                       f"of {self.name} ({self._image_duration}) must be an int or a float.")
             if not isinstance(self._animate_num_runs, int):
-                raise SystemError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_runs}) must an integer.")
+                raise CompositionError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+                                       f"method of {self.name} ({self._animate_num_runs}) must an integer.")
             if not isinstance(self._animate_num_trials, int):
-                raise SystemError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must an integer.")
+                raise CompositionError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for "
+                                       f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
+                                       f"must an integer.")
             if not isinstance(self._animate_simulations, bool):
-                raise SystemError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                  f"method of {self.name} ({self._animate_num_trials}) must a boolean.")
+                raise CompositionError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
+                                       f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
+                                       f"must a boolean.")
             if not isinstance(self._animation_directory, str):
-                raise SystemError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._animation_directory}) must be a string.")
+                raise CompositionError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+                                       f"method of {self.name} ({self._animation_directory}) must be a string.")
             if not isinstance(self._movie_filename, str):
-                raise SystemError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._movie_filename}) must be a string.")
+                raise CompositionError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+                                       f"method of {self.name} ({self._movie_filename}) must be a string.")
             if not isinstance(self._save_images, bool):
-                raise SystemError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')} method "
-                                  f"of {self.name} ({self._save_images}) must be a boolean")
+                raise CompositionError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')}"
+                                       f"method of {self.name} ({self._save_images}) must be a boolean")
             if not isinstance(self._show_animation, bool):
-                raise SystemError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
-                                  f"method of {self.name} ({self._show_animation}) must be a boolean.")
+                raise CompositionError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+                                       f"method of {self.name} ({self._show_animation}) must be a boolean.")
         elif self._animate:
             # self._animate should now be False or a dict
-            raise SystemError("{} argument for {} method of {} ({}) must be a boolean or "
-                              "a dictionary of argument specifications for its {} method".
-                              format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
+            raise CompositionError("{} argument for {} method of {} ({}) must be a boolean or "
+                                   "a dictionary of argument specifications for its {} method".
+                                   format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
 
     def _animate_execution(self, active_items, context):
         if self._component_animation_execution_count is None:
@@ -8162,18 +8062,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
                 `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `RUN` when the specified `Condition` is met.
-
-                Outer dictionary:
-                    - *key* - Node
-                    - *value* - Runtime Parameter Specification Dictionary
-
-                Runtime Parameter Specification Dictionary:
-                    - *key* - keyword corresponding to a parameter of the Node
-                    - *value* - tuple in which the index 0 item is the runtime parameter value, and the index 1 item is
-                      a `Condition`
-
-                See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+                during this `RUN` when the specified `Condition` is met (see `Composition_Runtime_Params` for
+                additional informaton).
 
             call_before_time_step : callable  : default None
                 will be called before each `TIME_STEP` is executed.
@@ -8227,8 +8117,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                   by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
                   <Composition.name>` of the  `Composition`, and the gif files are stored there.
 
-                * *MOVIE_NAME*: str (default=\\ `name <System.name>` + 'movie') -- specifies the name to be used for
-                  the movie file; it is automatically appended with '.gif'.
+                * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
+                  for the movie file; it is automatically appended with '.gif'.
 
                 * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
                   construct the animation in separate gif files, in addition to the file containing the animation.
@@ -8343,18 +8233,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reinitialize_values[node] = [reinitialize_values[node]]
             node.reinitialize(*reinitialize_values[node], context=context)
 
-        # cache and set reinitialize_when conditions for nodes, matching
-        # old System behavior
+        # cache and set reinitialize_when conditions for nodes, matching old System behavior
         # Validate
         if not isinstance(reinitialize_nodes_when, Condition):
             raise CompositionError(
-                "{} is not a valid specification for "
-                "reinitialize_nodes_when of {}. "
-                "reinitialize_nodes_when must be a Condition.".format(
-                    reinitialize_nodes_when,
-                    self.name
-                )
-            )
+                "{reinitialize_nodes_when} is not a valid specification for reinitialize_nodes_when of {self.name}. "
+                "reinitialize_nodes_when must be a Condition.")
 
         self._reinitialize_nodes_when_cache = {}
         for node in self.nodes:
@@ -8530,12 +8414,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # PROCESSING ------------------------------------------------------------------------
             # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
             if callable(inputs):
-                next_inputs = inputs(trial_num)
+                try:
+                    next_inputs = inputs(trial_num)
+                except TypeError as e:
+                    error_text = e.args[0]
+                    if f" takes 0 positional arguments but 1 was given" in error_text:
+                        raise CompositionError(f"{error_text}: requires arg for trial number")
+                    else:
+                        raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
             elif isgenerator(inputs):
                 try:
                     next_inputs = inputs.__next__()
                 except StopIteration:
                     break
+            # else:
+            #     raise <ClassTypeError>(f"<message>")
 
             if callable(inputs) or isgenerator(inputs):
                 next_inputs, num_inputs_sets = self._adjust_stimulus_dict(next_inputs)
@@ -8830,7 +8723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if len(self.input_CIM.path_afferents) > 0:
             nested = True
 
-        runtime_params = self._parse_runtime_params(runtime_params)
+        runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
         # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
         self._assign_execution_ids(context)
@@ -8987,7 +8880,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Update nested compositions
             for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
                 for port in comp.input_ports:
-                    port._update(context)
+                    port._update(context=context)
 
         # FIX: 6/12/19 Deprecate?
         # Manage input clamping
@@ -9138,13 +9031,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(node, Mechanism):
 
                     execution_runtime_params = {}
-
                     if node in runtime_params:
-                        for param in runtime_params[node]:
-                            if runtime_params[node][param][1].is_satisfied(scheduler=execution_scheduler,
-                                               # KAM 5/15/18 - not sure if this will always be the correct execution id:
-                                                                           context=context):
-                                execution_runtime_params[param] = runtime_params[node][param][0]
+                        execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
+                                                                                                 execution_scheduler,
+                                                                                                 context))
 
                     # Set context.execution_phase
 
@@ -9162,7 +9052,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
                             context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
-                    # Execute node
+                    # Execute Mechanism
                     if bin_execute:
                         _comp_ex.execute_node(node)
                     else:
@@ -9170,25 +9060,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                 for port in node.input_ports:
                                     port._update(context=context)
-                            node.execute(
-                                context=context,
-                                runtime_params=execution_runtime_params,
-                            )
+                            node.execute(context=context,
+                                         runtime_params=execution_runtime_params,
+                                         )
 
-                    # Reset runtime_params for node and its function if specified
+                        # Reset runtim_params
+                        # Reset any specified for Mechanism
                         if context.execution_id in node._runtime_params_reset:
                             for key in node._runtime_params_reset[context.execution_id]:
                                 node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
                                                           context)
                         node._runtime_params_reset[context.execution_id] = {}
-
+                        # Reset any specified for Mechanism's function
                         if context.execution_id in node.function._runtime_params_reset:
                             for key in node.function._runtime_params_reset[context.execution_id]:
                                 node.function._set_parameter_value(
                                         key,
                                         node.function._runtime_params_reset[context.execution_id][key],
                                         context)
-
                         node.function._runtime_params_reset[context.execution_id] = {}
 
                     # Set execution_phase for node's context back to IDLE
@@ -9220,7 +9109,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   v, context, skip_history=True, skip_log=True)
 
                         # Update afferent projections and input ports.
-                        node.input_CIM._update_input_ports(context)
+                        node.input_CIM._update_input_ports(context=context)
 
                     # Pass outer context to nested Composition
                     context.composition = node
@@ -9507,7 +9396,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if "KWTA" in str(type(node)):
                             err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
                                                 "(or other values) to represent the outside stimulus for " \
-                                                "the inhibition InputPort, and for systems, put your inputs"
+                                                "the inhibition InputPort, and for Compositions, put your inputs"
                         raise RunError(err_msg)
                     elif check_spec_type == "homogeneous":
                         # np.atleast_2d will catch any single-input ports specified without an outer list
@@ -9523,9 +9412,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 adjusted_stimuli[node] *= max(nums_input_sets)
         nums_input_sets.discard(1)
         if len(nums_input_sets) > 1:
-            raise CompositionError("The input dictionary for {} contains input specifications of different "
-                                    "lengths ({}). The same number of inputs must be provided for each node "
-                                    "in a Composition.".format(self.name, nums_input_sets))
+            raise RunError(f"The input dictionary for {self.name} contains input specifications of different "
+                           f"lengths ({nums_input_sets}). The same number of inputs must be provided for each node "
+                           f"in a Composition.")
         return adjusted_stimuli, num_trials
 
     def _adjust_execution_stimuli(self, stimuli):
@@ -9611,25 +9500,81 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return []
 
-    def _parse_runtime_params(self, runtime_params):
+    def _parse_runtime_params_conditions(self, runtime_params):
+        """Validate runtime_params and assign Always() for any params that don't have a Condition already specified.
+        Recursively process subdicts (Port- or Project-specific dictionaries of params).
+        """
+        def validate_and_assign_default_condition(node, entry, param_key, param_value):
+            if not isinstance(param_value, tuple):
+                param_spec = param_value
+                # Default Condition
+                param_condition = Always()
+            # Parameter specified as tuple
+            else:
+                param_spec = param_value[0]
+                if len(param_value)==1:
+                    # Default Condition
+                    param_condition = Always()
+                elif len(param_value)==2:
+                    # Condition specified, so use it
+                    param_condition = param_value[1]
+                else:
+                    # Invalid tuple
+                    raise CompositionError(f"Invalid runtime parameter specification "
+                                           f"for {node.name}'s {param_key} parameter in {self.name}: "
+                                           f"'{entry}: {param_value}'. "
+                                           f"Must be a tuple of the form (parameter value, condition), "
+                                           f"or simply the parameter value.")
+            if isinstance(param_spec, dict):
+                for entry in param_spec:
+                    param_spec[entry] = validate_and_assign_default_condition(node,
+                                                                              entry,
+                                                                              param_key,
+                                                                              param_spec[entry])
+            return (param_spec, param_condition)
+
         if runtime_params is None:
             return {}
         for node in runtime_params:
             for param in runtime_params[node]:
-                if isinstance(runtime_params[node][param], tuple):
-                    if len(runtime_params[node][param]) == 1:
-                        runtime_params[node][param] = (runtime_params[node][param], Always())
-                    elif len(runtime_params[node][param]) != 2:
-                        raise CompositionError(
-                            "Invalid runtime parameter specification ({}) for {}'s {} parameter in {}. "
-                            "Must be a tuple of the form (parameter value, condition), or simply the "
-                            "parameter value. ".format(runtime_params[node][param],
-                                                       node.name,
-                                                       param,
-                                                       self.name))
-                else:
-                    runtime_params[node][param] = (runtime_params[node][param], Always())
+                param_value = runtime_params[node][param]
+                runtime_params[node][param] = validate_and_assign_default_condition(node,
+                                                                                    runtime_params[node],
+                                                                                    param,
+                                                                                    param_value)
         return runtime_params
+
+    def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
+        """Return dict with values for all runtime_params the Conditions of which are currently satisfied.
+        Recursively parse nested dictionaries for which Condition on dict is satisfied.
+        """
+
+        def get_satisfied_param_val(param_tuple):
+            """Return param value if Condition is satisfied, else None."""
+            param_val, param_condition = param_tuple
+            if isinstance(param_val, dict):
+                execution_params = parse_params_dict(param_val)
+                if execution_params:
+                    param_val = execution_params
+                else:
+                    return None
+            # KAM 5/15/18 - not sure if this will always be the correct execution id:
+            if param_condition.is_satisfied(scheduler=scheduler,context=context):
+                return param_val
+            else:
+                return None
+
+        def parse_params_dict(params_dict):
+            """Return dict with param:value entries only for Conditions that are satisfied."""
+            execution_params = {}
+            for entry in params_dict:
+                execution_param = get_satisfied_param_val(params_dict[entry])
+                if execution_param is None:
+                    continue
+                execution_params[entry] = execution_param
+            return execution_params
+
+        return parse_params_dict(runtime_params)
 
     def _after_agent_rep_execution(self, context=None):
         pass
@@ -9904,13 +9849,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def stateful_nodes(self):
         """
-        List of all nodes in the system that are currently marked as stateful. For Mechanisms, statefulness is
+        List of all nodes in the Composition that are currently marked as stateful. For Mechanisms, statefulness is
         determined by checking whether node.has_initializers is True. For Compositions, statefulness is determined
-        by checking whether any of its nodes are stateful.
+        by checking whether any of its `Nodes <Composition_Nodes>` are stateful.
 
         Returns
         -------
-        all stateful nodes in the system : List[Nodes]
+        all stateful nodes in the `Composition` : List[`Node <Composition_Nodes>`]
 
         """
 
