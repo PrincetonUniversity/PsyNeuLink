@@ -1068,6 +1068,7 @@ import warnings
 
 from collections import OrderedDict, defaultdict
 from inspect import isclass
+from numbers import Number
 
 import numpy as np
 import typecheck as tc
@@ -1084,15 +1085,15 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+# TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, \
+    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
+    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, INPUT_PORT_VARIABLES, \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, NAME, \
-    OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
-    PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, \
-    PROJECTIONS, REFERENCE_VALUE, RESULT, \
+    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
+    NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
+    PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
@@ -2034,9 +2035,10 @@ class Mechanism_Base(Mechanism):
         if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
             labels_dict = params[INPUT_LABELS_DICT]
             if isinstance(list(labels_dict.values())[0], dict):
-                for key, ld in labels_dict.values():
-                    validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
-                    validate_labels_dict(ld, INPUT_LABELS_DICT)
+                for subdict in labels_dict.values():
+                    for key, ld in subdict.items():
+                        validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
+                        validate_labels_dict(ld, INPUT_LABELS_DICT)
             else:
                 validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
 
@@ -3657,6 +3659,75 @@ class Mechanism_Base(Mechanism):
         # del mechanism.function
         remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
                                       component=mechanism)
+
+    def _get_standardized_label_dicts(self):
+        """
+        Gets dict of Mechanism's input and output port labels in a standardized form
+
+        Returns
+        -------
+
+        dict in the form
+        {INPUT_PORTS:
+                {(int) port_index:
+                        {{label_1: value_1},
+                         {label_2: value_2}}
+                },
+        OUTPUT_PORTS:
+        {(int) port_index:
+                        {{label_1: value_1},
+                         {label_2: value_2}}
+                }
+        }
+
+        """
+        input_labels = self._get_standardized_label_dict(INPUT)
+        output_labels = self._get_standardized_label_dict(INPUT)
+        port_labels = {
+            INPUT_PORTS: input_labels,
+            OUTPUT_PORTS: output_labels
+        }
+        return port_labels
+
+    def _get_standardized_label_dict(self, label_type):
+        """
+        Parses input or output label dicts into a standardized form
+
+        Parameters
+        ----------
+        (str) port_type: INPUT or OUTPUT keyword, specifying the type of labels to parse and return
+
+        port_type
+
+        Returns
+        -------
+        dict in the form
+        {INPUT_PORTS/OUTPUT_PORTS:
+                {(int) port_index:
+                        {{label_1: value_1},
+                         {label_2: value_2}}
+                }
+        }
+        """
+        if label_type == INPUT:
+            label_dict = self.input_labels_dict
+            ports = self.input_ports
+        elif label_type == OUTPUT:
+            label_dict = self.output_labels_dict
+            ports = self.output_ports
+        _label_dict = {}
+        if label_dict:
+            for k, v in label_dict.items():
+                if isinstance(k, Number):
+                    _label_dict[k] = v
+                elif type(v) == dict:
+                    i = ports[k].position_in_mechanism
+                    _label_dict[i] = v
+                else:
+                    if not 0 in _label_dict:
+                        _label_dict[0] = {}
+                    _label_dict[0].update({k:v})
+        return _label_dict
 
     def get_input_port_position(self, port):
         if port in self.input_ports:

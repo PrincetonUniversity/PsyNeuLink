@@ -3145,6 +3145,36 @@ class TestRun:
                 and "to InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
 
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      ])
+    def test_execute_no_inputs(self, mode):
+        m_inner = ProcessingMechanism(size=2)
+        inner_comp = Composition(pathways=[m_inner])
+        m_outer = ProcessingMechanism(size=2)
+        outer_comp = Composition(pathways=[m_outer, inner_comp])
+        result = outer_comp.execute(bin_execute=mode)
+        assert np.allclose(result, [[0.0],[0.0]])
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      ])
+    def test_run_no_inputs(self, mode):
+        m_inner = ProcessingMechanism(size=2)
+        inner_comp = Composition(pathways=[m_inner])
+        m_outer = ProcessingMechanism(size=2)
+        outer_comp = Composition(pathways=[m_outer, inner_comp])
+        result = outer_comp.run(bin_execute=mode)
+        assert np.allclose(result, [[0.0],[0.0]])
+
     def test_lpp_invalid_matrix_keyword(self):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
@@ -5501,6 +5531,61 @@ class TestInputSpecifications:
         assert c.parameters.results.get(c) == [[np.array([0.])], [np.array([1.])], [np.array([2.])], [np.array([3.])],
                                                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
                                                [np.array([8.])], [np.array([9.])]]
+
+    def test_function_as_learning_input(self):
+        num_epochs=2
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+    
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+    
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                    default_variable=np.zeros(2))
+
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                            in_to_hidden_comp,
+                                                                            hidden_comp,
+                                                                            hidden_to_out_comp,
+                                                                            output_comp],
+                                                                            learning_rate=10)
+        def test_function(trial_num):
+            return {
+                input_comp: xor_inputs[trial_num]
+            }
+
+        xor_comp.learn(inputs=test_function,
+              num_trials=4)
 
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),

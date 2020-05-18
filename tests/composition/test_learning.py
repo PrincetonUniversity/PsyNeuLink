@@ -7,7 +7,7 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
-from psyneulink.core.compositions.composition import Composition, RunError
+from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
 class TestTargetSpecs:
@@ -105,6 +105,10 @@ class TestTargetSpecs:
                             [[1.41003122, 1.54413183]], [[3.64504691, 4.13165454]], [[8.1607109 , 9.54419477]],
                             [[1.40021212, 1.56636511]], [[3.61629564, 4.17586792]], [[8.11241026, 9.57222535]]])
 
+    # DS: The following test fails the assert. The same value is returned whether a dict or function is used as input,
+    # which is not the same as the expected values. Are the expected values incorrect? If not, there is a problem
+    # at a deeper level than just the input handling. 5/18/2020
+    #
     # def test_function_target_spec(self):
     #
     #     from psyneulink.core.compositions.composition import Composition
@@ -126,7 +130,7 @@ class TestTargetSpecs:
     #     #     print('trial')
     #     #     return target_value
     #     def input_function(trial):
-    #         x = trial
+    #         x = trial + 1
     #         y = 2 * x
     #         z = y + 2
     #         target_value = {A:[x], target:[y,z]}
@@ -139,11 +143,11 @@ class TestTargetSpecs:
     #     assert np.allclose(comp.results, [[[2., 2.]], [[2.4, 2.8]], [[2.72, 3.44]]])
 
     def test_dict_target_spec_converging_pathways(self):
-        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-        C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
-        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+        A = TransferMechanism(name="converging-learning-pathways-mech-A")
+        B = TransferMechanism(name="converging-learning-pathways-mech-B")
+        C = TransferMechanism(name="converging-learning-pathways-mech-C", size=2)
+        D = TransferMechanism(name="converging-learning-pathways-mech-D")
+        E = TransferMechanism(name="converging-learning-pathways-mech-E")
         comp = Composition()
         p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
         p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
@@ -158,22 +162,56 @@ class TestTargetSpecs:
                            })
         assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
-    # def test_target_function_spec_converging_pathways(self):
-    #     A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-    #     B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-    #     C = TransferMechanism(name="diverging-learning-pathways-mech-C", size=2)
-    #     D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-    #     E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-    #     comp = Composition()
-    #     p = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-    #     p = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
-    #     target = p.target
-    #     inputs_fct = FUNCTION()
-    #     comp.learn(inputs=inputs_fct)
-    #     comp.learn(inputs=inputs_fct)
-    #     assert np.allclose(comp.results,???)
+    def test_function_target_spec_converging_pathways(self):
+        A = TransferMechanism(name="converging-learning-pathways-mech-A")
+        B = TransferMechanism(name="converging-learning-pathways-mech-B")
+        C = TransferMechanism(name="converging-learning-pathways-mech-C", size=2)
+        D = TransferMechanism(name="converging-learning-pathways-mech-D")
+        E = TransferMechanism(name="converging-learning-pathways-mech-E")
+        comp = Composition()
+        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        p2 = comp.add_backpropagation_learning_pathway(pathway=[D,E,C])
+        assert p1.target == p2.target
+        inputs = {
+            A: [1.0, 5.0],
+            D: [2.0, 6.0],
+            p1.target: [[3.0, 4.0], [7.0, 8.0]]
+        }
+        def input_function (trial_num):
+            return {
+                A: inputs[A][trial_num],
+                D: inputs[D][trial_num],
+                p1.target: inputs[p1.target][trial_num]
+            }
+        comp.learn(inputs=input_function,
+                   num_trials=2)
+        assert np.allclose(comp.results,[[[3., 3.]], [[11.85  , 12.7725]]])
 
     def test_dict_target_spec_diverging_pathways(self):
+        A = TransferMechanism(name="diverging-learning-pathways-mech-A")
+        B = TransferMechanism(name="diverging-learning-pathways-mech-B")
+        C = TransferMechanism(name="diverging-learning-pathways-mech-C")
+        D = TransferMechanism(name="diverging-learning-pathways-mech-D")
+        E = TransferMechanism(name="diverging-learning-pathways-mech-E")
+        comp = Composition()
+        p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
+        inputs = {
+            A: [1.0, 2.0],
+            p1.target: [2.0, 2.0],
+            p2.target: [4.0, 4.0]
+        }
+        def input_function (trial_num):
+            return {
+                A: inputs[A][trial_num],
+                p1.target: inputs[p1.target][trial_num],
+                p2.target: inputs[p2.target][trial_num]
+            }
+        comp.learn(inputs=input_function,
+                   num_trials=2)
+        assert np.allclose(comp.results,[[[1.], [1.]], [[2.42], [3.38]]])
+
+    def test_function_target_spec_divergin_pathways(self):
         A = TransferMechanism(name="diverging-learning-pathways-mech-A")
         B = TransferMechanism(name="diverging-learning-pathways-mech-B")
         C = TransferMechanism(name="diverging-learning-pathways-mech-C")
@@ -224,22 +262,6 @@ class TestTargetSpecs:
                     num_trials=2)
         assert np.allclose(comp2.results, comp1.results)
 
-    # def test_target_function_spec_diverging_pathways(self):
-    #     A = TransferMechanism(name="diverging-learning-pathways-mech-A")
-    #     B = TransferMechanism(name="diverging-learning-pathways-mech-B")
-    #     C = TransferMechanism(name="diverging-learning-pathways-mech-C")
-    #     D = TransferMechanism(name="diverging-learning-pathways-mech-D")
-    #     E = TransferMechanism(name="diverging-learning-pathways-mech-E")
-    #     comp = Composition()
-    #     p1 = comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-    #     p1_target = p1.target
-    #     p2 = comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
-    #     p2_target = p2.target
-    #     inputs_fct = FUNCTION()
-    #     comp.learn(inputs=inputs_fct)
-    #     comp.learn(inputs=inputs_fct)
-    #     assert np.allclose(comp.results,???)
-
     def test_target_spec_over_nesting_of_items_in_target_value_error(self):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
@@ -265,7 +287,7 @@ class TestTargetSpecs:
         B = TransferMechanism(name="learning-process-mech-B")
         comp = Composition()
         p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
-        with pytest.raises(RunError) as error_text:
+        with pytest.raises(CompositionError) as error_text:
             comp.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]],
                              p.target: [[1.0], [2.0], [3.0]]})
         assert ('The input dictionary' in str(error_text.value) and
