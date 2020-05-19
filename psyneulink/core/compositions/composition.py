@@ -1913,6 +1913,7 @@ import inspect
 import itertools
 import logging
 import networkx
+import typing
 import warnings
 import sys
 
@@ -2295,11 +2296,7 @@ class Graph(object):
             }
 
         # construct a parallel networkx graph to use its cycle algorithms
-        nx_graph = networkx.DiGraph()
-        nx_graph.add_nodes_from(list(execution_dependencies.keys()))
-        for child in execution_dependencies:
-            for parent in execution_dependencies[child]:
-                nx_graph.add_edge(parent, child)
+        nx_graph = self._generate_networkx_graph(execution_dependencies)
 
         # prune only one flexible edge per attempt, to remove as few
         # edges as possible
@@ -2402,6 +2399,24 @@ class Graph(object):
             },
             structural_dependencies
         )
+
+    def get_cycles(self, nx_graph: typing.Optional[networkx.DiGraph] = None):
+        if nx_graph is None:
+            nx_graph = self._generate_networkx_graph()
+
+        return list(networkx.simple_cycles(nx_graph))
+
+    def _generate_networkx_graph(self, dependency_dict=None):
+        if dependency_dict is None:
+            dependency_dict = self.dependency_dict
+
+        nx_graph = networkx.DiGraph()
+        nx_graph.add_nodes_from(list(dependency_dict.keys()))
+        for child in dependency_dict:
+            for parent in dependency_dict[child]:
+                nx_graph.add_edge(parent, child)
+
+        return nx_graph
 
     @property
     def dependency_dict(self):
