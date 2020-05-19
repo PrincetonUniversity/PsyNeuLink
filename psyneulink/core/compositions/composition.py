@@ -1162,50 +1162,73 @@ A tuple used to specify a subdictionary determines when any of the parameters sp
 If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
 *is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
 
-
 COMMENT:
 .. _Composition_Initial_Values_and_Feedback:
 
-*Cycles, Feedback, and Initialization*
+*Cycles, Initialization, and Feedback*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If a Composition has any recurrent Projections, these form cycles in its `graph <Composition_Graph> — loops of
-execution — that require one or more `Nodes <Composition_Nodes>` to be initialized when the Composition executes This
-is handled by a Composition in one of two ways, based on whether any of the Projections in a cycle are designated as
-`feeedback <LINK>`:
+execution — that requires special handling to insure consistent desired handling of their order of execution.
+This is handled by a Composition in one of two ways, based on whether any of the Projections in a cycle are
+designated as `feeedback <LINK>`:
 
-* No feedback Projections.  In this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
-  treated equally, and executed in the same `TIME_STEP <TimseScale.TIME_STEP>`.  The input that each receives from
-  the preceding Node in the cycle is based on that Node's `value <Component.value>` when it was last executed
-  (i.e., previous to the current `TIME_STEP <TimeScale.TIME_STEP>`).
-  to the current
-  <LINK>`;  on the first cycle,
-  - ?NESTED CYCLES ARE TREATED AS ONE BIG CYCLE
-  [- ALL NODES ARE INITIALIZED USING THEIR DEFAULT VALUES ON CONSTRUCTION]
-  - ON THE FIRST CALL TO RUN, OR ANY ONE THEREAFETER, NODES IN A CYCLE ARE ASSIGNED ANY ONES PASSED IN THE
-    "initialize_cycle_values" BEFORE THAT RUN IS EXEUTED (A WARNING IS ISSUED FOR ATTEMPTS TO ASSIGN TO ANY
-    NODES NOT IN CYCLE) (ONES NOT ASSIGNED A VALUE IN "initialize_cycle_values" USE DEFAULT
-    VALUE: <object>.defaults.value
-  - ANY NODES NOT ASSIGNED A VALUE IN "initialize_cycle_values" (AS ARGUMENT TO RUN) USE, ON SUBSEQUENT TRIALS (AND
-    RUNS) THE PREVIOUS VALUE OF THEIR VALUE ATTRIBUTE (AS DISTINCT FROM THE previous_value ATTRIBUTE WHICH BELONGS
-    TO AN INTEGRATOR).
-  - ALL NODES ARE GIVEN NodeRole.CYCLE
+.. _Composition_No_Feedback_Cycle:
 
-* Feedback Projection in cycles.
-  - CAN BE DESIGNATED IN add_projection;  FIX: ??ANY OTHER WAY?  IN A TUPLE?
-  - IF NOT DESIGNATED, INFERED USING FOLLOWING RULES:
-    - CONTROL PROJECTIONS THAT ARE IN A CYCLE ARE ALWAYS ASSIGNED FEEDBACK BY DEFAULT,
-      MAKING CONTROLMECHANISM FEEDBACK_SENDER
-    - FIX: ??OTHER RULES??
-  - USED TO "BREAK" CYCLE
-  - FIX: ??ONLY ONE PER CYCLE
-  - FIX: ??NESTED CYCLES ARE TREATED AS ONE BIG CYCLE, AND ALLOWED ONLY ONE FEEDBACK? -- SEE FIGURE
-  - NodeRole.FEEDBACK_SENDER AND NodeRole.FEEDBACK_RECEIVER ARE ASSIGNED
-  - FEEDBACK SENDER IS INITIALIZED;  ALL OTHER ARE TREATED IN THE STANDARD ACYCLIC / FEEDFORWARD MANNER
+* No feedback Projections -- in this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
+  treated equally, and executed synchronously (i.e., in the same `TIME_STEP <TimseScale.TIME_STEP>`).  Any cycles
+  nested within another cycle are flattened and added to the outermost cycle, and all are treated as part of the same
+  cycle
+  COMMENT:
+     (see Figure)
+  COMMENT
+  . All Nodes within a cycle are assigned the `NodeRole` `CYCLE`. When the Nodes in the cycle are executed, the value
+  received by each Node from those within the cycle that project to it is the sender's `value <Component.value>`
+  assigned when it was last executed within the same `execution context <Composition_Execution_Context>`;  this insures
+  that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution of the cycle
+  since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that case, each
+  sender passes the value to which it has been initialized which, by default, is its `default_value <LINK>`.  However,
+  this can be modified using the `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` argument of the
+  Composition's `run <Composition.run>` method (and similarly for its `learn <Composition.learn>` method), by
+  specifying values to assign as the initial values for Nodes in the cycle; any Nodes not specified are assigned their
+  `default_value <LINK>`.  The same applies for Nodes specified in the **initialize_cycle_values** argument of
+  subsequent calls to `run <Composition.run>` or `learn <Compositon.learn>`; they are assigned the specified values the
+  first time the cycle is executed in that run, however Nodes not specified in that call use the last `value
+  <Component.value>` they were assigned in the previous call to `run <Composition.run>` or `learn <Compositon.learn>`
+  for the first execution of the cycle in the next call.
 
-* RecurrentTransferMechanisms and AutoassociativeProjections.
-   - FIX: ??TREATED AS FLATTENED CYCLE?
+  COMMENT:
+      CHECK FOR ACCURACY:
+  COMMENT
+  .. note::
+     If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
+     <Mechanism_Base.execute>` method), by default this does not affect its initialization if it is subsequently
+     executed as part of the Composition;  the Mechanism is still initialized according to the description above,
+     even if the same `execution contexts <Composition_Execution_Context>` is used in both cases.
 
+  .. note::
+     Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
+     they receive the *current* value of any Nodes that project to them from outisde the cycle, and pass their current
+     value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
+     of the cycle.
+
+.. _Composition_Feedback_Cycle:
+
+* Feedback Projection(s) specified -- in this case, any Projections in a cycle specified as `feedback <LINK>` are used
+  to break the cycle: the `sender <Projection_Base.sender>` of each feedback Projection (assigned the `NodeRole`
+  `FEEDBACK_SENDER`) is initialized in the same way as a Node in a cycle (see `above <Composition_No_Feedback_Cycle>`);
+  the receiver (assigned the `NodeRole` `FEEDBACK_RECEIVER`) is passed the *SENDER's* initial value on the first
+  execution, and its previous value on subsequent executions.  Thus, in effect, the *RECEIVER* becomes the first Node
+  in the cycle to execute, and the *SENDER* the last.
+
+By default, cycles that do not include any `ControlProjections <ControlProjection>` are flattened. This includes any
+`RecurrentTransferMechanism` (or its subclaseses), which are treated as a single-Node cylce (formed by its
+`AutoassociativeProjection`).  In contrast, if there are any `ControlProjections <ControlProjection>` in a cycle,
+they are all assigned as `feedback <LINK>`.  The feedback status of a Projection can also be specified explcitly,
+using the Compositon's `add_projections <Composition.add_projections>` method, and specifiying its `feedback <LINK>`
+argument. FIX: ??Any other ways??
+
+  MOVE TO IntegratorMechanism and relevant arguments of run method
   - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
     - reset_integrator_nodes_to:  DICT of {node: value} paris
                                THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
@@ -1310,7 +1333,6 @@ different time scales.
 
 Runtime Params
 COMMENT
-
 
 .. _Composition_Compilation:
 
@@ -8596,14 +8618,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
 
+            .. _Composition_Initialize_Cycle_Values_Arg:
+
             initialize_cycle_values : Dict { Node: Node Value } : default None
-                sets the values of nodes before the start of the run. This is useful in cases where a node is part of a
-                cycle, because nodes in cycles receive their preceding nodes' values as of the previous trial. Thus,
-                this argument allows you to seed the values of nodes in cycles for use on the initial execution. If this
-                is not specified, the nodes will use their default values.
-                ..technical_note::
-                    the initial value of a node is only relevant when it is embedded in a Cycle, because this
-                    is the only case in which its value Parameter will be used before being updated.
+                sets the value of specified `Nodes <Composition_Nodes>` before the start of the run.  All specified
+                Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
+                <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
+                a cycle is not specified, it is assigned its `default_value <LINK>` when initialized (see
+                `Composition_Initial_Values_and_Feedback` additional details).
 
             reinitialize_values : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reinitialize methods when their
