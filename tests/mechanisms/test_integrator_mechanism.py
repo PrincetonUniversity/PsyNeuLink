@@ -23,7 +23,7 @@ class TestReinitialize:
     def test_FitzHughNagumo_valid(self):
         I = IntegratorMechanism(name="I",
                                 function=FitzHughNagumoIntegrator())
-        I.reinitialize_when = Never()
+        I.reset_integrator_when = Never()
         I.execute(1.0)
 
         assert np.allclose([[0.05127053]], I.value[0])
@@ -65,7 +65,7 @@ class TestReinitialize:
     def test_AGTUtility_valid(self):
         I = IntegratorMechanism(name="I",
                                 function=DualAdaptiveIntegrator())
-        I.reinitialize_when = Never()
+        I.reset_integrator_when = Never()
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
 
@@ -100,9 +100,9 @@ class TestReinitialize:
             function=SimpleIntegrator(
             ),
         )
-        I.reinitialize_when = Never()
+        I.reset_integrator_when = Never()
 
-        #  returns previous_value + rate*variable + noise
+        #  returns previous_integrator_value + rate*variable + noise
         # so in this case, returns 10.0
         I.execute(10)
         assert np.allclose(I.value, 10.0)
@@ -144,7 +144,7 @@ class TestReinitialize:
             ),
         )
 
-        #  returns (1-rate)*previous_value + rate*variable + noise
+        #  returns (1-rate)*previous_integrator_value + rate*variable + noise
         # so in this case, returns 0.5*0 + 0.5*10 + 0 = 5.0
         I.execute(10)
         assert np.allclose(I.value, 5.0)
@@ -193,7 +193,7 @@ class TestReinitialize:
             function=AccumulatorIntegrator(increment=1.0),
         )
 
-        #  returns previous_value + rate + noise
+        #  returns previous_integrator_value + rate + noise
         # so in this case, returns 0.0 + 1.0
         I.execute(1000)
         assert np.allclose(I.value, 1.0)
@@ -234,7 +234,7 @@ class TestReinitialize:
             function=OrnsteinUhlenbeckIntegrator(),
         )
 
-        # previous_value + (decay * previous_value - rate * variable) * time_step_size + noise
+        # previous_integrator_value + (decay * previous_integrator_value - rate * variable) * time_step_size + noise
         # decay=1.0, initializer=0.0, rate=1.0, time_step_size=1.0, noise=0.0
         # returns 0.0 + (1.0*0.0 - 1.0*10.0*1.0) + 0.0 = -10.0
         I.execute(2.0)
@@ -276,7 +276,7 @@ class TestReinitialize:
             function=AccumulatorIntegrator(increment=0.1),
         )
 
-        #  returns previous_value * rate + noise + increment
+        #  returns previous_integrator_value * rate + noise + increment
         # initializer = 0.0, rate = 1.0, noise = 0.0, increment = 0.1
         # returns 0.0*1.0 + 0.0 + 0.1 = 0.1
         I.execute(10000)
@@ -318,7 +318,7 @@ class TestReinitialize:
             function=LeakyCompetingIntegrator(leak=1),
         )
 
-        # previous_value + (new_value - rate*previous_value)*time_step_size + noise
+        # previous_integrator_value + (new_value - rate*previous_integrator_value)*time_step_size + noise
         # initializer=0.0, rate=1.0, time_step_size=0.1, noise=0.0
         # returns 0.0 + (1.0*0.0 + 2.0)*0.1 = 2.0
         I.execute(2.0)
@@ -561,14 +561,14 @@ class TestIntegratorFunctions:
         val = I.execute(20000)
         # value = 10 + 5
         # adjusted_value = 15 + 10
-        # previous_value = 25
+        # previous_integrator_value = 25
         # RETURN 25
 
         # step 2:
         val2 = I.execute(70000)
         # value = 25 + 5
         # adjusted_value = 30 + 10
-        # previous_value = 30
+        # previous_integrator_value = 30
         # RETURN 40
         assert (val, val2) == (25, 40)
 
@@ -617,7 +617,7 @@ class TestIntegratorFunctions:
             )
         )
         # P = Process(pathway=[I])
-        # value = previous_value + decay * (previous_value -  rate * new_value) * time_step_size + np.sqrt(
+        # value = previous_integrator_value + decay * (previous_integrator_value -  rate * new_value) * time_step_size + np.sqrt(
         # time_step_size * noise) * np.random.normal()
         # step 1:
 
@@ -626,7 +626,7 @@ class TestIntegratorFunctions:
         #       = 10 + 0.5*9.75*0.5
         #       = 12.4375
         # adjusted_value = 12.4375 + 1.0
-        # previous_value = 13.4375
+        # previous_integrator_value = 13.4375
         # RETURN 13.4375
 
         # step 2:
@@ -634,7 +634,7 @@ class TestIntegratorFunctions:
         # value = 13.4375 + 0.5 * ( 13.4375 - 0.25*1.0) * 0.5
         #       = 13.4375 + 3.296875
         # adjusted_value = 16.734375 + 1.0
-        # previous_value = 17.734375
+        # previous_integrator_value = 17.734375
         # RETURN 31
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
@@ -1064,7 +1064,7 @@ class TestIntegratorRate:
     #         )
     # #     P = Process(pathway=[I])
 
-    #     # value = previous_value * rate + noise + increment
+    #     # value = previous_integrator_value * rate + noise + increment
     #     # step 1:
     #     val = I.execute()
     #     # value = 10.0 * 5.0 + 0 + 1.0
@@ -1210,7 +1210,7 @@ class TestStatefulness:
     def test_has_initializers(self):
         I = IntegratorMechanism()
         assert I.has_initializers
-        assert hasattr(I, "reinitialize_when")
+        assert hasattr(I, "reset_integrator_when")
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1246,11 +1246,11 @@ class TestStatefulness:
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    def test_reinitialize_when_composition(self, mode, cond0, cond1, expected):
+    def test_reset_integrator_when_composition(self, mode, cond0, cond1, expected):
         I1 = pnl.IntegratorMechanism()
         I2 = pnl.IntegratorMechanism()
-        I1.reinitialize_when = cond0
-        I2.reinitialize_when = cond1
+        I1.reset_integrator_when = cond0
+        I2.reset_integrator_when = cond1
         C = pnl.Composition()
         C.add_node(I1)
         C.add_node(I2)
@@ -1259,16 +1259,16 @@ class TestStatefulness:
 
         assert np.allclose(expected, C.results)
 
-    def test_reinitialize_when(self):
+    def test_reset_integrator_when(self):
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()
-        I2.reinitialize_when = AtTrial(2)
+        I2.reset_integrator_when = AtTrial(2)
         C = Composition(pathways=[[I1], [I2]])
 
         C.run(inputs={I1: [[1.0]],
                       I2: [[1.0]]},
               num_trials=7,
-              reinitialize_nodes_when=AtTrial(3))
+              reset_integrator_nodes_when=AtTrial(3))
 
         expected_results = [[np.array([0.5]), np.array([0.5])],
                             [np.array([0.75]), np.array([0.75])],

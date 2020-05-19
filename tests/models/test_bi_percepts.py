@@ -199,7 +199,7 @@ def test_necker_cube(benchmark, mode):
     )
 
 
-    #integrator function ((1-rate)*previous_value + rate*current_input) * mechanism_function
+    #integrator function ((1-rate)*previous_integrator_value + rate*current_input) * mechanism_function
 
     node4 = pnl.TransferMechanism(
         name='node4',

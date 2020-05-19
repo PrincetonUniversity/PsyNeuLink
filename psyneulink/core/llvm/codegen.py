@@ -253,7 +253,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         # Check if there's anything to reinitialize
         for node in composition._all_nodes:
-            when = getattr(node, "reinitialize_when", Never())
+            when = getattr(node, "reset_integrator_when", Never())
             # FIXME: This should not be necessary. The code gets DCE'd,
             # but there are still some problems with generation
             # 'reinitialize' function

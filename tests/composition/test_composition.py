@@ -4169,7 +4169,7 @@ class TestCallBeforeAfterTimescale:
 class TestSchedulerConditions:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-                                     #FIXME: "Exec" versions see different shape of previous_value parameter ([0] vs. [[0]])
+                                     #FIXME: "Exec" versions see different shape of previous_integrator_value parameter ([0] vs. [[0]])
                                      #pytest.param('LLVM', marks=pytest.mark.llvm),
                                      #pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -4197,7 +4197,7 @@ class TestSchedulerConditions:
                         function=pnl.DriftDiffusionIntegrator(starting_point=0,
                                                               threshold=1,
                                                               noise=0.0),
-                        reinitialize_when=pnl.AtTrialStart(),
+                        reset_integrator_when=pnl.AtTrialStart(),
                         output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                         name='DDM')
 
@@ -6085,7 +6085,7 @@ class TestReinitializeValues:
         comp.run(
             inputs={A: [1.0]},
             num_trials=5,
-            reinitialize_nodes_when=AtTimeStep(0)
+            reset_integrator_nodes_when=AtTimeStep(0)
         )
 
         # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
@@ -6113,13 +6113,13 @@ class TestReinitializeValues:
         comp.add_linear_processing_pathway([A, B, C])
 
         # Set reinitialization condition
-        B.reinitialize_when = AtTrial(2)
+        B.reset_integrator_when = AtTrial(2)
 
         C.log.set_log_conditions('value')
 
         comp.run(
             inputs={A: [1.0]},
-            reinitialize_values={B: [0.]},
+            reset_integrator_nodes_to={B: [0.]},
             num_trials=5
         )
 
@@ -6132,6 +6132,116 @@ class TestReinitializeValues:
                 [np.array([0.5])],
                 [np.array([0.75])],
                 [np.array([0.875])]
+            ]
+        )
+
+    def test_reinitialize_one_mechanism_at_trial_2_with_dict(self):
+        A = TransferMechanism(name='A')
+        B = TransferMechanism(
+            name='B',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        C = TransferMechanism(name='C')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([A, B, C])
+
+        C.log.set_log_conditions('value')
+
+        comp.run(
+            inputs={A: [1.0]},
+            reset_integrator_nodes_when={B: AtTrial(2)},
+            reset_integrator_nodes_to={B: [0.]},
+            num_trials=5
+        )
+
+        assert isinstance(B.reset_integrator_when, Never)
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])]
+            ]
+        )
+
+    def test_reinitialize_two_mechanisms_at_different_trials_with_dict(self):
+        A = TransferMechanism(
+            name='A',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        B = TransferMechanism(
+            name='B',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        C = TransferMechanism(name='C')
+
+        comp = Composition(
+            pathways = [[A,C],[B,C]]
+        )
+
+        A.log.set_log_conditions('value')
+        B.log.set_log_conditions('value')
+        C.log.set_log_conditions('value')
+
+        comp.run(
+            inputs={A: [1.0],
+                    B: [1.0]},
+            reset_integrator_nodes_when={
+                A: AtTrial(1),
+                B: AtTrial(2)
+            },
+            reset_integrator_nodes_to={B: [0.]},
+            num_trials=5
+        )
+
+        # Mechanisms A and B should have their original reset_integrator_when
+        # Conditions after the call to run has completed
+        assert isinstance(A.reset_integrator_when, Never)
+        assert isinstance(B.reset_integrator_when, Never)
+
+        # Mechanism A - resets on Trial 1
+        # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
+        assert np.allclose(
+            A.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])],
+                [np.array([0.9375])]
+            ]
+        )
+
+        # Mechanism B - resets on Trial 2
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+        assert np.allclose(
+            B.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])]
+            ]
+        )
+
+        # Mechanism C - sum of A and B
+        # Trial 0: 1.0, Trial 1: 1.25, Trial 2: 1.25, Trial 3: 1.625, Trial 4: 1.8125
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([1.0])],
+                [np.array([1.25])],
+                [np.array([1.25])],
+                [np.array([1.625])],
+                [np.array([1.8125])]
             ]
         )
 
@@ -6186,7 +6296,7 @@ class TestReinitializeValues:
 
         comp.run(
             inputs={A: [[1.0], [1.0]]},
-            reinitialize_values=reinitialization_values
+            reset_integrator_nodes_to=reinitialization_values
         )
 
         run_3_values = [A.parameters.value.get(comp),

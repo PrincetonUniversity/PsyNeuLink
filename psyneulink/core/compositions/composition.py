@@ -8502,8 +8502,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs=None,
             num_trials=None,
             initialize_cycle_values=None,
-            reinitialize_values=None,
-            reinitialize_nodes_when=Never(),
+            reset_integrator_nodes_to=None,
+            reset_integrator_nodes_when=Never(),
             skip_initialization=False,
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
@@ -8551,18 +8551,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     the initial value of a node is only relevant when it is embedded in a Cycle, because this
                     is the only case in which its value Parameter will be used before being updated.
 
-            reinitialize_values : Dict { Node : Object | iterable [Object] } : default None
+            reset_integrator_nodes_to : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reinitialize methods when their
-                respective reinitialize_when conditions are met. These are used to seed the previous_value parameters
+                respective reset_integrator_when conditions are met. These are used to seed the previous_integrator_value parameters
                 of Mechanisms that have active integrator functions.
                 ..technical_note::
-                    reinitialize values are used to seed the previous_value Parameter of Mechanisms with
+                    reinitialize values are used to seed the previous_integrator_value Parameter of Mechanisms with
                     active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
                     call to run.
 
-            reinitialize_nodes_when :  Condition : default Never()
-                sets the reinitialize_when condition for all nodes in the Composition that currently have their
-                reinitialize_when condition set to `Never <Never>` for the duration of the run.
+            reset_integrator_nodes_when :  Condition : default Never()
+                sets the reset_integrator_when condition for all nodes in the Composition that currently have their
+                reset_integrator_when condition set to `Never <Never>` for the duration of the run.
 
             skip_initialization : bool : default False
 
@@ -8731,32 +8731,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     node.initialize(initialize_cycle_values[node], context)
 
-        if reinitialize_values is None:
-            reinitialize_values = {}
+        if reset_integrator_nodes_to is None:
+            reset_integrator_nodes_to = {}
 
-        for node in reinitialize_values:
+        for node in reset_integrator_nodes_to:
             # make sure the args to reinitialize are in the form of an iterable so they can be unpacked
             try:
-                iter(reinitialize_values[node])
+                iter(reset_integrator_nodes_to[node])
             except TypeError:
-                reinitialize_values[node] = [reinitialize_values[node]]
-            node.reinitialize(*reinitialize_values[node], context=context)
+                reset_integrator_nodes_to[node] = [reset_integrator_nodes_to[node]]
+            node.reinitialize(*reset_integrator_nodes_to[node], context=context)
 
-        # cache and set reinitialize_when conditions for nodes, matching old System behavior
+        # cache and set reset_integrator_when conditions for nodes
         # Validate
-        if not isinstance(reinitialize_nodes_when, Condition):
-            raise CompositionError(
-                "{reinitialize_nodes_when} is not a valid specification for reinitialize_nodes_when of {self.name}. "
-                "reinitialize_nodes_when must be a Condition.")
+        valid_reset_type = True
+        if not isinstance(reset_integrator_nodes_when, (Condition, dict)):
+            valid_reset_type = False
+        elif type(reset_integrator_nodes_when) == dict:
+            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
+                         False for k,v in reset_integrator_nodes_when.items()}:
+                valid_reset_type = False
 
-        self._reinitialize_nodes_when_cache = {}
-        for node in self.nodes:
-            try:
-                if isinstance(node.reinitialize_when, Never):
-                    self._reinitialize_nodes_when_cache[node] = node.reinitialize_when
-                    node.reinitialize_when = reinitialize_nodes_when
-            except AttributeError:
-                pass
+        if not valid_reset_type:
+            raise CompositionError(
+                f"{reset_integrator_nodes_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
+                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+
+        self._reset_integrator_nodes_when_cache = {}
+
+        # use type here to avoid another costly call to isinstance
+        if not type(reset_integrator_nodes_when) == dict:
+            for node in self.nodes:
+                try:
+                    if isinstance(node.reset_integrator_when, Never):
+                        self._reset_integrator_nodes_when_cache[node] = node.reset_integrator_when
+                        node.reset_integrator_when = reset_integrator_nodes_when
+                except AttributeError:
+                    pass
+        else:
+            for node in reset_integrator_nodes_when:
+                self._reset_integrator_nodes_when_cache[node] = node.reset_integrator_when
+                node.reset_integrator_when = reset_integrator_nodes_when[node]
 
         if ContextFlags.SIMULATION not in context.execution_phase:
             try:
@@ -8896,11 +8911,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 break
 
             for node in self.nodes:
-                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
-                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler,
+                if hasattr(node, "reset_integrator_when") and node.parameters.has_initializers._get(context):
+                    if node.reset_integrator_when.is_satisfied(scheduler=self.scheduler,
                                                            context=context):
-                        if node in reinitialize_values:
-                            node.reinitialize(*reinitialize_values[node], context=context)
+                        if node in reset_integrator_nodes_to:
+                            node.reinitialize(*reset_integrator_nodes_to[node], context=context)
                         else:
                             node.reinitialize(None, context=context)
 
@@ -8971,10 +8986,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 movie = Image.open(movie_path)
                 movie.show()
 
-        # Undo override of reinitialize_when conditions
+        # Undo override of reset_integrator_when conditions
         for node in self.nodes:
             try:
-                node.reinitialize_when = self._reinitialize_nodes_when_cache[node]
+                node.reset_integrator_when = self._reset_integrator_nodes_when_cache[node]
             except KeyError:
                 pass
 
@@ -9286,7 +9301,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.execution_id = old_eid
 
         # Set num_executions.TRIAL to 0 for every node
-        # Reinitialize any nodes that have satisfied 'reinitialize_when' conditions.
+        # Reinitialize any nodes that have satisfied 'reset_integrator_when' conditions.
         for node in self.nodes:
             node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
             if node.parameters.has_initializers._get(context):

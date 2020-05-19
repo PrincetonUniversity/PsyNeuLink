@@ -30,7 +30,7 @@ class TestLCA:
                          time_step_size=0.1)
         C = Composition()
         C.add_linear_processing_pathway([T,L])
-        L.reinitialize_when = Never()
+        L.reset_integrator_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =
@@ -87,7 +87,7 @@ class TestLCA:
 
         C = Composition()
         C.add_linear_processing_pathway([T,L])
-        L.reinitialize_when = Never()
+        L.reset_integrator_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =
@@ -296,18 +296,18 @@ class TestLCAReinitialize:
                          noise=0.0)
         C = Composition(pathways=[L])
 
-        L.reinitialize_when = Never()
-        assert np.allclose(L.integrator_function.previous_value, 0.5)
+        L.reset_integrator_when = Never()
+        assert np.allclose(L.integrator_function.previous_integrator_value, 0.5)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 
         C.run(inputs={L: 1.0},
               num_trials=2,
-              # reinitialize_nodes_when=AtRunStart(),
-              # reinitialize_nodes_when=AtTrialStart(),
+              # reset_integrator_nodes_when=AtRunStart(),
+              # reset_integrator_nodes_when=AtTrialStart(),
               initialize_cycle_values={L: [0.0]})
 
-        # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
+        # IntegratorFunction fn: previous_integrator_value + (rate*previous_integrator_value + new_value)*time_step_size + noise*(time_step_size**0.5)
 
         # Trial 1    |   variable = 1.0 + 0.0
         # integration: 0.5 + (0.1*0.5 + 1.0)*1.0 + 0.0 = 1.55
@@ -315,16 +315,16 @@ class TestLCAReinitialize:
         # Trial 2    |   variable = 1.0 + 1.55
         # integration: 1.55 + (0.1*1.55 + 2.55)*1.0 + 0.0 = 4.255
         #  linear fn: 4.255*1.0 = 4.255
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 3.755)
+        assert np.allclose(L.integrator_function.parameters.previous_integrator_value.get(C), 3.755)
 
         L.integrator_function.reinitialize(0.9, context=C)
 
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.9)
+        assert np.allclose(L.integrator_function.parameters.previous_integrator_value.get(C), 0.9)
         assert np.allclose(L.parameters.value.get(C), 3.755)
 
         L.reinitialize(0.5, context=C)
 
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.5)
+        assert np.allclose(L.integrator_function.parameters.previous_integrator_value.get(C), 0.5)
         assert np.allclose(L.parameters.value.get(C), 0.5)
 
         C.run(inputs={L: 1.0},
@@ -335,7 +335,7 @@ class TestLCAReinitialize:
         # Trial 4    |   variable = 1.0 + 2.05
         # integration: 2.05 + (0.1*2.05 + 3.05)*1.0 + 0.0 = 5.305
         #  linear fn: 5.305*1.0 = 5.305
-        assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 4.705)
+        assert np.allclose(L.integrator_function.parameters.previous_integrator_value.get(C), 4.705)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 

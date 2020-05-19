@@ -171,7 +171,7 @@ class GymForagerCFA(RegressionCFA):
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
-    # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reset_integrator_nodes_to, feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.

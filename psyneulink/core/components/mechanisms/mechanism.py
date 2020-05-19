@@ -2223,7 +2223,7 @@ class Mechanism_Base(Mechanism):
 
         .. note::
                 The reinitialize method of an IntegratorFunction Function typically resets the function's
-                `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
+                `previous_integrator_value <IntegratorFunction.previous_integrator_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
                 quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in
@@ -2246,7 +2246,7 @@ class Mechanism_Base(Mechanism):
             self._update_output_ports(context=context)
 
         # If the mechanism has an auxiliary integrator function:
-        # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
+        # (1) reinitialize it, (2) run the primary function with the new "previous_integrator_value" as input
         # (3) update value, (4) update output ports
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, IntegratorFunction):

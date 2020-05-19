@@ -276,7 +276,7 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
     # KDM 8/7/18: removing the below because it has bad side effects for _instantiate_from_context, and it's not clear
     # that it's the correct behavior. Similar reason for removing/not implementing auto/hetero setters
     # if hasattr(owning_component, "recurrent_projection"):
-    #     owning_component.recurrent_projection.parameter_ports["matrix"].function.parameters.previous_value._set(value, base_execution_id)
+    #     owning_component.recurrent_projection.parameter_ports["matrix"].function.parameters.previous_integrator_value._set(value, base_execution_id)
 
     try:
         value = get_matrix(value, owning_component.recurrent_size, owning_component.recurrent_size)
@@ -1009,10 +1009,10 @@ class RecurrentTransferMechanism(TransferMechanism):
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
         # KDM 10/12/18: removing below because it doesn't seem to be correct, and also causes
-        # unexpected values to be set to previous_value
+        # unexpected values to be set to previous_integrator_value
         # KDM 7/1/19: reinstating below
         if hasattr(self, "recurrent_projection"):
-            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_integrator_value = val
 
         self.parameters.matrix._set(val, self.most_recent_context)
 
@@ -1031,7 +1031,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.parameters.auto._set(val, self.most_recent_context)
 
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_ports:
-            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_integrator_value = self.matrix
 
 
     @property
@@ -1043,7 +1043,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         self.parameters.hetero._set(val, self.most_recent_context)
 
         if hasattr(self, "recurrent_projection") and 'auto' in self._parameter_ports:
-            self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix_param
+            self.recurrent_projection.parameter_ports["matrix"].function.previous_integrator_value = self.matrix_param
 
     @property
     def learning_enabled(self):
@@ -1198,7 +1198,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     def _execute(self, variable=None, context=None, runtime_params=None):
 
         # if not self.is_initializing
-        #     self.parameters.previous_value._set(self.value)
+        #     self.parameters.previous_integrator_value._set(self.value)
         # self._output = super()._execute(variable=variable, runtime_params=runtime_params, context=context)
         # return self._output
         return super()._execute(variable, context, runtime_params)

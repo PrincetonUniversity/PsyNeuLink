@@ -323,20 +323,20 @@ terminate integration, as in the following example::
 
 In this case, the single call to ``my_mech.execute`` caused the Mechanism to integrate for 4 steps, until the
 difference between its current `value <Mechanism_Base.value>` and its `previous value
-<Mechanism_Base.previous_value>` is less than the specified **termination_threshold**.  However,
+<Mechanism_Base.previous_integrator_value>` is less than the specified **termination_threshold**.  However,
 the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
 conditions.  There are two broad types of termination condition:  convergence and boundary terination.
 
 *Convergence termination* -- execution terminates based on the difference between the TransferMechanism's current
-`value <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>` (as in the example above).
+`value <Mechanism_Base.value>` and its `previous_integrator_value <Mechanism_Base.previous_integrator_value>` (as in the example above).
 This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
 (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
 `MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current `value
-<Mechanism_Base.value>` as well as its `previous_value <Mechanism_Base.previous_value>`, and the scalar returned is
+<Mechanism_Base.value>` as well as its `previous_integrator_value <Mechanism_Base.previous_integrator_value>`, and the scalar returned is
 compared to **termination_threshold** using the comparison operator specified by **termination_comparison_op** (which
 is *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True.  Thus, in the example above,
 execution continued until the difference between the Mechanism's current `value <Mechanism_Base.value>` and
-`previous_value <Mechanism_Base.previous_value>` was less than or equal to 0.1.  A `Distance` Function with other
+`previous_integrator_value <Mechanism_Base.previous_integrator_value>` was less than or equal to 0.1.  A `Distance` Function with other
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
 accepts a single argument that is a 2d array with two entries.
 
@@ -345,8 +345,8 @@ accepts a single argument that is a 2d array with two entries.
     *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
     a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
-    entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
-    <Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
+    entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_integrator_value
+    <Mechanism_Base.previous_integrator_value>` is ignored). After each execution, the function is passed the Mechanism's
     current `value <Mechanism_Base.value>`, and the scalar returned is compared to **termination_threshold** using
     the comparison operator specified by **termination_comparison_op**. Execution continues until this returns True,
     as in the following example::
@@ -513,15 +513,15 @@ mechanism's `integrator_function <TransferMechanism.integrator_function>`, or th
 The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
-    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute and
+    - the integrator_function's `previous_integrator_value <AdaptiveIntegrator.previous_integrator_value>` attribute and
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
     to the specified value.
 
 The `reinitialize <Mechanism_Base.reinitialize>` method of the `TransferMechanism` first sets:
 
-    - the Mechanismn's `previous_value <Mechanism_Base.previous_value>` attribute,
-    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute, and
+    - the Mechanismn's `previous_integrator_value <Mechanism_Base.previous_integrator_value>` attribute,
+    - the integrator_function's `previous_integrator_value <AdaptiveIntegrator.previous_integrator_value>` attribute, and
     - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
 
     to the specified value. Then:
@@ -703,8 +703,8 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
             owning_component._needs_integrator_function_init = True
     elif value is False:
         owning_component.parameters.has_initializers._set(False, context)
-        if not hasattr(owning_component, "reinitialize_when"):
-            owning_component.reinitialize_when = Never()
+        if not hasattr(owning_component, "reset_integrator_when"):
+            owning_component.reset_integrator_when = Never()
 
     return value
 
@@ -902,14 +902,14 @@ class TransferMechanism(ProcessingMechanism_Base):
         `execute_until_finished <Component.execute_until_finished>` is True.  If it is a `TimeScale`, then execution
         terminates when the value of the Mechanism's `num_executions <Compnent_Num_Executions>` at that TimeScale is
         is equal to `termination_threshold <TransferMechanism.termination_threshold>`.  If it is a function, it is
-        passed the `value <Mechanism_Base.value>` and `previous_value <Mechanism_Base.previous_value>` of the
+        passed the `value <Mechanism_Base.value>` and `previous_integrator_value <Mechanism_Base.previous_integrator_value>` of the
         TransferMechanism; its result (`termination_measure_value <TransferMechanism.termination_measure_value>`) is
         compared with `termination_threshold <TransferMechanism.termination_threshold>` using
         `TransferMechanism.termination_comparison_op`, the result of which is used as the value of `is_finished`.
 
         .. note::
-           A Mechanism's `previous_value` attribute is distinct from the `previous_value
-           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           A Mechanism's `previous_integrator_value` attribute is distinct from the `previous_integrator_value
+           <AdaptiveIntegrator.previous_integrator_value>` attribute of its `integrator_function
            <Mechanism_Base.integrator_function>`.
 
     termination_measure_value : array or scalar
@@ -1412,7 +1412,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     # If function's initializer was not specified, assign Mechanism's initial_value to it
                     if not fct_specified:
                         self.integrator_function.parameters.initializer._set(initializer, context)
-                        self.integrator_function._initialize_previous_value(initializer, context)
+                        self.integrator_function._initialize_previous_integrator_value(initializer, context)
                     # Otherwise, give precedence to function's value
                     else:
                         if mech_specified:
@@ -1784,12 +1784,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         except:
             # Otherwise, use "duck typing"
             try:
-                # Try a single item first (only uses value, and not previous_value)
+                # Try a single item first (only uses value, and not previous_integrator_value)
                 measure(np.array([0,0]))
                 self._termination_measure_num_items_expected = 1
             except:
                 try:
-                    # termination_measure takes two arguments -- value and previous_value -- (e.g., Distance)
+                    # termination_measure takes two arguments -- value and previous_integrator_value -- (e.g., Distance)
                     measure(np.array([[0,0],[0,0]]))
                     self._termination_measure_num_items_expected = 2
                 except:
@@ -1834,7 +1834,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # comparator = self.parameters.termination_comparison_op._get(context)
         comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
-        previous_value = self.parameters.value.get_previous(context)
+        previous_integrator_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==0:
             status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
@@ -1843,7 +1843,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Squeeze to collapse 2d array with single item
             status = measure(np.squeeze(value))
         else:
-            status = measure([value, previous_value])
+            status = measure([value, previous_integrator_value])
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 

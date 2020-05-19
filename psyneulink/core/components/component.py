@@ -337,17 +337,17 @@ The following attributes control and provide information about the execution of 
 
 .. _Component_Reinitialize_When:
 
-* **reinitialize_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
+* **reset_integrator_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
   `reinitialize <Component.reinitialize>` method. The `reinitialize <Component.reinitialize>` method is executed
   without arguments, meaning that the relevant function's `initializer<IntegratorFunction.initializer>` attribute
   (or equivalent -- initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-  the `reinitialize <Component.reinitialize>` method and `reinitialize_when <Component.reinitialize_when>` attribute
+  the `reinitialize <Component.reinitialize>` method and `reset_integrator_when <Component.reset_integrator_when>` attribute
   only exist for Mechanisms that have `stateful <Parameter.stateful>` Parameters, or that have a `function
   <Mechanism.function>` with `stateful <Parameter.stateful>` Parameters.
 
   .. note::
 
-        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
+        Currently, only Mechanisms reinitialize when their reset_integrator_when Conditions are satisfied. Other types of
         Components do not reinitialize.
 
 .. _:
@@ -747,8 +747,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     max_executions_before_finished : bool
         see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
-    reinitialize_when : `Condition`
-        see `reinitialize_when <Component_Reinitialize_When>`
+    reset_integrator_when : `Condition`
+        see `reset_integrator_when <Component_Reinitialize_When>`
 
     name : str
         see `name <Component_Name>`
@@ -982,7 +982,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
-                 reinitialize_when=None,
+                 reset_integrator_when=None,
                  prefs=None,
                  **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
@@ -1042,10 +1042,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.has_initializers._set(False, context)
 
-        if reinitialize_when is not None:
-            self.reinitialize_when = reinitialize_when
+        if reset_integrator_when is not None:
+            self.reset_integrator_when = reset_integrator_when
         else:
-            self.reinitialize_when = Never()
+            self.reset_integrator_when = Never()
 
         # self.componentName = self.componentType
         try:
@@ -1157,7 +1157,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # ------------------------------------------------------------------------------------------------------------------
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
-        whitelist = {"previous_time", "previous_value", "previous_v",
+        whitelist = {"previous_time", "previous_integrator_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
                      "execution_count", "value"}
@@ -1204,7 +1204,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
-        blacklist = {"previous_time", "previous_value", "previous_v",
+        blacklist = {"previous_time", "previous_integrator_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions", "variable",
                      "value", "saved_values", "saved_samples", "grid",

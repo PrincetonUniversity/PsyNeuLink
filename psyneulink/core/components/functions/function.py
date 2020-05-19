@@ -638,11 +638,11 @@ class Function_Base(Function):
             except AttributeError:
                 raise FunctionError(f"{self} has no parameter '{param_name}'.")
 
-    def get_previous_value(self, context=None):
+    def get_previous_integrator_value(self, context=None):
         # temporary method until previous values are integrated for all parameters
-        value = self.parameters.previous_value._get(context)
+        value = self.parameters.previous_integrator_value._get(context)
         if value is None:
-            value = self.parameters.previous_value._get(Context())
+            value = self.parameters.previous_integrator_value._get(Context())
 
         return value
 

@@ -809,8 +809,8 @@ class GradientOptimization(OptimizationFunction):
                     :default value: 1000
                     :type: ``int``
 
-                previous_value
-                    see `previous_value <GradientOptimization.previous_value>`
+                previous_integrator_value
+                    see `previous_integrator_value <GradientOptimization.previous_integrator_value>`
 
                     :default value: [[0], [0]]
                     :type: ``list``
@@ -833,7 +833,7 @@ class GradientOptimization(OptimizationFunction):
 
         # these should be removed and use switched to .get_previous()
         previous_variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        previous_value = Parameter([[0], [0]], read_only=True, pnl_internal=True)
+        previous_integrator_value = Parameter([[0], [0]], read_only=True, pnl_internal=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
         step_size = Parameter(1.0, modulable=True)
@@ -1062,23 +1062,23 @@ class GradientOptimization(OptimizationFunction):
 
     def _convergence_condition(self, variable, value, iteration, context=None):
         previous_variable = self.parameters.previous_variable._get(context)
-        previous_value = self.parameters.previous_value._get(context)
+        previous_integrator_value = self.parameters.previous_integrator_value._get(context)
 
         if iteration == 0:
             # self._convergence_metric = self.convergence_threshold + EPSILON
             self.parameters.previous_variable._set(variable, context)
-            self.parameters.previous_value._set(value, context)
+            self.parameters.previous_integrator_value._set(value, context)
             return False
 
         # Evaluate for convergence
         if self.convergence_criterion == VALUE:
-            convergence_metric = np.abs(value - previous_value)
+            convergence_metric = np.abs(value - previous_integrator_value)
         else:
             convergence_metric = np.max(np.abs(np.array(variable) -
                                                np.array(previous_variable)))
 
         self.parameters.previous_variable._set(variable, context)
-        self.parameters.previous_value._set(value, context)
+        self.parameters.previous_integrator_value._set(value, context)
 
         return convergence_metric <= self.parameters.convergence_threshold._get(context)
 

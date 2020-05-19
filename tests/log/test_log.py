@@ -952,7 +952,7 @@ class TestLog:
                 size=2,
                 leak=0.5,
                 threshold=0.515,
-                reinitialize_when=pnl.AtTrialStart()
+                reset_integrator_when=pnl.AtTrialStart()
         )
         lca.set_log_conditions(pnl.VALUE)
         m0 = pnl.ProcessingMechanism(

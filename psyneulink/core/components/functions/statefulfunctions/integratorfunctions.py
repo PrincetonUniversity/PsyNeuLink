@@ -86,7 +86,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     .. note::
         If `variable <IntegratorFunction.variable>` is an array, for any parameter that is specified as a float its
         value is applied uniformly to all elements of the relevant term of the integral (e.g., `variable
-        <IntegratorFunction.variable>` or `previous_value <IntegratorFunction.previous_value>`, depending on the
+        <IntegratorFunction.variable>` or `previous_integrator_value <IntegratorFunction.previous_integrator_value>`, depending on the
         subclass);  for any parameter specified as an array, it must be the same length as `variable
         <IntegratorFunction.variable>`, and it is applied elementwise (Hadarmard) to the relevant term of the integral.
         If, on initialization, the default_variable is not specified, any parameters specified as an array must be
@@ -141,9 +141,9 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     rate : float or 1d array
         determines the rate of integration. If it is a float or has a single value, it is applied to all elements
-        of `variable <IntegratorFunction.variable>` and/or `previous_value <IntegrationFunction.previous_value>`
+        of `variable <IntegratorFunction.variable>` and/or `previous_integrator_value <IntegrationFunction.previous_integrator_value>`
         (depending on the subclass);  if it has more than one element, each element is applied to the corresponding
-        element of `variable <IntegratorFunction.variable>` and/or `previous_value <IntegratorFunction.previous_value>`.
+        element of `variable <IntegratorFunction.variable>` and/or `previous_integrator_value <IntegratorFunction.previous_integrator_value>`.
 
     .. _Integrator_Noise:
 
@@ -164,13 +164,13 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     .. _Integrator_Initializer:
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <IntegratorFunction.previous_value>` is set.  If `variable <Integrator.variable>` is a list or array, and
-        initializer is a float or has a single element, it is applied to each element of `previous_value
-        <Integrator.previous_value>`. If initializer is a list or array, each element is applied to the corresponding
-        element of `previous_value <Integrator.previous_value>`.
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <IntegratorFunction.previous_integrator_value>` is set.  If `variable <Integrator.variable>` is a list or array, and
+        initializer is a float or has a single element, it is applied to each element of `previous_integrator_value
+        <Integrator.previous_integrator_value>`. If initializer is a list or array, each element is applied to the corresponding
+        element of `previous_integrator_value <Integrator.previous_integrator_value>`.
 
-    previous_value : 1d array
+    previous_integrator_value : 1d array
         stores previous value with which `variable <IntegratorFunction.variable>` is integrated.
 
     owner : Component
@@ -206,8 +206,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :default value: 0.0
                     :type: ``float``
 
-                previous_value
-                    see `previous_value <IntegratorFunction.previous_value>`
+                previous_integrator_value
+                    see `previous_integrator_value <IntegratorFunction.previous_integrator_value>`
 
                     :default value: numpy.array([0])
                     :type: ``numpy.ndarray``
@@ -220,7 +220,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
         noise = Parameter(0.0, modulable=True, function_arg=True)
-        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        previous_integrator_value = Parameter(np.array([0]), pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @tc.typecheck
@@ -326,43 +326,43 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         assert True
     # MODIFIED 6/21/19 END
 
-    def _EWMA_filter(self, previous_value, rate, variable):
+    def _EWMA_filter(self, previous_integrator_value, rate, variable):
         """Return `exponentially weighted moving average (EWMA)
         <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of a variable.
         """
-        return (1 - rate) * previous_value + rate * variable
+        return (1 - rate) * previous_integrator_value + rate * variable
 
     def _logistic(self, variable, gain, bias):
         """Return logistic transform of variable"""
         return 1 / (1 + np.exp(-(gain * variable) + bias))
 
-    def _euler(self, previous_value, previous_time, slope, time_step_size):
+    def _euler(self, previous_integrator_value, previous_time, slope, time_step_size):
 
         if callable(slope):
-            slope = slope(previous_time, previous_value)
+            slope = slope(previous_time, previous_integrator_value)
 
-        return previous_value + slope * time_step_size
+        return previous_integrator_value + slope * time_step_size
 
-    def _runge_kutta_4(self, previous_value, previous_time, slope, time_step_size):
+    def _runge_kutta_4(self, previous_integrator_value, previous_time, slope, time_step_size):
 
         if callable(slope):
             slope_approx_1 = slope(previous_time,
-                                   previous_value)
+                                   previous_integrator_value)
 
             slope_approx_2 = slope(previous_time + time_step_size / 2,
-                                   previous_value + (0.5 * time_step_size * slope_approx_1))
+                                   previous_integrator_value + (0.5 * time_step_size * slope_approx_1))
 
             slope_approx_3 = slope(previous_time + time_step_size / 2,
-                                   previous_value + (0.5 * time_step_size * slope_approx_2))
+                                   previous_integrator_value + (0.5 * time_step_size * slope_approx_2))
 
             slope_approx_4 = slope(previous_time + time_step_size,
-                                   previous_value + (time_step_size * slope_approx_3))
+                                   previous_integrator_value + (time_step_size * slope_approx_3))
 
-            value = previous_value \
+            value = previous_integrator_value \
                     + (time_step_size / 6) * (slope_approx_1 + 2 * (slope_approx_2 + slope_approx_3) + slope_approx_4)
 
         else:
-            value = previous_value + time_step_size * slope
+            value = previous_integrator_value + time_step_size * slope
 
         return value
 
@@ -452,12 +452,12 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         <AccumulatorIntegrator.variable>` (see `rate <AccumulatorIntegrator.rate>` for additional details.
 
     increment : float, list or 1d array : default 0.0
-        specifies an amount to be added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
+        specifies an amount to be added to `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>` in each call to
         `function <AccumulatorIntegrator.function>`; if it is a list or array, it must be the same length as
         `variable <AccumulatorIntegrator.variable>` (see `increment <AccumulatorIntegrator.increment>` for details).
 
     noise : float, Function, list or 1d array : default 0.0
-        specifies random value added to `prevous_value <AccumulatorIntegrator.previous_value>` in each call to
+        specifies random value added to `prevous_value <AccumulatorIntegrator.previous_integrator_value>` in each call to
         `function <AccumulatorIntegrator.function>`; if it is a list or array, it must be the same length as
         `variable <AccumulatorIntegrator.variable>` (see `noise <Integrator_Noise>` for additonal details).
 
@@ -488,20 +488,20 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         integrator functions that depend on both a prior value and a new value (variable).
 
     rate : float or 1d array
-        determines the rate of exponential decay of `previous_value <AccumulatorIntegrator.previous_value>` in each
+        determines the rate of exponential decay of `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>` in each
         call to `function <AccumulatorIntegrator.function>`. If it is a float or has a single element, its value is
-        applied to all the elements of `previous_value <AccumulatorIntegrator.previous_value>`; if it is an array, each
-        element is applied to the corresponding element of `previous_value <AccumulatorIntegrator.previous_value>`.
+        applied to all the elements of `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>`; if it is an array, each
+        element is applied to the corresponding element of `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>`.
         Serves as *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
         <AccumulatorIntegrator.function>`.
 
     increment : float, function, or 1d array
-        determines the amount added to `previous_value <AccumulatorIntegrator.previous_value>` in each call to
+        determines the amount added to `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>` in each call to
         `function <AccumulatorIntegrator.function>`.  If it is a list or array, it must be the same length as
         `variable <AccumulatorIntegrator.variable>` and each element is added to the corresponding element of
-        `previous_value <AccumulatorIntegrator.previous_value>` (i.e., it is used for Hadamard addition).  If it is a
-        scalar or has a single element, its value is added to all the elements of `previous_value
-        <AccumulatorIntegrator.previous_value>`.  Serves as *ADDITIVE_PARAM* for
+        `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>` (i.e., it is used for Hadamard addition).  If it is a
+        scalar or has a single element, its value is added to all the elements of `previous_integrator_value
+        <AccumulatorIntegrator.previous_integrator_value>`.  Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <AccumulatorIntegrator.function>`.
 
     noise : float, Function or 1d array
@@ -509,10 +509,10 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         (see `noise <Integrator_Noise>` for details).
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <AccumulatorIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <AccumulatorIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value to which `rate <AccumulatorIntegrator.rate>` and `noise <AccumulatorIntegrator.noise>`
         will be added.
 
@@ -656,15 +656,15 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         increment = self._get_current_function_param(INCREMENT, context)
         noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_integrator_value = np.atleast_2d(self.get_previous_integrator_value(context))
 
-        value = previous_value * rate + noise + increment
+        value = previous_integrator_value * rate + noise + increment
 
         # If this NOT an initialization run, update the old value
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not self.is_initializing:
-            self.parameters.previous_value._set(value, context)
+            self.parameters.previous_integrator_value._set(value, context)
 
         return self.convert_output_type(value)
 
@@ -688,7 +688,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     .. math::
 
-        previous_value + rate * variable + noise + offset
+        previous_integrator_value + rate * variable + noise + offset
 
     *Modulatory Parameters:*
 
@@ -761,10 +761,10 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         <ModulatorySignal_Modulation>` of `function <SimpleIntegrator.function>`.
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value to which `previous_value
-        <SimpleIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        determines the starting value(s) for integration (i.e., the value to which `previous_integrator_value
+        <SimpleIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <SimpleIntegrator.variable>` is integrated.
 
     owner : Component
@@ -855,10 +855,10 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
         # execute noise if it is a function
         noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
-        previous_value = self.get_previous_value(context)
+        previous_integrator_value = self.get_previous_integrator_value(context)
         new_value = variable
 
-        value = previous_value + (new_value * rate) + noise
+        value = previous_integrator_value + (new_value * rate) + noise
 
         adjusted_value = value + offset
 
@@ -866,7 +866,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not self.is_initializing:
-            self.parameters.previous_value._set(adjusted_value, context)
+            self.parameters.previous_integrator_value._set(adjusted_value, context)
 
         return self.convert_output_type(adjusted_value)
 
@@ -877,7 +877,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
                                           state=state)
 
         # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_integrator_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -918,7 +918,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     <https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average>`_ of input:
 
     .. math::
-        ((1-rate) * previous_value) + (rate * variable)  + noise + offset
+        ((1-rate) * previous_integrator_value) + (rate * variable)  + noise + offset
 
     *Modulatory Parameters:*
 
@@ -977,10 +977,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     rate : float or 1d array
         determines the smoothing factor of the `EWMA <AdaptiveIntegrator>`. All rate elements must be between 0 and 1
         (rate = 0 --> no change, `variable <AdaptiveAdaptiveIntegrator.variable>` is ignored; rate = 1 -->
-        `previous_value <AdaptiveIntegrator.previous_value>` is ignored).  If rate is a float or has a single element,
-        its value is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>` and `previous_value
-        <AdaptiveIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding element
-        of `variable <AdaptiveIntegrator.variable>` and `previous_value <AdaptiveIntegrator.previous_value>`).
+        `previous_integrator_value <AdaptiveIntegrator.previous_integrator_value>` is ignored).  If rate is a float or has a single element,
+        its value is applied to all elements of `variable <AdaptiveAdaptiveIntegrator.variable>` and `previous_integrator_value
+        <AdaptiveIntegrator.previous_integrator_value>`; if it is an array, each element is applied to the corresponding element
+        of `variable <AdaptiveIntegrator.variable>` and `previous_integrator_value <AdaptiveIntegrator.previous_integrator_value>`).
         Serves as *MULTIPLICATIVE_PARAM*  for `modulation <ModulatorySignal_Modulation>` of `function
         <AdaptiveIntegrator.function>`.
 
@@ -996,10 +996,10 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         `modulation <ModulatorySignal_Modulation>` of `function <AdaptiveIntegrator.function>`.
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <AdaptiveIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <AdaptiveIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <AdaptiveIntegrator.variable>` is integrated.
 
     owner : Component
@@ -1140,7 +1140,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                                           state=state)
 
         # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_integrator_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -1195,12 +1195,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
 
         # # MODIFIED 6/14/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(context))
+        # previous_integrator_value = np.atleast_2d(self.get_previous_integrator_value(context))
         # # MODIFIED 6/14/19 NEW: [JDC]
-        previous_value = self.get_previous_value(context)
+        previous_integrator_value = self.get_previous_integrator_value(context)
         # MODIFIED 6/14/19 END
 
-        value = self._EWMA_filter(previous_value, rate, variable) + noise
+        value = self._EWMA_filter(previous_integrator_value, rate, variable) + noise
 
         adjusted_value = value + offset
 
@@ -1208,7 +1208,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not self.is_initializing:
-            self.parameters.previous_value._set(adjusted_value, context)
+            self.parameters.previous_integrator_value._set(adjusted_value, context)
 
         # # MODIFIED 6/21/19 OLD:
         # return self.convert_output_type(adjusted_value)
@@ -1931,11 +1931,11 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         <InteractiveActivationIntegrator.function>` (see `noise <Integrator_Noise>` for details).
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <InteractiveActivationIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>`
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <InteractiveActivationIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>`
         for details).
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <InteractiveActivationIntegrator.variable>` is integrated.
 
     owner : Component
@@ -2098,19 +2098,19 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         # FIX: ?CLEAN THIS UP BY SETTING initializer IN __init__ OR OTHER RELEVANT PLACE?
         if self.is_initializing:
             if rest.ndim == 0 or len(rest)==1:
-                # self.parameters.previous_value._set(np.full_like(current_input, rest), context)
-                self._initialize_previous_value(np.full_like(current_input, rest), context)
+                # self.parameters.previous_integrator_value._set(np.full_like(current_input, rest), context)
+                self._initialize_previous_integrator_value(np.full_like(current_input, rest), context)
             elif np.atleast_2d(rest).shape == current_input.shape:
-                # self.parameters.previous_value._set(rest, context)
-                self._initialize_previous_value(rest, context)
+                # self.parameters.previous_integrator_value._set(rest, context)
+                self._initialize_previous_integrator_value(rest, context)
             else:
                 raise FunctionError("The {} argument of {} ({}) must be an int or float, "
                                     "or a list or array of the same length as its variable ({})".
                                     format(repr(REST), self.__class__.__name__, rest, len(variable)))
-        previous_value = self.get_previous_value(context)
+        previous_integrator_value = self.get_previous_integrator_value(context)
 
         current_input = np.atleast_2d(variable)
-        prev_val = np.atleast_2d(previous_value)
+        prev_val = np.atleast_2d(previous_integrator_value)
 
         dist_from_asymptote = np.zeros_like(current_input, dtype=float)
         for i in range(len(current_input)):
@@ -2125,10 +2125,10 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
         dist_from_rest = prev_val - rest
 
-        new_value = previous_value + (rate * (current_input + noise) * dist_from_asymptote) - (decay * dist_from_rest)
+        new_value = previous_integrator_value + (rate * (current_input + noise) * dist_from_asymptote) - (decay * dist_from_rest)
 
         if not self.is_initializing:
-            self.parameters.previous_value._set(new_value, context)
+            self.parameters.previous_integrator_value._set(new_value, context)
 
         return self.convert_output_type(new_value)
 
@@ -2289,14 +2289,14 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         <DriftDiffusionIntegrator.noise>` parameter according to the standard DDM probability distribution.
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <DriftDiffusionIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <DriftDiffusionIntegrator.default_time_step_size>`.
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <DriftDiffusionIntegrator.variable>` is integrated.
 
     owner : Component
@@ -2414,7 +2414,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             self.initializers = ["initializer", "starting_point"]
 
         if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
+            self.stateful_attributes = ["previous_integrator_value", "previous_time"]
 
         random_state = np.random.RandomState([seed])
 
@@ -2474,10 +2474,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
         random_state = self._get_current_function_param("random_state", context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_integrator_value = np.atleast_2d(self.get_previous_integrator_value(context))
 
         random_draw = np.array([random_state.normal() for _ in list(variable)])
-        value = previous_value + rate * variable * time_step_size \
+        value = previous_integrator_value + rate * variable * time_step_size \
                 + np.sqrt(time_step_size * noise) * random_draw
 
         adjusted_value = np.clip(value + offset, -threshold, threshold)
@@ -2487,7 +2487,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         #    (don't want to count it as an execution step)
         previous_time = self._get_current_function_param('previous_time', context)
         if not self.is_initializing:
-            previous_value = adjusted_value
+            previous_integrator_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
                 previous_time = np.broadcast_to(
@@ -2497,8 +2497,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
             self.parameters.previous_time._set(previous_time, context)
 
-        self.parameters.previous_value._set(previous_value, context)
-        return previous_value, previous_time
+        self.parameters.previous_integrator_value._set(previous_integrator_value, context)
+        return previous_integrator_value, previous_time
 
     def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
         # Get parameter pointers
@@ -2520,10 +2520,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             rate = builder.extract_value(rate, 0)
 
         # Get state pointers
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_integrator_value")
         prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
 
-        # value = previous_value + rate * variable * time_step_size \
+        # value = previous_integrator_value + rate * variable * time_step_size \
         #       + np.sqrt(time_step_size * noise) * random_state.normal()
         prev_val_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0),
                                               ctx.int32_ty(0), index])
@@ -2610,7 +2610,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         <OrnsteinUhlenbeckIntegrator.rate>` for details).
 
     decay : float, list or 1d array : default 1.0
-        specifies value applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`;
+        specifies value applied multiplicatively to `previous_integrator_value <OrnsteinUhlenbeckIntegrator.previous_integrator_value>`;
         If it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>` (
         see `decay <OrnsteinUhlenbeckIntegrator.rate>` for details).
 
@@ -2675,10 +2675,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator.function>`.
 
     decay : float or 1d array
-        applied multiplicatively to `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`; If it is a float or
-        has a single element, its value is applied to all the elements of `previous_value
-        <OrnsteinUhlenbeckIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
-        element of `previous_value <OrnsteinUhlenbeckIntegrator.previous_value>`.
+        applied multiplicatively to `previous_integrator_value <OrnsteinUhlenbeckIntegrator.previous_integrator_value>`; If it is a float or
+        has a single element, its value is applied to all the elements of `previous_integrator_value
+        <OrnsteinUhlenbeckIntegrator.previous_integrator_value>`; if it is an array, each element is applied to the corresponding
+        element of `previous_integrator_value <OrnsteinUhlenbeckIntegrator.previous_integrator_value>`.
 
     noise : float
         scales the normally distributed random value added to integral in each call to `function
@@ -2711,10 +2711,10 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         <OrnsteinUhlenbeckIntegrator.noise>` parameter appropriately.
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <OrnsteinUhlenbeckIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <OrnsteinUhlenbeckIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <OrnsteinUhlenbeckIntegrator.variable>` is integrated.
 
     previous_time : float
@@ -2828,7 +2828,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             self.initializers = ["initializer", "starting_point"]
 
         if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
+            self.stateful_attributes = ["previous_integrator_value", "previous_time"]
 
         if seed is None:
             seed = get_global_seed()
@@ -2844,7 +2844,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             starting_point=starting_point,
             time_step_size=time_step_size,
             initializer=initializer,
-            previous_value=initializer,
+            previous_integrator_value=initializer,
             previous_time=starting_point,
             params=params,
             random_state=random_state,
@@ -2892,12 +2892,12 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
         random_state = self._get_current_function_param('random_state', context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_integrator_value = np.atleast_2d(self.get_previous_integrator_value(context))
 
         random_normal = random_state.normal()
 
         # dx = (lambda*x + A)dt + c*dW
-        value = previous_value + (decay * previous_value - rate * variable) * time_step_size + np.sqrt(
+        value = previous_integrator_value + (decay * previous_integrator_value - rate * variable) * time_step_size + np.sqrt(
             time_step_size * noise) * random_normal
 
         # If this NOT an initialization run, update the old value and time
@@ -2907,7 +2907,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         previous_time = self._get_current_function_param('previous_time', context)
         if not self.is_initializing:
-            previous_value = adjusted_value
+            previous_integrator_value = adjusted_value
             previous_time = previous_time + time_step_size
             if not np.isscalar(variable):
                 previous_time = np.broadcast_to(
@@ -2916,8 +2916,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                 ).copy()
             self.parameters.previous_time._set(previous_time, context)
 
-        self.parameters.previous_value._set(previous_value, context)
-        return previous_value, previous_time
+        self.parameters.previous_integrator_value._set(previous_integrator_value, context)
+        return previous_integrator_value, previous_time
 
 
 class LeakyCompetingIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
@@ -3026,12 +3026,12 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         added to the prior value;  if it is an array, each element is independently integrated.
 
     rate : float, list or 1d array
-        scales the contribution of `previous_value <LeakyCompetingIntegrator.previous_value>` to the decay of
+        scales the contribution of `previous_integrator_value <LeakyCompetingIntegrator.previous_integrator_value>` to the decay of
         the `value <LeakyCompetingIntegrator.value>` on each time step (corresponding to the ``leak`` term of the
         function described in Equation 4 of `Usher & McClelland, 2001) <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_.
-        If it is a float or has a single element, its value is applied to all the elements of `previous_value
-        <LeakyCompetingIntegrator.previous_value>`; if it is an array, each element is applied to the corresponding
-        element of `previous_value <LeakyCompetingIntegrator.previous_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
+        If it is a float or has a single element, its value is applied to all the elements of `previous_integrator_value
+        <LeakyCompetingIntegrator.previous_integrator_value>`; if it is an array, each element is applied to the corresponding
+        element of `previous_integrator_value <LeakyCompetingIntegrator.previous_integrator_value>`.  Serves as *MULTIPLICATIVE_PARAM*  for
         `modulation <ModulatorySignal_Modulation>` of `function <LeakyCompetingIntegrator.function>`.
 
         .. note::
@@ -3057,10 +3057,10 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         <LeakyCompetingIntegrator.noise>` parameter appropriately.
 
     initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <LeakyCompetingIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_integrator_value
+        <LeakyCompetingIntegrator.previous_integrator_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         stores previous value with which `variable <LeakyCompetingIntegrator.variable>` is integrated.
 
     owner : Component
@@ -3167,11 +3167,11 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
         # execute noise if it is a function
         noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
-        previous_value = self.get_previous_value(context)
+        previous_integrator_value = self.get_previous_integrator_value(context)
         new_value = variable
 
-        # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
-        value = previous_value + (-rate * previous_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
+        # Gilzenrat: previous_integrator_value + (-previous_integrator_value + variable)*self.time_step_size + noise --> rate = -1
+        value = previous_integrator_value + (-rate * previous_integrator_value + new_value) * time_step_size + noise * (time_step_size ** 0.5)
 
         adjusted_value = value + offset
 
@@ -3179,7 +3179,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
         if not self.is_initializing:
-            self.parameters.previous_value._set(adjusted_value, context)
+            self.parameters.previous_integrator_value._set(adjusted_value, context)
 
         return self.convert_output_type(adjusted_value)
 
@@ -3191,7 +3191,7 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         time_step = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
         # Get the only context member -- previous value
-        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_integrator_value")
         # Get rid of 2d array. When part of a Mechanism the input,
         # (and output, and context) are 2d arrays.
         prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
@@ -3861,7 +3861,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                                 format(self.integration_method, self.name))
 
     def _euler_FitzHughNagumo(
-        self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w, time_step_size,
+        self, variable, previous_integrator_value_v, previous_integrator_value_w, previous_time, slope_v, slope_w, time_step_size,
         a_v,
         threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w, uncorrelated_activity,
         time_constant_w, context=None
@@ -3870,8 +3870,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_v_approx = slope_v(
             variable,
             previous_time,
-            previous_value_v,
-            previous_value_w,
+            previous_integrator_value_v,
+            previous_integrator_value_w,
             a_v,
             threshold,
             b_v,
@@ -3886,8 +3886,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_w_approx = slope_w(
             variable,
             previous_time,
-            previous_value_w,
-            previous_value_v,
+            previous_integrator_value_w,
+            previous_integrator_value_v,
             mode,
             a_w,
             b_w,
@@ -3897,27 +3897,27 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             context=context
         )
 
-        new_v = previous_value_v + time_step_size * slope_v_approx
-        new_w = previous_value_w + time_step_size * slope_w_approx
+        new_v = previous_integrator_value_v + time_step_size * slope_v_approx
+        new_w = previous_integrator_value_w + time_step_size * slope_w_approx
 
         return new_v, new_w
 
     def _runge_kutta_4_FitzHughNagumo(
-        self, variable, previous_value_v, previous_value_w, previous_time, slope_v, slope_w,
+        self, variable, previous_integrator_value_v, previous_integrator_value_w, previous_time, slope_v, slope_w,
         time_step_size,
         a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, mode, a_w, b_w, c_w,
         uncorrelated_activity, time_constant_w, context=None
     ):
 
         # First approximation
-        # v is approximately previous_value_v
-        # w is approximately previous_value_w
+        # v is approximately previous_integrator_value_v
+        # w is approximately previous_integrator_value_w
 
         slope_v_approx_1 = slope_v(
             variable,
             previous_time,
-            previous_value_v,
-            previous_value_w,
+            previous_integrator_value_v,
+            previous_integrator_value_w,
             a_v,
             threshold,
             b_v,
@@ -3932,8 +3932,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_w_approx_1 = slope_w(
             variable,
             previous_time,
-            previous_value_w,
-            previous_value_v,
+            previous_integrator_value_w,
+            previous_integrator_value_v,
             mode,
             a_w,
             b_w,
@@ -3943,14 +3943,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             context=context
         )
         # Second approximation
-        # v is approximately previous_value_v + 0.5 * time_step_size * slope_w_approx_1
-        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
+        # v is approximately previous_integrator_value_v + 0.5 * time_step_size * slope_w_approx_1
+        # w is approximately previous_integrator_value_w + 0.5 * time_step_size * slope_w_approx_1
 
         slope_v_approx_2 = slope_v(
             variable,
             previous_time + time_step_size / 2,
-            previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
-            previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
+            previous_integrator_value_v + (0.5 * time_step_size * slope_v_approx_1),
+            previous_integrator_value_w + (0.5 * time_step_size * slope_w_approx_1),
             a_v,
             threshold,
             b_v,
@@ -3965,8 +3965,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_w_approx_2 = slope_w(
             variable,
             previous_time + time_step_size / 2,
-            previous_value_w + (0.5 * time_step_size * slope_w_approx_1),
-            previous_value_v + (0.5 * time_step_size * slope_v_approx_1),
+            previous_integrator_value_w + (0.5 * time_step_size * slope_w_approx_1),
+            previous_integrator_value_v + (0.5 * time_step_size * slope_v_approx_1),
             mode,
             a_w,
             b_w,
@@ -3977,14 +3977,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         )
 
         # Third approximation
-        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
-        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
+        # v is approximately previous_integrator_value_v + 0.5 * time_step_size * slope_v_approx_2
+        # w is approximately previous_integrator_value_w + 0.5 * time_step_size * slope_w_approx_2
 
         slope_v_approx_3 = slope_v(
             variable,
             previous_time + time_step_size / 2,
-            previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
-            previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
+            previous_integrator_value_v + (0.5 * time_step_size * slope_v_approx_2),
+            previous_integrator_value_w + (0.5 * time_step_size * slope_w_approx_2),
             a_v,
             threshold,
             b_v,
@@ -3999,8 +3999,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_w_approx_3 = slope_w(
             variable,
             previous_time + time_step_size / 2,
-            previous_value_w + (0.5 * time_step_size * slope_w_approx_2),
-            previous_value_v + (0.5 * time_step_size * slope_v_approx_2),
+            previous_integrator_value_w + (0.5 * time_step_size * slope_w_approx_2),
+            previous_integrator_value_v + (0.5 * time_step_size * slope_v_approx_2),
             mode,
             a_w,
             b_w,
@@ -4010,14 +4010,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             context=context
         )
         # Fourth approximation
-        # v is approximately previous_value_v + time_step_size * slope_v_approx_3
-        # w is approximately previous_value_w + time_step_size * slope_w_approx_3
+        # v is approximately previous_integrator_value_v + time_step_size * slope_v_approx_3
+        # w is approximately previous_integrator_value_w + time_step_size * slope_w_approx_3
 
         slope_v_approx_4 = slope_v(
             variable,
             previous_time + time_step_size,
-            previous_value_v + (time_step_size * slope_v_approx_3),
-            previous_value_w + (time_step_size * slope_w_approx_3),
+            previous_integrator_value_v + (time_step_size * slope_v_approx_3),
+            previous_integrator_value_w + (time_step_size * slope_w_approx_3),
             a_v,
             threshold,
             b_v,
@@ -4032,8 +4032,8 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_w_approx_4 = slope_w(
             variable,
             previous_time + time_step_size,
-            previous_value_w + (time_step_size * slope_w_approx_3),
-            previous_value_v + (time_step_size * slope_v_approx_3),
+            previous_integrator_value_w + (time_step_size * slope_w_approx_3),
+            previous_integrator_value_v + (time_step_size * slope_v_approx_3),
             mode,
             a_w,
             b_w,
@@ -4043,10 +4043,10 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             context=context
         )
 
-        new_v = previous_value_v \
+        new_v = previous_integrator_value_v \
                 + (time_step_size / 6) * (
         slope_v_approx_1 + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
-        new_w = previous_value_w \
+        new_w = previous_integrator_value_w \
                 + (time_step_size / 6) * (
         slope_w_approx_1 + 2 * (slope_w_approx_2 + slope_w_approx_3) + slope_w_approx_4)
 
@@ -4272,44 +4272,44 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         slope_w_approx_1 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
         # Second approximation
-        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_1
+        # v is approximately previous_integrator_value_v + 0.5 * time_step_size * slope_v_approx_1
         input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
         input_v = builder.fmul(input_v, slope_v_approx_1)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_2 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
-        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_1
+        # w is approximately previous_integrator_value_w + 0.5 * time_step_size * slope_w_approx_1
         input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
         input_w = builder.fmul(input_w, slope_w_approx_1)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_2 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
         # Third approximation
-        # v is approximately previous_value_v + 0.5 * time_step_size * slope_v_approx_2
+        # v is approximately previous_integrator_value_v + 0.5 * time_step_size * slope_v_approx_2
         input_v = builder.fmul(ctx.float_ty(0.5), time_step_size)
         input_v = builder.fmul(input_v, slope_v_approx_2)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_3 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
-        # w is approximately previous_value_w + 0.5 * time_step_size * slope_w_approx_2
+        # w is approximately previous_integrator_value_w + 0.5 * time_step_size * slope_w_approx_2
         input_w = builder.fmul(ctx.float_ty(0.5), time_step_size)
         input_w = builder.fmul(input_w, slope_w_approx_2)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_3 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
         # Fourth approximation
-        # v is approximately previous_value_v + time_step_size * slope_v_approx_3
+        # v is approximately previous_integrator_value_v + time_step_size * slope_v_approx_3
         input_v = builder.fmul(time_step_size, slope_v_approx_3)
         input_v = builder.fadd(input_v, previous_v)
         slope_v_approx_4 = self.__gen_llvm_dv_dt(builder, ctx, var, input_v, previous_w, param_vals)
 
-        # w is approximately previous_value_w + time_step_size * slope_w_approx_3
+        # w is approximately previous_integrator_value_w + time_step_size * slope_w_approx_3
         input_w = builder.fmul(time_step_size, slope_w_approx_3)
         input_w = builder.fadd(input_w, previous_w)
         slope_w_approx_4 = self.__gen_llvm_dw_dt(builder, ctx, input_w, previous_v, param_vals)
 
         ts = builder.fdiv(time_step_size, ctx.float_ty(6.0))
-        # new_v = previous_value_v \
+        # new_v = previous_integrator_value_v \
         #    + (time_step_size/6) * (slope_v_approx_1
         #    + 2 * (slope_v_approx_2 + slope_v_approx_3) + slope_v_approx_4)
         new_v = builder.fadd(slope_v_approx_2, slope_v_approx_3)
@@ -4353,11 +4353,11 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         # First approximation uses previous_w
         slope_w_approx = self.__gen_llvm_dw_dt(builder, ctx, previous_w, previous_v, param_vals)
 
-        # new_v = previous_value_v + time_step_size*slope_v_approx
+        # new_v = previous_integrator_value_v + time_step_size*slope_v_approx
         new_v = builder.fmul(time_step_size, slope_v_approx)
         new_v = builder.fadd(previous_v, new_v)
         builder.store(new_v, out_v_ptr)
-        # new_w = previous_value_w + time_step_size*slope_w_approx
+        # new_w = previous_integrator_value_w + time_step_size*slope_w_approx
         new_w = builder.fmul(time_step_size, slope_w_approx)
         new_w = builder.fadd(previous_w, new_w)
         builder.store(new_w, out_w_ptr)

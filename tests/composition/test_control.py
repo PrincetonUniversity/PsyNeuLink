@@ -1354,7 +1354,7 @@ class TestModelBasedOptimizationControlMechanisms:
             Input: [0.5, 0.123],
             reward: [20, 20]
         }
-        Input.reinitialize_when = pnl.Never()
+        Input.reset_integrator_when = pnl.Never()
 
         comp.run(inputs=stim_list_dict)
 

@@ -5,8 +5,8 @@ import pytest
 class TestComponent:
 
     def test_detection_of_legal_arg_in_kwargs(self):
-        assert isinstance(pnl.ProcessingMechanism().reinitialize_when, pnl.Never)
-        assert isinstance(pnl.ProcessingMechanism(reinitialize_when=pnl.AtTrialStart()).reinitialize_when,
+        assert isinstance(pnl.ProcessingMechanism().reset_integrator_when, pnl.Never)
+        assert isinstance(pnl.ProcessingMechanism(reset_integrator_when=pnl.AtTrialStart()).reset_integrator_when,
                           pnl.AtTrialStart)
 
     def test_detection_of_illegal_arg_in_kwargs(self):

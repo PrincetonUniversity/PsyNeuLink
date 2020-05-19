@@ -1167,9 +1167,9 @@ class DDM(ProcessingMechanism):
 
     @handle_external_context()
     def is_finished(self, context=None):
-        # find the single numeric entry in previous_value
+        # find the single numeric entry in previous_integrator_value
         try:
-            single_value = self.function.get_previous_value(context)
+            single_value = self.function.get_previous_integrator_value(context)
         except AttributeError:
             # Analytical function so it is always finished after it is called
             return True
@@ -1201,9 +1201,9 @@ class DDM(ProcessingMechanism):
         func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')
         func_param_ptr = pnlvm.helpers.get_state_ptr(builder, self, params, 'function')
 
-        # Find the single numeric entry in previous_value
+        # Find the single numeric entry in previous_integrator_value
         try:
-            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, func_state_ptr, "previous_value")
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, func_state_ptr, "previous_integrator_value")
         except ValueError:
             return pnlvm.ir.IntType(1)(1)
 

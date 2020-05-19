@@ -161,7 +161,7 @@ class TestBuffer():
                                 history=3))
 
         C = Composition(pathways=[P])
-        P.reinitialize_when = Never()
+        P.reset_integrator_when = Never()
         full_result = []
 
         def assemble_full_result():

@@ -930,7 +930,7 @@ class Projection_Base(Projection):
             getattr(self.parameters, port_Name)._set(value, context)
             # manual setting of previous value to matrix value (happens in above param['matrix'] setting
             if port_Name == MATRIX:
-                port.function.parameters.previous_value._set(value, context)
+                port.function.parameters.previous_integrator_value._set(value, context)
 
     def add_to(self, receiver, port, context=None):
         _add_projection_to(receiver=receiver, port=port, projection_spec=self, context=context)

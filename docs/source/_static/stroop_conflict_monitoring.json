@@ -1058,7 +1058,7 @@
                             "net_outcome": null,
                             "outcome": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "simulation_ids": [],
                             "variable": [
                                 [
@@ -1258,7 +1258,7 @@
                                     "input_labels_dict": {},
                                     "input_port_variables": null,
                                     "output_labels_dict": {},
-                                    "previous_value": null,
+                                    "previous_integrator_value": null,
                                     "variable": [
                                         [
                                             0.0,
@@ -1707,7 +1707,7 @@
                                                 "input_labels_dict": {},
                                                 "input_port_variables": null,
                                                 "output_labels_dict": {},
-                                                "previous_value": null,
+                                                "previous_integrator_value": null,
                                                 "variable": [
                                                     [
                                                         0.0,
@@ -2581,7 +2581,7 @@
                                             "input_labels_dict": {},
                                             "input_port_variables": null,
                                             "output_labels_dict": {},
-                                            "previous_value": null,
+                                            "previous_integrator_value": null,
                                             "variable": [
                                                 [
                                                     0.0,
@@ -2826,7 +2826,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -3275,7 +3275,7 @@
                                         "input_labels_dict": {},
                                         "input_port_variables": null,
                                         "output_labels_dict": {},
-                                        "previous_value": null,
+                                        "previous_integrator_value": null,
                                         "variable": [
                                             [
                                                 0.0,
@@ -3736,7 +3736,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0
@@ -4247,7 +4247,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -5106,7 +5106,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -5602,7 +5602,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -5884,7 +5884,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -6166,7 +6166,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -6625,7 +6625,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,
@@ -6907,7 +6907,7 @@
                             "input_labels_dict": {},
                             "input_port_variables": null,
                             "output_labels_dict": {},
-                            "previous_value": null,
+                            "previous_integrator_value": null,
                             "variable": [
                                 [
                                     0.0,

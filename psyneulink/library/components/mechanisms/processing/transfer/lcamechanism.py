@@ -277,7 +277,7 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     leak : value
         determines the `leak <LeakyCompetingIntegrator.leak>` for the `LeakyCompetingIntegrator` Function,
-        which scales the contribution of its `previous_value <LeakyCompetingIntegrator.previous_value>` to the
+        which scales the contribution of its `previous_integrator_value <LeakyCompetingIntegrator.previous_integrator_value>` to the
         accumulation of its `variable <LeakyCompetingIntegrator.variable>` (:math:`x_{i}`) on each time step (see
         `LeakyCompetingIntegrator` for additional details.
 

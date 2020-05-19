@@ -411,7 +411,7 @@ COMPONENT = 'COMPONENT'
 VARIABLE = "variable"
 DEFAULT_VARIABLE = "default_variable"
 VALUE = "value"
-PREVIOUS_VALUE = 'previous_value'
+PREVIOUS_VALUE = 'previous_integrator_value'
 LABELS = 'labels'
 PARAMS = "params"
 NAME = "name"
@@ -860,7 +860,7 @@ FUNCTION_OUTPUT_TYPE = 'output_type'
 OUTPUT_TYPE = 'output'
 OVERWRITE = 'overwrite'
 REINITIALIZE = "reinitialize"
-REINITIALIZE_WHEN = "reinitialize_when"
+REINITIALIZE_WHEN = "reset_integrator_when"
 
 LOW = 'low'
 HIGH = 'high'

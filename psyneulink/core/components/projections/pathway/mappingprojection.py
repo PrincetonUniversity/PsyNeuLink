@@ -260,11 +260,11 @@ A LearningProjection `modulates <LearningSignal_Modulation>` the `function <Para
 and providing it to the MappingProjection's `function <Projection_Base.function>` (usually `LinearMatrix`).  By
 default, the function for the *MATRIX* ParameterPort is an `AccumulatorIntegrator`.  A LearningProjection
 modulates it by assigning the value of its `additive_param <AccumulatorIntegrator.additive_param>` (`increment
-<AccumulatorIntegrator.increment>`), which is added to its `previous_value <AccumulatorIntegrator.previous_value>`
+<AccumulatorIntegrator.increment>`), which is added to its `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>`
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
 executes its *MATRIX* ParameterPort, the `weight changes <LearningProjection_Structure>` conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the *MATRIX*
-ParameterPort's `AccumulatorIntegrator` function in its `previous_value <AccumulatorIntegrator.previous_value>`
+ParameterPort's `AccumulatorIntegrator` function in its `previous_integrator_value <AccumulatorIntegrator.previous_integrator_value>`
 attribute. This is then the value of the matrix used  by the MappingProjection's `LinearMatrix` function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
 LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and not the MappingProjection's `matrix
@@ -324,7 +324,7 @@ def _mapping_projection_matrix_setter(value, owning_component=None, context=None
     owning_component.function.parameters.matrix.set(value, context)
     # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type
     # method but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
-    owning_component.parameter_ports["matrix"].function.parameters.previous_value.set(value, context)
+    owning_component.parameter_ports["matrix"].function.parameters.previous_integrator_value.set(value, context)
 
     return value
 

@@ -289,7 +289,7 @@ Mechanism has completed its execution, as follows::
     # Modify consruction of decision Mechanism:
     decision = DDM(name='DECISION',
                    input_format=ARRAY,
-                   reinitialize_when=AtTrialStart(),
+                   reset_integrator_when=AtTrialStart(),
                    function=DriftDiffusionIntegrator(noise=0.5, threshold=20)
                    )
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
@@ -395,7 +395,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
 
     # Set up run and then execute it
     task.initial_value = [0.5,0.5]         # Assign "neutral" starting point for task units on each trial
-    task.reinitialize_when=AtTrialStart()  # Reinitialize task units at beginning of each trial
+    task.reset_integrator_when=AtTrialStart()  # Reinitialize task units at beginning of each trial
     num_trials = 4
     stimuli = {color_input:[red]*num_trials,
                word_input:[green]*num_trials,

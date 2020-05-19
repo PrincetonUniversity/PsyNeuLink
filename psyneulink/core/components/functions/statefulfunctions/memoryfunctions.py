@@ -65,7 +65,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     .. _Buffer:
 
-    Append `variable <Buffer.variable>` to the end of `previous_value <Buffer.previous_value>` (i.e., right-append
+    Append `variable <Buffer.variable>` to the end of `previous_integrator_value <Buffer.previous_integrator_value>` (i.e., right-append
     to deque of previous inputs).
 
     .. note::
@@ -82,7 +82,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
        to `function <Buffer.function>`.
 
     If the length of the result exceeds `history <Buffer.history>`, delete the first item.
-    Return `previous_value <Buffer.previous_value>` appended with `variable <Buffer.variable>`.
+    Return `previous_integrator_value <Buffer.previous_integrator_value>` appended with `variable <Buffer.variable>`.
 
     Arguments
     ---------
@@ -135,17 +135,17 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
     history : int
         determines maxlen of the deque and the value returned by the `function <Buffer.function>`. If appending
-        `variable <Buffer.variable>` to `previous_value <Buffer.previous_value>` exceeds history, the first item of
-        `previous_value <Buffer.previous_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
-        so that `value <Buffer.previous_value>` maintains a constant length.  If history is not specified,
+        `variable <Buffer.variable>` to `previous_integrator_value <Buffer.previous_integrator_value>` exceeds history, the first item of
+        `previous_integrator_value <Buffer.previous_integrator_value>` is deleted, and `variable <Buffer.variable>` is appended to it,
+        so that `value <Buffer.previous_integrator_value>` maintains a constant length.  If history is not specified,
         the value returned continues to be extended indefinitely.
 
     initializer : float, list or ndarray
         value assigned as the first item of the deque when the Function is initialized, or reinitialized
-        if the **new_previous_value** argument is not specified in the call to `reinitialize
+        if the **new_previous_integrator_value** argument is not specified in the call to `reinitialize
         <StatefulFUnction.reinitialize>`.
 
-    previous_value : 1d array : default class_defaults.variable
+    previous_integrator_value : 1d array : default class_defaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
 
     owner : Component
@@ -236,17 +236,17 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         self.has_initializers = True
 
-    def _initialize_previous_value(self, initializer, context=None):
+    def _initialize_previous_integrator_value(self, initializer, context=None):
         initializer = initializer or []
-        previous_value = deque(initializer, maxlen=self.parameters.history.get(context))
+        previous_integrator_value = deque(initializer, maxlen=self.parameters.history.get(context))
 
-        self.parameters.previous_value.set(previous_value, context, override=True)
+        self.parameters.previous_integrator_value.set(previous_integrator_value, context, override=True)
 
-        return previous_value
+        return previous_integrator_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.parameters.previous_value._set(
-            self._initialize_previous_value(
+        self.parameters.previous_integrator_value._set(
+            self._initialize_previous_integrator_value(
                 self.parameters.initializer._get(context),
                 context
             ),
@@ -257,13 +257,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
     def reinitialize(self, *args, context=None):
         """
 
-        Clears the `previous_value <Buffer.previous_value>` deque.
+        Clears the `previous_integrator_value <Buffer.previous_integrator_value>` deque.
 
         If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
-        value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
-        Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
+        value besides [], then that value is used to start the new `previous_integrator_value <Buffer.previous_integrator_value>` deque.
+        Otherwise, the new `previous_integrator_value <Buffer.previous_integrator_value>` deque starts out empty.
 
-        `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
+        `value <Buffer.value>` takes on the same value as  `previous_integrator_value <Buffer.previous_integrator_value>`.
 
         """
         if context.execution_id is NotImplemented:
@@ -279,17 +279,17 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "reinitialize its stateful attribute (previous_integrator_value), or reinitialize must be called "
                                 "without any arguments, in which case the current initializer value, will be used to "
-                                "reinitialize previous_value".format(args,
+                                "reinitialize previous_integrator_value".format(args,
                                                                      self.name))
 
         if reinitialization_value is None or reinitialization_value == []:
-            self.get_previous_value(context).clear()
+            self.get_previous_integrator_value(context).clear()
             value = deque([], maxlen=self.parameters.history.get(context))
 
         else:
-            value = self._initialize_previous_value(reinitialization_value, context=context)
+            value = self._initialize_previous_integrator_value(reinitialization_value, context=context)
 
         self.parameters.value.set(value, context, override=True)
         return value
@@ -328,18 +328,18 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if self.is_initializing:
             return variable
 
-        previous_value = self.get_previous_value(context)
+        previous_integrator_value = self.get_previous_integrator_value(context)
 
         # Apply rate and/or noise, if they are specified, to all stored items
-        if len(previous_value):
-            previous_value = previous_value * rate + noise
+        if len(previous_integrator_value):
+            previous_integrator_value = previous_integrator_value * rate + noise
 
-        previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
+        previous_integrator_value = deque(previous_integrator_value, maxlen=self.parameters.history._get(context))
 
-        previous_value.append(variable)
+        previous_integrator_value.append(variable)
 
-        self.parameters.previous_value._set(previous_value, context)
-        return self.convert_output_type(previous_value)
+        self.parameters.previous_integrator_value._set(previous_integrator_value, context)
+        return self.convert_output_type(previous_integrator_value)
 
 
 RETRIEVAL_PROB = 'retrieval_prob'
@@ -540,7 +540,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
-    previous_value : 1d array
+    previous_integrator_value : 1d array
         state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable
         <ContentAddressableMemory.variable>` in the current call.
 
@@ -729,12 +729,12 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             prefs=prefs,
         )
 
-        if self.previous_value.size != 0:
-            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
-            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
+        if self.previous_integrator_value.size != 0:
+            self.parameters.key_size._set(len(self.previous_integrator_value[KEYS][0]), Context())
+            self.parameters.val_size._set(len(self.previous_integrator_value[VALS][0]), Context())
 
         self.has_initializers = True
-        self.stateful_attributes = ["random_state", "previous_value"]
+        self.stateful_attributes = ["random_state", "previous_integrator_value"]
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["ring_memory"]
@@ -753,7 +753,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                            ring_buffer_struct))
 
     def _get_state_initializer(self, context):
-        memory = self.get_previous_value(context)
+        memory = self.get_previous_integrator_value(context)
         mem_init = pnlvm._tupleize([memory[0], memory[1], 0, 0])
         return (*super()._get_state_initializer(context), mem_init)
 
@@ -974,22 +974,22 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
                                 f'({result}) must return an array of the same length it receives')
 
-    def _initialize_previous_value(self, initializer, context=None):
-        """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
+    def _initialize_previous_integrator_value(self, initializer, context=None):
+        """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_integrator_value
 
         - Validate, if initializer is specified, it is a 3d array
-            (must be done here rather than in validate_params as it is needed to initialize previous_value
+            (must be done here rather than in validate_params as it is needed to initialize previous_integrator_value
         - Insure that it has exactly 2 items in outer dimension (axis 0)
             and that all items in each of those two items are all arrays
         """
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
-        previous_value = np.ndarray(shape=(2, 0))
+        previous_integrator_value = np.ndarray(shape=(2, 0))
         if len(initializer) == 0:
-            return previous_value
+            return previous_integrator_value
         else:
             # Set key_size and val_size if this is the first entry
-            self.parameters.previous_value.set(previous_value, context, override=True)
+            self.parameters.previous_integrator_value.set(previous_integrator_value, context, override=True)
             self.parameters.key_size.set(len(initializer[0][KEYS]), context)
             self.parameters.val_size.set(len(initializer[0][VALS]), context)
             for entry in initializer:
@@ -1000,8 +1000,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return np.asarray(self._memory)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.parameters.previous_value._set(
-            self._initialize_previous_value(
+        self.parameters.previous_integrator_value._set(
+            self._initialize_previous_integrator_value(
                 self.parameters.initializer._get(context),
                 context
             ),
@@ -1021,15 +1021,15 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         """
         reinitialize(<new_dictionary> default={})
 
-        Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
+        Clears the memory in `previous_integrator_value <ContentAddressableMemory.previous_integrator_value>`.
 
         If an argument is passed into reinitialize or if the `initializer <ContentAddressableMemory.initializer>`
-        attribute contains a value besides [], then that value is used to start the new memory in `previous_value
-        <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
-        <ContentAddressableMemory.previous_value>` memory starts out empty.
+        attribute contains a value besides [], then that value is used to start the new memory in `previous_integrator_value
+        <ContentAddressableMemory.previous_integrator_value>`. Otherwise, the new `previous_integrator_value
+        <ContentAddressableMemory.previous_integrator_value>` memory starts out empty.
 
         `value <ContentAddressableMemory.value>` takes on the same value as
-        `previous_value <ContentAddressableMemory.previous_value>`.
+        `previous_integrator_value <ContentAddressableMemory.previous_integrator_value>`.
         """
         if context.execution_id is NotImplemented:
             context.execution_id = self.most_recent_context.execution_id
@@ -1044,16 +1044,16 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "reinitialize its stateful attribute (previous_integrator_value), or reinitialize must be called "
                                 "without any arguments, in which case the current initializer value will be used to "
-                                "reinitialize previous_value".format(args, self.name))
+                                "reinitialize previous_integrator_value".format(args, self.name))
 
         if reinitialization_value == []:
-            self.get_previous_value(context).clear()
+            self.get_previous_integrator_value(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         else:
-            value = self._initialize_previous_value(reinitialization_value, context=context)
+            value = self._initialize_previous_integrator_value(reinitialization_value, context=context)
 
         self.parameters.value.set(value, context, override=True)
         return value
@@ -1106,7 +1106,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return variable
 
         # Set key_size and val_size if this is the first entry
-        if len(self.get_previous_value(context)[KEYS]) == 0:
+        if len(self.get_previous_integrator_value(context)[KEYS]) == 0:
             self.parameters.key_size._set(len(key), context)
             self.parameters.val_size._set(len(val), context)
 
@@ -1172,7 +1172,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
 
         self._validate_key(query_key, context)
-        _memory = self.get_previous_value(context)
+        _memory = self.get_previous_integrator_value(context)
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
@@ -1233,7 +1233,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         key = list(memory[KEYS])
         val = list(memory[VALS])
 
-        d = self.get_previous_value(context)
+        d = self.get_previous_integrator_value(context)
 
         matches = [k for k in d[KEYS] if key==list(k)]
 
@@ -1271,7 +1271,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if len(d[KEYS]) > self.max_entries:
             d = np.delete(d, [KEYS], axis=1)
 
-        self.parameters.previous_value._set(d,context)
+        self.parameters.previous_integrator_value._set(d,context)
         self._memory = d
 
         return storage_succeeded
@@ -1324,7 +1324,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                         memory_keys = np.delete(self._memory[KEYS],j,axis=0)
                         memory_vals = np.delete(self._memory[VALS],j,axis=0)
                         self._memory = np.array([list(memory_keys), list(memory_vals)])
-                        self.parameters.previous_value._set(self._memory, context)
+                        self.parameters.previous_integrator_value._set(self._memory, context)
 
     def _parse_memories(self, memories, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
