@@ -4828,6 +4828,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return existing_projections
         return False
 
+    def _check_for_unnecessary_feedback_projections(self):
+        """
+            Warn if there exist projections in the graph that the user
+            labeled as EdgeType.FEEDBACK (True) but are not in a cycle
+        """
+        unnecessary_feedback_specs = []
+        cycles = self.graph.get_cycles()
+
+        for proj in self.projections:
+            try:
+                vert = self.graph.comp_to_vertex[proj]
+                if vert.feedback is EdgeType.FEEDBACK:
+                    for c in cycles:
+                        if proj in c:
+                            break
+                    else:
+                        unnecessary_feedback_specs.append(proj)
+            except KeyError:
+                pass
+
+        if unnecessary_feedback_specs:
+            warnings.warn(
+                'The following projections were labeled as feedback, '
+                'but they are not in any cycles: {0}'.format(
+                    ', '.join([str(x) for x in unnecessary_feedback_specs])
+                )
+            )
+
     # ******************************************************************************************************************
     #                                            PATHWAYS
     # ******************************************************************************************************************
@@ -8810,6 +8838,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not skip_analyze_graph:
                 self._analyze_graph(scheduler=scheduler, context=context)
         # MODIFIED 8/27/19 END
+
+        self._check_for_unnecessary_feedback_projections()
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
