@@ -2697,11 +2697,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` that is excluded from
         being assigned to it.
 
-    COMMENT:
-        feedback_senders : ??
+    feedback_senders : ContentAddressableList[`Node <Composition_Nodes>`]
+        list of `Nodes <Composition_Nodes>` that have one or more `efferent Projections <Mechanism_Base.efferents>`
+        assigned as `feedback <Composition_Feedback_Specification>`.
 
-        feedback_receivers : ??
-    COMMENT
+    feedback_receivers : ContentAddressableList[`Node <Composition_Nodes>`]
+        list of `Nodes <Composition_Nodes>` that have one or more `afferents <Mechanism_Base.afferents>` assigned as
+        `feedback <Composition_Feedback_Specification>`.
 
     feedback_projections : ContentAddressableList[`Projection <Projection>`]
         list of Projections that have been `assigned as `feedback <Composition_Feedback_Specification>`.
@@ -2952,8 +2954,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles = collections.OrderedDict()
 
         self.cycle_vertices = set()
-        self.feedback_senders = set()
-        self.feedback_receivers = set()
+        # # MODIFIED 5/19/20 OLD:
+        # self.feedback_senders = set()
+        # self.feedback_receivers = set()
+        # MODIFIED 5/19/20 END
 
         self._initialize_parameters(
             **param_defaults,
@@ -4630,9 +4634,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
                             self.add_projection(MappingProjection(sender=sender, receiver=input_port),
                                                 sender_mechanism, shadow)
-        if feedback in {True, EdgeType.FEEDBACK}:
-            self.feedback_senders.add(sender_mechanism)
-            self.feedback_receivers.add(receiver_mechanism)
+        # if feedback in {True, FEEDBACK}:
+        #     self.feedback_senders.add(sender_mechanism)
+        #     self.feedback_receivers.add(receiver_mechanism)
 
         return projection
 
@@ -10363,6 +10367,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def efferents(self):
         return ContentAddressableList(component_type=Projection,
                                       list=[proj for proj in self.output_CIM.efferents])
+
+    @property
+    def feedback_senders(self):
+        return ContentAddressableList(component_type=Component,
+                                      list=[node for node in self.nodes
+                                            if node in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)])
+
+    @property
+    def feedback_receivers(self):
+        return ContentAddressableList(component_type=Component,
+                                      list=[node for node in self.nodes
+                                            if node in self.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)])
 
     @property
     def feedback_projections(self):

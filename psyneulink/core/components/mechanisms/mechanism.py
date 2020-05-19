@@ -974,8 +974,8 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>`
        will be.
 
-     - If the `value <Port_Base.value>` of a Port is specified, *neither its afferent Projections nor it `function
-       <Port_Base.function>` will be executed.
+     - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
+       nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
        OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
@@ -2328,7 +2328,7 @@ class Mechanism_Base(Mechanism):
         runtime_params : [Dict[str, Dict[str, Dict[str, value]]]] : None
             a dictionary specifying values for `Parameters <Parameter>` of the Mechanism or those of any of its
             `Components <Component>` (`function <Mechanism_Base.function>`, `Ports <Mechanism_Ports>` and/or
-            `afferent Projections <Port_Projections>`), that temporarily override their values for the current
+            their `afferent Projections <Port_Projections>`), that temporarily override their values for the current
             execution, and are then restored to their previous values following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
 
@@ -3850,7 +3850,7 @@ class Mechanism_Base(Mechanism):
 
     @property
     def path_afferents(self):
-        """Return list of path_afferent Projections to all of the Mechanism's input_ports"""
+        """Return list of the `path_afferents <Port_Base.path_afferents>` for all of the Mechanism's input_ports"""
         projs = []
         for input_port in self.input_ports:
             projs.extend(input_port.path_afferents)
