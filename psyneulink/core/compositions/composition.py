@@ -10367,7 +10367,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def feedback_projections(self):
         return ContentAddressableList(component_type=Projection,
-                                      list=[p.component for p in C.graph.vertices if p.feedback is EdgeType.FEEDBACK]
+                                      list=[p.component for p in self.graph.vertices
+                                            if p.feedback is EdgeType.FEEDBACK])
 
     @property
     def _all_nodes(self):
