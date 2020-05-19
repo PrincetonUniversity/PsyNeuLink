@@ -282,17 +282,28 @@ class TestTargetSpecs:
         assert ("Input stimulus" in str(error_text.value) and
                 "for Target is incompatible with its external_input_values" in str(error_text.value))
 
-    def test_different_number_of_stimuli_for_targets_and_other_input_mech_error(self):
+    # The input sizes were picked because the lengths conflict in set:
+    # >>> print({10, 2}, {2, 10})
+    #     {10, 2} {2, 10}
+    # whereas:
+    # >>> print({4, 2}, {2, 4})
+    #     {2, 4} {2, 4}
+    @pytest.mark.parametrize("input_A, target_B", [
+        ([[[1.0]], [[2.0]]], [[1.0], [2.0], [3.0], [4.0], [5.0], [6.0], [7.0], [8.0], [9.0], [10.0]]),
+        ([[[1.0]], [[2.0]], [[3.0]], [[4.0]], [[5.0]], [[6.0]], [[7.0]], [[8.0]], [[9.0]], [[10.0]]], [[1.0], [2.0]])],
+        ids=["2,10", "10,2"])
+    def test_different_number_of_stimuli_for_targets_and_other_input_mech_error(self, input_A, target_B):
         A = TransferMechanism(name="learning-process-mech-A")
         B = TransferMechanism(name="learning-process-mech-B")
         comp = Composition()
         p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
-        with pytest.raises(CompositionError) as error_text:
-            comp.run(inputs={A: [[[1.0]], [[2.0]], [[3.0]], [[4.0]]],
-                             p.target: [[1.0], [2.0], [3.0]]})
-        assert ('The input dictionary' in str(error_text.value) and
-                'contains input specifications of different lengths ({3, 4})' in str(error_text.value) and
-                'The same number of inputs must be provided for each node in a Composition' in str(error_text.value))
+        with pytest.raises(CompositionError) as error:
+            comp.run(inputs={A: input_A, p.target: target_B})
+        error_text = str(error)
+        assert 'The input dictionary' in error_text
+        assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
+               'contains input specifications of different lengths ({2, 10})' in error_text
+        assert 'The same number of inputs must be provided for each node in a Composition' in error_text
 
 
 class TestLearningPathwayMethods:
