@@ -1225,8 +1225,9 @@ By default, cycles that do not include any `ControlProjections <ControlProjectio
 `RecurrentTransferMechanism` (or its subclaseses), which are treated as a single-Node cylce (formed by its
 `AutoassociativeProjection`).  In contrast, if there are any `ControlProjections <ControlProjection>` in a cycle,
 they are all assigned as `feedback <LINK>`.  The feedback status of a Projection can also be specified explcitly,
-using the Compositon's `add_projections <Composition.add_projections>` method, and specifiying its `feedback <LINK>`
-argument. FIX: ??Any other ways??
+either by including the keyword *FEEDBACK* in a tuple with the Projection where it is `specified in a Pathway <LINK>`,
+or in Composition's `add_projections <Composition.add_projections>` method by specifiying its `feedback <LINK>`
+argument.
 
   MOVE TO IntegratorMechanism and relevant arguments of run method
   - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
