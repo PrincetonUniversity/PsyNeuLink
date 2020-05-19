@@ -2654,6 +2654,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _update_default_variable(self, new_default_variable, context=None):
         self.defaults.variable = copy.deepcopy(new_default_variable)
+
+        # exclude value from validation because it isn't updated until
+        # _instantiate_value is called
+        call_with_pruned_args(
+            self._validate_params,
+            variable=new_default_variable,
+            request_set={
+                k: v.default_value
+                for k, v in self.parameters.values(True).items()
+                if k not in {'value'} and not isinstance(v, ParameterAlias)
+            },
+            target_set={},
+            context=context
+        )
         self._instantiate_value(context)
 
         function_variable = self._parse_function_variable(
@@ -2664,6 +2678,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.function._update_default_variable(function_variable, context)
         except AttributeError:
             pass
+
+        # TODO: is it necessary to call _validate_value here?
 
     def initialize(self, context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
