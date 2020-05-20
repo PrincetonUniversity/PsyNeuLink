@@ -2018,6 +2018,7 @@ import inspect
 import itertools
 import logging
 import networkx
+import typing
 import warnings
 import sys
 
@@ -2401,11 +2402,7 @@ class Graph(object):
             }
 
         # construct a parallel networkx graph to use its cycle algorithms
-        nx_graph = networkx.DiGraph()
-        nx_graph.add_nodes_from(list(execution_dependencies.keys()))
-        for child in execution_dependencies:
-            for parent in execution_dependencies[child]:
-                nx_graph.add_edge(parent, child)
+        nx_graph = self._generate_networkx_graph(execution_dependencies)
 
         # prune only one flexible edge per attempt, to remove as few
         # edges as possible
@@ -2508,6 +2505,24 @@ class Graph(object):
             },
             structural_dependencies
         )
+
+    def get_cycles(self, nx_graph: typing.Optional[networkx.DiGraph] = None):
+        if nx_graph is None:
+            nx_graph = self._generate_networkx_graph()
+
+        return list(networkx.simple_cycles(nx_graph))
+
+    def _generate_networkx_graph(self, dependency_dict=None):
+        if dependency_dict is None:
+            dependency_dict = self.dependency_dict
+
+        nx_graph = networkx.DiGraph()
+        nx_graph.add_nodes_from(list(dependency_dict.keys()))
+        for child in dependency_dict:
+            for parent in dependency_dict[child]:
+                nx_graph.add_edge(parent, child)
+
+        return nx_graph
 
     @property
     def dependency_dict(self):
@@ -4941,6 +4956,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections and not existing_projections_in_composition:
                 return existing_projections
         return False
+
+    def _check_for_unnecessary_feedback_projections(self):
+        """
+            Warn if there exist projections in the graph that the user
+            labeled as EdgeType.FEEDBACK (True) but are not in a cycle
+        """
+        unnecessary_feedback_specs = []
+        cycles = self.graph.get_cycles()
+
+        for proj in self.projections:
+            try:
+                vert = self.graph.comp_to_vertex[proj]
+                if vert.feedback is EdgeType.FEEDBACK:
+                    for c in cycles:
+                        if proj in c:
+                            break
+                    else:
+                        unnecessary_feedback_specs.append(proj)
+            except KeyError:
+                pass
+
+        if unnecessary_feedback_specs:
+            warnings.warn(
+                'The following projections were labeled as feedback, '
+                'but they are not in any cycles: {0}'.format(
+                    ', '.join([str(x) for x in unnecessary_feedback_specs])
+                )
+            )
 
     # ******************************************************************************************************************
     #                                            PATHWAYS
@@ -8924,6 +8967,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not skip_analyze_graph:
                 self._analyze_graph(scheduler=scheduler, context=context)
         # MODIFIED 8/27/19 END
+
+        self._check_for_unnecessary_feedback_projections()
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
