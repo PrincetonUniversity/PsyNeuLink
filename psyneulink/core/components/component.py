@@ -2605,6 +2605,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             except AttributeError:
                 context = self.most_recent_context
 
+        if context.source is ContextFlags.COMMAND_LINE:
+            self._initialize_from_context(context, override=False)
+
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
 
