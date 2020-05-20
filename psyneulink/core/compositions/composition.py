@@ -1243,12 +1243,16 @@ tuple with the Projection where it is `specified in a Pathway <Pathway_Specifica
 <Composition_add_projection_feedback_Arg>` of the Composition's `add_projection <Composition.add_projection>` method.
 
     .. warning::
-       Designating a Projection as **feeedback** that is *not* in a cycle, or designating more than one Projection as
-       **feedback* within the same cycle is allowed, but will issue a warning and can produce unexpected results.
+       Designating a Projection as **feeedback** that is *not* in a cycle
+       COMMENT:
+       , or designating more than one Projection as
+       **feedback* within the same cycle,
+       COMMENT
+       is allowed, but will issue a warning and can produce unexpected results.
        Specifically, the `FEEDBACK_RECEIVER` for any Projection designated as **feedback** will receive a value from
        the Projection that is based either on the `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed)
        or its previous `value <Component.value>` (in subsequent executions), rather than its most recently computed
-       `value <Component.value>`, whether or not it is in a cycle.
+       `value <Component.value>` whether or not it is in a cycle.
        COMMENT:
            CONFIRM SWHAT HAPPENS FOR 2 FEEDBACK PROJECTIONS.
            EXAMPLE:
