@@ -1346,6 +1346,16 @@ COMMENT:
         `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
 COMMENT
 
+
+COMMENT:
+.._Composition_Reset:
+
+*Resetting Stateful Parameters*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT
+
+
 .. _Composition_Execution_Context:
 
 *Execution Contexts*
@@ -1424,10 +1434,6 @@ different time scales.
 Runtime Params
 COMMENT
 
-
-COMMENT:
-.._Composition_Reset:
-COMMENT
 
 .. _Composition_Compilation:
 
