@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.7.5.4+374.g3e31f41 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.7.5.4+375.g474cd32 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+374
+                  0.7.5.4+375
                 </div>
               
             
@@ -573,9 +573,9 @@ property of its class, and its own <a class="reference internal" href="Component
 <p>Each row (axis 0) is a time series, with each item in each row the data for the corresponding time point.
 Rows are ordered in the same order as Components are specified in the <strong>entries</strong> argument.</p>
 <p>If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not <code class="xref any docutils literal"><span class="pre">None</span></code>),
-then the first four rows are time indices for the run, trial, pass, and time_step of each data item, respectively.
-Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
-at a given time point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
+then the first four rows are time indices for the run, trial, pass, and time_step of each data item,
+respectively. Each subsequent row is the times series of data for a given entry.  If there is no data for a
+given entry at a given time point, it is entered as <code class="xref any docutils literal"><span class="pre">None</span></code>.</p>
 <p>If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
 System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
 sequential index (starting with 0) that simply designates the data item number.</p>
@@ -831,7 +831,7 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+374.g3e31f41',
+               VERSION:'0.7.5.4+375.g474cd32',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

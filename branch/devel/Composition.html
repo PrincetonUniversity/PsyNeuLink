@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.5.4+374.g3e31f41 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.5.4+375.g474cd32 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+374
+                  0.7.5.4+375
                 </div>
               
             
@@ -300,6 +300,7 @@
 </dl>
 </li>
 <li><a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">Runtime Parameters</span></a></li>
+<li><a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles, Initialization, and Feedback</span></a></li>
 <li><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></li>
 <li><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></li>
 </ul>
@@ -481,12 +482,12 @@ displayed  using the <a class="reference internal" href="#psyneulink.core.compos
 <div class="section" id="acyclic-and-cyclic-graphs">
 <span id="composition-acyclic-cyclic"></span><h5>Acyclic and Cyclic Graphs<a class="headerlink" href="#acyclic-and-cyclic-graphs" title="Permalink to this headline">¶</a></h5>
 <p>Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
-Composition has no recurrent Projections then its structure is a <a class="reference external" href="https://en.wikipedia.org/wiki/Acyclic_graph">directed acyclic graph (DAG)</a>, the order in which its nodes are executed can be determined by
+Composition has no recurrent Projections then its structure is a <a class="reference external" href="https://en.wikipedia.org/wiki/Acyclic_graph">directed acyclic graph (DAG)</a>, and the order in which its Nodes are executed can be determined by
 the structure of the graph itself.  However if the Composition contains recurrent Projections, then its structure
 is a <a class="reference external" href="https://en.wikipedia.org/wiki/Cyclic_graph">cyclic graph</a>, and the value of some nodes must be initialized
 (i.e., “break” the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
 determinining which nodes need be initialized and initializing them when the Composition is <a class="reference internal" href="#"><span class="doc">run</span></a>,
-and also for allowing the user specify how this is done</p>
+and also for allowing the user specify how this is done (see <a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles, Initialization, and Feedback</span></a>).</p>
 </div>
 </div>
 <div class="section" id="nodes">
@@ -1043,10 +1044,10 @@ are always restored after execution.</p>
 <p id="composition-runtime-param-specification">Runtime parameter values for a Composition are specified in a dictionary assigned to the <strong>runtime_params</strong> argument
 of a Composition’s <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execution method</span></a>.  The key of each entry is a Node of the
 Composition, and the value is a subdictionary specifying the <strong>runtime_params</strong> argument that will be passed to the
-Node when it is executed.  The format of the dictionary for each node follows that for a Mechanism’s <a class="reference internal" href="Mechanism.html#mechanism-runtime-param-specification"><span class="std std-ref">runtime
-specification dictionary</span></a>, except that in addition to specifying the value
-of a parameter directly (in which case, the value will apply throughout the execution), its value can also be placed
-in a tuple together with a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifying when that value should be applied, as follows:</p>
+Node when it is executed.  The format of the dictionary for each <code class="xref any docutils literal"><span class="pre">Node</span></code> follows that for a Mechanism’s
+<a class="reference internal" href="Mechanism.html#mechanism-runtime-param-specification"><span class="std std-ref">runtime specification dictionary</span></a>, except that in addition to specifying the
+value of a parameter directly (in which case, the value will apply throughout the execution), its value can also be
+placed in a tuple together with a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifying when that value should be applied, as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><dl class="first docutils">
@@ -1061,19 +1062,12 @@ in a tuple together with a <a class="reference internal" href="Condition.html"><
 <li><dl class="first docutils">
 <dt>Runtime Parameter Specification Dictionary: {&lt;parameter name&gt;: (&lt;parameter value&gt;, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>)}</dt>
 <dd><ul class="first last">
-<li><dl class="first docutils">
-<dt><em>key</em> - str</dt>
-<dd>name of a <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> of the Node, its <code class="xref any docutils literal"><span class="pre">function</span></code>, or a keyword specifying a
-subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);</dd>
-</dl>
-</li>
-<li><dl class="first docutils">
-<dt><em>value</em> - (&lt;parameter value&gt;, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>), &lt;parameter value&gt;, or subdictionary (see below)</dt>
-<dd><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> specifies when the value is applied;  otherwise, its previously assigned value or default
-is used;  if the parameter values appears alone in a tuple or outside of one, then the Condtion <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Always" title="psyneulink.core.scheduling.condition.Always"><code class="xref any py py-class docutils literal"><span class="pre">Always</span></code></a>
-is applied.</dd>
-</dl>
-</li>
+<li><em>key</em> - str
+name of a <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> of the Node, its <code class="xref any docutils literal"><span class="pre">function</span></code>, or a keyword specifying
+a subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);</li>
+<li><em>value</em> - (&lt;parameter value&gt;, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>), &lt;parameter value&gt;, or subdictionary (see below) <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>
+specifies when the value is applied;  otherwise, its previously assigned value or <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default</span></a> is used;  if the parameter values appears alone in a tuple or outside of one,
+then the Condtion <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Always" title="psyneulink.core.scheduling.condition.Always"><code class="xref any py py-class docutils literal"><span class="pre">Always</span></code></a> is applied.</li>
 </ul>
 </dd>
 </dl>
@@ -1087,6 +1081,77 @@ used to specify those can be placed placed in a tuple, as can any of the specifi
 A tuple used to specify a subdictionary determines when any of the parameters specified within it are eligible to apply:
 If its <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is <em>not</em> satisfied, then none of the parameters specified within it will apply;  if its <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>
 <em>is</em> satisfied, then any parameter specified within it for which the <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is satisified will also apply.</p>
+</div>
+<div class="section" id="cycles-initialization-and-feedback">
+<span id="composition-initial-values-and-feedback"></span><h4><em>Cycles, Initialization, and Feedback</em><a class="headerlink" href="#cycles-initialization-and-feedback" title="Permalink to this headline">¶</a></h4>
+<p>If a Composition has any Projections that form&nbsp;loops of execution —&nbsp;that is, cycles in its <code class="xref any docutils literal"><span class="pre">graph</span></code>:</p>
+<ul id="composition-no-feedback-cycle">
+<li><p class="first">No feedback Projections – in this case, the cycle is “flattened,” meaning that all of the Nodes in the cycle are
+treated equally, and executed synchronously (i.e., in the same <code class="xref any docutils literal"><span class="pre">TIME_STEP</span></code>).  Any cycles
+nested within another cycle are flattened and added to the outermost cycle, and all are treated as part of the same
+cycle
+. All Nodes within a cycle are assigned the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.CYCLE" title="psyneulink.core.compositions.composition.NodeRole.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>. When the Nodes in the cycle are executed, the value
+that a Node receives from each of those that project to it (from within the cycle) is the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of the senders after that was last executed in the same <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a>;  this
+insures that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution
+of the cycle since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that
+case, each sender passes the value to which it has been initialized which, by default, is its <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default value</span></a>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
+they receive the <em>current</em> value of any Nodes that project to them from outisde the cycle, and pass their current
+value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
+of the cycle.</p>
+</div>
+<p>The initialization of Nodes in a cycle using their <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default values</span></a> can be overridden using
+the <a class="reference internal" href="#composition-initialize-cycle-values-arg"><span class="std std-ref">initialize_cycle_values</span></a> argument of the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a> methods.  This can be used to specify an initial value for any
+Node in a cycle.  On the first call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a>, nodes specified in
+<a class="reference internal" href="#composition-initialize-cycle-values-arg"><span class="std std-ref">initialize_cycle_values</span></a> are initialized using the assigned values, and
+any Nodes in the cycle that are not specified are assigned their <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default value</span></a>. In subsequent
+calls to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a>, Nodes specified in <a class="reference internal" href="#composition-initialize-cycle-values-arg"><span class="std std-ref">initialize_cycle_values</span></a> will be re-initialized to the assigned values for the first execution of
+the cycle in that run, whereas any Nodes not specified will retain the last <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> they were
+assigned in the previous call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or <code class="xref any docutils literal"><span class="pre">learn</span></code>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> belonging to a cycle in a Composition is first executed on its own (i.e., using its own <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method), the value it is assigned will be used as its initial value when it is executed
+within the Composition
+.  This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
+<code class="xref any docutils literal"><span class="pre">value</span></code> last assigned in the None context.  As described aove, this can be overridden by
+specifying an initial value for the Mechanism in the <a class="reference internal" href="#composition-initialize-cycle-values-arg"><span class="std std-ref">initialize_cycle_values</span></a> argument of the call to the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> or
+<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a> methods.</p>
+</div>
+</li>
+</ul>
+<ul class="simple" id="composition-feedback-cycle">
+<li>Feedback Projection(s) specified – in this case, any Projections in a cycle specified as <a class="reference internal" href="#composition-feedback-specification"><span class="std std-ref">feedback</span></a> are used to break the cycle: the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> of each
+feedback Projection (assigned the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER" title="psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER"><code class="xref any py py-attr docutils literal"><span class="pre">FEEDBACK_SENDER</span></code></a>) is initialized in the same way as a Node in a
+cycle (see <a class="reference internal" href="#composition-no-feedback-cycle"><span class="std std-ref">above</span></a>); the receiver (assigned the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.FEEDBACK_RECEIVER" title="psyneulink.core.compositions.composition.NodeRole.FEEDBACK_RECEIVER"><code class="xref any py py-attr docutils literal"><span class="pre">FEEDBACK_RECEIVER</span></code></a>) is
+passed the <em>SENDER’s</em> initial value on the first execution, and its previous value on subsequent executions.
+Thus, in effect, the <em>RECEIVER</em> becomes the first Node in the cycle to execute, and the <em>SENDER</em> the last. The
+<em>FEEDBACK_SENDERS</em> of a Composition are listed in its <code class="xref any docutils literal"><span class="pre">feedback_senders</span></code> attribute,
+and its <em>FEEDBACK_RECEIVERS</em> in <code class="xref any docutils literal"><span class="pre">feedback_senders</span></code>.  These can also be listed using
+the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.get_nodes_by_role" title="psyneulink.core.compositions.composition.Composition.get_nodes_by_role"><code class="xref any py py-meth docutils literal"><span class="pre">get_nodes_by_role</span></code></a> method.</li>
+</ul>
+<p id="composition-feedback-specification">By default, cycles that do not include any <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> are flattened. This includes any
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> (or its subclaseses), which are treated as a single-Node cylce (formed by its
+<code class="xref any docutils literal"><span class="pre">AutoassociativeProjection</span></code>).  In contrast, if there are any <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> in a cycle,
+some or all of them may be assigned as feedback Projections to break the cycle.</p>
+<p>The feedback status of a Projection can also be specified explcitly, either by including the keyword <em>FEEDBACK</em> in a
+tuple with the Projection where it is <a class="reference internal" href="Pathway.html#pathway-specification"><span class="std std-ref">specified in a Pathway</span></a> or in the Composition’s
+<a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_projections" title="psyneulink.core.compositions.composition.Composition.add_projections"><code class="xref any py py-meth docutils literal"><span class="pre">add_projections</span></code></a> method, or using the <code class="xref any docutils literal"><span class="pre">feedback</span></code> of the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="psyneulink.core.compositions.composition.Composition.add_projection"><code class="xref any py py-meth docutils literal"><span class="pre">add_projection</span></code></a> method.</p>
+<blockquote>
+<div><div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Designating a Projection as <strong>feeedback</strong> that is <em>not</em> in a cycle
+is allowed, but will issue a warning and can produce unexpected results.
+Specifically, the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.FEEDBACK_RECEIVER" title="psyneulink.core.compositions.composition.NodeRole.FEEDBACK_RECEIVER"><code class="xref any py py-attr docutils literal"><span class="pre">FEEDBACK_RECEIVER</span></code></a> for any Projection designated as <strong>feedback</strong> will receive a value from
+the Projection that is based either on the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER" title="psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER"><code class="xref any py py-attr docutils literal"><span class="pre">FEEDBACK_SENDER</span></code></a>’s initial_value (the first time it is executed)
+or its previous <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (in subsequent executions), rather than its most recently computed
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> whether or not it is in a cycle.</p>
+</div>
+</div></blockquote>
+<p>The feedback Projections of a Composition are listed in its <code class="xref any docutils literal"><span class="pre">feedback_projections</span></code>
+attribute, and the feedback status of a Projection in a composition is returned by its <code class="xref any docutils literal"><span class="pre">get_feedback_status</span></code> method.</p>
 </div>
 <div class="section" id="execution-contexts">
 <span id="composition-execution-context"></span><h4><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h4>
@@ -2080,8 +2145,8 @@ as will its <a class="reference internal" href="Pathway.html#psyneulink.core.com
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>node</strong> (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) – the node to be added to the Composition</li>
-<li><strong>required_roles</strong> (<a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> or list of NodeRoles) – any NodeRoles roles that this node should have in addition to those determined by analyze graph.</li>
+<li><strong>node</strong> (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="#"><span class="doc">Composition</span></a>) – the Node to be added to the Composition</li>
+<li><strong>required_roles</strong> (<a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> or list of NodeRoles) – any NodeRoles roles that this Node should have in addition to those determined by analyze graph.</li>
 </ul>
 </td>
 </tr>
@@ -2147,7 +2212,7 @@ in any role-specification tuples in the <strong>nodes</strong> argument.</li>
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_projection">
 <code class="descname">add_projection</code><span class="sig-paren">(</span><em>projection=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>learning_projection=False</em>, <em>name=None</em>, <em>allow_duplicates=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_projection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add <strong>projection</strong> to the Composition, if one with the same sender and receiver doesn’t already exist.</p>
+<dd><p>Add <strong>projection</strong> to the Composition.</p>
 <p>If <strong>projection</strong> is not specified, create a default <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> using <strong>sender</strong> and <strong>receiver</strong>.</p>
 <p>If <strong>projection</strong> is specified:</p>
 <ul>
@@ -2186,22 +2251,22 @@ a <code class="xref any docutils literal"><span class="pre">feedback</span></cod
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If <strong>projection</strong> is an instantiated Projection (i.e., not in <code class="xref any docutils literal"><span class="pre">deferred_init</span></code>) and one already exists between
-its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> a warning is generated.</p>
+its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> a warning is generated and
+the request is ignored.</p>
 </div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a>) – the sender of <strong>projection</strong></li>
-<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><em>matrix</em></a>) – the projection to add</li>
-<li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a>) – the receiver of <strong>projection</strong></li>
-<li><strong>feedback</strong> (<em>bool</em>) – When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-means that each Projections within the cycle actually passes to its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
-the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.
-When True, this Projection “breaks” the cycle, such that all Nodes execute in sequence, and only the
-Projection marked as ‘feedback’ passes to its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> the
-<a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> from the previous execution.</li>
+<li><strong>sender</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a>) – the sender of <strong>projection</strong>.</li>
+<li><strong>projection</strong> (<em>Projection</em><em>, </em><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><em>matrix</em></a>) – the projection to add.</li>
+<li><strong>receiver</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em>, or </em><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a>) – the receiver of <strong>projection</strong>.</li>
+<li><strong>_Composition_add_projection_feedback_Arg</strong> (<em>.</em>) – </li>
+<li><strong>feedback</strong> (<em>bool</em><em> or </em><em>FEEDBACK : False</em>) – if False, the Projection is <em>never</em> assigned as a feedback Projection, even if that may have been the
+default behavior (e.g., for a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> that forms a <code class="xref any docutils literal"><span class="pre">cycle</span></code>;
+if True or <em>FEEDBACK</em>, and the Projection is in a cycle, it <em>always</em> assigned as a feedback Projection,
+and used to “break” the cycle (see <a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles, Initialization, and Feedback</span></a> for additional details.</li>
 </ul>
 </td>
 </tr>
@@ -2373,17 +2438,19 @@ is used as its input;  see</li>
 <li><strong>skip_initialization</strong> (<em>: default False</em>) – </li>
 <li><strong>scheduler</strong> (<em>Scheduler : default None</em>) – the scheduler object that owns the conditions that will instruct the execution of the Composition
 If not specified, the Composition will use its automatically generated scheduler.</li>
-<li><strong>context</strong> (<code class="xref any docutils literal"><span class="pre">Context.execution_id&gt;</span></code> : default <code class="xref any docutils literal"><span class="pre">default_execution_id</span></code>) – context in which the <a class="reference internal" href="#"><span class="doc">Composition</span></a> will be executed;  set to self.default_execution_id ifunspecified.</li>
-<li><strong>base_context</strong> (<code class="xref any docutils literal"><span class="pre">Context.execution_id&gt;</span></code> : Context(execution_id=None)) – the context corresponding to the execution context from which this execution will be initialized,
-if values currently do not exist for <strong>context</strong></li>
+<li><strong>_Composition_execute_context_Arg</strong> (<em>.</em>) – </li>
+<li><strong>context</strong> (<code class="xref any docutils literal"><span class="pre">Context.execution_id&gt;</span></code> : default <code class="xref any docutils literal"><span class="pre">default_execution_id</span></code>) – <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a> in which the <a class="reference internal" href="#"><span class="doc">Composition</span></a> will be executed.</li>
+<li><strong>_Composition_Run_base_context_Arg</strong> (<em>.</em>) – </li>
+<li><strong>base_context</strong> (<code class="xref any docutils literal"><span class="pre">Context.execution_id&gt;</span></code> : Context(execution_id=None)) – the context corresponding to the <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a> from which this
+execution will be initialized, if values currently do not exist for <strong>context</strong>.</li>
 <li><strong>call_before_time_step</strong> (<em>callable : default None</em>) – called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed
-passed the current <em>context</em> (but it is not necessary for your callable to take)</li>
+passed the current <em>context</em> (but it is not necessary for your callable to take).</li>
 <li><strong>call_after_time_step</strong> (<em>callable : default None</em>) – called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEP</span></code></a> is executed
-passed the current <em>context</em> (but it is not necessary for your callable to take)</li>
+passed the current <em>context</em> (but it is not necessary for your callable to take).</li>
 <li><strong>call_before_pass</strong> (<em>callable : default None</em>) – called before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed
-passed the current <em>context</em> (but it is not necessary for your callable to take)</li>
+passed the current <em>context</em> (but it is not necessary for your callable to take).</li>
 <li><strong>call_after_pass</strong> (<em>callable : default None</em>) – called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed
-passed the current <em>context</em> (but it is not necessary for your callable to take)</li>
+passed the current <em>context</em> (but it is not necessary for your callable to take).</li>
 <li><strong>bin_execute</strong> (<em>bool</em><em> or </em><em>Enum</em><em>[</em><em>LLVM|LLVMexec|Python|PTXExec</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
 see <strong>bin_execute</strong> argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method for additional details.</li>
 </ul>
@@ -2591,17 +2658,13 @@ information about format.  If <strong>inputs</strong> is not specified, the <a c
 <dd>typically, the composition will infer the number of trials from the length of its input specification.
 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
 or use default inputs, and select a number of trials with num_trials.</dd>
+</dl>
+<dl class="docutils" id="composition-initialize-cycle-values-arg">
 <dt>initialize_cycle_values <span class="classifier-delimiter">:</span> <span class="classifier">Dict { Node: Node Value }</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
-<dd><p class="first">sets the values of nodes before the start of the run. This is useful in cases where a node is part of a
-cycle, because nodes in cycles receive their preceding nodes’ values as of the previous trial. Thus,
-this argument allows you to seed the values of nodes in cycles for use on the initial execution. If this
-is not specified, the nodes will use their default values.
-..technical_note:</p>
-<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">the</span> <span class="n">initial</span> <span class="n">value</span> <span class="n">of</span> <span class="n">a</span> <span class="n">node</span> <span class="ow">is</span> <span class="n">only</span> <span class="n">relevant</span> <span class="n">when</span> <span class="n">it</span> <span class="ow">is</span> <span class="n">embedded</span> <span class="ow">in</span> <span class="n">a</span> <span class="n">Cycle</span><span class="p">,</span> <span class="n">because</span> <span class="n">this</span>
-<span class="ow">is</span> <span class="n">the</span> <span class="n">only</span> <span class="n">case</span> <span class="ow">in</span> <span class="n">which</span> <span class="n">its</span> <span class="n">value</span> <span class="n">Parameter</span> <span class="n">will</span> <span class="n">be</span> <span class="n">used</span> <span class="n">before</span> <span class="n">being</span> <span class="n">updated</span><span class="o">.</span>
-</pre></div>
-</div>
-</dd>
+<dd>sets the value of specified <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> before the start of the run.  All specified
+Nodes must be in a <a class="reference internal" href="#composition-graph"><span class="std std-ref">cycle</span></a> (i.e., designated with with <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <code class="xref any docutils literal"><span class="pre">CYCLE</span></code>; otherwise, a warning is issued and the specification is ignored). If a Node in
+a cycle is not specified, it is assigned its <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default values</span></a> when initialized
+(see <a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles, Initialization, and Feedback</span></a> additional details).</dd>
 <dt>reinitialize_values <span class="classifier-delimiter">:</span> <span class="classifier">Dict { Node</span> <span class="classifier-delimiter">:</span> <span class="classifier">Object | iterable [Object] }</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
 <dd><p class="first">object or iterable of objects to be passed as arguments to nodes’ reinitialize methods when their
 respective reinitialize_when conditions are met. These are used to seed the previous_value parameters
@@ -3062,6 +3125,7 @@ This role cannot be modified programmatically.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#runtime-parameters"><em>Runtime Parameters</em></a></li>
+<li><a class="reference internal" href="#cycles-initialization-and-feedback"><em>Cycles, Initialization, and Feedback</em></a></li>
 <li><a class="reference internal" href="#execution-contexts"><em>Execution Contexts</em></a></li>
 <li><a class="reference internal" href="#compilation"><em>Compilation</em></a></li>
 </ul>
@@ -3100,7 +3164,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+374.g3e31f41',
+               VERSION:'0.7.5.4+375.g474cd32',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
