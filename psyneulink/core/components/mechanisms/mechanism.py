@@ -2332,6 +2332,13 @@ class Mechanism_Base(Mechanism):
             execution, and are then restored to their previous values following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
 
+        .. _Mechanism_execute_context_Arg:
+
+        context : Context or str : None
+            the context in which the Mechanism is executed, usually specified by its `execution_id
+            <Context.execution_id>` (see `Composition_Execution_Context` for additional information about execution
+            contexts.
+
         Returns
         -------
 

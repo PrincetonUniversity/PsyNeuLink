@@ -1143,12 +1143,12 @@ placed in a tuple together with a `Condition` specifying when that value should 
 
     * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
        - *key* - str
-          name of a `Parameter` of the Node, its `function <Mechanism_Base.function>`, or a keyword specifying a
-          subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);
-       - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below)
-          `Condition` specifies when the value is applied;  otherwise, its previously assigned value or default
-          is used;  if the parameter values appears alone in a tuple or outside of one, then the Condtion `Always`
-          is applied.
+         name of a `Parameter` of the Node, its `function <Mechanism_Base.function>`, or a keyword specifying
+         a subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);
+       - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below) `Condition`
+         specifies when the value is applied;  otherwise, its previously assigned value or `default
+         <Parameter_Defaults>` is used;  if the parameter values appears alone in a tuple or outside of one,
+         then the Condtion `Always` is applied.
 
     See `Runtime Parameter Specification Dictionary <Mechanism_Runtime_Param_Specification>` for additional details.
 
@@ -1182,10 +1182,10 @@ one of two ways, based on whether any of the Projections in a cycle are designat
   . All Nodes within a cycle are assigned the `NodeRole` `CYCLE`. When the Nodes in the cycle are executed, the value
   that a Node receives from each of those that project to it (from within the cycle) is the `value <Component.value>`
   of the senders after that was last executed in the same `execution context <Composition_Execution_Context>`;  this
-  insures that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution of
-  the cycle since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that
-  case, each sender passes the value to which it has been initialized which, by default, is its `default_value
-  <LINK>`.
+  insures that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution
+  of the cycle since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that
+  case, each sender passes the value to which it has been initialized which, by default, is its `default value
+  <Parameter_Defaults>`.
 
   .. note::
      Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
@@ -1193,13 +1193,13 @@ one of two ways, based on whether any of the Projections in a cycle are designat
      value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
      of the cycle.
 
-  The initialization of Nodes in a cycle using their `default_values <LINK>` can be overridden using the
-  `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` argument of the Composition's `run
+  The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be overridden using
+  the `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` argument of the Composition's `run
   <Composition.run>` or `learn <Composition.learn>` methods.  This can be used to specify an initial value for any
   Node in a cycle.  On the first call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in
   `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` are initialized using the assigned values, and
-  any Nodes in the cycle that are not specified are assigned their `default_value <LINK>`.  In subsequent calls to
-  `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified in `initialize_cycle_values
+  any Nodes in the cycle that are not specified are assigned their `default value <Parameter_Defaults>`. In subsequent
+  calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified in `initialize_cycle_values
   <Composition_Initialize_Cycle_Values_Arg>` will be re-initialized to the assigned values for the first execution of
   the cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were
   assigned in the previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
@@ -1209,18 +1209,14 @@ one of two ways, based on whether any of the Projections in a cycle are designat
      <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
      within the Composition
      COMMENT:
-         if an `execution context <Composition_Execution_Context>` is not explicitly assigned a value
-         other than None in either the `base_context <Composition.base_context>`
-         arguments of the call to `run <Composition.run>` (and similarly for `learn <Composition.learn>`).
+         unless an execution_id is assigned to `context <Mechanism_execute_context_Arg>` of the Mechanism's `execute
+         <Mechanism_Base.exeucte>` method when it is called
      COMMENT
      .  This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
      `value <Mechanism_Base.value>` last assigned in the None context.  As described aove, this can be overridden by
      specifying an initial value for the Mechanism in the `initialize_cycle_values
-     <Composition_Initialize_Cycle_Values_Arg>` argument
-     COMMENT:
-         or a value other than None in the `base_context <Composition.base_context>` argument
-     COMMENT
-     of the call to `run <Composition.run>` (or `learn <Composition.learn>` method).
+     <Composition_Initialize_Cycle_Values_Arg>` argument of the call to the Composition's `run <Composition.run>` or
+     `learn  <Composition.learn>` methods.
 
 .. _Composition_Feedback_Cycle:
 
@@ -1246,7 +1242,19 @@ tuple with the Projection where it is `specified in a Pathway <Pathway_Specifica
 `add_projections <Composition.add_projections>` method, or using the `feedback
 <Composition_add_projection_feedback_Arg>` of the Composition's `add_projection <Composition.add_projection>` method.
 
-The feedback Projections of a Compositoin are listed in its `feedback_projections <Composition.feeeback_projections>`
+    .. wqrning::
+       Designating a Projection as **feeedback** that is *not* in a cycle, or designating more than one Projection as
+       **feedback* within the same cycle is allowed, but will issue a warning and can produce unexpected results.
+       COMMENT:
+       Specifically, the `FEEDBACK_RECEIVER` will receive a value from the Projection that is based either on the
+       the `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+       (in subsequent executions), rather than its most recently computed `value <Component.value>`, even though they
+       may not be in a cycle.
+           CONFIRM SWHAT HAPPENS FOR 2 FEEDBACK PROJECTIONS.
+           EXAMPLE HERE
+       COMMENT
+
+The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feeeback_projections>`
 attribute, and the feedback status of a Projection in a composition is returned by its `get_feedback_status
 <Composition.get_feedback_status>` method.
 
@@ -8669,8 +8677,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sets the value of specified `Nodes <Composition_Nodes>` before the start of the run.  All specified
                 Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
                 <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
-                a cycle is not specified, it is assigned its `default_value <LINK>` when initialized (see
-                `Composition_Initial_Values_and_Feedback` additional details).
+                a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
+                (see `Composition_Initial_Values_and_Feedback` additional details).
 
             reinitialize_values : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reinitialize methods when their
@@ -9251,32 +9259,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            .. _Composition_Run_context_Arg:
+            .. _Composition_execute_context_Arg:
 
             context : `Context.execution_id>` : default `default_execution_id`
-                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
+                `execution context <Composition_Execution_Context>` in which the `Composition` will be executed.
 
             .. _Composition_Run_base_context_Arg:
 
             base_context : `Context.execution_id>` : Context(execution_id=None)
-                the context corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **context**
+                the context corresponding to the `execution context <Composition_Execution_Context>` from which this
+                execution will be initialized, if values currently do not exist for **context**.
 
             call_before_time_step : callable : default None
                 called before each `TIME_STEP` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             call_after_time_step : callable : default None
                 called after each `TIME_STEP` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             call_before_pass : callable : default None
                 called before each `PASS` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             call_after_pass : callable : default None
                 called after each `PASS` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             bin_execute : bool or Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
@@ -9996,7 +10004,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                     param_value)
         return runtime_params
 
-    def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
+    def _get_satisfied_runtime_param_values(self, runtime_params, scheduler, context):
         """Return dict with values for all runtime_params the Conditions of which are currently satisfied.
         Recursively parse nested dictionaries for which Condition on dict is satisfied.
         """
@@ -10010,7 +10018,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     param_val = execution_params
                 else:
                     return None
-            # KAM 5/15/18 - not sure if this will always be the correct execution id:
             if param_condition.is_satisfied(scheduler=scheduler,context=context):
                 return param_val
             else:
