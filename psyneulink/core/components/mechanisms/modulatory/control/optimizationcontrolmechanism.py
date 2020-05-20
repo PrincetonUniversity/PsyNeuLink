@@ -276,11 +276,11 @@ OptimizationControlMechanism, however it must meet the following requirements:
   - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
   ..
-  - It must implement a `reinitialize` method that accepts **objective_function** as a keyword argument and
+  - It must implement a `reset` method that accepts **objective_function** as a keyword argument and
     implements an attribute with the same name.
 
     COMMENT:
-    - it must implement a `reinitialize` method that accepts as keyword arguments **objective_function**,
+    - it must implement a `reset` method that accepts as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
       with corresponding names.
     COMMENT
@@ -847,7 +847,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
+        self.function.reset({DEFAULT_VARIABLE: self.control_allocation,
                                     OBJECTIVE_FUNCTION: self.evaluation_function,
                                     # SEARCH_FUNCTION: self.search_function,
                                     # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,

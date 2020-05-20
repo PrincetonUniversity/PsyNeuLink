@@ -1354,7 +1354,7 @@ class TestModelBasedOptimizationControlMechanisms:
             Input: [0.5, 0.123],
             reward: [20, 20]
         }
-        Input.reinitialize_when = pnl.Never()
+        Input.reset_stateful_function_when = pnl.Never()
 
         comp.run(inputs=stim_list_dict)
 
@@ -1526,7 +1526,7 @@ class TestModelBasedOptimizationControlMechanisms:
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
         for i in range(1, len(ocm.input_ports)):
-            ocm.input_ports[i].function.reinitialize()
+            ocm.input_ports[i].function.reset()
         comp.run(inputs=inputs)
 
         log = objective_mech.log.nparray_dictionary()
@@ -1726,7 +1726,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
 
         for i in range(1, len(stabilityFlexibility.controller.input_ports)):
-            stabilityFlexibility.controller.input_ports[i].function.reinitialize()
+            stabilityFlexibility.controller.input_ports[i].function.reset()
         # Origin Node Inputs
         taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
         stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]

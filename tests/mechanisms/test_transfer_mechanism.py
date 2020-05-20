@@ -19,7 +19,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import \
-    INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, REINITIALIZE, COMBINE, RESULT, GREATER_THAN
+    INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, RESET, COMBINE, RESULT, GREATER_THAN
 from psyneulink.core.globals.utilities import UtilitiesError, set_global_seed
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
@@ -40,7 +40,7 @@ class TestTransferMechanismInputs:
             integration_rate=1.0,
             integrator_mode=True
         )
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         val = benchmark(T.execute, [10 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
         assert len(T.size) == 1 and T.size[0] == VECTOR_SIZE and isinstance(T.size[0], np.integer)
@@ -60,7 +60,7 @@ class TestTransferMechanismInputs:
             integration_rate=1.0,
             integrator_mode=True
         )
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         var = [10.0 for i in range(VECTOR_SIZE)]
         if mode == 'Python':
             EX = T.execute
@@ -162,7 +162,7 @@ class TestTransferMechanismNoise:
             integration_rate=1.0,
             integrator_mode=True
         )
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         if mode == 'Python':
             EX = T.execute
         elif mode == 'LLVM':
@@ -189,7 +189,7 @@ class TestTransferMechanismNoise:
             integration_rate=1.0,
             integrator_mode=True
         )
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
         assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
 
@@ -205,7 +205,7 @@ class TestTransferMechanismNoise:
             integration_rate=1.0,
             integrator_mode=True
         )
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
         expected = [-1.5640434149388383, -3.013204030356897, -1.225036779097983,
        1.3093711955796925]
@@ -227,7 +227,7 @@ class TestTransferMechanismNoise:
             integration_rate=1.0,
             integrator_mode=True
         )
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         if mode == 'Python':
             EX = T.execute
         elif mode == 'LLVM':
@@ -1606,7 +1606,7 @@ class TestIntegratorMode:
                               integrator_mode=True,
                               integration_rate=0.1,
                               noise=0.0)
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         assert np.allclose(T.integrator_function.previous_value, 0.5)
 
         T.execute(1.0)
@@ -1626,7 +1626,7 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         C = Composition(pathways=[T])
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
 
         assert np.allclose(T.integrator_function.previous_value, 0.5)
 
@@ -1649,13 +1649,13 @@ class TestIntegratorMode:
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.86195)
 
-    def test_previous_value_reinitialize_execute(self):
+    def test_previous_value_reset_execute(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
                               integrator_mode=True,
                               integration_rate=0.1,
                               noise=0.0)
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         assert np.allclose(T.integrator_function.previous_value, 0.5)
         T.execute(1.0)
         # integration: 0.9*0.5 + 0.1*1.0 + 0.0 = 0.55  --->  previous value = 0.55
@@ -1664,7 +1664,7 @@ class TestIntegratorMode:
         assert np.allclose(T.value, 0.55)
 
         # Reset integrator_function ONLY
-        T.integrator_function.reinitialize(0.6)
+        T.integrator_function.reset(0.6)
 
         assert np.allclose(T.integrator_function.previous_value, 0.6)   # previous_value is a property that looks at integrator_function
         assert np.allclose(T.value, 0.55)           # on mechanism only, so does not update until execution
@@ -1675,7 +1675,7 @@ class TestIntegratorMode:
         assert np.allclose(T.integrator_function.previous_value, 0.64)   # property that looks at integrator_function
         assert np.allclose(T.value, 0.64)            # on mechanism, but updates with execution
 
-        T.reinitialize(0.4)
+        T.reset(0.4)
         # linear fn: 0.4*1.0 = 0.4
         assert np.allclose(T.integrator_function.previous_value, 0.4)   # property that looks at integrator, which updated with mech reset
         assert np.allclose(T.value, 0.4)  # on mechanism, but updates with mech reset
@@ -1686,7 +1686,7 @@ class TestIntegratorMode:
         assert np.allclose(T.integrator_function.previous_value, 0.46)  # property that looks at integrator, which updated with mech exec
         assert np.allclose(T.value, 0.46)  # on mechanism, but updates with exec
 
-    def test_reinitialize_run(self):
+    def test_reset_run(self):
         T = TransferMechanism(name="T",
                               initial_value=0.5,
                               integrator_mode=True,
@@ -1694,7 +1694,7 @@ class TestIntegratorMode:
                               noise=0.0)
         C = Composition(pathways=[T])
         
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
 
         assert np.allclose(T.integrator_function.previous_value, 0.5)
 
@@ -1707,12 +1707,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
-        T.integrator_function.reinitialize(0.9, context=C)
+        T.integrator_function.reset(0.9, context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.9)
         assert np.allclose(T.parameters.value.get(C), 0.595)
 
-        T.reinitialize(0.5, context=C)
+        T.reset(0.5, context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.5)
         assert np.allclose(T.parameters.value.get(C), 0.5)
@@ -1726,7 +1726,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), 0.595)
 
-    def test_reinitialize_run_array(self):
+    def test_reset_run_array(self):
         T = TransferMechanism(name="T",
                               default_variable=[0.0, 0.0, 0.0],
                               initial_value=[0.5, 0.5, 0.5],
@@ -1734,7 +1734,7 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         C = Composition(pathways=[T])
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
 
         assert np.allclose(T.integrator_function.previous_value, [0.5, 0.5, 0.5])
 
@@ -1747,12 +1747,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9], context=C)
+        T.integrator_function.reset([0.9, 0.9, 0.9], context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
         assert np.allclose(T.parameters.value.get(C), [0.595, 0.595, 0.595])
 
-        T.reinitialize([0.5, 0.5, 0.5], context=C)
+        T.reset([0.5, 0.5, 0.5], context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.5, 0.5, 0.5])
         assert np.allclose(T.parameters.value.get(C), [0.5, 0.5, 0.5])
@@ -1766,7 +1766,7 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
 
-    def test_reinitialize_run_2darray(self):
+    def test_reset_run_2darray(self):
 
         initial_val = [[0.5, 0.5, 0.5]]
         T = TransferMechanism(name="T",
@@ -1776,7 +1776,7 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         C = Composition(pathways=[T])
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
 
         assert np.allclose(T.integrator_function.previous_value, initial_val)
 
@@ -1789,12 +1789,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
 
-        T.integrator_function.reinitialize([0.9, 0.9, 0.9], context=C)
+        T.integrator_function.reset([0.9, 0.9, 0.9], context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.9, 0.9, 0.9])
         assert np.allclose(T.parameters.value.get(C), [0.595, 0.595, 0.595])
 
-        T.reinitialize(initial_val, context=C)
+        T.reset(initial_val, context=C)
 
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), initial_val)
         assert np.allclose(T.parameters.value.get(C), initial_val)
@@ -1808,12 +1808,12 @@ class TestIntegratorMode:
         # linear fn: 0.595*1.0 = 0.595
         assert np.allclose(T.integrator_function.parameters.previous_value.get(C), [0.595, 0.595, 0.595])
 
-    def test_reinitialize_not_integrator(self):
+    def test_reset_not_integrator(self):
 
         with pytest.raises(MechanismError) as err_txt:
             T_not_integrator = TransferMechanism()
             T_not_integrator.execute(1.0)
-            T_not_integrator.reinitialize(0.0)
+            T_not_integrator.reset(0.0)
         assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
         assert "try setting the integrator_mode argument to True." in str(err_txt.value)
 
@@ -1822,7 +1822,7 @@ class TestIntegratorMode:
                               on_resume_integrator_mode=INTEGRATOR_MODE_VALUE)
         C = Composition(pathways=[T])
         integrator_function = T.integrator_function
-        T.reinitialize_when = Never()
+        T.reset_stateful_function_when = Never()
         # T starts with integrator_mode = True; confirm that T behaves correctly
         C.run({T: [[1.0], [1.0], [1.0]]})
         assert np.allclose(T.parameters.value.get(C), [[0.875]])
@@ -1938,8 +1938,8 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*1.5 + 0.5*2.0 = 1.75 * 1.0 = 1.75
         assert np.allclose(T.parameters.value.get(C), [[1.75]])
 
-    def test_reinitialize_spec(self):
-        T = TransferMechanism(on_resume_integrator_mode=REINITIALIZE,
+    def test_reset_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=RESET,
                               integrator_mode=True)
         C = Composition()
         C.add_node(T)

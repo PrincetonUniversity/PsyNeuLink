@@ -27,7 +27,7 @@ S = Composition()
 S.add_node(A, required_roles=NodeRole.INPUT)
 S.add_linear_processing_pathway(pathway=path)
 S.add_node(LC, required_roles=NodeRole.OUTPUT)
-LC.reinitialize_when = Never()
+LC.reset_stateful_function_when = Never()
 
 gain_created_by_LC_output_port_1 = []
 mod_gain_assigned_to_A = []

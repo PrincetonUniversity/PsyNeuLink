@@ -19,18 +19,18 @@ from psyneulink.core.scheduling.condition import AtTrial
 from psyneulink.core.scheduling.condition import Never
 
 
-class TestReinitialize:
+class TestReset:
     def test_FitzHughNagumo_valid(self):
         I = IntegratorMechanism(name="I",
                                 function=FitzHughNagumoIntegrator())
-        I.reinitialize_when = Never()
+        I.reset_stateful_function_when = Never()
         I.execute(1.0)
 
         assert np.allclose([[0.05127053]], I.value[0])
         assert np.allclose([[0.00279552]], I.value[1])
         assert np.allclose([[0.05]], I.value[2])
 
-        I.function.reinitialize(0.01, 0.02, 0.03)
+        I.function.reset(0.01, 0.02, 0.03)
 
         assert np.allclose(0.01, I.function.value[0])
         assert np.allclose(0.02, I.function.value[1])
@@ -50,8 +50,8 @@ class TestReinitialize:
 
         assert np.allclose([[0.06075727]], I.output_ports[0].value)
 
-        # I.reinitialize(new_previous_v=0.01, new_previous_w=0.02, new_previous_time=0.03)
-        I.reinitialize(0.01, 0.02, 0.03)
+        # I.reset(new_previous_v=0.01, new_previous_w=0.02, new_previous_time=0.03)
+        I.reset(0.01, 0.02, 0.03)
 
         assert np.allclose(0.01, I.value[0])
         assert np.allclose(0.02, I.value[1])
@@ -65,21 +65,21 @@ class TestReinitialize:
     def test_AGTUtility_valid(self):
         I = IntegratorMechanism(name="I",
                                 function=DualAdaptiveIntegrator())
-        I.reinitialize_when = Never()
+        I.reset_stateful_function_when = Never()
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
 
-        I.function.reinitialize(0.2, 0.8)
+        I.function.reset(0.2, 0.8)
 
         assert np.allclose([[0.2]], I.function.previous_short_term_avg)
         assert np.allclose([[0.8]], I.function.previous_long_term_avg)
 
-        I.function.reinitialize()
+        I.function.reset()
 
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
 
-        I.reinitialize(0.3, 0.7)
+        I.reset(0.3, 0.7)
 
         assert np.allclose([[0.3]], I.function.previous_short_term_avg)
         assert np.allclose([[0.7]], I.function.previous_long_term_avg)
@@ -88,7 +88,7 @@ class TestReinitialize:
         print(I.function._combine_terms(0.3, 0.7, context))
         assert np.allclose(I.function._combine_terms(0.3, 0.7, context), I.value)
 
-        I.reinitialize()
+        I.reset()
 
         assert np.allclose([[0.0]], I.function.previous_short_term_avg)
         assert np.allclose([[0.0]], I.function.previous_long_term_avg)
@@ -100,7 +100,7 @@ class TestReinitialize:
             function=SimpleIntegrator(
             ),
         )
-        I.reinitialize_when = Never()
+        I.reset_stateful_function_when = Never()
 
         #  returns previous_value + rate*variable + noise
         # so in this case, returns 10.0
@@ -108,20 +108,20 @@ class TestReinitialize:
         assert np.allclose(I.value, 10.0)
         assert np.allclose(I.output_port.value, 10.0)
 
-        # reinitialize function
-        I.function.reinitialize(5.0)
+        # reset function
+        I.function.reset(5.0)
         assert np.allclose(I.function.value, 5.0)
         assert np.allclose(I.value, 10.0)
         assert np.allclose(I.output_ports[0].value, 10.0)
 
-        # reinitialize function without value spec
-        I.function.reinitialize()
+        # reset function without value spec
+        I.function.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 10.0)
         assert np.allclose(I.output_ports[0].value, 10.0)
 
-        # reinitialize mechanism
-        I.reinitialize(4.0)
+        # reset mechanism
+        I.reset(4.0)
         assert np.allclose(I.function.value, 4.0)
         assert np.allclose(I.value, 4.0)
         assert np.allclose(I.output_ports[0].value, 4.0)
@@ -130,8 +130,8 @@ class TestReinitialize:
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_ports[0].value, 5.0)
 
-        # reinitialize mechanism without value spec
-        I.reinitialize()
+        # reset mechanism without value spec
+        I.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
@@ -150,20 +150,20 @@ class TestReinitialize:
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_port.value, 5.0)
 
-        # reinitialize function
-        I.function.reinitialize(1.0)
+        # reset function
+        I.function.reset(1.0)
         assert np.allclose(I.function.value, 1.0)
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_ports[0].value, 5.0)
 
-        # reinitialize function without value spec
-        I.function.reinitialize()
+        # reset function without value spec
+        I.function.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_ports[0].value, 5.0)
 
-        # reinitialize mechanism
-        I.reinitialize(2.0)
+        # reset mechanism
+        I.reset(2.0)
         assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 2.0)
         assert np.allclose(I.output_ports[0].value, 2.0)
@@ -173,8 +173,8 @@ class TestReinitialize:
         assert np.allclose(I.value, 1.5)
         assert np.allclose(I.output_ports[0].value, 1.5)
 
-        # reinitialize mechanism without value spec
-        I.reinitialize()
+        # reset mechanism without value spec
+        I.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
@@ -199,20 +199,20 @@ class TestReinitialize:
         assert np.allclose(I.value, 1.0)
         assert np.allclose(I.output_port.value, 1.0)
 
-        # reinitialize function
-        I.function.reinitialize(2.0)
+        # reset function
+        I.function.reset(2.0)
         assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 1.0)
         assert np.allclose(I.output_ports[0].value, 1.0)
 
-        # reinitialize function without value spec
-        I.function.reinitialize()
+        # reset function without value spec
+        I.function.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 1.0)
         assert np.allclose(I.output_ports[0].value, 1.0)
 
-        # reinitialize mechanism
-        I.reinitialize(2.0)
+        # reset mechanism
+        I.reset(2.0)
         assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 2.0)
         assert np.allclose(I.output_ports[0].value, 2.0)
@@ -222,8 +222,8 @@ class TestReinitialize:
         assert np.allclose(I.value, 3.0)
         assert np.allclose(I.output_ports[0].value, 3.0)
 
-        # reinitialize mechanism without value spec
-        I.reinitialize()
+        # reset mechanism without value spec
+        I.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
@@ -241,20 +241,20 @@ class TestReinitialize:
         assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_port.value, -2.0)
 
-        # reinitialize function
-        I.function.reinitialize(5.0, 0.0)
+        # reset function
+        I.function.reset(5.0, 0.0)
         assert np.allclose(I.function.value[0], 5.0)
         assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_ports[0].value, -2.0)
 
-        # reinitialize function without value spec
-        I.function.reinitialize()
+        # reset function without value spec
+        I.function.reset()
         assert np.allclose(I.function.value[0], 0.0)
         assert np.allclose(I.value[0], -2.0)
         assert np.allclose(I.output_ports[0].value, -2.0)
 
-        # reinitialize mechanism
-        I.reinitialize(4.0, 0.0)
+        # reset mechanism
+        I.reset(4.0, 0.0)
         assert np.allclose(I.function.value[0], 4.0)
         assert np.allclose(I.value[0], 4.0)
         assert np.allclose(I.output_ports[0].value, 4.0)
@@ -264,8 +264,8 @@ class TestReinitialize:
         assert np.allclose(I.value[0], 7.0)
         assert np.allclose(I.output_ports[0].value, 7.0)
 
-        # reinitialize mechanism without value spec
-        I.reinitialize()
+        # reset mechanism without value spec
+        I.reset()
         assert np.allclose(I.function.value[0], 0.0)
         assert np.allclose(I.value[0], 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
@@ -283,20 +283,20 @@ class TestReinitialize:
         assert np.allclose(I.value, 0.1)
         assert np.allclose(I.output_port.value, 0.1)
 
-        # reinitialize function
-        I.function.reinitialize(2.0)
+        # reset function
+        I.function.reset(2.0)
         assert np.allclose(I.function.value, 2.0)
         assert np.allclose(I.value, 0.1)
         assert np.allclose(I.output_ports[0].value, 0.1)
 
-        # reinitialize function without value spec
-        I.function.reinitialize()
+        # reset function without value spec
+        I.function.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.1)
         assert np.allclose(I.output_ports[0].value, 0.1)
 
-        # reinitialize mechanism
-        I.reinitialize(5.0)
+        # reset mechanism
+        I.reset(5.0)
         assert np.allclose(I.function.value, 5.0)
         assert np.allclose(I.value, 5.0)
         assert np.allclose(I.output_ports[0].value, 5.0)
@@ -306,8 +306,8 @@ class TestReinitialize:
         assert np.allclose(I.value, 5.1)
         assert np.allclose(I.output_ports[0].value, 5.1)
 
-        # reinitialize mechanism without value spec
-        I.reinitialize()
+        # reset mechanism without value spec
+        I.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
@@ -325,20 +325,20 @@ class TestReinitialize:
         assert np.allclose(I.value, 0.2)
         assert np.allclose(I.output_port.value, 0.2)
 
-        # reinitialize function
-        I.function.reinitialize(5.0)
+        # reset function
+        I.function.reset(5.0)
         assert np.allclose(I.function.value, 5.0)
         assert np.allclose(I.value, 0.2)
         assert np.allclose(I.output_ports[0].value, 0.2)
 
-        # reinitialize function without value spec
-        I.function.reinitialize()
+        # reset function without value spec
+        I.function.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.2)
         assert np.allclose(I.output_ports[0].value, 0.2)
 
-        # reinitialize mechanism
-        I.reinitialize(4.0)
+        # reset mechanism
+        I.reset(4.0)
         assert np.allclose(I.function.value, 4.0)
         assert np.allclose(I.value, 4.0)
         assert np.allclose(I.output_ports[0].value, 4.0)
@@ -348,20 +348,20 @@ class TestReinitialize:
         assert np.allclose(I.value, 3.7)
         assert np.allclose(I.output_ports[0].value, 3.7)
 
-        # reinitialize mechanism without value spec
-        I.reinitialize()
+        # reset mechanism without value spec
+        I.reset()
         assert np.allclose(I.function.value, 0.0)
         assert np.allclose(I.value, 0.0)
         assert np.allclose(I.output_ports[0].value, 0.0)
 
-    def test_reinitialize_not_integrator(self):
+    def test_reset_not_integrator(self):
 
         with pytest.raises(MechanismError) as err_txt:
             I_not_integrator = IntegratorMechanism(function=Linear)
             I_not_integrator.execute(1.0)
-            I_not_integrator.reinitialize(0.0)
+            I_not_integrator.reset(0.0)
         assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
-        assert "it does not have an accumulator to reinitialize" in str(err_txt.value)
+        assert "it does not have an accumulator to reset" in str(err_txt.value)
 
 
 VECTOR_SIZE=4
@@ -1092,7 +1092,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        I.function.reinitialize(5.0)
+        I.function.reset(5.0)
 
         val2 = float(I.execute(0))
 
@@ -1210,7 +1210,7 @@ class TestStatefulness:
     def test_has_initializers(self):
         I = IntegratorMechanism()
         assert I.has_initializers
-        assert hasattr(I, "reinitialize_when")
+        assert hasattr(I, "reset_stateful_function_when")
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1224,7 +1224,7 @@ class TestStatefulness:
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
           [np.array([0.75]), np.array([0.75])],
-          [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.875]), np.array([0.5])],   # I2 resets at Trial 2
           [np.array([0.9375]), np.array([0.75])],
           [np.array([0.96875]), np.array([0.875])],
           [np.array([0.984375]), np.array([0.9375])],
@@ -1240,17 +1240,17 @@ class TestStatefulness:
         (pnl.AtPass(0), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
           [np.array([0.5]), np.array([0.75])],
-          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.5])],   # I2 resets at Trial 2
           [np.array([0.5]), np.array([0.75])],
           [np.array([0.5]), np.array([0.875])],
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    def test_reinitialize_when_composition(self, mode, cond0, cond1, expected):
+    def test_reset_stateful_function_when_composition(self, mode, cond0, cond1, expected):
         I1 = pnl.IntegratorMechanism()
         I2 = pnl.IntegratorMechanism()
-        I1.reinitialize_when = cond0
-        I2.reinitialize_when = cond1
+        I1.reset_stateful_function_when = cond0
+        I2.reset_stateful_function_when = cond1
         C = pnl.Composition()
         C.add_node(I1)
         C.add_node(I2)
@@ -1259,21 +1259,21 @@ class TestStatefulness:
 
         assert np.allclose(expected, C.results)
 
-    def test_reinitialize_when(self):
+    def test_reset_stateful_function_when(self):
         I1 = IntegratorMechanism()
         I2 = IntegratorMechanism()
-        I2.reinitialize_when = AtTrial(2)
+        I2.reset_stateful_function_when = AtTrial(2)
         C = Composition(pathways=[[I1], [I2]])
 
         C.run(inputs={I1: [[1.0]],
                       I2: [[1.0]]},
               num_trials=7,
-              reinitialize_nodes_when=AtTrial(3))
+              reset_stateful_functions_when=AtTrial(3))
 
         expected_results = [[np.array([0.5]), np.array([0.5])],
                             [np.array([0.75]), np.array([0.75])],
-                            [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
-                            [np.array([0.5]), np.array([0.75])],    # I1 reinitializes at Trial 3
+                            [np.array([0.875]), np.array([0.5])],   # I2 resets at Trial 2
+                            [np.array([0.5]), np.array([0.75])],    # I1 resets at Trial 3
                             [np.array([0.75]), np.array([0.875])],
                             [np.array([0.875]), np.array([0.9375])],
                             [np.array([0.9375]), np.array([0.96875])]]

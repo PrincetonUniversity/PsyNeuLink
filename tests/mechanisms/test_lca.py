@@ -30,7 +30,7 @@ class TestLCA:
                          time_step_size=0.1)
         C = Composition()
         C.add_linear_processing_pathway([T,L])
-        L.reinitialize_when = Never()
+        L.reset_stateful_function_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =
@@ -87,7 +87,7 @@ class TestLCA:
 
         C = Composition()
         C.add_linear_processing_pathway([T,L])
-        L.reinitialize_when = Never()
+        L.reset_stateful_function_when = Never()
         #  - - - - - - - Equations to be executed  - - - - - - -
 
         # new_transfer_input =
@@ -281,9 +281,9 @@ class TestLCA:
     #     result = comp.run(inputs={lca:[1,0]})
     #     assert np.allclose(result, [[0.71463572, 0.28536428]])
 
-class TestLCAReinitialize:
+class TestLCAReset:
 
-    def test_reinitialize_run(self):
+    def test_reset_run(self):
 
         L = LCAMechanism(name="L",
                          function=Linear,
@@ -296,15 +296,15 @@ class TestLCAReinitialize:
                          noise=0.0)
         C = Composition(pathways=[L])
 
-        L.reinitialize_when = Never()
+        L.reset_stateful_function_when = Never()
         assert np.allclose(L.integrator_function.previous_value, 0.5)
         assert np.allclose(L.initial_value, 0.5)
         assert np.allclose(L.integrator_function.initializer, 0.5)
 
         C.run(inputs={L: 1.0},
               num_trials=2,
-              # reinitialize_nodes_when=AtRunStart(),
-              # reinitialize_nodes_when=AtTrialStart(),
+              # reset_stateful_functions_when=AtRunStart(),
+              # reset_stateful_functions_when=AtTrialStart(),
               initialize_cycle_values={L: [0.0]})
 
         # IntegratorFunction fn: previous_value + (rate*previous_value + new_value)*time_step_size + noise*(time_step_size**0.5)
@@ -317,12 +317,12 @@ class TestLCAReinitialize:
         #  linear fn: 4.255*1.0 = 4.255
         assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 3.755)
 
-        L.integrator_function.reinitialize(0.9, context=C)
+        L.integrator_function.reset(0.9, context=C)
 
         assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.9)
         assert np.allclose(L.parameters.value.get(C), 3.755)
 
-        L.reinitialize(0.5, context=C)
+        L.reset(0.5, context=C)
 
         assert np.allclose(L.integrator_function.parameters.previous_value.get(C), 0.5)
         assert np.allclose(L.parameters.value.get(C), 0.5)

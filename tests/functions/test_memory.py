@@ -142,7 +142,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
     # Run again to test re-initialization and random retrieval
-    em.function.reinitialize(np.array([stimuli['A'], stimuli['F']]))
+    em.function.reset(np.array([stimuli['A'], stimuli['F']]))
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]

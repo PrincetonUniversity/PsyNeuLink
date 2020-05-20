@@ -967,9 +967,9 @@ class TestRecurrentTransferMechanismInComposition:
         np.testing.assert_allclose(R.output_port.parameters.value.get(C),[0.0, 1.18518086, 0.0, 1.18518086])
 
 
-class TestRecurrentTransferMechanismReinitialize:
+class TestRecurrentTransferMechanismReset:
 
-    def test_reinitialize_run(self):
+    def test_reset_run(self):
 
         R = RecurrentTransferMechanism(name="R",
                  initial_value=0.5,
@@ -977,7 +977,7 @@ class TestRecurrentTransferMechanismReinitialize:
                  integration_rate=0.1,
                  auto=1.0,
                  noise=0.0)
-        R.reinitialize_when = Never()
+        R.reset_stateful_function_when = Never()
         C = Composition(pathways=[R])
         assert np.allclose(R.integrator_function.previous_value, 0.5)
 
@@ -999,12 +999,12 @@ class TestRecurrentTransferMechanismReinitialize:
         # linear fn: 0.65*1.0 = 0.65
         assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.65)
 
-        R.integrator_function.reinitialize(0.9, context=C)
+        R.integrator_function.reset(0.9, context=C)
 
         assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.9)
         assert np.allclose(R.parameters.value.get(C), 0.65)
 
-        R.reinitialize(0.5, context=C)
+        R.reset(0.5, context=C)
 
         assert np.allclose(R.integrator_function.parameters.previous_value.get(C), 0.5)
         assert np.allclose(R.parameters.value.get(C), 0.5)
@@ -1084,7 +1084,7 @@ class TestCustomCombinationFunction:
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
           [np.array([0.75]), np.array([0.75])],
-          [np.array([0.875]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.875]), np.array([0.5])],   # I2 resets at Trial 2
           [np.array([0.9375]), np.array([0.75])],
           [np.array([0.96875]), np.array([0.875])],
           [np.array([0.984375]), np.array([0.9375])],
@@ -1100,19 +1100,19 @@ class TestCustomCombinationFunction:
         (pnl.AtPass(0), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
           [np.array([0.5]), np.array([0.75])],
-          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.5])],   # I2 resets at Trial 2
           [np.array([0.5]), np.array([0.75])],
           [np.array([0.5]), np.array([0.875])],
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    def test_reinitialize_when_composition(self, mode, cond0, cond1, expected):
+    def test_reset_stateful_function_when_composition(self, mode, cond0, cond1, expected):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
         I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
-        I1.reinitialize_when = cond0
-        I2.reinitialize_when = cond1
+        I1.reset_stateful_function_when = cond0
+        I2.reset_stateful_function_when = cond1
         C = pnl.Composition()
         C.add_node(I1)
         C.add_node(I2)
@@ -1133,7 +1133,7 @@ class TestCustomCombinationFunction:
         (pnl.AtPass(0), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
           [np.array([0.5]), np.array([0.75])],
-          [np.array([0.5]), np.array([0.5])],   # I2 reinitializes at Trial 2
+          [np.array([0.5]), np.array([0.5])],   # I2 resets at Trial 2
           [np.array([0.5]), np.array([0.75])],
           [np.array([0.5]), np.array([0.875])],
           [np.array([0.5]), np.array([0.9375])],
@@ -1143,14 +1143,14 @@ class TestCustomCombinationFunction:
                              ids=lambda x: "initializers1" if x else "NO initializers1")
     @pytest.mark.parametrize('has_initializers1', [True, False],
                              ids=lambda x: "initializers2" if x else "NO initializers2")
-    def test_reinitialize_when_has_initializers_composition(self, mode, cond0, cond1, expected,
+    def test_reset_stateful_function_when_has_initializers_composition(self, mode, cond0, cond1, expected,
                                            has_initializers1, has_initializers2):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
         I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
-        I1.reinitialize_when = cond0
-        I2.reinitialize_when = cond1
+        I1.reset_stateful_function_when = cond0
+        I2.reset_stateful_function_when = cond1
         I1.has_initializers = has_initializers1
         I2.has_initializers = has_initializers2
         C = pnl.Composition()

@@ -2184,8 +2184,8 @@ class Mechanism_Base(Mechanism):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
-        """Reinitialize `value <Mechanism_Base.value>` if Mechanisms is stateful.
+    def reset(self, *args, context=None):
+        """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
@@ -2194,26 +2194,26 @@ class Mechanism_Base(Mechanism):
         `value <Mechanism.value>` `history <Parameter.history`, thus
         effectively setting the previous value to ``None``.
 
-        If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reinitialize
-        <Mechanism_Base.reinitialize>` method:
+        If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reset
+        <Mechanism_Base.reset>` method:
 
-            (1) Calls the function's own `reinitialize <IntegratorFunction.reinitialize>` method (see Note below for
+            (1) Calls the function's own `reset <IntegratorFunction.reset>` method (see Note below for
                 details)
 
             (2) Sets the mechanism's `value <Mechanism_Base.value>` to the output of the function's
-                reinitialize method
+                reset method
 
             (3) Updates its `output ports <Mechanism_Base.output_port>` based on its new `value
                 <Mechanism_Base.value>`
 
-        If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reinitialize
-        <Mechanism_Base.reinitialize>` method::
+        If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reset
+        <Mechanism_Base.reset>` method::
 
-            (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reinitialize
-                <IntegratorFunction.reinitialize>` method (see Note below for details)
+            (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reset
+                <IntegratorFunction.reset>` method (see Note below for details)
 
             (2) Executes its `function <Mechanism_Base.function>` using the output of the `integrator_function's
-                <TransferMechanism.integrator_function>` `reinitialize <IntegratorFunction.reinitialize>` method as
+                <TransferMechanism.integrator_function>` `reset <IntegratorFunction.reset>` method as
                 the function's variable
 
             (3) Sets the mechanism's `value <Mechanism_Base.value>` to the output of its function
@@ -2222,15 +2222,15 @@ class Mechanism_Base(Mechanism):
                 <Mechanism_Base.value>`
 
         .. note::
-                The reinitialize method of an IntegratorFunction Function typically resets the function's
+                The reset method of an IntegratorFunction Function typically resets the function's
                 `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
-                quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
+                quantities) specified. If `reset <Mechanism_Base.reset>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in
-                `initializers <IntegratorFunction.initializers>`) is used instead. The `reinitialize
-                <IntegratorFunction.reinitialize>` method may vary across different Integrators. See individual
+                `initializers <IntegratorFunction.initializers>`) is used instead. The `reset
+                <IntegratorFunction.reset>` method may vary across different Integrators. See individual
                 functions for details on their `stateful_attributes <IntegratorFunction.stateful_attributes>`,
-                as well as other reinitialization steps that the reinitialize method may carry out.
+                as well as other reinitialization steps that the reset method may carry out.
         """
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
@@ -2239,18 +2239,18 @@ class Mechanism_Base(Mechanism):
             context.execution_id = self.most_recent_context.execution_id
 
         # If the primary function of the mechanism is stateful:
-        # (1) reinitialize it, (2) update value, (3) update output ports
+        # (1) reset it, (2) update value, (3) update output ports
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reinitialize(*args, context=context)
+            new_value = self.function.reset(*args, context=context)
             self.parameters.value._set(np.atleast_2d(new_value), context=context)
             self._update_output_ports(context=context)
 
         # If the mechanism has an auxiliary integrator function:
-        # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
+        # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, IntegratorFunction):
-                new_input = self.integrator_function.reinitialize(*args, context=context)[0]
+                new_input = self.integrator_function.reset(*args, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
                     context=context,
@@ -2260,20 +2260,20 @@ class Mechanism_Base(Mechanism):
 
             elif self.integrator_function is None or isinstance(self.integrator_function, type):
                 if hasattr(self, "integrator_mode"):
-                    raise MechanismError(f"Reinitializing '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reinitialize. "
+                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                                         f"is not stateful; it does not have an integrator to reset. "
                                          f"If it should be stateful, try setting the integrator_mode argument to True.")
                 else:
-                    raise MechanismError(f"Reinitializing '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reinitialize.")
+                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                                         f"is not stateful; it does not have an integrator to reset.")
 
             else:
-                raise MechanismError(f"Reinitializing '{self.name}' is not allowed because its integrator_function "
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because its integrator_function "
                                      f"is not an IntegratorFunction type function, therefore the Mechanism "
-                                     f"does not have an integrator to reinitialize.")
+                                     f"does not have an integrator to reset.")
         else:
-            raise MechanismError(f"Reinitializing '{self.name}' is not allowed because this Mechanism is not stateful; "
-                                 f"it does not have an accumulator to reinitialize.")
+            raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
+                                 f"it does not have an accumulator to reset.")
 
     def _get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
@@ -2968,8 +2968,8 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
@@ -2981,7 +2981,7 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" not in tags
+        assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
                 self, params, ctx, builder, params, state, arg_in)
