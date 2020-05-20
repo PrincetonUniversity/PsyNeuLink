@@ -1906,6 +1906,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
 
     def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        if context.execution_id is base_context.execution_id:
+            return
+
         if visited is None:
             visited = set()
 
