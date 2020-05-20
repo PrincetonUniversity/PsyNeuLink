@@ -45,9 +45,7 @@ Contents
           • `Composition_Target_Inputs`
           COMMENT
       - `Composition_Runtime_Params`
-      COMMENT:
       - `Composition_Initial_Values_and_Feedback`
-      COMMENT
       - `Composition_Execution_Context`
       - `Composition_Compilation`
   * `Composition_Visualization`
@@ -240,15 +238,14 @@ Acyclic and Cyclic Graphs
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
 Composition has no recurrent Projections then its structure is a `directed acyclic graph (DAG)
-<https://en.wikipedia.org/wiki/Acyclic_graph>`_, the order in which its nodes are executed can be determined by
+<https://en.wikipedia.org/wiki/Acyclic_graph>`_, and the order in which its Nodes are executed can be determined by
 the structure of the graph itself.  However if the Composition contains recurrent Projections, then its structure
 is a `cyclic graph <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and the value of some nodes must be initialized
 (i.e., "break" the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
 determinining which nodes need be initialized and initializing them when the Composition is `run <Composition>`,
-and also for allowing the user specify how this is done
+and also for allowing the user specify how this is done (see `Composition_Initial_Values_and_Feedback`).
 
 COMMENT:
-    XXX (see `Composition_Initial_Values_and_Feedback`)
     XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
 COMMENT
 
@@ -1079,7 +1076,7 @@ Complete input specification:
 
 ..
 
-COMMENT`:
+COMMENT:
 The script below, for example, uses a function to specify inputs in order to interact with the Gym Forarger
 Environment.
 
@@ -1102,7 +1099,7 @@ Environment.
         done = env_step[2]
         if not done:
             # NEW: This function MUST return a dictionary of input values for a single `TRIAL <TimeScale.TRIAL>`
-            for each INPUT node
+            for each INPUT Node
             return {player: [observation[player_coord_idx]],
                     prey: [observation[prey_coord_idx]]}
         return done
@@ -1135,10 +1132,10 @@ are always restored after execution.
 Runtime parameter values for a Composition are specified in a dictionary assigned to the **runtime_params** argument
 of a Composition's `execution method <Composition_Execution_Methods>`.  The key of each entry is a Node of the
 Composition, and the value is a subdictionary specifying the **runtime_params** argument that will be passed to the
-Node when it is executed.  The format of the dictionary for each node follows that for a Mechanism's `runtime
-specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the value
-of a parameter directly (in which case, the value will apply throughout the execution), its value can also be placed
-in a tuple together with a `Condition` specifying when that value should be applied, as follows:
+Node when it is executed.  The format of the dictionary for each `Node <Component_Nodes>` follows that for a Mechanism's
+`runtime specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the
+value of a parameter directly (in which case, the value will apply throughout the execution), its value can also be
+placed in a tuple together with a `Condition` specifying when that value should be applied, as follows:
 
     * Dictionary assigned to **runtime_parms** argument: {<Node>: Runtime Parameter Specification Dictionary}
        - *key* - Node
@@ -1146,12 +1143,12 @@ in a tuple together with a `Condition` specifying when that value should be appl
 
     * Runtime Parameter Specification Dictionary: {<parameter name>: (<parameter value>, `Condition`)}
        - *key* - str
-          name of a `Parameter` of the Node, its `function <Mechanism_Base.function>`, or a keyword specifying a
-          subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);
-       - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below)
-          `Condition` specifies when the value is applied;  otherwise, its previously assigned value or default
-          is used;  if the parameter values appears alone in a tuple or outside of one, then the Condtion `Always`
-          is applied.
+         name of a `Parameter` of the Node, its `function <Mechanism_Base.function>`, or a keyword specifying
+         a subdictionary containing runtime parameter specifications for Component(s) of the Node (see below);
+       - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below) `Condition`
+         specifies when the value is applied;  otherwise, its previously assigned value or `default
+         <Parameter_Defaults>` is used;  if the parameter values appears alone in a tuple or outside of one,
+         then the Condtion `Always` is applied.
 
     See `Runtime Parameter Specification Dictionary <Mechanism_Runtime_Param_Specification>` for additional details.
 
@@ -1163,22 +1160,147 @@ A tuple used to specify a subdictionary determines when any of the parameters sp
 If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
 *is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
 
-
-COMMENT:
 .. _Composition_Initial_Values_and_Feedback:
 
-*Cycles, Feedback, and Initialization*
+*Cycles, Initialization, and Feedback*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
-    MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
-    ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-    a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at the start of a `TRIAL
-    <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as `FEEDBACK_SENDER`,
-    and listed in the Composition's ?? attribute),
+If a Composition has any Projections that form loops of execution — that is, cycles in its `graph <Composition_Graph> —
+these require special handling to insure consistent and desired order of execution. This is handled by a Composition in
+one of two ways, based on whether any of the Projections in a cycle are designated as `feeedback
+<Composition_Feedback_Specification>`:
 
+.. _Composition_No_Feedback_Cycle:
+
+* No feedback Projections -- in this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
+  treated equally, and executed synchronously (i.e., in the same `TIME_STEP <TimseScale.TIME_STEP>`).  Any cycles
+  nested within another cycle are flattened and added to the outermost cycle, and all are treated as part of the same
+  cycle
+  COMMENT:
+     (see Figure)
+  COMMENT
+  . All Nodes within a cycle are assigned the `NodeRole` `CYCLE`. When the Nodes in the cycle are executed, the value
+  that a Node receives from each of those that project to it (from within the cycle) is the `value <Component.value>`
+  of the senders after that was last executed in the same `execution context <Composition_Execution_Context>`;  this
+  insures that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution
+  of the cycle since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that
+  case, each sender passes the value to which it has been initialized which, by default, is its `default value
+  <Parameter_Defaults>`.
+
+  .. note::
+     Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
+     they receive the *current* value of any Nodes that project to them from outisde the cycle, and pass their current
+     value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
+     of the cycle.
+
+  The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be overridden using
+  the `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` argument of the Composition's `run
+  <Composition.run>` or `learn <Composition.learn>` methods.  This can be used to specify an initial value for any
+  Node in a cycle.  On the first call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in
+  `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` are initialized using the assigned values, and
+  any Nodes in the cycle that are not specified are assigned their `default value <Parameter_Defaults>`. In subsequent
+  calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified in `initialize_cycle_values
+  <Composition_Initialize_Cycle_Values_Arg>` will be re-initialized to the assigned values for the first execution of
+  the cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were
+  assigned in the previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
+
+  .. note::
+     If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
+     <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
+     within the Composition
+     COMMENT:
+         unless an execution_id is assigned to `context <Mechanism_execute_context_Arg>` of the Mechanism's `execute
+         <Mechanism_Base.exeucte>` method when it is called
+     COMMENT
+     .  This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
+     `value <Mechanism_Base.value>` last assigned in the None context.  As described aove, this can be overridden by
+     specifying an initial value for the Mechanism in the `initialize_cycle_values
+     <Composition_Initialize_Cycle_Values_Arg>` argument of the call to the Composition's `run <Composition.run>` or
+     `learn  <Composition.learn>` methods.
+
+.. _Composition_Feedback_Cycle:
+
+* Feedback Projection(s) specified -- in this case, any Projections in a cycle specified as `feedback
+  <Composition_Feedback_Specification>` are used to break the cycle: the `sender <Projection_Base.sender>` of each
+  feedback Projection (assigned the `NodeRole` `FEEDBACK_SENDER`) is initialized in the same way as a Node in a
+  cycle (see `above <Composition_No_Feedback_Cycle>`); the receiver (assigned the `NodeRole` `FEEDBACK_RECEIVER`) is
+  passed the *SENDER's* initial value on the first execution, and its previous value on subsequent executions.
+  Thus, in effect, the *RECEIVER* becomes the first Node in the cycle to execute, and the *SENDER* the last. The
+  *FEEDBACK_SENDERS* of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
+  and its *FEEDBACK_RECEIVERS* in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using
+  the Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.
+
+.. _Composition_Feedback_Specification:
+
+By default, cycles that do not include any `ControlProjections <ControlProjection>` are flattened. This includes any
+`RecurrentTransferMechanism` (or its subclaseses), which are treated as a single-Node cylce (formed by its
+`AutoassociativeProjection`).  In contrast, if there are any `ControlProjections <ControlProjection>` in a cycle,
+some or all of them may be assigned as feedback Projections to break the cycle.
+
+The feedback status of a Projection can also be specified explcitly, either by including the keyword *FEEDBACK* in a
+tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the Composition's
+`add_projections <Composition.add_projections>` method, or using the `feedback
+<Composition_add_projection_feedback_Arg>` of the Composition's `add_projection <Composition.add_projection>` method.
+
+    .. warning::
+       Designating a Projection as **feeedback** that is *not* in a cycle
+       COMMENT:
+       , or designating more than one Projection as
+       **feedback* within the same cycle,
+       COMMENT
+       is allowed, but will issue a warning and can produce unexpected results.
+       Specifically, the `FEEDBACK_RECEIVER` for any Projection designated as **feedback** will receive a value from
+       the Projection that is based either on the `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed)
+       or its previous `value <Component.value>` (in subsequent executions), rather than its most recently computed
+       `value <Component.value>` whether or not it is in a cycle.
+       COMMENT:
+           CONFIRM SWHAT HAPPENS FOR 2 FEEDBACK PROJECTIONS.
+           EXAMPLE:
+                T1 = TransferMechanism()
+                T2 = TransferMechanism()
+                T3 = TransferMechanism()
+                T4 = TransferMechanism()
+                P = MappingProjection(sender=T2, receiver=T3, name='MY FEEDBACK PROJECTION')
+                C = Composition([T1, T2, (P, FEEDBACK), T3, T4])
+                C.run({T1:3})
+                UserWarning: The following projections were labeled as feedback, but they are not in any cycles: (MappingProjection MY FEEDBACK PROJECTION)
+                [array([3.]), array([0.])]
+                T1:  [[3.]]
+                T2:  [[3.]]
+                T3:  [[0.]] # Because P is designated as feedback
+                T4:  [[0.]]
+       COMMENT
+
+The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feeeback_projections>`
+attribute, and the feedback status of a Projection in a composition is returned by its `get_feedback_status
+<Composition.get_feedback_status>` method.
+
+COMMENT:
+
+      MOVE TO IntegratorMechanism and relevant arguments of run method
+      - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
+        - reset_integrator_nodes_to:  DICT of {node: value} paris
+                                   THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
+                                   IF NOT SPECIIFED, THEN REINITIALIZED TO previous_value ATTRIBUTE, WHICH IS SET TO THE
+                                   MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
+        FIX: ?? CONSIDER MAKING REINITIALIZE_NODES_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+        - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
+                                                     IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
+                                                                           THEIR reset_integrator_when ATTRIBUTE IS None
+                                                     IF A DICT: IT SETS THE CONDITION FOR ALL SPECIFIFED NODES
+                                                                OVERRIDING THEIR SPEC IF THEY HAVE ONE, AND LEAVING ANY
+                                                                NOT SPECIFIED IN THE DICT WITH THEIR CURRENT ASSIGNMENT
+        - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
+                                                                   INCLUDED IN reset_integrator_nodes_when ARG OF RUN
+        - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
+
+        FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
+        MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
+        ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
+        a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at
+        the start of a `TRIAL <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as
+        `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
 COMMENT
-
 
 .. _Composition_Execution_Context:
 
@@ -1250,13 +1372,13 @@ When `run <Composition.run>` is called by a Composition, it calls that Compositi
 method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
 <Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
 the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
-in each `TIME_STEP`, until every Component has been executed at least once or another `termination condition
-<Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be used in combination with
-`Condition` specifications for individual Components to execute different Components at different time scales.
+in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been executed at least once or another
+`termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
+used in combination with `Condition` specifications for individual Components to execute different Components at
+different time scales.
 
 Runtime Params
 COMMENT
-
 
 .. _Composition_Compilation:
 
@@ -1913,6 +2035,7 @@ import inspect
 import itertools
 import logging
 import networkx
+import typing
 import warnings
 import sys
 
@@ -1957,14 +2080,14 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
-    LEARNING, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
-    SAMPLE, SHADOW_INPUT_NAME, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
+    SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -2108,6 +2231,7 @@ class Vertex(object):
         mapping = {
             False: EdgeType.NON_FEEDBACK,
             True: EdgeType.FEEDBACK,
+            FEEDBACK: EdgeType.FEEDBACK,
             MAYBE: EdgeType.FLEXIBLE
         }
         try:
@@ -2254,7 +2378,7 @@ class Graph(object):
             that are `potentially feedback <EdgeType.FLEXIBLE>` that are
             in cycles. After these edges are removed, if cycles still
             remain, they are "flattened." That is, each edge in the
-            cycle is pruned, and each the dependencies of each node in
+            cycle is pruned, and each the dependencies of each Node in
             the cycle are set to the pre-flattened union of all cyclic
             nodes' parents that are themselves not in a cycle.
 
@@ -2295,11 +2419,7 @@ class Graph(object):
             }
 
         # construct a parallel networkx graph to use its cycle algorithms
-        nx_graph = networkx.DiGraph()
-        nx_graph.add_nodes_from(list(execution_dependencies.keys()))
-        for child in execution_dependencies:
-            for parent in execution_dependencies[child]:
-                nx_graph.add_edge(parent, child)
+        nx_graph = self._generate_networkx_graph(execution_dependencies)
 
         # prune only one flexible edge per attempt, to remove as few
         # edges as possible
@@ -2342,7 +2462,7 @@ class Graph(object):
             new_cycles = cycle_dicts
             cycles_changed = True
 
-            # repeatedly join cycles that have a node in common
+            # repeatedly join cycles that have a Node in common
             while cycles_changed:
                 cycles_changed = False
                 i = 0
@@ -2402,6 +2522,24 @@ class Graph(object):
             },
             structural_dependencies
         )
+
+    def get_cycles(self, nx_graph: typing.Optional[networkx.DiGraph] = None):
+        if nx_graph is None:
+            nx_graph = self._generate_networkx_graph()
+
+        return list(networkx.simple_cycles(nx_graph))
+
+    def _generate_networkx_graph(self, dependency_dict=None):
+        if dependency_dict is None:
+            dependency_dict = self.dependency_dict
+
+        nx_graph = networkx.DiGraph()
+        nx_graph.add_nodes_from(list(dependency_dict.keys()))
+        for child in dependency_dict:
+            for parent in dependency_dict[child]:
+                nx_graph.add_edge(parent, child)
+
+        return nx_graph
 
     @property
     def dependency_dict(self):
@@ -2599,7 +2737,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` that is excluded from
         being assigned to it.
 
-    pathways : ContentAddressableList
+    feedback_senders : ContentAddressableList[`Node <Composition_Nodes>`]
+        list of `Nodes <Composition_Nodes>` that have one or more `efferent Projections <Mechanism_Base.efferents>`
+        assigned as `feedback <Composition_Feedback_Specification>`.
+
+    feedback_receivers : ContentAddressableList[`Node <Composition_Nodes>`]
+        list of `Nodes <Composition_Nodes>` that have one or more `afferents <Mechanism_Base.afferents>` assigned as
+        `feedback <Composition_Feedback_Specification>`.
+
+    feedback_projections : ContentAddressableList[`Projection <Projection>`]
+        list of Projections that have been `assigned as `feedback <Composition_Feedback_Specification>`.
+
+    pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
         <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
@@ -2613,7 +2762,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
         containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
-    afferents : ContentAddressableList
+    afferents : ContentAddressableList[`Projection <Projection>`]
         a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
 
     external_input_ports : list[InputPort]
@@ -2638,7 +2787,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
         containing two items: the corresponding InputPort and OutputPort on the input_CIM.
 
-    efferents : ContentAddressableList
+    efferents : ContentAddressableList[`Projection <Projection>`]
         a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
 
     env : Gym Forager Environment : default: None
@@ -2845,8 +2994,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles = collections.OrderedDict()
 
         self.cycle_vertices = set()
-        self.feedback_senders = set()
-        self.feedback_receivers = set()
+        # # MODIFIED 5/19/20 OLD:
+        # self.feedback_senders = set()
+        # self.feedback_receivers = set()
+        # MODIFIED 5/19/20 END
 
         self._initialize_parameters(
             **param_defaults,
@@ -2959,14 +3110,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         Assigns `NodeRoles <NodeRole>` to nodes based on the structure of the `Graph`.
 
-        By default, if _analyze_graph determines that a node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
-        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a node is `TERMINAL
+        By default, if _analyze_graph determines that a Node is `ORIGIN <NodeRole.ORIGIN>`, it is also given the role
+        `INPUT <NodeRole.INPUT>`. Similarly, if _analyze_graph determines that a Node is `TERMINAL
         <NodeRole.TERMINAL>`, it is also given the role `OUTPUT <NodeRole.OUTPUT>`.
 
-        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any node in the
+        However, if the **required_roles** argument of `add_node <Composition.add_node>` is used to set any Node in the
         Composition to `INPUT <NodeRole.INPUT>`, then the `ORIGIN <NodeRole.ORIGIN>` nodes are not set to `INPUT
         <NodeRole.INPUT>` by default. If the **required_roles** argument of `add_node <Composition.add_node>` is used
-        to set any node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
+        to set any Node in the Composition to `OUTPUT <NodeRole.OUTPUT>`, then the `TERMINAL <NodeRole.TERMINAL>`
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
 
@@ -3039,10 +3190,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ---------
 
             node : `Mechanism <Mechanism>` or `Composition`
-                the node to be added to the Composition
+                the Node to be added to the Composition
 
             required_roles : `NodeRole` or list of NodeRoles
-                any NodeRoles roles that this node should have in addition to those determined by analyze graph.
+                any NodeRoles roles that this Node should have in addition to those determined by analyze graph.
         """
 
         self._update_shadows_dict(node)
@@ -4301,7 +4452,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        name=None,
                        allow_duplicates=False
                        ):
-        """Add **projection** to the Composition, if one with the same sender and receiver doesn't already exist.
+        """Add **projection** to the Composition.
 
         If **projection** is not specified, create a default `MappingProjection` using **sender** and **receiver**.
 
@@ -4335,7 +4486,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. note::
            If **projection** is an instantiated Projection (i.e., not in `deferred_init`) and one already exists between
-           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated.
+           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated and
+           the request is ignored.
 
         COMMENT:
         IMPLEMENTATION NOTE:
@@ -4354,21 +4506,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         sender : Mechanism, Composition, or OutputPort
-            the sender of **projection**
+            the sender of **projection**.
 
         projection : Projection, matrix
-            the projection to add
+            the projection to add.
 
         receiver : Mechanism, Composition, or InputPort
-            the receiver of **projection**
+            the receiver of **projection**.
 
-        feedback : bool
-            When False (default) all Nodes within a cycle containing this Projection execute in parallel. This
-            means that each Projections within the cycle actually passes to its `receiver <Projection_Base.receiver>`
-            the `value <Projection_Base.value>` of its `sender <Projection_Base.sender>` from the previous execution.
-            When True, this Projection "breaks" the cycle, such that all Nodes execute in sequence, and only the
-            Projection marked as 'feedback' passes to its `receiver <Projection_Base.receiver>` the
-            `value <Projection_Base.value>` of its `sender <Projection_Base.sender>` from the previous execution.
+        .. _Composition_add_projection_feedback_Arg:
+
+        feedback : bool or FEEDBACK : False
+            if False, the Projection is *never* assigned as a feedback Projection, even if that may have been the
+            default behavior (e.g., for a `ControlProjection` that forms a `cycle <_Composition_Acyclic_Cyclic>`;
+            if True or *FEEDBACK*, and the Projection is in a cycle, it *always* assigned as a feedback Projection,
+            and used to "break" the cycle (see `Composition_Initial_Values_and_Feedback` for additional details.
+            COMMENT:
+                all `Nodes <Comopsition_Nodes>`  within a `cycle <Composition_Cycle>` containing this `Projection
+                <Projection>` execute in parallel. This means that each Projection within the cycle actually passes
+                to its `receiver <Projection_Base.receiver>` the `value <Projection_Base.value>` of its `sender
+                <Projection_Base.sender>` from the previous execution. When True, this Projection "breaks" the cycle,
+                such that all Nodes execute in sequence, and only the Projection marked as 'feedback' passes to its
+                `receiver <Projection_Base.receiver>` the `value <Projection_Base.value>` of its `sender
+                <Projection_Base.sender>` from the previous execution.
+            COMMENT
 
         Returns
         -------
@@ -4513,9 +4674,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # TBI: Copy the projection type/matrix value of the projection that is being shadowed
                             self.add_projection(MappingProjection(sender=sender, receiver=input_port),
                                                 sender_mechanism, shadow)
-        if feedback in {True, EdgeType.FEEDBACK}:
-            self.feedback_senders.add(sender_mechanism)
-            self.feedback_receivers.add(receiver_mechanism)
+        # if feedback in {True, FEEDBACK}:
+        #     self.feedback_senders.add(sender_mechanism)
+        #     self.feedback_receivers.add(receiver_mechanism)
 
         return projection
 
@@ -4812,6 +4973,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if existing_projections and not existing_projections_in_composition:
                 return existing_projections
         return False
+
+    def _check_for_unnecessary_feedback_projections(self):
+        """
+            Warn if there exist projections in the graph that the user
+            labeled as EdgeType.FEEDBACK (True) but are not in a cycle
+        """
+        unnecessary_feedback_specs = []
+        cycles = self.graph.get_cycles()
+
+        for proj in self.projections:
+            try:
+                vert = self.graph.comp_to_vertex[proj]
+                if vert.feedback is EdgeType.FEEDBACK:
+                    for c in cycles:
+                        if proj in c:
+                            break
+                    else:
+                        unnecessary_feedback_specs.append(proj)
+            except KeyError:
+                pass
+
+        if unnecessary_feedback_specs:
+            warnings.warn(
+                'The following projections were labeled as feedback, '
+                'but they are not in any cycles: {0}'.format(
+                    ', '.join([str(x) for x in unnecessary_feedback_specs])
+                )
+            )
 
     # ******************************************************************************************************************
     #                                            PATHWAYS
@@ -8542,14 +8731,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
                 or use default inputs, and select a number of trials with num_trials.
 
+            .. _Composition_Initialize_Cycle_Values_Arg:
+
             initialize_cycle_values : Dict { Node: Node Value } : default None
-                sets the values of nodes before the start of the run. This is useful in cases where a node is part of a
-                cycle, because nodes in cycles receive their preceding nodes' values as of the previous trial. Thus,
-                this argument allows you to seed the values of nodes in cycles for use on the initial execution. If this
-                is not specified, the nodes will use their default values.
-                ..technical_note::
-                    the initial value of a node is only relevant when it is embedded in a Cycle, because this
-                    is the only case in which its value Parameter will be used before being updated.
+                sets the value of specified `Nodes <Composition_Nodes>` before the start of the run.  All specified
+                Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
+                <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
+                a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
+                (see `Composition_Initial_Values_and_Feedback` additional details).
 
             reinitialize_values : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reinitialize methods when their
@@ -8795,6 +8984,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not skip_analyze_graph:
                 self._analyze_graph(scheduler=scheduler, context=context)
         # MODIFIED 8/27/19 END
+
+        self._check_for_unnecessary_feedback_projections()
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
@@ -9130,28 +9321,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
+            .. _Composition_execute_context_Arg:
+
             context : `Context.execution_id>` : default `default_execution_id`
-                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
+                `execution context <Composition_Execution_Context>` in which the `Composition` will be executed.
+
+            .. _Composition_Run_base_context_Arg:
 
             base_context : `Context.execution_id>` : Context(execution_id=None)
-                the context corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **context**
+                the context corresponding to the `execution context <Composition_Execution_Context>` from which this
+                execution will be initialized, if values currently do not exist for **context**.
 
             call_before_time_step : callable : default None
                 called before each `TIME_STEP` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             call_after_time_step : callable : default None
                 called after each `TIME_STEP` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             call_before_pass : callable : default None
                 called before each `PASS` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             call_after_pass : callable : default None
                 called after each `PASS` is executed
-                passed the current *context* (but it is not necessary for your callable to take)
+                passed the current *context* (but it is not necessary for your callable to take).
 
             bin_execute : bool or Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
@@ -9871,7 +10066,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                     param_value)
         return runtime_params
 
-    def _get_satisfied_runtime_param_values(self, runtime_params, scheduler,context):
+    def _get_satisfied_runtime_param_values(self, runtime_params, scheduler, context):
         """Return dict with values for all runtime_params the Conditions of which are currently satisfied.
         Recursively parse nested dictionaries for which Condition on dict is satisfied.
         """
@@ -9885,7 +10080,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     param_val = execution_params
                 else:
                     return None
-            # KAM 5/15/18 - not sure if this will always be the correct execution id:
             if param_condition.is_satisfied(scheduler=scheduler,context=context):
                 return param_val
             else:
@@ -10242,6 +10436,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def efferents(self):
         return ContentAddressableList(component_type=Projection,
                                       list=[proj for proj in self.output_CIM.efferents])
+
+    @property
+    def feedback_senders(self):
+        return ContentAddressableList(component_type=Component,
+                                      list=[node for node in self.nodes
+                                            if node in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)])
+
+    @property
+    def feedback_receivers(self):
+        return ContentAddressableList(component_type=Component,
+                                      list=[node for node in self.nodes
+                                            if node in self.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)])
+
+    @property
+    def feedback_projections(self):
+        return ContentAddressableList(component_type=Projection,
+                                      list=[p.component for p in self.graph.vertices
+                                            if p.feedback is EdgeType.FEEDBACK])
 
     @property
     def _all_nodes(self):

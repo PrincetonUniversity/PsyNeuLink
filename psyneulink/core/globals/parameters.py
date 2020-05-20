@@ -21,7 +21,7 @@ class, and are used to validate compatibility between this instance and other Ps
 `TransferMechanism` *t*:
 
     - instance defaults are accessible by ``t.defaults`` (e.g., for the `noise <TransferMechanism.noise>` parameter,
-      ``t.defaults.noiset.defaults.noise``)
+      ``t.defaults.noise.defaults.noise``)
 
     - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults`` (e.g.,
     ``t.class_defaults.noise`` or `TransferMechanism.defaults.noise)
