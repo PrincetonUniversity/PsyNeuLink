@@ -1242,16 +1242,29 @@ tuple with the Projection where it is `specified in a Pathway <Pathway_Specifica
 `add_projections <Composition.add_projections>` method, or using the `feedback
 <Composition_add_projection_feedback_Arg>` of the Composition's `add_projection <Composition.add_projection>` method.
 
-    .. wqrning::
+    .. warning::
        Designating a Projection as **feeedback** that is *not* in a cycle, or designating more than one Projection as
        **feedback* within the same cycle is allowed, but will issue a warning and can produce unexpected results.
+       Specifically, the `FEEDBACK_RECEIVER` for any Projection designated as **feedback** will receive a value from
+       the Projection that is based either on the `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed)
+       or its previous `value <Component.value>` (in subsequent executions), rather than its most recently computed
+       `value <Component.value>`, whether or not it is in a cycle.
        COMMENT:
-       Specifically, the `FEEDBACK_RECEIVER` will receive a value from the Projection that is based either on the
-       the `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
-       (in subsequent executions), rather than its most recently computed `value <Component.value>`, even though they
-       may not be in a cycle.
            CONFIRM SWHAT HAPPENS FOR 2 FEEDBACK PROJECTIONS.
-           EXAMPLE HERE
+           EXAMPLE:
+                T1 = TransferMechanism()
+                T2 = TransferMechanism()
+                T3 = TransferMechanism()
+                T4 = TransferMechanism()
+                P = MappingProjection(sender=T2, receiver=T3, name='MY FEEDBACK PROJECTION')
+                C = Composition([T1, T2, (P, FEEDBACK), T3, T4])
+                C.run({T1:3})
+                UserWarning: The following projections were labeled as feedback, but they are not in any cycles: (MappingProjection MY FEEDBACK PROJECTION)
+                [array([3.]), array([0.])]
+                T1:  [[3.]]
+                T2:  [[3.]]
+                T3:  [[0.]] # Because P is designated as feedback
+                T4:  [[0.]]
        COMMENT
 
 The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feeeback_projections>`
