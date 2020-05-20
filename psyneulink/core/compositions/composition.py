@@ -1165,8 +1165,8 @@ If its `Condition` is *not* satisfied, then none of the parameters specified wit
 
 .. _Composition_Initial_Values_and_Feedback:
 
-*Cycles, Initialization, and Feedback*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Cycles and Feedback*
+~~~~~~~~~~~~~~~~~~~~~
 
 If a Composition has any Projections that form loops of execution — that is, cycles in its `graph <Composition_Graph> —
 these require special handling to insure consistent and desired order of execution. This is handled by a Composition in
