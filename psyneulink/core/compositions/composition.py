@@ -46,6 +46,9 @@ Contents
           COMMENT
       - `Composition_Runtime_Params`
       - `Composition_Initial_Values_and_Feedback`
+      COMMENT:
+      - `Composition_Reset`
+      COMMENT
       - `Composition_Execution_Context`
       - `Composition_Compilation`
   * `Composition_Visualization`
@@ -1243,32 +1246,73 @@ tuple with the Projection where it is `specified in a Pathway <Pathway_Specifica
 <Composition_add_projection_feedback_Arg>` of the Composition's `add_projection <Composition.add_projection>` method.
 
     .. warning::
-       Designating a Projection as **feeedback** that is *not* in a cycle
+       Designating a Projection as **feeedback** that is *not* in a cycle is allowed, but will issue a warning and
+       can produce unexpected results.  Designating more than one Projection as **feedback** within a cycle is also
+       permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
+       Projection designated as **feedback** will receive a value from the Projection that is based either on the
+       FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+       (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
+       is in a cycle.
        COMMENT:
-       , or designating more than one Projection as
-       **feedback* within the same cycle,
-       COMMENT
-       is allowed, but will issue a warning and can produce unexpected results.
-       Specifically, the `FEEDBACK_RECEIVER` for any Projection designated as **feedback** will receive a value from
-       the Projection that is based either on the `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed)
-       or its previous `value <Component.value>` (in subsequent executions), rather than its most recently computed
-       `value <Component.value>` whether or not it is in a cycle.
-       COMMENT:
-           CONFIRM SWHAT HAPPENS FOR 2 FEEDBACK PROJECTIONS.
-           EXAMPLE:
-                T1 = TransferMechanism()
-                T2 = TransferMechanism()
-                T3 = TransferMechanism()
-                T4 = TransferMechanism()
-                P = MappingProjection(sender=T2, receiver=T3, name='MY FEEDBACK PROJECTION')
-                C = Composition([T1, T2, (P, FEEDBACK), T3, T4])
+           EXAMPLES:  [INCLUDE FIGURE WITH show_graph() FOR EACH
+                T1 = TransferMechanism(name='T1')
+                T2 = TransferMechanism(name='T2')
+                T3 = TransferMechanism(name='T3')
+                T4 = TransferMechanism(name='T4')
+                P4 = MappingProjection(sender=T4, receiver=T1)
+                P3 = MappingProjection(sender=T3, receiver=T1)
+
+                # # No feedback version (cycle)
+                # C = Composition([T1, T2, T3, T4, P4, T1])
+                # C.add_projection(P3)
                 C.run({T1:3})
-                UserWarning: The following projections were labeled as feedback, but they are not in any cycles: (MappingProjection MY FEEDBACK PROJECTION)
-                [array([3.]), array([0.])]
+                print('T1: ',T1.value)
+                print('T2: ',T2.value)
+                print('T3: ',T3.value)
+                print('T4: ',T4.value)
+                T1:  [[3.]]
+                T2:  [[0.]]
+                T3:  [[0.]]
+                T4:  [[0.]]
+
+                # # One feedback version:
+                # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
+                # C.add_projection(P3)
+                C.run({T1:3})
+                print('T1: ',T1.value)
+                print('T2: ',T2.value)
+                print('T3: ',T3.value)
+                print('T4: ',T4.value)
+                T1:  [[3.]]
+                T2:  [[0.]]
+                T3:  [[0.]]
+                T4:  [[0.]]
+
+                # The other feedback version:
+                C = Composition([T1, T2, T3, T4, P4, T1])
+                C.add_projection(P3, feedback=FEEDBACK)
+                C.run({T1:3})
+                print('T1: ',T1.value)
+                print('T2: ',T2.value)
+                print('T3: ',T3.value)
+                print('T4: ',T4.value)
+                T1:  [[3.]]
+                T2:  [[0.]]
+                T3:  [[0.]]
+                T4:  [[0.]]
+
+                # # Dual feedback version:
+                # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
+                # C.add_projection(P3, feedback=FEEDBACK)
+                C.run({T1:3})
+                print('T1: ',T1.value)
+                print('T2: ',T2.value)
+                print('T3: ',T3.value)
+                print('T4: ',T4.value)
                 T1:  [[3.]]
                 T2:  [[3.]]
-                T3:  [[0.]] # Because P is designated as feedback
-                T4:  [[0.]]
+                T3:  [[3.]]
+                T4:  [[3.]]
        COMMENT
 
 The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feeeback_projections>`
@@ -1378,6 +1422,11 @@ used in combination with `Condition` specifications for individual Components to
 different time scales.
 
 Runtime Params
+COMMENT
+
+
+COMMENT:
+.._Composition_Reset:
 COMMENT
 
 .. _Composition_Compilation:
