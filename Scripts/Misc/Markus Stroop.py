@@ -268,8 +268,8 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):#, plot_tit
     results = np.empty((10, 0))
     # clear log
     # respond_red_accumulator.log.clear_entries(delete_entry=False)
-    # respond_red_accumulator.reinitialize(0)
-    # respond_green_accumulator.reinitialize(0)
+    # respond_red_accumulator.reset(0)
+    # respond_green_accumulator.reset(0)
     for trial in range(ntrials):
         # run system once (with integrator mode off and no noise for hidden units) with only task so asymptotes
         colors_hidden_layer.integrator_mode = False
@@ -281,8 +281,8 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials):#, plot_tit
 
         my_Stroop.run(inputs=initialize_trial_input)
         # but didn't want to run accumulators so set those back to zero
-        # respond_green_accumulator.reinitialize(0)
-        # respond_red_accumulator.reinitialize(0)
+        # respond_green_accumulator.reset(0)
+        # respond_red_accumulator.reset(0)
 
         # now put back in integrator mode and noise
         colors_hidden_layer.integrator_mode = True
@@ -375,8 +375,8 @@ print(response_layer.value)
 # nTrials = 5
 # #my_Stroop.run(inputs=CN_incongruent_trial_input, num_trials=nTrials)
 # #but didn't want to run accumulators so set those back to zero
-# #respond_green_accumulator.reinitialize(0)
-# #respond_red_accumulator.reinitialize(0)
+# #respond_green_accumulator.reset(0)
+# #respond_red_accumulator.reset(0)
 # # now run test trial
 # #my_Stroop.show_graph(show_mechanism_structure=pnl.VALUES)
 # my_Stroop.run(inputs=CN_incongruent_trial_input, num_trials=1)

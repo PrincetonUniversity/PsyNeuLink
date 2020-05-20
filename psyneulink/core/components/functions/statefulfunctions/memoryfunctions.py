@@ -141,9 +141,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         the value returned continues to be extended indefinitely.
 
     initializer : float, list or ndarray
-        value assigned as the first item of the deque when the Function is initialized, or reinitialized
-        if the **new_previous_value** argument is not specified in the call to `reinitialize
-        <StatefulFUnction.reinitialize>`.
+        value assigned as the first item of the deque when the Function is initialized, or reset
+        if the **new_previous_value** argument is not specified in the call to `reset
+        <StatefulFunction.reset>`.
 
     previous_value : 1d array : default class_defaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
@@ -254,12 +254,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         )
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
 
-        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        If an argument is passed into reset or if the `initializer <Buffer.initializer>` attribute contains a
         value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
         Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
 
@@ -279,9 +279,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "reset its stateful attribute (previous_value), or reset must be called "
                                 "without any arguments, in which case the current initializer value, will be used to "
-                                "reinitialize previous_value".format(args,
+                                "reset previous_value".format(args,
                                                                      self.name))
 
         if reinitialization_value is None or reinitialization_value == []:
@@ -392,7 +392,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
     pairs can be used to initialize the contents of memory by providing it in the **initialzer** argument of the
-    ContentAddressableMemory's constructor, or in a call to its `reinitialize  <ContentAddressableMemory.reinitialize>`
+    ContentAddressableMemory's constructor, or in a call to its `reset  <ContentAddressableMemory.reset>`
     method.  The current contents of the memory can be inspected using the `memory <ContentAddressableMemory.memory>`
     attribute, which returns a list containing the current entries, each as a 2 item list containing a key-value pair.
 
@@ -1017,13 +1017,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
-        reinitialize(<new_dictionary> default={})
+        reset(<new_dictionary> default={})
 
         Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reinitialize or if the `initializer <ContentAddressableMemory.initializer>`
+        If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
         <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
         <ContentAddressableMemory.previous_value>` memory starts out empty.
@@ -1044,9 +1044,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "reset its stateful attribute (previous_value), or reset must be called "
                                 "without any arguments, in which case the current initializer value will be used to "
-                                "reinitialize previous_value".format(args, self.name))
+                                "reset previous_value".format(args, self.name))
 
         if reinitialization_value == []:
             self.get_previous_value(context).clear()

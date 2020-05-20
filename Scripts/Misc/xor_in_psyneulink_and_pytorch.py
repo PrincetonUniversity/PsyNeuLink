@@ -129,7 +129,7 @@ print('\n')
 # XOR in Autodiff Composition ---------------------------------------------------------------------
 
 autodiff_start_time = time.time()
-# The mechanisms and projections provided to AutodiffComposition are basically the same as above, but reinitialized
+# The mechanisms and projections provided to AutodiffComposition are basically the same as above, but resetd
 xor_in = pnl.TransferMechanism(name='xor_in',
                            default_variable=np.zeros(2))
 

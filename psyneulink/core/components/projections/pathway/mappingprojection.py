@@ -322,7 +322,7 @@ def _mapping_projection_matrix_getter(owning_component=None, context=None):
 
 def _mapping_projection_matrix_setter(value, owning_component=None, context=None):
     owning_component.function.parameters.matrix.set(value, context)
-    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type
+    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reset" type
     # method but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
     owning_component.parameter_ports["matrix"].function.parameters.previous_value.set(value, context)
 
@@ -485,7 +485,7 @@ class MappingProjection(PathwayProjection_Base):
                          **kwargs)
 
         try:
-            self._parameter_ports[MATRIX].function.reinitialize(context=context)
+            self._parameter_ports[MATRIX].function.reset(context=context)
         except AttributeError:
             pass
 

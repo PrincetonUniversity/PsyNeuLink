@@ -260,7 +260,7 @@ A ContrastiveHebbianMechanism always executes in two sequential phases, that tog
 .. _ContrastiveHebbian_Plus_Phase:
 
 * *plus phase:*  if `continuous <ContrastiveHebbianMechanism.continuous>` is `False`, then `current_activity
-  <ContrastiveHebbianMechanism.current_activity>` is reinitialized to
+  <ContrastiveHebbianMechanism.current_activity>` is reset to
   `initial_value <Mechanism_Base.initial_value>`, and the Mechanism's
   previous `value <Mechanism_Base.value>` is reset to ``None``;
   otherwise, these retain their value from the last execution in the
@@ -477,7 +477,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         details.
 
     continuous : bool : default True
-        specifies whether or not to reinitialize `current_activity <ContrastiveHebbianMechanism.current_activity>`
+        specifies whether or not to reset `current_activity <ContrastiveHebbianMechanism.current_activity>`
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of a trial.
 
     minus_phase_termination_condition : COUNT or CONVERGENCE : default CONVERGENCE
@@ -574,7 +574,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         of the *RECURRENT* InputPort by `combination_function <ContrastiveHebbianMechanism.combination_function>`.
 
     continuous : bool : default True
-        determines whether or not `current_activity <ContrastiveHebbianMechanism.current_activity>` is reinitialized
+        determines whether or not `current_activity <ContrastiveHebbianMechanism.current_activity>` is reset
         at the beginning of the `minus phase <ContrastiveHebbian_Minus_Phase>` of execution. If `False`, it is set to `initial_value
         <Mechanism_Base.initial_value>`.
 
@@ -1224,7 +1224,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)
                 if not self.continuous:
-                    self.reinitialize(self.initial_value, context=context)
+                    self.reset(self.initial_value, context=context)
                     self.parameters.current_activity._set(self.parameters.initial_value._get(context), context)
                 self.parameters.current_termination_threshold._set(self.plus_phase_termination_threshold, context)
                 self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, context)

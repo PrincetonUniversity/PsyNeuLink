@@ -283,16 +283,16 @@ for cond in range(conditions):
 
         response_all.append(rrr.shape[0])
 
-        # Clear log & reinitialize ----------------------------------------------------------------------------------------
+        # Clear log & reset ----------------------------------------------------------------------------------------
         response_layer.log.clear_entries()
         colors_hidden_layer.log.clear_entries()
         words_hidden_layer.log.clear_entries()
         task_layer.log.clear_entries()
 
-        colors_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
-        words_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
-        response_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
-        task_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
+        colors_hidden_layer.reset([[0, 0, 0]], context=Bidirectional_Stroop)
+        words_hidden_layer.reset([[0, 0, 0]], context=Bidirectional_Stroop)
+        response_layer.reset([[0, 0]], context=Bidirectional_Stroop)
+        task_layer.reset([[0, 0]], context=Bidirectional_Stroop)
 
     print('response_all: ', response_all)
 
@@ -318,15 +318,15 @@ for cond in range(conditions):
         n_r = rr.shape[0]
         rrr = rr.reshape(n_r,2)
         response_all.append(rrr.shape[0])
-        # Clear log & reinitialize ------------------------------------------------------------------------------------
+        # Clear log & reset ------------------------------------------------------------------------------------
         response_layer.log.clear_entries()
         colors_hidden_layer.log.clear_entries()
         words_hidden_layer.log.clear_entries()
         task_layer.log.clear_entries()
-        colors_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
-        words_hidden_layer.reinitialize([[0, 0, 0]], context=Bidirectional_Stroop)
-        response_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
-        task_layer.reinitialize([[0, 0]], context=Bidirectional_Stroop)
+        colors_hidden_layer.reset([[0, 0, 0]], context=Bidirectional_Stroop)
+        words_hidden_layer.reset([[0, 0, 0]], context=Bidirectional_Stroop)
+        response_layer.reset([[0, 0]], context=Bidirectional_Stroop)
+        task_layer.reset([[0, 0]], context=Bidirectional_Stroop)
 
 # Plotting ------------------------------------------------------------------------------------------------------------
 #compute regression for model

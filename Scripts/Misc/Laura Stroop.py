@@ -311,8 +311,8 @@ my_Stroop.show()
 #run system once with only task so asymptotes
 my_Stroop.run(inputs=CN_trial_initialize_input)
 #but didn't want to run accumulators so set those back to zero
-respond_green_accumulator.reinitialize(0)
-respond_red_accumulator.reinitialize(0)
+respond_green_accumulator.reset(0)
+respond_red_accumulator.reset(0)
 # now run test trial
 my_Stroop.show_graph()
 # my_Stroop.show_graph(show_mechanism_structure=pnl.VALUES)
@@ -339,9 +339,9 @@ print(response_layer.value)
 
 
 #if you want to run again you have to reset integrator mechanisms
-words_hidden_layer.reinitialize([0,0])
-colors_hidden_layer.reinitialize([0,0])
-response_layer.reinitialize([0,0])
+words_hidden_layer.reset([0,0])
+colors_hidden_layer.reset([0,0])
+response_layer.reset([0,0])
 
 
 # In[ ]:
@@ -351,8 +351,8 @@ response_layer.reinitialize([0,0])
 #run system once with only task so asymptotes
 my_Stroop.run(inputs=CN_trial_initialize_input)
 #but didn't want to run accumulators so set those back to zero
-respond_green_accumulator.reinitialize(0)
-respond_red_accumulator.reinitialize(0)
+respond_green_accumulator.reset(0)
+respond_red_accumulator.reset(0)
 # now run test trial
 my_Stroop.run(inputs=CN_congruent_trial_input, termination_processing=terminate_trial)
 

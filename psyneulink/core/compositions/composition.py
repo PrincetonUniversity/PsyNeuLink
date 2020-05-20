@@ -1281,9 +1281,9 @@ COMMENT:
       - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
         - reset_integrator_nodes_to:  DICT of {node: value} paris
                                    THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
-                                   IF NOT SPECIIFED, THEN REINITIALIZED TO previous_value ATTRIBUTE, WHICH IS SET TO THE
+                                   IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
                                    MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
-        FIX: ?? CONSIDER MAKING REINITIALIZE_NODES_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
         - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
                                                      IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
                                                                            THEIR reset_integrator_when ATTRIBUTE IS None
@@ -8691,8 +8691,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs=None,
             num_trials=None,
             initialize_cycle_values=None,
-            reinitialize_values=None,
-            reinitialize_nodes_when=Never(),
+            reset_stateful_functions_to=None,
+            reset_stateful_functions_when=Never(),
             skip_initialization=False,
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
@@ -8740,18 +8740,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
                 (see `Composition_Initial_Values_and_Feedback` additional details).
 
-            reinitialize_values : Dict { Node : Object | iterable [Object] } : default None
-                object or iterable of objects to be passed as arguments to nodes' reinitialize methods when their
-                respective reinitialize_when conditions are met. These are used to seed the previous_value parameters
+            reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
+                object or iterable of objects to be passed as arguments to nodes' reset methods when their
+                respective reset_stateful_function_when conditions are met. These are used to seed the previous_value parameters
                 of Mechanisms that have active integrator functions.
                 ..technical_note::
-                    reinitialize values are used to seed the previous_value Parameter of Mechanisms with
+                    reset values are used to seed the previous_value Parameter of Mechanisms with
                     active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
                     call to run.
 
-            reinitialize_nodes_when :  Condition : default Never()
-                sets the reinitialize_when condition for all nodes in the Composition that currently have their
-                reinitialize_when condition set to `Never <Never>` for the duration of the run.
+            reset_stateful_functions_when :  Condition : default Never()
+                sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
+                reset_stateful_function_when condition set to `Never <Never>` for the duration of the run.
 
             skip_initialization : bool : default False
 
@@ -8920,32 +8920,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     node.initialize(initialize_cycle_values[node], context)
 
-        if reinitialize_values is None:
-            reinitialize_values = {}
+        if reset_stateful_functions_to is None:
+            reset_stateful_functions_to = {}
 
-        for node in reinitialize_values:
-            # make sure the args to reinitialize are in the form of an iterable so they can be unpacked
+        for node in reset_stateful_functions_to:
+            # make sure the args to reset are in the form of an iterable so they can be unpacked
             try:
-                iter(reinitialize_values[node])
+                iter(reset_stateful_functions_to[node])
             except TypeError:
-                reinitialize_values[node] = [reinitialize_values[node]]
-            node.reinitialize(*reinitialize_values[node], context=context)
+                reset_stateful_functions_to[node] = [reset_stateful_functions_to[node]]
+            node.reset(*reset_stateful_functions_to[node], context=context)
 
-        # cache and set reinitialize_when conditions for nodes, matching old System behavior
+        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
         # Validate
-        if not isinstance(reinitialize_nodes_when, Condition):
-            raise CompositionError(
-                "{reinitialize_nodes_when} is not a valid specification for reinitialize_nodes_when of {self.name}. "
-                "reinitialize_nodes_when must be a Condition.")
+        valid_reset_type = True
+        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
+            valid_reset_type = False
+        elif type(reset_stateful_functions_when) == dict:
+            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
+                         False for k,v in reset_stateful_functions_when.items()}:
+                valid_reset_type = False
 
-        self._reinitialize_nodes_when_cache = {}
-        for node in self.nodes:
-            try:
-                if isinstance(node.reinitialize_when, Never):
-                    self._reinitialize_nodes_when_cache[node] = node.reinitialize_when
-                    node.reinitialize_when = reinitialize_nodes_when
-            except AttributeError:
-                pass
+        if not valid_reset_type:
+            raise CompositionError(
+                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
+                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+
+        self._reset_stateful_functions_when_cache = {}
+
+        # use type here to avoid another costly call to isinstance
+        if not type(reset_stateful_functions_when) == dict:
+            for node in self.nodes:
+                try:
+                    if isinstance(node.reset_stateful_function_when, Never):
+                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                        node.reset_stateful_function_when = reset_stateful_functions_when
+                except AttributeError:
+                    pass
+        else:
+            for node in reset_stateful_functions_when:
+                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
         if ContextFlags.SIMULATION not in context.execution_phase:
             try:
@@ -9087,13 +9102,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 break
 
             for node in self.nodes:
-                if hasattr(node, "reinitialize_when") and node.parameters.has_initializers._get(context):
-                    if node.reinitialize_when.is_satisfied(scheduler=self.scheduler,
+                if hasattr(node, "reset_stateful_function_when") and node.parameters.has_initializers._get(context):
+                    if node.reset_stateful_function_when.is_satisfied(scheduler=self.scheduler,
                                                            context=context):
-                        if node in reinitialize_values:
-                            node.reinitialize(*reinitialize_values[node], context=context)
+                        if node in reset_stateful_functions_to:
+                            node.reset(*reset_stateful_functions_to[node], context=context)
                         else:
-                            node.reinitialize(None, context=context)
+                            node.reset(None, context=context)
 
             # execute processing
             # pass along the stimuli for this trial
@@ -9162,10 +9177,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 movie = Image.open(movie_path)
                 movie.show()
 
-        # Undo override of reinitialize_when conditions
+        # Undo override of reset_stateful_function_when conditions
         for node in self.nodes:
             try:
-                node.reinitialize_when = self._reinitialize_nodes_when_cache[node]
+                node.reset_stateful_function_when = self._reset_stateful_functions_when_cache[node]
             except KeyError:
                 pass
 
@@ -9481,18 +9496,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.execution_id = old_eid
 
         # Set num_executions.TRIAL to 0 for every node
-        # Reinitialize any nodes that have satisfied 'reinitialize_when' conditions.
+        # Reset any nodes that have satisfied 'reset_stateful_function_when' conditions.
         for node in self.nodes:
             node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
             if node.parameters.has_initializers._get(context):
                 try:
                     if (
-                        node.reinitialize_when.is_satisfied(
+                        node.reset_stateful_function_when.is_satisfied(
                             scheduler=execution_scheduler,
                             context=context
                         )
                     ):
-                        node.reinitialize(None, context=context)
+                        node.reset(None, context=context)
                 except AttributeError:
                     pass
 
@@ -9918,12 +9933,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, values, context=NotImplemented):
+    def reset(self, values, context=NotImplemented):
         if context.execution_id is NotImplemented:
             context.execution_id = self.most_recent_context.execution_id
 
         for i in range(self.stateful_nodes):
-            self.stateful_nodes[i].reinitialize(values[i], context=context)
+            self.stateful_nodes[i].reset(values[i], context=context)
 
     def disable_all_history(self):
         """
@@ -10187,7 +10202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, context=None):
+    def reset(self, context=None):
         if context.execution_id is NotImplemented:
             context.execution_id = self.most_recent_context.execution_id
 

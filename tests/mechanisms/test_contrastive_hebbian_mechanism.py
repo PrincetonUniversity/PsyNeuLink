@@ -140,7 +140,7 @@ class TestContrastiveHebbian:
         assert correct_message_found
 
         m.configure_learning()
-        m.reinitialize_when=pnl.Never()
+        m.reset_stateful_function_when=pnl.Never()
 
         c = pnl.Composition()
         c.add_linear_processing_pathway([m,o])

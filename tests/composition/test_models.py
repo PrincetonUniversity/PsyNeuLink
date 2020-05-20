@@ -1025,12 +1025,12 @@ class TestModels:
     #             results.append(res)
     #             res = comp.run(inputs=stim[1], num_trials=ntrials)
     #             results.append(res)
-    #             # reinitialize after condition was run
-    #             colors_hidden_layer.reinitialize([[0, 0, 0]])
-    #             words_hidden_layer.reinitialize([[0, 0, 0]])
-    #             response_layer.reinitialize([[0, 0]])
-    #             task_layer.reinitialize([[0, 0]])
-    #             comp.reinitialize()
+    #             # reset after condition was run
+    #             colors_hidden_layer.reset([[0, 0, 0]])
+    #             words_hidden_layer.reset([[0, 0, 0]])
+    #             response_layer.reset([[0, 0]])
+    #             task_layer.reset([[0, 0]])
+    #             comp.reset()
     #
     #         return results
     #

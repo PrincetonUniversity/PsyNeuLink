@@ -133,12 +133,12 @@ class ContextFlags(enum.IntFlag):
     """Set during validation of the value of a Component or its attribute."""
     INITIALIZED   = 1 << 4  # 16
     """Set after completion of initialization of the Component."""
-    REINITIALIZED = 1 << 4  # 16
+    RESET = 1 << 4  # 16
     """Set on stateful Components when they are re-initialized."""
     UNINITIALIZED = 1 << 16
     """Default value set before initialization"""
 
-    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED | UNINITIALIZED
+    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | RESET | UNINITIALIZED
 
     # execution_phase flags
     PROCESSING    = 1 << 5  # 32
@@ -245,7 +245,7 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
                                ContextFlags.VALIDATING,
                                ContextFlags.INITIALIZED,
-                               ContextFlags.REINITIALIZED,
+                               ContextFlags.RESET,
                                ContextFlags.UNINITIALIZED}
 
 EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,

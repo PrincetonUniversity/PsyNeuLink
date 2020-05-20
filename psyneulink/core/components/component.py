@@ -336,20 +336,20 @@ The following attributes control and provide information about the execution of 
 *Initialization*
 ~~~~~~~~~~~~~~~~
 
-.. _Component_Reinitialize_When:
+.. _Component_Reset_Stateful_Function_When:
 
-* **reinitialize_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
-  `reinitialize <Component.reinitialize>` method. The `reinitialize <Component.reinitialize>` method is executed
+* **reset_stateful_function_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
+  `reset <Component.reset>` method. The `reset <Component.reset>` method is executed
   without arguments, meaning that the relevant function's `initializer<IntegratorFunction.initializer>` attribute
   (or equivalent -- initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-  the `reinitialize <Component.reinitialize>` method and `reinitialize_when <Component.reinitialize_when>` attribute
+  the `reset <Component.reset>` method and `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute
   only exist for Mechanisms that have `stateful <Parameter.stateful>` Parameters, or that have a `function
   <Mechanism.function>` with `stateful <Parameter.stateful>` Parameters.
 
   .. note::
 
-        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
-        Components do not reinitialize.
+        Currently, only Mechanisms reset when their reset_stateful_function_when Conditions are satisfied. Other types of
+        Components do not reset.
 
 .. _:
 Component_Execution_Termination
@@ -468,7 +468,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    REINITIALIZE_WHEN, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
@@ -748,8 +748,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     max_executions_before_finished : bool
         see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
-    reinitialize_when : `Condition`
-        see `reinitialize_when <Component_Reinitialize_When>`
+    reset_stateful_function_when : `Condition`
+        see `reset_stateful_function_when <Component_reset_stateful_function_when>`
 
     name : str
         see `name <Component_Name>`
@@ -772,7 +772,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             * `INITIALIZING <ContextFlags.INITIALIZING>`
             * `VALIDATING <ContextFlags.VALIDATING>`
             * `INITIALIZED <ContextFlags.INITIALIZED>`
-            * `REINITIALIZED <ContextFlags.REINITIALIZED>`
+            * `RESET <ContextFlags.RESET>`
             * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
 
     COMMENT:
@@ -798,7 +798,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = [REINITIALIZE_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
+    standard_constructor_args = [RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
 
     # helper attributes for JSON model spec
     _model_spec_id_parameters = 'parameters'
@@ -983,7 +983,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
-                 reinitialize_when=None,
+                 reset_stateful_function_when=None,
                  prefs=None,
                  **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
@@ -1043,10 +1043,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.has_initializers._set(False, context)
 
-        if reinitialize_when is not None:
-            self.reinitialize_when = reinitialize_when
+        if reset_stateful_function_when is not None:
+            self.reset_stateful_function_when = reset_stateful_function_when
         else:
-            self.reinitialize_when = Never()
+            self.reset_stateful_function_when = Never()
 
         # self.componentName = self.componentType
         try:
@@ -1289,8 +1289,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, *_, tags):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
+        assert "reset" in tags
         return builder
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
@@ -1306,8 +1306,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for p in params, state, arg_in, arg_out:
                 p.attributes.add('noalias')
 
-        if "reinitialize" in tags:
-            builder = self._gen_llvm_function_reinitialize(ctx, builder,
+        if "reset" in tags:
+            builder = self._gen_llvm_function_reset(ctx, builder,
                                                            params, state,
                                                            arg_in, arg_out,
                                                            tags=tags)
@@ -2577,7 +2577,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -2588,11 +2588,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if isinstance(self.function, IntegratorFunction):
             if context is NotImplemented:
                 context = self.most_recent_context
-            new_value = self.function.reinitialize(*args, context=context)
+            new_value = self.function.reset(*args, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
         else:
-            raise ComponentError(f"Reinitializing {self.name} is not allowed because this Component is not stateful. "
-                                 "(It does not have an accumulator to reinitialize).")
+            raise ComponentError(f"Resetting {self.name} is not allowed because this Component is not stateful. "
+                                 "(It does not have an accumulator to reset).")
 
     @handle_external_context()
     def execute(self, variable=None, context=None, runtime_params=None):

@@ -1749,7 +1749,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         return value + offset
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, short=None, long=None, context=NotImplemented):
+    def reset(self, short=None, long=None, context=NotImplemented):
         """
         Effectively begins accumulation over again at the specified utilities.
 

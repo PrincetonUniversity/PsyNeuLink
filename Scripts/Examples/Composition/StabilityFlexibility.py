@@ -189,7 +189,7 @@ stabilityFlexibility.enable_model_based_optimizer = True
 print("Beginning of Run")
 
 for i in range(1, len(stabilityFlexibility.controller.input_ports)):
-    stabilityFlexibility.controller.input_ports[i].function.reinitialize()
+    stabilityFlexibility.controller.input_ports[i].function.reset()
 
 # stabilityFlexibility.show_graph(show_controller=True)
 

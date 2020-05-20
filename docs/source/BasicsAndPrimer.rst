@@ -289,7 +289,7 @@ Mechanism has completed its execution, as follows::
     # Modify consruction of decision Mechanism:
     decision = DDM(name='DECISION',
                    input_format=ARRAY,
-                   reinitialize_when=AtTrialStart(),
+                   reset_stateful_function_when=AtTrialStart(),
                    function=DriftDiffusionIntegrator(noise=0.5, threshold=20)
                    )
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
@@ -395,7 +395,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
 
     # Set up run and then execute it
     task.initial_value = [0.5,0.5]         # Assign "neutral" starting point for task units on each trial
-    task.reinitialize_when=AtTrialStart()  # Reinitialize task units at beginning of each trial
+    task.reset_stateful_function_when=AtTrialStart()  # Reset task units at beginning of each trial
     num_trials = 4
     stimuli = {color_input:[red]*num_trials,
                word_input:[green]*num_trials,
@@ -403,7 +403,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     Stroop_model.run(inputs=stimuli, call_after_trial=print_after)
 
 This example takes advantage of several additional features of PsyNeuLink, including its ability to automate certain
-forms of construction, and perform specified operations at various points during execution (e.g., reinitialize variables
+forms of construction, and perform specified operations at various points during execution (e.g., reset variables
 and call user-defined functions).  For example, the constructor for the ControlMechanism can be used to specify how
 control should be configured, and automates the process of implementing it:  the **objective_mechanism** argument
 specifies the construction of an ObjectiveMechanism for the ControlMechanism that provides its input, and
@@ -424,7 +424,7 @@ The result is shown in the figure below, using the **show_controller** option of
    **Stroop Model with Controller.** Representation of the Composition with the ``control`` Mechanism added, generated
    by a call to ``Stroop_model.show_graph(show_controller)``.
 
-The ``task`` Mechanism is configured to reinitialize at the beginning of each `trial <TimeScale.TRIAL>`, and the
+The ``task`` Mechanism is configured to reset at the beginning of each `trial <TimeScale.TRIAL>`, and the
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
 at the end of each `trial <TimeScale.TRIAL>` (see `below <Stroop_model_output>`).
 
@@ -432,7 +432,7 @@ When the Composition executes, the Objective Mechanism receives the output of th
 `Energy` function assigned to it to compute conflict in the ``output`` Mechanism (i.e., the degree of co-activity of
 the ``red`` and ``green`` values).  The result passed to the ``control`` Mechanism, which uses it to set the `gain
 <Logistic .gain>` of the ``task`` Mechanism's `Logistic` function.  The ``task`` Mechanism is configured to
-reinitialize at the beginning of each `trial <TimeScale.TRIAL>`; and,since the ``control`` Mechanism was assigned as
+reset at the beginning of each `trial <TimeScale.TRIAL>`; and,since the ``control`` Mechanism was assigned as
 the Composition's `controller <Composition.controller>`, it executes at the end of each `trial <TimeScale.TRIAL>`
 after all of the other Mechanisms in the Composition have executed, which has its effects on the ``task`` Mechanism
 the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's `controller
