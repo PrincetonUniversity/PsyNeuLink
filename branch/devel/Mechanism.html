@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+377.gfc5d9db documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+379.g1853c30 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+377
+                  0.7.5.4+379
                 </div>
               
             
@@ -1397,52 +1397,6 @@ over the specified x_range</td>
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reinitialize <code class="xref any docutils literal"><span class="pre">value</span></code> if Mechanisms is stateful.</p>
-<p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
-<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
-effectively begins the function’s accumulation over again at the specified value, and updates related
-attributes on the mechanism.  It also clears the
-<code class="xref any docutils literal"><span class="pre">value</span></code> <code class="xref any docutils literal"><span class="pre">history</span> <span class="pre">&lt;Parameter.history</span></code>, thus
-effectively setting the previous value to <code class="docutils literal"><span class="pre">None</span></code>.</p>
-<p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method:</p>
-<blockquote>
-<div><ol class="arabic simple">
-<li>Calls the function’s own <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method (see Note below for
-details)</li>
-<li>Sets the mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> to the output of the function’s
-reinitialize method</li>
-<li>Updates its <code class="xref any docutils literal"><span class="pre">output</span> <span class="pre">ports</span></code> based on its new <code class="xref any docutils literal"><span class="pre">value</span></code></li>
-</ol>
-</div></blockquote>
-<p>If the mechanism has an <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>(1) Calls the `integrator_function&#39;s &lt;TransferMechanism.integrator_function&gt;` own `reinitialize
-    &lt;IntegratorFunction.reinitialize&gt;` method (see Note below for details)
-
-(2) Executes its `function &lt;Mechanism_Base.function&gt;` using the output of the `integrator_function&#39;s
-    &lt;TransferMechanism.integrator_function&gt;` `reinitialize &lt;IntegratorFunction.reinitialize&gt;` method as
-    the function&#39;s variable
-
-(3) Sets the mechanism&#39;s `value &lt;Mechanism_Base.value&gt;` to the output of its function
-
-(4) Updates its `output ports &lt;Mechanism_Base.output_port&gt;` based on its new `value
-    &lt;Mechanism_Base.value&gt;`
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">The reinitialize method of an IntegratorFunction Function typically resets the function’s
-<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (and any other <code class="xref any docutils literal"><span class="pre">stateful_attributes</span></code>) and <code class="xref any docutils literal"><span class="pre">value</span></code> to the quantity (or
-quantities) specified. If <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> is called without arguments,
-the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> value (or the values of each of the attributes in
-<code class="xref any docutils literal"><span class="pre">initializers</span></code>) is used instead. The <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method may vary across different Integrators. See individual
-functions for details on their <code class="xref any docutils literal"><span class="pre">stateful_attributes</span></code>,
-as well as other reinitialization steps that the reinitialize method may carry out.</p>
-</div>
-</dd></dl>
-
-<dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.remove_ports">
 <code class="descname">remove_ports</code><span class="sig-paren">(</span><em>ports</em>, <em>context='REMOVE_PORTS'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.remove_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove one or more <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> from the Mechanism.  Only <code class="xref any docutils literal"><span class="pre">InputPorts</span></code> can be removed; <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> cannot be removed from a Mechanism.</p>
@@ -1462,6 +1416,52 @@ Port specification(s) can be an Port object or the name of one.</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset <code class="xref any docutils literal"><span class="pre">value</span></code> if Mechanisms is stateful.</p>
+<p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
+effectively begins the function’s accumulation over again at the specified value, and updates related
+attributes on the mechanism.  It also clears the
+<code class="xref any docutils literal"><span class="pre">value</span></code> <code class="xref any docutils literal"><span class="pre">history</span> <span class="pre">&lt;Parameter.history</span></code>, thus
+effectively setting the previous value to <code class="docutils literal"><span class="pre">None</span></code>.</p>
+<p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Calls the function’s own <code class="xref any docutils literal"><span class="pre">reset</span></code> method (see Note below for
+details)</li>
+<li>Sets the mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> to the output of the function’s
+reset method</li>
+<li>Updates its <code class="xref any docutils literal"><span class="pre">output</span> <span class="pre">ports</span></code> based on its new <code class="xref any docutils literal"><span class="pre">value</span></code></li>
+</ol>
+</div></blockquote>
+<p>If the mechanism has an <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>(1) Calls the `integrator_function&#39;s &lt;TransferMechanism.integrator_function&gt;` own `reset
+    &lt;IntegratorFunction.reset&gt;` method (see Note below for details)
+
+(2) Executes its `function &lt;Mechanism_Base.function&gt;` using the output of the `integrator_function&#39;s
+    &lt;TransferMechanism.integrator_function&gt;` `reset &lt;IntegratorFunction.reset&gt;` method as
+    the function&#39;s variable
+
+(3) Sets the mechanism&#39;s `value &lt;Mechanism_Base.value&gt;` to the output of its function
+
+(4) Updates its `output ports &lt;Mechanism_Base.output_port&gt;` based on its new `value
+    &lt;Mechanism_Base.value&gt;`
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The reset method of an IntegratorFunction Function typically resets the function’s
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (and any other <code class="xref any docutils literal"><span class="pre">stateful_attributes</span></code>) and <code class="xref any docutils literal"><span class="pre">value</span></code> to the quantity (or
+quantities) specified. If <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> is called without arguments,
+the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> value (or the values of each of the attributes in
+<code class="xref any docutils literal"><span class="pre">initializers</span></code>) is used instead. The <code class="xref any docutils literal"><span class="pre">reset</span></code> method may vary across different Integrators. See individual
+functions for details on their <code class="xref any docutils literal"><span class="pre">stateful_attributes</span></code>,
+as well as other reinitialization steps that the reset method may carry out.</p>
+</div>
 </dd></dl>
 
 <dl class="attribute">
@@ -1579,7 +1579,7 @@ Port specification(s) can be an Port object or the name of one.</td>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+377.gfc5d9db',
+               VERSION:'0.7.5.4+379.g1853c30',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

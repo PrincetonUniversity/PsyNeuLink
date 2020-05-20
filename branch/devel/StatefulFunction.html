@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>StatefulFunction &mdash; PsyNeuLink 0.7.5.4+377.gfc5d9db documentation</title>
+  <title>StatefulFunction &mdash; PsyNeuLink 0.7.5.4+379.g1853c30 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+377
+                  0.7.5.4+379
                 </div>
               
             
@@ -321,20 +321,20 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reinitialize" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>  and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>
 to the specified value(s).</p>
-<p>If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
+<p>If arguments are passed into the reset method, then reset sets each of the attributes in
 <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding argument.
 Next, it sets the <code class="xref any docutils literal"><span class="pre">value</span></code> to a list containing each of the argument values.</p>
-<p>If reinitialize is called without arguments, then it sets each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>. Next, it sets the <code class="xref any docutils literal"><span class="pre">value</span></code> to a list containing
+<p>If reset is called without arguments, then it sets each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>. Next, it sets the <code class="xref any docutils literal"><span class="pre">value</span></code> to a list containing
 the values of each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>.</p>
 <p>Often, the only attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> is
 <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and the only attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a> is <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>, in which case
-the reinitialize method sets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and <code class="xref any docutils literal"><span class="pre">value</span></code> to either the value of the argument (if an argument was passed into
-reinitialize) or the current value of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>.</p>
-<p>For specific types of StatefulFunction functions, the reinitialize method may carry out other
+the reset method sets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and <code class="xref any docutils literal"><span class="pre">value</span></code> to either the value of the argument (if an argument was passed into
+reset) or the current value of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>.</p>
+<p>For specific types of StatefulFunction functions, the reset method may carry out other
 reinitialization steps.</p>
 </dd></dl>
 
@@ -394,7 +394,7 @@ reinitialization steps.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+377.gfc5d9db',
+               VERSION:'0.7.5.4+379.g1853c30',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

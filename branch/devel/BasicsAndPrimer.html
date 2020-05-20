@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+377.gfc5d9db documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.7.5.4+379.g1853c30 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+377
+                  0.7.5.4+379
                 </div>
               
             
@@ -437,7 +437,7 @@ Mechanism has completed its execution, as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of decision Mechanism:</span>
 <span class="n">decision</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION&#39;</span><span class="p">,</span>
                <span class="n">input_format</span><span class="o">=</span><span class="n">ARRAY</span><span class="p">,</span>
-               <span class="n">reinitialize_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">(),</span>
+               <span class="n">reset_stateful_function_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">(),</span>
                <span class="n">function</span><span class="o">=</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
                <span class="p">)</span>
 <span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:</span><span class="n">red</span><span class="p">,</span> <span class="n">word_input</span><span class="p">:</span><span class="n">green</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span><span class="n">color</span><span class="p">},</span>
@@ -538,7 +538,7 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
 
 <span class="c1"># Set up run and then execute it</span>
 <span class="n">task</span><span class="o">.</span><span class="n">initial_value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]</span>         <span class="c1"># Assign &quot;neutral&quot; starting point for task units on each trial</span>
-<span class="n">task</span><span class="o">.</span><span class="n">reinitialize_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">()</span>  <span class="c1"># Reinitialize task units at beginning of each trial</span>
+<span class="n">task</span><span class="o">.</span><span class="n">reset_stateful_function_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">()</span>  <span class="c1"># Reset task units at beginning of each trial</span>
 <span class="n">num_trials</span> <span class="o">=</span> <span class="mi">4</span>
 <span class="n">stimuli</span> <span class="o">=</span> <span class="p">{</span><span class="n">color_input</span><span class="p">:[</span><span class="n">red</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">,</span>
            <span class="n">word_input</span><span class="p">:[</span><span class="n">green</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">,</span>
@@ -547,7 +547,7 @@ conflict in the <code class="docutils literal"><span class="pre">output</span></
 </pre></div>
 </div>
 <p>This example takes advantage of several additional features of PsyNeuLink, including its ability to automate certain
-forms of construction, and perform specified operations at various points during execution (e.g., reinitialize variables
+forms of construction, and perform specified operations at various points during execution (e.g., reset variables
 and call user-defined functions).  For example, the constructor for the ControlMechanism can be used to specify how
 control should be configured, and automates the process of implementing it:  the <strong>objective_mechanism</strong> argument
 specifies the construction of an ObjectiveMechanism for the ControlMechanism that provides its input, and
@@ -563,13 +563,13 @@ The result is shown in the figure below, using the <strong>show_controller</stro
 <p class="caption"><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal"><span class="pre">control</span></code> Mechanism added, generated
 by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span></p>
 </div>
-<p>The <code class="docutils literal"><span class="pre">task</span></code> Mechanism is configured to reinitialize at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>, and the
+<p>The <code class="docutils literal"><span class="pre">task</span></code> Mechanism is configured to reset at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>, and the
 <strong>call_after_trial</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method is used to print Mechanism values
 at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a> (see <code class="xref any docutils literal"><span class="pre">below</span></code>).</p>
 <p>When the Composition executes, the Objective Mechanism receives the output of the <code class="docutils literal"><span class="pre">output</span></code> Mechanism, and uses the
 <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Energy" title="psyneulink.core.components.functions.objectivefunctions.Energy"><code class="xref any py py-class docutils literal"><span class="pre">Energy</span></code></a> function assigned to it to compute conflict in the <code class="docutils literal"><span class="pre">output</span></code> Mechanism (i.e., the degree of co-activity of
 the <code class="docutils literal"><span class="pre">red</span></code> and <code class="docutils literal"><span class="pre">green</span></code> values).  The result passed to the <code class="docutils literal"><span class="pre">control</span></code> Mechanism, which uses it to set the <code class="xref any docutils literal"><span class="pre">gain</span></code> of the <code class="docutils literal"><span class="pre">task</span></code> Mechanism’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function.  The <code class="docutils literal"><span class="pre">task</span></code> Mechanism is configured to
-reinitialize at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>; and,since the <code class="docutils literal"><span class="pre">control</span></code> Mechanism was assigned as
+reset at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>; and,since the <code class="docutils literal"><span class="pre">control</span></code> Mechanism was assigned as
 the Composition’s <code class="xref any docutils literal"><span class="pre">controller</span></code>, it executes at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>
 after all of the other Mechanisms in the Composition have executed, which has its effects on the <code class="docutils literal"><span class="pre">task</span></code> Mechanism
 the next time it executes (i.e., on the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>;  a Composition’s <code class="xref any docutils literal"><span class="pre">controller</span></code> can also be configured to execute at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>). Finally, the
@@ -1045,7 +1045,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+377.gfc5d9db',
+               VERSION:'0.7.5.4+379.g1853c30',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

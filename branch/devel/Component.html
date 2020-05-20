@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4+377.gfc5d9db documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+379.g1853c30 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+377
+                  0.7.5.4+379
                 </div>
               
             
@@ -504,7 +504,7 @@ LearningProjection</p>
 </ul>
 <dl class="class">
 <dt id="psyneulink.core.components.component.Component">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>reinitialize_when=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>reset_stateful_function_when=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for Component.
 The arguments below are ones that can be used in the constructor for any Component subclass.</p>
 <div class="admonition note">
@@ -600,9 +600,9 @@ override any assigned to those parameters in arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.reinitialize_when">
-<code class="descname">reinitialize_when</code><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize_when" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> – see <code class="xref any docutils literal"><span class="pre">reinitialize_when</span></code></p>
+<dt id="psyneulink.core.components.component.Component.reset_stateful_function_when">
+<code class="descname">reset_stateful_function_when</code><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> – see <code class="xref any docutils literal"><span class="pre">reset_stateful_function_when</span></code></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -641,7 +641,7 @@ one and only one of the following flags is always set:</p>
 <li><code class="xref any docutils literal"><span class="pre">INITIALIZING</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">VALIDATING</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">INITIALIZED</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">REINITIALIZED</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">RESET</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">UNINITIALIZED</span></code></li>
 </ul>
 </div></blockquote>
@@ -691,8 +691,8 @@ This is a convenience method that calls the <a class="reference internal" href="
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.component.Component.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.component.Component.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
@@ -881,7 +881,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+377.gfc5d9db',
+               VERSION:'0.7.5.4+379.g1853c30',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
