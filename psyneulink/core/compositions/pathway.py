@@ -104,7 +104,9 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
     * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
       each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
       (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
-      <Projection_Specification>` interposed between a pair of nodes.  The list must begin and end with a node.
+      <Projection_Specification>` or a (`Projection specification <Projection_Specification>`, `feedback specification
+      <Composition_Feedback_Specification>`) tuple interposed between a pair of nodes.
+      The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
       <Composition_Learning_Pathway>`;  the 1st item must be a `Node <Composition_Nodes>` or list, as
@@ -193,7 +195,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
-    ANY, CONTEXT, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
+    ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
 
 
@@ -222,7 +224,7 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
         is_proj = (_is_projection_spec(entry)
                    or (isinstance(entry, tuple)
                        and _is_projection_spec(entry[0])
-                       and entry[1] in {True, False, MAYBE}))
+                       and entry[1] in {True, FEEDBACK, False, MAYBE}))
 
     if is_node or is_proj:
         return True

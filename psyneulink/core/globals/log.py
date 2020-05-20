@@ -1205,9 +1205,9 @@ class Log:
         Rows are ordered in the same order as Components are specified in the **entries** argument.
 
         If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
-        then the first four rows are time indices for the run, trial, pass, and time_step of each data item, respectively.
-        Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
-        at a given time point, it is entered as `None`.
+        then the first four rows are time indices for the run, trial, pass, and time_step of each data item,
+        respectively. Each subsequent row is the times series of data for a given entry.  If there is no data for a
+        given entry at a given time point, it is entered as `None`.
 
         If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
         System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a
