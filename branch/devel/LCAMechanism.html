@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.7.5.4+381.gc516eaa documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.7.5.4+382.g72841d2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+381
+                  0.7.5.4+382
                 </div>
               
             
@@ -264,19 +264,19 @@ and all related arguments (<strong>noise</strong>, <strong>leak</strong>, <stron
 <span id="lcamechanism-threshold"></span><h3><em>Thresholding</em><a class="headerlink" href="#thresholding" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>threshold</strong> and <strong>threshold_criterion</strong> arguments specify the conditions under which execution of the
 LCAMechanism terminates if <a class="reference internal" href="TransferMechanism.html#transfermechanism-integrator-mode"><span class="std std-ref">integrator_mode</span></a> is True.  If <strong>threshold</strong> is None
-(the default), then the LCAMechanism will update its <code class="xref any docutils literal"><span class="pre">value</span></code> and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+(the default), then the LCAMechanism will update its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 of each <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> only once each time it is executed.  If a <strong>threshold</strong> is specified, then it will continue
 to execute until the condition specified by <strong>threshold_criterion</strong> is True; this can be specified using one of the
 following keywords:</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>VALUE</em> –  (default) True when any element of the LCAMechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> is equal to or
+<li><em>VALUE</em> –  (default) True when any element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is equal to or
 greater than the <strong>threshold</strong>;</li>
-<li><em>MAX_VS_NEXT</em> – True when the element of the LCAMechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> with the highest
+<li><em>MAX_VS_NEXT</em> – True when the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the highest
 values is greater than the one with the next-highest value by an amount that equals or exceeds <strong>threshold</strong>;</li>
-<li><em>MAX_VS_AVG</em> – True when the element of the LCAMechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> with the highest
+<li><em>MAX_VS_AVG</em> – True when the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the highest
 values is greater than the average of the others by an amount that equals or exceeds <strong>threshold</strong>;</li>
-<li><em>CONVERGENCE</em> – True when the no element of the LCAMechanism’s current <code class="xref any docutils literal"><span class="pre">value</span></code>
+<li><em>CONVERGENCE</em> – True when the no element of the LCAMechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 differs from its value on the previous update by more than <strong>threshold</strong>.</li>
 </ul>
 </div></blockquote>
@@ -307,12 +307,12 @@ value of <a class="reference internal" href="#psyneulink.library.components.mech
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.self_excitation"><code class="xref any py py-attr docutils literal"><span class="pre">self_excitation</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.competition"><code class="xref any py py-attr docutils literal"><span class="pre">competition</span></code></a> are ignored.</li>
 </ol>
 <p>Like any RecurrentTransferMechanism, by default an LCAMechanism has a single <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>
-named <em>RESULT</em> that contains the Mechanism’s current <code class="xref any docutils literal"><span class="pre">value</span></code>.  It also has two
+named <em>RESULT</em> that contains the Mechanism’s current <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  It also has two
 <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> in its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
 attribute – <em>MAX_VS_NEXT</em> and <em>MAX_VS_AVG</em> that are available for assignment, in addition to the
 <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>:</p>
 <p>The <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>MAX_VS_NEXT</em> OutputPort contains the difference between the two elements of
-the LCAMechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> with the highest values, and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
+the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> with the highest values, and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
 <em>MAX_VS_AVG</em> OutputPort contains the difference between the element with the highest value and the average of all
 the others (see <a class="reference internal" href="#lcamechanism-ddm-approximation"><span class="std std-ref">above</span></a> for their relationship to the output of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism).</p>
 </div>
@@ -344,7 +344,7 @@ additional details).</li>
 <li><strong>threshold</strong> (<em>float</em><em> or </em><em>None : default None</em>) – specifes the value at which the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> attribute is set to True
 (see <a class="reference internal" href="#lcamechanism-threshold"><span class="std std-ref">Thresholding</span></a> for additional details).</li>
 <li><strong>threshold_criterion</strong> (<em>VALUE</em>, <em>MAX_VS_NEXT</em>, <em>MAX_VS_AVG</em>, or <em>CONVERGENCE</em>) – specifies the criterion that is used to evaluate whether the threshold has been reached. If <em>MAX_VS_NEXT</em> or
-<em>MAX_VS_AVG</em> is specified, then the length of the LCAMCechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> must be at
+<em>MAX_VS_AVG</em> is specified, then the length of the LCAMCechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must be at
 least 2 (see <a class="reference internal" href="#lcamechanism-threshold"><span class="std std-ref">Thresholding</span></a> for additional details).</li>
 </ul>
 </td>
@@ -396,12 +396,12 @@ process it implements, and used to scale its <a class="reference internal" href=
 <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>:</p>
 <dl class="docutils" id="max-vs-next">
 <dt><em>MAX_VS_NEXT</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the difference between the two elements of the LCAMechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code>
+<dd>the difference between the two elements of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 with the highest values.</dd>
 </dl>
 <dl class="docutils" id="max-vs-avg">
 <dt><em>MAX_VS_AVG</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
-<dd>the difference between the element of the LCAMechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code>
+<dd>the difference between the element of the LCAMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
 and the average of all of the other elements.</dd>
 </dl>
 </dd></dl>
@@ -494,7 +494,7 @@ and the average of all of the other elements.</dd>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+381.gc516eaa',
+               VERSION:'0.7.5.4+382.g72841d2',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

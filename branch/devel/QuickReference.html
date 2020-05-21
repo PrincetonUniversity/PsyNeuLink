@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Reference &mdash; PsyNeuLink 0.7.5.4+381.gc516eaa documentation</title>
+  <title>Quick Reference &mdash; PsyNeuLink 0.7.5.4+382.g72841d2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+381
+                  0.7.5.4+382
                 </div>
               
             
@@ -318,7 +318,7 @@ written in or called from Python.</dd>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a></dt>
 <dd>A Mechanism takes one or more inputs received from its afferent <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>,
-uses its <code class="xref any docutils literal"><span class="pre">function</span></code> to combine and/or transform these in some way, and makes the output
+uses its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to combine and/or transform these in some way, and makes the output
 available to other Components.  There are two primary types of Mechanisms in PsyNeuLink:
 ProcessingMechanisms and ModulatoryMechanisms:<ul class="last">
 <li><dl class="first docutils">
@@ -406,7 +406,7 @@ and/or <a class="reference internal" href="ModulatoryProjection.html"><span clas
 <dt><a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a></dt>
 <dd>Represents a set of inputs to a Mechanism.
 Receives one or more afferent PathwayProjections to a Mechanism, combines them using its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and assigns the result (its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>)as an item of the Mechanism’s
-<code class="xref any docutils literal"><span class="pre">variable</span></code>.  It can also receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  It can also receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>
 or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify the parameter(s) of the Port’s function, and thereby the
 Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
 </dl>
@@ -414,13 +414,13 @@ Port’s <a class="reference internal" href="Port.html#psyneulink.core.component
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a></dt>
 <dd>Represents a parameter of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Mechanism or Projection.  Takes the
-assigned value of the parameter as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the Port’s <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result as the value of the parameter used by the Mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> when the Componet executes.  It can also receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> that modify parameter(s) of the Port’s <code class="xref any docutils literal"><span class="pre">function</span></code> of the Mechanism or Projection.</dd>
+assigned value of the parameter as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the Port’s <code class="xref any docutils literal"><span class="pre">function</span></code>, and assigns the result as the value of the parameter used by the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> when the Componet executes.  It can also receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> that modify parameter(s) of the Port’s <code class="xref any docutils literal"><span class="pre">function</span></code> of the Mechanism or Projection.</dd>
 </dl>
 </li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a></dt>
 <dd>Represents an output of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
-Takes an item of the Mechanism’s <code class="xref any docutils literal"><span class="pre">value</span></code> as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the
+Takes an item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for the
 Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, assigns the result as the Port’s <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, and
 provides that to one or more efferent PathwayProjections.  It can also receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, that modify parameter(s) of the Port’s
 function, and thereby the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</dd>
@@ -575,7 +575,7 @@ debugging, but suppressible for efficiency of execution).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+381.gc516eaa',
+               VERSION:'0.7.5.4+382.g72841d2',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

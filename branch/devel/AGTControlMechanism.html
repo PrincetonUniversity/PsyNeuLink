@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0.7.5.4+381.gc516eaa documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.7.5.4+382.g72841d2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+381
+                  0.7.5.4+382
                 </div>
               
             
@@ -284,7 +284,7 @@ ControlSignal’s <a class="reference internal" href="ControlProjection.html"><s
 <div class="section" id="execution">
 <span id="agtcontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-of its <em>OUTCOME</em> <code class="xref any docutils literal"><span class="pre">input_port</span></code>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
+of its <em>OUTCOME</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
 its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it receives from its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to
 all of its ControlSignals.  Each ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>,
 which is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterPort(s) for the
@@ -302,7 +302,7 @@ to which it belongs has executed.</p>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</code><code class="descname">AGTControlMechanism</code><span class="sig-paren">(</span><em>monitored_output_ports=None</em>, <em>function=None</em>, <em>control_signals=None</em>, <em>modulation='multiplicative_param'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <code class="xref any docutils literal"><span class="pre">function</span></code> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
+<dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
 See <a class="reference internal" href="ControlMechanism.html#controlmechanism-class-reference"><span class="std std-ref">ControlMechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -431,7 +431,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+381.gc516eaa',
+               VERSION:'0.7.5.4+382.g72841d2',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
