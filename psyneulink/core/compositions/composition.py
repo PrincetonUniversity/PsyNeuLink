@@ -5682,7 +5682,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_projection(learning_projection, learning_projection=True)
 
         # Wrap up and return
-        learning_related_components = {TARGET_MECHANISM: target,
+        learning_related_components = {OUTPUT_MECHANISM: pathway[-1],
+                                       TARGET_MECHANISM: target,
                                        OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanism,
                                        LEARNED_PROJECTIONS: learned_projection,
@@ -6206,7 +6207,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 s.parameters.require_projection_in_composition.set(False,
                                                                    override=True)
 
-        learning_related_components = {TARGET_MECHANISM: target,
+        learning_related_components = {OUTPUT_MECHANISM: pathway[-1],
+                                       TARGET_MECHANISM: target,
                                        OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanisms,
                                        LEARNED_PROJECTIONS: learned_projections,
