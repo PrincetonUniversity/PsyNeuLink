@@ -3974,7 +3974,7 @@ def _is_mechanism_spec(spec):
 
 from collections import UserList
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list for an owner.
+    """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
 
     Attributes
     ----------
