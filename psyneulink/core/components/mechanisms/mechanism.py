@@ -3976,23 +3976,49 @@ from collections import UserList
 class MechanismList(UserList):
     """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
     
-    Properties return dicts with item : attribute pairs;  recursively processes any item that itself is a MechanismList.
+    Properties return dicts with item : attribute pairs.
+    Recursively process any item that itself is a MechanismList (e.g., a `Nested Composition <Composition_Nested>`.
 
     Attributes
     ----------
-    mechanisms : list of Mechanism objects
+    mechanisms : List[item]
 
-    names : list of strings
-        each item is a Mechanism.name
+    names : List[str | Dict[str:List[str]]
+        each item is an item name or a dict with one item as its key and a list of subitem names as its value.
 
-    values : list of values
-        each item is a Mechanism_Base.value
+    values : Dict[str:value]
+        each entry is an item name : value pair.
 
-    output_port_names : list of strings
-        each item is an OutputPort.name
+    input_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `InputPort` `names <InputPort.name>` or, if the item is a
+        nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of 
+        their InputPort names.
 
-    output_port_values : list of values
-        each item is an OutputPort.value
+    input_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `InputPort` `name <InputPort.name>`:`value <InputPort.value>`
+        pairs or, if the item is a nested MechanismList, then a dict with the name of the nested item and a dict
+        with its InputPort name:value pairs. 
+
+    parameter_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `ParameterPort` `names <ParameterPort.name>` or, if the
+        item is a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a
+        list of their ParameterPort names.
+
+    parameter_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `ParameterPort` `name <ParameterPort.name>`:`value
+        <ParameterPort.value>` pairs or, if the item is a nested MechanismList, then a dict with the name of the
+        nested item and a dict with its ParameterPort name:value pairs.
+
+    output_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `OutputPort` `names <OutputPort.name>` or, if the item is
+        a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of
+        their OutputPort names.
+
+    output_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `OutputPort` `name <OutputPort.name>`:`value
+        <OutputPort.value>` pairs or, if the item is a nested MechanismList, then a dict with the name of the nested
+        item and a dict with its OutputPort name:value pairs.
+
     """
 
     def __init__(self, owner, components_list:list):
@@ -4014,7 +4040,7 @@ class MechanismList(UserList):
     def __call__(self):
         return self.data
 
-    def _get_attributes_dict(self, mech_list_attr_name, item_attr_name, sub_attr_name=None):
+    def _get_attributes_dict(self, mech_list_attr_name, item_attr_name, sub_attr_name=None, values_only=False):
         """Generate dict of {item.name:item attribute value} pairs in "human readalbe" form.
         Call recursively if item is itself a MechanismList
         """
@@ -4023,20 +4049,27 @@ class MechanismList(UserList):
             if isinstance(item, Mechanism):
                 attr_val = getattr(item, item_attr_name)
                 if isinstance(attr_val, (list, ContentAddressableList)):
-                    for sub_item in attr_val:
-                        sub_item_dict = {}
-                        if sub_attr_name:
-                            sub_item_dict[sub_item.name] = getattr(sub_item, sub_attr_name)
-                        else:
-                            assert False, f"Need to specify sub_attr for attributs that are a list"
-                    ret_dict[item.name] = sub_item_dict
+                    assert sub_attr_name, f"Need to specify sub_attr for attributs that are a list"
+                    if sub_attr_name == 'name':
+                        sub_items = []
+                        for sub_item in attr_val:
+                            sub_items.append(getattr(sub_item, sub_attr_name))
+                    else:
+                        sub_items = {}
+                        for sub_item in attr_val:
+                            sub_items[sub_item.name] = getattr(sub_item, sub_attr_name)
+                    ret_dict[item.name] = sub_items
                 elif not sub_attr_name:
                     ret_dict[item.name] = attr_val
                 else:
                     ret_dict[item.name] = getattr(attr_val, sub_attr_name)
             else:
                 ret_dict[item.owner.name] = getattr(item, mech_list_attr_name)
-        return ret_dict
+        if values_only:
+            # return list(ret_dict.values())
+            return [k if isinstance(v, str) else {k:v} for k,v in ret_dict.items()]
+        else:
+            return ret_dict
 
     @property
     def mechs_sorted(self):
@@ -4051,7 +4084,7 @@ class MechanismList(UserList):
     @property
     def names(self):
         """Return dictwith names of all Mechanisms in MechanismList"""
-        return self._get_attributes_dict('names', 'name')
+        return self._get_attributes_dict('names', 'name', values_only=True)
 
     @property
     def values(self):
