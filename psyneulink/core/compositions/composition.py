@@ -592,17 +592,24 @@ For each `learning pathway <Composition_Learning_Pathway>` specified in the **pa
 constructor or one of its `learning methods <Composition_Learning_Methods>`, it creates the following Components,
 and assigns to them the `NodeRoles <NodeRole>` indicated:
 
+    .. _OUTPUT_MECHANISM:
+    * *OUTPUT_MECHANISM* -- the final `Node <Component_Nodes>` in the learning Pathway, the desired `value
+      <Mechanism_Base.value>` of which is specified as input to the `TARGET_MECHANISM`; the Node is assigned
+      the `NodeRoles <NodeRole>` `LEARNING_OUTPUT` and `LEARNING` in the Composition.
+
     .. _TARGET_MECHANISM:
-    * *TARGET_MECHANISM* -- receives the value to be used by the *OBJECTIVE_MECHANISM* as the target in
-      computing the error signal (see above);  that value must be specified in the **inputs** argument of the
-      Composition's `learn <Composition.learn>` method (as the input to the *TARGET_MECHANISM*; this is assigned the
-      `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition;
+    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` of the `OUTPUT_MECHANISM`, that is
+      used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal (see above);  that value must be
+      specified in either the `inputs <Composition_learn_inputs_Arg` argument of the Composition's `learn
+      <Composition.learn>` method, or in its `targets <Composition_learn_targets_Arg>` argument in an entry for
+      either the *TARGET_MECHANISM* or the `OUTPUT_MECHANISM` (see `Composition_Target_Inputs`); the Mechanism is
+      assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
-      <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*;
+      <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
     ..
     * a MappingProjection that projects from the last ProcessingMechanism in the learning Pathway to the *SAMPLE*
-      `InputPort  <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*;
+      `InputPort  <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
     ..
     .. _OBJECTIVE_MECHANISM:
     * *OBJECTIVE_MECHANISM* -- usually a `ComparatorMechanism`, used to `calculate an error signal
@@ -659,7 +666,7 @@ attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the
    and in italics, above each Mechanism).
 
 COMMENT:
-    MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGING OF FIRST LINE THAT FOLLOWS IT WITH:
+    MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGINNING OF FIRST LINE THAT FOLLOWS IT WITH:
     The description above (and example `below <EXMAPLE>`
 COMMENT
 
@@ -852,13 +859,13 @@ the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Compositio
 A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
 set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
 <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
-can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`).
-The same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node
-(in which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed).
-If the **inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>`
-methods, the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL
-<TimeScale.TRIAL>`.  if it is not specified for the `learn <Composition.learn>` method, an error is generated
-(since it requires the target for learning that is specified in **inputs**).
+can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`). The
+same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node (in
+which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed). If the
+**inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
+the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
+If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its `targets <targets
+<Composition_learn_targets_Arg>` argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
 
 
 .. _Composition_Execution_Results:
@@ -867,6 +874,8 @@ methods, the `default_variable <Component_Variable>` for each `INPUT` Node is us
 the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
 `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
 <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
+
+.. _Composition_Execution_Num_Trials:
 
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
 executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
@@ -877,22 +886,25 @@ Node in the **inputs** argument, then the inputs are recycled from the beginning
 then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of inputs provided for each `Node
 <Composition_Nodes>` in **inputs** argument.
 
-*Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur, its
-`learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
-`disable_learning <Composition.disable_learning>` attribute must be False (the default).  The **inputs** argument
-must also specify an input for the Composition's `TARGET_MECHANISM <Composition_Learning_Components>`.  The `run
-<Composition.run>` and `execute <Composition.execute>` methods can also be used to execute the Composition, but no
-learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>` attribute.
+.. _Composition_Execution_Learning_Inputs:
 
+*Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur,
+its `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
+`disable_learning <Composition.disable_learning>` attribute must be False (the default). A set of targets must also
+be specified (see `below <Composition_Target_Inputs`). The `run <Composition.run>` and `execute <Composition.execute>`
+methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
+`disable_learning <Composition.disable_learning>` attribute.
 
 .. _Composition_Execution_Inputs:
 
 *Input formats*
 ~~~~~~~~~~~~~~~
 
-The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` is used to
+The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
+the `targets <Composition_learn_targets_Arg>` argument of the `learn <Compistion.learn>` method) is used to
 specify the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's
-`INPUT` `Nodes  <Composition_Nodes>` each time it is executed. There are two ways to specify inputs:
+`INPUT` `Nodes  <Composition_Nodes>` (including its TARGET_MECHANISMS <Composition_Learning_Components>` for learning)
+each time it is executed. There are two ways to specify inputs:
 
   * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
@@ -900,12 +912,13 @@ specify the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These
   * `programmtically <Composition_Programmatic_Inputs>`, using a function, generator or generator function
     that constructs the inputs dynamically on a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` basis.
 
-The **inputs** argument of the `run <Composition.run>` and  `learn <Composition.learn>` methods can be specified in
-either way;  however, only the dictionary format can be used for the `execute <Composition.execute>` method, since
-it executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a single `TRIAL
-<TimeScale.TRIAL>`.
+The `inputs <Composition_learn_inputs_Arg>` argument of the `run <Composition.run>` and `learn <Composition.learn>`
+methods (and the `targets <Composition_learn_targets_Arg>` argument of the `learn <Composition.learn>` method) can
+be specified in either way;  however, only the dictionary format can be used for the `execute <Composition.execute>`
+method, since it executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a
+single `TRIAL <TimeScale.TRIAL>`.
 
-*Inputs and input_ports*. Both formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
+*Inputs and input_ports*. All formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
 the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that require external inputs. These are listed
 in the `external_input_ports  <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
 `Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
@@ -933,13 +946,12 @@ of inputs, as described in detail below (also see `examples <Composition_Example
 Input Dictionary
 ^^^^^^^^^^^^^^^^
 
-The simplest way to specificy inputs is using a dict, in which each entry specifies the inputs to a given
-`INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of the inputs
-to that Node, one for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list represents
-the  input to the Node on `TRIAL <TimeScale.TRIAL>` i).  The same number of input values must be specified in each
-entry, unless only a single input value is specified is in an entry, in which case that input is presented to the
-corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
-
+The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
+the inputs to a given `INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of
+the inputs to that Node, one for each `TRIAL <TimeScale.TRIAL>` to be executed (i.e., the i-th item of the list
+represents the  input to the Node on `TRIAL <TimeScale.TRIAL>` i).  The same number of input values must be specified
+in each entry, unless only a single input value is specified is in an entry, in which case that input is presented to
+the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
 
 .. _Composition_Execution_Input_Dict_Fig:
 
@@ -963,6 +975,18 @@ shape of the input value must be compatible with the shape of the Node's `extrer
 a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
 may vary;  in some case shorthand notations are allowed, as illustrated in the `examples
 <Composition_Examples_Input_Dictionary>` below.
+
+.. _Composition_Target_Inputs:
+
+For learning, inputs must also be specified for the `TARGET_MECHANISM <Composition_Learning_Components>` of each
+`learning Pathway <Composition_Learning_Pathway>` in the Composition.  This can be done in either the `inputs
+Composition_learn_inputs_Arg` or `targets <Composition_learn_targets_Arg>` argument of the `learn <Composition.learn>`
+method.  If the **inputs** argument is used, it must include an entry for each `TARGET_MECHANISM
+<Composition_Learning_Components>`; if the **targets** argument is used, it must be assigned a dictionary containing
+entries in which the key is either a `OUTPUT_MECHANISM  <Composition_Learning_Components>` (i.e., the final `Node
+<Composition_Nodes>`) of a `learning Pathway <Composition_Learning_Pathway>`, or its corresponding `TARGET_MECHANISM
+<Composition_Learning_Components>`. The value of each entry specifies the inputs for each trial, formatted as
+described `above <Composition_Input_Dictionary>`.
 
 
 .. _Composition_Programmatic_Inputs:
@@ -1197,13 +1221,13 @@ one of two ways, based on whether any of the Projections in a cycle are designat
      of the cycle.
 
   The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be overridden using
-  the `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` argument of the Composition's `run
+  the `initialize_cycle_values <Composition_initialize_cycle_values_Arg>` argument of the Composition's `run
   <Composition.run>` or `learn <Composition.learn>` methods.  This can be used to specify an initial value for any
   Node in a cycle.  On the first call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in
-  `initialize_cycle_values <Composition_Initialize_Cycle_Values_Arg>` are initialized using the assigned values, and
+  `initialize_cycle_values <Composition_initialize_cycle_values_Arg>` are initialized using the assigned values, and
   any Nodes in the cycle that are not specified are assigned their `default value <Parameter_Defaults>`. In subsequent
   calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified in `initialize_cycle_values
-  <Composition_Initialize_Cycle_Values_Arg>` will be re-initialized to the assigned values for the first execution of
+  <Composition_initialize_cycle_values_Arg>` will be re-initialized to the assigned values for the first execution of
   the cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were
   assigned in the previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
 
@@ -1218,7 +1242,7 @@ one of two ways, based on whether any of the Projections in a cycle are designat
      .  This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
      `value <Mechanism_Base.value>` last assigned in the None context.  As described aove, this can be overridden by
      specifying an initial value for the Mechanism in the `initialize_cycle_values
-     <Composition_Initialize_Cycle_Values_Arg>` argument of the call to the Composition's `run <Composition.run>` or
+     <Composition_initialize_cycle_values_Arg>` argument of the call to the Composition's `run <Composition.run>` or
      `learn  <Composition.learn>` methods.
 
 .. _Composition_Feedback_Cycle:
@@ -2140,7 +2164,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
-    OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_PORTS, OWNER_VALUE, \
+    OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
     SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
@@ -2656,17 +2680,25 @@ class NodeRole(Enum):
 
     LEARNING
         A `Node <Composition_Nodes>` that is only executed when learning is enabled;  if it is not also assigned
-        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role cannot be modified
-        programmatically.
+        `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role can, but generally should not be
+        modified programmatically.
+
+    LEARNING_OUTPUT
+        A `Node <Composition_Nodes>` that is last one in a `learning Pathway <Composition_Learning_Pathway>`,
+        the desired `value <Mechanism_Base.value>` of which is provided as input to the `TARGET_MECHANISM
+        <Composition_Learning_Components>` for that pathway (see `OUTPUT_MECHANISM
+        <Composition_Learning_Components>`. This role can, but generally should not be modified programmatically.
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-        <Composition_Learning_Pathway>` specified in the **inputs** argument of the Composition's `learn
-        <Composition.learn>` method (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+        <Composition_Learning_Pathway>` specifing the desired output of the `OUTPUT_MECHANISM
+        <Composition_Learning_Components>` for that pathway (see `TARGET_MECHANISM <Composition_Learning_Components>`).
+        This role can, but generally should not be modified programmatically.
 
     LEARNING_OBJECTIVE
         A `Node <Composition_Nodes>` that is the `ObjectiveMechanism` of a `learning Pathway
-        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`).
+        <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can,
+        but generally should not be modified programmatically.
 
     OUTPUT
         A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
@@ -2700,10 +2732,11 @@ class NodeRole(Enum):
     CONTROL_OBJECTIVE = 7
     CONTROLLER_OBJECTIVE = 8
     LEARNING = 9
-    TARGET = 10
-    LEARNING_OBJECTIVE = 11
-    OUTPUT = 12
-    TERMINAL = 13
+    LEARNING_OUTPUT = 10
+    TARGET = 11
+    LEARNING_OBJECTIVE = 12
+    OUTPUT = 13
+    TERMINAL = 14
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -3476,7 +3509,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
                               f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
                               f"argument of its constructor.  Doing so otherwise may cause unexpected results.")
-            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE}:
+            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE, NodeRole.TARGET, NodeRole.LEARNING_OUTPUT}:
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"Learning Components are generally constructed automatically as part of "
                               f"a learning Pathway. Doing so otherwise may cause unexpected results.")
@@ -5681,6 +5714,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         learning_projection = self._create_learning_projection(learning_mechanism, learned_projection)
         self.add_projection(learning_projection, learning_projection=True)
 
+        # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
         # Wrap up and return
         learning_related_components = {OUTPUT_MECHANISM: pathway[-1],
                                        TARGET_MECHANISM: target,
@@ -8777,11 +8811,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
+            .. _Composition_run_inputs_Arg:
+
             inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None
                 specifies the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL
                 <TimeScale.TRIAL>` executed during the run;  see `Composition_Execution_Inputs` for additional
                 information about format.  If **inputs** is not specified, the `default_variable
                 <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`
+
+            .. _Composition_num_trials_Arg:
 
             num_trials : int : default 1
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -8797,6 +8835,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
                 (see `Composition_Initial_Values_and_Feedback` additional details).
 
+            .. _Composition_reset_stateful_functions_to_Arg:
+
             reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reset methods when their
                 respective reset_stateful_function_when conditions are met. These are used to seed the previous_value parameters
@@ -8806,6 +8846,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
                     call to run.
 
+            .. _Composition_reset_stateful_functions_when_Arg:
+
             reset_stateful_functions_when :  Condition : default Never()
                 sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
                 reset_stateful_function_when condition set to `Never <Never>` for the duration of the run.
@@ -8813,6 +8855,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization : bool : default False
 
             clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
+                specifies how inputs are handled for the Composition's `INPUT` `Nodes <Composition_Nodes>`.
+
+                COMMENT:
+                   BETTER DESCRIPTION NEEDED
+                COMMENT
+
+            .. _Composition_runtime_params_Arg:
 
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
@@ -8821,26 +8870,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 additional informaton).
 
             call_before_time_step : callable  : default None
-                will be called before each `TIME_STEP` is executed.
+                specifies fuction to call before each `TIME_STEP` is executed.
 
             call_after_time_step : callable  : default None
-                will be called after each `TIME_STEP` is executed.
+                specifies fuction to call after each `TIME_STEP` is executed.
 
             call_before_pass : callable  : default None
-                will be called before each `PASS` is executed.
+                specifies fuction to call before each `PASS` is executed.
 
             call_after_pass : callable  : default None
-                will be called after each `PASS` is executed.
+                specifies fuction to call after each `PASS` is executed.
 
             call_before_trial : callable  : default None
-                will be called before each `TRIAL <TimeScale.TRIAL>` is executed.
+                specifies fuction to call before each `TRIAL <TimeScale.TRIAL>` is executed.
 
             call_after_trial : callable  : default None
-                will be called after each `TRIAL <TimeScale.TRIAL>` is executed.
+                specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
             termination_processing : Condition  : default None
+                specifies `Condition` under which execution of the run will occur.
+
+                COMMMENT:
+                   BETTER DESCRIPTION NEEDED
+                COMMENT
 
             skip_analyze_graph : bool : default False
+                setting to True suppresses call to _analyze_graph()
+
+                COMMMENT:
+                   BETTER DESCRIPTION NEEDED
+                COMMENT
 
             animate : dict or bool : default False
                 specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
@@ -9268,6 +9327,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
+            .. _Composition_learn_inputs_Arg:
+
             inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each node in the composition that receives inputs from
                 the user. There are several equally valid ways that this dict could be structured:
@@ -9278,10 +9339,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
                 values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
 
+            .. _Composition_learn_targets_Arg:
+
             targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each node in the composition that receives target values
-                to train on from the user. This could be either target mechanisms or output nodes in backpropagation
-                learning pathways.
+                a dictionary containing a key-value pair for each Node <Composition_Nodes>` in the Composition that
+                receives target values as input to the Composition for training `learning pathways
+                <Composition_Learning_Pathway>` The key of each entry can be either the `TARGET_MECHANISM
+                <Composition_Learning_Components>` for a learning pathway or the final Node in that Pathway, and
+                the value is the target value used for that Node on each trial (see `Composition_Target_Inputs`
+                for additonal details concerning the formatting of targets).
 
             num_trials : int (default=None)
                 typically, the composition will infer the number of trials from the length of its input specification.
