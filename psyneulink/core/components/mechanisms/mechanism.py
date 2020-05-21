@@ -1140,7 +1140,16 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 
 class Mechanism_Base(Mechanism):
-    """Base class for Mechanism.
+    """
+    Mechanism_Base(             \
+        default_variable=None,  \
+        size=None,              \
+        input_ports,            \
+        function,               \
+        output_ports,           \
+        )
+
+    Base class for Mechanism.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
@@ -1203,10 +1212,10 @@ class Mechanism_Base(Mechanism):
 
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its `execute
-        <Mechanism_Base.execute>` method; also serves as a template to specify the
-        length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
-        outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
-        is assigned (usually [[0]]).
+        <Mechanism_Base.execute>` method; also serves as a template to specify the shape of the `variable
+        <InputPort.variable>` for its `InputPorts <Mechanism_InputPorts>` and the `variable <Mechanism_Base.variable>`
+        of its `function <Mechanism_Base.function>` if those are not specified.  If it is not specified, then a
+        subclass-specific default is assigned (usually [[0]]).
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
@@ -1218,12 +1227,13 @@ class Mechanism_Base(Mechanism):
     input_ports : str, list, dict, or np.ndarray : default None
         specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
         using the value of default_variable as its `variable <InputPort.variable>`;  if more than one is specified,
-        the number and, if specified, their values must be compatible with any specifications in **default_variable**
-        or **size** (see `Mechanism_InputPorts` for additional details).
+        the number and, if specified, their values must be compatible with any specifications made for
+        **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
 
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
-        can be a PsyNeuLink `Function` or a `UserDefinedFunction`.
+        can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
+        the shape of the `primary outputPort <OutputPort_Primary>` of the Mechanism.
 
     output_ports : str, list or np.ndarray : default None
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
