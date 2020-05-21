@@ -2355,6 +2355,9 @@ class Mechanism_Base(Mechanism):
         else:
             context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
 
+        if context.source is ContextFlags.COMMAND_LINE:
+            self._initialize_from_context(context, override=False)
+
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
         #             self.functionsDict[func]()

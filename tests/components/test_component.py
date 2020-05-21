@@ -82,3 +82,17 @@ class TestComponent:
         for c in A._dependent_components:
             for param in c.parameters:
                 assert param.history_max_length == 0
+
+    @pytest.mark.parametrize(
+        'component_type', [
+            pnl.ProcessingMechanism,
+            pnl.TransferMechanism,
+            pnl.Linear,
+            pnl.DDM
+        ]
+    )
+    def test_execute_manual_context(self, component_type):
+        c = component_type()
+        default_result = c.execute(5)
+
+        assert pnl.safe_equals(c.execute(5, context='new'), default_result)

@@ -1906,6 +1906,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
 
     def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        if context.execution_id is base_context.execution_id:
+            return
+
         if visited is None:
             visited = set()
 
@@ -2601,6 +2604,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 context = self.owner.most_recent_context
             except AttributeError:
                 context = self.most_recent_context
+
+        if context.source is ContextFlags.COMMAND_LINE:
+            self._initialize_from_context(context, override=False)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
