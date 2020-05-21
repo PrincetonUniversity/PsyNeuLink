@@ -80,10 +80,16 @@ under `Mechanism_Structure` below.
 Creating a Mechanism
 --------------------
 
+Mechanisms are created by calling the constructor for a particular type.  PsyNeuLink also automatically
+creates one or more Mechanisms under some circumstances. For example, a `ComparatorMechanism` and `LearningMechanism
+<LearningMechanism>` are created automatically when `learning is specified <Composition_Learning>` for a `Composition`;
+and an `ObjectiveMechanism` may be created when a `ControlMechanism <ControlMechanism>` is created.
+
+COMMENT:
 Mechanisms can be created in several ways.  The simplest is to call the constructor for the desired type of Mechanism.
 Alternatively, the `mechanism` command can be used to create a specific type of Mechanism or an instance of
 `default_mechanism <Mechanism_Base.default_mechanism>`. Mechanisms can also be specified "in context," for example in
-the `pathway <Process.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
+the `pathway <Composition.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
 mentioned above, or using one of the following:
 
   * the name of an **existing Mechanism**;
@@ -116,6 +122,7 @@ mentioned above, or using one of the following:
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Composition_Learning>` for a Composition; and an `ObjectiveMechanism` may be created when a
     `ControlMechanism <ControlMechanism>` is created.
+COMMENT
 
 .. _Mechanism_Port_Specification:
 
@@ -490,16 +497,16 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
   Projections from all of the same `senders <Projection_Base.sender>` as those specified.
 
 COMMENT:
-*** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
+    *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
 COMMENT
 
 COMMENT:
-*** ADD THESE TO ABOVE WHEN IMPLEMENTED:
-    If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
-        the latter is extended to  match the former.
-    If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
-        a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
-        number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+    *** ADD THESE TO ABOVE WHEN IMPLEMENTED:
+        If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
+            the latter is extended to  match the former.
+        If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
+            a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
+            number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 COMMENT
 ..
 * *INPUT_PORTS* entry of a params dict (list) -- specifications are treated in the same manner as those in the
@@ -1134,15 +1141,12 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
+
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
 
     .. note::
        Mechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
-
-       COMMENT:
-       It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
-       COMMENT
        Mechanisms should be instantiated by calling the constructor for the desired subclass, or using other methods
        for specifying a Mechanism in context (see `Mechanism_Creation`)
 
@@ -1191,16 +1195,15 @@ class Mechanism_Base(Mechanism):
         MechanismRegistry
         -----------------
             All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
-              a count for all instances of that type, and a dictionary of those instances
+            a count for all instances of that type, and a dictionary of those instances
     COMMENT
-
 
     Arguments
     ---------
 
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its `execute
-        <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method; also serves as a template to specify the
+        <Mechanism_Base.execute>` method; also serves as a template to specify the
         length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
         outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
         is assigned (usually [[0]]).
@@ -1230,7 +1233,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : at least 2d array : default self.defaults.variable
+    variable : at least 2d array
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <InputPort>` (in the order they are listed in its `input_ports <Mechanism_Base.input_ports>` attribute), and
@@ -1239,9 +1242,7 @@ class Mechanism_Base(Mechanism):
         it is used as a template to define the format (shape and type of elements) of the input the Mechanism's
         `function <Mechanism_Base.function>`.
 
-        .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
-
-    input_port : InputPort : default default InputPort
+    input_port : InputPort
         `primary InputPort <InputPort_Primary>` for the Mechanism;  same as first entry of its `input_ports
         <Mechanism_Base.input_ports>` attribute.  Its `value <InputPort.value>` is assigned as the first item of the
         Mechanism's `variable <Mechanism_Base.variable>`.
@@ -1251,7 +1252,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary InputPort <InputPort_Primary>` (i.e., the one in the its `input_port
         <Mechanism_Base.input_port>` attribute).
 
-    input_values : List[List or 1d np.array] : default self.defaults.variable
+    input_values : List[List or 1d np.array]
         each item in the list corresponds to the `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <Mechanism_InputPorts>` listed in its `input_ports <Mechanism_Base.input_ports>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -1408,7 +1409,7 @@ class Mechanism_Base(Mechanism):
         a list of all of the Mechanisms that receive `Projections <Projection>` from the Mechanism (i.e.,
         the receivers of its `efferents <Mechanism_Base.efferents>`.
 
-   condition : Condition : None
+    condition : Condition : None
         condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
         `Composition` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
         Condition for a `Component` is used.  It can be overridden in a given `Composition` by assigning a Condition
@@ -1417,12 +1418,10 @@ class Mechanism_Base(Mechanism):
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
-
         .. _portRegistry : Registry
                registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
                dicts for the instances of each type and an instance count for each Port type in the Mechanism.
@@ -1712,7 +1711,6 @@ class Mechanism_Base(Mechanism):
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
         self._receivesProcessInput = False
-        self.phaseSpec = None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -3974,18 +3972,9 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
-# MechanismTuple indices
-# OBJECT_ITEM = 0
-# # PARAMS_ITEM = 1
-# # PHASE_ITEM = 2
-#
-# MechanismTuple = namedtuple('MechanismTuple', 'mechanism')
-
 from collections import UserList
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list of :class:`MechanismTuples` for an owner.
-
-    :class:`MechanismTuples` are of the form: (Mechanism object, runtime_params dict, phaseSpec int).
+    """Provides access to items and their attributes in a list for an owner.
 
     Attributes
     ----------
@@ -4009,12 +3998,6 @@ class MechanismList(UserList):
         self.mechs = components_list
         self.data = self.mechs
         self.owner = owner
-        # for item in components_list:
-        #     if not isinstance(item, MechanismTuple):
-        #         raise MechanismError("The following item in the components_list arg of MechanismList()"
-        #                              " is not a MechanismTuple: {}".format(item))
-
-        self.process_tuples = components_list
 
     def __getitem__(self, item):
         """Return specified Mechanism in MechanismList
