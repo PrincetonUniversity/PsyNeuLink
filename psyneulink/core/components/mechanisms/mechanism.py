@@ -490,16 +490,16 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
   Projections from all of the same `senders <Projection_Base.sender>` as those specified.
 
 COMMENT:
-*** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
+    *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
 COMMENT
 
 COMMENT:
-*** ADD THESE TO ABOVE WHEN IMPLEMENTED:
-    If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
-        the latter is extended to  match the former.
-    If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
-        a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
-        number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+    *** ADD THESE TO ABOVE WHEN IMPLEMENTED:
+        If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
+            the latter is extended to  match the former.
+        If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
+            a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
+            number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 COMMENT
 ..
 * *INPUT_PORTS* entry of a params dict (list) -- specifications are treated in the same manner as those in the
@@ -1134,6 +1134,7 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
+
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
 
@@ -1187,7 +1188,7 @@ class Mechanism_Base(Mechanism):
         MechanismRegistry
         -----------------
             All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
-              a count for all instances of that type, and a dictionary of those instances
+            a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
 
@@ -1196,7 +1197,7 @@ class Mechanism_Base(Mechanism):
 
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its `execute
-        <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method; also serves as a template to specify the
+        <Mechanism_Base.execute>` method; also serves as a template to specify the
         length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
         outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
         is assigned (usually [[0]]).

@@ -4,6 +4,7 @@ Projections
 .. toctree::
    :maxdepth: 1
 
+   *Subclasses:*
    Pathway Projections <PathwayProjection>
    Modulatory Projections <ModulatoryProjection>
 
