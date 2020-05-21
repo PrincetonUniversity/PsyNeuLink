@@ -1364,7 +1364,7 @@ COMMENT:
         `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
 COMMENT
 
-.._Composition_Reset:
+.. _Composition_Reset:
 
 *Resetting Stateful Parameters of Functions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
