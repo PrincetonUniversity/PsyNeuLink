@@ -3145,6 +3145,36 @@ class TestRun:
                 and "to InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
 
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      ])
+    def test_execute_no_inputs(self, mode):
+        m_inner = ProcessingMechanism(size=2)
+        inner_comp = Composition(pathways=[m_inner])
+        m_outer = ProcessingMechanism(size=2)
+        outer_comp = Composition(pathways=[m_outer, inner_comp])
+        result = outer_comp.execute(bin_execute=mode)
+        assert np.allclose(result, [[0.0],[0.0]])
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                      ])
+    def test_run_no_inputs(self, mode):
+        m_inner = ProcessingMechanism(size=2)
+        inner_comp = Composition(pathways=[m_inner])
+        m_outer = ProcessingMechanism(size=2)
+        outer_comp = Composition(pathways=[m_outer, inner_comp])
+        result = outer_comp.run(bin_execute=mode)
+        assert np.allclose(result, [[0.0],[0.0]])
+
     def test_lpp_invalid_matrix_keyword(self):
         comp = Composition()
         A = TransferMechanism(name="composition-pytests-A", function=Linear(slope=2.0))
@@ -4167,7 +4197,7 @@ class TestSchedulerConditions:
                         function=pnl.DriftDiffusionIntegrator(starting_point=0,
                                                               threshold=1,
                                                               noise=0.0),
-                        reinitialize_when=pnl.AtTrialStart(),
+                        reset_stateful_function_when=pnl.AtTrialStart(),
                         output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                         name='DDM')
 
@@ -5502,6 +5532,61 @@ class TestInputSpecifications:
                                                [np.array([4.])], [np.array([5.])], [np.array([6.])], [np.array([7.])],
                                                [np.array([8.])], [np.array([9.])]]
 
+    def test_function_as_learning_input(self):
+        num_epochs=2
+
+        xor_inputs = np.array(  # the inputs we will provide to the model
+            [[0, 0],
+             [0, 1],
+             [1, 0],
+             [1, 1]])
+    
+        xor_targets = np.array(  # the outputs we wish to see from the model
+            [[0],
+             [1],
+             [1],
+             [0]])
+    
+        in_to_hidden_matrix = np.random.rand(2,10)
+        hidden_to_out_matrix = np.random.rand(10,1)
+
+        input_comp = pnl.TransferMechanism(name='input_comp',
+                                    default_variable=np.zeros(2))
+
+        hidden_comp = pnl.TransferMechanism(name='hidden_comp',
+                                    default_variable=np.zeros(10),
+                                    function=pnl.Logistic())
+
+        output_comp = pnl.TransferMechanism(name='output_comp',
+                                    default_variable=np.zeros(1),
+                                    function=pnl.Logistic())
+
+        in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
+                                    matrix=in_to_hidden_matrix.copy(),
+                                    sender=input_comp,
+                                    receiver=hidden_comp)
+
+        hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
+                                    matrix=hidden_to_out_matrix.copy(),
+                                    sender=hidden_comp,
+                                    receiver=output_comp)
+
+        xor_comp = pnl.Composition()
+
+        backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
+                                                                            in_to_hidden_comp,
+                                                                            hidden_comp,
+                                                                            hidden_to_out_comp,
+                                                                            output_comp],
+                                                                            learning_rate=10)
+        def test_function(trial_num):
+            return {
+                input_comp: xor_inputs[trial_num]
+            }
+
+        xor_comp.learn(inputs=test_function,
+              num_trials=4)
+
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
@@ -5960,7 +6045,7 @@ class TestInitialize:
             warning_triggered = err in [warn.message.args[0] for warn in w]
             assert warning_triggered
 
-class TestReinitializeValues:
+class TestResetValues:
 
     def test_initialize_all_mechanisms(self):
         A = TransferMechanism(name='A')
@@ -5983,7 +6068,7 @@ class TestReinitializeValues:
             [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
         )
 
-    def test_reinitialize_one_mechanism_through_run(self):
+    def test_reset_one_mechanism_through_run(self):
         A = TransferMechanism(name='A')
         B = TransferMechanism(
             name='B',
@@ -6000,7 +6085,7 @@ class TestReinitializeValues:
         comp.run(
             inputs={A: [1.0]},
             num_trials=5,
-            reinitialize_nodes_when=AtTimeStep(0)
+            reset_stateful_functions_when=AtTimeStep(0)
         )
 
         # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
@@ -6015,7 +6100,7 @@ class TestReinitializeValues:
             ]
         )
 
-    def test_reinitialize_one_mechanism_at_trial_2_condition(self):
+    def test_reset_one_mechanism_at_trial_2_condition(self):
         A = TransferMechanism(name='A')
         B = TransferMechanism(
             name='B',
@@ -6028,13 +6113,13 @@ class TestReinitializeValues:
         comp.add_linear_processing_pathway([A, B, C])
 
         # Set reinitialization condition
-        B.reinitialize_when = AtTrial(2)
+        B.reset_stateful_function_when = AtTrial(2)
 
         C.log.set_log_conditions('value')
 
         comp.run(
             inputs={A: [1.0]},
-            reinitialize_values={B: [0.]},
+            reset_stateful_functions_to={B: [0.]},
             num_trials=5
         )
 
@@ -6047,6 +6132,81 @@ class TestReinitializeValues:
                 [np.array([0.5])],
                 [np.array([0.75])],
                 [np.array([0.875])]
+            ]
+        )
+
+    def test_reset_two_mechanisms_at_different_trials_with_dict(self):
+        A = TransferMechanism(
+            name='A',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        B = TransferMechanism(
+            name='B',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        C = TransferMechanism(name='C')
+
+        comp = Composition(
+            pathways=[[A, C], [B, C]]
+        )
+
+        A.log.set_log_conditions('value')
+        B.log.set_log_conditions('value')
+        C.log.set_log_conditions('value')
+
+        comp.run(
+            inputs={A: [1.0],
+                    B: [1.0]},
+            reset_stateful_functions_when = {
+                A: AtTrial(1),
+                B: AtTrial(2)
+            },
+            num_trials=5
+        )
+
+        # Mechanisms A and B should have their original reset_integrator_when
+        # Conditions after the call to run has completed
+        assert isinstance(A.reset_stateful_function_when, Never)
+        assert isinstance(B.reset_stateful_function_when, Never)
+
+        # Mechanism A - resets on Trial 1
+        # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
+        assert np.allclose(
+            A.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])],
+                [np.array([0.9375])]
+            ]
+        )
+
+        # Mechanism B - resets on Trial 2
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+        assert np.allclose(
+            B.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])]
+            ]
+        )
+
+        # Mechanism C - sum of A and B
+        # Trial 0: 1.0, Trial 1: 1.25, Trial 2: 1.25, Trial 3: 1.625, Trial 4: 1.8125
+        assert np.allclose(
+            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([1.0])],
+                [np.array([1.25])],
+                [np.array([1.25])],
+                [np.array([1.625])],
+                [np.array([1.8125])]
             ]
         )
 
@@ -6074,12 +6234,12 @@ class TestReinitializeValues:
 
         # "Save state" code from EVCaux
 
-        # Get any values that need to be reinitialized for each run
+        # Get any values that need to be reset for each run
         reinitialization_values = {}
         for mechanism in comp.stateful_nodes:
             # "save" the current state of each stateful mechanism by storing the values of each of its stateful
             # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
-            # the reinitialize method on each stateful mechanism.
+            # the reset method on each stateful mechanism.
             reinitialization_value = []
 
             if isinstance(mechanism.function, IntegratorFunction):
@@ -6101,7 +6261,7 @@ class TestReinitializeValues:
 
         comp.run(
             inputs={A: [[1.0], [1.0]]},
-            reinitialize_values=reinitialization_values
+            reset_stateful_functions_to=reinitialization_values
         )
 
         run_3_values = [A.parameters.value.get(comp),

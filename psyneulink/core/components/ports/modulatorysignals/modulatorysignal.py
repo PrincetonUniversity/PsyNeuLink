@@ -250,7 +250,7 @@ four keywords that can be used to specify generic forms of modulation supported 
   * *DISABLE* - suppresses the modulatory effect of the ModulatorySignal;  the Port's `function <Port_Base.function>`
     will operate as if it did not receive a `ModulatoryProjection <ModulatoryProjection>` from that ModulatorySignal.
 
-   .. note:
+   .. note::
 
       the *MULTPLICATIVE_PARAM* and *ADDITIVE_PARAM* keywords can be used only with `Functions <Function>` that
       specify a `multiplicative_param and/or additive_param <Function_Modulatory_Params>`, respectively.

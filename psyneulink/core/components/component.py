@@ -25,7 +25,9 @@ Contents
         * `Name <Component_Name>`
         * `Preferences <Component_Prefs>`
     * `User_Modifiable_Parameters`
+    COMMENT:
     * `Methods <Component_Methods>`
+    COMMENT
 * `Component_Execution`
     * `Component_Execution_Initialization`
     * `Component_Execution_Termination`
@@ -90,8 +92,9 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
-  dimensionality and shape if it is an array, etc.) as well as its default value (the value used when the Component
-  is executed and no input is provided), and takes precedence over the specification of `size <Component_Size>`.
+  dimensionality and shape if it is an array, etc.) as well as its `default value <Component.defaults>` (the value
+  used when the Componentis executed and no input is provided), and takes precedence over the specification of `size
+  <Component_Size>`.
 
   .. note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
@@ -199,27 +202,28 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 * `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values
    that are used for all Components, unless overridden.
 
-  All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
-  can also be modified by `ControlSignals <ControlSignal>` when a `Composition executes <Composition_Execution>`.
-  In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
-  or format of the values associated with a Component can be subject to modulation.  For example, for a
-  `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
-  `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
-  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
-  <TransferMechanism.integration_rate>` can all be subject to modulation. Parameters that are subject to modulation
-  have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
-  the ControlSignals can project (by way of a `ControlProjection`).
+   All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
+   can also be modified by `ControlSignals <ControlSignal>` when a `Composition executes <Composition_Execution>`.
+   In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+   or format of the values associated with a Component can be subject to modulation.  For example, for a
+   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
+   `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
+   `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
+   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
+   <TransferMechanism.integration_rate>` can all be subject to modulation. Parameters that are subject to modulation
+   have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
+   the ControlSignals can project (by way of a `ControlProjection`).
+
   COMMENT:
-      FIX: ADD COMMENT ABOUT HOW TO ASSIGN DEFAULTS HERE 5/8/20
+      FIX: ADD DISCUSSION ABOUT HOW TO ASSIGN DEFAULTS HERE 5/8/20
   COMMENT
 
 .. _Component_Function_Params:
 
-* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a dictionary of the parameters
-  for the Component's `function <Component.function>` and their values, to be used to instantiate the function.  Each entry is the name of a parameter, and its
-  value is the value of that parameter. The parameters for a function can be specified when the Component is created in one of
-  the following ways:
+* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a
+  dictionary of the parameters for the Component's `function <Component.function>` and their values, to be used to
+  instantiate the function.  Each entry is the name of a parameter, and its value is the value of that parameter.
+  The parameters for a function can be specified when the Component is created in one of the following ways:
 
       * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
         `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
@@ -238,21 +242,20 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   `ParameterPort_Specification` for details concerning different ways in which the value of a
   parameter can be specified).
 
-
 COMMENT:
-FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
-  * parameters are things that govern the operation of the Mechanism (including its function) and/or can be
-    modified/modulated
-  * attributes include parameters, but also read-only attributes that reflect but do not determine the operation
-    (e.g., EXECUTION_COUNT)
+    FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
+      * parameters are things that govern the operation of the Mechanism (including its function) and/or can be
+        modified/modulated
+      * attributes include parameters, but also read-only attributes that reflect but do not determine the operation
+        (e.g., EXECUTION_COUNT)
 COMMENT
 
+COMMENT:
 .. _Component_Methods:
 
 *Component Methods*
 ~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
    FOR DEVELOPERS:
 
     There are two sets of methods that belong to every Component: one set that is called when it is initialized; and
@@ -335,20 +338,20 @@ The following attributes control and provide information about the execution of 
 *Initialization*
 ~~~~~~~~~~~~~~~~
 
-.. _Component_Reinitialize_When:
+.. _Component_Reset_Stateful_Function_When:
 
-* **reinitialize_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
-  `reinitialize <Component.reinitialize>` method. The `reinitialize <Component.reinitialize>` method is executed
+* **reset_stateful_function_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
+  `reset <Component.reset>` method. The `reset <Component.reset>` method is executed
   without arguments, meaning that the relevant function's `initializer<IntegratorFunction.initializer>` attribute
   (or equivalent -- initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-  the `reinitialize <Component.reinitialize>` method and `reinitialize_when <Component.reinitialize_when>` attribute
+  the `reset <Component.reset>` method and `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute
   only exist for Mechanisms that have `stateful <Parameter.stateful>` Parameters, or that have a `function
   <Mechanism.function>` with `stateful <Parameter.stateful>` Parameters.
 
   .. note::
 
-        Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
-        Components do not reinitialize.
+        Currently, only Mechanisms reset when their reset_stateful_function_when Conditions are satisfied. Other types of
+        Components do not reset.
 
 .. _:
 Component_Execution_Termination
@@ -467,7 +470,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
-    REINITIALIZE_WHEN, VALUE, VARIABLE
+    RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
@@ -525,8 +528,8 @@ class ResetMode(Enum):
 
 class DefaultsFlexibility(Enum):
     """
-        Denotes how rigid an assignment to a default is. That is, how much, if at all
-        it can be modified to suit the purpose of a method/owner/etc.
+        Denotes how rigid an assignment to a default is. That is, how much it can be modified, if at all,
+        to suit the purpose of a method/owner/etc.
 
         e.g. when assigning a Function to a Mechanism:
 
@@ -541,13 +544,13 @@ class DefaultsFlexibility(Enum):
     ----------
 
     FLEXIBLE
-        can be modified in any way
+        can be modified in any way.
 
     RIGID
-        cannot be modifed in any way
+        cannot be modifed in any way.
 
     INCREASE_DIMENSION
-        can be wrapped in a single extra dimension
+        can be wrapped in a single extra dimension.
 
     """
     FLEXIBLE = 0
@@ -747,8 +750,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     max_executions_before_finished : bool
         see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
 
-    reinitialize_when : `Condition`
-        see `reinitialize_when <Component_Reinitialize_When>`
+    reset_stateful_function_when : `Condition`
+        see `reset_stateful_function_when <Component_reset_stateful_function_when>`
 
     name : str
         see `name <Component_Name>`
@@ -771,7 +774,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             * `INITIALIZING <ContextFlags.INITIALIZING>`
             * `VALIDATING <ContextFlags.VALIDATING>`
             * `INITIALIZED <ContextFlags.INITIALIZED>`
-            * `REINITIALIZED <ContextFlags.REINITIALIZED>`
+            * `RESET <ContextFlags.RESET>`
             * `UNINITIALIZED <ContextFlags.UNINITALIZED>`
 
     COMMENT:
@@ -797,7 +800,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     componentCategory = None
     componentType = None
 
-    standard_constructor_args = [REINITIALIZE_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
+    standard_constructor_args = [RESET_STATEFUL_FUNCTION_WHEN, EXECUTE_UNTIL_FINISHED, MAX_EXECUTIONS_BEFORE_FINISHED]
 
     # helper attributes for JSON model spec
     _model_spec_id_parameters = 'parameters'
@@ -982,7 +985,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                  size=NotImplemented,  # 7/5/17 CW: this is a hack to check whether the user has passed in a size arg
                  function=None,
                  name=None,
-                 reinitialize_when=None,
+                 reset_stateful_function_when=None,
                  prefs=None,
                  **kwargs):
         """Assign default preferences; enforce required params; validate and instantiate params and execute method
@@ -1042,10 +1045,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.has_initializers._set(False, context)
 
-        if reinitialize_when is not None:
-            self.reinitialize_when = reinitialize_when
+        if reset_stateful_function_when is not None:
+            self.reset_stateful_function_when = reset_stateful_function_when
         else:
-            self.reinitialize_when = Never()
+            self.reset_stateful_function_when = Never()
 
         # self.componentName = self.componentType
         try:
@@ -1288,8 +1291,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_param_initializer(self, context):
         return pnlvm._tupleize(self._get_param_values(context))
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, *_, tags):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
+        assert "reset" in tags
         return builder
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
@@ -1305,8 +1308,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for p in params, state, arg_in, arg_out:
                 p.attributes.add('noalias')
 
-        if "reinitialize" in tags:
-            builder = self._gen_llvm_function_reinitialize(ctx, builder,
+        if "reset" in tags:
+            builder = self._gen_llvm_function_reset(ctx, builder,
                                                            params, state,
                                                            arg_in, arg_out,
                                                            tags=tags)
@@ -1905,6 +1908,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
 
     def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        if context.execution_id is base_context.execution_id:
+            return
+
         if visited is None:
             visited = set()
 
@@ -2576,7 +2582,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -2587,11 +2593,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if isinstance(self.function, IntegratorFunction):
             if context is NotImplemented:
                 context = self.most_recent_context
-            new_value = self.function.reinitialize(*args, context=context)
+            new_value = self.function.reset(*args, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
         else:
-            raise ComponentError(f"Reinitializing {self.name} is not allowed because this Component is not stateful. "
-                                 "(It does not have an accumulator to reinitialize).")
+            raise ComponentError(f"Resetting {self.name} is not allowed because this Component is not stateful. "
+                                 "(It does not have an accumulator to reset).")
 
     @handle_external_context()
     def execute(self, variable=None, context=None, runtime_params=None):
@@ -2600,6 +2606,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 context = self.owner.most_recent_context
             except AttributeError:
                 context = self.most_recent_context
+
+        if context.source is ContextFlags.COMMAND_LINE:
+            self._initialize_from_context(context, override=False)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)

@@ -37,7 +37,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         ctx.get_input_struct_type(composition).as_pointer(),
         data_struct_ptr, data_struct_ptr]
 
-    if not is_mech and "reinitialize" not in tags:
+    if not is_mech and "reset" not in tags:
         # Add condition struct of the parent composition
         # This includes structures of all nested compositions
         cond_gen = helpers.ConditionGenerator(ctx, composition)
@@ -75,7 +75,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         node_in = builder.alloca(node_function.args[2].type.pointee)
         incoming_projections = node.afferents
 
-    if "reinitialize" in tags:
+    if "reset" in tags:
         incoming_projections = []
 
     # Execute all incoming projections
@@ -162,7 +162,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
             assert node is composition.controller
             call_args += [params, state, data_in]
         builder.call(node_function, call_args)
-    elif "reinitialize" not in tags:
+    elif "reset" not in tags:
         # FIXME: reinitialization of compositions is not supported
         # Condition and data structures includes parent first
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
@@ -251,12 +251,12 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TRIAL.value)])
             builder.store(ctx.int32_ty(0), num_exec_time_ptr)
 
-        # Check if there's anything to reinitialize
+        # Check if there's anything to reset
         for node in composition._all_nodes:
-            when = getattr(node, "reinitialize_when", Never())
+            when = getattr(node, "reset_stateful_function_when", Never())
             # FIXME: This should not be necessary. The code gets DCE'd,
             # but there are still some problems with generation
-            # 'reinitialize' function
+            # 'reset' function
             if node is composition.controller:
                 continue
 
@@ -264,7 +264,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 builder, when, cond, node, None)
             with builder.if_then(reinit_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
-                node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reinitialize"}))
+                node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
         if simulation is False and composition.enable_controller and \

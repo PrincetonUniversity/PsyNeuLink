@@ -736,8 +736,8 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reinitialize(self, *args, context=None):
-        # Override Component.reinitialize which requires that the Component is stateful
+    def reset(self, *args, context=None):
+        # Override Component.reset which requires that the Component is stateful
         pass
 
     def _gen_llvm_function_body(self, ctx, builder, _1, _2, arg_in, arg_out, *, tags:frozenset):

@@ -17,7 +17,7 @@ from psyneulink.core.globals.keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
     ARRAY, DDM, DDMError, DECISION_VARIABLE_ARRAY, SELECTED_INPUT_ARRAY
 
-class TestReinitialize:
+class TestReset:
 
     def test_valid(self):
         D = DDM(
@@ -32,8 +32,8 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 1.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
-        # reinitialize function
-        D.function.reinitialize(2.0, 0.1)
+        # reset function
+        D.function.reset(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -41,8 +41,8 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 1.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
-        # reinitialize function without value spec
-        D.function.reinitialize()
+        # reset function without value spec
+        D.function.reset()
         assert np.allclose(D.function.value[0], 0.0)
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
@@ -50,8 +50,8 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 1.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
-        # reinitialize mechanism
-        D.reinitialize(2.0, 0.1)
+        # reset mechanism
+        D.reset(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -65,18 +65,18 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 3.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.1)
 
-        # reinitialize mechanism without value spec
-        D.reinitialize()
+        # reset mechanism without value spec
+        D.reset()
         assert np.allclose(D.function.value[0], 0.0)
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.output_ports[0].value[0], 0.0)
         assert np.allclose(D.output_ports[1].value[0], 0.0)
 
-        # reinitialize only decision variable
+        # reset only decision variable
         D.function.initializer = 1.0
         D.function.starting_point = 0.0
-        D.reinitialize()
+        D.reset()
         assert np.allclose(D.function.value[0], 1.0)
         assert np.allclose(D.function.previous_value, 1.0)
         assert np.allclose(D.function.previous_time, 0.0)
@@ -165,7 +165,7 @@ class TestThreshold:
     def test_is_finished_stops_composition(self):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
-        C = Composition(pathways=[D], reinitialize_when=Never())
+        C = Composition(pathways=[D], reset_stateful_function_when=Never())
         C.run(inputs={D: 2.0},
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
 

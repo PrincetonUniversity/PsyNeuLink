@@ -165,14 +165,14 @@ def run(bin_execute):
         # RUN the SYSTEM to initialize ---------------------------------------
         comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute)
         comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute)
-        # reinitialize after condition was run
-        colors_hidden_layer.reinitialize([[0, 0, 0]], context=comp)
-        words_hidden_layer.reinitialize([[0, 0, 0]], context=comp)
-        response_layer.reinitialize([[0, 0]], context=comp)
-        task_layer.reinitialize([[0, 0]], context=comp)
+        # reset after condition was run
+        colors_hidden_layer.reset([[0, 0, 0]], context=comp)
+        words_hidden_layer.reset([[0, 0, 0]], context=comp)
+        response_layer.reset([[0, 0]], context=comp)
+        task_layer.reset([[0, 0]], context=comp)
         # Comp results include concatenation of both the above runs
         results.append(comp.results.copy())
-        comp.reinitialize()
+        comp.reset()
         comp.results = []
 
     return results

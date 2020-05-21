@@ -42,7 +42,7 @@ class TestMechanism:
         assert M.function.defaults.value.shape == function_value.shape
 
 
-class TestReinitializeValues:
+class TestResetValues:
 
     def test_reset_state_integrator_mechanism(self):
         A = pnl.IntegratorMechanism(name='A', function=pnl.DriftDiffusionIntegrator())
@@ -52,16 +52,16 @@ class TestReinitializeValues:
         original_output = [A.execute(1.0)[0], A.execute(1.0)[0]]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
-        reinitialize_values = []
+        reset_stateful_functions_to = []
         for attr in A.function.stateful_attributes:
-            reinitialize_values.append(getattr(A.function, attr))
+            reset_stateful_functions_to.append(getattr(A.function, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
         output_after_saving_state = [A.execute(1.0)[0], A.execute(1.0)[0]]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
-        A.reinitialize(*reinitialize_values)
+        A.reset(*reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0)[0], A.execute(1.0)[0]]
@@ -77,17 +77,17 @@ class TestReinitializeValues:
         original_output = [A.execute(1.0), A.execute(1.0)]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
-        reinitialize_values = []
+        reset_stateful_functions_to = []
 
         for attr in A.integrator_function.stateful_attributes:
-            reinitialize_values.append(getattr(A.integrator_function, attr))
+            reset_stateful_functions_to.append(getattr(A.integrator_function, attr))
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
         output_after_saving_state = [A.execute(1.0), A.execute(1.0)]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
-        A.reinitialize(*reinitialize_values)
+        A.reset(*reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]

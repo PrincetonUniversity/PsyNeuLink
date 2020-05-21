@@ -80,10 +80,16 @@ under `Mechanism_Structure` below.
 Creating a Mechanism
 --------------------
 
+Mechanisms are created by calling the constructor for a particular type.  PsyNeuLink also automatically
+creates one or more Mechanisms under some circumstances. For example, a `ComparatorMechanism` and `LearningMechanism
+<LearningMechanism>` are created automatically when `learning is specified <Composition_Learning>` for a `Composition`;
+and an `ObjectiveMechanism` may be created when a `ControlMechanism <ControlMechanism>` is created.
+
+COMMENT:
 Mechanisms can be created in several ways.  The simplest is to call the constructor for the desired type of Mechanism.
 Alternatively, the `mechanism` command can be used to create a specific type of Mechanism or an instance of
 `default_mechanism <Mechanism_Base.default_mechanism>`. Mechanisms can also be specified "in context," for example in
-the `pathway <Process.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
+the `pathway <Composition.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
 mentioned above, or using one of the following:
 
   * the name of an **existing Mechanism**;
@@ -116,6 +122,7 @@ mentioned above, or using one of the following:
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Composition_Learning>` for a Composition; and an `ObjectiveMechanism` may be created when a
     `ControlMechanism <ControlMechanism>` is created.
+COMMENT
 
 .. _Mechanism_Port_Specification:
 
@@ -490,16 +497,16 @@ attribute, as well as the number of InputPorts it has and their `variable <Input
   Projections from all of the same `senders <Projection_Base.sender>` as those specified.
 
 COMMENT:
-*** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
+    *** ADD SOME EXAMPLES HERE (see `examples <XXX>`)
 COMMENT
 
 COMMENT:
-*** ADD THESE TO ABOVE WHEN IMPLEMENTED:
-    If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
-        the latter is extended to  match the former.
-    If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
-        a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
-        number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
+    *** ADD THESE TO ABOVE WHEN IMPLEMENTED:
+        If more InputPorts are specified than there are items in `variable <Mechanism_Base.variable>,
+            the latter is extended to  match the former.
+        If the Mechanism's `variable <Mechanism_Base.variable>` has more than one item, it may still be assigned
+            a single InputPort;  in that case, the `value <InputPort.value>` of that InputPort must have the same
+            number of items as the Mechanisms's `variable <Mechanism_Base.variable>`.
 COMMENT
 ..
 * *INPUT_PORTS* entry of a params dict (list) -- specifications are treated in the same manner as those in the
@@ -974,8 +981,8 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
        Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>`
        will be.
 
-     - If the `value <Port_Base.value>` of a Port is specified, *neither its afferent Projections nor it `function
-       <Port_Base.function>` will be executed.
+     - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
+       nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
        OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
@@ -1068,6 +1075,7 @@ import warnings
 
 from collections import OrderedDict, defaultdict
 from inspect import isclass
+from numbers import Number
 
 import numpy as np
 import typecheck as tc
@@ -1084,15 +1092,15 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+# TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
-    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, \
-    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, \
+    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
+    INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
+    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, INPUT_PORT_VARIABLES, \
     MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MONITOR_FOR_CONTROL, MULTIPLICATIVE_PARAM, NAME, \
-    OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
-    PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, \
-    PROJECTIONS, REFERENCE_VALUE, RESULT, \
+    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
+    NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
+    PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import Condition
@@ -1133,15 +1141,12 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 class Mechanism_Base(Mechanism):
     """Base class for Mechanism.
+
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
 
     .. note::
        Mechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
-
-       COMMENT:
-       It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
-       COMMENT
        Mechanisms should be instantiated by calling the constructor for the desired subclass, or using other methods
        for specifying a Mechanism in context (see `Mechanism_Creation`)
 
@@ -1190,16 +1195,15 @@ class Mechanism_Base(Mechanism):
         MechanismRegistry
         -----------------
             All Mechanisms are registered in MechanismRegistry, which maintains a dict for each subclass,
-              a count for all instances of that type, and a dictionary of those instances
+            a count for all instances of that type, and a dictionary of those instances
     COMMENT
-
 
     Arguments
     ---------
 
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its `execute
-        <Mechanism_Base.execute>` or `run <Mechanism_Base.run>` method; also serves as a template to specify the
+        <Mechanism_Base.execute>` method; also serves as a template to specify the
         length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
         outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
         is assigned (usually [[0]]).
@@ -1229,7 +1233,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : at least 2d array : default self.defaults.variable
+    variable : at least 2d array
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <InputPort>` (in the order they are listed in its `input_ports <Mechanism_Base.input_ports>` attribute), and
@@ -1238,9 +1242,7 @@ class Mechanism_Base(Mechanism):
         it is used as a template to define the format (shape and type of elements) of the input the Mechanism's
         `function <Mechanism_Base.function>`.
 
-        .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
-
-    input_port : InputPort : default default InputPort
+    input_port : InputPort
         `primary InputPort <InputPort_Primary>` for the Mechanism;  same as first entry of its `input_ports
         <Mechanism_Base.input_ports>` attribute.  Its `value <InputPort.value>` is assigned as the first item of the
         Mechanism's `variable <Mechanism_Base.variable>`.
@@ -1250,7 +1252,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary InputPort <InputPort_Primary>` (i.e., the one in the its `input_port
         <Mechanism_Base.input_port>` attribute).
 
-    input_values : List[List or 1d np.array] : default self.defaults.variable
+    input_values : List[List or 1d np.array]
         each item in the list corresponds to the `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <Mechanism_InputPorts>` listed in its `input_ports <Mechanism_Base.input_ports>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -1407,7 +1409,7 @@ class Mechanism_Base(Mechanism):
         a list of all of the Mechanisms that receive `Projections <Projection>` from the Mechanism (i.e.,
         the receivers of its `efferents <Mechanism_Base.efferents>`.
 
-   condition : Condition : None
+    condition : Condition : None
         condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
         `Composition` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
         Condition for a `Component` is used.  It can be overridden in a given `Composition` by assigning a Condition
@@ -1416,12 +1418,10 @@ class Mechanism_Base(Mechanism):
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
-
         .. _portRegistry : Registry
                registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
                dicts for the instances of each type and an instance count for each Port type in the Mechanism.
@@ -1711,7 +1711,6 @@ class Mechanism_Base(Mechanism):
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
         self._receivesProcessInput = False
-        self.phaseSpec = None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -2034,9 +2033,10 @@ class Mechanism_Base(Mechanism):
         if INPUT_LABELS_DICT in params and params[INPUT_LABELS_DICT]:
             labels_dict = params[INPUT_LABELS_DICT]
             if isinstance(list(labels_dict.values())[0], dict):
-                for key, ld in labels_dict.values():
-                    validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
-                    validate_labels_dict(ld, INPUT_LABELS_DICT)
+                for subdict in labels_dict.values():
+                    for key, ld in subdict.items():
+                        validate_subdict_key(InputPort, key, INPUT_LABELS_DICT)
+                        validate_labels_dict(ld, INPUT_LABELS_DICT)
             else:
                 validate_labels_dict(labels_dict, INPUT_LABELS_DICT)
 
@@ -2182,8 +2182,8 @@ class Mechanism_Base(Mechanism):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
-        """Reinitialize `value <Mechanism_Base.value>` if Mechanisms is stateful.
+    def reset(self, *args, context=None):
+        """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
@@ -2192,26 +2192,26 @@ class Mechanism_Base(Mechanism):
         `value <Mechanism.value>` `history <Parameter.history`, thus
         effectively setting the previous value to ``None``.
 
-        If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reinitialize
-        <Mechanism_Base.reinitialize>` method:
+        If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reset
+        <Mechanism_Base.reset>` method:
 
-            (1) Calls the function's own `reinitialize <IntegratorFunction.reinitialize>` method (see Note below for
+            (1) Calls the function's own `reset <IntegratorFunction.reset>` method (see Note below for
                 details)
 
             (2) Sets the mechanism's `value <Mechanism_Base.value>` to the output of the function's
-                reinitialize method
+                reset method
 
             (3) Updates its `output ports <Mechanism_Base.output_port>` based on its new `value
                 <Mechanism_Base.value>`
 
-        If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reinitialize
-        <Mechanism_Base.reinitialize>` method::
+        If the mechanism has an `integrator_function <TransferMechanism.integrator_function>`, its `reset
+        <Mechanism_Base.reset>` method::
 
-            (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reinitialize
-                <IntegratorFunction.reinitialize>` method (see Note below for details)
+            (1) Calls the `integrator_function's <TransferMechanism.integrator_function>` own `reset
+                <IntegratorFunction.reset>` method (see Note below for details)
 
             (2) Executes its `function <Mechanism_Base.function>` using the output of the `integrator_function's
-                <TransferMechanism.integrator_function>` `reinitialize <IntegratorFunction.reinitialize>` method as
+                <TransferMechanism.integrator_function>` `reset <IntegratorFunction.reset>` method as
                 the function's variable
 
             (3) Sets the mechanism's `value <Mechanism_Base.value>` to the output of its function
@@ -2220,15 +2220,15 @@ class Mechanism_Base(Mechanism):
                 <Mechanism_Base.value>`
 
         .. note::
-                The reinitialize method of an IntegratorFunction Function typically resets the function's
+                The reset method of an IntegratorFunction Function typically resets the function's
                 `previous_value <IntegratorFunction.previous_value>` (and any other `stateful_attributes
                 <IntegratorFunction.stateful_attributes>`) and `value <IntegratorFunction.value>` to the quantity (or
-                quantities) specified. If `reinitialize <Mechanism_Base.reinitialize>` is called without arguments,
+                quantities) specified. If `reset <Mechanism_Base.reset>` is called without arguments,
                 the `initializer <IntegratorFunction.initializer>` value (or the values of each of the attributes in
-                `initializers <IntegratorFunction.initializers>`) is used instead. The `reinitialize
-                <IntegratorFunction.reinitialize>` method may vary across different Integrators. See individual
+                `initializers <IntegratorFunction.initializers>`) is used instead. The `reset
+                <IntegratorFunction.reset>` method may vary across different Integrators. See individual
                 functions for details on their `stateful_attributes <IntegratorFunction.stateful_attributes>`,
-                as well as other reinitialization steps that the reinitialize method may carry out.
+                as well as other reinitialization steps that the reset method may carry out.
         """
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
@@ -2237,18 +2237,18 @@ class Mechanism_Base(Mechanism):
             context.execution_id = self.most_recent_context.execution_id
 
         # If the primary function of the mechanism is stateful:
-        # (1) reinitialize it, (2) update value, (3) update output ports
+        # (1) reset it, (2) update value, (3) update output ports
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reinitialize(*args, context=context)
+            new_value = self.function.reset(*args, context=context)
             self.parameters.value._set(np.atleast_2d(new_value), context=context)
             self._update_output_ports(context=context)
 
         # If the mechanism has an auxiliary integrator function:
-        # (1) reinitialize it, (2) run the primary function with the new "previous_value" as input
+        # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
         elif hasattr(self, "integrator_function"):
             if isinstance(self.integrator_function, IntegratorFunction):
-                new_input = self.integrator_function.reinitialize(*args, context=context)[0]
+                new_input = self.integrator_function.reset(*args, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
                     context=context,
@@ -2258,20 +2258,20 @@ class Mechanism_Base(Mechanism):
 
             elif self.integrator_function is None or isinstance(self.integrator_function, type):
                 if hasattr(self, "integrator_mode"):
-                    raise MechanismError(f"Reinitializing '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reinitialize. "
+                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                                         f"is not stateful; it does not have an integrator to reset. "
                                          f"If it should be stateful, try setting the integrator_mode argument to True.")
                 else:
-                    raise MechanismError(f"Reinitializing '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reinitialize.")
+                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                                         f"is not stateful; it does not have an integrator to reset.")
 
             else:
-                raise MechanismError(f"Reinitializing '{self.name}' is not allowed because its integrator_function "
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because its integrator_function "
                                      f"is not an IntegratorFunction type function, therefore the Mechanism "
-                                     f"does not have an integrator to reinitialize.")
+                                     f"does not have an integrator to reset.")
         else:
-            raise MechanismError(f"Reinitializing '{self.name}' is not allowed because this Mechanism is not stateful; "
-                                 f"it does not have an accumulator to reinitialize.")
+            raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
+                                 f"it does not have an accumulator to reset.")
 
     def _get_current_mechanism_param(self, param_name, context=None):
         if param_name == "variable":
@@ -2326,9 +2326,16 @@ class Mechanism_Base(Mechanism):
         runtime_params : [Dict[str, Dict[str, Dict[str, value]]]] : None
             a dictionary specifying values for `Parameters <Parameter>` of the Mechanism or those of any of its
             `Components <Component>` (`function <Mechanism_Base.function>`, `Ports <Mechanism_Ports>` and/or
-            `afferent Projections <Port_Projections>`), that temporarily override their values for the current
+            their `afferent Projections <Port_Projections>`), that temporarily override their values for the current
             execution, and are then restored to their previous values following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
+
+        .. _Mechanism_execute_context_Arg:
+
+        context : Context or str : None
+            the context in which the Mechanism is executed, usually specified by its `execution_id
+            <Context.execution_id>` (see `Composition_Execution_Context` for additional information about execution
+            contexts.
 
         Returns
         -------
@@ -2345,6 +2352,9 @@ class Mechanism_Base(Mechanism):
                                                                        context.flags, EXECUTION_PHASE))
         else:
             context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
+
+        if context.source is ContextFlags.COMMAND_LINE:
+            self._initialize_from_context(context, override=False)
 
         # IMPLEMENTATION NOTE: Re-write by calling execute methods according to their order in functionDict:
         #         for func in self.functionDict:
@@ -2959,8 +2969,8 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
         return func_in, builder
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
@@ -2972,7 +2982,7 @@ class Mechanism_Base(Mechanism):
         return builder
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" not in tags
+        assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
                 self, params, ctx, builder, params, state, arg_in)
@@ -3658,6 +3668,75 @@ class Mechanism_Base(Mechanism):
         remove_instance_from_registry(MechanismRegistry, mechanism.__class__.__name__,
                                       component=mechanism)
 
+    def _get_standardized_label_dicts(self):
+        """
+        Gets dict of Mechanism's input and output port labels in a standardized form
+
+        Returns
+        -------
+
+        dict in the form
+        {INPUT_PORTS:
+                {(int) port_index:
+                        {{label_1: value_1},
+                         {label_2: value_2}}
+                },
+        OUTPUT_PORTS:
+        {(int) port_index:
+                        {{label_1: value_1},
+                         {label_2: value_2}}
+                }
+        }
+
+        """
+        input_labels = self._get_standardized_label_dict(INPUT)
+        output_labels = self._get_standardized_label_dict(INPUT)
+        port_labels = {
+            INPUT_PORTS: input_labels,
+            OUTPUT_PORTS: output_labels
+        }
+        return port_labels
+
+    def _get_standardized_label_dict(self, label_type):
+        """
+        Parses input or output label dicts into a standardized form
+
+        Parameters
+        ----------
+        (str) port_type: INPUT or OUTPUT keyword, specifying the type of labels to parse and return
+
+        port_type
+
+        Returns
+        -------
+        dict in the form
+        {INPUT_PORTS/OUTPUT_PORTS:
+                {(int) port_index:
+                        {{label_1: value_1},
+                         {label_2: value_2}}
+                }
+        }
+        """
+        if label_type == INPUT:
+            label_dict = self.input_labels_dict
+            ports = self.input_ports
+        elif label_type == OUTPUT:
+            label_dict = self.output_labels_dict
+            ports = self.output_ports
+        _label_dict = {}
+        if label_dict:
+            for k, v in label_dict.items():
+                if isinstance(k, Number):
+                    _label_dict[k] = v
+                elif type(v) == dict:
+                    i = ports[k].position_in_mechanism
+                    _label_dict[i] = v
+                else:
+                    if not 0 in _label_dict:
+                        _label_dict[0] = {}
+                    _label_dict[0].update({k:v})
+        return _label_dict
+
     def get_input_port_position(self, port):
         if port in self.input_ports:
             return self.input_ports.index(port)
@@ -3779,7 +3858,7 @@ class Mechanism_Base(Mechanism):
 
     @property
     def path_afferents(self):
-        """Return list of path_afferent Projections to all of the Mechanism's input_ports"""
+        """Return list of the `path_afferents <Port_Base.path_afferents>` for all of the Mechanism's input_ports"""
         projs = []
         for input_port in self.input_ports:
             projs.extend(input_port.path_afferents)
@@ -3893,18 +3972,9 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
-# MechanismTuple indices
-# OBJECT_ITEM = 0
-# # PARAMS_ITEM = 1
-# # PHASE_ITEM = 2
-#
-# MechanismTuple = namedtuple('MechanismTuple', 'mechanism')
-
 from collections import UserList
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list of :class:`MechanismTuples` for an owner.
-
-    :class:`MechanismTuples` are of the form: (Mechanism object, runtime_params dict, phaseSpec int).
+    """Provides access to items and their attributes in a list for an owner.
 
     Attributes
     ----------
@@ -3928,12 +3998,6 @@ class MechanismList(UserList):
         self.mechs = components_list
         self.data = self.mechs
         self.owner = owner
-        # for item in components_list:
-        #     if not isinstance(item, MechanismTuple):
-        #         raise MechanismError("The following item in the components_list arg of MechanismList()"
-        #                              " is not a MechanismTuple: {}".format(item))
-
-        self.process_tuples = components_list
 
     def __getitem__(self, item):
         """Return specified Mechanism in MechanismList
@@ -3946,15 +4010,6 @@ class MechanismList(UserList):
 
     def __len__(self):
         return (len(self.mechs))
-
-    # def _get_tuple_for_mech(self, mech):
-    #     """Return first Mechanism tuple containing specified Mechanism from the list of mechs
-    #     """
-    #     if list(item for item in self.mechs).count(mech):
-    #         if self.owner.verbosePref:
-    #             print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
-    #                   format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-    #     return next((object_item for object_item in self.mechs if object_item is mech), None)
 
     @property
     def mechs_sorted(self):

@@ -159,8 +159,8 @@ of its constructor.  This transforms its input (including from the `recurrent_pr
 a RecurrentTransferMechanism can be configured to integrate its input, by setting its `integration_mode
 <TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Integration`), and to do so for a
 single step of integration or until it reaches some termination condition each time it is executed (see
-`TransferMechanism_Termination`). Finally, it can be reinitialized using its `reinitialize
-<TransferMechanism.reinitialize>` method (see `TransferMechanism_Reinitialization`).
+`TransferMechanism_Termination`). Finally, it can be reset using its `reset
+<TransferMechanism.reset>` method (see `TransferMechanism_Reinitialization`).
 
 .. _RecurrentTransferMechanism_Execution_Learning:
 
@@ -1020,7 +1020,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             param_port = self._parameter_ports['matrix']
 
             if hasattr(param_port.function, 'initializer'):
-                param_port.function.reinitialize = val
+                param_port.function.reset = val
 
     @property
     def auto(self):
@@ -1222,9 +1222,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input, context)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         if self.parameters.integrator_mode.get(context):
-            super().reinitialize(*args, context=context)
+            super().reset(*args, context=context)
         self.parameters.value.clear_history(context)
 
     @property
@@ -1265,8 +1265,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
         return (*transfer_init, tuple(retval_init), projection_init)
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
 
         # Check if we have reinitializers
         has_reinitializers_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "has_initializers")
