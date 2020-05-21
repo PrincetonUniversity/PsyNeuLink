@@ -4076,5 +4076,3 @@ class MechanismList(UserList):
         for item in self.mechanisms:
             output_values.append(item.output_values)
         return output_values
-
-

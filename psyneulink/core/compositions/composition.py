@@ -10467,9 +10467,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
 
+    # @property
+    # def mechanisms(self):
+    #     return MechanismList(self, [mech for mech in self.nodes
+    #                                 if isinstance(mech, Mechanism)])
+
     @property
     def mechanisms(self):
-        return MechanismList(self, [mech for mech in self.nodes if isinstance(mech, Mechanism)])
+        return MechanismList(self, [node if isinstance(node, Mechanism) else node.mechanisms
+                                    for node in self.nodes])
 
     @property
     def runs_simulations(self):
