@@ -9,6 +9,6 @@ Mechanisms
    Modulatory Mechanisms <ModulatoryMechanism>
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
-   :members: Mechanism_Base
+   :members:
    :exclude-members: MechanismTuple, MechanismList, MonitoredOutputPortsOption, random, Parameters
 

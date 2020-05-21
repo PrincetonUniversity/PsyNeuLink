@@ -1712,7 +1712,6 @@ class Mechanism_Base(Mechanism):
         # FIX: 10/3/17 - IS THIS CORRECT?  SHOULD IT BE INITIALIZED??
         self._status = INITIALIZING
         self._receivesProcessInput = False
-        self.phaseSpec = None
 
     # ------------------------------------------------------------------------------------------------------------------
     # Parsing methods
@@ -3974,18 +3973,9 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
-# MechanismTuple indices
-# OBJECT_ITEM = 0
-# # PARAMS_ITEM = 1
-# # PHASE_ITEM = 2
-#
-# MechanismTuple = namedtuple('MechanismTuple', 'mechanism')
-
 from collections import UserList
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list of :class:`MechanismTuples` for an owner.
-
-    :class:`MechanismTuples` are of the form: (Mechanism object, runtime_params dict, phaseSpec int).
+    """Provides access to items and their attributes in a list for an owner.
 
     Attributes
     ----------
@@ -4009,12 +3999,6 @@ class MechanismList(UserList):
         self.mechs = components_list
         self.data = self.mechs
         self.owner = owner
-        # for item in components_list:
-        #     if not isinstance(item, MechanismTuple):
-        #         raise MechanismError("The following item in the components_list arg of MechanismList()"
-        #                              " is not a MechanismTuple: {}".format(item))
-
-        self.process_tuples = components_list
 
     def __getitem__(self, item):
         """Return specified Mechanism in MechanismList
@@ -4027,15 +4011,6 @@ class MechanismList(UserList):
 
     def __len__(self):
         return (len(self.mechs))
-
-    # def _get_tuple_for_mech(self, mech):
-    #     """Return first Mechanism tuple containing specified Mechanism from the list of mechs
-    #     """
-    #     if list(item for item in self.mechs).count(mech):
-    #         if self.owner.verbosePref:
-    #             print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
-    #                   format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-    #     return next((object_item for object_item in self.mechs if object_item is mech), None)
 
     @property
     def mechs_sorted(self):

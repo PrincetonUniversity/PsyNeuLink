@@ -5884,7 +5884,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
         # unpack processing components and add to composition
-        if len(processing_pathway) == 3 and isinstance(processing_pathway, MappingProjection):
+        if len(processing_pathway) == 3 and isinstance(processing_pathway[1], MappingProjection):
             input_source, learned_projection, output_source = processing_pathway
         elif len(processing_pathway) == 2:
             input_source, output_source = processing_pathway
