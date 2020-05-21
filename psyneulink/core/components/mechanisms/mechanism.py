@@ -4041,8 +4041,8 @@ class MechanismList(UserList):
         return self.data
 
     def _get_attributes_dict(self, mech_list_attr_name, item_attr_name, sub_attr_name=None, values_only=False):
-        """Generate dict of {item.name:item attribute value} pairs in "human readalbe" form.
-        Call recursively if item is itself a MechanismList
+        """Generate dict of {item.name:item attribute value} pairs in "human readable" form.
+        Call recursively if item is itself a MechanismList.
         """
         ret_dict = {}
         for item in self.mechanisms:
