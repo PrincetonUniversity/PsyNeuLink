@@ -80,10 +80,16 @@ under `Mechanism_Structure` below.
 Creating a Mechanism
 --------------------
 
+Mechanisms can be created using the constructor for one of the subclasses.  PsyNeuLink also automatically creates
+one or more Mechanisms under some circumstances. For example, a `ComparatorMechanism` and `LearningMechanism
+<LearningMechanism>` are created automatically when `learning is specified <Composition_Learning>` for a Composition;
+and an `ObjectiveMechanism` may be created when a `ControlMechanism <ControlMechanism>` is created.
+
+COMMENT:
 Mechanisms can be created in several ways.  The simplest is to call the constructor for the desired type of Mechanism.
 Alternatively, the `mechanism` command can be used to create a specific type of Mechanism or an instance of
 `default_mechanism <Mechanism_Base.default_mechanism>`. Mechanisms can also be specified "in context," for example in
-the `pathway <Process.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
+the `pathway <Composition.pathway>` attribute of a `Process`; the Mechanism can be specified in either of the ways
 mentioned above, or using one of the following:
 
   * the name of an **existing Mechanism**;
@@ -116,6 +122,7 @@ mentioned above, or using one of the following:
     a `ComparatorMechanism` and `LearningMechanism <LearningMechanism>` are created automatically when `learning is
     specified <Composition_Learning>` for a Composition; and an `ObjectiveMechanism` may be created when a
     `ControlMechanism <ControlMechanism>` is created.
+COMMENT
 
 .. _Mechanism_Port_Specification:
 
@@ -1191,7 +1198,6 @@ class Mechanism_Base(Mechanism):
             a count for all instances of that type, and a dictionary of those instances
     COMMENT
 
-
     Arguments
     ---------
 
@@ -1227,7 +1233,7 @@ class Mechanism_Base(Mechanism):
     Attributes
     ----------
 
-    variable : at least 2d array : default self.defaults.variable
+    variable : at least 2d array
         used as input to the Mechanism's `function <Mechanism_Base.function>`.  It is always at least a 2d np.array,
         with each item of axis 0 corresponding to a `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <InputPort>` (in the order they are listed in its `input_ports <Mechanism_Base.input_ports>` attribute), and
@@ -1236,7 +1242,7 @@ class Mechanism_Base(Mechanism):
         it is used as a template to define the format (shape and type of elements) of the input the Mechanism's
         `function <Mechanism_Base.function>`.
 
-    input_port : InputPort : default default InputPort
+    input_port : InputPort
         `primary InputPort <InputPort_Primary>` for the Mechanism;  same as first entry of its `input_ports
         <Mechanism_Base.input_ports>` attribute.  Its `value <InputPort.value>` is assigned as the first item of the
         Mechanism's `variable <Mechanism_Base.variable>`.
@@ -1246,7 +1252,7 @@ class Mechanism_Base(Mechanism):
         the Mechanism's `primary InputPort <InputPort_Primary>` (i.e., the one in the its `input_port
         <Mechanism_Base.input_port>` attribute).
 
-    input_values : List[List or 1d np.array] : default self.defaults.variable
+    input_values : List[List or 1d np.array]
         each item in the list corresponds to the `value <InputPort.value>` of one of the Mechanism's `InputPorts
         <Mechanism_InputPorts>` listed in its `input_ports <Mechanism_Base.input_ports>` attribute.  The value of
         each item is the same as the corresponding item in the Mechanism's `variable <Mechanism_Base.variable>`
@@ -1403,7 +1409,7 @@ class Mechanism_Base(Mechanism):
         a list of all of the Mechanisms that receive `Projections <Projection>` from the Mechanism (i.e.,
         the receivers of its `efferents <Mechanism_Base.efferents>`.
 
-   condition : Condition : None
+    condition : Condition : None
         condition to be associated with the Mechanism in the `Scheduler` responsible for executing it in each
         `Composition` to which it is assigned;  if it is not specified (i.e., its value is `None`), the default
         Condition for a `Component` is used.  It can be overridden in a given `Composition` by assigning a Condition
@@ -1412,12 +1418,10 @@ class Mechanism_Base(Mechanism):
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
         assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
-
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
         constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
         <LINK>` for details).
-
         .. _portRegistry : Registry
                registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
                dicts for the instances of each type and an instance count for each Port type in the Mechanism.
