@@ -1141,7 +1141,7 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 class Mechanism_Base(Mechanism):
     """
-    Mechanism(                  \
+    Mechanism_Base(             \
         default_variable=None,  \
         size=None,              \
         input_ports,            \

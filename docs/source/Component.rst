@@ -11,5 +11,5 @@ Component
    Functions <Functions>
 
 .. automodule:: psyneulink.core.components.component
-   :members:
-   :exclude-members: Parameters, ComponentLog, COMPONENT_BASE_CLASS, LogLevel
+   :members:  Component, DefaultsFlexibility, ResetMode
+   :exclude-members: Parameters, ComponentLog, COMPONENT_BASE_CLASS, LogLevel, ComponentError

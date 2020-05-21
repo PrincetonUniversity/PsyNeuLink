@@ -630,7 +630,18 @@ class ComponentsMeta(ABCMeta):
 
 
 class Component(JSONDumpable, metaclass=ComponentsMeta):
-    """Base class for Component.
+    """
+    Component(                 \
+        default_variable=None, \
+        size=None,             \
+        params=None,           \
+        name=None,             \
+        prefs=None,            \
+        context=None           \
+    )
+
+    Base class for Component.
+
     The arguments below are ones that can be used in the constructor for any Component subclass.
 
     .. note::
