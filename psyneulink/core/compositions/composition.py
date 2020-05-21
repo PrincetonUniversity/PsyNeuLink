@@ -2833,6 +2833,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     feedback_projections : ContentAddressableList[`Projection <Projection>`]
         list of Projections that have been `assigned as `feedback <Composition_Feedback_Specification>`.
 
+    mechanisms : `MechanismList`
+        list of Mechanisms in Composition, that provides access to some of they key attributes.
+
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
