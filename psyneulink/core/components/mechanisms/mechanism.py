@@ -3975,6 +3975,8 @@ def _is_mechanism_spec(spec):
 from collections import UserList
 class MechanismList(UserList):
     """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
+    
+    Properties return dicts with item : attribute pairs;  recursively processes any item that itself is a MechanismList.
 
     Attributes
     ----------
@@ -4000,9 +4002,7 @@ class MechanismList(UserList):
         self.owner = owner
 
     def __getitem__(self, item):
-        """Return specified Mechanism in MechanismList
-        """
-        # return list(self.mechs[item])[MECHANISM]
+        """Return specified Mechanism in MechanismList"""
         return self.mechs[item]
 
     def __setitem__(self, key, value):
@@ -4011,17 +4011,32 @@ class MechanismList(UserList):
     def __len__(self):
         return (len(self.mechs))
 
-    # def _get_tuple_for_mech(self, mech):
-    #     """Return first Mechanism tuple containing specified Mechanism from the list of mechs
-    #     """
-    #     if list(item for item in self.mechs).count(mech):
-    #         if self.owner.verbosePref:
-    #             print("PROGRAM ERROR:  {} found in more than one object_item in {} in {}".
-    #                   format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
-    #     return next((object_item for object_item in self.mechs if object_item is mech), None)
-
     def __call__(self):
         return self.data
+
+    def _get_attributes_dict(self, mech_list_attr_name, item_attr_name, sub_attr_name=None):
+        """Generate dict of {item.name:item attribute value} pairs in "human readalbe" form.
+        Call recursively if item is itself a MechanismList
+        """
+        ret_dict = {}
+        for item in self.mechanisms:
+            if isinstance(item, Mechanism):
+                attr_val = getattr(item, item_attr_name)
+                if isinstance(attr_val, (list, ContentAddressableList)):
+                    for sub_item in attr_val:
+                        sub_item_dict = {}
+                        if sub_attr_name:
+                            sub_item_dict[sub_item.name] = getattr(sub_item, sub_attr_name)
+                        else:
+                            assert False, f"Need to specify sub_attr for attributs that are a list"
+                    ret_dict[item.name] = sub_item_dict
+                elif not sub_attr_name:
+                    ret_dict[item.name] = attr_val
+                else:
+                    ret_dict[item.name] = getattr(attr_val, sub_attr_name)
+            else:
+                ret_dict[item.owner.name] = getattr(item, mech_list_attr_name)
+        return ret_dict
 
     @property
     def mechs_sorted(self):
@@ -4035,44 +4050,51 @@ class MechanismList(UserList):
 
     @property
     def names(self):
-        """Return names of all Mechanisms in MechanismList"""
-        return list(item.name for item in self.mechanisms)
+        """Return dictwith names of all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('names', 'name')
 
     @property
     def values(self):
-        """Return values of all Mechanisms in MechanismList"""
-        return list(item.value for item in self.mechanisms)
+        """Return dict with values of all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+
+    @property
+    def input_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('input_port_names', 'input_ports', 'name')
+
+    @property
+    def input_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('input_port_values', 'input_ports', 'value')
+
+    @property
+    def input_values(self):
+        """Return dict with input_values for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+
+    @property
+    def parameter_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('parameter_port_names', 'parameter_ports', 'name')
+
+    @property
+    def parameter_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('parameter_port_values', 'parameter_ports', 'value')
 
     @property
     def output_port_names(self):
-        """Return names of all OutputPorts for all Mechanisms in MechanismList"""
-        names = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                names.append(output_port.name)
-        return names
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('output_port_names', 'output_ports', 'name')
 
     @property
     def output_port_values(self):
-        """Return values of OutputPorts for all Mechanisms in MechanismList"""
-        values = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                values.append(output_port.value)
-        return values
-
-    def get_output_port_values(self, context):
-        """Return values of OutputPorts for all Mechanisms in MechanismList for **context**"""
-        values = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                values.append(output_port.parameters.value.get(context))
-        return values
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('output_port_values', 'output_ports', 'value')
 
     @property
     def output_values(self):
-        """Return output_values of for all Mechanisms in MechanismList"""
-        output_values = []
-        for item in self.mechanisms:
-            output_values.append(item.output_values)
-        return output_values
+        """Return dict with output_values for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+
