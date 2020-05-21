@@ -25,7 +25,9 @@ Contents
         * `Name <Component_Name>`
         * `Preferences <Component_Prefs>`
     * `User_Modifiable_Parameters`
+    COMMENT:
     * `Methods <Component_Methods>`
+    COMMENT
 * `Component_Execution`
     * `Component_Execution_Initialization`
     * `Component_Execution_Termination`
@@ -200,27 +202,28 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 * `Parameters <Component.Parameters>` - a `Parameters class <Parameters>` defining parameters and their default values
    that are used for all Components, unless overridden.
 
-  All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
-  can also be modified by `ControlSignals <ControlSignal>` when a `Composition executes <Composition_Execution>`.
-  In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
-  or format of the values associated with a Component can be subject to modulation.  For example, for a
-  `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
-  `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
-  `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
-  but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
-  <TransferMechanism.integration_rate>` can all be subject to modulation. Parameters that are subject to modulation
-  have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
-  the ControlSignals can project (by way of a `ControlProjection`).
+   All of the parameters listed in the *parameters* class can be modified by the user (as described above).  Some
+   can also be modified by `ControlSignals <ControlSignal>` when a `Composition executes <Composition_Execution>`.
+   In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+   or format of the values associated with a Component can be subject to modulation.  For example, for a
+   `TransferMechanism`, `clip <TransferMechanism.clip>`, `initial_value <TransferMechanism.initial_value>`,
+   `integrator_mode <TransferMechanism.integrator_mode>`, `input_ports <Mechanism_Base.input_ports>`,
+   `output_ports`, and `function <Mechanism_Base.function>`, are all listed in parameters, and are user-modifiable,
+   but are not subject to modulation; whereas `noise <TransferMechanism.noise>` and `integration_rate
+   <TransferMechanism.integration_rate>` can all be subject to modulation. Parameters that are subject to modulation
+   have the `modulable <Parameter.modulable>` attribute set to True and are associated with a `ParameterPort` to which
+   the ControlSignals can project (by way of a `ControlProjection`).
+
   COMMENT:
-      FIX: ADD COMMENT ABOUT HOW TO ASSIGN DEFAULTS HERE 5/8/20
+      FIX: ADD DISCUSSION ABOUT HOW TO ASSIGN DEFAULTS HERE 5/8/20
   COMMENT
 
 .. _Component_Function_Params:
 
-* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a dictionary of the parameters
-  for the Component's `function <Component.function>` and their values, to be used to instantiate the function.  Each entry is the name of a parameter, and its
-  value is the value of that parameter. The parameters for a function can be specified when the Component is created in one of
-  the following ways:
+* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a
+  dictionary of the parameters for the Component's `function <Component.function>` and their values, to be used to
+  instantiate the function.  Each entry is the name of a parameter, and its value is the value of that parameter.
+  The parameters for a function can be specified when the Component is created in one of the following ways:
 
       * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
         `function <Component.function>` share some or all of their parameters in common, the shared paramters may appear
@@ -239,21 +242,20 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
   `ParameterPort_Specification` for details concerning different ways in which the value of a
   parameter can be specified).
 
-
 COMMENT:
-FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
-  * parameters are things that govern the operation of the Mechanism (including its function) and/or can be
-    modified/modulated
-  * attributes include parameters, but also read-only attributes that reflect but do not determine the operation
-    (e.g., EXECUTION_COUNT)
+    FIX: STATEMENT ABOVE ABOUT MODIFYING EXECUTION COUNT VIOLATES THIS DEFINITION, AS PROBABLY DO OTHER ATTRIBUTES
+      * parameters are things that govern the operation of the Mechanism (including its function) and/or can be
+        modified/modulated
+      * attributes include parameters, but also read-only attributes that reflect but do not determine the operation
+        (e.g., EXECUTION_COUNT)
 COMMENT
 
+COMMENT:
 .. _Component_Methods:
 
 *Component Methods*
 ~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
    FOR DEVELOPERS:
 
     There are two sets of methods that belong to every Component: one set that is called when it is initialized; and
@@ -526,8 +528,8 @@ class ResetMode(Enum):
 
 class DefaultsFlexibility(Enum):
     """
-        Denotes how rigid an assignment to a default is. That is, how much, if at all
-        it can be modified to suit the purpose of a method/owner/etc.
+        Denotes how rigid an assignment to a default is. That is, how much it can be modified, if at all,
+        to suit the purpose of a method/owner/etc.
 
         e.g. when assigning a Function to a Mechanism:
 
@@ -542,13 +544,13 @@ class DefaultsFlexibility(Enum):
     ----------
 
     FLEXIBLE
-        can be modified in any way
+        can be modified in any way.
 
     RIGID
-        cannot be modifed in any way
+        cannot be modifed in any way.
 
     INCREASE_DIMENSION
-        can be wrapped in a single extra dimension
+        can be wrapped in a single extra dimension.
 
     """
     FLEXIBLE = 0
@@ -1906,6 +1908,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
 
     def _initialize_from_context(self, context, base_context=Context(execution_id=None), override=True, visited=None):
+        if context.execution_id is base_context.execution_id:
+            return
+
         if visited is None:
             visited = set()
 
@@ -2601,6 +2606,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 context = self.owner.most_recent_context
             except AttributeError:
                 context = self.most_recent_context
+
+        if context.source is ContextFlags.COMMAND_LINE:
+            self._initialize_from_context(context, override=False)
 
         value = self._execute(variable=variable, context=context, runtime_params=runtime_params)
         self.parameters.value._set(value, context=context)
