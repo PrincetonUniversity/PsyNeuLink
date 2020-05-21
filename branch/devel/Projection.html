@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.7.5.4+384.g9ccc937 documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.7.5.4+385.ge157195 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+384
+                  0.7.5.4+385
                 </div>
               
             
@@ -590,7 +590,8 @@ It should be created by calling the constructor for a subclass` or by using any 
 <li><strong>sender</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the source of the Projection’s input. If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used. If it is not specified, it is assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
-<li><strong>function</strong> (<em>TransferFunction : default LinearMatrix</em>) – specifies function used to convey (and potentially convert) <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+<li><strong>function</strong> (<em>TransferFunction : default LinearMatrix</em>) – specifies function used to convey (and potentially convert) <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> to <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+Port.</li>
 <li><strong>receiver</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the destination of the Projection’s output.  If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
@@ -752,7 +753,7 @@ default name is assigned by the subclass (see subclass for details)</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+384.g9ccc937',
+               VERSION:'0.7.5.4+385.ge157195',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

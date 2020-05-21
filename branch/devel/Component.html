@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4+384.g9ccc937 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+385.ge157195 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+384
+                  0.7.5.4+385
                 </div>
               
             
@@ -435,7 +435,7 @@ parameter can be specified).</p>
 </ul>
 <ul class="simple" id="component-assign-params">
 <li><strong>reset_params</strong> - reset the value of all parameters to a set of default values as specified in its <strong>mode</strong>
-argument, using a value of <a class="reference internal" href="#component-resetmode"><span class="std std-ref">ResetMode</span></a>.</li>
+argument, using a value of <code class="xref any docutils literal"><span class="pre">ResetMode</span></code>.</li>
 </ul>
 </div>
 </div>
@@ -511,8 +511,8 @@ last execution.</li>
 <dl class="class">
 <dt id="psyneulink.core.components.component.Component">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>reset_stateful_function_when=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for Component.
-The arguments below are ones that can be used in the constructor for any Component subclass.</p>
+<dd><p>Base class for Component.</p>
+<p>The arguments below are ones that can be used in the constructor for any Component subclass.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Component is an abstract class and should <em>never</em> be instantiated by a direct call to its constructor.
@@ -526,7 +526,6 @@ It should be instantiated using the constructor for a subclass.</p>
 <li><strong>default_variable</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default</em><em> [</em><em>[</em><em>0</em><em>]</em><em>]</em>) – specifies template for the input to the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
-<li><strong>function</strong> (<em>function : default Linear</em>) – specifies function used to transform <a class="reference internal" href="#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> into <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;  must take an input of the same shape as <a class="reference internal" href="#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
@@ -747,68 +746,6 @@ may change during runtime</p>
 
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">DefaultsFlexibility</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Denotes how rigid an assignment to a default is. That is, how much it can be modified, if at all,
-to suit the purpose of a method/owner/etc.</p>
-<p>e.g. when assigning a Function to a Mechanism:</p>
-<blockquote>
-<div><p><code class="docutils literal"><span class="pre">pnl.TransferMechanism(default_variable=[0,</span> <span class="pre">0],</span> <span class="pre">function=pnl.Linear())</span></code></p>
-<p>the Linear function is assigned a default variable ([0]) based on it’s ClassDefault,
-which conflicts with the default variable specified by its future owner ([0, 0]). Since
-the default for Linear was not explicitly stated, we allow the TransferMechanism to
-reassign the Linear’s default variable as needed (<a class="reference internal" href="#psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE" title="psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE"><code class="xref any py py-attr docutils literal"><span class="pre">FLEXIBLE</span></code></a>)</p>
-</div></blockquote>
-</div></blockquote>
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE">
-<code class="descname">FLEXIBLE</code><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE" title="Permalink to this definition">¶</a></dt>
-<dd><p>can be modified in any way.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility.RIGID">
-<code class="descname">RIGID</code><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility.RIGID" title="Permalink to this definition">¶</a></dt>
-<dd><p>cannot be modifed in any way.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility.INCREASE_DIMENSION">
-<code class="descname">INCREASE_DIMENSION</code><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility.INCREASE_DIMENSION" title="Permalink to this definition">¶</a></dt>
-<dd><p>can be wrapped in a single extra dimension.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.core.components.component.ResetMode">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">ResetMode</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.ResetMode" title="Permalink to this definition">¶</a></dt>
-<dd><p id="component-resetmode">ResetModes used for <strong>reset_params</strong>:</p>
-<dl class="docutils" id="current-to-instance-defaults">
-<dt><em>CURRENT_TO_INSTANCE_DEFAULTS</em></dt>
-<dd><ul class="first last simple">
-<li>resets all current values to instance default values.</li>
-</ul>
-</dd>
-</dl>
-<dl class="docutils" id="instance-to-class">
-<dt><em>INSTANCE_TO_CLASS</em></dt>
-<dd><ul class="first last simple">
-<li>resets all instance default values to class default values.</li>
-</ul>
-</dd>
-</dl>
-<dl class="docutils" id="all-to-class-defaults">
-<dt><em>ALL_TO_CLASS_DEFAULTS</em></dt>
-<dd><ul class="first last simple">
-<li>resets all current values and instance default values to       class default values</li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 </div>
 </div>
 
@@ -892,7 +829,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+384.g9ccc937',
+               VERSION:'0.7.5.4+385.ge157195',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

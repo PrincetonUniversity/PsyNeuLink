@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+384.g9ccc937 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+385.ge157195 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+384
+                  0.7.5.4+385
                 </div>
               
             
@@ -1005,10 +1005,9 @@ for specifying a Mechanism in context (see <a class="reference internal" href="#
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies the input to the Mechanism to use if none is provided in a call to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method; also serves as a template to specify the
-length of <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary
-outputPort</span></a> of the Mechanism.  If it is not specified, then a subclass-specific default
-is assigned (usually [[0]]).</li>
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies the input to the Mechanism to use if none is provided in a call to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method; also serves as a template to specify the shape of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if those are not specified.  If it is not specified, then a
+subclass-specific default is assigned (usually [[0]]).</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints : default None</em>) – <p>specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.
 For example, the following Mechanisms are equivalent:</p>
@@ -1019,10 +1018,11 @@ For example, the following Mechanisms are equivalent:</p>
 </li>
 <li><strong>input_ports</strong> (<em>str</em><em>, </em><em>list</em><em>, </em><em>dict</em><em>, or </em><em>np.ndarray : default None</em>) – specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
 using the value of default_variable as its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>;  if more than one is specified,
-the number and, if specified, their values must be compatible with any specifications in <strong>default_variable</strong>
-or <strong>size</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</li>
+the number and, if specified, their values must be compatible with any specifications made for
+<strong>default_variable</strong> or <strong>size</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</li>
 <li><strong>function</strong> (<em>Function : default Linear</em>) – specifies the function used to generate the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;
-can be a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> or a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>.</li>
+can be a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> or a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>;  it <code class="xref any docutils literal"><span class="pre">value</span></code> is used to determine
+the shape of the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary outputPort</span></a> of the Mechanism.</li>
 <li><strong>output_ports</strong> (<em>str</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
 the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of which is assigned the first item in the outermost dimension (axis 0) of the
 Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (see <a class="reference internal" href="#mechanism-outputports"><span class="std std-ref">OutputPorts</span></a> for additional details).</li>
@@ -1659,7 +1659,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+384.g9ccc937',
+               VERSION:'0.7.5.4+385.ge157195',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -12,4 +12,4 @@ Component
 
 .. automodule:: psyneulink.core.components.component
    :members:
-   :exclude-members: Parameters, ComponentLog, COMPONENT_BASE_CLASS, LogLevel
+   :exclude-members: Parameters, ComponentLog, COMPONENT_BASE_CLASS, LogLevel, ComponentError, DefaultsFlexibility, ResetMode
