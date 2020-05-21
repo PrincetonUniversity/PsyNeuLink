@@ -41,9 +41,6 @@ Contents
       - `Composition_Execution_Inputs`
           • `Composition_Input_Dictionary`
           • `Composition_Programmatic_Inputs`
-          COMMENT:
-          • `Composition_Target_Inputs`
-          COMMENT
       - `Composition_Runtime_Params`
       - `Composition_Initial_Values_and_Feedback`
       COMMENT:
@@ -899,14 +896,14 @@ methods can also be used to execute the Composition, but no learning will occur,
 
 .. _Composition_Execution_Inputs:
 
-*Input formats*
-~~~~~~~~~~~~~~~
+*Input formats (including targets for learning)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
-the `targets <Composition_learn_targets_Arg>` argument of the `learn <Compistion.learn>` method) is used to
-specify the inputs to the Composition for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's
-`INPUT` `Nodes  <Composition_Nodes>` (including its TARGET_MECHANISMS <Composition_Learning_Components>` for learning)
-each time it is executed. There are two ways to specify inputs:
+the **targets** argument of the `learn <Composition.learn>` method) is used to specify the inputs to the Composition
+for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's `INPUT` `Nodes  <Composition_Nodes>`
+(including its `TARGET_MECHANISMS <Composition_Learning_Components>` for learning) each time it is executed. There are
+two ways to specify inputs:
 
   * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
@@ -922,23 +919,23 @@ single `TRIAL <TimeScale.TRIAL>`.
 
 *Inputs and input_ports*. All formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
 the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that require external inputs. These are listed
-in the `external_input_ports  <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
+in the `external_input_ports <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
 `Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
-of any `nested Composition <Composition_Nested>` that is an `INPUT Node of the Composition being being executed
-<Composition_Nested_External_Input_Ports>`)
+of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the Composition being executed
+(see `above <Composition_Nested_External_Input_Ports>`)
 
-.. note:
-   Most Mechanisms have only a single InputPort `input_port <Mechanism_Base.input_port>`, and thus require only
-   a single input to be specified for them for each `TRIAL <TimsScale.TRIAL>`. However some Mechanisms have more
-   than one InputPort (for example, a `ComparatorMechanisms`), in which case an input must be specified for each
-   InputPort of that Mechanism. Conversely, some Mechanisms have input_ports that are marked as `internal_only
-   <InputPort.internal_only>` (for example, the input_port for a `RecurrentTransferMechanism`, if its
-   `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no
-   input should be specified for that input_port.  Similar considerations extend to the `external_input_ports
-   <Composition.external_input_ports>` of a `nested Composition <Composition_Nested>`, based on the Mechanisms
-   (and/or additionally nested Compositions) that comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
+.. note::
+   Most Mechanisms have only a single `InputPort`, and thus require only a single input to be specified for them
+   for each `TRIAL <TimeScale.TRIAL>`. However some Mechanisms have more than one InputPort (for example, a
+   `ComparatorMechanism`), in which case an input must be specified for each InputPort of that Mechanism. Conversely,
+   some Mechanisms have input_ports that are marked as `internal_only <InputPort.internal_only>` (for example,
+   the `input_port <Mechanism_Base.input_port>` for a `RecurrentTransferMechanism`, if its `has_recurrent_input_port
+   <RecurrentTransferMechanism.has_recurrent_input_port>` is True), in which case no input should be specified for
+   that input_port.  Similar considerations extend to the `external_input_ports <Composition.external_input_ports>`
+   of a `nested Composition <Composition_Nested>`, based on the Mechanisms (and/or additionally nested Compositions)
+   that comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
 
-These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>, or the
+These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
 return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
 of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
 
@@ -960,7 +957,7 @@ the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
 .. figure:: _static/Composition_input_dict_spec.svg
    :alt: Example input dict specification showing inputs specified for each Node and its InputPorts
 
-   Exaxmple input dict specification, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
+   Example input dict specification, in which the first entry is for Mechanism ``a`` with one `InputPort` that takes
    an array of length 2 as its input, and for which two `TRIAL <TimesScale.TRIAL>`\\s worth of input are specified
    (``[1.0, 2.0]`` and ``[3,0, 4.0]``);  the second entry is for Mechanism ``b`` with two InputPorts, one of which
    takes an array of length 1 as its input and the other an array of length 2, and for which two `TRIAL
@@ -1218,7 +1215,7 @@ one of two ways, based on whether any of the Projections in a cycle are designat
 
   .. note::
      Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
-     they receive the *current* value of any Nodes that project to them from outisde the cycle, and pass their current
+     they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
      value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
      of the cycle.
 
@@ -1236,12 +1233,9 @@ one of two ways, based on whether any of the Projections in a cycle are designat
   .. note::
      If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
      <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
-     within the Composition
-     COMMENT:
-         unless an execution_id is assigned to `context <Mechanism_execute_context_Arg>` of the Mechanism's `execute
-         <Mechanism_Base.exeucte>` method when it is called
-     COMMENT
-     .  This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
+     within the Composition, unless an `execution_id <Context.execution_id>` is assigned to `context
+     <Mechanism_execute_context_Arg>` of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.
+     This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
      `value <Mechanism_Base.value>` last assigned in the None context.  As described aove, this can be overridden by
      specifying an initial value for the Mechanism in the `initialize_cycle_values
      <Composition_initialize_cycle_values_Arg>` argument of the call to the Composition's `run <Composition.run>` or
