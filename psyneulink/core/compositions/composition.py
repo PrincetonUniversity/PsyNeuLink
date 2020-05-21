@@ -1369,11 +1369,26 @@ COMMENT
 *Resetting Stateful Parameters of Functions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Compositions offer several ways to reset the stateful parameters of their nodes' functions. This can be done in a
-blanket fashion, using the composition's `reset <Composition.reset>` method, or on a scheduled basis, optionally with
-separate specifications for individual nodes, using `conditions <Condition>`. There is also an interface for
-specifying the values that stateful parameters should be reset to. If reset values are not specified, then the
-parameters' defaults will be used. See below for examples.
+Compositions offer several ways to reset the stateful parameters of their nodes' functions in a customizable way
+throughout a call to `run <Composition.run>`. These resets can occur on a scheduled basis in accordance with user-specified
+`conditions <Scheduling.Condition.Condition>` using the *`reset_stateful_functions_when`* argument of `run`. This argument
+can take as its input a single `condition <Scheduling.Condition.Condition>` to be applied to all of the Composition's
+relevant nodes (i.e. ones with StatefulFunctions) that have not yet had their `reset_stateful_function_when` attribute
+specified, or in a dict of {Node:Condition} pairs, allowing the user to make separate specifications for individual nodes.
+
+.. note::
+    Passing a single `condition <Scheduling.Condition.Condition>` as input to the `reset_stateful_functions_when`
+    argument of `run` will apply that condition only to nodes that have not yet had their `reset_stateful_function_when`
+    attribute specified. In contrast, using a dict of {Node:Condition} pairs will apply to all nodes included in the dict.
+    In either case, the specified `condition <Scheduling.Condition.Condition>` will persist only for the duration of the
+    call to `run`.
+
+Additionally, users may specify values that nodes will use to reset their StatefulFunctions' stateful attributes. The
+values provided will be passed to the individual nodes' respective `reset` methods. This argument should be specified in
+a dict comprised of {node:value} pairs or, in the case where a given node's `reset` method takes multiple arguments,
+{node:[value_0, value_1, ... value_n]} pairs. In this latter case, the value-containing iterable must contain all of the
+args that need to be passed to the node's `reset` method. If, during a call to run, a node resets that is not included
+in this dict, it will set its stateful function's stateful parameters to their default values.
 
 .. note::
     There is some variation in the nature of the specific stateful attributes that belong to different functions,
@@ -1381,8 +1396,22 @@ parameters' defaults will be used. See below for examples.
     cases, such as for the majority of IntegratorFunctions, the only stateful attribute is a single scalar value that
     serves as the point from which the integrator will step on its next execution. There are other functions, however,
     such as the `DualAdaptiveIntegrator <DualAdaptiveIntegrator>` where this is not the case. Users
-    should look to see if the `StatefulFunction` that is relevant to them overrides the base `reset` method, and, if so,
-    use that as a template for how to structure values when resetting the attributes of those functions.
+    should look to see if the `StatefulFunction <StatefulFunction>` that is relevant to them overrides the base `reset`
+    method, and, if so, use that as a template for how to structure values when resetting the attributes of those functions.
+
+The `reset_stateful_functions_when` and `reset_stateful_functions_to` arguments can be used in conjunction, but they can
+also be used independently from one another. If, for example, a user wishes to specify under what conditions a Mechanism
+with a stateful function will reset during a specific call to `run`, but does not wish to specify a custom value for it
+to reset to, then they should only use the `reset_stateful_functions_when` argument. Conversely, if they don't wish to
+set or override any nodes' `reset_stateful_function_when` attributes, but they do want to specify the values those nodes
+should use to reset their stateful functions, then they should only use the `reset_stateful_functions_to` argument.
+
+A blanket reset can also be achieved outside of a call to `run <Composition.run>` using the composition's
+`reset <Composition.reset>` method. Similarly to the `reset_stateful_functions_to` argument, this method can take as
+input a dict comprised of {node:value} pairs or, in the case where a given node's `reset` method takes multiple arguments,
+{node:[value_0, value_1, ... value_n]} pairs.
+
+See below for examples.
 
 Example composition with two Mechanisms containing stateful functions:
 
