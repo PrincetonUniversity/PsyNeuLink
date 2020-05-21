@@ -3997,10 +3997,10 @@ class MechanismList(UserList):
     values : list of values
         each item is a Mechanism_Base.value
 
-    outputPortNames : list of strings
+    output_port_names : list of strings
         each item is an OutputPort.name
 
-    outputPortValues : list of values
+    output_port_values : list of values
         each item is an OutputPort.value
     """
 
@@ -4037,29 +4037,32 @@ class MechanismList(UserList):
     #                   format(append_type_to_name(mech), self.__class__.__name__, self.owner.name))
     #     return next((object_item for object_item in self.mechs if object_item is mech), None)
 
+    def __call__(self):
+        return self.data
+
     @property
     def mechs_sorted(self):
-        """Return list of mechs sorted by Mechanism name"""
+        """Return list of Mechanisms sorted by Mechanisms' names"""
         return sorted(self.mechs, key=lambda object_item: object_item.name)
 
     @property
     def mechanisms(self):
-        """Return list of all mechanisms in MechanismList"""
+        """Return list of all Mechanisms in MechanismList"""
         return list(self)
 
     @property
     def names(self):
-        """Return names of all mechanisms in MechanismList"""
+        """Return names of all Mechanisms in MechanismList"""
         return list(item.name for item in self.mechanisms)
 
     @property
     def values(self):
-        """Return values of all mechanisms in MechanismList"""
+        """Return values of all Mechanisms in MechanismList"""
         return list(item.value for item in self.mechanisms)
 
     @property
-    def outputPortNames(self):
-        """Return names of all OutputPorts for all mechanisms in MechanismList"""
+    def output_port_names(self):
+        """Return names of all OutputPorts for all Mechanisms in MechanismList"""
         names = []
         for item in self.mechanisms:
             for output_port in item.output_ports:
@@ -4067,8 +4070,8 @@ class MechanismList(UserList):
         return names
 
     @property
-    def outputPortValues(self):
-        """Return values of OutputPorts for all mechanisms in MechanismList"""
+    def output_port_values(self):
+        """Return values of OutputPorts for all Mechanisms in MechanismList"""
         values = []
         for item in self.mechanisms:
             for output_port in item.output_ports:
@@ -4076,9 +4079,19 @@ class MechanismList(UserList):
         return values
 
     def get_output_port_values(self, context):
-        """Return values of OutputPorts for all mechanisms in MechanismList for **context**"""
+        """Return values of OutputPorts for all Mechanisms in MechanismList for **context**"""
         values = []
         for item in self.mechanisms:
             for output_port in item.output_ports:
                 values.append(output_port.parameters.value.get(context))
         return values
+
+    @property
+    def output_values(self):
+        """Return output_values of for all Mechanisms in MechanismList"""
+        output_values = []
+        for item in self.mechanisms:
+            output_values.append(item.output_values)
+        return output_values
+
+
