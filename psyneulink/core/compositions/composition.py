@@ -592,18 +592,13 @@ For each `learning pathway <Composition_Learning_Pathway>` specified in the **pa
 constructor or one of its `learning methods <Composition_Learning_Methods>`, it creates the following Components,
 and assigns to them the `NodeRoles <NodeRole>` indicated:
 
-    .. _OUTPUT_MECHANISM:
-    * *OUTPUT_MECHANISM* -- the final `Node <Component_Nodes>` in the learning Pathway, the desired `value
-      <Mechanism_Base.value>` of which is specified as input to the `TARGET_MECHANISM`; the Node is assigned
-      the `NodeRoles <NodeRole>` `LEARNING_OUTPUT` and `LEARNING` in the Composition.
-
     .. _TARGET_MECHANISM:
-    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` of the `OUTPUT_MECHANISM`, that is
+    * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` for the `OUTPUT_MECHANISM`, that is
       used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal (see above);  that value must be
-      specified in either the `inputs <Composition_learn_inputs_Arg` argument of the Composition's `learn
-      <Composition.learn>` method, or in its `targets <Composition_learn_targets_Arg>` argument in an entry for
-      either the *TARGET_MECHANISM* or the `OUTPUT_MECHANISM` (see `Composition_Target_Inputs`); the Mechanism is
-      assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+      specified as an input to the TARGET_MECHANISM, either in the `inputs <Composition_learn_inputs_Arg` argument of
+      the Composition's `learn <Composition.learn>` method, or in its `targets <Composition_learn_targets_Arg>` argument
+      in an entry for either the *TARGET_MECHANISM* or the `OUTPUT_MECHANISM` (see `Composition_Target_Inputs`); the
+      Mechanism is assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
@@ -636,7 +631,14 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
     * *LEARNED_PROJECTIONS* -- a `LearningProjection` from each `LearningMechanism` to the `MappingProjection`
       for which it modifies it s`matrix <MappingProjection.matrix>` parameter.
 
-The items with names in the list above are placed in a dict that is assigned to the `learning_components
+It also assigns the following item to the list of `learning_components` for the pathway:
+
+    .. _OUTPUT_MECHANISM:
+    * *OUTPUT_MECHANISM* -- the final `Node <Component_Nodes>` in the learning Pathway, the target `value
+      <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM`; the Node is assigned
+      the `NodeRoles <NodeRole>` `OUTPUT` in the Composition.
+
+The items with names listed above are placed in a dict that is assigned to the `learning_components
 <Pathway.learning_components>` attribute of the `Pathway` returned by the learning method used to create the `Pathway`;
 they key for each item in the dict is the name of the item (as listed above), and the object(s) created of that type
 are its value (see `LearningMechanism_Single_Layer_Learning` for a more detailed description and figure showing these
@@ -2683,15 +2685,17 @@ class NodeRole(Enum):
         `TARGET` or `LEARNING_OBJECTIVE`, then it is a `LearningMechanism`. This role can, but generally should not be
         modified programmatically.
 
+    COMMENT:
     LEARNING_OUTPUT
         A `Node <Composition_Nodes>` that is last one in a `learning Pathway <Composition_Learning_Pathway>`,
         the desired `value <Mechanism_Base.value>` of which is provided as input to the `TARGET_MECHANISM
         <Composition_Learning_Components>` for that pathway (see `OUTPUT_MECHANISM
         <Composition_Learning_Components>`. This role can, but generally should not be modified programmatically.
+    COMMENT
 
     TARGET
         A `Node <Composition_Nodes>` that receives the target for a `learning pathway
-        <Composition_Learning_Pathway>` specifing the desired output of the `OUTPUT_MECHANISM
+        <Composition_Learning_Pathway>` specifying the desired output of the `OUTPUT_MECHANISM
         <Composition_Learning_Components>` for that pathway (see `TARGET_MECHANISM <Composition_Learning_Components>`).
         This role can, but generally should not be modified programmatically.
 
@@ -2732,11 +2736,10 @@ class NodeRole(Enum):
     CONTROL_OBJECTIVE = 7
     CONTROLLER_OBJECTIVE = 8
     LEARNING = 9
-    LEARNING_OUTPUT = 10
-    TARGET = 11
-    LEARNING_OBJECTIVE = 12
-    OUTPUT = 13
-    TERMINAL = 14
+    TARGET = 10
+    LEARNING_OBJECTIVE = 11
+    OUTPUT = 12
+    TERMINAL = 13
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -3509,7 +3512,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"{ObjectiveMechanism.__name__}s are generally constructed automatically by a "
                               f"{ControlMechanism.__name__}, or assigned to it in the '{OBJECTIVE_MECHANISM}' "
                               f"argument of its constructor.  Doing so otherwise may cause unexpected results.")
-            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE, NodeRole.TARGET, NodeRole.LEARNING_OUTPUT}:
+            elif role in {NodeRole.LEARNING, NodeRole.LEARNING_OBJECTIVE, NodeRole.TARGET}:
                 warnings.warn(f"{role} should be assigned with caution to {self.name}. "
                               f"Learning Components are generally constructed automatically as part of "
                               f"a learning Pathway. Doing so otherwise may cause unexpected results.")
@@ -5716,7 +5719,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX 5/8/20: WHY IS LEARNING_MECHANSIMS ASSIGNED A SINGLE MECHANISM?
         # Wrap up and return
-        learning_related_components = {OUTPUT_MECHANISM: pathway[-1],
+        learning_related_components = {OUTPUT_MECHANISM: output_source,
                                        TARGET_MECHANISM: target,
                                        OBJECTIVE_MECHANISM: comparator,
                                        LEARNING_MECHANISMS: learning_mechanism,
