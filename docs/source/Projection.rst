@@ -9,4 +9,4 @@ Projections
 
 .. automodule:: psyneulink.core.components.projections.projection
    :members:
-   :exclude-members: _is_projection_spec, random, Parameters
+   :exclude-members: _is_projection_spec, random, Parameters, ProjectionError, DuplicateProjectionError

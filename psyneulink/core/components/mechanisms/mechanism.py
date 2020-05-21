@@ -1139,10 +1139,6 @@ class Mechanism_Base(Mechanism):
 
     .. note::
        Mechanism is an abstract class and should *never* be instantiated by a direct call to its constructor.
-
-       COMMENT:
-       It should be instantiated using the :class:`mechanism` command (see it for description of parameters),
-       COMMENT
        Mechanisms should be instantiated by calling the constructor for the desired subclass, or using other methods
        for specifying a Mechanism in context (see `Mechanism_Creation`)
 
@@ -1238,8 +1234,6 @@ class Mechanism_Base(Mechanism):
         <InputPort_Primary>`.  When specified in the **variable** argument of the constructor for the Mechanism,
         it is used as a template to define the format (shape and type of elements) of the input the Mechanism's
         `function <Mechanism_Base.function>`.
-
-        .. _receivesProcessInput (bool): flags if Mechanism (as first in Pathway) receives Process input Projection
 
     input_port : InputPort : default default InputPort
         `primary InputPort <InputPort_Primary>` for the Mechanism;  same as first entry of its `input_ports

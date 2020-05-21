@@ -371,7 +371,6 @@ executed. When a Projection executes, it gets the value of its `sender <Projecti
 <Projection_Base.function>` of a Projection converts the value received from its `sender <Projection_Base.sender>` to
 a form suitable as input for its `receiver <Projection_Base.receiver>`.
 
-
 COMMENT:
 *** ADD EXAMPLES
 
@@ -386,7 +385,11 @@ for example, if a ProjectionTuple is used in the context of an
 
 COMMENT
 
+
 .. _Projection_Class_Reference:
+
+Class Reference
+---------------
 
 """
 import abc
