@@ -43,9 +43,7 @@ Contents
           • `Composition_Programmatic_Inputs`
       - `Composition_Runtime_Params`
       - `Composition_Initial_Values_and_Feedback`
-      COMMENT:
       - `Composition_Reset`
-      COMMENT
       - `Composition_Execution_Context`
       - `Composition_Compilation`
   * `Composition_Visualization`
@@ -1364,7 +1362,7 @@ COMMENT:
         a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at
         the start of a `TRIAL <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as
         `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
-
+COMMENT
 
 .._Composition_Reset:
 
