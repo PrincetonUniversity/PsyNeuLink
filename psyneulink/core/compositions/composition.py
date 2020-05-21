@@ -9181,7 +9181,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     iter(reset_stateful_functions_to[node])
                 except TypeError:
                     reset_stateful_functions_to[node] = [reset_stateful_functions_to[node]]
-                if (isinstance(reset_stateful_functions_when, Never) or \
+                if (isinstance(reset_stateful_functions_when, Never) or
                         node not in reset_stateful_functions_when) and \
                         isinstance(node.reset_stateful_function_when, Never):
                     node.reset(*reset_stateful_functions_to[node], context=context)
