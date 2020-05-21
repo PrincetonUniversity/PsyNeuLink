@@ -5887,15 +5887,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _unpack_processing_components_of_learning_pathway(self, processing_pathway):
         # unpack processing components and add to composition
-        if len(processing_pathway) == 3:
+        if len(processing_pathway) == 3 and isinstance(processing_pathway, MappingProjection):
             input_source, learned_projection, output_source = processing_pathway
         elif len(processing_pathway) == 2:
             input_source, output_source = processing_pathway
             learned_projection = MappingProjection(sender=input_source, receiver=output_source)
         else:
-            raise CompositionError(f"Too many components in learning pathway: {processing_pathway}. "
+            raise CompositionError(f"Too many Nodes in learning pathway: {processing_pathway}. "
                                    f"Only single-layer learning is supported by this method. "
-                                   f"See AutodiffComposition for other learning models.")
+                                   f"Use {BackPropagation.__name__} LearningFunction or "
+                                   f"see AutodiffComposition for other learning models.")
         return input_source, output_source, learned_projection
 
     # FIX: NOT CURRENTLY USED; IMPLEMENTED FOR FUTURE USE IN GENERALIZATION OF LEARNING METHODS
