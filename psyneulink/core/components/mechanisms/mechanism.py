@@ -80,9 +80,9 @@ under `Mechanism_Structure` below.
 Creating a Mechanism
 --------------------
 
-Mechanisms can be created using the constructor for one of the subclasses.  PsyNeuLink also automatically creates
-one or more Mechanisms under some circumstances. For example, a `ComparatorMechanism` and `LearningMechanism
-<LearningMechanism>` are created automatically when `learning is specified <Composition_Learning>` for a Composition;
+Mechanisms are created by calling the constructor for a particular type.  PsyNeuLink also automatically
+creates one or more Mechanisms under some circumstances. For example, a `ComparatorMechanism` and `LearningMechanism
+<LearningMechanism>` are created automatically when `learning is specified <Composition_Learning>` for a `Composition`;
 and an `ObjectiveMechanism` may be created when a `ControlMechanism <ControlMechanism>` is created.
 
 COMMENT:
