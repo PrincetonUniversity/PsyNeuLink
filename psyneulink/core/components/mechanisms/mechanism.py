@@ -3990,8 +3990,8 @@ class MechanismList(UserList):
         each entry is an item name : value pair.
 
     input_port_names : Dict[str:List[str]]
-        each entry is either an item name with a list of its `InputPort` `names <InputPort.name>` or, if the item is a
-        nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of 
+        each entry is either an item name with a list of its `InputPort` `names <InputPort.name>` or, if the item is
+        a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of
         their InputPort names.
 
     input_port_values : Dict[str:Dict[str:value]]
