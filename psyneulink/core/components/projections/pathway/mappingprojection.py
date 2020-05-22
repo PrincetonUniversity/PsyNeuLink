@@ -384,7 +384,7 @@ class MappingProjection(PathwayProjection_Base):
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
-        `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
+        `Registry_Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
         assigned using the following format:
         'MappingProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
         (for example, ``'MappingProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
