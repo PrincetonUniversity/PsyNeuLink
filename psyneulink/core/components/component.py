@@ -176,7 +176,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 .. _Component_Name:
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
-  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
+  If it was not specified, a default is assigned by the `registry <Registry>` for subclass (see `Naming` for
   conventions used in assigning default names and handling of duplicate names).
 ..
 
@@ -744,7 +744,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         override any assigned to those parameters in arguments of the constructor.
 
     name : str : default see `name <Component_Name>`
-        a string used for the name of the Component;  default is assigned by relevant `Registry <LINK>` for Component
+        a string used for the name of the Component;  default is assigned by relevant `Registry` for Component
         (see `Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : default Component.classPreferences
