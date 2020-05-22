@@ -192,8 +192,7 @@ should project to the InputPort. Each of these is described below:
       to specify an InputPort in the constructor for a Mechanism, the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputPort is assigned is used as the format for the InputPort`s
       `variable <InputPort.variable>`; otherwise, the default for the InputPort is used.  If a string is specified,
-      it is used as the `name <InputPort.name>` of the InputPort (see `example
-      <Port_Constructor_Argument_Examples>`).
+      it is used as the `name <InputPort.name>` of the InputPort (see `example <Port_Constructor_Argument_Examples>`).
 
     .. _InputPort_Specification_by_Value:
 
