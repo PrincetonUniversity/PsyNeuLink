@@ -463,8 +463,8 @@ class Function_Base(Function):
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     """
 
@@ -796,8 +796,8 @@ class ArgumentTherapy(Function_Base):
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
 
     """

@@ -6,4 +6,5 @@ Services
 
    Log
    Registry
+   Preferences
    json

@@ -185,7 +185,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
-  preference (see `PreferenceSet <LINK>` for details).
+  preference (see `Preferences` for details).
 
 
 .. _User_Modifiable_Parameters:

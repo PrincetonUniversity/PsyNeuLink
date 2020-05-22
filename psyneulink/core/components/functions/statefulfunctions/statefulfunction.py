@@ -153,10 +153,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
         assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = STATEFUL_FUNCTION_TYPE

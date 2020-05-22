@@ -168,8 +168,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences` for
+        details).
     """
     componentName = CONCATENATE_FUNCTION
 
@@ -381,8 +381,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
     componentName = REARRANGE_FUNCTION
 
@@ -662,8 +662,8 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
     componentName = REDUCE_FUNCTION
 
@@ -1091,8 +1091,8 @@ class LinearCombination(
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LINEAR_COMBINATION_FUNCTION
@@ -1616,8 +1616,8 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = COMBINE_MEANS_FUNCTION

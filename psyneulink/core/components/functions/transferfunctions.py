@@ -181,8 +181,8 @@ class Identity(TransferFunction):  # -------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = IDENTITY_FUNCTION
@@ -329,8 +329,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LINEAR_FUNCTION
@@ -573,8 +573,8 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = EXPONENTIAL_FUNCTION
@@ -830,8 +830,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LOGISTIC_FUNCTION
@@ -1129,8 +1129,8 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = TANH_FUNCTION
@@ -1378,8 +1378,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = RELU_FUNCTION
@@ -1608,8 +1608,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = GAUSSIAN_FUNCTION
@@ -1876,8 +1876,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = GAUSSIAN_DISTORT_FUNCTION
@@ -2155,8 +2155,8 @@ class SoftMax(TransferFunction):
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = SOFTMAX_FUNCTION

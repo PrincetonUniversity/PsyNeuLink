@@ -182,8 +182,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = INTEGRATOR_FUNCTION_TYPE
@@ -525,8 +525,8 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
@@ -776,8 +776,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -1011,8 +1011,8 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
@@ -1424,8 +1424,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
@@ -1947,8 +1947,8 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
@@ -2308,8 +2308,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
@@ -2733,8 +2733,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
@@ -3072,8 +3072,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LEAKY_COMPETING_INTEGRATOR_FUNCTION
