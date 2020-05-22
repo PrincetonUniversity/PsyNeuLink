@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0.7.5.4+387.gdacb97f documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+387
+                  0.7.5.4+388
                 </div>
               
             
@@ -424,10 +424,10 @@ InputPort’s owner <a class="reference internal" href="Mechanism.html"><span cl
 updates its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter based on any <code class="xref any docutils literal"><span class="pre">LearningProjection(s)</span></code> it receives (listed in
 the ParameterPort’s <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute). This brings into effect any changes that
 occurred due to <a class="reference internal" href="#mappingprojection-learning"><span class="std std-ref">learning</span></a>.  Since this does not occur until the Mechanism that receives
-the MappingProjection is executed (in accord with <span class="xref std std-ref">Lazy Evaluation</span>), any changes due to learning do not
-take effect, and are not observable (e.g., through inspection of the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> attribute or
-the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ParameterPort) until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution
-(see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of “lazy” updating).</p>
+the MappingProjection is executed (in accord with <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>), any changes due to
+learning do not take effect, and are not observable (e.g., through inspection of the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
+attribute or the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ParameterPort) until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
+execution (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 <div class="section" id="learning">
 <span id="mappingprojection-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>Learning modifies the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a MappingProjection, under the influence
@@ -449,7 +449,7 @@ is, its unmodulated value, conforming to the general protocol for <a class="refe
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>MATRIX</em> ParameterPort. As noted <a class="reference internal" href="#mappingprojection-execution"><span class="std std-ref">above</span></a>, however, this does
 not reflect any changes due to learning on the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution; those are assigned to the
 ParameterPort’s <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> when it executes, which does not occur until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives the MappingProjection is executed in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution
-(see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of “lazy” updating)</p>
+(see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -617,7 +617,7 @@ then the parenthesized name of class is used in place of the unassigned attribut
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+387.gdacb97f',
+               VERSION:'0.7.5.4+388.gddca757',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

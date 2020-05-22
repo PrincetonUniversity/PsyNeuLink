@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+387.gdacb97f documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+387
+                  0.7.5.4+388
                 </div>
               
             
@@ -952,15 +952,13 @@ or its <a class="reference internal" href="Port.html#psyneulink.core.components.
 <p class="first admonition-title">Note</p>
 <ul class="last simple">
 <li>If the <code class="xref any docutils literal"><span class="pre">variable</span></code> of a Port is specified as a runtime parameter, then its afferent
-Projections will not be executed (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code>), but its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
-will be.</li>
+Projections will not be executed (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>), but its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> will be.</li>
 <li>If the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Port is specified, <a href="#id4"><span class="problematic" id="id5">*</span></a>neither its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a>
 nor it <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> will be executed.</li>
 <li>If the <code class="xref any docutils literal"><span class="pre">variable</span></code> and/or <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is specified for <em>all</em> of the
 OutputPorts of a Mechanism, then it’s function will not be executed, and the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
-will retain its previous value (again in accord with Lazy Evaluation), though its OutputPorts <em>will</em> be
-executed using the assigned values, and it’s <a class="reference internal" href="Component.html#component-execution-count"><span class="std std-ref">execution_count</span></a> and
-<a class="reference internal" href="Component.html#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes will be incremented (since the OutputPorts –
+will retain its previous value (again in accord with <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code>
+and <a class="reference internal" href="Component.html#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes will be incremented (since the OutputPorts –
 Components of the Mechanism – executed).</li>
 <li>As expected, specifying <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> supercedes any specification of <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or of the parameters of its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 </ul>
@@ -979,8 +977,9 @@ as the key, and a dictionary containing parameter specifications as its value.</
 <div><div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">If the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a Projection is specified as a runtime parameter, then it will not be
-executed (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code>); accordingly, specifying <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> supercedes any
-specification of <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or of the parameters of its <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;Projection_Base.function&gt;.</span></code></p>
+executed (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>); accordingly, specifying <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+supercedes any specification of <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> or of the parameters of its <code class="xref any docutils literal"><span class="pre">function</span>
+<span class="pre">&lt;Projection_Base.function&gt;.</span></code></p>
 </div>
 </div></blockquote>
 </div>
@@ -1365,7 +1364,6 @@ InputPort (see <a class="reference internal" href="Composition.html#composition-
 their <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a>), that temporarily override their values for the current
 execution, and are then restored to their previous values following execution (see
 <a class="reference internal" href="#mechanism-runtime-param-specification"><span class="std std-ref">Runtime specification ditionary: parameters of a Mechanism and its function</span></a> for details of specification).</li>
-<li><strong>_Mechanism_execute_context_Arg</strong> (<em>.</em>) – </li>
 <li><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context" title="psyneulink.core.globals.context.Context"><em>Context</em></a><em> or </em><em>str : None</em>) – the context in which the Mechanism is executed, usually specified by its <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal"><span class="pre">execution_id</span></code></a> (see <a class="reference internal" href="Composition.html#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a> for additional information about execution
 contexts.</li>
 </ul>
@@ -1659,7 +1657,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+387.gdacb97f',
+               VERSION:'0.7.5.4+388.gddca757',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

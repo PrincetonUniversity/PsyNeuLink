@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4+387.gdacb97f documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+387
+                  0.7.5.4+388
                 </div>
               
             
@@ -244,7 +244,7 @@
 <dt><a class="reference internal" href="#component-execution"><span class="std std-ref">Execution</span></a></dt>
 <dd><ul class="first last">
 <li><a class="reference internal" href="#component-execution-initialization"><span class="std std-ref">Initialization</span></a></li>
-<li><code class="xref any docutils literal"><span class="pre">Component_Execution_Termination</span></code></li>
+<li><a class="reference internal" href="#component-execution-termination"><span class="std std-ref">Termination</span></a></li>
 <li><a class="reference internal" href="#component-execution-count-and-time"><span class="std std-ref">Count and Time</span></a></li>
 </ul>
 </dd>
@@ -441,34 +441,49 @@ argument, using a value of <code class="xref any docutils literal"><span class="
 </div>
 <div class="section" id="execution">
 <span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Calls the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method of the subclass that, in turn, calls its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
-The following attributes control and provide information about the execution of a Component:</p>
+<p>A Component is executed when its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method is called, which in turn calls its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.</p>
+<div class="section" id="lazy-updating">
+<span id="component-lazy-updating"></span><h3><em>Lazy Updating</em><a class="headerlink" href="#lazy-updating" title="Permalink to this headline">¶</a></h3>
+<p>In general, only <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> are executed from the command line (i.e., from the console or in a
+script).  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can also be executed, although this is usually just for the purposes of demonstration
+or debugging, and <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can only be executed if they are standalone (that is, they do not belong to
+another Component).  All other Components are executed only a Component that depends on them to do so.  This can be
+one to which a Components belongs (such as the Mechanism to which a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> belongs) or that otherwise requires it to
+execute (for example, a updating a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> requires its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a> to <a class="reference internal" href="Port.html#port-execution"><span class="std std-ref">execute</span></a>).  This is referred to as “lazy updating”, since it means that most Components don’t execute unless
+and until they are required to do so.  While this reduces unecessary computation, it can sometimes be confusing. For
+example, when <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a> occurs in a Composition, the modification to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that occurs on a given <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
+does not acutally appear in its <a class="reference internal" href="ParameterPort.html"><span class="doc">value</span></a> until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, since it requires
+that the ParameterPort for the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> be executed, which does not occur until the next
+time the MappingProjection is executed (i.e., in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>).  Therefore, in tracking the
+<a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of Components during execution, it is important to carefully consider the state of
+execution of the Components to which they belong or on which they depend for execution.</p>
+<p>The following attributes and methods control and provide information about the execution of a Component:</p>
+</div>
 <div class="section" id="initialization">
 <span id="component-execution-initialization"></span><h3><em>Initialization</em><a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
 <ul id="component-reset-stateful-function-when">
-<li><p class="first"><strong>reset_stateful_function_when</strong> - contains a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>; when this condition is satisfied, the Component calls its
-<a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method. The <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method is executed
-without arguments, meaning that the relevant function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attribute
-(or equivalent – initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> attribute
-only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters, or that have a <code class="xref any docutils literal"><span class="pre">function</span></code> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters.</p>
+<li><p class="first"><strong>reset_stateful_function_when</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> that determines when the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a>
+method is called.  The <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> attribute only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a>, or that have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters.  When the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method is called, this is done without any
+arguments, so that the relevant <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attributes (or their equivalents
+– initialization attributes vary among functions) are used for reinitialization.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently, only Mechanisms reset when their reset_stateful_function_when Conditions are satisfied. Other types of
-Components do not reset.</p>
+<p class="last"><a class="reference internal" href="Mechanisms.html"><span class="doc">Mechanisms</span></a> &lt;Mechanism&gt;` are the only type of Component that reset when the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is satisfied. Other Component types do not reset,
+although <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> has a <code class="xref any docutils literal"><span class="pre">reset</span></code> method that can be used to reset all of its eligible
+Mechanisms.</p>
 </div>
 </li>
 </ul>
-<p>Component_Execution_Termination
-<em>Termniation</em>
-~~~~~~~~~~~~~</p>
+</div>
+<div class="section" id="termination">
+<span id="component-execution-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-is-finished">
-<li><strong>is_finished</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</li>
+<li><strong>is_finished()</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</li>
 </ul>
 <ul class="simple" id="component-execute-until-finished">
-<li><strong>execute_until_finished</strong> – determines whether Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method returns True.  If
-it is False, then the Component executes only once per call to its <code class="xref any docutils literal"><span class="pre">execute</span></code> method,  irrespective
-of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
+<li><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method returns True.
+If it is False, then the Component executes only once per call to its <code class="xref any docutils literal"><span class="pre">execute</span></code> method,
+irrespective of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
 <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <code class="xref any docutils literal"><span class="pre">execute</span></code> method.</li>
 </ul>
 <ul class="simple" id="component-num-executions-before-finished">
@@ -805,7 +820,9 @@ may change during runtime</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#execution">Execution</a><ul>
+<li><a class="reference internal" href="#lazy-updating"><em>Lazy Updating</em></a></li>
 <li><a class="reference internal" href="#initialization"><em>Initialization</em></a></li>
+<li><a class="reference internal" href="#termination"><em>Termination</em></a></li>
 <li><a class="reference internal" href="#count-and-time"><em>Count and Time</em></a></li>
 </ul>
 </li>
@@ -829,7 +846,7 @@ may change during runtime</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+387.gdacb97f',
+               VERSION:'0.7.5.4+388.gddca757',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
