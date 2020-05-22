@@ -331,6 +331,7 @@ Class Reference
 
 from collections.abc import Iterable
 
+import copy
 import numpy as np
 import typecheck as tc
 from psyneulink.core.components.functions.function import get_matrix, is_function_type
@@ -1120,6 +1121,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
             plus_phase_activity=self.input_ports[RECURRENT].socket_template,
             execution_phase=None,
         )
+        self.defaults.initial_value = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.current_activity = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.minus_phase_activity = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.plus_phase_activity = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.execution_phase = None
+
         if self._target_included:
             self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
