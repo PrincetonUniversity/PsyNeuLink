@@ -76,3 +76,75 @@ class TestCompositionMethods:
 
 
         assert len(results) == 4 // minibatch_size
+
+    def test_composition_level_stateful_function_resets(self):
+        A = pnl.TransferMechanism(
+            name='A',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        B = pnl.TransferMechanism(
+            name='B',
+            integrator_mode=True,
+            integration_rate=0.5
+        )
+        C = pnl.TransferMechanism(name='C')
+
+        comp = pnl.Composition(
+            pathways=[[A, C], [B, C]]
+        )
+
+        A.log.set_log_conditions('value')
+        B.log.set_log_conditions('value')
+
+        comp.run(
+            inputs={A: [1.0],
+                    B: [1.0]},
+            reset_stateful_functions_when={
+                A: pnl.AtTrial(3),
+                B: pnl.AtTrial(4)
+            },
+            reset_stateful_functions_to = {
+                A: 0.5,
+                B: 0.5
+            },
+            num_trials = 5
+        )
+        # Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will
+        # be exactly one step of integration forward from 0.5.
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875
+        assert np.allclose(
+            A.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])],
+                [np.array([0.75])],
+                [np.array([0.875])]
+            ]
+        )
+
+        # Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will
+        # be exactly one step of integration forward from 0.5.
+        # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
+        assert np.allclose(
+            B.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
+            [
+                [np.array([0.5])],
+                [np.array([0.75])],
+                [np.array([0.875])],
+                [np.array([0.9375])],
+                [np.array([0.75])]
+            ]
+        )
+
+        comp.reset()
+        comp.run(
+            inputs={A: [1.0],
+                    B: [1.0]}
+        )
+
+        # Mechanisms A and B should have been reset, so verify that their new values are equal to their values at the
+        # end of trial 0
+
+        assert A.parameters.value.get(comp) == B.parameters.value.get(comp) == [[0.5]]

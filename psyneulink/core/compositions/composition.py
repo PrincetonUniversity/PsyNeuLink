@@ -9186,19 +9186,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     node.initialize(initialize_cycle_values[node], context)
 
-        try:
-            for node in reset_stateful_functions_to:
-                # make sure the args to reset are in the form of an iterable so they can be unpacked
-                try:
-                    iter(reset_stateful_functions_to[node])
-                except TypeError:
-                    reset_stateful_functions_to[node] = [reset_stateful_functions_to[node]]
-                if (isinstance(reset_stateful_functions_when, Never) or
-                        node not in reset_stateful_functions_when) and \
-                        isinstance(node.reset_stateful_function_when, Never):
-                    node.reset(*reset_stateful_functions_to[node], context=context)
-        except TypeError:
-            pass
+        if not reset_stateful_functions_to:
+            reset_stateful_functions_to = {}
+
+        for node, vals in reset_stateful_functions_to.items():
+            try:
+                iter(vals)
+            except TypeError:
+                vals = [vals]
+                reset_stateful_functions_to[node] = vals
+            if (isinstance(reset_stateful_functions_when, Never) or
+                    node not in reset_stateful_functions_when) and \
+                    isinstance(node.reset_stateful_function_when, Never):
+                node.reset(*vals, context=context)
 
         # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
         # Validate
@@ -9773,12 +9773,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             context=context
                         )
                     ):
-                        if node in reset_stateful_functions_to:
-                            node.reset(*reset_stateful_functions_to[node],
-                                       context=context)
-                        else:
-                            node.reset(None,
-                                       context=context)
+                        vals = reset_stateful_functions_to.get(node, [None])
+                        node.reset(*vals, context=context)
                 except AttributeError:
                     pass
 
@@ -10212,7 +10208,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             values = {}
 
         for node in self.stateful_nodes:
-            reset_val = None if not node in values else values[node]
+            reset_val = values.get(node)
             node.reset(reset_val, context=context)
 
     def disable_all_history(self):
@@ -10475,17 +10471,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
-
-    # @handle_external_context(execution_id=NotImplemented)
-    # def reset(self, context=None):
-    #     if context.execution_id is NotImplemented:
-    #         context.execution_id = self.most_recent_context.execution_id
-    #
-    #     self._compilation_data.ptx_execution.set(None, context)
-    #     self._compilation_data.parameter_struct.set(None, context)
-    #     self._compilation_data.state_struct.set(None, context)
-    #     self._compilation_data.data_struct.set(None, context)
-    #     self._compilation_data.scheduler_conditions.set(None, context)
 
     def __ptx_initialize(self, context=None, additional_tags=frozenset()):
         if self._compilation_data.ptx_execution._get(context) is None:
