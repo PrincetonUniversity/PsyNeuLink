@@ -1369,26 +1369,26 @@ COMMENT
 *Resetting Stateful Parameters of Functions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Compositions offer several ways to reset the stateful parameters of their nodes' functions in a customizable way
-throughout a call to `run <Composition.run>`. These resets can occur on a scheduled basis in accordance with user-specified
-`conditions <Scheduling.Condition.Condition>` using the *`reset_stateful_functions_when`* argument of `run`. This argument
-can take as its input a single `condition <Scheduling.Condition.Condition>` to be applied to all of the Composition's
+Compositions offer several interfaces for resetting their nodes' stateful functions' stateful parameters in customizable ways
+throughout calls to `run <Composition.run>`. These resets can occur on a scheduled basis, in accordance with user-specified
+`conditions <Scheduling.Condition.Condition>`, by using the *`reset_stateful_functions_when`* argument of `run`. This argument
+takes as input *either* a single `condition <Scheduling.Condition.Condition>` to be applied to all of the Composition's
 relevant nodes (i.e. ones with StatefulFunctions) that have not yet had their `reset_stateful_function_when` attribute
-specified, or in a dict of {Node:Condition} pairs, allowing the user to make separate specifications for individual nodes.
+specified, *or* in a dict of {Node:Condition} pairs, allowing the user to make separate specifications for individual nodes.
 
 .. note::
     Passing a single `condition <Scheduling.Condition.Condition>` as input to the `reset_stateful_functions_when`
     argument of `run` will apply that condition only to nodes that have not yet had their `reset_stateful_function_when`
-    attribute specified. In contrast, using a dict of {Node:Condition} pairs will apply to all nodes included in the dict.
-    In either case, the specified `condition <Scheduling.Condition.Condition>` will persist only for the duration of the
-    call to `run`.
+    attribute specified. In contrast, using a dict of {Node:Condition} pairs will apply to all nodes included in the dict,
+    regardless of whether its `reset_stateful_function_when` condition has been set. In either case, the specified
+    `condition <Scheduling.Condition.Condition>` will persist only for the duration of the call to `run`.
 
-Additionally, users may specify values that nodes will use to reset their StatefulFunctions' stateful attributes. The
+Additionally, users may specify the specific values that nodes will use to reset their functions' stateful parameters. The
 values provided will be passed to the individual nodes' respective `reset` methods. This argument should be specified in
-a dict comprised of {node:value} pairs or, in the case where a given node's `reset` method takes multiple arguments,
-{node:[value_0, value_1, ... value_n]} pairs. In this latter case, the value-containing iterable must contain all of the
+the form of a dict comprised of {node:value} pairs or, for a node that has a `reset` method that takes multiple arguments,
+{node:[value_0, value_1, ... value_n]} pairs. In this latter case, the provided iterable must contain all of the
 args that need to be passed to the node's `reset` method. If, during a call to run, a node resets that is not included
-in this dict, it will set its stateful function's stateful parameters to their default values.
+in this dict, its stateful functions' stateful parameters will be reset to their default values.
 
 .. note::
     There is some variation in the nature of the specific stateful attributes that belong to different functions,
@@ -1400,7 +1400,7 @@ in this dict, it will set its stateful function's stateful parameters to their d
     method, and, if so, use that as a template for how to structure values when resetting the attributes of those functions.
 
 The `reset_stateful_functions_when` and `reset_stateful_functions_to` arguments can be used in conjunction, but they can
-also be used independently from one another. If, for example, a user wishes to specify under what conditions a Mechanism
+also be used independently with respect to each other. If, for example, a user wishes to specify under what conditions a Mechanism
 with a stateful function will reset during a specific call to `run`, but does not wish to specify a custom value for it
 to reset to, then they should only use the `reset_stateful_functions_when` argument. Conversely, if they don't wish to
 set or override any nodes' `reset_stateful_function_when` attributes, but they do want to specify the values those nodes
