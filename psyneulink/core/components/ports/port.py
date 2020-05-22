@@ -858,7 +858,13 @@ class PortError(Exception):
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
-    """Base class for Port.
+    """
+    Port_Base(     \
+        owner=None \
+        )
+
+    Base class for Port.
+
     The arguments below can be used in the constructor for any subclass of Port.
     See `Component <Component_Class_Reference>` for additional arguments and attributes.
 

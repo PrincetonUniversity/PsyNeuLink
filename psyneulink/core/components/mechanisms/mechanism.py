@@ -1141,7 +1141,16 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 
 class Mechanism_Base(Mechanism):
-    """Base class for Mechanism.
+    """
+    Mechanism_Base(             \
+        default_variable=None,  \
+        size=None,              \
+        input_ports,            \
+        function,               \
+        output_ports,           \
+        )
+
+    Base class for Mechanism.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
@@ -1204,10 +1213,10 @@ class Mechanism_Base(Mechanism):
 
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its `execute
-        <Mechanism_Base.execute>` method; also serves as a template to specify the
-        length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
-        outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
-        is assigned (usually [[0]]).
+        <Mechanism_Base.execute>` method; also serves as a template to specify the shape of the `variable
+        <InputPort.variable>` for its `InputPorts <Mechanism_InputPorts>` and the `variable <Mechanism_Base.variable>`
+        of its `function <Mechanism_Base.function>` if those are not specified.  If it is not specified, then a
+        subclass-specific default is assigned (usually [[0]]).
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
@@ -1219,12 +1228,13 @@ class Mechanism_Base(Mechanism):
     input_ports : str, list, dict, or np.ndarray : default None
         specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
         using the value of default_variable as its `variable <InputPort.variable>`;  if more than one is specified,
-        the number and, if specified, their values must be compatible with any specifications in **default_variable**
-        or **size** (see `Mechanism_InputPorts` for additional details).
+        the number and, if specified, their values must be compatible with any specifications made for
+        **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
 
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
-        can be a PsyNeuLink `Function` or a `UserDefinedFunction`.
+        can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
+        the shape of the `primary outputPort <OutputPort_Primary>` of the Mechanism.
 
     output_ports : str, list or np.ndarray : default None
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
@@ -3973,23 +3983,51 @@ def _is_mechanism_spec(spec):
 
 from collections import UserList
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list for an owner.
+    """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
+    
+    Properties return dicts with item : attribute pairs.
+    Recursively process any item that itself is a MechanismList (e.g., a `Nested Composition <Composition_Nested>`.
 
     Attributes
     ----------
-    mechanisms : list of Mechanism objects
+    mechanisms : List[item]
 
-    names : list of strings
-        each item is a Mechanism.name
+    names : List[str | Dict[str:List[str]]
+        each item is an item name or a dict with one item as its key and a list of subitem names as its value.
 
-    values : list of values
-        each item is a Mechanism_Base.value
+    values : Dict[str:value]
+        each entry is an item name : value pair.
 
-    outputPortNames : list of strings
-        each item is an OutputPort.name
+    input_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `InputPort` `names <InputPort.name>` or, if the item is
+        a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of
+        their InputPort names.
 
-    outputPortValues : list of values
-        each item is an OutputPort.value
+    input_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `InputPort` `name <InputPort.name>`:`value <InputPort.value>`
+        pairs or, if the item is a nested MechanismList, then a dict with the name of the nested item and a dict
+        with its InputPort name:value pairs.
+
+    parameter_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `ParameterPort` `names <ParameterPort.name>` or, if the
+        item is a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a
+        list of their ParameterPort names.
+
+    parameter_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `ParameterPort` `name <ParameterPort.name>`:`value
+        <ParameterPort.value>` pairs or, if the item is a nested MechanismList, then a dict with the name of the
+        nested item and a dict with its ParameterPort name:value pairs.
+
+    output_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `OutputPort` `names <OutputPort.name>` or, if the item is
+        a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of
+        their OutputPort names.
+
+    output_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `OutputPort` `name <OutputPort.name>`:`value
+        <OutputPort.value>` pairs or, if the item is a nested MechanismList, then a dict with the name of the nested
+        item and a dict with its OutputPort name:value pairs.
+
     """
 
     def __init__(self, owner, components_list:list):
@@ -3999,9 +4037,7 @@ class MechanismList(UserList):
         self.owner = owner
 
     def __getitem__(self, item):
-        """Return specified Mechanism in MechanismList
-        """
-        # return list(self.mechs[item])[MECHANISM]
+        """Return specified Mechanism in MechanismList"""
         return self.mechs[item]
 
     def __setitem__(self, key, value):
@@ -4010,48 +4046,97 @@ class MechanismList(UserList):
     def __len__(self):
         return (len(self.mechs))
 
+    def __call__(self):
+        return self.data
+
+    def _get_attributes_dict(self, mech_list_attr_name, item_attr_name, sub_attr_name=None, values_only=False):
+        """Generate dict of {item.name:item attribute value} pairs in "human readable" form.
+        Call recursively if item is itself a MechanismList.
+        """
+        ret_dict = {}
+        for item in self.mechanisms:
+            if isinstance(item, Mechanism):
+                attr_val = getattr(item, item_attr_name)
+                if isinstance(attr_val, (list, ContentAddressableList)):
+                    assert sub_attr_name, f"Need to specify sub_attr for attributs that are a list"
+                    if sub_attr_name == 'name':
+                        sub_items = []
+                        for sub_item in attr_val:
+                            sub_items.append(getattr(sub_item, sub_attr_name))
+                    else:
+                        sub_items = {}
+                        for sub_item in attr_val:
+                            sub_items[sub_item.name] = getattr(sub_item, sub_attr_name)
+                    ret_dict[item.name] = sub_items
+                elif not sub_attr_name:
+                    ret_dict[item.name] = attr_val
+                else:
+                    ret_dict[item.name] = getattr(attr_val, sub_attr_name)
+            else:
+                ret_dict[item.owner.name] = getattr(item, mech_list_attr_name)
+        if values_only:
+            # return list(ret_dict.values())
+            return [k if isinstance(v, str) else {k:v} for k,v in ret_dict.items()]
+        else:
+            return ret_dict
+
     @property
     def mechs_sorted(self):
-        """Return list of mechs sorted by Mechanism name"""
+        """Return list of Mechanisms sorted by Mechanisms' names"""
         return sorted(self.mechs, key=lambda object_item: object_item.name)
 
     @property
     def mechanisms(self):
-        """Return list of all mechanisms in MechanismList"""
+        """Return list of all Mechanisms in MechanismList"""
         return list(self)
 
     @property
     def names(self):
-        """Return names of all mechanisms in MechanismList"""
-        return list(item.name for item in self.mechanisms)
+        """Return dictwith names of all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('names', 'name', values_only=True)
 
     @property
     def values(self):
-        """Return values of all mechanisms in MechanismList"""
-        return list(item.value for item in self.mechanisms)
+        """Return dict with values of all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
 
     @property
-    def outputPortNames(self):
-        """Return names of all OutputPorts for all mechanisms in MechanismList"""
-        names = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                names.append(output_port.name)
-        return names
+    def input_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('input_port_names', 'input_ports', 'name')
 
     @property
-    def outputPortValues(self):
-        """Return values of OutputPorts for all mechanisms in MechanismList"""
-        values = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                values.append(output_port.value)
-        return values
+    def input_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('input_port_values', 'input_ports', 'value')
 
-    def get_output_port_values(self, context):
-        """Return values of OutputPorts for all mechanisms in MechanismList for **context**"""
-        values = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                values.append(output_port.parameters.value.get(context))
-        return values
+    @property
+    def input_values(self):
+        """Return dict with input_values for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+
+    @property
+    def parameter_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('parameter_port_names', 'parameter_ports', 'name')
+
+    @property
+    def parameter_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('parameter_port_values', 'parameter_ports', 'value')
+
+    @property
+    def output_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('output_port_names', 'output_ports', 'name')
+
+    @property
+    def output_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('output_port_values', 'output_ports', 'value')
+
+    @property
+    def output_values(self):
+        """Return dict with output_values for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+

@@ -2125,7 +2125,7 @@ from psyneulink.core.components.functions.interfacefunctions import InterfacePor
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2828,6 +2828,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     feedback_projections : ContentAddressableList[`Projection <Projection>`]
         list of Projections that have been `assigned as `feedback <Composition_Feedback_Specification>`.
+
+    mechanisms : `MechanismList`
+        list of Mechanisms in Composition, that provides access to some of they key attributes.
 
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
@@ -10416,6 +10419,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.input_CIM.input_ports
 
     @property
+    def input_port(self):
+        """Returns the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
+        return self.input_CIM.input_ports[0]
+
+    @property
+    def input_values(self):
+        """Returns values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        return self.get_input_values()
+
+    def get_input_values(self, context=None):
+        return [input_port.parameters.value.get(context) for input_port in self.input_CIM.input_ports]
+
+    @property
     def output_ports(self):
         """Returns all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports
@@ -10428,18 +10444,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
 
-    @property
-    def input_port(self):
-        """Returns the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
-        return self.input_CIM.input_ports[0]
+    # @property
+    # def mechanisms(self):
+    #     return MechanismList(self, [mech for mech in self.nodes
+    #                                 if isinstance(mech, Mechanism)])
 
     @property
-    def input_values(self):
-        """Returns values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
-        return self.get_input_values()
-
-    def get_input_values(self, context=None):
-        return [input_port.parameters.value.get(context) for input_port in self.input_CIM.input_ports]
+    def mechanisms(self):
+        return MechanismList(self, [node if isinstance(node, Mechanism) else node.mechanisms
+                                    for node in self.nodes])
 
     @property
     def runs_simulations(self):

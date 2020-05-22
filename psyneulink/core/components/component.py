@@ -650,7 +650,18 @@ class ComponentsMeta(ABCMeta):
 
 
 class Component(JSONDumpable, metaclass=ComponentsMeta):
-    """Base class for Component.
+    """
+    Component(                 \
+        default_variable=None, \
+        size=None,             \
+        params=None,           \
+        name=None,             \
+        prefs=None,            \
+        context=None           \
+    )
+
+    Base class for Component.
+
     The arguments below are ones that can be used in the constructor for any Component subclass.
 
     .. note::
@@ -713,10 +724,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     COMMENT:
     param_defaults :   :  default None,
     COMMENT
-
-    function : function : default Linear
-       specifies function used to transform `variable <Component.variable>` into `value
-       <Component.value>`;  must take an input of the same shape as `variable <Component.variable>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
