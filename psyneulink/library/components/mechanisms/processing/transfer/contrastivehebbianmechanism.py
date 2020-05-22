@@ -1106,6 +1106,23 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             self.input_ports[TARGET].internal_only = True
 
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        super()._instantiate_attributes_before_function(function=function, context=context)
+
+        # Set minus_phase activity, plus_phase, current_activity and initial_value
+        #    all  to zeros with size of Mechanism's array
+        # Should be OK to use attributes here because initialization should only occur during None context
+        self._set_multiple_parameter_values(
+            context,
+            initial_value=self.input_ports[RECURRENT].socket_template,
+            current_activity=self.input_ports[RECURRENT].socket_template,
+            minus_phase_activity=self.input_ports[RECURRENT].socket_template,
+            plus_phase_activity=self.input_ports[RECURRENT].socket_template,
+            execution_phase=None,
+        )
+        if self._target_included:
+            self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
+
     @tc.typecheck
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism,
@@ -1131,21 +1148,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  function_variable=None,
                  runtime_params=None,
                  ):
-
-        if self.initialization_status == ContextFlags.INITIALIZING:
-            # Set minus_phase activity, plus_phase, current_activity and initial_value
-            #    all  to zeros with size of Mechanism's array
-            # Should be OK to use attributes here because initialization should only occur during None context
-            self._set_multiple_parameter_values(
-                context,
-                initial_value=self.input_ports[RECURRENT].socket_template,
-                current_activity=self.input_ports[RECURRENT].socket_template,
-                minus_phase_activity=self.input_ports[RECURRENT].socket_template,
-                plus_phase_activity=self.input_ports[RECURRENT].socket_template,
-                execution_phase=None,
-            )
-            if self._target_included:
-                self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase._get(context) is None:
