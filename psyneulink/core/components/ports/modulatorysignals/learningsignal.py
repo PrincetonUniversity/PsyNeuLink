@@ -177,8 +177,8 @@ projects.
 
 .. note::
    The changes in a MappingProjection's matrix parameter in response to the execution of a LearningSignal are not
-   applied until the MappingProjection is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).
+   applied until the MappingProjection is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _LearningSignal_Class_Reference:
 

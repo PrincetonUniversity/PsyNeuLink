@@ -978,17 +978,17 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
   .. note::
 
      - If the `variable <Port_base.variable>` of a Port is specified as a runtime parameter, then its afferent
-       Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>`
-       will be.
+       Projections will not be executed (see `Lazy Evaluation <Component_Lazy_Updating>`), but its `function
+       <Port_Base.function>` will be.
 
      - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
        nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
        OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
-       will retain its previous value (again in accord with Lazy Evaluation), though its OutputPorts *will* be
-       executed using the assigned values, and it's `execution_count <Component_Execution_Count>` and
-       `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
+       will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>), though its
+       OutputPorts *will* be executed using the assigned values, and it's `execution_count <Component_Execution_Count>`
+       and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
 
      - As expected, specifying `value <Port_Base.value>` supercedes any specification of `variable
@@ -1010,8 +1010,9 @@ as the key, and a dictionary containing parameter specifications as its value.
 
    .. note::
      If the `value <Projection_Base.value>` of a Projection is specified as a runtime parameter, then it will not be
-     executed (see `Lazy Evaluation <LINK>`); accordingly, specifying `value <Port_Base.value>` supercedes any
-     specification of `variable <Port_Base.variable>` or of the parameters of its `function <Projection_Base.function>.`
+     executed (see `Lazy Evaluation <Component_Lazy_Updating>`); accordingly, specifying `value <Port_Base.value>`
+     supercedes any specification of `variable <Port_Base.variable>` or of the parameters of its `function
+     <Projection_Base.function>.`
 
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
@@ -2339,8 +2340,6 @@ class Mechanism_Base(Mechanism):
             their `afferent Projections <Port_Projections>`), that temporarily override their values for the current
             execution, and are then restored to their previous values following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
-
-        .. _Mechanism_execute_context_Arg:
 
         context : Context or str : None
             the context in which the Mechanism is executed, usually specified by its `execution_id

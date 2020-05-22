@@ -511,7 +511,8 @@ These assignments cause the value of the LearningProjection to be added to the p
 ParameterPort, thus incrementing the weights by an amount specified by the LearningMechanism's `learning_signal
 <LearningMechanism.learning_signal>`. Note, that the changes to the `matrix
 <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect until the next time the
-`learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+`learned_projection` is executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
+"lazy" updating).
 
 A LearningMechanism's `function <LearningMechanism.function>` also computes an `error_signal
 <LearningMechanism.error_signal>` that is assigned as the `value <OutputPort.value>` of its *ERROR_SIGNAL*

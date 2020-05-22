@@ -330,8 +330,30 @@ COMMENT
 Execution
 ---------
 
-Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
-The following attributes control and provide information about the execution of a Component:
+A Component is executed when its `execute` method is called, which in turn calls its `function <Component_Function>`.
+
+.. _Component_Lazy_Updating:
+
+*Lazy Updating*
+~~~~~~~~~~~~~~~
+
+In general, only `Compositions <Composition>` are executed from the command line (i.e., from the console or in a
+script).  `Mechanisms <Mechanism>` can also be executed, although this is usually just for the purposes of demonstration
+or debugging, and `Functions <Function>` can only be executed if they are standalone (that is, they do not belong to
+another Component).  All other Components are executed only a Component that depends on them to do so.  This can be
+one to which a Components belongs (such as the Mechanism to which a `Port` belongs) or that otherwise requires it to
+execute (for example, a updating a `Port` requires its `afferent Projections <Port_Projections>` to `execute
+<Port_Execution>`).  This is referred to as "lazy updating", since it means that most Components don't execute unless
+and until they are required to do so.  While this reduces unecessary computation, it can sometimes be confusing. For
+example, when `learning <Composition_Learning>` occurs in a Composition, the modification to the `matrix
+<MappingProjection.matrix>` parameter of a `MappingProjection` that occurs on a given `TRIAL <TimeScale.TRIAL>`
+does not acutally appear in its `value <ParameterPort>` until the next `TRIAL <TimeScale.TRIAL>`, since it requires
+that the ParameterPort for the `matrix <MappingProjection.matrix>` be executed, which does not occur until the next
+time the MappingProjection is executed (i.e., in the next `TRIAL <TimeScale.TRIAL>`).  Therefore, in tracking the
+`value <Component.value>` of Components during execution, it is important to carefully consider the state of
+execution of the Components to which they belong or on which they depend for execution.
+
+The following attributes and methods control and provide information about the execution of a Component:
 
 .. _Component_Execution_Initialization:
 
@@ -340,34 +362,40 @@ The following attributes control and provide information about the execution of 
 
 .. _Component_Reset_Stateful_Function_When:
 
-* **reset_stateful_function_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
-  `reset <Component.reset>` method. The `reset <Component.reset>` method is executed
-  without arguments, meaning that the relevant function's `initializer<IntegratorFunction.initializer>` attribute
-  (or equivalent -- initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-  the `reset <Component.reset>` method and `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute
-  only exist for Mechanisms that have `stateful <Parameter.stateful>` Parameters, or that have a `function
-  <Mechanism.function>` with `stateful <Parameter.stateful>` Parameters.
+* **reset_stateful_function_when** -- a `Condition` that determines when the Component's `reset <Component.reset>`
+  method is called.  The `reset <Component.reset>` method and `reset_stateful_function_when
+  <Component.reset_stateful_function_when>` attribute only exist for Mechanisms that have `stateful
+  <Parameter.stateful>` `Parameters`, or that have a `function <Mechanism_Base.function>` with `stateful
+  <Parameter.stateful>` Parameters.  When the `reset <Component.reset>` method is called, this is done without any
+  arguments, so that the relevant `initializer <IntegratorFunction.initializer>` attributes (or their equivalents
+  -- initialization attributes vary among functions) are used for reinitialization.
+  COMMENT:
+      WHAT ABOUT initializer ATTRIBUTE FOR NON-INTEGRATOR FUNCTIONS, AND FOR STATEFUL PARAMETERS ON MECHANISMS?
+      WHY IS THIS ATTRIBUTE ON COMPONENT RATHER THAN MECHANISM?
+  COMMENT
 
   .. note::
 
-        Currently, only Mechanisms reset when their reset_stateful_function_when Conditions are satisfied. Other types of
-        Components do not reset.
+     `Mechanisms` <Mechanism>` are the only type of Component that reset when the `reset_stateful_function_when
+     <Component.reset_stateful_function_when>` `Condition` is satisfied. Other Component types do not reset,
+     although `Composition` has a `reset <Composition.reset>` method that can be used to reset all of its eligible
+     Mechanisms.
 
-.. _:
-Component_Execution_Termination
-*Termniation*
+.. _Component_Execution_Termination:
+
+*Termination*
 ~~~~~~~~~~~~~
 
 .. _Component_Is_Finished:
 
-* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL
+* **is_finished()** -- method that determines whether execution of the Component is complete for a `TRIAL
   <TimeScale.TRIAL>`;  it is only used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
 
 .. _Component_Execute_Until_Finished:
 
-* **execute_until_finished** -- determines whether Component executes until its `is_finished` method returns True.  If
-  it is False, then the Component executes only once per call to its `execute <Component.execute>` method,  irrespective
-  of its `is_finished` method;  if it is True then, depending on how its class implements and handles its
+* **execute_until_finished** -- determines whether the Component executes until its `is_finished` method returns True.
+  If it is False, then the Component executes only once per call to its `execute <Component.execute>` method,
+  irrespective of its `is_finished` method;  if it is True then, depending on how its class implements and handles its
   `is_finished` method, the Component may execute more than once per call to its `execute <Component.execute>` method.
 
 .. _Component_Num_Executions_Before_Finished:
@@ -461,7 +489,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.globals.context import Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
+from psyneulink.core.globals.context import \
+    Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
@@ -473,12 +502,16 @@ from psyneulink.core.globals.keywords import \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
+from psyneulink.core.globals.parameters import \
+    Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments, call_with_pruned_args
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
+    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
+    get_all_explicit_arguments, call_with_pruned_args
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
