@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.5.4+402.ga740f1a documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+389
+                  0.7.5.4+402
                 </div>
               
             
@@ -314,6 +314,7 @@
 </li>
 <li><a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">Runtime Parameters</span></a></li>
 <li><a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles and Feedback</span></a></li>
+<li><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Stateful Parameters of Functions</span></a></li>
 <li><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></li>
 <li><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></li>
 </ul>
@@ -1202,6 +1203,179 @@ is in a cycle.</p>
 </div></blockquote>
 <p>The feedback Projections of a Composition are listed in its <code class="xref any docutils literal"><span class="pre">feedback_projections</span></code>
 attribute, and the feedback status of a Projection in a composition is returned by its <code class="xref any docutils literal"><span class="pre">get_feedback_status</span></code> method.</p>
+</div>
+<div class="section" id="resetting-stateful-parameters-of-functions">
+<span id="composition-reset"></span><h4><em>Resetting Stateful Parameters of Functions</em><a class="headerlink" href="#resetting-stateful-parameters-of-functions" title="Permalink to this headline">¶</a></h4>
+<p>Compositions offer several interfaces for resetting their nodes’ stateful functions’ stateful parameters in customizable ways
+throughout calls to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>. These resets can occur on a scheduled basis, in accordance with user-specified
+<code class="xref any docutils literal"><span class="pre">conditions</span></code>, by using the <em>`reset_stateful_functions_when`</em> argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>. This argument
+takes as input <em>either</em> a single <code class="xref any docutils literal"><span class="pre">condition</span></code> to be applied to all of the Composition’s
+relevant nodes (i.e. ones with StatefulFunctions) that have not yet had their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> attribute
+specified, <em>or</em> in a dict of {Node:Condition} pairs, allowing the user to make separate specifications for individual nodes.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Passing a single <code class="xref any docutils literal"><span class="pre">condition</span></code> as input to the <code class="xref any docutils literal"><span class="pre">reset_stateful_functions_when</span></code>
+argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> will apply that condition only to nodes that have not yet had their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a>
+attribute specified. In contrast, using a dict of {Node:Condition} pairs will apply to all nodes included in the dict,
+regardless of whether or not their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> conditions have been set. In either case, the specified
+<code class="xref any docutils literal"><span class="pre">conditions</span></code> will persist only for the duration of the call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</p>
+</div>
+<p>Additionally, users may specify the values that nodes will use to reset their functions’ stateful parameters. The
+values provided will be passed to individual nodes’ respective <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> methods. This argument should be provided in
+the form of a dict comprised of {node:value} pairs or, for a node that has a <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method that takes multiple arguments,
+{node:[value_0, value_1, … value_n]} pairs. In this latter case, the provided iterable must contain all of the
+args that need to be passed to the node’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method. If, during a call to run, a node resets that is not included
+in this dict, its stateful functions’ stateful parameters will be reset to their default values.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">There is some variation in the nature of the specific stateful attributes that belong to different functions,
+meaning the value(s) that you will want to use to reset them may vary from each other in heterogeneous ways. In most
+cases, such as for the majority of IntegratorFunctions, the only stateful attribute is a single scalar value that
+serves as the point from which the integrator will step on its next execution. There are other functions, however,
+such as the <a class="reference internal" href="IntegratorFunctions.html#dualadaptiveintegrator"><span class="std std-ref">DualAdaptiveIntegrator</span></a> where this is not the case. Users
+should look to see if the <a class="reference internal" href="StatefulFunction.html"><span class="doc">StatefulFunction</span></a> that is relevant to them overrides the base <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a>
+method, and, if so, use that as a template for how to structure values when resetting the attributes of those functions.</p>
+</div>
+<p>The <code class="xref any docutils literal"><span class="pre">reset_stateful_functions_when</span></code> and <code class="xref any docutils literal"><span class="pre">reset_stateful_functions_to</span></code> arguments can be used in conjunction, but they can
+also be used independently of each other. If, for example, a user wishes to specify under what conditions a Mechanism
+with a stateful function will reset during a specific call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>, but does not wish to specify a custom value for it
+to reset to, then they should only use the <code class="xref any docutils literal"><span class="pre">reset_stateful_functions_when</span></code> argument. Conversely, if they don’t wish to
+set or override any nodes’ <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> attributes, but they do want to specify the values those nodes
+should use to reset their stateful functions, then they should only use the <code class="xref any docutils literal"><span class="pre">reset_stateful_functions_to</span></code> argument.</p>
+<p>A blanket reset can also be achieved outside of a call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> using the composition’s
+<code class="xref any docutils literal"><span class="pre">reset</span></code> method. Similarly to the <code class="xref any docutils literal"><span class="pre">reset_stateful_functions_to</span></code> argument, this method can take as
+input a dict comprised of {node:value} pairs or, in the case where a given node’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method takes multiple arguments,
+{node:[value_0, value_1, … value_n]} pairs.</p>
+<p>See below for examples.</p>
+<p>Example composition with two Mechanisms containing stateful functions:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;A&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">integration_rate</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;B&#39;</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">integration_rate</span><span class="o">=</span><span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;C&#39;</span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">C</span><span class="p">],</span> <span class="p">[</span><span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Example 1) A blanket reset of all stateful functions to their default values:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">num_trials</span><span class="o">=</span><span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The Mechanisms&#39; stateful functions are now in their default states, which is identical</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># to their states prior to Trial 1. Thus, if we call run again with the same inputs,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># we see the same results that we saw on Trial 1.</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 3: 0.5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.5]]</span>
+</pre></div>
+</div>
+<p>Example 2) A blanket reset of all stateful functions to custom values:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">num_trials</span><span class="o">=</span><span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism B is currently identical to Mechanism A</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanisms will match their values after trials 1 and 2, respectively.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">reset</span><span class="p">({</span><span class="n">A</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">})</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 3: 0.75</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.75]]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 3: 0.875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
+</pre></div>
+</div>
+<p>Example 3) Schedule resets for both Mechanisms to their default values, to occur at different times</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">reset_stateful_functions_when</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">A</span><span class="p">:</span> <span class="n">AtTrial</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">B</span><span class="p">:</span> <span class="n">AtTrial</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism A - resets to its default (0) at the beginning of Trial 1. Its value at the end of Trial 1 will</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># be exactly one step of integration forward from its default.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.9375]]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># be exactly one step of integration forward from its default.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
+</pre></div>
+</div>
+<p>Example 4) Schedule resets for both Mechanisms to custom values, to occur at different times</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">A</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+<span class="gp">&gt;&gt;&gt; </span>            <span class="n">B</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">reset_stateful_functions_when</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">A</span><span class="p">:</span> <span class="n">AtTrial</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">B</span><span class="p">:</span> <span class="n">AtTrial</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">reset_stateful_functions_to</span><span class="o">=</span><span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">A</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="n">B</span><span class="p">:</span> <span class="mf">0.5</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">},</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># be exactly one step of integration forward from 0.5.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.875]]</span>
+<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># be exactly one step of integration forward from 0.5.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">B</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># [[0.75]]</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="execution-contexts">
 <span id="composition-execution-context"></span><h4><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h4>
@@ -2467,7 +2641,7 @@ method.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.execute">
-<code class="descname">execute</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler=None</em>, <em>termination_processing=None</em>, <em>call_before_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_time_step=None</em>, <em>call_after_pass=None</em>, <em>context=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em>clamp_input='soft_clamp'</em>, <em>runtime_params=None</em>, <em>skip_initialization=False</em>, <em>bin_execute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
+<code class="descname">execute</code><span class="sig-paren">(</span><em>inputs=None</em>, <em>scheduler=None</em>, <em>termination_processing=None</em>, <em>call_before_time_step=None</em>, <em>call_before_pass=None</em>, <em>call_after_time_step=None</em>, <em>call_after_pass=None</em>, <em>reset_stateful_functions_to=None</em>, <em>context=None</em>, <em>base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em>clamp_input='soft_clamp'</em>, <em>runtime_params=None</em>, <em>skip_initialization=False</em>, <em>bin_execute=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to any Nodes receiving inputs directly from the user (via the “inputs” argument) then
 coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
 termination conditions are met.</p>
@@ -2707,19 +2881,23 @@ information about format.  If <strong>inputs</strong> is not specified, the <a c
 <li><strong>num_trials</strong> (<em>int : default 1</em>) – typically, the composition will infer the number of trials from the length of its input specification.
 To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
 or use default inputs, and select a number of trials with num_trials.</li>
-<li><strong>initialize_cycle_values</strong> (<em>Dict { Node: Node Value } : default None</em>) – sets the value of specified <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> before the start of the run.  All specified
+<li><strong>initialize_cycle_values</strong> (<em>Dict { Node: Node Value } : default None</em>) – <p>sets the value of specified <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> before the start of the run.  All specified
 Nodes must be in a <a class="reference internal" href="#composition-graph"><span class="std std-ref">cycle</span></a> (i.e., designated with with <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <code class="xref any docutils literal"><span class="pre">CYCLE</span></code>; otherwise, a warning is issued and the specification is ignored). If a Node in
 a cycle is not specified, it is assigned its <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default values</span></a> when initialized
-(see <a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles and Feedback</span></a> additional details).</li>
-<li><strong>reset_stateful_functions_to</strong> (<em>Dict { Node : Object | iterable</em><em> [</em><em>Object</em><em>] </em><em>} : default None</em>) – <p>object or iterable of objects to be passed as arguments to nodes’ reset methods when their
-respective reset_stateful_function_when conditions are met. These are used to seed the previous_value parameters
-of Mechanisms that have active integrator functions.
-..technical_note:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">reset</span> <span class="n">values</span> <span class="n">are</span> <span class="n">used</span> <span class="n">to</span> <span class="n">seed</span> <span class="n">the</span> <span class="n">previous_value</span> <span class="n">Parameter</span> <span class="n">of</span> <span class="n">Mechanisms</span> <span class="k">with</span>
-<span class="n">active</span> <span class="n">IntegratorFunctions</span><span class="p">,</span> <span class="n">thus</span> <span class="n">effectively</span> <span class="n">starting</span> <span class="n">Integration</span> <span class="n">at</span> <span class="n">a</span> <span class="n">user</span><span class="o">-</span><span class="n">specified</span> <span class="n">point</span> <span class="k">for</span> <span class="n">a</span>
-<span class="n">call</span> <span class="n">to</span> <span class="n">run</span><span class="o">.</span>
+(see <a class="reference internal" href="#composition-initial-values-and-feedback"><span class="std std-ref">Cycles and Feedback</span></a> additional details).</p>
+<dl class="docutils">
+<dt>reset_stateful_functions_to <span class="classifier-delimiter">:</span> <span class="classifier">Dict { Node</span> <span class="classifier-delimiter">:</span> <span class="classifier">Object | iterable [Object] }</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
+<dd>object or iterable of objects to be passed as arguments to nodes’ reset methods when their
+respective reset_stateful_function_when conditions are met. These are used to seed the stateful attributes
+of Mechanisms that have stateful functions. If a node’s reset_stateful_function_when condition is set to
+Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
+beginning of the run, using the provided values.
+..technical_note:<div class="last highlight-default"><div class="highlight"><pre><span></span><span class="n">These</span> <span class="n">values</span> <span class="n">are</span> <span class="n">used</span> <span class="n">to</span> <span class="n">seed</span> <span class="n">the</span> <span class="n">stateful</span> <span class="n">attributes</span> <span class="n">of</span> <span class="n">Mechanisms</span> <span class="k">with</span> <span class="n">StatefulFunctions</span><span class="p">,</span> <span class="n">thus</span>
+<span class="n">effectively</span> <span class="n">starting</span> <span class="n">Integration</span> <span class="n">at</span> <span class="n">a</span> <span class="n">user</span><span class="o">-</span><span class="n">specified</span> <span class="n">point</span> <span class="k">for</span> <span class="n">a</span> <span class="n">call</span> <span class="n">to</span> <span class="n">run</span><span class="o">.</span>
 </pre></div>
 </div>
+</dd>
+</dl>
 </li>
 <li><strong>reset_stateful_functions_when</strong> (<em>Condition : default Never</em><em>(</em><em>)</em>) – sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
 reset_stateful_function_when condition set to <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Never" title="psyneulink.core.scheduling.condition.Never"><code class="xref any py py-class docutils literal"><span class="pre">Never</span></code></a> for the duration of the run.</li>
@@ -3159,6 +3337,7 @@ This role cannot be modified programmatically.</p>
 </li>
 <li><a class="reference internal" href="#runtime-parameters"><em>Runtime Parameters</em></a></li>
 <li><a class="reference internal" href="#cycles-and-feedback"><em>Cycles and Feedback</em></a></li>
+<li><a class="reference internal" href="#resetting-stateful-parameters-of-functions"><em>Resetting Stateful Parameters of Functions</em></a></li>
 <li><a class="reference internal" href="#execution-contexts"><em>Execution Contexts</em></a></li>
 <li><a class="reference internal" href="#compilation"><em>Compilation</em></a></li>
 </ul>
@@ -3197,7 +3376,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+389.ga013bc1',
+               VERSION:'0.7.5.4+402.ga740f1a',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
