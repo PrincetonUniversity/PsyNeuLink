@@ -337,8 +337,21 @@ A Component is executed when its `execute` method is called, which in turn calls
 *Lazy Updating*
 ~~~~~~~~~~~~~~~
 
-
-
+In general, only `Compositions <Composition>` are executed from the command line (i.e., from the console or in a
+script).  `Mechanisms <Mechanism>` can also be executed, although this is usually just for the purposes of demonstration
+or debugging, and `Functions <Function>` can only be executed if they are standalone (that is, they do not belong to
+another Component).  All other Components are executed only a Component that depends on them to do so.  This can be
+one to which a Components belongs (such as the Mechanism to which a `Port` belongs) or that otherwise requires it to
+execute (for example, a updating a `Port` requires its `afferent Projections <Port_Projections>` to `execute
+<Port_Execution>`).  This is referred to as "lazy updating", since it means that most Components don't execute unless
+and until they are required to do so.  While this reduces unecessary computation, it can sometimes be confusing. For
+example, when `learning <Composition_Learning>` occurs in a Composition, the modification to the `matrix
+<MappingProjection.matrix>` parameter of a `MappingProjection` that occurs on a given `TRIAL <TimeScale.TRIAL>`
+does not acutally appear in its `value <ParameterPort>` until the next `TRIAL <TimeScale.TRIAL>`, since it requires
+that the ParameterPort for the `matrix <MappingProjection.matrix>` be executed, which does not occur until the next
+time the MappingProjection is executed (i.e., in the next `TRIAL <TimeScale.TRIAL>`).  Therefore, in tracking the
+`value <Component.value>` of Components during execution, it is important to carefully consider the state of
+execution of the Components to which they belong or on which they depend for execution.
 
 The following attributes and methods control and provide information about the execution of a Component:
 
@@ -349,7 +362,7 @@ The following attributes and methods control and provide information about the e
 
 .. _Component_Reset_Stateful_Function_When:
 
-* **reset_stateful_function_when** - a `Condition` that determines when the Component's `reset <Component.reset>`
+* **reset_stateful_function_when** -- a `Condition` that determines when the Component's `reset <Component.reset>`
   method is called.  The `reset <Component.reset>` method and `reset_stateful_function_when
   <Component.reset_stateful_function_when>` attribute only exist for Mechanisms that have `stateful
   <Parameter.stateful>` `Parameters`, or that have a `function <Mechanism_Base.function>` with `stateful
