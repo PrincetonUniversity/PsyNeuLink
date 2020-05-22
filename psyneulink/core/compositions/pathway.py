@@ -356,8 +356,8 @@ class Pathway(object):
         if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
     name : str
-        the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Pathway; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by PathwayRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
         See `note <Pathway_Name_Note>` for additional information.
 
     """

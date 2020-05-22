@@ -1428,11 +1428,12 @@ class Mechanism_Base(Mechanism):
 
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+        assigned by MechanismRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
         .. _portRegistry : Registry
                registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
                dicts for the instances of each type and an instance count for each Port type in the Mechanism.
@@ -3505,8 +3506,8 @@ class Mechanism_Base(Mechanism):
         If the `owner <Port_Base.owner>` of a Port specified in the **ports** argument is not the same as the
         Mechanism to which it is being added an error is generated.    If the name of a specified Port is the same
         as an existing one with the same name, an index is appended to its name, and incremented for each Port
-        subsequently added with the same name (see `naming conventions <LINK>`).  If a specified Port already
-        belongs to the Mechanism, the request is ignored.
+        subsequently added with the same name (see `naming conventions <Registry_Naming>`).  If a specified Port
+        already belongs to the Mechanism, the request is ignored.
 
         .. note::
             Adding InputPorts to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,

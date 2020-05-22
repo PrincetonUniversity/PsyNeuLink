@@ -152,13 +152,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = BUFFER_FUNCTION
@@ -569,13 +569,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     Returns
     -------

@@ -3117,12 +3117,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     name : str
         the name of the Composition; if it is not specified in the **name** argument of the constructor, a default
-        is assigned by CompositionRegistry (see `Naming` for conventions used for default and duplicate names).
+        is assigned by CompositionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Composition; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     """
 

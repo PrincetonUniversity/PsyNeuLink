@@ -7,7 +7,4 @@ Core
 
    Components <Component>
    Compositions <Composition>
-   Scheduling
-   Run
-   Log
-   json
+   Services

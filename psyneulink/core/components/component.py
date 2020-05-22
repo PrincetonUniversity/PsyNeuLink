@@ -13,7 +13,7 @@
 Contents
 --------
 
-* `Component_Overview
+* `Component_Overview`
 * `Component_Creation`
     * `Component_Deferred_Init`
 * `Component_Structure`
@@ -176,7 +176,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 .. _Component_Name:
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
-  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
+  If it was not specified, a default is assigned by the `registry <Registry>` for subclass (see `Registry_Naming` for
   conventions used in assigning default names and handling of duplicate names).
 ..
 
@@ -185,7 +185,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
-  preference (see `PreferenceSet <LINK>` for details).
+  preference (see `Preferences` for details).
 
 
 .. _User_Modifiable_Parameters:
@@ -743,9 +743,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <Component_Name>`
-        a string used for the name of the Component;  default is assigned by relevant `Registry <LINK>` for Component
-        (see `Naming` for conventions used for default and duplicate names).
+    name : str : for default see `name <Component_Name>`
+        a string used for the name of the Component;  default is assigned by relevant `Registry` for Component
+        (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : default Component.classPreferences
         specifies the `PreferenceSet` for the Component (see `prefs <Component_Base.prefs>` for details).

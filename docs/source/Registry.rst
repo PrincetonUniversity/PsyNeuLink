@@ -1,12 +1,23 @@
+Registry
+========
+
+A Registry is used to maintain a list of categories (subclasses) for a given type of base_class of Component,
+and to insure that the name of every Component created in each of those categories is uniquie.  If an item
+is created with the same name as one already in the Registry, its name is appended with a hyphenated index
+(e.g., name-n) that is incremented for each new item assigned the same base name, as described in greater
+detail below.
+
+.. _Registry_Naming:
+
 Naming
-======
+------
 
 Every object in PsyNeuLink has a `name <Component.name>` attribute, that is a string used to refer to it in printouts
 and display. The name of a object can be specified in the **name** argument of its constructor.  An object's name can
 be reassigned, but this should be done with caution, as other objects may depend on its name.
 
-Default Names
--------------
+*Default Names*
+~~~~~~~~~~~~~~~
 
 If the name of an object is not specified in its constructor, a default name is assigned.  Some classes of objects use
 class-specific conventions for default names (see individual classes for specifics). Otherwise, the default name is
@@ -16,8 +27,8 @@ requiring a default name.  For example, the first TransferMechanism to be constr
 will be assigned the name 'TransferMechanism-0', the next 'TransferMechanism-1', etc..
 
 
-Duplicate Names
----------------
+*Duplicate Names*
+~~~~~~~~~~~~~~~~~
 
 If the name of an object specified in its constructor is the same as the name of an existing object of that type, its
 name is appended with a hyphenated integer suffix (<object name>-n) that is incremented for each additional

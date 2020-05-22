@@ -7,7 +7,6 @@
 #
 #
 # ***********************************************  Registry ************************************************************
-#
 
 import re
 
@@ -66,14 +65,19 @@ def register_category(entry,
                       context='Registry'):
     """Create a category within the specified registry.
 
-    A Registry is used to maintain a list of categories (subclasses) for a given type of base_class of Component,
-    and to insure that the name of every Component created in each of those categories is uniquie.  If an item
-    is created (using the `register_instance` function below) with the same name as one already in the Registry,
-    its name is appended with a hyphenated index (e.g., name-n) that is incremented for each new item assigned
-    the same base name.
-
     Arguments
     ---------
+
+    base_class : Class
+        PsyNeuLink Base class of Category to be added to Registry.
+
+    name : str
+        PsyNeuLink Base class of Category for which Registry is to be created.
+
+    Registry : Dict
+        Registry to which Category should be added.
+
+    context : Context or str
 
     COMMENT:
     - entry (object or class)

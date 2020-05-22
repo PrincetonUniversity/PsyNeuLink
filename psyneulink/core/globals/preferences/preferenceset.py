@@ -38,6 +38,7 @@ class PreferenceLevel(IntEnum):
     CATEGORY    = 4
     COMPOSITION = 5
 
+
 class PreferenceSetError(Exception):
      def __init__(self, error_value):
          self.error_value = error_value
