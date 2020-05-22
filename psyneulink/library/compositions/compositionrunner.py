@@ -122,7 +122,6 @@ class CompositionRunner():
                      call_after_minibatch = None,
                      context=None,
                      bin_execute=False,
-                     *args,
                      **kwargs):
         """
         Runs the composition repeatedly with the specified parameters
@@ -198,7 +197,6 @@ class CompositionRunner():
                                   skip_analyze_graph=True,
                                   bin_execute=bin_execute,
                                   context=context,
-                                  *args,
                                   **kwargs)
             skip_initialization = True
 

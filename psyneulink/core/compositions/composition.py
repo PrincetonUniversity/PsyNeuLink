@@ -43,9 +43,7 @@ Contents
           • `Composition_Programmatic_Inputs`
       - `Composition_Runtime_Params`
       - `Composition_Initial_Values_and_Feedback`
-      COMMENT:
       - `Composition_Reset`
-      COMMENT
       - `Composition_Execution_Context`
       - `Composition_Compilation`
   * `Composition_Visualization`
@@ -1362,15 +1360,183 @@ COMMENT:
         `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
 COMMENT
 
+.. _Composition_Reset:
 
-COMMENT:
-.._Composition_Reset:
-
-*Resetting Stateful Parameters*
+*Resetting Stateful Parameters of Functions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-COMMENT
+Compositions offer several interfaces for resetting their nodes' stateful functions' stateful parameters in customizable ways
+throughout calls to `run <Composition.run>`. These resets can occur on a scheduled basis, in accordance with user-specified
+`conditions <Scheduling.Condition.Condition>`, by using the *`reset_stateful_functions_when`* argument of `run`. This argument
+takes as input *either* a single `condition <Scheduling.Condition.Condition>` to be applied to all of the Composition's
+relevant nodes (i.e. ones with StatefulFunctions) that have not yet had their `reset_stateful_function_when` attribute
+specified, *or* in a dict of {Node:Condition} pairs, allowing the user to make separate specifications for individual nodes.
 
+.. note::
+    Passing a single `condition <Scheduling.Condition.Condition>` as input to the `reset_stateful_functions_when`
+    argument of `run` will apply that condition only to nodes that have not yet had their `reset_stateful_function_when`
+    attribute specified. In contrast, using a dict of {Node:Condition} pairs will apply to all nodes included in the dict,
+    regardless of whether or not their `reset_stateful_function_when` conditions have been set. In either case, the specified
+    `conditions <Scheduling.Condition.Condition>` will persist only for the duration of the call to `run`.
+
+Additionally, users may specify the values that nodes will use to reset their functions' stateful parameters. The
+values provided will be passed to individual nodes' respective `reset` methods. This argument should be provided in
+the form of a dict comprised of {node:value} pairs or, for a node that has a `reset` method that takes multiple arguments,
+{node:[value_0, value_1, ... value_n]} pairs. In this latter case, the provided iterable must contain all of the
+args that need to be passed to the node's `reset` method. If, during a call to run, a node resets that is not included
+in this dict, its stateful functions' stateful parameters will be reset to their default values.
+
+.. note::
+    There is some variation in the nature of the specific stateful attributes that belong to different functions,
+    meaning the value(s) that you will want to use to reset them may vary from each other in heterogeneous ways. In most
+    cases, such as for the majority of IntegratorFunctions, the only stateful attribute is a single scalar value that
+    serves as the point from which the integrator will step on its next execution. There are other functions, however,
+    such as the `DualAdaptiveIntegrator <DualAdaptiveIntegrator>` where this is not the case. Users
+    should look to see if the `StatefulFunction <StatefulFunction>` that is relevant to them overrides the base `reset`
+    method, and, if so, use that as a template for how to structure values when resetting the attributes of those functions.
+
+The `reset_stateful_functions_when` and `reset_stateful_functions_to` arguments can be used in conjunction, but they can
+also be used independently of each other. If, for example, a user wishes to specify under what conditions a Mechanism
+with a stateful function will reset during a specific call to `run`, but does not wish to specify a custom value for it
+to reset to, then they should only use the `reset_stateful_functions_when` argument. Conversely, if they don't wish to
+set or override any nodes' `reset_stateful_function_when` attributes, but they do want to specify the values those nodes
+should use to reset their stateful functions, then they should only use the `reset_stateful_functions_to` argument.
+
+A blanket reset can also be achieved outside of a call to `run <Composition.run>` using the composition's
+`reset <Composition.reset>` method. Similarly to the `reset_stateful_functions_to` argument, this method can take as
+input a dict comprised of {node:value} pairs or, in the case where a given node's `reset` method takes multiple arguments,
+{node:[value_0, value_1, ... value_n]} pairs.
+
+See below for examples.
+
+Example composition with two Mechanisms containing stateful functions:
+
+    >>> A = TransferMechanism(
+    >>>     name='A',
+    >>>     integrator_mode=True,
+    >>>     integration_rate=0.5
+    >>> )
+    >>> B = TransferMechanism(
+    >>>     name='B',
+    >>>     integrator_mode=True,
+    >>>     integration_rate=0.5
+    >>> )
+    >>> C = TransferMechanism(name='C')
+    >>>
+    >>> comp = Composition(
+    >>>     pathways=[[A, C], [B, C]]
+    >>> )
+
+Example 1) A blanket reset of all stateful functions to their default values:
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     num_trials=3
+    >>> )
+    >>>
+    >>> # Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>>
+    >>> comp.reset()
+    >>>
+    >>> # The Mechanisms' stateful functions are now in their default states, which is identical
+    >>> # to their states prior to Trial 1. Thus, if we call run again with the same inputs,
+    >>> # we see the same results that we saw on Trial 1.
+    >>>
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>> )
+    >>>
+    >>> # Trial 3: 0.5
+    >>> print(A.value)
+    >>> # [[0.5]]
+
+Example 2) A blanket reset of all stateful functions to custom values:
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     num_trials=3
+    >>> )
+    >>>
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>> # Mechanism B is currently identical to Mechanism A
+    >>> print(B.value)
+    >>> # [[0.875]]
+    >>>
+    >>> # Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of
+    >>> # trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the
+    >>> # Mechanisms will match their values after trials 1 and 2, respectively.
+    >>> comp.reset({A: 0.5,
+    >>>             B: 0.75})
+    >>>
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>> )
+    >>>
+    >>> # Trial 3: 0.75
+    >>> print(A.value)
+    >>> # [[0.75]]
+    >>>
+    >>> # Trial 3: 0.875
+    >>> print(B.value)
+    >>> # [[0.875]]
+
+Example 3) Schedule resets for both Mechanisms to their default values, to occur at different times
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     reset_stateful_functions_when = {
+    >>>         A: AtTrial(1),
+    >>>         B: AtTrial(2)
+    >>>     },
+    >>>     num_trials=5
+    >>> )
+    >>> # Mechanism A - resets to its default (0) at the beginning of Trial 1. Its value at the end of Trial 1 will
+    >>> # be exactly one step of integration forward from its default.
+    >>> # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
+    >>> print(A.value)
+    >>> # [[0.9375]]
+    >>>
+    >>> # Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will
+    >>> # be exactly one step of integration forward from its default.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+    >>> print(B.value)
+    >>> # [[0.875]]
+
+Example 4) Schedule resets for both Mechanisms to custom values, to occur at different times
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     reset_stateful_functions_when={
+    >>>         A: AtTrial(3),
+    >>>         B: AtTrial(4)
+    >>>     },
+    >>>     reset_stateful_functions_to={
+    >>>         A: 0.5,
+    >>>         B: 0.5
+    >>>     },
+    >>>     num_trials=5
+    >>> )
+    >>> # Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will
+    >>> # be exactly one step of integration forward from 0.5.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>>
+    >>> # Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will
+    >>> # be exactly one step of integration forward from 0.5.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
+    >>> print(B.value)
+    >>> # [[0.75]]
 
 .. _Composition_Execution_Context:
 
@@ -8824,14 +8990,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
             (see `Composition_Initial_Values_and_Feedback` additional details).
 
-        reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
-            object or iterable of objects to be passed as arguments to nodes' reset methods when their
-            respective reset_stateful_function_when conditions are met. These are used to seed the previous_value parameters
-            of Mechanisms that have active integrator functions.
-            ..technical_note::
-                reset values are used to seed the previous_value Parameter of Mechanisms with
-                active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
-                call to run.
+            reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
+                object or iterable of objects to be passed as arguments to nodes' reset methods when their
+                respective reset_stateful_function_when conditions are met. These are used to seed the stateful attributes
+                of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
+                Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
+                beginning of the run, using the provided values.
+                ..technical_note::
+                    These values are used to seed the stateful attributes of Mechanisms with StatefulFunctions, thus
+                    effectively starting Integration at a user-specified point for a call to run.
 
         reset_stateful_functions_when :  Condition : default Never()
             sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
@@ -9019,16 +9186,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     node.initialize(initialize_cycle_values[node], context)
 
-        if reset_stateful_functions_to is None:
+        if not reset_stateful_functions_to:
             reset_stateful_functions_to = {}
 
-        for node in reset_stateful_functions_to:
-            # make sure the args to reset are in the form of an iterable so they can be unpacked
+        for node, vals in reset_stateful_functions_to.items():
             try:
-                iter(reset_stateful_functions_to[node])
+                iter(vals)
             except TypeError:
-                reset_stateful_functions_to[node] = [reset_stateful_functions_to[node]]
-            node.reset(*reset_stateful_functions_to[node], context=context)
+                vals = [vals]
+                reset_stateful_functions_to[node] = vals
+            if (isinstance(reset_stateful_functions_when, Never) or
+                    node not in reset_stateful_functions_when) and \
+                    isinstance(node.reset_stateful_function_when, Never):
+                node.reset(*vals, context=context)
 
         # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
         # Validate
@@ -9200,18 +9370,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except StopIteration:
                 break
 
-            for node in self.nodes:
-                if hasattr(node, "reset_stateful_function_when") and node.parameters.has_initializers._get(context):
-                    if node.reset_stateful_function_when.is_satisfied(scheduler=self.scheduler,
-                                                           context=context):
-                        if node in reset_stateful_functions_to:
-                            node.reset(*reset_stateful_functions_to[node], context=context)
-                        else:
-                            node.reset(None, context=context)
-
             # execute processing
             # pass along the stimuli for this trial
-
             trial_output = self.execute(inputs=execution_stimuli,
                                         scheduler=scheduler,
                                         termination_processing=termination_processing,
@@ -9219,6 +9379,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         call_before_pass=call_before_pass,
                                         call_after_time_step=call_after_time_step,
                                         call_after_pass=call_after_pass,
+                                        reset_stateful_functions_to=reset_stateful_functions_to,
                                         context=context,
                                         base_context=base_context,
                                         clamp_input=clamp_input,
@@ -9404,6 +9565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_before_pass=None,
             call_after_time_step=None,
             call_after_pass=None,
+            reset_stateful_functions_to=None,
             context=None,
             base_context=Context(execution_id=None),
             clamp_input=SOFT_CLAMP,
@@ -9598,6 +9760,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Set num_executions.TRIAL to 0 for every node
         # Reset any nodes that have satisfied 'reset_stateful_function_when' conditions.
+        if not reset_stateful_functions_to:
+            reset_stateful_functions_to = {}
+
         for node in self.nodes:
             node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
             if node.parameters.has_initializers._get(context):
@@ -9608,7 +9773,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             context=context
                         )
                     ):
-                        node.reset(None, context=context)
+                        vals = reset_stateful_functions_to.get(node, [None])
+                        node.reset(*vals, context=context)
                 except AttributeError:
                     pass
 
@@ -10034,12 +10200,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, values, context=NotImplemented):
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
+    def reset(self, values=None, context=NotImplemented):
+        if context is NotImplemented:
+            context = self.most_recent_context
 
-        for i in range(self.stateful_nodes):
-            self.stateful_nodes[i].reset(values[i], context=context)
+        if not values:
+            values = {}
+
+        for node in self.stateful_nodes:
+            reset_val = values.get(node)
+            node.reset(reset_val, context=context)
 
     def disable_all_history(self):
         """
@@ -10301,17 +10471,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
-
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, context=None):
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
-        self._compilation_data.ptx_execution.set(None, context)
-        self._compilation_data.parameter_struct.set(None, context)
-        self._compilation_data.state_struct.set(None, context)
-        self._compilation_data.data_struct.set(None, context)
-        self._compilation_data.scheduler_conditions.set(None, context)
 
     def __ptx_initialize(self, context=None, additional_tags=frozenset()):
         if self._compilation_data.ptx_execution._get(context) is None:
