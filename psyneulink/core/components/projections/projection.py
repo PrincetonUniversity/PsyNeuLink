@@ -586,8 +586,8 @@ class Projection_Base(Projection):
         <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
-        same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor, a
-        default name is assigned by the subclass (see subclass for details)
+        same base name (see `Registry_Naming`). If the name is not  specified in the **name** argument of its
+        constructor, a default name is assigned by the subclass (see subclass for details)
 
     """
 

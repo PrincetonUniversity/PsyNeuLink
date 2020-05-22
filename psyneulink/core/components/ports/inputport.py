@@ -165,8 +165,8 @@ method (see `examples <Port_Create_Port_Examples>` in Port).
        <Mechanism_Add_InputPorts_Note>`).
 
 If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
-numerical index (incremented for each InputPort with that name; see `Naming`), and the InputPort is added to the
-list (that is, it will *not* replace ones that already exist).
+numerical index (incremented for each InputPort with that name; see `Registry_Naming`), and the InputPort is added to
+the list (that is, it will *not* replace ones that already exist).
 
 .. _InputPort_Forms_of_Specification:
 
@@ -665,9 +665,9 @@ class InputPort(Port_Base):
         assigned by the InputPortRegistry of the Mechanism to which the InputPort belongs.  Note that some Mechanisms
         automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
         InputPorts are specified in the **input_ports** argument of the Mechanism's constructor, those replace those
-        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions <Naming>`
-        apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created
-        (see `note <Port_Naming_Note>`).
+        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions
+        <Registry_Naming>` apply to the InputPorts specified, as well as any that are added to the Mechanism once it
+        is created (see `note <Port_Naming_Note>`).
 
     """
 

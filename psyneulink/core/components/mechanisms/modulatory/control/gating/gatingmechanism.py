@@ -386,8 +386,8 @@ class GatingMechanism(ControlMechanism):
         unless they are `individually specified <GatingSignal_Specification>`.
 
     name : str
-        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a default
+        is assigned by MechanismRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the GatingMechanism; if it is not specified in the **prefs** argument of the

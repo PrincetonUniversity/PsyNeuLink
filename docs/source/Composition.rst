@@ -9,11 +9,10 @@ Related
 * `PathwayRoles <PathwayRole>`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    Pathway
-   Scheduler
-   Condition
+   Scheduling
 |
 *Subclasses*
 

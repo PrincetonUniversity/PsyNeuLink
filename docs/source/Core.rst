@@ -7,5 +7,4 @@ Core
 
    Components <Component>
    Compositions <Composition>
-   Scheduling
-   json
+   Services

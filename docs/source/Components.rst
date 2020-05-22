@@ -8,7 +8,4 @@ used by `Compositions` in the `Library`.
    :maxdepth: 3
 
    Mechanisms
-   Ports
    Projections
-   Log
-   Registry
