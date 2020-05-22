@@ -570,15 +570,15 @@ Each uses the Composition's `add_linear_processing_pathway` method to create a `
 
 A *learning pathway* is a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the
 `MappingProjections <MappingProjection>` between them, in which supervised learning is used to modify the `matrix
-<MappingProjection.matrix>` parameter of the MappingProjections in the sequence, so that the input to the first
-ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that matches as closely as
-possible the value specified for the target mechanism in the **inputs** argument of the Composition's `learn
-<Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their `function
-<Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
+<MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` in the sequence, so that the
+input to the first ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that
+matches as closely as possible a target value `specified as input <Composition_Target_Inputs>` in the Composition's
+`learn <Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their
+`function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
 `LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
 `learning methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
-<Pathway.learning_components>` attribute is assigned a dict containing the set of the set of learning components
-generated for the Pathway, as described below.
+<Pathway.learning_components>` attribute is assigned a dict containing the set of learning components generated for
+the Pathway, as described below.
 
 .. _Composition_Learning_Components:
 
@@ -592,10 +592,10 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
     .. _TARGET_MECHANISM:
     * *TARGET_MECHANISM* -- receives the desired `value <Mechanism_Base.value>` for the `OUTPUT_MECHANISM`, that is
       used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal (see above);  that value must be
-      specified as an input to the TARGET_MECHANISM, either in the `inputs <Composition_learn_inputs_Arg` argument of
-      the Composition's `learn <Composition.learn>` method, or in its `targets <Composition_learn_targets_Arg>` argument
-      in an entry for either the *TARGET_MECHANISM* or the `OUTPUT_MECHANISM` (see `Composition_Target_Inputs`); the
-      Mechanism is assigned the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
+      specified as an input to the TARGET_MECHANISM, either in the **inputs** argument of the Composition's `learn
+      <Composition.learn>` method, or in its **targets** argument in an entry for either the *TARGET_MECHANISM* or
+      the `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (see `below <Composition_Target_Inputs>`); the Mechanism is assigned
+      the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
@@ -763,11 +763,12 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
        Animation of XOR Composition in example above when it is executed by calling its `learn <Composition.learn>`
        method with the argument ``animate={'show_learning':True}``.
 
-Note that, since the `learning components <Composition_Learning_Components>` are not executed until after the
-processing components, the change to the weights of the MappingProjections in a learning pathway are not
-made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
-changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
-they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+.. note::
+    Since the `learning components <Composition_Learning_Components>` are not executed until after the
+    processing components, the change to the weights of the MappingProjections in a learning pathway are not
+    made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
+    changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
+    they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -863,8 +864,8 @@ same number of inputs must be specified for every `INPUT` Node, unless only one 
 which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed). If the
 **inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
 the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
-If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its `targets <targets
-<Composition_learn_targets_Arg>` argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
+If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
+argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
 
 
 .. _Composition_Execution_Results:
@@ -911,11 +912,10 @@ two ways to specify inputs:
   * `programmtically <Composition_Programmatic_Inputs>`, using a function, generator or generator function
     that constructs the inputs dynamically on a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` basis.
 
-The `inputs <Composition_learn_inputs_Arg>` argument of the `run <Composition.run>` and `learn <Composition.learn>`
-methods (and the `targets <Composition_learn_targets_Arg>` argument of the `learn <Composition.learn>` method) can
-be specified in either way;  however, only the dictionary format can be used for the `execute <Composition.execute>`
-method, since it executes only one `TRIAL <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for a
-single `TRIAL <TimeScale.TRIAL>`.
+The **inputs** argument of the `run <Composition.run>` and `learn <Composition.learn>` methods (and the **targets**
+argument of the `learn <Composition.learn>` method) can be specified in either way; however, only the dictionary
+format can be used for the `execute <Composition.execute>` method, since it executes only one `TRIAL
+<TimeScale.TRIAL>` at a time, and therefore can only accept inputs for asingle `TRIAL <TimeScale.TRIAL>`.
 
 *Inputs and input_ports*. All formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
 the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that require external inputs. These are listed
@@ -978,15 +978,13 @@ may vary;  in some case shorthand notations are allowed, as illustrated in the `
 .. _Composition_Target_Inputs:
 
 For learning, inputs must also be specified for the `TARGET_MECHANISM <Composition_Learning_Components>` of each
-`learning Pathway <Composition_Learning_Pathway>` in the Composition.  This can be done in either the `inputs
-Composition_learn_inputs_Arg` or `targets <Composition_learn_targets_Arg>` argument of the `learn <Composition.learn>`
-method.  If the **inputs** argument is used, it must include an entry for each `TARGET_MECHANISM
-<Composition_Learning_Components>`; if the **targets** argument is used, it must be assigned a dictionary containing
-entries in which the key is either a `OUTPUT_MECHANISM  <Composition_Learning_Components>` (i.e., the final `Node
-<Composition_Nodes>`) of a `learning Pathway <Composition_Learning_Pathway>`, or its corresponding `TARGET_MECHANISM
-<Composition_Learning_Components>`. The value of each entry specifies the inputs for each trial, formatted as
-described `above <Composition_Input_Dictionary>`.
-
+`learning Pathway <Composition_Learning_Pathway>` in the Composition.  This can be done in either the **inputs**
+argument or **targets** argument of the `learn <Composition.learn>` method.  If the **inputs** argument is used,
+it must include an entry for each `TARGET_MECHANISM <Composition_Learning_Components>`; if the **targets** argument
+is used, it must be assigned a dictionary containing entries in which the key is either an `OUTPUT_MECHANISM
+<Composition_Learning_Components>` (i.e., the final `Node <Composition_Nodes>`) of a `learning Pathway
+<Composition_Learning_Pathway>`, or the corresponding `TARGET_MECHANISM <Composition_Learning_Components>`. The
+value of each entry specifies the inputs for each trial, formatted asdescribed `above <Composition_Input_Dictionary>`.
 
 .. _Composition_Programmatic_Inputs:
 
@@ -1220,26 +1218,24 @@ one of two ways, based on whether any of the Projections in a cycle are designat
      of the cycle.
 
   The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be overridden using
-  the `initialize_cycle_values <Composition_initialize_cycle_values_Arg>` argument of the Composition's `run
-  <Composition.run>` or `learn <Composition.learn>` methods.  This can be used to specify an initial value for any
-  Node in a cycle.  On the first call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in
-  `initialize_cycle_values <Composition_initialize_cycle_values_Arg>` are initialized using the assigned values, and
-  any Nodes in the cycle that are not specified are assigned their `default value <Parameter_Defaults>`. In subsequent
-  calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified in `initialize_cycle_values
-  <Composition_initialize_cycle_values_Arg>` will be re-initialized to the assigned values for the first execution of
-  the cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were
-  assigned in the previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
+  the **initialize_cycle_values** argument of the Composition's `run <Composition.run>` or `learn <Composition.learn>`
+  methods.  This can be used to specify an initial value for any Node in a cycle.  On the first call to `run
+  <Composition.run>` or `learn <Composition.learn>`, nodes specified in **initialize_cycle_values** are initialized
+  using the assigned values, and any Nodes in the cycle that are not specified are assigned their `default value
+  <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified
+  in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the cycle in
+  that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned in the
+  previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
 
   .. note::
      If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
      <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
-     within the Composition, unless an `execution_id <Context.execution_id>` is assigned to `context
-     <Mechanism_execute_context_Arg>` of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.
-     This is because the first time a Mechanism is executed in a Composition, its initial value is copied from the
-     `value <Mechanism_Base.value>` last assigned in the None context.  As described aove, this can be overridden by
-     specifying an initial value for the Mechanism in the `initialize_cycle_values
-     <Composition_initialize_cycle_values_Arg>` argument of the call to the Composition's `run <Composition.run>` or
-     `learn  <Composition.learn>` methods.
+     within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
+     of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.  This is because the first time
+     a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
+     last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
+     the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
+     or `learn  <Composition.learn>` methods.
 
 .. _Composition_Feedback_Cycle:
 
@@ -1262,8 +1258,8 @@ some or all of them may be assigned as feedback Projections to break the cycle.
 
 The feedback status of a Projection can also be specified explcitly, either by including the keyword *FEEDBACK* in a
 tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the Composition's
-`add_projections <Composition.add_projections>` method, or using the `feedback
-<Composition_add_projection_feedback_Arg>` of the Composition's `add_projection <Composition.add_projection>` method.
+`add_projections <Composition.add_projections>` method, or using the **feedback** of the Composition's `add_projection
+<Composition.add_projection>` method.
 
     .. warning::
        Designating a Projection as **feeedback** that is *not* in a cycle is allowed, but will issue a warning and
@@ -4601,8 +4597,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         receiver : Mechanism, Composition, or InputPort
             the receiver of **projection**.
-
-        .. _Composition_add_projection_feedback_Arg:
 
         feedback : bool or FEEDBACK : False
             if False, the Projection is *never* assigned as a feedback Projection, even if that may have been the
@@ -8809,163 +8803,151 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         See `Composition_Execution` for details of formatting input specifications.
         Use **animate** to generate a gif of the execution sequence.
 
-            Arguments
-            ---------
+        Arguments
+        ---------
 
-            .. _Composition_run_inputs_Arg:
+        inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None
+            specifies the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL
+            <TimeScale.TRIAL>` executed during the run;  see `Composition_Execution_Inputs` for additional
+            information about format.  If **inputs** is not specified, the `default_variable
+            <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`
 
-            inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None
-                specifies the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL
-                <TimeScale.TRIAL>` executed during the run;  see `Composition_Execution_Inputs` for additional
-                information about format.  If **inputs** is not specified, the `default_variable
-                <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`
+        num_trials : int : default 1
+            typically, the composition will infer the number of trials from the length of its input specification.
+            To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+            or use default inputs, and select a number of trials with num_trials.
 
-            .. _Composition_num_trials_Arg:
+        initialize_cycle_values : Dict { Node: Node Value } : default None
+            sets the value of specified `Nodes <Composition_Nodes>` before the start of the run.  All specified
+            Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
+            <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
+            a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
+            (see `Composition_Initial_Values_and_Feedback` additional details).
 
-            num_trials : int : default 1
-                typically, the composition will infer the number of trials from the length of its input specification.
-                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-                or use default inputs, and select a number of trials with num_trials.
+        reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
+            object or iterable of objects to be passed as arguments to nodes' reset methods when their
+            respective reset_stateful_function_when conditions are met. These are used to seed the previous_value parameters
+            of Mechanisms that have active integrator functions.
+            ..technical_note::
+                reset values are used to seed the previous_value Parameter of Mechanisms with
+                active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
+                call to run.
 
-            .. _Composition_Initialize_Cycle_Values_Arg:
+        reset_stateful_functions_when :  Condition : default Never()
+            sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
+            reset_stateful_function_when condition set to `Never <Never>` for the duration of the run.
 
-            initialize_cycle_values : Dict { Node: Node Value } : default None
-                sets the value of specified `Nodes <Composition_Nodes>` before the start of the run.  All specified
-                Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
-                <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
-                a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
-                (see `Composition_Initial_Values_and_Feedback` additional details).
+        skip_initialization : bool : default False
 
-            .. _Composition_reset_stateful_functions_to_Arg:
+        clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
+            specifies how inputs are handled for the Composition's `INPUT` `Nodes <Composition_Nodes>`.
 
-            reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
-                object or iterable of objects to be passed as arguments to nodes' reset methods when their
-                respective reset_stateful_function_when conditions are met. These are used to seed the previous_value parameters
-                of Mechanisms that have active integrator functions.
-                ..technical_note::
-                    reset values are used to seed the previous_value Parameter of Mechanisms with
-                    active IntegratorFunctions, thus effectively starting Integration at a user-specified point for a
-                    call to run.
+            COMMENT:
+               BETTER DESCRIPTION NEEDED
+            COMMENT
 
-            .. _Composition_reset_stateful_functions_when_Arg:
+        runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
+            nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
+            `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
+            during this `RUN` when the specified `Condition` is met (see `Composition_Runtime_Params` for
+            additional informaton).
 
-            reset_stateful_functions_when :  Condition : default Never()
-                sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
-                reset_stateful_function_when condition set to `Never <Never>` for the duration of the run.
+        call_before_time_step : callable  : default None
+            specifies fuction to call before each `TIME_STEP` is executed.
 
-            skip_initialization : bool : default False
+        call_after_time_step : callable  : default None
+            specifies fuction to call after each `TIME_STEP` is executed.
 
-            clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
-                specifies how inputs are handled for the Composition's `INPUT` `Nodes <Composition_Nodes>`.
+        call_before_pass : callable  : default None
+            specifies fuction to call before each `PASS` is executed.
 
-                COMMENT:
-                   BETTER DESCRIPTION NEEDED
-                COMMENT
+        call_after_pass : callable  : default None
+            specifies fuction to call after each `PASS` is executed.
 
-            .. _Composition_runtime_params_Arg:
+        call_before_trial : callable  : default None
+            specifies fuction to call before each `TRIAL <TimeScale.TRIAL>` is executed.
 
-            runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
-                nested dictionary of (value, `Condition`) tuples for parameters of Nodes (`Mechanisms <Mechanism>` or
-                `Compositions <Composition>` of the Composition; specifies alternate parameter values to be used only
-                during this `RUN` when the specified `Condition` is met (see `Composition_Runtime_Params` for
-                additional informaton).
+        call_after_trial : callable  : default None
+            specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
-            call_before_time_step : callable  : default None
-                specifies fuction to call before each `TIME_STEP` is executed.
+        termination_processing : Condition  : default None
+            specifies `Condition` under which execution of the run will occur.
 
-            call_after_time_step : callable  : default None
-                specifies fuction to call after each `TIME_STEP` is executed.
+            COMMMENT:
+               BETTER DESCRIPTION NEEDED
+            COMMENT
 
-            call_before_pass : callable  : default None
-                specifies fuction to call before each `PASS` is executed.
+        skip_analyze_graph : bool : default False
+            setting to True suppresses call to _analyze_graph()
 
-            call_after_pass : callable  : default None
-                specifies fuction to call after each `PASS` is executed.
+            COMMMENT:
+               BETTER DESCRIPTION NEEDED
+            COMMENT
 
-            call_before_trial : callable  : default None
-                specifies fuction to call before each `TRIAL <TimeScale.TRIAL>` is executed.
+        animate : dict or bool : default False
+            specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
+            sequence of Components executed in a run.  A dict can be specified containing options to pass to
+            the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
+            <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
+            below can also be included in the dict to specify parameters of the animation.  If the **animate**
+            argument is specified simply as `True`, defaults are used for all arguments of `show_graph
+            <Composition.show_graph>` and the options below:
 
-            call_after_trial : callable  : default None
-                specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
+            * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
+              to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
+              image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
+              <Component.execution_sets>`, showing all of the Components in that set as active.
 
-            termination_processing : Condition  : default None
-                specifies `Condition` under which execution of the run will occur.
+            * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
 
-                COMMMENT:
-                   BETTER DESCRIPTION NEEDED
-                COMMENT
+            * *NUM_RUNS*: int (default=1) -- specifies the number of runs to animate;  by default, this is 1.
+              If the number specified is less than the total number of runs executed, only the number specified
+              are animated; if it is greater than the number of runs being executed, only the number being run are
+              animated.
 
-            skip_analyze_graph : bool : default False
-                setting to True suppresses call to _analyze_graph()
+            * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
+              If the number specified is less than the total number of trials being run, only the number specified
+              are animated; if it is greater than the number of trials being run, only the number being run are
+              animated.
 
-                COMMMENT:
-                   BETTER DESCRIPTION NEEDED
-                COMMENT
+            * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
+              by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
+              <Composition.name>` of the  `Composition`, and the gif files are stored there.
 
-            animate : dict or bool : default False
-                specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
-                sequence of Components executed in a run.  A dict can be specified containing options to pass to
-                the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
-                <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
-                below can also be included in the dict to specify parameters of the animation.  If the **animate**
-                argument is specified simply as `True`, defaults are used for all arguments of `show_graph
-                <Composition.show_graph>` and the options below:
+            * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
+              for the movie file; it is automatically appended with '.gif'.
 
-                * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
-                  to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
-                  image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
-                  <Component.execution_sets>`, showing all of the Components in that set as active.
+            * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
+              construct the animation in separate gif files, in addition to the file containing the animation.
 
-                * *DURATION*: float (default=0.75) -- specifies the duration (in seconds) of each image in the movie.
+            * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
+              constructed, using the OS's default viewer.
 
-                * *NUM_RUNS*: int (default=1) -- specifies the number of runs to animate;  by default, this is 1.
-                  If the number specified is less than the total number of runs executed, only the number specified
-                  are animated; if it is greater than the number of runs being executed, only the number being run are
-                  animated.
+        log : bool, LogCondition : default False
+            Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
+            `projection <Composition.projections>` in the Composition, if it is not already set.
 
-                * *NUM_TRIALS*: int (default=1) -- specifies the number of trials to animate;  by default, this is 1.
-                  If the number specified is less than the total number of trials being run, only the number specified
-                  are animated; if it is greater than the number of trials being run, only the number being run are
-                  animated.
+            .. note::
+               as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
+               correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
 
-                * *MOVIE_DIR*: str (default=project root dir) -- specifies the directdory to be used for the movie file;
-                  by default a subdirectory of <root_dir>/show_graph_OUTPUT/GIFS is created using the `name
-                  <Composition.name>` of the  `Composition`, and the gif files are stored there.
+        scheduler : Scheduler : default None
+            the scheduler object that owns the conditions that will instruct the execution of the Composition.
+            If not specified, the Composition will use its automatically generated scheduler.
 
-                * *MOVIE_NAME*: str (default=\\ `name <Composition.name>` + 'movie') -- specifies the name to be used
-                  for the movie file; it is automatically appended with '.gif'.
+        bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+            specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
+            False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
+            reverting less powerful modes (in the order of the options listed), and to Python if no compilation
+            mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
+            CUDA compilation.
 
-                * *SAVE_IMAGES*: bool (default=\\ `False`\\ ) -- specifies whether to save each of the images used to
-                  construct the animation in separate gif files, in addition to the file containing the animation.
+        context : `Context.execution_id>` : default `default_execution_id`
+            context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
-                * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
-                  constructed, using the OS's default viewer.
-
-            log : bool, LogCondition : default False
-                Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
-                `projection <Composition.projections>` in the Composition, if it is not already set.
-
-                .. note::
-                   as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
-                   correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
-
-            scheduler : Scheduler : default None
-                the scheduler object that owns the conditions that will instruct the execution of the Composition.
-                If not specified, the Composition will use its automatically generated scheduler.
-
-            bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
-                specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
-                False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
-                reverting less powerful modes (in the order of the options listed), and to Python if no compilation
-                mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
-                CUDA compilation.
-
-            context : `Context.execution_id>` : default `default_execution_id`
-                context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
-
-            base_context : `Context.execution_id>` : Context(execution_id=None)
-                the context corresponding to the execution context from which this execution will be initialized,
-                if values currently do not exist for **context**
+        base_context : `Context.execution_id>` : Context(execution_id=None)
+            the context corresponding to the execution context from which this execution will be initialized,
+            if values currently do not exist for **context**
 
         COMMENT:
         REPLACE WITH EVC/OCM EXAMPLE
@@ -9328,8 +9310,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            .. _Composition_learn_inputs_Arg:
-
             inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each node in the composition that receives inputs from
                 the user. There are several equally valid ways that this dict could be structured:
@@ -9339,8 +9319,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
                 same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
                 values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
-
-            .. _Composition_learn_targets_Arg:
 
             targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
                 a dictionary containing a key-value pair for each Node <Composition_Nodes>` in the Composition that
@@ -9455,17 +9433,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 `Condition` is met. See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
 
             skip_initialization :  : default False
+                COMMENT:
+                    NEEDS DESCRIPTION
+                COMMENT
 
             scheduler : Scheduler : default None
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            .. _Composition_execute_context_Arg:
-
             context : `Context.execution_id>` : default `default_execution_id`
                 `execution context <Composition_Execution_Context>` in which the `Composition` will be executed.
-
-            .. _Composition_Run_base_context_Arg:
 
             base_context : `Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the `execution context <Composition_Execution_Context>` from which this

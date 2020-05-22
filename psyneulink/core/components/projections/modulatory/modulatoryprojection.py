@@ -85,7 +85,7 @@ the `function <Port_Base.function>` to determine the `value <Port_Base.value>` o
 .. note::
    The change made to the parameter of the Port's Function in response to the execution of a ModulatoryProjection
    are not applied until the Port is updated which, in turn, does not occur until the Mechanism to which the Port
-   belongs is next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+   belongs is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _ModulatoryProjection_Class_Reference:
 

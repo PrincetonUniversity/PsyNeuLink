@@ -127,9 +127,9 @@ to `learning <Composition_Learning>` in a Composition; or a parameter modulated 
 
 .. note::
    A `Port` that receives a `ModulatoryProjection` from a ModulatoryMechanism does not update its value until its
-   owner Mechanism executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that
-   even if a ModulatoryMechanism has executed, a parameter that it modulates will not assume its new value until
-   the Mechanism to which it belongs has executed.
+   owner Mechanism executes (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
+   This means that even if a ModulatoryMechanism has executed, a parameter that it modulates will not assume its new
+   value until the Mechanism to which it belongs has executed.
 
 .. _ModulatoryMechanism_Class_Reference:
 

@@ -255,8 +255,8 @@ evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjus
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
-   with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).
+   with the parameter being controlled is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _ControlSignal_Examples:
 

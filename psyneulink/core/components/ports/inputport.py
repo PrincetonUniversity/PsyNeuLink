@@ -192,8 +192,7 @@ should project to the InputPort. Each of these is described below:
       to specify an InputPort in the constructor for a Mechanism, the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputPort is assigned is used as the format for the InputPort`s
       `variable <InputPort.variable>`; otherwise, the default for the InputPort is used.  If a string is specified,
-      it is used as the `name <InputPort.name>` of the InputPort (see `example
-      <Port_Constructor_Argument_Examples>`).
+      it is used as the `name <InputPort.name>` of the InputPort (see `example <Port_Constructor_Argument_Examples>`).
 
     .. _InputPort_Specification_by_Value:
 
@@ -370,14 +369,14 @@ starting with constraints that are given the highest precedence:
     then its format is determined by the `specification of Components that project to it
     <InputPort_Projection_Source_Specification>`:
 
-    * **More than one Component is specified with the same :ref:`value` format** -- that format is used to determine
+    * **More than one Component is specified with the same `value` format** -- that format is used to determine
       the format of the InputPort's `variable <InputPort.variable>`.
 
-    * **More than one Component is specified with different :ref:`value` formats** -- the InputPort's `variable
+    * **More than one Component is specified with different `value` formats** -- the InputPort's `variable
       <InputPort.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
       the class of its owner Mechanism.
 
-    * **A single Component is specified** -- its :ref:`value` is used to determine the format of the InputPort's
+    * **A single Component is specified** -- its `value` is used to determine the format of the InputPort's
       `variable <InputPort.variable>`;  if the Component is a(n):
 
       * **MappingProjection** -- can be specified by its class, an existing MappingProjection, or a matrix:
