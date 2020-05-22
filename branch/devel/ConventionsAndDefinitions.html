@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -372,15 +372,15 @@ that can be written in or called from Python.</li>
 <span id="definitions-compositions"></span><h3>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h3>
 <p>Compositions are combinations of Components that make up a PsyNeuLink model.  There are two types of Compositions:
 Processes and Systems.</p>
-<p><a class="reference internal" href="Process.html"><span class="doc">Processes</span></a>.  A Process is the simplest type of Composition: a linear chain of Mechanisms connected by
+<p><code class="xref any docutils literal"><span class="pre">Processes</span></code>.  A Process is the simplest type of Composition: a linear chain of Mechanisms connected by
 Projections.  A Process may have recurrent Projections, but it does not have any branches.</p>
-<p><a class="reference internal" href="System.html"><span class="doc">System</span></a>.  A system is a collection of Processes that can have any configuration, and is represented by a graph in
+<p><code class="xref any docutils literal"><span class="pre">System</span></code>.  A system is a collection of Processes that can have any configuration, and is represented by a graph in
 which each node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and each edge is a <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.  Systems are generally constructed from Processes,
 but they can also be constructed directly from Mechanisms and Projections.</p>
 <p id="definitions-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
 <div class="figure" id="id3">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink Components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
-<p class="caption"><span class="caption-text">Two <a class="reference internal" href="Process.html"><span class="doc">Processes</span></a> are shown, both belonging to the same <a class="reference internal" href="System.html"><span class="doc">System</span></a>.  Each Process has a
+<p class="caption"><span class="caption-text">Two <code class="xref any docutils literal"><span class="pre">Processes</span></code> are shown, both belonging to the same <code class="xref any docutils literal"><span class="pre">System</span></code>.  Each Process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
 that converge on a common final ProcessingMechanism (see <code class="xref any docutils literal"><span class="pre">figure</span> <span class="pre">in</span> <span class="pre">System</span></code> for a more
 complete example, that includes Components responsible for learning, control and gating).</span></p>
@@ -467,7 +467,7 @@ another in a single system.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -261,7 +261,7 @@ projections.</p>
 <p>An OutputPort can be created by calling its constructor. However, in general this is not necessary, as a Mechanism
 automatically creates a default OutputPort if none is explicitly specified, that contains the primary result of its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  For example, if the Mechanism is created within the <a class="reference internal" href="Pathway.html#module-psyneulink.core.compositions.pathway" title="psyneulink.core.compositions.pathway"><code class="xref any py py-mod docutils literal"><span class="pre">pathway</span></code></a> of a
-<a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, an OutputPort is created and assigned as the <code class="xref any docutils literal"><span class="pre">sender</span></code>
+<code class="xref any docutils literal"><span class="pre">Process</span></code>, an OutputPort is created and assigned as the <code class="xref any docutils literal"><span class="pre">sender</span></code>
 of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to the next Mechanism in the pathway, or to the Process’ <code class="xref any docutils literal"><span class="pre">output</span></code>
 if the Mechanism is a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism for that Process. Other configurations can also easily be specified using
 a Mechanism’s <strong>output_ports</strong> argument (see <a class="reference internal" href="#outputport-specification"><span class="std std-ref">OutputPort Specification</span></a> below).  If it is created using its
@@ -313,8 +313,8 @@ Unlike specification in the constructor, this <strong>does not</strong> replace 
 Doing so appends them to the list of OutputPorts in the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>
 attribute, and their values are appended to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute.  If the name
 of an OutputPort added to a Mechanism is the same as one that is already exists on the Mechanism, its name is suffixed
-with a numerical index (incremented for each OutputPort with that name; see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>), and the OutputPort is added
-to the list (that is, it does <em>not</em> replace the one that was already there).</p>
+with a numerical index (incremented for each OutputPort with that name; see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>), and the OutputPort is
+added to the list (that is, it does <em>not</em> replace the one that was already there).</p>
 <div class="section" id="outputports-variable-and-value">
 <span id="outputport-variable-and-value"></span><h5><em>OutputPorts</em> <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> <em>and</em> <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a><a class="headerlink" href="#outputports-variable-and-value" title="Permalink to this headline">¶</a></h5>
 <p>Each OutputPort created with or assigned to a Mechanism must reference one or more items of the Mechanism’s attributes,
@@ -360,13 +360,14 @@ Mechanism specified for the OutputPort’s <a class="reference internal" href="#
 </ul>
 <ul class="simple">
 <li><strong>OutputPort class</strong>, <strong>keyword</strong> <em>OUTPUT_PORT</em>, or a <strong>string</strong> – creates a default OutputPort that uses
-the first item of the <code class="xref any docutils literal"><span class="pre">owner</span></code> Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and assigns it as the <code class="xref any docutils literal"><span class="pre">owner</span></code> Mechanism’s <a class="reference internal" href="#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>. If the class name or <em>OUTPUT_PORT</em> keyword is used, a default name is assigned to the
-Port; if a string is specified, it is used as the <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.name" title="psyneulink.core.components.ports.outputport.OutputPort.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> of the OutputPort  (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>).</li>
+the first item of the <code class="xref any docutils literal"><span class="pre">owner</span></code> Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and assigns it as the <code class="xref any docutils literal"><span class="pre">owner</span></code> Mechanism’s <a class="reference internal" href="#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>. If the class name or <em>OUTPUT_PORT</em> keyword is used, a default name is assigned to
+the Port; if a string is specified, it is used as the <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.name" title="psyneulink.core.components.ports.outputport.OutputPort.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> of the OutputPort
+(see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>).</li>
 </ul>
 <ul class="simple" id="outputport-specification-by-variable">
 <li><strong>variable</strong> – creates an OutputPort using the specification as the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#outputport-customization"><span class="std std-ref">Custom OutputPorts</span></a>).  This must be compatible with (have the same number
 and type of elements as) the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  A default name is assigned based
-on the name of the Mechanism (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>).</li>
+on the name of the Mechanism (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>).</li>
 </ul>
 <p id="outputport-specification-dictionary"><strong>OutputPort Specification Dictionary</strong></p>
 <ul>
@@ -721,7 +722,7 @@ owner mechanism’s <code class="xref any docutils literal"><span class="pre">ou
 assigned by the OutputPortRegistry of the Mechanism to which the OutputPort belongs.  Note that most
 Mechanisms automatically create one or more <a class="reference internal" href="#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>, that have
 pre-specified names.  However, if any OutputPorts are specified in the <strong>input_ports</strong> argument of the
-Mechanism’s constructor, those replace its Standard OutputPorts (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>);  <a class="reference internal" href="Naming.html"><span class="doc">standard naming conventions</span></a> apply to the
+Mechanism’s constructor, those replace its Standard OutputPorts (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>);  <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">standard naming conventions</span></a> apply to the
 OutputPorts specified, as well as any that are added to the Mechanism once it is created (see <a class="reference internal" href="Port.html#port-naming-note"><span class="std std-ref">note</span></a>).</p>
 </dd></dl>
 
@@ -932,7 +933,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

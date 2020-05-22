@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>Projections &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -248,7 +248,7 @@ each of which has subtypes that differ in the type of information they transmit,
 <dd>takes the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>
 converts it by convolving it with the MappingProjection’s <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 parameter, and transmits the result to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of another ProcessingMechanism.  Typically,
-MappingProjections are used to connect Mechanisms in the <a class="reference internal" href="Pathway.html#module-psyneulink.core.compositions.pathway" title="psyneulink.core.compositions.pathway"><code class="xref any py py-mod docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, though they can be use for
+MappingProjections are used to connect Mechanisms in the <a class="reference internal" href="Pathway.html#module-psyneulink.core.compositions.pathway" title="psyneulink.core.compositions.pathway"><code class="xref any py py-mod docutils literal"><span class="pre">pathway</span></code></a> of a <code class="xref any docutils literal"><span class="pre">Process</span></code>, though they can be use for
 other purposes as well (for example, to convey the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>).</dd>
 </dl>
 </li>
@@ -304,7 +304,7 @@ automatically</span></a>, as described below.</p>
 <div class="section" id="specifying-a-projection">
 <span id="projection-specification"></span><h3><em>Specifying a Projection</em><a class="headerlink" href="#specifying-a-projection" title="Permalink to this headline">¶</a></h3>
 <p>Projections can be specified in a number of places where they are required or permitted, for example in the
-specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, where the value of a parameter is specified
+specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <code class="xref any docutils literal"><span class="pre">Process</span></code>, where the value of a parameter is specified
 (e.g., to assign a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>) or where a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is specified  (to assign it a
 <a class="reference internal" href="MappingProjection.html#mappingprojection-tuple-specification"><span class="std std-ref">LearningProjection</span></a>).  Any of the following can be used to specify a
 Projection in context:</p>
@@ -326,7 +326,7 @@ specifications.</li>
 <div><ul class="simple">
 <li><em>MAPPING_PROJECTION</em> – if the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> cannot be inferred from the context in which this specification occurs, then its
 <a class="reference internal" href="MappingProjection.html#mappingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until both of those have been
-determined (e.g., it is used in the specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>). For
+determined (e.g., it is used in the specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <code class="xref any docutils literal"><span class="pre">Process</span></code>). For
 MappingProjections, a <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">matrix specification</span></a> can also be used to
 specify the projection (see <strong>value</strong> below).</li>
 </ul>
@@ -658,8 +658,8 @@ to determine that Port’s <a class="reference internal" href="Port.html#psyneul
 <dd><p><em>str</em> – the name of the Projection. If the Projection’s <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">initialization has been deferred</span></a>, it is assigned a temporary name (indicating its deferred initialization
 status) until initialization is completed, at which time it is assigned its designated name.  If that is the
 name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
-same base name (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>). If the name is not  specified in the <strong>name</strong> argument of its constructor, a
-default name is assigned by the subclass (see subclass for details)</p>
+same base name (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>). If the name is not  specified in the <strong>name</strong> argument of its
+constructor, a default name is assigned by the subclass (see subclass for details)</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -753,7 +753,7 @@ default name is assigned by the subclass (see subclass for details)</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

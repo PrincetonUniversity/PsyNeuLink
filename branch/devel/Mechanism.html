@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>Mechanisms &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -1277,14 +1277,15 @@ for the Mechanism directly to a Scheduler that is then assigned to the Compositi
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – the name of the Mechanism; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
-assigned by MechanismRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+assigned by MechanismRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Mechanism; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).
+<dd><p><em>PreferenceSet or specification dict</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Mechanism; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).
 .. _portRegistry : Registry</p>
 <blockquote>
 <div><p>registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
@@ -1305,8 +1306,8 @@ been constructed.</p>
 <p>If the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.owner" title="psyneulink.core.components.ports.port.Port_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> of a Port specified in the <strong>ports</strong> argument is not the same as the
 Mechanism to which it is being added an error is generated.    If the name of a specified Port is the same
 as an existing one with the same name, an index is appended to its name, and incremented for each Port
-subsequently added with the same name (see <code class="xref any docutils literal"><span class="pre">naming</span> <span class="pre">conventions</span></code>).  If a specified Port already
-belongs to the Mechanism, the request is ignored.</p>
+subsequently added with the same name (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">naming conventions</span></a>).  If a specified Port
+already belongs to the Mechanism, the request is ignored.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Adding InputPorts to a Mechanism changes the size of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> attribute,
@@ -1657,7 +1658,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

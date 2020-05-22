@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -259,7 +259,7 @@ for additional details about the role of InputPorts in Mechanisms, and their ass
 <div class="section" id="creating-an-inputport">
 <span id="inputport-creation"></span><h2>Creating an InputPort<a class="headerlink" href="#creating-an-inputport" title="Permalink to this headline">¶</a></h2>
 <p>An InputPort can be created by calling its constructor, but in general this is not necessary as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> can usually automatically create the InputPort(s) it needs when it is created.  For example, if the
-Mechanism isbeing created within the <code class="xref any docutils literal"><span class="pre">pathway</span></code> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, its InputPort is created and assigned
+Mechanism isbeing created within the <code class="xref any docutils literal"><span class="pre">pathway</span></code> of a <code class="xref any docutils literal"><span class="pre">Process</span></code>, its InputPort is created and assigned
 as the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the  preceding Mechanism in the <code class="xref any docutils literal"><span class="pre">pathway</span></code>.  InputPorts can also be specified in the <strong>input_ports</strong> argument of a Mechanism’s constructor
 (see <a class="reference internal" href="#inputport-specification"><span class="std std-ref">below</span></a>).</p>
 <p>The <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of an InputPort can be specified using the <strong>variable</strong> or <strong>size</strong> arguments of
@@ -342,8 +342,8 @@ relationship of the Mechanism’s <a class="reference internal" href="Mechanism.
 </div>
 </div></blockquote>
 <p>If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
-numerical index (incremented for each InputPort with that name; see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>), and the InputPort is added to the
-list (that is, it will <em>not</em> replace ones that already exist).</p>
+numerical index (incremented for each InputPort with that name; see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>), and the InputPort is added to
+the list (that is, it will <em>not</em> replace ones that already exist).</p>
 </div>
 <div class="section" id="forms-of-specification">
 <span id="inputport-forms-of-specification"></span><h4>Forms of Specification<a class="headerlink" href="#forms-of-specification" title="Permalink to this headline">¶</a></h4>
@@ -709,9 +709,8 @@ InputPort from a Composition’s <code class="xref any docutils literal"><span c
 assigned by the InputPortRegistry of the Mechanism to which the InputPort belongs.  Note that some Mechanisms
 automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
 InputPorts are specified in the <strong>input_ports</strong> argument of the Mechanism’s constructor, those replace those
-InputPorts (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>), and <a class="reference internal" href="Naming.html"><span class="doc">standard naming conventions</span></a>
-apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created
-(see <a class="reference internal" href="Port.html#port-naming-note"><span class="std std-ref">note</span></a>).</p>
+InputPorts (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>), and <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">standard naming conventions</span></a> apply to the InputPorts specified, as well as any that are added to the Mechanism once it
+is created (see <a class="reference internal" href="Port.html#port-naming-note"><span class="std std-ref">note</span></a>).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -808,7 +807,7 @@ apply to the InputPorts specified, as well as any that are added to the Mechanis
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Ports &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>Ports &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -938,12 +938,12 @@ and <em>MULTIPLICATIVE</em> are subject to modulation by a <a class="reference i
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.port.Port_Base.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Port. If the Port’s <a class="reference internal" href="#port-deferred-initialization"><span class="std std-ref">initialization has been deferred</span></a>,
-it is assigned a temporary name (indicating its deferred initialization status) until initialization is
-completed, at which time it is assigned its designated name.  If that is the name of an existing Port,
-it is appended with an indexed suffix, incremented for each Port with the same base name (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>). If
-the name is not  specified in the <strong>name</strong> argument of its constructor, a default name is assigned by the
-subclass (see subclass for details).</p>
+<dd><p><em>str</em> – the name of the Port. If the Port’s <a class="reference internal" href="#port-deferred-initialization"><span class="std std-ref">initialization has been deferred</span></a>, it is
+assigned a temporary name (indicating its deferred initialization status) until initialization is completed,
+at which time it is assigned its designated name.  If that is the name of an existing Port, it is appended
+with an indexed suffix, incremented for each Port with the same base name (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>). If the name
+is not  specified in the <strong>name</strong> argument of its constructor, a default name is assigned by the subclass
+(see subclass for details).</p>
 <div class="admonition note" id="port-naming-note">
 <p class="first admonition-title">Note</p>
 <p class="last">Unlike other PsyNeuLink Components, Ports names are “scoped” within a Mechanism, meaning that Ports with
@@ -963,9 +963,8 @@ otherwise same as <code class="xref any docutils literal"><span class="pre">name
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.port.Port_Base.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Port; if it is not specified in the <strong>prefs</strong> argument of the constructor,
-a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for
-details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Port; if it is not specified in the <strong>prefs</strong> argument of the constructor,
+a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -1059,7 +1058,7 @@ details).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

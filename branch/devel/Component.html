@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4+388.gddca757 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+389.ga013bc1 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+388
+                  0.7.5.4+389
                 </div>
               
             
@@ -210,7 +210,7 @@
 <span class="target" id="module-psyneulink.core.components.component"></span><div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><a href="#id1"><span class="problematic" id="id2">`</span></a>Component_Overview</li>
+<li><a class="reference internal" href="#component-overview"><span class="std std-ref">Overview</span></a></li>
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#component-creation"><span class="std std-ref">Creating a Component</span></a></dt>
 <dd><ul class="first last">
@@ -276,11 +276,11 @@ full initialization is deferred until its the information is available (e.g., th
 available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
 be completed by a call to it <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a Port to a Mechanism) or to a Composition (e.g.,
-a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>) of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>), as appropriate.</p>
+a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>) of a <code class="xref any docutils literal"><span class="pre">Process</span></code>), as appropriate.</p>
 </div>
 </div>
 <div class="section" id="component-structure">
-<span id="id3"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
+<span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="core-structural-attributes">
 <span id="component-structural-attributes"></span><h3><em>Core Structural Attributes</em><a class="headerlink" href="#core-structural-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
@@ -372,14 +372,14 @@ corresponding methods of its Log, used to identify, configure and track items fo
 </ul>
 <ul class="simple" id="component-name">
 <li><strong>name</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.name" title="psyneulink.core.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute contains the name assigned to the Component when it was created.
-If it was not specified, a default is assigned by the registry for subclass (see <span class="xref std std-doc">Registry</span> for
+If it was not specified, a default is assigned by the <a class="reference internal" href="Registry.html"><span class="doc">registry</span></a> for subclass (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for
 conventions used in assigning default names and handling of duplicate names).</li>
 </ul>
 <ul class="simple" id="component-prefs">
-<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> assigned to the Component when
+<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> assigned to the Component when
 it was created.  If it was not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
-preference (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
+preference (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for details).</li>
 </ul>
 </div>
 <div class="section" id="parameters">
@@ -544,9 +544,9 @@ if <strong>default_variable</strong> is specified, it takes precedence over the 
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (str : default see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a>) – a string used for the name of the Component;  default is assigned by relevant <code class="xref any docutils literal"><span class="pre">Registry</span></code> for Component
-(see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Component.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Component (see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details).</li>
+<li><strong>name</strong> (str : for default see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a>) – a string used for the name of the Component;  default is assigned by relevant <a class="reference internal" href="Registry.html"><span class="doc">Registry</span></a> for Component
+(see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Component.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Component (see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details).</li>
 <li><strong>context</strong> (<em>Context : default None</em>) – specifies <a class="reference internal" href="Context.html"><span class="doc">context</span></a> in which Component is being initialized or executed.</li>
 </ul>
 </td>
@@ -846,7 +846,7 @@ may change during runtime</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+388.gddca757',
+               VERSION:'0.7.5.4+389.ga013bc1',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
