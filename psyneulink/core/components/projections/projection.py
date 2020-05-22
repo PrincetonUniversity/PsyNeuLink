@@ -497,7 +497,14 @@ class DuplicateProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-    """Base class for all Projections.
+    """
+    Projection_Base(           \
+        sender=None,           \
+        function=LinearMatrix, \
+        receiver=None          \
+        )
+
+    Base class for all Projections.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
@@ -528,8 +535,9 @@ class Projection_Base(Projection):
         <Projection_Deferred_Initialization>`.
 
     function : TransferFunction : default LinearMatrix
-        specifies function used to convey (and potentially convert) `variable <Projection_Base.variable>` to `value
-        <Projection_Base.value>`.
+        specifies function used to convey (and potentially convert) `value <Port_Base.value>` of `sender
+        <Projection_Base.sender>` `Port` to `variable <Port_Base.variable>` of `receiver <Projection_Base.receiver>`
+        Port.
 
     receiver: InputPort or Mechanism : default None
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
