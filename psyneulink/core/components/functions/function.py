@@ -40,7 +40,7 @@ more numpy functions).  There are two reasons PsyNeuLink packages functions in a
 ..
 * **Modularity** -- by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
   replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
-  standards (the PsyNeuLink :ref:`Function API <LINK>`).
+  standards (the PsyNeuLink `Function API <LINK>`).
 
 .. _Function_Creation:
 

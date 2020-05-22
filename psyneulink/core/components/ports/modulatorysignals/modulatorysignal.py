@@ -355,7 +355,8 @@ COMMENT
 
 .. note::
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
-   which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   which the port belongs is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
+   "lazy" updating).
 
 COMMENT:
 

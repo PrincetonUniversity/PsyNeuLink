@@ -570,15 +570,15 @@ Each uses the Composition's `add_linear_processing_pathway` method to create a `
 
 A *learning pathway* is a contiguous sequence of `ProcessingMechanisms <ProcessingMechanism>` and the
 `MappingProjections <MappingProjection>` between them, in which supervised learning is used to modify the `matrix
-<MappingProjection.matrix>` parameter of the MappingProjections in the sequence, so that the input to the first
-ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that matches as closely as
-possible the value specified for the target mechanism in the **inputs** argument of the Composition's `learn
-<Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their `function
-<Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
+<MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` in the sequence, so that the
+input to the first ProcessingMechanism in the sequence generates an output from the last ProcessingMechanism that
+matches as closely as possible a target value `specified as input <Composition_Target_Inputs>` in the Composition's
+`learn <Composition.learn>` method. The Mechanisms in the pathway must be compatible with learning (that is, their
+`function <Mechanism_Base.function>` must be compatible with the `function <LearningMechanism.function>` of the
 `LearningMechanism` for the MappingProjections they receive (see `LearningMechanism_Function`).  The Composition's
 `learning methods <Composition_Learning_Methods>` return a learning `Pathway`, in which its `learning_components
-<Pathway.learning_components>` attribute is assigned a dict containing the set of the set of learning components
-generated for the Pathway, as described below.
+<Pathway.learning_components>` attribute is assigned a dict containing the set of learning components generated for
+the Pathway, as described below.
 
 .. _Composition_Learning_Components:
 
@@ -594,8 +594,8 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
       used by the *OBJECTIVE_MECHANISM* as the target in computing the error signal (see above);  that value must be
       specified as an input to the TARGET_MECHANISM, either in the **inputs** argument of the Composition's `learn
       <Composition.learn>` method, or in its **targets** argument in an entry for either the *TARGET_MECHANISM* or
-      the `OUTPUT_MECHANISM` (see `Composition_Target_Inputs`); the Mechanism is assigned the `NodeRoles <NodeRole>`
-      `TARGET` and `LEARNING` in the Composition.
+      the `OUTPUT_MECHANISM <OUTPUT_MECHANISM>` (see `below <Composition_Target_Inputs>`); the Mechanism is assigned
+      the `NodeRoles <NodeRole>` `TARGET` and `LEARNING` in the Composition.
     ..
     * a MappingProjection that projects from the *TARGET_MECHANISM* to the *TARGET* `InputPort
       <ComparatorMechanism_Structure>` of the *OBJECTIVE_MECHANISM*.
@@ -763,11 +763,12 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
        Animation of XOR Composition in example above when it is executed by calling its `learn <Composition.learn>`
        method with the argument ``animate={'show_learning':True}``.
 
-Note that, since the `learning components <Composition_Learning_Components>` are not executed until after the
-processing components, the change to the weights of the MappingProjections in a learning pathway are not
-made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
-changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
-they are next executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+.. note::
+    Since the `learning components <Composition_Learning_Components>` are not executed until after the
+    processing components, the change to the weights of the MappingProjections in a learning pathway are not
+    made until after it has executed.  Thus, as with `execution of a Projection <Projection_Execution>`, those
+    changes will not be observed in the values of their `matrix <MappingProjection.matrix>` parameters until after
+    they are next executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _Composition_Learning_AutodiffComposition:
 
@@ -980,11 +981,10 @@ For learning, inputs must also be specified for the `TARGET_MECHANISM <Compositi
 `learning Pathway <Composition_Learning_Pathway>` in the Composition.  This can be done in either the **inputs**
 argument or **targets** argument of the `learn <Composition.learn>` method.  If the **inputs** argument is used,
 it must include an entry for each `TARGET_MECHANISM <Composition_Learning_Components>`; if the **targets** argument
-is used, it must be assigned a dictionary containing entries in which the key is either a `OUTPUT_MECHANISM
+is used, it must be assigned a dictionary containing entries in which the key is either an `OUTPUT_MECHANISM
 <Composition_Learning_Components>` (i.e., the final `Node <Composition_Nodes>`) of a `learning Pathway
-<Composition_Learning_Pathway>`, or its corresponding `TARGET_MECHANISM <Composition_Learning_Components>`. The
+<Composition_Learning_Pathway>`, or the corresponding `TARGET_MECHANISM <Composition_Learning_Components>`. The
 value of each entry specifies the inputs for each trial, formatted asdescribed `above <Composition_Input_Dictionary>`.
-
 
 .. _Composition_Programmatic_Inputs:
 

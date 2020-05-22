@@ -242,10 +242,10 @@ InputPort's owner `Mechanism <Mechanism>` is executed. When executed, the Mappin
 updates its `matrix <MappingProjection.matrix>` parameter based on any `LearningProjection(s)` it receives (listed in
 the ParameterPort's `mod_afferents <ParameterPort.mod_afferents>` attribute). This brings into effect any changes that
 occurred due to `learning <MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives
-the MappingProjection is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not
-take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or
-the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL <TimeScale.TRIAL>` of execution
-(see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+the MappingProjection is executed (in accord with `Lazy Evaluation <Component_Lazy_Updating>`), any changes due to
+learning do not take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>`
+attribute or the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL <TimeScale.TRIAL>` of
+execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
 
@@ -275,7 +275,7 @@ PsyNeuLink).  The most recent value of the matrix used by the MappingProjection 
 not reflect any changes due to learning on the current `TRIAL <TimeScale.TRIAL>` of execution; those are assigned to the
 ParameterPort's `value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism
 <Mechanism>` that receives the MappingProjection is executed in the next `TRIAL <TimeScale.TRIAL>` of execution
-(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating)
+(see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Class_Reference:
 

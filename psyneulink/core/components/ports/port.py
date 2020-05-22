@@ -405,8 +405,8 @@ the Port calls its `function <Port_Base.function>` to determine its `value <Port
 
 .. note::
    The change in the value of a `Port <Port>` does not occur until the Mechanism to which the Port belongs is next
-   executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
-   of "lazy" updating).
+   executed; This conforms to a "lazy evaluation" protocol (see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _Port_Examples:
 

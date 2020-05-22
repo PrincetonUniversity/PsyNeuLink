@@ -225,8 +225,8 @@ used by its `ControlProjections <ControlProjection>` to modulate the response --
 of execution -- of the Mechanisms the LCControlMechanism controls.
 
 .. note::
-   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism executes
+   (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).  This means that even if a
    LCControlMechanism has executed, the `multiplicative_param <Function_Modulatory_Params>` parameter of the `function
    <Mechanism_Base.function>` of a Mechanism that it controls will not assume its new value until that Mechanism has
    executed.

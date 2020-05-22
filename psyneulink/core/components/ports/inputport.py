@@ -369,14 +369,14 @@ starting with constraints that are given the highest precedence:
     then its format is determined by the `specification of Components that project to it
     <InputPort_Projection_Source_Specification>`:
 
-    * **More than one Component is specified with the same :ref:`value` format** -- that format is used to determine
+    * **More than one Component is specified with the same `value` format** -- that format is used to determine
       the format of the InputPort's `variable <InputPort.variable>`.
 
-    * **More than one Component is specified with different :ref:`value` formats** -- the InputPort's `variable
+    * **More than one Component is specified with different `value` formats** -- the InputPort's `variable
       <InputPort.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
       the class of its owner Mechanism.
 
-    * **A single Component is specified** -- its :ref:`value` is used to determine the format of the InputPort's
+    * **A single Component is specified** -- its `value` is used to determine the format of the InputPort's
       `variable <InputPort.variable>`;  if the Component is a(n):
 
       * **MappingProjection** -- can be specified by its class, an existing MappingProjection, or a matrix:

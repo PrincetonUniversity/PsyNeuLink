@@ -148,10 +148,10 @@ which is used by its `ControlProjection(s) <ControlProjection>` to modulate the 
 parameter(s) it controls, which are then used in the subsequent `TRIAL <TimeScale.TRIAL>` of execution.
 
 .. note::
-   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
-   to which it belongs has executed.
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism executes
+   (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).  This means that even if a
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism to
+   which it belongs has executed.
 
 
 .. _AGTControlMechanism_Class_Reference:
