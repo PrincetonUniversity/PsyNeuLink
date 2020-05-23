@@ -48,8 +48,6 @@ before_install:
       export EXTRA_PKGS="build-essential gfortran llvm-8-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
       # Export LLVM_CONFIG for llvmlite
       export LLVM_CONFIG=llvm-config-8
-      # Cython is needed to build scikit-learn
-      export EXTRA_PIP="cython"
       # Disable coverage
       export RUN_COV=""
     fi
