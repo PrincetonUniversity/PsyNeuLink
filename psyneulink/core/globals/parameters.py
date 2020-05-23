@@ -36,12 +36,10 @@ class, and are used to validate compatibility between this instance and other Ps
 Statefulness of Parameters
 ==========================
 
-Parameters can have different values in different `execution contexts <Run_Scope_of_Execution>` in order to ensure correctness
-of and allow access to `simulation <OptimizationControlMechanism_Execution>` calculations. As a result, to inspect and use the values
-of a parameter, in general you need to know the execution context in which you are interested. Much of the time, this execution context
-is likely to be a Composition:
-
-::
+Parameters can have different values in different `execution contexts <Composition_Execution_Context>` in order to
+ensure correctness of and allow access to `simulation <OptimizationControlMechanism_Execution>` calculations. As a
+result, to inspect and use the values of a parameter, in general you need to know the execution context in which you
+are interested. Much of the time, this execution context is likely to be a Composition:::
 
         >>> import psyneulink as pnl
         >>> c = pnl.Composition()
@@ -233,8 +231,6 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |execution context; if True, the Parameter's |                                         |
 |                  |               |default_value will be returned instead      |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
-
-
 
 
 

@@ -43,8 +43,8 @@ Contents
           • `Composition_Programmatic_Inputs`
       - `Composition_Runtime_Params`
       - `Composition_Initial_Values_and_Feedback`
-      - `Composition_Reset`
       - `Composition_Execution_Context`
+      - `Composition_Reset`
       - `Composition_Compilation`
   * `Composition_Visualization`
   * `Composition_Examples`
@@ -1360,10 +1360,97 @@ COMMENT:
         `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
 COMMENT
 
+
+.. _Composition_Execution_Context:
+
+*Execution Contexts*
+~~~~~~~~~~~~~~~~~~~~
+
+A Composition is always executed in a designated *execution context*, specified by an `execution_id
+<Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
+Composition. Execution contexts make several capabilities possible:
+
+  * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
+    <Component.value>` and that of its `parameters <Parameter_statefulness>` independently for each of
+    the Compositions to which it is assigned.
+
+  * The same Composition can be exectued independently in different contexts; this can be used for
+    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
+    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
+    (see `OptimizationControlMechanism`).
+
+If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
+is used, which is generally the Composition's `name <Composition.name>`; however, any `hashable
+<https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
+That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
+Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
+executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
+<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
+is given an execution_id of `None`.
+
+COMMENT:
+   MENTION DEFAULT VALUES HERE?  ?= execution_id NONE?
+COMMENT
+
+  .. note::
+     If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
+     <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
+     value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
+     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
+     to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
+     value.
+
+
+COMMENT:
+For Developers
+--------------
+
+.. _Composition_Execution_Contexts_Init:
+
+Initialization of Execution Contexts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- The parameter values for any execution context can be copied into another execution context by using \
+Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
+and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+
+- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
+other Components to function properly (beyond "standard" things like Component.function, \
+or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
+    - the intent is that with ``_dependent_components`` set properly, calling \
+    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+    under **new_context**
+    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+
+.. _Composition_Timing:
+
+*Timing*
+~~~~~~~~
+
+When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
+method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
+<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
+the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
+in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been executed at least once or another
+`termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
+used in combination with `Condition` specifications for individual Components to execute different Components at
+different time scales.
+
+COMMENT
+
+
 .. _Composition_Reset:
 
 *Resetting Stateful Parameters of Functions*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Some `Components <Component>` have `stateful Parameters <Parameter_statefulness>`, which are ones that maintain a
+record of their `value <Parameter.value>` from one execution of the Component to the next within each `execution
+context <_Composition_Execution_Context>`.  The initial valu of a stateful parameter is assigned in the same way as
+any other, and then the record of its value is maintained both within and between calls to the Composition's
+`execution methods <Composition_Execution_Methods>`.  However, these values can be reset to either their `default
+values <Parameter_Defaults>` or some other specified value using the Composition's reset methods.
+
 
 Compositions offer several interfaces for resetting their nodes' stateful functions' stateful parameters in customizable ways
 throughout calls to `run <Composition.run>`. These resets can occur on a scheduled basis, in accordance with user-specified
@@ -1537,85 +1624,6 @@ Example 4) Schedule resets for both Mechanisms to custom values, to occur at dif
     >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
     >>> print(B.value)
     >>> # [[0.75]]
-
-.. _Composition_Execution_Context:
-
-*Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
-
-A Composition is always executed in a designated *execution context*, specified by an `execution_id
-<Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
-Composition. Execution contexts make several capabilities possible:
-
-  * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
-    <Component.value>` and that of its `parameters <Parameter_statefulness>` independently for each of
-    the Compositions to which it is assigned.
-
-  * The same Composition can be exectued independently in different contexts; this can be used for
-    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
-    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
-    (see `OptimizationControlMechanism`).
-
-If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
-is used, which is generally the Composition's `name <Composition.name>`; however, any `hashable
-<https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
-That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
-Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
-executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
-<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
-is given an execution_id of `None`.
-
-COMMENT:
-   MENTION DEFAULT VALUES HERE?  ?= execution_id NONE?
-COMMENT
-
-  .. note::
-     If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
-     <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
-     value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
-     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
-     to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
-     value.
-
-
-COMMENT:
-For Developers
---------------
-
-.. _Composition_Execution_Contexts_Init:
-
-Initialization of Execution Contexts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- The parameter values for any execution context can be copied into another execution context by using \
-Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
-and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
-
-- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-other Components to function properly (beyond "standard" things like Component.function, \
-or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
-    - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
-    under **new_context**
-    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
-
-.. _Composition_Timing:
-
-*Timing*
-~~~~~~~~
-
-When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
-method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
-<Composition.run>`, which constitutes a `TRIAL <TimeScale.TRIAL>` of execution.  For each `TRIAL <TimeScale.TRIAL>`,
-the Component makes repeated calls to its `scheduler <Composition.scheduler>`, executing the Components it specifies
-in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been executed at least once or another
-`termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
-used in combination with `Condition` specifications for individual Components to execute different Components at
-different time scales.
-
-Runtime Params
-COMMENT
-
 
 .. _Composition_Compilation:
 
