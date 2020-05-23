@@ -47,7 +47,7 @@ The **default_variable** argument specifies the format of its input (i.e., wheth
 array), as well as the value to use if none is provided when Mechanism is executed.  Alternatively, the **size**
 argument can be used to specify the length of the array, in which case it will be initialized with all zeros.
 
-.. _IntegratorMechanism_Structure
+.. _IntegratorMechanism_Structure:
 
 Structure
 ---------
@@ -60,7 +60,7 @@ values as its input, and returns a value of the same type and format.  The Mecha
 the `value <OutputPort.OutputPort.value>` of which is assigned the result of  the call to the Mechanism's
 `function  <IntegratorMechanism.function>`.
 
-.. _IntegratorMechanism_Execution
+.. _IntegratorMechanism_Execution:
 
 Execution
 ---------

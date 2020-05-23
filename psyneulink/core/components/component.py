@@ -255,7 +255,7 @@ COMMENT
 * **stateful_parameters** - a list containing all of the Component's `stateful parameters <Parameter_Statefulness>`.
   COMMENT:
      DESCRIPTION HERE
-  COMENT
+  COMMENT
 
 
 COMMENT:

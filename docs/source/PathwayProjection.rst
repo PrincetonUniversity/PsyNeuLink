@@ -1,10 +1,11 @@
-Pathway Projections
-===================
+Pathway Projection
+==================
+
+*Subclasses:*
 
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
    MappingProjection
    MaskedMappingProjection
    AutoAssociativeProjection

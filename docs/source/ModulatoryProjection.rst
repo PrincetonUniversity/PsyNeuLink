@@ -1,7 +1,9 @@
-Modulatory Projections
-======================
+Modulatory Projection
+=====================
 
 .. _ModulatoryProjection_Subtypes:
+
+*Subclasses*
 
 .. toctree::
    :maxdepth: 1

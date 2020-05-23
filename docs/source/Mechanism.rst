@@ -1,12 +1,13 @@
-Mechanisms
-==========
+Mechanism
+=========
+
+*Subclasses:*
 
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
-   Processing Mechanisms <ProcessingMechanism>
-   Modulatory Mechanisms <ModulatoryMechanism>
+   ProcessingMechanism
+   Modulatory Mechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:

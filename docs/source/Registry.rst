@@ -1,8 +1,8 @@
 Registry
 ========
 
-A Registry is used to maintain a list of categories (subclasses) for a given type of base_class of Component,
-and to insure that the name of every Component created in each of those categories is uniquie.  If an item
+A Registry is used to maintain a list of categories (subclasses) for a given base_class of `Component`,
+and to ensure that the name of every Component created in each of those categories is unique.  If an item
 is created with the same name as one already in the Registry, its name is appended with a hyphenated index
 (e.g., name-n) that is incremented for each new item assigned the same base name, as described in greater
 detail below.
