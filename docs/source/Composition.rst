@@ -1,6 +1,15 @@
 Composition
 ===========
 
+*Subclasses*
+
+.. toctree::
+   :maxdepth: 1
+
+   CompositionFunctionApproximator
+   RegressionCFA
+   AutodiffComposition
+
 *Related*
 
 * `NodeRoles <NodeRole>`
@@ -11,15 +20,6 @@ Composition
    Pathway
    Scheduling
 |
-*Subclasses*
-
-.. toctree::
-   :maxdepth: 1
-
-   CompositionFunctionApproximator
-   RegressionCFA
-   AutodiffComposition
-
 .. toctree::
    :maxdepth: 2
 
