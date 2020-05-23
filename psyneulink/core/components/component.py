@@ -250,6 +250,14 @@ COMMENT:
         (e.g., EXECUTION_COUNT)
 COMMENT
 
+.. _Component_Stateful_Parameters:
+
+* **stateful_parameters** - a list containing all of the Component's `stateful parameters <Parameter_Statefulness>`.
+  COMMENT:
+     DESCRIPTION HERE
+  COMENT
+
+
 COMMENT:
 .. _Component_Methods:
 
@@ -789,6 +797,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     max_executions_before_finished : bool
         see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
+
+    stateful_parameters : list
+        see `stateful_parameters <Component_Stateful_Parameters>`
 
     reset_stateful_function_when : `Condition`
         see `reset_stateful_function_when <Component_reset_stateful_function_when>`

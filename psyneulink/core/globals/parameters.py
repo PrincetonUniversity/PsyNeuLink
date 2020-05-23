@@ -5,7 +5,7 @@
 PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`.
 `Parameter`\\ s have names, default values, and other attributes that define how they are used in Compositions.
 `Parameter` \\s also maintain and provide access to the data used in actual computations - `default values
-<Parameter_Defaults>`, `current values <Parameter_statefulness>`, `previous values <Parameter.history>`, and
+<Parameter_Defaults>`, `current values <Parameter_Statefulness>`, `previous values <Parameter.history>`, and
 `logged values <Log>`.
 
 
@@ -64,9 +64,9 @@ are interested. Much of the time, this execution context is likely to be a Compo
         [[10.]]
 
 
-The TransferMechanism in the above snippet has a different `value <Component.value>` for each Composition it is run in. This holds
-true for all of its `stateful Parameters <Component.stateful_parameters>`, so they can behave differently in different execution contexts
-and be modulated during `control <System_Execution_Control>`.
+The TransferMechanism in the above snippet has a different `value <Component.value>` for each Composition it is run in.
+This holds true for all of its `stateful Parameters <Component_Stateful_Parameters>`, so they can behave differently in
+different execution contexts and can be modified by modulated `ModulatorySignal_Modulation`.
 
 .. _Parameter_Dot_Notation:
 
@@ -406,7 +406,7 @@ class ParametersTemplate:
                 show_all : False
                     if `True`, includes non-`user<Parameter.user` parameters
 
-            :return: a dictionary with {parameter name: parameter value} key-value pairs for each Par
+            :return: a dictionary with {parameter name: parameter value} key-value pairs for each Parameter
         """
         result = {}
         for k in self._params:
