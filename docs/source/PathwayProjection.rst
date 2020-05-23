@@ -1,5 +1,5 @@
-Pathway Projection
-==================
+PathwayProjection
+=================
 
 *Subclasses:*
 

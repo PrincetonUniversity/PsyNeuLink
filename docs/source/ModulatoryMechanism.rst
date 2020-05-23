@@ -1,5 +1,5 @@
-Modulatory Mechanism
-====================
+ModulatoryMechanism
+===================
 
 .. _ModulatoryMechanism_Subtypes:
 

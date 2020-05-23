@@ -7,7 +7,7 @@ Mechanism
    :maxdepth: 1
 
    ProcessingMechanism
-   Modulatory Mechanism
+   ModulatoryMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:

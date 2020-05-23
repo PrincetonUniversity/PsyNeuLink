@@ -1,5 +1,5 @@
-Processing Mechanism
-====================
+ProcessingMechanism
+===================
 
 .. _ProcessingMechanism_Subtypes:
 

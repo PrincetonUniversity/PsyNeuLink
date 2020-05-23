@@ -6,9 +6,9 @@ Composition
 .. toctree::
    :maxdepth: 1
 
-   CompositionFunctionApproximator
-   RegressionCFA
    AutodiffComposition
+   CompositionFunctionApproximator
+     RegressionCFA
 |
 *Related*
 
