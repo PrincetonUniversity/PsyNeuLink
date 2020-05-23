@@ -48,6 +48,12 @@ Contents
       - `Composition_Compilation`
   * `Composition_Visualization`
   * `Composition_Examples`
+      - `Composition_Examples_Creation`
+      - `Composition_Examples_Run`
+      - `Composition_Examples_Input`
+      - `Composition_Examples_Runtime_Params`
+      - `Composition_Examples_Execution_Context`
+      - `Composition_Examples_Reset`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -1400,6 +1406,7 @@ COMMENT
      to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
      value.
 
+See `Composition_Examples_Execution_Context` for examples.
 
 COMMENT:
 For Developers
@@ -1684,6 +1691,8 @@ Examples
   * `Composition_Examples_Creation`
   * `Composition_Examples_Run`
   * `Composition_Examples_Input`
+    - `Composition_Examples_Input_Dictionary`
+    - `Composition_Examples_Programmatic_Input`
   * `Composition_Examples_Runtime_Params`
   * `Composition_Examples_Execution_Context`
   * `Composition_Examples_Reset`
@@ -1781,7 +1790,7 @@ brevity:*
     >>> outer_comp.run(inputs=input_dict)
 
 
-.. :
+.. _Composition_Examples_Input:
 
 *Input Formats*
 ~~~~~~~~~~~~~~~
@@ -2030,9 +2039,7 @@ Complete input specification:
         >>> comp.run(inputs=input_dictionary)
 ..
 
-Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
-
-::
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`::
 
         >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
 
@@ -2049,10 +2056,10 @@ COMMENT:
 COMMENT
 
 
+.. _Composition_Examples_Runtime_Params:
+
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
-
-.. _Composition_Examples_Runtime_Params
 
 If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
 `Condition` will be assigned by default:
@@ -2113,7 +2120,7 @@ the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was 
     value.
 
 
-.. :
+.. _Composition_Examples_Execution_Context:
 
 *Execution Contexts*
 ~~~~~~~~~~~~~~~~~~~~
@@ -2158,10 +2165,10 @@ When looking for values after a run, it's important to know the execution contex
         [[20.]]Composition_Controller
 
 
+.. _Composition_Examples_Reset:
+
 *Reset Paramters of Stateful Functions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. _Composition_Examples_Reset:
 
 Example composition with two Mechanisms containing stateful functions:
 

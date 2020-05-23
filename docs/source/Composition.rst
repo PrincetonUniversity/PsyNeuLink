@@ -9,7 +9,7 @@ Related
 * `PathwayRoles <PathwayRole>`
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    Pathway
    Scheduling
