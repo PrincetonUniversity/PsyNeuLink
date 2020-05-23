@@ -15,45 +15,46 @@ Contents
 
   * `Composition_Overview`
   * `Composition_Creation`
-      - `Composition_Constructor`
-      - `Composition_Addition_Methods`
-        - `Adding Components <Composition_Component_Addition_Methods>`
-        - `Adding Pathways <Composition_Pathway_Addition_Methods>`
-      - `Composition_Add_Nested`
+     - `Composition_Constructor`
+     - `Composition_Addition_Methods`
+        • `Adding Components <Composition_Component_Addition_Methods>`
+        • `Adding Pathways <Composition_Pathway_Addition_Methods>`
+     - `Composition_Add_Nested`
   * `Composition_Structure`
-      - `Composition_Graph`
-      - `Composition_Nodes`
-      - `Composition_Nested`
-      - `Composition_Pathways`
+     - `Composition_Graph`
+     - `Composition_Nodes`
+     - `Composition_Nested`
+     - `Composition_Pathways`
   * `Composition_Controller`
-      - `Composition_Controller_Assignment`
-      - `Composition_Controller_Execution`
+     - `Composition_Controller_Assignment`
+     - `Composition_Controller_Execution`
   * `Composition_Learning`
-      - `Composition_Learning_Standard`
-          • `Composition_Learning_Unsupervised`
-          • `Composition_Learning_Supervised`
-              - `Composition_Learning_Methods`
-              - `Composition_Learning_Components`
-              - `Composition_Learning_Execution`
-      - `Composition_Learning_AutodiffComposition`
-      - `Composition_Learning_UDF`
+     - `Composition_Learning_Standard`
+        • `Composition_Learning_Unsupervised`
+        • `Composition_Learning_Supervised`
+           - `Composition_Learning_Methods`
+           - `Composition_Learning_Components`
+           - `Composition_Learning_Execution`
+     - `Composition_Learning_AutodiffComposition`
+     - `Composition_Learning_UDF`
   * `Composition_Execution`
-      - `Composition_Execution_Inputs`
-          • `Composition_Input_Dictionary`
-          • `Composition_Programmatic_Inputs`
-      - `Composition_Runtime_Params`
-      - `Composition_Initial_Values_and_Feedback`
-      - `Composition_Execution_Context`
-      - `Composition_Reset`
-      - `Composition_Compilation`
+     - `Composition_Execution_Inputs`
+        • `Composition_Input_Dictionary`
+        • `Composition_Programmatic_Inputs`
+     - `Composition_Runtime_Params`
+     - `Composition_Initial_Values_and_Feedback`
+     - `Composition_Execution_Context`
+     - `Composition_Reset`
+     - `Composition_Compilation`
   * `Composition_Visualization`
   * `Composition_Examples`
-      - `Composition_Examples_Creation`
-      - `Composition_Examples_Run`
-      - `Composition_Examples_Input`
-      - `Composition_Examples_Runtime_Params`
-      - `Composition_Examples_Execution_Context`
-      - `Composition_Examples_Reset`
+     - `Composition_Examples_Creation`
+     - `Composition_Examples_Run`
+     - `Composition_Examples_Input`
+     - `Composition_Examples_Runtime_Params`
+     - `Composition_Examples_Execution_Context`
+     - `Composition_Examples_Reset`
+     - `Composition_Examples_Visualization`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -79,13 +80,17 @@ other user-specified scheduling and termination conditions to be specified.
 Creating a Composition
 ----------------------
 
+    - `Composition_Constructor`
+    - `Composition_Addition_Methods`
+    - `Composition_Add_Nested`
+
 A Composition can be created by calling the constructor and specifying `Components <Component>` to be added, using
 either arguments of the constructor and/or methods that allow Components to be added once it has been constructed.
 
 .. hint::
     Although Components (Nodes and Projections) can be added individually to a Composition, it is often easier to use
     `Pathways <Composition_Pathway>` to construct a Composition, which in many cases can automaticially construct the
-    Projections needed without have to specify those explicitly.
+    Projections needed without having to specify those explicitly.
 
 .. _Composition_Constructor:
 
@@ -124,6 +129,9 @@ The following arguments of the Composition's constructor can be used to add Comp
 
 *Adding Components and Pathways*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    - `Adding Components <Composition_Component_Addition_Methods>`
+    - `Adding Pathways <Composition_Pathway_Addition_Methods>`
 
 The methods used for adding individual Components and `Pathways <Composition_Pathways>` to a Composition are described
 briefly below.  Examples of their their use are provided in `Composition_Examples_Creation`.
@@ -217,6 +225,11 @@ created automatically if specified in a Pathway) just as for any other Node.
 
 Composition Structure
 ---------------------
+
+    - `Composition_Graph`
+    - `Composition_Nodes`
+    - `Composition_Nested`
+    - `Composition_Pathways`
 
 This section provides an overview of the structure of a Composition and its `Components <Component>`. Later sections
 describe these in greater detail, and how they are used to implement various forms of Composition.
@@ -367,6 +380,10 @@ of the Pathways in a Composition are listed in its `pathways <Composition.pathwa
 Controlling a Composition
 -------------------------
 
+      - `Composition_Controller_Assignment`
+      - `Composition_Controller_Execution`
+
+
 A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass of
 one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
 It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
@@ -450,9 +467,6 @@ corresponding attribute.
 
 Learning in a Composition
 -------------------------
-* `Composition_Learning_Standard`
-* `Composition_Learning_AutodiffComposition`
-* `Composition_Learning_UDF`
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
@@ -463,7 +477,7 @@ associations between representations in the Mechanisms) within a `Pathway`.
 .. _Composition_Learning_Configurations:
 
 *Configuring Learning in a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are three ways of configuring learning in a Composition:
 
@@ -534,7 +548,6 @@ COMMENT
 
 **Supervised Learning**
 ^^^^^^^^^^^^^^^^^^^^^^^
-
 * `Composition_Learning_Methods`
 * `Composition_Learning_Components`
 * `Composition_Learning_Execution`
@@ -832,6 +845,14 @@ other Components in the Composition (e.g., as a source of information or for mod
 Executing a Composition
 -----------------------
 
+    - `Composition_Execution_Inputs`
+    - `Composition_Runtime_Params`
+    - `Composition_Initial_Values_and_Feedback`
+    - `Composition_Execution_Context`
+    - `Composition_Reset`
+    - `Composition_Compilation`
+
+
 .. _Composition_Execution_Methods:
 
 There are three methods for executing a Composition:
@@ -902,7 +923,9 @@ methods can also be used to execute the Composition, but no learning will occur,
 .. _Composition_Execution_Inputs:
 
 *Input formats (including targets for learning)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- `Composition_Input_Dictionary`
+- `Composition_Programmatic_Inputs`
 
 The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
 the **targets** argument of the `learn <Composition.learn>` method) is used to specify the inputs to the Composition
@@ -1410,7 +1433,6 @@ See `Composition_Examples_Execution_Context` for examples.
 
 COMMENT:
 For Developers
---------------
 
 .. _Composition_Execution_Contexts_Init:
 
@@ -1600,102 +1622,21 @@ Nested Compositions) and Projections in the Composition (based on the Compositio
 
 By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
 <NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
-shown as unlabeled arrows, as illustrated for the Composition in the example below:
-
-.. _Composition_show_graph_basic_figure:
-
-+-----------------------------------------------------------+----------------------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
-| >>> a = ProcessingMechanism(                              |                                                          |
-|               name='A',                                   |                                                          |
-| ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULT, MEAN]                 |                                                          |
-| ...           )                                           |                                                          |
-| >>> b = ProcessingMechanism(                              |                                                          |
-| ...           name='B',                                   |                                                          |
-| ...           size=5                                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> c = ProcessingMechanism(                              |                                                          |
-| ...           name='C',                                   |                                                          |
-| ...           size=2,                                     |                                                          |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp = Composition(                                   |                                                          |
-| ...           name='Comp',                                |                                                          |
-| ...           enable_controller=True                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
-| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
-| ...            name='Controller',                         |                                                          |
-| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
-| ...            control_signals=(GAIN, c),                 |                                                          |
-| ...            agent_rep=comp                             |                                                          |
-| ...            )                                          |                                                          |
-| >>> comp.add_controller(ctlr)                             |                                                          |
-+-----------------------------------------------------------+----------------------------------------------------------+
-
-Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
-can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
-method.  The figure below shows several examples.
-
-.. _Composition_show_graph_options_figure:
-
-**Output of show_graph using different options**
-
-.. figure:: _static/Composition_show_graph_options_fig.svg
-   :alt: Composition graph examples
-   :scale: 150 %
-
-   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
-   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
-   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
-   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
-   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
-   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
-
-If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
-**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
-and nested Compositions in an outer Composition, ``comp``:
-
-.. _Composition_show_graph_show_nested_figure:
-
-+------------------------------------------------------+---------------------------------------------------------------+
-| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
-| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
-| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
-| >>> comp1 = Composition(name='comp1')                |                                                               |
-| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
-| ...                                      mech_B1])   |                                                               |
-| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
-| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
-| >>> comp2 = Composition(name='comp2')                |                                                               |
-| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
-| ...                                      mech_B2])   |                                                               |
-| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
-| >>> comp = Composition()                             |                                                               |
-| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
-| ...                                     comp1, comp2,|                                                               |
-| ...                                     mech_resp])  |                                                               |
-| >>> comp.show_graph(show_nested=True)                |                                                               |
-+------------------------------------------------------+---------------------------------------------------------------+
+shown as unlabeled arrows, as illustrated for the Composition in the `examples <Composition_Examples_Visualization>`.
 
 
 .. _Composition_Examples:
 
-Examples
---------
+Composition Examples
+--------------------
 
-  * `Composition_Examples_Creation`
-  * `Composition_Examples_Run`
-  * `Composition_Examples_Input`
-    - `Composition_Examples_Input_Dictionary`
-    - `Composition_Examples_Programmatic_Input`
-  * `Composition_Examples_Runtime_Params`
-  * `Composition_Examples_Execution_Context`
-  * `Composition_Examples_Reset`
+    * `Composition_Examples_Creation`
+    * `Composition_Examples_Run`
+    * `Composition_Examples_Input`
+    * `Composition_Examples_Runtime_Params`
+    * `Composition_Examples_Execution_Context`
+    * `Composition_Examples_Reset`
+    * `Composition_Examples_Visualization`
 
 .. _Composition_Examples_Creation:
 
@@ -1794,6 +1735,8 @@ brevity:*
 
 *Input Formats*
 ~~~~~~~~~~~~~~~
+- `Composition_Examples_Input_Dictionary`
+- `Composition_Examples_Programmatic_Input`
 
 .. _Composition_Examples_Input_Dictionary:
 
@@ -2298,6 +2241,92 @@ Example 4) Schedule resets for both Mechanisms to custom values, to occur at dif
     >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
     >>> print(B.value)
     >>> # [[0.75]]
+
+.. _Composition_Examples_Visualization:
+
+*Visualizing a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. _Composition_show_graph_basic_figure:
+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULT, MEAN]                 |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
+
+Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
+can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
+method.  The figure below shows several examples.
+
+.. _Composition_show_graph_options_figure:
+
+**Output of show_graph using different options**
+
+.. figure:: _static/Composition_show_graph_options_fig.svg
+   :alt: Composition graph examples
+   :scale: 150 %
+
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
+   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
+   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
+   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
+   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
+
+If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and nested Compositions in an outer Composition, ``comp``:
+
+.. _Composition_show_graph_show_nested_figure:
+
++------------------------------------------------------+---------------------------------------------------------------+
+| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
+| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
+| >>> comp1 = Composition(name='comp1')                |                                                               |
+| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
+| ...                                      mech_B1])   |                                                               |
+| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
+| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
+| >>> comp2 = Composition(name='comp2')                |                                                               |
+| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
+| ...                                      mech_B2])   |                                                               |
+| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
+| >>> comp = Composition()                             |                                                               |
+| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
+| ...                                     comp1, comp2,|                                                               |
+| ...                                     mech_resp])  |                                                               |
+| >>> comp.show_graph(show_nested=True)                |                                                               |
++------------------------------------------------------+---------------------------------------------------------------+
 
 
 .. _Composition_Class_Reference:
@@ -3014,7 +3043,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     node_ordering : list[`Mechanism <Mechanism>` or `Composition`]
         a list of all `Nodes <Composition_Nodes>` in the order in which they were added to the Composition.
-        COMENT:
+        COMMENT:
             FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
         COMMENT
 
