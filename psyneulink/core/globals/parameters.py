@@ -31,7 +31,7 @@ class, and are used to validate compatibility between this instance and other Ps
     ``noise`` value for *t*
 
 
-.. _Parameter_statefulness:
+.. _Parameter_Statefulness:
 
 Statefulness of Parameters
 ==========================

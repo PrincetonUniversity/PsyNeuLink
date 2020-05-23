@@ -8,7 +8,6 @@ Composition
 
    AutodiffComposition
    CompositionFunctionApproximator
-     RegressionCFA
 |
 *Related*
 
@@ -20,9 +19,6 @@ Composition
    Pathway
    Scheduling
 |
-.. toctree::
-   :maxdepth: 2
-
 .. automodule:: psyneulink.core.compositions.composition
    :members: Composition, NodeRole
    :exclude-members: Parameters, show_structure, CompositionError

@@ -10,7 +10,6 @@ Core
 * `Composition`
    - `AutodiffComposition`
    - `CompositionFunctionApproximator`
-     - `RegressionCFA`
 
 * `Services`
    - `Log`

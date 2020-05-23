@@ -387,7 +387,7 @@ The following attributes and methods control and provide information about the e
      `Mechanisms` <Mechanism>` are the only type of Component that reset when the `reset_stateful_function_when
      <Component.reset_stateful_function_when>` `Condition` is satisfied. Other Component types do not reset,
      although `Composition` has a `reset <Composition.reset>` method that can be used to reset all of its eligible
-     Mechanisms.
+     Mechanisms (see `Composition_Reset`)
 
 .. _Component_Execution_Termination:
 

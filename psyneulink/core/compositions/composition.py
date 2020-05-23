@@ -916,7 +916,7 @@ then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of
 *Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur,
 its `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
 `disable_learning <Composition.disable_learning>` attribute must be False (the default). A set of targets must also
-be specified (see `below <Composition_Target_Inputs`). The `run <Composition.run>` and `execute <Composition.execute>`
+be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.run>` and `execute <Composition.execute>`
 methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
 `disable_learning <Composition.disable_learning>` attribute.
 
@@ -1216,15 +1216,20 @@ If its `Condition` is *not* satisfied, then none of the parameters specified wit
 *Cycles and Feedback*
 ~~~~~~~~~~~~~~~~~~~~~
 
-If a Composition has any Projections that form loops of execution — that is, cycles in its `graph <Composition_Graph> —
+COMMENT:
+    .. _Composition_Feedback_Projection:
+    ADD SECTION HERE DEFINING A FEEDBACK PROJECTION
+COMMENT
+
+If a Composition has any Projections that form loops of execution — that is, cycles in its `graph <Composition_Graph>` —
 these require special handling to insure consistent and desired order of execution. This is handled by a Composition in
 one of two ways, based on whether any of the Projections in a cycle are designated as `feeedback
 <Composition_Feedback_Specification>`:
 
 .. _Composition_No_Feedback_Cycle:
 
-* No feedback Projections -- in this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
-  treated equally, and executed synchronously (i.e., in the same `TIME_STEP <TimseScale.TIME_STEP>`).  Any cycles
+* **No feedback Projections** -- in this case, the cycle is "flattened," meaning that all of the Nodes in the cycle
+  are treated equally, and executed synchronously (i.e., in the same `TIME_STEP <TimeScale.TIME_STEP>`).  Any cycles
   nested within another cycle are flattened and added to the outermost cycle, and all are treated as part of the same
   cycle
   COMMENT:
@@ -1252,7 +1257,7 @@ one of two ways, based on whether any of the Projections in a cycle are designat
   <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified
   in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the cycle in
   that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned in the
-  previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
+  previous call to `run <Composition.run>` or `learn <Composition.learn>`.
 
   .. note::
      If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
@@ -1266,7 +1271,7 @@ one of two ways, based on whether any of the Projections in a cycle are designat
 
 .. _Composition_Feedback_Cycle:
 
-* Feedback Projection(s) specified -- in this case, any Projections in a cycle specified as `feedback
+* **Feedback Projection(s) specified** -- in this case, any Projections in a cycle specified as `feedback
   <Composition_Feedback_Specification>` are used to break the cycle: the `sender <Projection_Base.sender>` of each
   feedback Projection (assigned the `NodeRole` `FEEDBACK_SENDER`) is initialized in the same way as a Node in a
   cycle (see `above <Composition_No_Feedback_Cycle>`); the receiver (assigned the `NodeRole` `FEEDBACK_RECEIVER`) is
@@ -1278,15 +1283,20 @@ one of two ways, based on whether any of the Projections in a cycle are designat
 
 .. _Composition_Feedback_Specification:
 
-By default, cycles that do not include any `ControlProjections <ControlProjection>` are flattened. This includes any
-`RecurrentTransferMechanism` (or its subclaseses), which are treated as a single-Node cylce (formed by its
-`AutoassociativeProjection`).  In contrast, if there are any `ControlProjections <ControlProjection>` in a cycle,
-some or all of them may be assigned as feedback Projections to break the cycle.
+*Specification of a Projection's feedback status*
 
-The feedback status of a Projection can also be specified explcitly, either by including the keyword *FEEDBACK* in a
-tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the Composition's
-`add_projections <Composition.add_projections>` method, or using the **feedback** of the Composition's `add_projection
-<Composition.add_projection>` method.
+By default, cycles that do not include any Projections explicitly specified as feeedback or any `ControlProjections
+<ControlProjection>` are flattened. This includes any `RecurrentTransferMechanism` (or its subclaseses), which are
+treated as a single-Node cylce (formed by its `AutoAssociativeProjection`).  However, any Projections are explicitly
+specified as feedback (see below) then they are used to break the cycle;  and if there are any `ControlProjections
+<ControlProjection>` and they are responsible for forming a cycle, they are automatically assigned as feedback (
+unless explicitly specified otherwise) and used to break the cycle.
+
+The feedback status of a `Projection` can be explicitly specified either in a tuple with the Projection where it is
+`specified in a Pathway <Pathway_Specification>` or in the Composition's `add_projections <Composition.add_projections>`
+method, or by using the **feedback** argument of the Composition's `add_projection <Composition.add_projection>` method.
+Specifying True or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it
+from being assigned as a feedback Projection (e.g., a `ControlProjection` that forms a cycle).
 
     .. warning::
        Designating a Projection as **feeedback** that is *not* in a cycle is allowed, but will issue a warning and
@@ -1358,8 +1368,8 @@ tuple with the Projection where it is `specified in a Pathway <Pathway_Specifica
                 T4:  [[3.]]
        COMMENT
 
-The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feeeback_projections>`
-attribute, and the feedback status of a Projection in a composition is returned by its `get_feedback_status
+The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feedback_projections>`
+attribute, and the feedback status of a Projection in a Composition is returned by its `get_feedback_status
 <Composition.get_feedback_status>` method.
 
 COMMENT:
@@ -1414,7 +1424,7 @@ is used, which is generally the Composition's `name <Composition.name>`; however
 That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
 Components or their `parameters <Parameter_Statefulness>` that were assigned during the execution. If a Component is
 executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
-<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
+<Mechanism_Base.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
 is given an execution_id of `None`.
 
 COMMENT:
@@ -1425,7 +1435,7 @@ COMMENT
      If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
      <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
      value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
-     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
+     ``<Component>.parameters.<parameter_name>.get(execution_id)``, where ``value`` can be used as the parameter_name
      to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
      value.
 
@@ -1472,10 +1482,10 @@ COMMENT
 *Resetting Parameters of StatefulFunctions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`StatefulFunctions <StatefulFunction>` (such as IntegratorFunctions <IntegratorFunction>` and "non-parametric"
+`StatefulFunctions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
 `MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
 a record of the Function's `values <Parameter.values>` for each `execution context <Composition_Execution_Context>` in
-which it is executed, within and between calls to the Composition's `execute methods <Composition_Execute_Methods>`.
+which it is executed, within and between calls to the Composition's `execute methods <Composition_Execution_Methods>`.
 This record can be cleared and `previous_value <StatefulFunction.previous_value>` reset to either the Function's
 `default value <Parameter_Defaults>` or another one, using either the Composition's `reset <Composition.reset>` method
 or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` methods, as described below (see
@@ -1483,7 +1493,7 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
 
    * `reset <Composition.reset>` -- this is a method of the Composition that calls the `reset <Component.reset>` method
      of Nodes in the Composition that have a `StatefulFunction`, each of which resets the `stateful parameters
-     <Component_Stateful_Parameters>`.
+     <Component_Stateful_Parameters>` of those Functions.
      COMMENT:
         ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` ??
      COMMENT
@@ -1511,15 +1521,15 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
            <Component.reset_stateful_function_when>` attribute has not otherwise been specified. If a dictionary is
            specified, then the `Condition` specified for each Node applies to that Node, superceding any prior
            specification of its `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute
-           for the duration of the call to `run <Comopsition.run>` or `learn <Composition.learn>`.
+           for the duration of the call to `run <Composition.run>` or `learn <Composition.learn>`.
 
-     - **reset_stateful_functions_to** -- this specifies the values used by each `Node <Composition_Nodes>` to reset the
-       `stateful parameters <Parameter_Statefulness> of its StatefulFunction(s) <StatefulFunction>`.  It must be a dict
-       of {Node:value} pairs, in which the value specifies the value(s) passed to the`reset<Component.resset>` method
-       of the specified Node.  If the `reset <Component.reset>` method of a Node takes more than one value (see Note
-       below), then a list of values must be provided (i.e., as {node:[value_0, value_1,... value_n]}) that matches the
-       number of arguments taken by the `reset <Component.reset>` method. Any Nodes *not* specified in the dictionary
-       are reset using their `default value(s) <Parameter_Defaults>`.
+     - **reset_stateful_functions_to** -- this specifies the values used by each `Node <Composition_Nodes>` to reset
+       the `stateful parameters <Component_Stateful_Parameters>` of its `StatefulFunction(s) <StatefulFunction>`.  It
+       must be a dictionary of {Node:value} pairs, in which the value specifies the value(s) passed to the
+       `reset<Component.reset>` method of the specified Node.  If the `reset <Component.reset>` method of a Node
+       takes more than one value (see Note below), then a list of values must be provided (i.e., as {node:[value_0,
+       value_1,... value_n]}) that matches the number of arguments taken by the `reset <Component.reset>` method.
+       Any Nodes *not* specified in the dictionary are reset using their `default value(s) <Parameter_Defaults>`.
 
        .. note::
           The `reset <Component.reset>` method of most Nodes with a `StatefulFunction` takes only a single value, that
@@ -1529,13 +1539,13 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
           **reset_stateful_functions_to**.
 
      The **reset_stateful_functions_when** and **reset_stateful_functions_to** arguments can be used in conjunction or
-     independently of one another. For example, the `Conditions <Condition>` under which a `Mechanism` with a
-     `StatefulFunction` is reset using its `default values <Parameter_Defaults>` can be specified by including it in
+     independently of one another. For example, the `Condition(s) <Condition>` under which a `Mechanism` with a
+     `StatefulFunction` is reset using to its `default values <Parameter_Defaults>` can be specified by including it in
      **reset_stateful_functions_when** but not **reset_stateful_functions_to**.  Conversely, the value to which
      the `StatefulFunction` of a Mechanism is reset can be specified without changing the Condition under which this
-     occurs by including it in **reset_stateful_functions_to** but not **reset_stateful_functions_when** -- in that
-     case, the `Condition` specified by its own `reset_stateful_functions_to <Component.reset_stateful_functions_to>`
-     paramter will be used.
+     occurs, by including it in **reset_stateful_functions_to** but not **reset_stateful_functions_when** -- in that
+     case, the `Condition` specified by its own `reset_stateful_function_when <Component.reset_stateful_function_when>`
+     parameter will be used.
 
 
 .. _Composition_Compilation:
@@ -3063,7 +3073,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `feedback <Composition_Feedback_Specification>`.
 
     feedback_projections : ContentAddressableList[`Projection <Projection>`]
-        list of Projections that have been `assigned as `feedback <Composition_Feedback_Specification>`.
+        list of Projections that have been assigned as `feedback <Composition_Feedback_Specification>`.
 
     mechanisms : `MechanismList`
         list of Mechanisms in Composition, that provides access to some of they key attributes.
@@ -4252,7 +4262,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # else:
             #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
 
-
     def _determine_pathway_roles(self, context=None):
         from psyneulink.core.compositions.pathway import PathwayRole
         for pway in self.pathways:
@@ -4655,8 +4664,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 c = len(self._get_external_modulatory_projections())
                 assert c == 0, f"PROGRAM ERROR:  Number of external control projections {c} is greater than 0. " \
                                f"This means there was a failure to route these projections through the PCIM."
-
-
 
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
@@ -5252,6 +5259,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+
+    def get_feedback_status(self, projection):
+        """Return True if **projection** is assigned as `feedback Projection <Composition_Feedback_Projection>`
+        in the Composition, else False.
+        """
+        return projection in self.feedback_projections
 
     def _check_for_existing_projections(self,
                                        projection=None,
@@ -6930,7 +6943,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._analyze_graph(context=Context(source=ContextFlags.METHOD))
         else:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
-
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by nodes in the Composition
@@ -9556,8 +9568,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receives target values as input to the Composition for training `learning pathways
                 <Composition_Learning_Pathway>` The key of each entry can be either the `TARGET_MECHANISM
                 <Composition_Learning_Components>` for a learning pathway or the final Node in that Pathway, and
-                the value is the target value used for that Node on each trial (see `Composition_Target_Inputs`
-                for additonal details concerning the formatting of targets).
+                the value is the target value used for that Node on each trial (see `target inputs
+                <Composition_Target_Inputs>` for additonal details concerning the formatting of targets).
 
             num_trials : int (default=None)
                 typically, the composition will infer the number of trials from the length of its input specification.
