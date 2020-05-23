@@ -120,7 +120,7 @@ The following arguments of the Composition's constructor can be used to add Comp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The methods used for adding individual Components and `Pathways <Composition_Pathways>` to a Composition are described
-briefly below.  Examples of their their use are provided in `Composition_Creation_Examples`.
+briefly below.  Examples of their their use are provided in `Composition_Examples_Creation`.
 
 .. _Composition_Component_Addition_Methods:
 
@@ -1435,7 +1435,6 @@ in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been execut
 `termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
 used in combination with `Condition` specifications for individual Components to execute different Components at
 different time scales.
-
 COMMENT
 
 
@@ -1450,7 +1449,8 @@ a record of the Function's `values <Parameter.values>` for each `execution conte
 which it is executed, within and between calls to the Composition's `execute methods <Composition_Execute_Methods>`.
 This record can be cleared and `previous_value <StatefulFunction.previous_value>` reset to either the Function's
 `default value <Parameter_Defaults>` or another one, using either the Composition's `reset <Composition.reset>` method
-or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` methods, as described below:
+or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` methods, as described below (see
+`Composition_Examples_Reset` for examples):
 
    * `reset <Composition.reset>` -- this is a method of the Composition that calls the `reset <Component.reset>` method
      of Nodes in the Composition that have a `StatefulFunction`, each of which resets the `stateful parameters
@@ -1508,136 +1508,6 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      case, the `Condition` specified by its own `reset_stateful_functions_to <Component.reset_stateful_functions_to>`
      paramter will be used.
 
-See below for examples.
-
-Example composition with two Mechanisms containing stateful functions:
-
-    >>> A = TransferMechanism(
-    >>>     name='A',
-    >>>     integrator_mode=True,
-    >>>     integration_rate=0.5
-    >>> )
-    >>> B = TransferMechanism(
-    >>>     name='B',
-    >>>     integrator_mode=True,
-    >>>     integration_rate=0.5
-    >>> )
-    >>> C = TransferMechanism(name='C')
-    >>>
-    >>> comp = Composition(
-    >>>     pathways=[[A, C], [B, C]]
-    >>> )
-
-Example 1) A blanket reset of all stateful functions to their default values:
-
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     num_trials=3
-    >>> )
-    >>>
-    >>> # Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875
-    >>> print(A.value)
-    >>> # [[0.875]]
-    >>>
-    >>> comp.reset()
-    >>>
-    >>> # The Mechanisms' stateful functions are now in their default states, which is identical
-    >>> # to their states prior to Trial 1. Thus, if we call run again with the same inputs,
-    >>> # we see the same results that we saw on Trial 1.
-    >>>
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>> )
-    >>>
-    >>> # Trial 3: 0.5
-    >>> print(A.value)
-    >>> # [[0.5]]
-
-Example 2) A blanket reset of all stateful functions to custom values:
-
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     num_trials=3
-    >>> )
-    >>>
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875
-    >>> print(A.value)
-    >>> # [[0.875]]
-    >>> # Mechanism B is currently identical to Mechanism A
-    >>> print(B.value)
-    >>> # [[0.875]]
-    >>>
-    >>> # Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of
-    >>> # trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the
-    >>> # Mechanisms will match their values after trials 1 and 2, respectively.
-    >>> comp.reset({A: 0.5,
-    >>>             B: 0.75})
-    >>>
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>> )
-    >>>
-    >>> # Trial 3: 0.75
-    >>> print(A.value)
-    >>> # [[0.75]]
-    >>>
-    >>> # Trial 3: 0.875
-    >>> print(B.value)
-    >>> # [[0.875]]
-
-Example 3) Schedule resets for both Mechanisms to their default values, to occur at different times
-
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     reset_stateful_functions_when = {
-    >>>         A: AtTrial(1),
-    >>>         B: AtTrial(2)
-    >>>     },
-    >>>     num_trials=5
-    >>> )
-    >>> # Mechanism A - resets to its default (0) at the beginning of Trial 1. Its value at the end of Trial 1 will
-    >>> # be exactly one step of integration forward from its default.
-    >>> # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
-    >>> print(A.value)
-    >>> # [[0.9375]]
-    >>>
-    >>> # Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will
-    >>> # be exactly one step of integration forward from its default.
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
-    >>> print(B.value)
-    >>> # [[0.875]]
-
-Example 4) Schedule resets for both Mechanisms to custom values, to occur at different times
-
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     reset_stateful_functions_when={
-    >>>         A: AtTrial(3),
-    >>>         B: AtTrial(4)
-    >>>     },
-    >>>     reset_stateful_functions_to={
-    >>>         A: 0.5,
-    >>>         B: 0.5
-    >>>     },
-    >>>     num_trials=5
-    >>> )
-    >>> # Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will
-    >>> # be exactly one step of integration forward from 0.5.
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875
-    >>> print(A.value)
-    >>> # [[0.875]]
-    >>>
-    >>> # Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will
-    >>> # be exactly one step of integration forward from 0.5.
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
-    >>> print(B.value)
-    >>> # [[0.75]]
 
 .. _Composition_Compilation:
 
@@ -1811,7 +1681,14 @@ and nested Compositions in an outer Composition, ``comp``:
 Examples
 --------
 
-.. _Composition_Creation_Examples:
+  * `Composition_Examples_Creation`
+  * `Composition_Examples_Run`
+  * `Composition_Examples_Input`
+  * `Composition_Examples_Runtime_Params`
+  * `Composition_Examples_Execution_Context`
+  * `Composition_Examples_Reset`
+
+.. _Composition_Examples_Creation:
 
 *Creating a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1882,7 +1759,7 @@ Examples
     >>> input_dict = {outer_A: [[[1.0]]]}
 
 
-.. _Composition_Run_Examples
+.. _Composition_Examples_Run:
 
 *Run Composition*
 ~~~~~~~~~~~~~~~~~
@@ -1904,7 +1781,7 @@ brevity:*
     >>> outer_comp.run(inputs=input_dict)
 
 
-.. _Composition_Examples_Input:
+.. :
 
 *Input Formats*
 ~~~~~~~~~~~~~~~
@@ -2172,51 +2049,6 @@ COMMENT:
 COMMENT
 
 
-.. _Composition_Examples_Execution_Context:
-
-*Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
-
-COMMENT:
-  REDUCE REDUNDANCY WITH SECTION ON EXECUTION CONTEXTS ABOVE
-COMMENT
-An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
-<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
-which often occurs when using multiple or nested Compositions, or running `simulations
-<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
-which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
-unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
-When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
-
-::
-
-        >>> import psyneulink as pnl
-        >>> c = pnl.Composition()
-        >>> d = pnl.Composition()
-        >>> t = pnl.TransferMechanism()
-        >>> c.add_node(t)
-        >>> d.add_node(t)
-
-        >>> t.execute(1)
-        array([[1.]])
-        >>> c.run({t: 5})
-        [[array([5.])]]
-        >>> d.run({t: 10})
-        [[array([10.])]]
-        >>> c.run({t: 20}, context='custom execution id')
-        [[array([20.])]]
-
-        # context None
-        >>> print(t.parameters.value.get())
-        [[1.]]
-        >>> print(t.parameters.value.get(c))
-        [[5.]]
-        >>> print(t.parameters.value.get(d))
-        [[10.]]
-        >>> print(t.parameters.value.get('custom execution id'))
-        [[20.]]Composition_Controller
-
-
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -2279,6 +2111,186 @@ the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was 
 .. note::
     Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
     value.
+
+
+.. :
+
+*Execution Contexts*
+~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+  REDUCE REDUNDANCY WITH SECTION ON EXECUTION CONTEXTS ABOVE
+COMMENT
+An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
+<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
+which often occurs when using multiple or nested Compositions, or running `simulations
+<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
+which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
+unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
+When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
+
+::
+
+        >>> import psyneulink as pnl
+        >>> c = pnl.Composition()
+        >>> d = pnl.Composition()
+        >>> t = pnl.TransferMechanism()
+        >>> c.add_node(t)
+        >>> d.add_node(t)
+
+        >>> t.execute(1)
+        array([[1.]])
+        >>> c.run({t: 5})
+        [[array([5.])]]
+        >>> d.run({t: 10})
+        [[array([10.])]]
+        >>> c.run({t: 20}, context='custom execution id')
+        [[array([20.])]]
+
+        # context None
+        >>> print(t.parameters.value.get())
+        [[1.]]
+        >>> print(t.parameters.value.get(c))
+        [[5.]]
+        >>> print(t.parameters.value.get(d))
+        [[10.]]
+        >>> print(t.parameters.value.get('custom execution id'))
+        [[20.]]Composition_Controller
+
+
+*Reset Paramters of Stateful Functions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _Composition_Examples_Reset:
+
+Example composition with two Mechanisms containing stateful functions:
+
+    >>> A = TransferMechanism(
+    >>>     name='A',
+    >>>     integrator_mode=True,
+    >>>     integration_rate=0.5
+    >>> )
+    >>> B = TransferMechanism(
+    >>>     name='B',
+    >>>     integrator_mode=True,
+    >>>     integration_rate=0.5
+    >>> )
+    >>> C = TransferMechanism(name='C')
+    >>>
+    >>> comp = Composition(
+    >>>     pathways=[[A, C], [B, C]]
+    >>> )
+
+Example 1) A blanket reset of all stateful functions to their default values:
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     num_trials=3
+    >>> )
+    >>>
+    >>> # Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>>
+    >>> comp.reset()
+    >>>
+    >>> # The Mechanisms' stateful functions are now in their default states, which is identical
+    >>> # to their states prior to Trial 1. Thus, if we call run again with the same inputs,
+    >>> # we see the same results that we saw on Trial 1.
+    >>>
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>> )
+    >>>
+    >>> # Trial 3: 0.5
+    >>> print(A.value)
+    >>> # [[0.5]]
+
+Example 2) A blanket reset of all stateful functions to custom values:
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     num_trials=3
+    >>> )
+    >>>
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>> # Mechanism B is currently identical to Mechanism A
+    >>> print(B.value)
+    >>> # [[0.875]]
+    >>>
+    >>> # Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of
+    >>> # trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the
+    >>> # Mechanisms will match their values after trials 1 and 2, respectively.
+    >>> comp.reset({A: 0.5,
+    >>>             B: 0.75})
+    >>>
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>> )
+    >>>
+    >>> # Trial 3: 0.75
+    >>> print(A.value)
+    >>> # [[0.75]]
+    >>>
+    >>> # Trial 3: 0.875
+    >>> print(B.value)
+    >>> # [[0.875]]
+
+Example 3) Schedule resets for both Mechanisms to their default values, to occur at different times
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     reset_stateful_functions_when = {
+    >>>         A: AtTrial(1),
+    >>>         B: AtTrial(2)
+    >>>     },
+    >>>     num_trials=5
+    >>> )
+    >>> # Mechanism A - resets to its default (0) at the beginning of Trial 1. Its value at the end of Trial 1 will
+    >>> # be exactly one step of integration forward from its default.
+    >>> # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
+    >>> print(A.value)
+    >>> # [[0.9375]]
+    >>>
+    >>> # Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will
+    >>> # be exactly one step of integration forward from its default.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+    >>> print(B.value)
+    >>> # [[0.875]]
+
+Example 4) Schedule resets for both Mechanisms to custom values, to occur at different times
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     reset_stateful_functions_when={
+    >>>         A: AtTrial(3),
+    >>>         B: AtTrial(4)
+    >>>     },
+    >>>     reset_stateful_functions_to={
+    >>>         A: 0.5,
+    >>>         B: 0.5
+    >>>     },
+    >>>     num_trials=5
+    >>> )
+    >>> # Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will
+    >>> # be exactly one step of integration forward from 0.5.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>>
+    >>> # Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will
+    >>> # be exactly one step of integration forward from 0.5.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
+    >>> print(B.value)
+    >>> # [[0.75]]
 
 
 .. _Composition_Class_Reference:
