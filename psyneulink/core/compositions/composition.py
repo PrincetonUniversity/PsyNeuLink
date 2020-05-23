@@ -89,7 +89,7 @@ either arguments of the constructor and/or methods that allow Components to be a
 
 .. hint::
     Although Components (Nodes and Projections) can be added individually to a Composition, it is often easier to use
-    `Pathways <Composition_Pathway>` to construct a Composition, which in many cases can automaticially construct the
+    `Pathways <Composition_Pathways>` to construct a Composition, which in many cases can automaticially construct the
     Projections needed without having to specify those explicitly.
 
 .. _Composition_Constructor:
@@ -110,7 +110,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         values as the **projections** argument of that method.
 
     - **pathways**
-        adds one or more `Pathways <Component_Pathways>` to the Composition; this is equivalent to constructing the
+        adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing the
         Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
         of specification as the **pathways** argument of that method.  If any `learning Pathways
         <Composition_Learning_Pathway>` are included, then the constructor's **disable_learning** argument can be
@@ -5329,12 +5329,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
-        """Add an existing `Pathway <Component_Pathways>` to the Composition
+        """Add an existing `Pathway <Composition_Pathways>` to the Composition
 
         Arguments
         ---------
 
-        pathway : the `Pathway <Component_Pathways>` to be added
+        pathway : the `Pathway <Composition_Pathways>` to be added
 
         """
 

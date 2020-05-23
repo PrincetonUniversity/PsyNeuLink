@@ -9,7 +9,7 @@ Composition
    CompositionFunctionApproximator
    RegressionCFA
    AutodiffComposition
-
+|
 *Related*
 
 * `NodeRoles <NodeRole>`
