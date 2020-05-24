@@ -9293,15 +9293,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if initialize_cycle_values is not None:
             for node in initialize_cycle_values:
                 if node not in self.nodes:
-                    raise CompositionError(f"{node.name} (entry in initialize_cycle_values arg) is not a node in '{self.name}'")
+                    raise CompositionError(f"{node.name} "
+                                           f"(entry in initialize_cycle_values arg) is not a node in '{self.name}'")
                 else:
-                    if node not in self.get_nodes_by_role(NodeRole.CYCLE):
+                    if (node not in self.get_nodes_by_role(NodeRole.CYCLE) and
+                            node not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)):
                         warnings.warn(
-                            f"A value is specified for node {node.name} in the initialize_cycle_values "
-                            f"argument, but this node is not part of a cycle. Setting initialization cycle values of nodes that "
-                            f"are not part of cycles is generally a mistake, because these values will be overwritten "
-                            f"when the node first executes, and therefore never used."
-                        )
+                            f"A value is specified for node {node.name} of {self.name} in the 'initialize_cycle_values' "
+                            f"argument, but it is not part of a cycle nor is it a FEEDBACK_SENDER. Its value will be "
+                            f"overwritten when the node first executes, and therefore not used.")
                     node.initialize(initialize_cycle_values[node], context)
 
         if not reset_stateful_functions_to:
