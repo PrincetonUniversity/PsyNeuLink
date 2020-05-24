@@ -52,8 +52,10 @@ Contents
   * `Composition_Examples`
      - `Composition_Examples_Creation`
      - `Composition_Examples_Run`
+     - `Composition_Examples_Learning`
      - `Composition_Examples_Input`
      - `Composition_Examples_Runtime_Params`
+     - `Composition_Examples_Cycles_Feedback`
      - `Composition_Examples_Execution_Context`
      - `Composition_Examples_Reset`
      - `Composition_Examples_Visualization`
@@ -683,57 +685,29 @@ attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the
    italics below Mechanism type) and  the names of the learning components returned by the learning method (capitalized
    and in italics, above each Mechanism).
 
-COMMENT:
-    MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGINNING OF FIRST LINE THAT FOLLOWS IT WITH:
-    The description above (and example `below <EXMAPLE>`
-COMMENT
-
-.. _Composition_XOR_Example:
-
-The following example implements a simple three-layered network that learns the XOR function
-(see `figure <Composition_Learning_Output_vs_Terminal_Figure>` below)::
-
-    # Construct Composition:
-    >>> input = TransferMechanism(name='Input', default_variable=np.zeros(2))
-    >>> hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
-    >>> output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
-    >>> input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
-    >>> output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
-    >>> xor_comp = Composition('XOR Composition')
-    >>> backprop_pathway = xor_comp.add_backpropagation_learning_pathway(
-    >>>                       pathway=[input, input_weights, hidden, output_weights, output])
-
-    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
-    >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
-    >>>               'targets':[  [0],     [1],     [1],     [0] ]}
-    >>> xor_comp.learn(inputs={input:xor_inputs['stimuli'],
-    >>>                      backprop_pathway.target:xor_inputs['targets']},
-    >>>              num_trials=1,
-    >>>              animate={'show_learning':True})
-
-The description and example above pertain to simple linear sequences.  However, more complex configurations,
-with convergent, divergent and/or intersecting sequences can be built using multiple calls to the learning method
-(see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  In each call, the learning method determines
-how the sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates
-andconfigures the relevant learning components so that the error terms are properly computed and propagated by each
-LearningMechanism to the next in the configuration. It is important to note that, in doing so, the status of a
-Mechanism in the final configuration takes precedence over its status in any of the individual sequences specified
-in the `learning methods <Composition_Learning_Methods>` when building the Composition.  In particular,
-whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning method projects to a
-*OBJECTIVE_MECHANISM*, this may be superceded if multiple sequences are created. This is the case if: i) the
-Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the Composition,
-ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in *all* of them;
-in that in that case, it will not project to a *OBJECTIVE_MECHANISM* (see `figure below
+The description above (and `example <Composition_Examples_Learning_XOR>` >below) pertain to simple linear sequences.
+However, more complex configurations, with convergent, divergent and/or intersecting sequences can be built using
+multiple calls to the learning method (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`). In
+each the learning method determines how the sequence to be added relates to any existing ones with which it abuts or
+intersects, and automatically creates andconfigures the relevant learning components so that the error terms are
+properly computed and propagated by each LearningMechanism to the next in the configuration. It is important to note
+that, in doing so, the status of a Mechanism in the final configuration takes precedence over its status in any of
+the individual sequences specified in the `learning methods <Composition_Learning_Methods>` when building the
+Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning
+method projects to a *OBJECTIVE_MECHANISM*, this may be superceded if multiple sequences are created. This is the
+case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the
+Composition, ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in
+*all* of them; in that in that case, it will not project to a *OBJECTIVE_MECHANISM* (see `figure below
 <Composition_Learning_Output_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all
 of them (that is, all of the specified pathways converge on that Mechanism), only one *OBJECTIVE_MECHANISM* is created
 for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
 are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
-conversely, even though the last Mechanism of a `learning Pathway <Composition_Learning_Pathway>` projects to a
+conversely, even though the last Mechanism of a `learning Pathway <Composition_Learning_Pathway>` projects to an
 *OBJECTIVE_MECHANISM*, and thus is not the `TERMINAL` `Node <Composition_Nodes>` of a Composition, if it does not
-project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.
-That is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as
-an `OUTPUT` Node of the Composition if they are part of a `learning Pathway <Composition_Learning_Pathway>` even
-though  they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition.
+project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition. That
+is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as an
+`OUTPUT` Node of the Composition if they are part of a `learning Pathway <Composition_Learning_Pathway>` eventhough
+they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -1225,13 +1199,13 @@ If `Projections <Projection>` among any or all of the `Nodes <Composition_Nodes>
 is, there are any cycles in its `graph <Composition_Graph>` —  then the order in which the Nodes are executed must
 be determined.  This is handled in one of two ways:
 
-   * Flatten cycle - If the cycle does not have any `feedback Projections <Composition_Feedback>`, then the cycle is
-     "flattened" and all of the Nodes are executed synchronously.
+   * **Flatten cycle** - if the cycle does not have any `feedback Projections <Composition_Feedback>`, then the cycle
+     is "flattened" and all of the Nodes are executed synchronously.
 
-   * Break cycle - If cycle has any`feedback Projections <Composition_Feedback>`, they are used to break the cycle
-     at those points, and the remaining Projections are used to execute the Nodes sequentially, with the `receiver
-     <Projection_Base.receiver>` of each feedback Projection executed first, its `sender <Projection_Base.sender>`
-     executed last, and the receiver getting the sender's value on its next execution.
+   * **Break cycle** - if cycle has any `feedback Projections <Composition_Feedback>`, they are used to break the
+     cycle at those points, and the remaining Projections are used to execute the Nodes sequentially, with the
+     `receiver <Projection_Base.receiver>` of each feedback Projection executed first, its `sender
+     <Projection_Base.sender>` executed last, and the receiver getting the sender's value on its next execution.
 
 Each of these approaches is described in greater detail below.
 
@@ -1242,22 +1216,22 @@ Cycles and synchronous execution
 
 .. _Composition_Cycle_Structure:
 
-*Cycles* -- A cycle is formed when the Projections among a set of `Nodes form a loop, and none of the Projections
-is designated as a `feedback Projection <Composition_Feedback_Designation>`.  Any cycle nested within another is
-added to the one in which it is nested, and all are treated as part of the same cycle. All Nodes within a cycle are
-assigned the `NodeRole` `CYCLE`.
+**Cycles**. A cycle is formed when the Projections among a set of `Nodes <Composition_Nodes>` form a loop, and none
+of the Projections is designated as a `feedback Projection <Composition_Feedback_Designation>`.  Any cycle nested
+within another is added to the one in which it is nested, and all are treated as part of the same cycle. All Nodes
+within a cycle are assigned the `NodeRole` `CYCLE`.
 
 .. note::
-   A `RecurrentTransferMechanism>` (and its subclaseses) are treated as single-Node cylces, formed by their
+   A `RecurrentTransferMechanism` (and its subclaseses) are treated as single-Node cylces, formed by their
    `AutoAssociativeProjection` (since the latter is subclass of MappingProjection and thus not designated as feedback
    (see `below <Composition_Feedback_Designation>`).
 
 .. _Composition_Cycle_Synchronous_Execution:
 
-*Synchronous execution* -- cycles are "flattened" for execution, meaning that all of the Nodes within a cycle are
+**Synchronous execution**. Cycles are "flattened" for execution, meaning that all of the Nodes within a cycle are
 executed in the same `TIME_STEP <TimeScale.TIME_STEP>`). The input that each Node in a cycle receives from those that
-project to it from within the cycle is the `value <Component.value>` of those Nodes when the cycle was last executed in
-the same `execution context <Composition_Execution_Context>`;  this ensures not only that the execute in synchrony,
+project to it from within the cycle is the `value <Component.value>` of those Nodes when the cycle was last executed
+in the same `execution context <Composition_Execution_Context>`;  this ensures not only that the execute in synchrony,
 but that the inputs received from any Nodes within the cycle are synchronized (i.e., from the same earlier `TIME_STEP
 <TimeScale.TIME_STEP>` of execution). However, this presents a problem for the first execution of the cycle since, by
 definition, none of the Nodes have a value from a previous execution.  In that case, each sender passes the value to
@@ -1276,7 +1250,7 @@ COMMENT
 
 .. _Composition_Cycle_Initialization:
 
-*Initialization* -- the initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be
+**Initialization**. The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be
 overridden using the **initialize_cycle_values** argument of the Composition's `run <Composition.run>` or `learn
 <Composition.learn>` methods.  This can be used to specify an initial value for any Node in a cycle.  On the first
 call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in **initialize_cycle_values** are
@@ -1284,13 +1258,13 @@ initialized using the assigned values, and any Nodes in the cycle that are not s
 value <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes
 specified in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the
 cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
-in the previous call to `run <Composition.run>` or `learn <Composition.learn>`.
+in the uprevious call to `run <Composition.run>` or `learn <Composition.learn>`.
 
 .. note::
    If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
    <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
    within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
-   of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.  This is because the first time
+   of the Mechanism's `execute <Mechanism_Base.execute>` method when it is called.  This is because the first time
    a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
    last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
    the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
@@ -1303,10 +1277,10 @@ Feedback and sequential execution
 
 .. _Composition_Feedback_Designation:
 
-*Feedback designation* -- if any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
+**Feedback designation**. If any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
 they are used to break the `cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the
 Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
-a feedback Projection is assigned the `NodeRole``FEEDBACK_SENDER`), and the receiver is assigned the `NodeRole`
+a feedback Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
 `FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
 therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>` by default. In
 contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
@@ -1324,93 +1298,31 @@ its assignment as a *feedback* Projection, whereas False precludes it from being
    can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
    permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
    Projection designated as **feedback** will receive a value from the Projection that is based either on the
-   FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+   `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
    (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
    is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
 
-_Composition_Feedback_Sequential_Execution:
+.. _Composition_Feedback_Sequential_Execution:
 
-*Sequential execution* -- The *FEEDBACK_RECEIVER* is the first of the Nodes that were in a loop to execute in a
-given `PASS <TimeScale.PASS>`, receiving a value from the *FEEDBACK_SENDER* as described `below
+**Sequential execution**. The `FEEDBACK_RECEIVER` is the first of the Nodes that were in a loop to execute in a
+given `PASS <TimeScale.PASS>`, receiving a value from the `FEEDBACK_SENDER` as described `below
 <Composition_Feedback_Initialization>`.  It is followed in each subsequent `TIME_STEP <TimeScale.TIME_STEP>` by the
-next Node in the sequence, with the *FEEDBACK_SENDER* executing last.
+next Node in the sequence, with the `FEEDBACK_SENDER` executing last.
 
 .. _Composition_Feedback_Initialization:
 
-*Initialization* -- the receiver of a feedback Projection (its `FEEDBACK_RECEIVER`) is treated in the same way as a
+**Initialization**. The receiver of a feedback Projection (its `FEEDBACK_RECEIVER`) is treated in the same way as a
 `CYCLE` Node:  the first time it executes, it receives input from the `FEEDBACK_SENDER` based on the `value
 <Component.value>` to which it was initialized
 COMMENT:
    ??CORRECT: ;  however, as with `CYCLE` Node, this can be overidden using....
 COMMENT
-.  On subsequent executions, its input from the FEEDBACK_SENDER is based on the `value <Component.value>` of that
+.  On subsequent executions, its input from the `FEEDBACK_SENDER` is based on the `value <Component.value>` of that
 Node after it was last executed in the same `execution context <Composition_Execution_Context>`.
 
-       COMMENT:
-           EXAMPLES:  [INCLUDE FIGURE WITH show_graph() FOR EACH
-                T1 = TransferMechanism(name='T1')
-                T2 = TransferMechanism(name='T2')
-                T3 = TransferMechanism(name='T3')
-                T4 = TransferMechanism(name='T4')
-                P4 = MappingProjection(sender=T4, receiver=T1)
-                P3 = MappingProjection(sender=T3, receiver=T1)
-
-                # # No feedback version (cycle)
-                # C = Composition([T1, T2, T3, T4, P4, T1])
-                # C.add_projection(P3)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[0.]]
-                T3:  [[0.]]
-                T4:  [[0.]]
-
-                # # One feedback version:
-                # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
-                # C.add_projection(P3)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[0.]]
-                T3:  [[0.]]
-                T4:  [[0.]]
-
-                # The other feedback version:
-                C = Composition([T1, T2, T3, T4, P4, T1])
-                C.add_projection(P3, feedback=FEEDBACK)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[0.]]
-                T3:  [[0.]]
-                T4:  [[0.]]
-
-                # # Dual feedback version:
-                # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
-                # C.add_projection(P3, feedback=FEEDBACK)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[3.]]
-                T3:  [[3.]]
-                T4:  [[3.]]
-       COMMENT
-
-The *FEEDBACK_SENDERS* of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
-and its *FEEDBACK_RECEIVERS* in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using the
-Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.  The feedback Projections of a Composition
+The `FEEDBACK_SENDER`\\s of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
+and its `FEEDBACK_RECEIVER`\\s  in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using
+the Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.  The feedback Projections of a Composition
 are listed in its `feedback_projections <Composition.feedback_projections>`  attribute, and the feedback status of a
 Projection in a Composition is returned by its `get_feedback_status<Composition.get_feedback_status>` method.
 
@@ -1662,13 +1574,14 @@ COMMENT:
     XXX - ADD DISCUSSION OF show_controller AND show_learning
 COMMENT
 
-The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
-Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
-<Composition.processing_graph>`).
+The `show_graph <Composition.show_graph>` method generates a display of the graph structure of `Nodes
+<Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
+<Composition.graph>`).
 
-By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
-<NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
-shown as unlabeled arrows, as illustrated for the Composition in the `examples <Composition_Examples_Visualization>`.
+By default, Nodes are shown as ovals labeled by their `names <Mechanism_Base.name>`, with the Composition's `INPUT
+<NodeRole.INPUT>` Nodes shown in green, its `OUTPUT <NodeRole.OUTPUT>` Nodes shown in red, any that are both
+(i.e., are `SINGLETON`\\s) shown in brown, and Projections shown as unlabeled arrows, as illustrated for the
+Composition in the `examples <Composition_Examples_Visualization>`.
 
 
 .. _Composition_Examples:
@@ -1678,6 +1591,7 @@ Composition Examples
 
     * `Composition_Examples_Creation`
     * `Composition_Examples_Run`
+    * `Composition_Examples_Learning`
     * `Composition_Examples_Input`
     * `Composition_Examples_Runtime_Params`
     * `Composition_Examples_Execution_Context`
@@ -1775,6 +1689,34 @@ brevity:*
     >>> outer_comp.add_linear_processing_pathway([outer_A, inner_comp, outer_B])
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
+
+.. _Composition_Examples_Learning:
+
+*Learning*
+~~~~~~~~~~
+
+.. _Composition_Examples_Learning_XOR:
+
+The following example implements a simple three-layered network that learns the XOR function
+(see `figure <Composition_Learning_Output_vs_Terminal_Figure>`)::
+
+    # Construct Composition:
+    >>> input = TransferMechanism(name='Input', default_variable=np.zeros(2))
+    >>> hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
+    >>> output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
+    >>> input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
+    >>> output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
+    >>> xor_comp = Composition('XOR Composition')
+    >>> backprop_pathway = xor_comp.add_backpropagation_learning_pathway(
+    >>>                       pathway=[input, input_weights, hidden, output_weights, output])
+
+    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
+    >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
+    >>>               'targets':[  [0],     [1],     [1],     [0] ]}
+    >>> xor_comp.learn(inputs={input:xor_inputs['stimuli'],
+    >>>                      backprop_pathway.target:xor_inputs['targets']},
+    >>>              num_trials=1,
+    >>>              animate={'show_learning':True})
 
 
 .. _Composition_Examples_Input:
@@ -2040,10 +1982,79 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `I
 Examples of Programmatic Input Specification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+[EXAMPLES TO BE ADDED]
+
 COMMENT:
     EXAMPLES HERE
 COMMENT
 
+.. _Composition_Examples_Cycles_Feedback:
+
+*Cycles and Feedback*
+~~~~~~~~~~~~~~~~~~~~~
+
+[EXAMPLES TO BE ADDED]
+COMMENT:
+   EXAMPLES:  [INCLUDE FIGURE WITH show_graph() FOR EACH
+        T1 = TransferMechanism(name='T1')
+        T2 = TransferMechanism(name='T2')
+        T3 = TransferMechanism(name='T3')
+        T4 = TransferMechanism(name='T4')
+        P4 = MappingProjection(sender=T4, receiver=T1)
+        P3 = MappingProjection(sender=T3, receiver=T1)
+
+        # # No feedback version (cycle)
+        # C = Composition([T1, T2, T3, T4, P4, T1])
+        # C.add_projection(P3)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[0.]]
+        T3:  [[0.]]
+        T4:  [[0.]]
+
+        # # One feedback version:
+        # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
+        # C.add_projection(P3)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[0.]]
+        T3:  [[0.]]
+        T4:  [[0.]]
+
+        # The other feedback version:
+        C = Composition([T1, T2, T3, T4, P4, T1])
+        C.add_projection(P3, feedback=FEEDBACK)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[0.]]
+        T3:  [[0.]]
+        T4:  [[0.]]
+
+        # # Dual feedback version:
+        # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
+        # C.add_projection(P3, feedback=FEEDBACK)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[3.]]
+        T3:  [[3.]]
+        T4:  [[3.]]
+COMMENT
 
 .. _Composition_Examples_Runtime_Params:
 
@@ -2932,7 +2943,7 @@ class NodeRole(Enum):
         <Composition_Feedback_Designation>`.
 
     FEEDBACK_RECEIVER
-        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>` `designated as feedback
+        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>` designated as `feedback
         <Composition_Feedback_Designation>` in the Composition. This means that the Node executes first in the
         sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
         modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
@@ -3075,8 +3086,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ----------
 
     graph : `Graph`
-        the full `Graph` associated with the Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
-        `Compositions <Composition>`) and `Projections <Projection>`
+        the full `Graph` associated with the Composition. Contains both `Nodes <Composition_Nodes>`
+        (`Mechanisms <Mechanism>` or `Compositions <Composition>`) and `Projections <Projection>`.
 
     nodes : ContentAddressableList[`Mechanism <Mechanism>` or `Composition`]
         a list of all `Nodes <Composition_Nodes>` in the Composition.

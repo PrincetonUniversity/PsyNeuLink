@@ -845,14 +845,14 @@ Execution
 
 When a Mechanism executes, the following sequence of actions is carried out:
 
-    - The Mechanism updates its `InputPort`(s) by executing the `function <InputPort.function>` of each.  The resulting
-      `value <InputPort.value>`\\(s) are used to assemble the Mechanism's `variable<Mechanism_Base.variable>`. Each
-      `value <InputPort.value>` is added to an outer array, such that each item of the Mechanism's `variable
+    - The Mechanism updates its `InputPort`\\(s) by executing the `function <InputPort.function>` of each.  The
+      resulting `value <InputPort.value>`\\(s) are used to assemble the Mechanism's `variable<Mechanism_Base.variable>`.
+      Each `value <InputPort.value>` is added to an outer array, such that each item of the Mechanism's `variable
       <Mechanism_Base.variable>` corresponds to an InputPort `value <InputPort.value>`.  The array is placed in
       the Mechanism's `input_values <Mechanism_Base.input_values>` attribute, and also passed as the input to the
       Mechanism's `function <Mechanism_Base.function>` after updating its `ParameterPorts <ParamterPorts>`.
 
-    - The Mechanism updates its `ParameterPort`(s) by executing each of their `functions <ParameterPort.function>`,
+    - The Mechanism updates its `ParameterPort`\\(s) by executing each of their `functions <ParameterPort.function>`,
       the results of which are assigned as the values used for the corresponding Parameters, which include those of the
       Mechanism's `function <Mechanism_Base.function>`.
 
@@ -861,9 +861,9 @@ When a Mechanism executes, the following sequence of actions is carried out:
       of its ParameterPorts. The result of the Mechanism's `function <Mechanism_Base.function>` is placed in the
       Mechanism's `value <Mechanism_Base.value>` attribute.
 
-    - The Mechanism its OutputPorts are updated based on `value <Mechanism_Base.value>`, by executing the `function
-      `OutputPort.function>` of each. The resulting `value <OUtputPort.value>` for each Outport is placed in the
-      Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
+    - The Mechanism updates its `OutputPort`\\(s) are updated based on `value <Mechanism_Base.value>`, by executing the
+      `function <OutputPort.function>` of each. The resulting `value <OutputPort.value>` for each Outport is placed
+      in the Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
 A Mechanism may be executed by calling its execute method directly:
 
