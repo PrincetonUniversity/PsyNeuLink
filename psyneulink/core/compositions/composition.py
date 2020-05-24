@@ -1245,8 +1245,10 @@ COMMENT
 .. note::
    Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
    they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
-   value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
-   of the cycle.
+   value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside of
+   the cycle.  The former means that any Nodes within the cycle that receive such input are "a step ahead" of those
+   within the cycle and also, unless the use a `StatefulFunction`, others within the cycle will not see the effects of
+   that input within or across `TRIALS <TimeScale.TRIAL>`.
 
 .. _Composition_Cycle_Initialization:
 
