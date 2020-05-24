@@ -114,7 +114,7 @@ Execution
 The execution of a ModulatoryMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
 (`Mechanism_Execution`).  However, in the context of a Composition, its `ModulatoryProjection`\\s are often feedback
 connections to other Mechanisms in the Composition, forming a `cycle <Composition_Acyclic_Cyclic>` in the Composition,
-and thus the ModulatoryMechanism may need to be properly initialized (see `Composition_Initial_Values_and_Feedback`).
+and thus the ModulatoryMechanism may need to be properly initialized (see `Composition_Cycles_and_Feedback`).
 Also, a `ControlMechanism` can be the `controller <Composition.controller>` of a `Composition` in which case its
 execution is handled separately from other Mechanisms in the Composition (see `Composition_Controller_Execution`).
 As noted below, the modifications made by a ModulatoryMechanism to a parameter that it modulates are not available to

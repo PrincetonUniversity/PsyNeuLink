@@ -42,7 +42,9 @@ Contents
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
      - `Composition_Runtime_Params`
-     - `Composition_Initial_Values_and_Feedback`
+     - `Composition_Cycles_and_Feedback`
+        • `Composition_Cycle`
+        • `Composition_Feedback`
      - `Composition_Execution_Context`
      - `Composition_Reset`
      - `Composition_Compilation`
@@ -253,14 +255,14 @@ displayed  using the `show_graph <Composition.show_graph>` method (see `Composit
 Acyclic and Cyclic Graphs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
-Composition has no recurrent Projections then its structure is a `directed acyclic graph (DAG)
+Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
+Projections among the Nodes of the Compostion never form a loop, then it is a `directed acyclic graph (DAG)
 <https://en.wikipedia.org/wiki/Acyclic_graph>`_, and the order in which its Nodes are executed can be determined by
-the structure of the graph itself.  However if the Composition contains recurrent Projections, then its structure
-is a `cyclic graph <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and the value of some nodes must be initialized
-(i.e., "break" the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
-determinining which nodes need be initialized and initializing them when the Composition is `run <Composition>`,
-and also for allowing the user specify how this is done (see `Composition_Initial_Values_and_Feedback`).
+the structure of the graph itself.  However if the Composition contains loops, then its structure is a `cyclic graph
+<https://en.wikipedia.org/wiki/Cyclic_graph>`_, and how the Nodes in the loop are initialized and the order in which
+they execute must be determined in order to execute the graph.  PsyNeuLink has procedures both for automatically
+detecting handling such cycles, and also for allowing the user to specify how this is done (see
+`Composition_Cycles_and_Feedback`).
 
 COMMENT:
     XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
@@ -525,8 +527,8 @@ their constructors, or modified by assigning values to their attributes.
 
 .. _Composition_Learning_Unsupervised:
 
-**Unsupervised Learning**
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Unsupervised Learning
+^^^^^^^^^^^^^^^^^^^^^
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
 to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
@@ -546,8 +548,8 @@ COMMENT
 
 .. _Composition_Learning_Supervised:
 
-**Supervised Learning**
-^^^^^^^^^^^^^^^^^^^^^^^
+Supervised Learning
+^^^^^^^^^^^^^^^^^^^
 * `Composition_Learning_Methods`
 * `Composition_Learning_Components`
 * `Composition_Learning_Execution`
@@ -847,7 +849,7 @@ Executing a Composition
 
     - `Composition_Execution_Inputs`
     - `Composition_Runtime_Params`
-    - `Composition_Initial_Values_and_Feedback`
+    - `Composition_Cycles_and_Feedback`
     - `Composition_Execution_Context`
     - `Composition_Reset`
     - `Composition_Compilation`
@@ -1211,101 +1213,139 @@ A tuple used to specify a subdictionary determines when any of the parameters sp
 If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
 *is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
 
-.. _Composition_Initial_Values_and_Feedback:
+.. _Composition_Cycles_and_Feedback:
 
 *Cycles and Feedback*
 ~~~~~~~~~~~~~~~~~~~~~
 
+    * `Composition_Cycle`
+    * `Composition_Feedback`
+
+If `Projections <Projection>` among any or all of the `Nodes <Composition_Nodes>` in a Composition form loops — that
+is, there are any cycles in its `graph <Composition_Graph>` —  then the order in which the Nodes are executed must
+be determined.  This is handled in one of two ways:
+
+   * Flatten cycle - If the cycle does not have any `feedback Projections <Composition_Feedback>`, then the cycle is
+     "flattened" and all of the Nodes are executed synchronously.
+
+   * Break cycle - If cycle has any`feedback Projections <Composition_Feedback>`, they are used to break the cycle
+     at those points, and the remaining Projections are used to execute the Nodes sequentially, with the `receiver
+     <Projection_Base.receiver>` of each feedback Projection executed first, its `sender <Projection_Base.sender>`
+     executed last, and the receiver getting the sender's value on its next execution.
+
+Each of these approaches is described in greater detail below.
+
+.. _Composition_Cycle:
+
+Cycles and synchronous execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _Composition_Cycle_Structure:
+
+*Cycles* -- A cycle is formed when the Projections among a set of `Nodes form a loop, and none of the Projections
+is designated as a `feedback Projection <Composition_Feedback_Designation>`.  Any cycle nested within another is
+added to the one in which it is nested, and all are treated as part of the same cycle. All Nodes within a cycle are
+assigned the `NodeRole` `CYCLE`.
+
+.. note::
+   A `RecurrentTransferMechanism>` (and its subclaseses) are treated as single-Node cylces, formed by their
+   `AutoAssociativeProjection` (since the latter is subclass of MappingProjection and thus not designated as feedback
+   (see `below <Composition_Feedback_Designation>`).
+
+.. _Composition_Cycle_Synchronous_Execution:
+
+*Synchronous execution* -- cycles are "flattened" for execution, meaning that all of the Nodes within a cycle are
+executed in the same `TIME_STEP <TimeScale.TIME_STEP>`). The input that each Node in a cycle receives from those that
+project to it from within the cycle is the `value <Component.value>` of those Nodes when the cycle was last executed in
+the same `execution context <Composition_Execution_Context>`;  this ensures not only that the execute in synchrony,
+but that the inputs received from any Nodes within the cycle are synchronized (i.e., from the same earlier `TIME_STEP
+<TimeScale.TIME_STEP>` of execution). However, this presents a problem for the first execution of the cycle since, by
+definition, none of the Nodes have a value from a previous execution.  In that case, each sender passes the value to
+which it has been initialized which, by default, is its `default value <Parameter_Defaults>`.  However, this can be
+overridden, as described below.
+
 COMMENT:
-    .. _Composition_Feedback_Projection:
-    ADD SECTION HERE DEFINING A FEEDBACK PROJECTION
+ FIGURE HERE
 COMMENT
 
-If a Composition has any Projections that form loops of execution — that is, cycles in its `graph <Composition_Graph>` —
-these require special handling to insure consistent and desired order of execution. This is handled by a Composition in
-one of two ways, based on whether any of the Projections in a cycle are designated as `feeedback
-<Composition_Feedback_Specification>`:
+.. note::
+   Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
+   they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
+   value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
+   of the cycle.
 
-.. _Composition_No_Feedback_Cycle:
+.. _Composition_Cycle_Initialization:
 
-* **No feedback Projections** -- in this case, the cycle is "flattened," meaning that all of the Nodes in the cycle
-  are treated equally, and executed synchronously (i.e., in the same `TIME_STEP <TimeScale.TIME_STEP>`).  Any cycles
-  nested within another cycle are flattened and added to the outermost cycle, and all are treated as part of the same
-  cycle
-  COMMENT:
-     (see Figure)
-  COMMENT
-  . All Nodes within a cycle are assigned the `NodeRole` `CYCLE`. When the Nodes in the cycle are executed, the value
-  that a Node receives from each of those that project to it (from within the cycle) is the `value <Component.value>`
-  of the senders after that was last executed in the same `execution context <Composition_Execution_Context>`;  this
-  insures that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution
-  of the cycle since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that
-  case, each sender passes the value to which it has been initialized which, by default, is its `default value
-  <Parameter_Defaults>`.
+*Initialization* -- the initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be
+overridden using the **initialize_cycle_values** argument of the Composition's `run <Composition.run>` or `learn
+<Composition.learn>` methods.  This can be used to specify an initial value for any Node in a cycle.  On the first
+call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in **initialize_cycle_values** are
+initialized using the assigned values, and any Nodes in the cycle that are not specified are assigned their `default
+value <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes
+specified in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the
+cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
+in the previous call to `run <Composition.run>` or `learn <Composition.learn>`.
 
-  .. note::
-     Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
-     they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
-     value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
-     of the cycle.
+.. note::
+   If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
+   <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
+   within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
+   of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.  This is because the first time
+   a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
+   last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
+   the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
+   or `learn  <Composition.learn>` methods.
 
-  The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be overridden using
-  the **initialize_cycle_values** argument of the Composition's `run <Composition.run>` or `learn <Composition.learn>`
-  methods.  This can be used to specify an initial value for any Node in a cycle.  On the first call to `run
-  <Composition.run>` or `learn <Composition.learn>`, nodes specified in **initialize_cycle_values** are initialized
-  using the assigned values, and any Nodes in the cycle that are not specified are assigned their `default value
-  <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified
-  in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the cycle in
-  that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned in the
-  previous call to `run <Composition.run>` or `learn <Composition.learn>`.
+.. _Composition_Feedback:
 
-  .. note::
-     If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
-     <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
-     within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
-     of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.  This is because the first time
-     a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
-     last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
-     the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
-     or `learn  <Composition.learn>` methods.
+Feedback and sequential execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _Composition_Feedback_Cycle:
+.. _Composition_Feedback_Designation:
 
-* **Feedback Projection(s) specified** -- in this case, any Projections in a cycle specified as `feedback
-  <Composition_Feedback_Specification>` are used to break the cycle: the `sender <Projection_Base.sender>` of each
-  feedback Projection (assigned the `NodeRole` `FEEDBACK_SENDER`) is initialized in the same way as a Node in a
-  cycle (see `above <Composition_No_Feedback_Cycle>`); the receiver (assigned the `NodeRole` `FEEDBACK_RECEIVER`) is
-  passed the *SENDER's* initial value on the first execution, and its previous value on subsequent executions.
-  Thus, in effect, the *RECEIVER* becomes the first Node in the cycle to execute, and the *SENDER* the last. The
-  *FEEDBACK_SENDERS* of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
-  and its *FEEDBACK_RECEIVERS* in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using
-  the Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.
+*Feedback designation* -- if any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
+they are used to break the `cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the
+Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
+a feedback Projection is assigned the `NodeRole``FEEDBACK_SENDER`), and the receiver is assigned the `NodeRole`
+`FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
+therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>` by default. In
+contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
+loops containing one or more ModulatoryProjections are broken by default, with the Mechanism that is `modulated
+<ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
+it designated as the `FEEDBACK_SENDER`. However, the feedback status of any Projection can be specified explicitly,
+either in a tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the
+Composition's `add_projections <Composition.add_projections>` method, or by using the **feedback** argument of the
+Composition's `add_projection <Composition.add_projection>` method. Specifying True or the keyword *FEEDBACK* forces
+its assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
+(e.g., a `ControlProjection` that forms a cycle).
 
-.. _Composition_Feedback_Specification:
+.. warning::
+   Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
+   can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
+   permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
+   Projection designated as **feedback** will receive a value from the Projection that is based either on the
+   FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+   (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
+   is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
 
-*Specification of a Projection's feedback status*
+_Composition_Feedback_Sequential_Execution:
 
-By default, cycles that do not include any Projections explicitly specified as feeedback or any `ControlProjections
-<ControlProjection>` are flattened. This includes any `RecurrentTransferMechanism` (or its subclaseses), which are
-treated as a single-Node cylce (formed by its `AutoAssociativeProjection`).  However, any Projections are explicitly
-specified as feedback (see below) then they are used to break the cycle;  and if there are any `ControlProjections
-<ControlProjection>` and they are responsible for forming a cycle, they are automatically assigned as feedback (
-unless explicitly specified otherwise) and used to break the cycle.
+*Sequential execution* -- The *FEEDBACK_RECEIVER* is the first of the Nodes that were in a loop to execute in a
+given `PASS <TimeScale.PASS>`, receiving a value from the *FEEDBACK_SENDER* as described `below
+<Composition_Feedback_Initialization>`.  It is followed in each subsequent `TIME_STEP <TimeScale.TIME_STEP>` by the
+next Node in the sequence, with the *FEEDBACK_SENDER* executing last.
 
-The feedback status of a `Projection` can be explicitly specified either in a tuple with the Projection where it is
-`specified in a Pathway <Pathway_Specification>` or in the Composition's `add_projections <Composition.add_projections>`
-method, or by using the **feedback** argument of the Composition's `add_projection <Composition.add_projection>` method.
-Specifying True or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it
-from being assigned as a feedback Projection (e.g., a `ControlProjection` that forms a cycle).
+.. _Composition_Feedback_Initialization:
 
-    .. warning::
-       Designating a Projection as **feeedback** that is *not* in a cycle is allowed, but will issue a warning and
-       can produce unexpected results.  Designating more than one Projection as **feedback** within a cycle is also
-       permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
-       Projection designated as **feedback** will receive a value from the Projection that is based either on the
-       FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
-       (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
-       is in a cycle.
+*Initialization* -- the receiver of a feedback Projection (its `FEEDBACK_RECEIVER`) is treated in the same way as a
+`CYCLE` Node:  the first time it executes, it receives input from the `FEEDBACK_SENDER` based on the `value
+<Component.value>` to which it was initialized
+COMMENT:
+   ??CORRECT: ;  however, as with `CYCLE` Node, this can be overidden using....
+COMMENT
+.  On subsequent executions, its input from the FEEDBACK_SENDER is based on the `value <Component.value>` of that
+Node after it was last executed in the same `execution context <Composition_Execution_Context>`.
+
        COMMENT:
            EXAMPLES:  [INCLUDE FIGURE WITH show_graph() FOR EACH
                 T1 = TransferMechanism(name='T1')
@@ -1368,36 +1408,11 @@ from being assigned as a feedback Projection (e.g., a `ControlProjection` that f
                 T4:  [[3.]]
        COMMENT
 
-The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feedback_projections>`
-attribute, and the feedback status of a Projection in a Composition is returned by its `get_feedback_status
-<Composition.get_feedback_status>` method.
-
-COMMENT:
-
-      MOVE TO IntegratorMechanism and relevant arguments of run method
-      - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
-        - reset_integrator_nodes_to:  DICT of {node: value} paris
-                                   THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
-                                   IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
-                                   MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
-        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
-        - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
-                                                     IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
-                                                                           THEIR reset_integrator_when ATTRIBUTE IS None
-                                                     IF A DICT: IT SETS THE CONDITION FOR ALL SPECIFIFED NODES
-                                                                OVERRIDING THEIR SPEC IF THEY HAVE ONE, AND LEAVING ANY
-                                                                NOT SPECIFIED IN THE DICT WITH THEIR CURRENT ASSIGNMENT
-        - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
-                                                                   INCLUDED IN reset_integrator_nodes_when ARG OF RUN
-        - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
-
-        FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
-        MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
-        ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-        a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at
-        the start of a `TRIAL <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as
-        `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
-COMMENT
+The *FEEDBACK_SENDERS* of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
+and its *FEEDBACK_RECEIVERS* in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using the
+Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.  The feedback Projections of a Composition
+are listed in its `feedback_projections <Composition.feedback_projections>`  attribute, and the feedback status of a
+Projection in a Composition is returned by its `get_feedback_status<Composition.get_feedback_status>` method.
 
 
 .. _Composition_Execution_Context:
@@ -1481,6 +1496,27 @@ COMMENT
 
 *Resetting Parameters of StatefulFunctions*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+
+      MOVE TO IntegratorMechanism and relevant arguments of run method
+      - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
+        - reset_integrator_nodes_to:  DICT of {node: value} paris
+                                   THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
+                                   IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
+                                   MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
+        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+        - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
+                                                     IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
+                                                                           THEIR reset_integrator_when ATTRIBUTE IS None
+                                                     IF A DICT: IT SETS THE CONDITION FOR ALL SPECIFIFED NODES
+                                                                OVERRIDING THEIR SPEC IF THEY HAVE ONE, AND LEAVING ANY
+                                                                NOT SPECIFIED IN THE DICT WITH THEIR CURRENT ASSIGNMENT
+        - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
+                                                                   INCLUDED IN reset_integrator_nodes_when ARG OF RUN
+        - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
+
+COMMENT
 
 `StatefulFunctions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
 `MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
@@ -2473,12 +2509,10 @@ class EdgeType(enum.Enum):
     """
         Attributes:
             NON_FEEDBACK
-                A standard edge that if it exists in a cycle will only
-                be flattened, not pruned
+                A standard edge that if it exists in a cycle will only be flattened, not pruned
 
             FEEDBACK
-                A "feedbacK" edge that will be immediately pruned to
-                create an acyclic graph
+                A "feedbacK" edge that will be immediately pruned to create an acyclic graph
 
             FLEXIBLE
                 An edge that will be pruned only if it exists in a cycle
@@ -2530,9 +2564,8 @@ class Vertex(object):
 
         self.feedback = feedback
 
-        # when pruning a vertex for a processing graph, we store the
-        # connection type (the vertex.feedback) to the new child or
-        # parent here
+        # when pruning a vertex for a processing graph, we store the connection type (the vertex.feedback)
+        # to the new child or parent here
         # self.source_types = collections.defaultdict(EdgeType.NORMAL)
         self.source_types = {}
 
@@ -2690,14 +2723,11 @@ class Graph(object):
 
     def prune_feedback_edges(self):
         """
-            Produces an acyclic graph from this Graph. `Feedback
-            <EdgeType.FEEDBACK>` edges are pruned, as well as any edges
-            that are `potentially feedback <EdgeType.FLEXIBLE>` that are
-            in cycles. After these edges are removed, if cycles still
-            remain, they are "flattened." That is, each edge in the
-            cycle is pruned, and each the dependencies of each Node in
-            the cycle are set to the pre-flattened union of all cyclic
-            nodes' parents that are themselves not in a cycle.
+            Produces an acyclic graph from this Graph. `Feedback <EdgeType.FEEDBACK>` edges are pruned, as well as
+            any edges that are `potentially feedback <EdgeType.FLEXIBLE>` that are in cycles. After these edges are
+            removed, if cycles still remain, they are "flattened." That is, each edge in the cycle is pruned, and
+            each the dependencies of each Node in the cycle are set to the pre-flattened union of all cyclic nodes'
+            parents that are themselves not in a cycle.
 
             Returns:
                 a tuple containing
@@ -2895,18 +2925,18 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that belongs to a cycle. This role cannot be modified programmatically.
 
     FEEDBACK_SENDER
-        A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` the `feedback
-        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway`
-        that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be  modified directly,
-        but will be modified if the `feedback <Projection.feedback>` attribute of the relelvant `Projection
-        <Projection>`\\(s) is modified.
+        A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` designated as `feedback
+        <Composition_Feedback_Designation>` in the Composition.  This means that the Node executes last in the
+        sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
+        modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
+        <Composition_Feedback_Designation>`.
 
     FEEDBACK_RECEIVER
-        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>`  the `feedback
-        <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
-        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be
-        modified directly, but will be modified if the `feedback <Projection.feedback>` attribute of the
-        relelvant `Projection <Projection>`\\(s) is modified.
+        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>` `designated as feedback
+        <Composition_Feedback_Designation>` in the Composition. This means that the Node executes first in the
+        sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
+        modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
+        <Composition_Feedback_Designation>`.
 
     CONTROL_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
@@ -3066,14 +3096,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     feedback_senders : ContentAddressableList[`Node <Composition_Nodes>`]
         list of `Nodes <Composition_Nodes>` that have one or more `efferent Projections <Mechanism_Base.efferents>`
-        assigned as `feedback <Composition_Feedback_Specification>`.
+        designated as `feedback <Composition_Feedback_Designation>`.
 
     feedback_receivers : ContentAddressableList[`Node <Composition_Nodes>`]
-        list of `Nodes <Composition_Nodes>` that have one or more `afferents <Mechanism_Base.afferents>` assigned as
-        `feedback <Composition_Feedback_Specification>`.
+        list of `Nodes <Composition_Nodes>` that have one or more `afferents <Mechanism_Base.afferents>` designated as
+        `feedback <Composition_Feedback_Designation>`.
 
     feedback_projections : ContentAddressableList[`Projection <Projection>`]
-        list of Projections that have been assigned as `feedback <Composition_Feedback_Specification>`.
+        list of Projections in the Composition designated as `feedback <Composition_Feedback_Designation>`.
 
     mechanisms : `MechanismList`
         list of Mechanisms in Composition, that provides access to some of they key attributes.
@@ -4842,19 +4872,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the receiver of **projection**.
 
         feedback : bool or FEEDBACK : False
-            if False, the Projection is *never* assigned as a feedback Projection, even if that may have been the
-            default behavior (e.g., for a `ControlProjection` that forms a `cycle <_Composition_Acyclic_Cyclic>`;
-            if True or *FEEDBACK*, and the Projection is in a cycle, it *always* assigned as a feedback Projection,
-            and used to "break" the cycle (see `Composition_Initial_Values_and_Feedback` for additional details.
-            COMMENT:
-                all `Nodes <Comopsition_Nodes>`  within a `cycle <Composition_Cycle>` containing this `Projection
-                <Projection>` execute in parallel. This means that each Projection within the cycle actually passes
-                to its `receiver <Projection_Base.receiver>` the `value <Projection_Base.value>` of its `sender
-                <Projection_Base.sender>` from the previous execution. When True, this Projection "breaks" the cycle,
-                such that all Nodes execute in sequence, and only the Projection marked as 'feedback' passes to its
-                `receiver <Projection_Base.receiver>` the `value <Projection_Base.value>` of its `sender
-                <Projection_Base.sender>` from the previous execution.
-            COMMENT
+            if False, the Projection is *never* designated as a `feedback Projection
+            <Composition_Feedback_Designation>`, even if that may have been the default behavior (e.g.,
+            for a `ControlProjection` that forms a `loop <Composition_Cycle_Structure>`; if True or *FEEDBACK*,
+            and the Projection is in a loop, it is *always* designated as a feedback Projection, and used to `break"
+            the cycle <Composition_Feedback_Designation>`.
 
         Returns
         -------
@@ -5261,7 +5283,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
 
     def get_feedback_status(self, projection):
-        """Return True if **projection** is assigned as `feedback Projection <Composition_Feedback_Projection>`
+        """Return True if **projection** is designated as a `feedback Projection <_Composition_Feedback_Designation>`
         in the Composition, else False.
         """
         return projection in self.feedback_projections
@@ -9070,7 +9092,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
             <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
             a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
-            (see `Composition_Initial_Values_and_Feedback` additional details).
+            (see `Composition_Cycles_and_Feedback` additional details).
 
             reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reset methods when their
