@@ -5642,6 +5642,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
+        # FIX 5/24/20 [JDC]: CHECK THAT PATHWAY IS VIABLE AND NOT SAME AS EXISTING ONE
+        # # If the explicit pathway is shorter than the one specified, then something went wrong
+        # if len(explicit_pathway) < len(pathway):
+        #     # If no Projections were added, then Pathway is presumably identical
+
+
+
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
                           name=pathway_name,

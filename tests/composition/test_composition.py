@@ -6027,12 +6027,11 @@ class TestInitialize:
 
     def test_initialize_cycle_values_warning(self):
         A = ProcessingMechanism(name='A')
-        err = f"A value is specified for node {A.name} in the initialize_cycle_values " \
-            f"argument, but this node is not part of a cycle. Setting initialization cycle values of nodes that " \
-            f"are not part of cycles is generally a mistake, because these values will be overwritten " \
-            f"when the node first executes, and therefore never used."
         a_Composition = Composition(name='a_Composition',
                                     pathways=[[A]])
+        err = f"A value is specified for {A.name} of {a_Composition.name} in the 'initialize_cycle_values' " \
+              f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. " \
+              f"Its value will be overwritten when the node first executes, and therefore not used."
         with pytest.warns(UserWarning) as w:
             a_Composition.run(
                 inputs={
