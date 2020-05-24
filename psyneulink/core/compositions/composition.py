@@ -9299,9 +9299,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if (node not in self.get_nodes_by_role(NodeRole.CYCLE) and
                             node not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)):
                         warnings.warn(
-                            f"A value is specified for node {node.name} of {self.name} in the 'initialize_cycle_values' "
-                            f"argument, but it is not part of a cycle nor is it a FEEDBACK_SENDER. Its value will be "
-                            f"overwritten when the node first executes, and therefore not used.")
+                            f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
+                            f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
+                            f"Its value will be overwritten when the node first executes, and therefore not used.")
                     node.initialize(initialize_cycle_values[node], context)
 
         if not reset_stateful_functions_to:
