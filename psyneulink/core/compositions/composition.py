@@ -1578,10 +1578,10 @@ The `show_graph <Composition.show_graph>` method generates a display of the grap
 <Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
 <Composition.graph>`).
 
-By default, Nodes are shown as ovals labeled by their `names <Mechanism_Base.name>`, with the Composition's `INPUT
-<NodeRole.INPUT>` Nodes shown in green, its `OUTPUT <NodeRole.OUTPUT>` Nodes shown in red, any that are both
-(i.e., are `SINGLETON`\\s) shown in brown, and Projections shown as unlabeled arrows, as illustrated for the
-Composition in the `examples <Composition_Examples_Visualization>`.
+By default, Nodes are shown as ovals labeled by their `names <Mechanism_Base.name>`, with the Composition's `INPUT`
+Nodes shown in green, its `OUTPUT` Nodes shown in red, any that are both (i.e., are `SINGLETON`\\s) shown in brown,
+and Projections shown as unlabeled arrows, as illustrated for the Composition in the `examples
+<Composition_Examples_Visualization>`.
 
 
 .. _Composition_Examples:
