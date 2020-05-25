@@ -5658,13 +5658,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return existing_pathway
         # If the explicit pathway is shorter than the one specified, then something is wrong,
         elif len(explicit_pathway) < len(pathway):
-            # Duplicate Projetions were found and suppressed
-            # if any(pathway == [item for p in self.pathways for item in p.pathway if not isinstance(item, Projection)]):
-            existing_pathway = next((p for p in self.pathways if [item for p in self.pathways for item in p.pathway
-                                          if not isinstance(item, Projection)]), None)
+            # Pathway without all Projections specified has same nodes in same order as existing one
+            #    (shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed)
+            existing_pathway = next((p for p in self.pathways
+                                     if [item for p in self.pathways for item in p.pathway
+                                         if not isinstance(item, Projection)]), None)
             if explicit_pathway:
-                warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
-                              f"it will be ignored.")
+                warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
+                              f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
             # Otherwise, something has gone wrong
             assert False, f"Bad pathway specification in {pathway_arg_str}: {pathway}."

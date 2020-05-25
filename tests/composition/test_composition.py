@@ -815,6 +815,86 @@ class TestCompositionPathwayAdditionMethods:
                 and "must be a Node, list, tuple or dict:" in str(error_text.value))
 
 
+class TestDuplicatePathwayWarnings:
+
+    def test_add_processing_pathway_exact_duplicate_warning(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        P = MappingProjection(sender=A, receiver=B)
+        comp = Composition()
+        with pytest.warns(UserWarning) as w:
+            comp.add_linear_processing_pathway(pathway=[A,P,B])
+            comp.add_linear_processing_pathway(pathway=[A,P,B])
+        assert (f"Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in  w[0].message.args[0]
+                and  f"already exists in {comp.name}" in  w[0].message.args[0])
+
+    def test_add_processing_pathway_inferred_duplicate_warning(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition()
+        with pytest.warns(UserWarning) as w:
+            comp.add_linear_processing_pathway(pathway=[A,B,C])
+            comp.add_linear_processing_pathway(pathway=[A,B,C])
+        assert (f"Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in  w[0].message.args[0]
+                and  f"has same Nodes in same order as one already in {comp.name}" in  w[0].message.args[0])
+
+    def test_add_processing_pathway_subset_duplicate_warning(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition()
+        with pytest.warns(UserWarning) as w:
+            comp.add_linear_processing_pathway(pathway=[A,B,C])
+            comp.add_linear_processing_pathway(pathway=[A,B])
+        assert (f"Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in  w[0].message.args[0]
+                and  f"has same Nodes in same order as one already in {comp.name}" in  w[0].message.args[0])
+
+    def test_add_backpropagation_pathway_exact_duplicate_warning(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        P = MappingProjection(sender=A, receiver=B)
+        comp = Composition()
+        with pytest.warns(UserWarning) as w:
+            comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
+            comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
+        assert (f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method"
+                in w[0].message.args[0] and  f"already exists in {comp.name}" in  w[0].message.args[0])
+
+    def test_add_backpropagation_pathway_inferred_duplicate_warning(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition()
+        with pytest.warns(UserWarning) as w:
+            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+        assert (f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method"
+                in  w[0].message.args[0] and  f"has same Nodes in same order as one already in {comp.name}"
+                in  w[0].message.args[0])
+
+    def test_add_backpropagation_pathway_inferred_duplicate_warning(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition()
+        with pytest.warns(UserWarning) as w:
+            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+            comp.add_backpropagation_learning_pathway(pathway=[A,B])
+        assert (f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method"
+                in  w[0].message.args[0] and  f"has same Nodes in same order as one already in {comp.name}"
+                in  w[0].message.args[0])
+
+    def test_add_processing_pathway_same_nodes_but_different_order_is_OK(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[A,B])
+        comp.add_linear_processing_pathway(pathway=[B,A])
+        {A,B} == set(comp.nodes)
+        len(comp.pathways)==2
+
+
 class TestCompositionPathwaysArg:
 
     def test_composition_pathways_arg_pathway_object(self):
@@ -4165,7 +4245,6 @@ class TestCallBeforeAfterTimescale:
 #         assert 925 == output[0][0]
 
 
-
 class TestSchedulerConditions:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
@@ -6004,7 +6083,6 @@ class TestShadowInputs:
         assert obj.value == [[25.0]]
 
 
-
 class TestInitialize:
 
     def test_initialize_cycle_values(self):
@@ -6043,6 +6121,7 @@ class TestInitialize:
             )
             warning_triggered = err in [warn.message.args[0] for warn in w]
             assert warning_triggered
+
 
 class TestResetValues:
 
@@ -6658,7 +6737,6 @@ class TestNodeRoles:
         assert any([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
-
 
 
 class TestMisc:
