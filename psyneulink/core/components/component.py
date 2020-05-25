@@ -250,6 +250,14 @@ COMMENT:
         (e.g., EXECUTION_COUNT)
 COMMENT
 
+.. _Component_Stateful_Parameters:
+
+* **stateful_parameters** - a list containing all of the Component's `stateful parameters <Parameter_Statefulness>`.
+  COMMENT:
+     DESCRIPTION HERE
+  COMMENT
+
+
 COMMENT:
 .. _Component_Methods:
 
@@ -379,7 +387,7 @@ The following attributes and methods control and provide information about the e
      `Mechanisms` <Mechanism>` are the only type of Component that reset when the `reset_stateful_function_when
      <Component.reset_stateful_function_when>` `Condition` is satisfied. Other Component types do not reset,
      although `Composition` has a `reset <Composition.reset>` method that can be used to reset all of its eligible
-     Mechanisms.
+     Mechanisms (see `Composition_Reset`)
 
 .. _Component_Execution_Termination:
 
@@ -789,6 +797,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     max_executions_before_finished : bool
         see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
+
+    stateful_parameters : list
+        see `stateful_parameters <Component_Stateful_Parameters>`
 
     reset_stateful_function_when : `Condition`
         see `reset_stateful_function_when <Component_reset_stateful_function_when>`

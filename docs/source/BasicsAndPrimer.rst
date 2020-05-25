@@ -512,7 +512,7 @@ generic use of the term "value" to designate the quantity assigned to a paramete
 *particular* parameter of a Component.)  Although parameters are attributes of a Component, and can be accessed like
 any other Python attribute (as described below), they are actually instances of a special `Parameters` class that
 supports a number of important features. These include the ability to simultaneously have different values in
-different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
+different contexts (often referred to as `"statefulness" <Parameter_Statefulness>`), the ability to keep a record of
 previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
 These features are supported by methods on the Parameter class, as described below.
 
@@ -526,7 +526,7 @@ access the first element of the output Mechanism's value, ``output.value[0]``, a
 decison Mechanism's `value <Mechanism_Base.value>`).  This returns their most recently assigned values. However, as an
 instance of the `Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more
 than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
-different `contexts <Parameter_statefulness>`, either as part of different Compositions or, within the same
+different `contexts <Parameter_Statefulness>`, either as part of different Compositions or, within the same
 Composition, as part of `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the
 Composition's `controller <Composition_Controller>`.  The value of a parameter in a particular context can be
 accessed by using the `get <Parameter.get>` method for the parameter and providing the context, for example::

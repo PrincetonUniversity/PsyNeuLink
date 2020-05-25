@@ -307,7 +307,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its
-   :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
+   :py:meth:`execute <Mechanism_Base.execte>` or :py:meth:`run <Mechanism_Base.run>` methods)
    differently than standard Components: runtime parameters are added to the Mechanism's current value of the
    corresponding ParameterPort (rather than overriding it);  that is, they are combined additively with the value of
    any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterPort's

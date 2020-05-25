@@ -15,39 +15,50 @@ Contents
 
   * `Composition_Overview`
   * `Composition_Creation`
-      - `Composition_Constructor`
-      - `Composition_Addition_Methods`
-        - `Adding Components <Composition_Component_Addition_Methods>`
-        - `Adding Pathways <Composition_Pathway_Addition_Methods>`
-      - `Composition_Add_Nested`
+     - `Composition_Constructor`
+     - `Composition_Addition_Methods`
+        • `Adding Components <Composition_Component_Addition_Methods>`
+        • `Adding Pathways <Composition_Pathway_Addition_Methods>`
+     - `Composition_Add_Nested`
   * `Composition_Structure`
-      - `Composition_Graph`
-      - `Composition_Nodes`
-      - `Composition_Nested`
-      - `Composition_Pathways`
+     - `Composition_Graph`
+     - `Composition_Nodes`
+     - `Composition_Nested`
+     - `Composition_Pathways`
   * `Composition_Controller`
-      - `Composition_Controller_Assignment`
-      - `Composition_Controller_Execution`
+     - `Composition_Controller_Assignment`
+     - `Composition_Controller_Execution`
   * `Composition_Learning`
-      - `Composition_Learning_Standard`
-          • `Composition_Learning_Unsupervised`
-          • `Composition_Learning_Supervised`
-              - `Composition_Learning_Methods`
-              - `Composition_Learning_Components`
-              - `Composition_Learning_Execution`
-      - `Composition_Learning_AutodiffComposition`
-      - `Composition_Learning_UDF`
+     - `Composition_Learning_Standard`
+        • `Composition_Learning_Unsupervised`
+        • `Composition_Learning_Supervised`
+           - `Composition_Learning_Methods`
+           - `Composition_Learning_Components`
+           - `Composition_Learning_Execution`
+     - `Composition_Learning_AutodiffComposition`
+     - `Composition_Learning_UDF`
   * `Composition_Execution`
-      - `Composition_Execution_Inputs`
-          • `Composition_Input_Dictionary`
-          • `Composition_Programmatic_Inputs`
-      - `Composition_Runtime_Params`
-      - `Composition_Initial_Values_and_Feedback`
-      - `Composition_Reset`
-      - `Composition_Execution_Context`
-      - `Composition_Compilation`
+     - `Composition_Execution_Inputs`
+        • `Composition_Input_Dictionary`
+        • `Composition_Programmatic_Inputs`
+     - `Composition_Runtime_Params`
+     - `Composition_Cycles_and_Feedback`
+        • `Composition_Cycle`
+        • `Composition_Feedback`
+     - `Composition_Execution_Context`
+     - `Composition_Reset`
+     - `Composition_Compilation`
   * `Composition_Visualization`
   * `Composition_Examples`
+     - `Composition_Examples_Creation`
+     - `Composition_Examples_Run`
+     - `Composition_Examples_Learning`
+     - `Composition_Examples_Input`
+     - `Composition_Examples_Runtime_Params`
+     - `Composition_Examples_Cycles_Feedback`
+     - `Composition_Examples_Execution_Context`
+     - `Composition_Examples_Reset`
+     - `Composition_Examples_Visualization`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -73,13 +84,17 @@ other user-specified scheduling and termination conditions to be specified.
 Creating a Composition
 ----------------------
 
+    - `Composition_Constructor`
+    - `Composition_Addition_Methods`
+    - `Composition_Add_Nested`
+
 A Composition can be created by calling the constructor and specifying `Components <Component>` to be added, using
 either arguments of the constructor and/or methods that allow Components to be added once it has been constructed.
 
 .. hint::
     Although Components (Nodes and Projections) can be added individually to a Composition, it is often easier to use
-    `Pathways <Composition_Pathway>` to construct a Composition, which in many cases can automaticially construct the
-    Projections needed without have to specify those explicitly.
+    `Pathways <Composition_Pathways>` to construct a Composition, which in many cases can automaticially construct the
+    Projections needed without having to specify those explicitly.
 
 .. _Composition_Constructor:
 
@@ -99,7 +114,7 @@ The following arguments of the Composition's constructor can be used to add Comp
         values as the **projections** argument of that method.
 
     - **pathways**
-        adds one or more `Pathways <Component_Pathways>` to the Composition; this is equivalent to constructing the
+        adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing the
         Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
         of specification as the **pathways** argument of that method.  If any `learning Pathways
         <Composition_Learning_Pathway>` are included, then the constructor's **disable_learning** argument can be
@@ -119,8 +134,11 @@ The following arguments of the Composition's constructor can be used to add Comp
 *Adding Components and Pathways*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    - `Adding Components <Composition_Component_Addition_Methods>`
+    - `Adding Pathways <Composition_Pathway_Addition_Methods>`
+
 The methods used for adding individual Components and `Pathways <Composition_Pathways>` to a Composition are described
-briefly below.  Examples of their their use are provided in `Composition_Creation_Examples`.
+briefly below.  Examples of their their use are provided in `Composition_Examples_Creation`.
 
 .. _Composition_Component_Addition_Methods:
 
@@ -212,6 +230,11 @@ created automatically if specified in a Pathway) just as for any other Node.
 Composition Structure
 ---------------------
 
+    - `Composition_Graph`
+    - `Composition_Nodes`
+    - `Composition_Nested`
+    - `Composition_Pathways`
+
 This section provides an overview of the structure of a Composition and its `Components <Component>`. Later sections
 describe these in greater detail, and how they are used to implement various forms of Composition.
 
@@ -234,14 +257,14 @@ displayed  using the `show_graph <Composition.show_graph>` method (see `Composit
 Acyclic and Cyclic Graphs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if a
-Composition has no recurrent Projections then its structure is a `directed acyclic graph (DAG)
+Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
+Projections among the Nodes of the Compostion never form a loop, then it is a `directed acyclic graph (DAG)
 <https://en.wikipedia.org/wiki/Acyclic_graph>`_, and the order in which its Nodes are executed can be determined by
-the structure of the graph itself.  However if the Composition contains recurrent Projections, then its structure
-is a `cyclic graph <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and the value of some nodes must be initialized
-(i.e., "break" the cycle) in order to execute the graph.  PsyNeuLink has procedures both for automatically
-determinining which nodes need be initialized and initializing them when the Composition is `run <Composition>`,
-and also for allowing the user specify how this is done (see `Composition_Initial_Values_and_Feedback`).
+the structure of the graph itself.  However if the Composition contains loops, then its structure is a `cyclic graph
+<https://en.wikipedia.org/wiki/Cyclic_graph>`_, and how the Nodes in the loop are initialized and the order in which
+they execute must be determined in order to execute the graph.  PsyNeuLink has procedures both for automatically
+detecting handling such cycles, and also for allowing the user to specify how this is done (see
+`Composition_Cycles_and_Feedback`).
 
 COMMENT:
     XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
@@ -361,6 +384,10 @@ of the Pathways in a Composition are listed in its `pathways <Composition.pathwa
 Controlling a Composition
 -------------------------
 
+      - `Composition_Controller_Assignment`
+      - `Composition_Controller_Execution`
+
+
 A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass of
 one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
 It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
@@ -444,9 +471,6 @@ corresponding attribute.
 
 Learning in a Composition
 -------------------------
-* `Composition_Learning_Standard`
-* `Composition_Learning_AutodiffComposition`
-* `Composition_Learning_UDF`
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
@@ -457,7 +481,7 @@ associations between representations in the Mechanisms) within a `Pathway`.
 .. _Composition_Learning_Configurations:
 
 *Configuring Learning in a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are three ways of configuring learning in a Composition:
 
@@ -505,8 +529,8 @@ their constructors, or modified by assigning values to their attributes.
 
 .. _Composition_Learning_Unsupervised:
 
-**Unsupervised Learning**
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Unsupervised Learning
+^^^^^^^^^^^^^^^^^^^^^
 
 Undersupervised learning is implemented using a `RecurrentTransferMechanism`, setting its **enable_learning** argument
 to True, and specifying the desired `LearningFunction <LearningFunctions>` in its **learning_function** argument.  The
@@ -526,9 +550,8 @@ COMMENT
 
 .. _Composition_Learning_Supervised:
 
-**Supervised Learning**
-^^^^^^^^^^^^^^^^^^^^^^^
-
+Supervised Learning
+^^^^^^^^^^^^^^^^^^^
 * `Composition_Learning_Methods`
 * `Composition_Learning_Components`
 * `Composition_Learning_Execution`
@@ -662,57 +685,29 @@ attribute of the `learning Pathway <Composition_Learning_Pathway>` return by the
    italics below Mechanism type) and  the names of the learning components returned by the learning method (capitalized
    and in italics, above each Mechanism).
 
-COMMENT:
-    MOVE THE FOLLOWING TO EXAMPLES AND REPLACE BEGINNING OF FIRST LINE THAT FOLLOWS IT WITH:
-    The description above (and example `below <EXMAPLE>`
-COMMENT
-
-.. _Composition_XOR_Example:
-
-The following example implements a simple three-layered network that learns the XOR function
-(see `figure <Composition_Learning_Output_vs_Terminal_Figure>` below)::
-
-    # Construct Composition:
-    >>> input = TransferMechanism(name='Input', default_variable=np.zeros(2))
-    >>> hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
-    >>> output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
-    >>> input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
-    >>> output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
-    >>> xor_comp = Composition('XOR Composition')
-    >>> backprop_pathway = xor_comp.add_backpropagation_learning_pathway(
-    >>>                       pathway=[input, input_weights, hidden, output_weights, output])
-
-    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
-    >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
-    >>>               'targets':[  [0],     [1],     [1],     [0] ]}
-    >>> xor_comp.learn(inputs={input:xor_inputs['stimuli'],
-    >>>                      backprop_pathway.target:xor_inputs['targets']},
-    >>>              num_trials=1,
-    >>>              animate={'show_learning':True})
-
-The description and example above pertain to simple linear sequences.  However, more complex configurations,
-with convergent, divergent and/or intersecting sequences can be built using multiple calls to the learning method
-(see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`).  In each call, the learning method determines
-how the sequence to be added relates to any existing ones with which it abuts or intersects, and automatically creates
-andconfigures the relevant learning components so that the error terms are properly computed and propagated by each
-LearningMechanism to the next in the configuration. It is important to note that, in doing so, the status of a
-Mechanism in the final configuration takes precedence over its status in any of the individual sequences specified
-in the `learning methods <Composition_Learning_Methods>` when building the Composition.  In particular,
-whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning method projects to a
-*OBJECTIVE_MECHANISM*, this may be superceded if multiple sequences are created. This is the case if: i) the
-Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the Composition,
-ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in *all* of them;
-in that in that case, it will not project to a *OBJECTIVE_MECHANISM* (see `figure below
+The description above (and `example <Composition_Examples_Learning_XOR>` >below) pertain to simple linear sequences.
+However, more complex configurations, with convergent, divergent and/or intersecting sequences can be built using
+multiple calls to the learning method (see `example <BasicsAndPrimer_Rumelhart_Model>` in `BasicsAndPrimer`). In
+each the learning method determines how the sequence to be added relates to any existing ones with which it abuts or
+intersects, and automatically creates andconfigures the relevant learning components so that the error terms are
+properly computed and propagated by each LearningMechanism to the next in the configuration. It is important to note
+that, in doing so, the status of a Mechanism in the final configuration takes precedence over its status in any of
+the individual sequences specified in the `learning methods <Composition_Learning_Methods>` when building the
+Composition.  In particular, whereas ordinarily the last ProcessingMechanism of a sequence specified in a learning
+method projects to a *OBJECTIVE_MECHANISM*, this may be superceded if multiple sequences are created. This is the
+case if: i) the Mechanism is in a seqence that is contiguous (i.e., abuts or intersects) with others already in the
+Composition, ii) the Mechanism appears in any of those other sequences and, iii) it is not the last Mechanism in
+*all* of them; in that in that case, it will not project to a *OBJECTIVE_MECHANISM* (see `figure below
 <Composition_Learning_Output_vs_Terminal_Figure>` for an example).  Furthermore, if it *is* the last Mechanism in all
 of them (that is, all of the specified pathways converge on that Mechanism), only one *OBJECTIVE_MECHANISM* is created
 for that Mechanism (i.e., not one for each sequence).  Finally, it should be noted that, by default, learning components
 are *not* assigned the `NodeRole` of `OUTPUT` even though they may be the `TERMINAL` Mechanism of a Composition;
-conversely, even though the last Mechanism of a `learning Pathway <Composition_Learning_Pathway>` projects to a
+conversely, even though the last Mechanism of a `learning Pathway <Composition_Learning_Pathway>` projects to an
 *OBJECTIVE_MECHANISM*, and thus is not the `TERMINAL` `Node <Composition_Nodes>` of a Composition, if it does not
-project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition.
-That is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as
-an `OUTPUT` Node of the Composition if they are part of a `learning Pathway <Composition_Learning_Pathway>` even
-though  they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition.
+project to any other Mechanisms in the Composition it is nevertheless assigned as an `OUTPUT` of the Composition. That
+is, Mechanisms that would otherwise have been the `TERMINAL` Mechanism of a Composition preserve their role as an
+`OUTPUT` Node of the Composition if they are part of a `learning Pathway <Composition_Learning_Pathway>` eventhough
+they project to another Mechanism (the *OBJECTIVE_MECHANISM*) in the Composition.
 
 .. _Composition_Learning_Output_vs_Terminal_Figure:
 
@@ -826,6 +821,14 @@ other Components in the Composition (e.g., as a source of information or for mod
 Executing a Composition
 -----------------------
 
+    - `Composition_Execution_Inputs`
+    - `Composition_Runtime_Params`
+    - `Composition_Cycles_and_Feedback`
+    - `Composition_Execution_Context`
+    - `Composition_Reset`
+    - `Composition_Compilation`
+
+
 .. _Composition_Execution_Methods:
 
 There are three methods for executing a Composition:
@@ -889,14 +892,16 @@ then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of
 *Learning*. If a Composition is configured for `learning <Composition_Learning>` then, for learning to occur,
 its `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
 `disable_learning <Composition.disable_learning>` attribute must be False (the default). A set of targets must also
-be specified (see `below <Composition_Target_Inputs`). The `run <Composition.run>` and `execute <Composition.execute>`
+be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.run>` and `execute <Composition.execute>`
 methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
 `disable_learning <Composition.disable_learning>` attribute.
 
 .. _Composition_Execution_Inputs:
 
 *Input formats (including targets for learning)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- `Composition_Input_Dictionary`
+- `Composition_Programmatic_Inputs`
 
 The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
 the **targets** argument of the `learn <Composition.learn>` method) is used to specify the inputs to the Composition
@@ -1182,361 +1187,147 @@ A tuple used to specify a subdictionary determines when any of the parameters sp
 If its `Condition` is *not* satisfied, then none of the parameters specified within it will apply;  if its `Condition`
 *is* satisfied, then any parameter specified within it for which the `Condition` is satisified will also apply.
 
-.. _Composition_Initial_Values_and_Feedback:
+.. _Composition_Cycles_and_Feedback:
 
 *Cycles and Feedback*
 ~~~~~~~~~~~~~~~~~~~~~
 
-If a Composition has any Projections that form loops of execution — that is, cycles in its `graph <Composition_Graph> —
-these require special handling to insure consistent and desired order of execution. This is handled by a Composition in
-one of two ways, based on whether any of the Projections in a cycle are designated as `feeedback
-<Composition_Feedback_Specification>`:
+    * `Composition_Cycle`
+    * `Composition_Feedback`
 
-.. _Composition_No_Feedback_Cycle:
+If `Projections <Projection>` among any or all of the `Nodes <Composition_Nodes>` in a Composition form loops — that
+is, there are any cycles in its `graph <Composition_Graph>` —  then the order in which the Nodes are executed must
+be determined.  This is handled in one of two ways:
 
-* No feedback Projections -- in this case, the cycle is "flattened," meaning that all of the Nodes in the cycle are
-  treated equally, and executed synchronously (i.e., in the same `TIME_STEP <TimseScale.TIME_STEP>`).  Any cycles
-  nested within another cycle are flattened and added to the outermost cycle, and all are treated as part of the same
-  cycle
-  COMMENT:
-     (see Figure)
-  COMMENT
-  . All Nodes within a cycle are assigned the `NodeRole` `CYCLE`. When the Nodes in the cycle are executed, the value
-  that a Node receives from each of those that project to it (from within the cycle) is the `value <Component.value>`
-  of the senders after that was last executed in the same `execution context <Composition_Execution_Context>`;  this
-  insures that all Nodes in a cycle execute in synchrony. However, it also presents a problem the first execution
-  of the cycle since, by definition, none of the Nodes have been assigned a value from a previous executed.  In that
-  case, each sender passes the value to which it has been initialized which, by default, is its `default value
-  <Parameter_Defaults>`.
+   * **Flatten cycle** - if the cycle does not have any `feedback Projections <Composition_Feedback>`, then the cycle
+     is "flattened" and all of the Nodes are executed synchronously.
 
-  .. note::
-     Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
-     they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
-     value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside
-     of the cycle.
+   * **Break cycle** - if cycle has any `feedback Projections <Composition_Feedback>`, they are used to break the
+     cycle at those points, and the remaining Projections are used to execute the Nodes sequentially, with the
+     `receiver <Projection_Base.receiver>` of each feedback Projection executed first, its `sender
+     <Projection_Base.sender>` executed last, and the receiver getting the sender's value on its next execution.
 
-  The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be overridden using
-  the **initialize_cycle_values** argument of the Composition's `run <Composition.run>` or `learn <Composition.learn>`
-  methods.  This can be used to specify an initial value for any Node in a cycle.  On the first call to `run
-  <Composition.run>` or `learn <Composition.learn>`, nodes specified in **initialize_cycle_values** are initialized
-  using the assigned values, and any Nodes in the cycle that are not specified are assigned their `default value
-  <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes specified
-  in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the cycle in
-  that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned in the
-  previous call to `run <Composition.run>` or `learn <Compositon.learn>`.
+Each of these approaches is described in greater detail below.
 
-  .. note::
-     If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
-     <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
-     within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
-     of the Mechanism's `execute <Mechanism_Base.exeucte>` method when it is called.  This is because the first time
-     a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
-     last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
-     the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
-     or `learn  <Composition.learn>` methods.
+.. _Composition_Cycle:
 
-.. _Composition_Feedback_Cycle:
+Cycles and synchronous execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Feedback Projection(s) specified -- in this case, any Projections in a cycle specified as `feedback
-  <Composition_Feedback_Specification>` are used to break the cycle: the `sender <Projection_Base.sender>` of each
-  feedback Projection (assigned the `NodeRole` `FEEDBACK_SENDER`) is initialized in the same way as a Node in a
-  cycle (see `above <Composition_No_Feedback_Cycle>`); the receiver (assigned the `NodeRole` `FEEDBACK_RECEIVER`) is
-  passed the *SENDER's* initial value on the first execution, and its previous value on subsequent executions.
-  Thus, in effect, the *RECEIVER* becomes the first Node in the cycle to execute, and the *SENDER* the last. The
-  *FEEDBACK_SENDERS* of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
-  and its *FEEDBACK_RECEIVERS* in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using
-  the Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.
+.. _Composition_Cycle_Structure:
 
-.. _Composition_Feedback_Specification:
+**Cycles**. A cycle is formed when the Projections among a set of `Nodes <Composition_Nodes>` form a loop, and none
+of the Projections is designated as a `feedback Projection <Composition_Feedback_Designation>`.  Any cycle nested
+within another is added to the one in which it is nested, and all are treated as part of the same cycle. All Nodes
+within a cycle are assigned the `NodeRole` `CYCLE`.
 
-By default, cycles that do not include any `ControlProjections <ControlProjection>` are flattened. This includes any
-`RecurrentTransferMechanism` (or its subclaseses), which are treated as a single-Node cylce (formed by its
-`AutoassociativeProjection`).  In contrast, if there are any `ControlProjections <ControlProjection>` in a cycle,
-some or all of them may be assigned as feedback Projections to break the cycle.
+.. note::
+   A `RecurrentTransferMechanism` (and its subclaseses) are treated as single-Node cylces, formed by their
+   `AutoAssociativeProjection` (since the latter is subclass of MappingProjection and thus not designated as feedback
+   (see `below <Composition_Feedback_Designation>`).
 
-The feedback status of a Projection can also be specified explcitly, either by including the keyword *FEEDBACK* in a
-tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the Composition's
-`add_projections <Composition.add_projections>` method, or using the **feedback** of the Composition's `add_projection
-<Composition.add_projection>` method.
+.. _Composition_Cycle_Synchronous_Execution:
 
-    .. warning::
-       Designating a Projection as **feeedback** that is *not* in a cycle is allowed, but will issue a warning and
-       can produce unexpected results.  Designating more than one Projection as **feedback** within a cycle is also
-       permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
-       Projection designated as **feedback** will receive a value from the Projection that is based either on the
-       FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
-       (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
-       is in a cycle.
-       COMMENT:
-           EXAMPLES:  [INCLUDE FIGURE WITH show_graph() FOR EACH
-                T1 = TransferMechanism(name='T1')
-                T2 = TransferMechanism(name='T2')
-                T3 = TransferMechanism(name='T3')
-                T4 = TransferMechanism(name='T4')
-                P4 = MappingProjection(sender=T4, receiver=T1)
-                P3 = MappingProjection(sender=T3, receiver=T1)
-
-                # # No feedback version (cycle)
-                # C = Composition([T1, T2, T3, T4, P4, T1])
-                # C.add_projection(P3)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[0.]]
-                T3:  [[0.]]
-                T4:  [[0.]]
-
-                # # One feedback version:
-                # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
-                # C.add_projection(P3)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[0.]]
-                T3:  [[0.]]
-                T4:  [[0.]]
-
-                # The other feedback version:
-                C = Composition([T1, T2, T3, T4, P4, T1])
-                C.add_projection(P3, feedback=FEEDBACK)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[0.]]
-                T3:  [[0.]]
-                T4:  [[0.]]
-
-                # # Dual feedback version:
-                # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
-                # C.add_projection(P3, feedback=FEEDBACK)
-                C.run({T1:3})
-                print('T1: ',T1.value)
-                print('T2: ',T2.value)
-                print('T3: ',T3.value)
-                print('T4: ',T4.value)
-                T1:  [[3.]]
-                T2:  [[3.]]
-                T3:  [[3.]]
-                T4:  [[3.]]
-       COMMENT
-
-The feedback Projections of a Composition are listed in its `feedback_projections <Composition.feeeback_projections>`
-attribute, and the feedback status of a Projection in a composition is returned by its `get_feedback_status
-<Composition.get_feedback_status>` method.
+**Synchronous execution**. Cycles are "flattened" for execution, meaning that all of the Nodes within a cycle are
+executed in the same `TIME_STEP <TimeScale.TIME_STEP>`). The input that each Node in a cycle receives from those that
+project to it from within the cycle is the `value <Component.value>` of those Nodes when the cycle was last executed
+in the same `execution context <Composition_Execution_Context>`;  this ensures not only that the execute in synchrony,
+but that the inputs received from any Nodes within the cycle are synchronized (i.e., from the same earlier `TIME_STEP
+<TimeScale.TIME_STEP>` of execution). However, this presents a problem for the first execution of the cycle since, by
+definition, none of the Nodes have a value from a previous execution.  In that case, each sender passes the value to
+which it has been initialized which, by default, is its `default value <Parameter_Defaults>`.  However, this can be
+overridden, as described below.
 
 COMMENT:
-
-      MOVE TO IntegratorMechanism and relevant arguments of run method
-      - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
-        - reset_integrator_nodes_to:  DICT of {node: value} paris
-                                   THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
-                                   IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
-                                   MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
-        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
-        - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
-                                                     IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
-                                                                           THEIR reset_integrator_when ATTRIBUTE IS None
-                                                     IF A DICT: IT SETS THE CONDITION FOR ALL SPECIFIFED NODES
-                                                                OVERRIDING THEIR SPEC IF THEY HAVE ONE, AND LEAVING ANY
-                                                                NOT SPECIFIED IN THE DICT WITH THEIR CURRENT ASSIGNMENT
-        - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
-                                                                   INCLUDED IN reset_integrator_nodes_when ARG OF RUN
-        - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
-
-        FIX:  ADD SECTION ON CYCLES, FEEDBACK, INITIAL VALUES, RELEVANCE TO MODULATORY MECHANISMS REINITIALIZATION
-        MODIFIED FROM SYSTEM (_System_Execution_Input_And_Initialization):
-        ..[another type] of input can be provided in corresponding arguments of the `run <System.run>` method:
-        a list or ndarray of **initialize_cycle_values**[...] The **initialize_cycle_values** are assigned at
-        the start of a `TRIAL <TimeScale.TRIAL>` as input to Nodes that close recurrent loops (designated as
-        `FEEDBACK_SENDER`, and listed in the Composition's ?? attribute),
+ FIGURE HERE
 COMMENT
 
-.. _Composition_Reset:
+.. note::
+   Although all the Nodes in a cycle receive either the initial value or previous value of other Nodes in the cycle,
+   they receive the *current* value of any Nodes that project to them from *outisde* the cycle, and pass their current
+   value (i.e., the ones computed in the current execution of the cycle) to any Nodes to which they project outside of
+   the cycle.  The former means that any Nodes within the cycle that receive such input are "a step ahead" of those
+   within the cycle and also, unless the use a `StatefulFunction`, others within the cycle will not see the effects of
+   that input within or across `TRIALS <TimeScale.TRIAL>`.
 
-*Resetting Stateful Parameters of Functions*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _Composition_Cycle_Initialization:
 
-Compositions offer several interfaces for resetting their nodes' stateful functions' stateful parameters in customizable ways
-throughout calls to `run <Composition.run>`. These resets can occur on a scheduled basis, in accordance with user-specified
-`conditions <Scheduling.Condition.Condition>`, by using the *`reset_stateful_functions_when`* argument of `run`. This argument
-takes as input *either* a single `condition <Scheduling.Condition.Condition>` to be applied to all of the Composition's
-relevant nodes (i.e. ones with StatefulFunctions) that have not yet had their `reset_stateful_function_when` attribute
-specified, *or* in a dict of {Node:Condition} pairs, allowing the user to make separate specifications for individual nodes.
+**Initialization**. The initialization of Nodes in a cycle using their `default values <Parameter_Defaults>` can be
+overridden using the **initialize_cycle_values** argument of the Composition's `run <Composition.run>` or `learn
+<Composition.learn>` methods.  This can be used to specify an initial value for any Node in a cycle.  On the first
+call to `run <Composition.run>` or `learn <Composition.learn>`, nodes specified in **initialize_cycle_values** are
+initialized using the assigned values, and any Nodes in the cycle that are not specified are assigned their `default
+value <Parameter_Defaults>`. In subsequent calls to `run <Composition.run>` or `learn <Composition.learn>`, Nodes
+specified in **initialize_cycle_values** will be re-initialized to the assigned values for the first execution of the
+cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
+in the uprevious call to `run <Composition.run>` or `learn <Composition.learn>`.
 
 .. note::
-    Passing a single `condition <Scheduling.Condition.Condition>` as input to the `reset_stateful_functions_when`
-    argument of `run` will apply that condition only to nodes that have not yet had their `reset_stateful_function_when`
-    attribute specified. In contrast, using a dict of {Node:Condition} pairs will apply to all nodes included in the dict,
-    regardless of whether or not their `reset_stateful_function_when` conditions have been set. In either case, the specified
-    `conditions <Scheduling.Condition.Condition>` will persist only for the duration of the call to `run`.
+   If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
+   <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
+   within the Composition, unless an `execution_id <Context.execution_id>` is assigned to the **context** argument
+   of the Mechanism's `execute <Mechanism_Base.execute>` method when it is called.  This is because the first time
+   a Mechanism is executed in a Composition, its initial value is copied from the `value <Mechanism_Base.value>`
+   last assigned in the None context.  As described aove, this can be overridden by specifying an initial value for
+   the Mechanism in the **initialize_cycle_values** argument of the call to the Composition's `run <Composition.run>`
+   or `learn  <Composition.learn>` methods.
 
-Additionally, users may specify the values that nodes will use to reset their functions' stateful parameters. The
-values provided will be passed to individual nodes' respective `reset` methods. This argument should be provided in
-the form of a dict comprised of {node:value} pairs or, for a node that has a `reset` method that takes multiple arguments,
-{node:[value_0, value_1, ... value_n]} pairs. In this latter case, the provided iterable must contain all of the
-args that need to be passed to the node's `reset` method. If, during a call to run, a node resets that is not included
-in this dict, its stateful functions' stateful parameters will be reset to their default values.
+.. _Composition_Feedback:
 
-.. note::
-    There is some variation in the nature of the specific stateful attributes that belong to different functions,
-    meaning the value(s) that you will want to use to reset them may vary from each other in heterogeneous ways. In most
-    cases, such as for the majority of IntegratorFunctions, the only stateful attribute is a single scalar value that
-    serves as the point from which the integrator will step on its next execution. There are other functions, however,
-    such as the `DualAdaptiveIntegrator <DualAdaptiveIntegrator>` where this is not the case. Users
-    should look to see if the `StatefulFunction <StatefulFunction>` that is relevant to them overrides the base `reset`
-    method, and, if so, use that as a template for how to structure values when resetting the attributes of those functions.
+Feedback and sequential execution
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `reset_stateful_functions_when` and `reset_stateful_functions_to` arguments can be used in conjunction, but they can
-also be used independently of each other. If, for example, a user wishes to specify under what conditions a Mechanism
-with a stateful function will reset during a specific call to `run`, but does not wish to specify a custom value for it
-to reset to, then they should only use the `reset_stateful_functions_when` argument. Conversely, if they don't wish to
-set or override any nodes' `reset_stateful_function_when` attributes, but they do want to specify the values those nodes
-should use to reset their stateful functions, then they should only use the `reset_stateful_functions_to` argument.
+.. _Composition_Feedback_Designation:
 
-A blanket reset can also be achieved outside of a call to `run <Composition.run>` using the composition's
-`reset <Composition.reset>` method. Similarly to the `reset_stateful_functions_to` argument, this method can take as
-input a dict comprised of {node:value} pairs or, in the case where a given node's `reset` method takes multiple arguments,
-{node:[value_0, value_1, ... value_n]} pairs.
+**Feedback designation**. If any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
+they are used to break the `cycle <Composition_Cycle_Structure>` of execution that would otherwise be formed, and the
+Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
+a feedback Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
+`FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
+therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>` by default. In
+contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
+loops containing one or more ModulatoryProjections are broken by default, with the Mechanism that is `modulated
+<ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
+it designated as the `FEEDBACK_SENDER`. However, the feedback status of any Projection can be specified explicitly,
+either in a tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the
+Composition's `add_projections <Composition.add_projections>` method, or by using the **feedback** argument of the
+Composition's `add_projection <Composition.add_projection>` method. Specifying True or the keyword *FEEDBACK* forces
+its assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
+(e.g., a `ControlProjection` that forms a cycle).
 
-See below for examples.
+.. warning::
+   Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
+   can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
+   permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
+   Projection designated as **feedback** will receive a value from the Projection that is based either on the
+   `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+   (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
+   is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
 
-Example composition with two Mechanisms containing stateful functions:
+.. _Composition_Feedback_Sequential_Execution:
 
-    >>> A = TransferMechanism(
-    >>>     name='A',
-    >>>     integrator_mode=True,
-    >>>     integration_rate=0.5
-    >>> )
-    >>> B = TransferMechanism(
-    >>>     name='B',
-    >>>     integrator_mode=True,
-    >>>     integration_rate=0.5
-    >>> )
-    >>> C = TransferMechanism(name='C')
-    >>>
-    >>> comp = Composition(
-    >>>     pathways=[[A, C], [B, C]]
-    >>> )
+**Sequential execution**. The `FEEDBACK_RECEIVER` is the first of the Nodes that were in a loop to execute in a
+given `PASS <TimeScale.PASS>`, receiving a value from the `FEEDBACK_SENDER` as described `below
+<Composition_Feedback_Initialization>`.  It is followed in each subsequent `TIME_STEP <TimeScale.TIME_STEP>` by the
+next Node in the sequence, with the `FEEDBACK_SENDER` executing last.
 
-Example 1) A blanket reset of all stateful functions to their default values:
+.. _Composition_Feedback_Initialization:
 
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     num_trials=3
-    >>> )
-    >>>
-    >>> # Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875
-    >>> print(A.value)
-    >>> # [[0.875]]
-    >>>
-    >>> comp.reset()
-    >>>
-    >>> # The Mechanisms' stateful functions are now in their default states, which is identical
-    >>> # to their states prior to Trial 1. Thus, if we call run again with the same inputs,
-    >>> # we see the same results that we saw on Trial 1.
-    >>>
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>> )
-    >>>
-    >>> # Trial 3: 0.5
-    >>> print(A.value)
-    >>> # [[0.5]]
+**Initialization**. The receiver of a feedback Projection (its `FEEDBACK_RECEIVER`) is treated in the same way as a
+`CYCLE` Node:  the first time it executes, it receives input from the `FEEDBACK_SENDER` based on the `value
+<Component.value>` to which it was initialized
+COMMENT:
+   ??CORRECT: ;  however, as with `CYCLE` Node, this can be overidden using....
+COMMENT
+.  On subsequent executions, its input from the `FEEDBACK_SENDER` is based on the `value <Component.value>` of that
+Node after it was last executed in the same `execution context <Composition_Execution_Context>`.
 
-Example 2) A blanket reset of all stateful functions to custom values:
+The `FEEDBACK_SENDER`\\s of a Composition are listed in its `feedback_senders <Composition.feedback_senders>` attribute,
+and its `FEEDBACK_RECEIVER`\\s  in `feedback_senders <Composition.feedback_senders>`.  These can also be listed using
+the Composition's `get_nodes_by_role <Composition.get_nodes_by_role>` method.  The feedback Projections of a Composition
+are listed in its `feedback_projections <Composition.feedback_projections>`  attribute, and the feedback status of a
+Projection in a Composition is returned by its `get_feedback_status<Composition.get_feedback_status>` method.
 
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     num_trials=3
-    >>> )
-    >>>
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875
-    >>> print(A.value)
-    >>> # [[0.875]]
-    >>> # Mechanism B is currently identical to Mechanism A
-    >>> print(B.value)
-    >>> # [[0.875]]
-    >>>
-    >>> # Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of
-    >>> # trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the
-    >>> # Mechanisms will match their values after trials 1 and 2, respectively.
-    >>> comp.reset({A: 0.5,
-    >>>             B: 0.75})
-    >>>
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>> )
-    >>>
-    >>> # Trial 3: 0.75
-    >>> print(A.value)
-    >>> # [[0.75]]
-    >>>
-    >>> # Trial 3: 0.875
-    >>> print(B.value)
-    >>> # [[0.875]]
-
-Example 3) Schedule resets for both Mechanisms to their default values, to occur at different times
-
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     reset_stateful_functions_when = {
-    >>>         A: AtTrial(1),
-    >>>         B: AtTrial(2)
-    >>>     },
-    >>>     num_trials=5
-    >>> )
-    >>> # Mechanism A - resets to its default (0) at the beginning of Trial 1. Its value at the end of Trial 1 will
-    >>> # be exactly one step of integration forward from its default.
-    >>> # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
-    >>> print(A.value)
-    >>> # [[0.9375]]
-    >>>
-    >>> # Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will
-    >>> # be exactly one step of integration forward from its default.
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
-    >>> print(B.value)
-    >>> # [[0.875]]
-
-Example 4) Schedule resets for both Mechanisms to custom values, to occur at different times
-
-    >>> comp.run(
-    >>>     inputs={A: [1.0],
-    >>>             B: [1.0]},
-    >>>     reset_stateful_functions_when={
-    >>>         A: AtTrial(3),
-    >>>         B: AtTrial(4)
-    >>>     },
-    >>>     reset_stateful_functions_to={
-    >>>         A: 0.5,
-    >>>         B: 0.5
-    >>>     },
-    >>>     num_trials=5
-    >>> )
-    >>> # Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will
-    >>> # be exactly one step of integration forward from 0.5.
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875
-    >>> print(A.value)
-    >>> # [[0.875]]
-    >>>
-    >>> # Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will
-    >>> # be exactly one step of integration forward from 0.5.
-    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
-    >>> print(B.value)
-    >>> # [[0.75]]
 
 .. _Composition_Execution_Context:
 
@@ -1548,7 +1339,7 @@ A Composition is always executed in a designated *execution context*, specified 
 Composition. Execution contexts make several capabilities possible:
 
   * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
-    <Component.value>` and that of its `parameters <Parameter_statefulness>` independently for each of
+    <Component.value>` and that of its `parameters <Parameter_Statefulness>` independently for each of
     the Compositions to which it is assigned.
 
   * The same Composition can be exectued independently in different contexts; this can be used for
@@ -1560,9 +1351,9 @@ If no `execution_id <Context.execution_id>` is specified, the `default execution
 is used, which is generally the Composition's `name <Composition.name>`; however, any `hashable
 <https://docs.python.org/3/glossary.html>`_ value (e.g., a string, a number, or `Component`) can be used.
 That execution_id can then be used to retrieve the `value <Component.value>` of any of the Composition's
-Components or their `parameters <Parameter_statefulness>` that were assigned during the execution. If a Component is
+Components or their `parameters <Parameter_Statefulness>` that were assigned during the execution. If a Component is
 executed outside of a Composition (e.g, a `Mechanism <Mechanism>` is executed on its own using its `execute
-<Mechanism.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
+<Mechanism_Base.execute>` method), then any assignments to its `value <Component.value>` and/or that of its parameters
 is given an execution_id of `None`.
 
 COMMENT:
@@ -1573,14 +1364,14 @@ COMMENT
      If the `value <Component.value>` of a Component or a parameter is queried using `dot notation
      <Parameter_Dot_Notation>`, then its most recently assigned value is returned.  To retrieve the
      value associated with a particular execution context, the parameter's `get <Parameter.get>` method must be used:
-     ``<Component>.paramters.<parameter_name>.get(execution_id)``, where ``value`` can used as the paramter_name
+     ``<Component>.parameters.<parameter_name>.get(execution_id)``, where ``value`` can be used as the parameter_name
      to retrieve the Component's `value <Component.value>`, and the name of any of its other parameters to get their
      value.
 
+See `Composition_Examples_Execution_Context` for examples.
 
 COMMENT:
 For Developers
---------------
 
 .. _Composition_Execution_Contexts_Init:
 
@@ -1612,9 +1403,99 @@ in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been execut
 `termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
 used in combination with `Condition` specifications for individual Components to execute different Components at
 different time scales.
-
-Runtime Params
 COMMENT
+
+
+.. _Composition_Reset:
+
+*Resetting Parameters of StatefulFunctions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+
+      MOVE TO IntegratorMechanism and relevant arguments of run method
+      - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
+        - reset_integrator_nodes_to:  DICT of {node: value} paris
+                                   THESE ARE USED AS THE VALUES WHEN EACH NODE'S reset_integrator_when CONDITION IS MET;
+                                   IF NOT SPECIIFED, THEN RESET TO previous_value ATTRIBUTE, WHICH IS SET TO THE
+                                   MECHANISM'S <object>.defaults.value WHEN CONSTRUCTED
+        FIX: ?? CONSIDER MAKING RESET_STATEFUL_FUNCTIONS_WHEN A DICT THAT IS USED TO SUPERCEDE THE attirbute of a Mechanism
+        - reset_integrator_nodes_when arg OF RUN: EITHER JUST A Condition, OR A DICT OF {node: Condition} pairs
+                                                     IF JUST A CONDITION:  IT SETS THE DEFAULT FOR ALL NODES FOR WHICH
+                                                                           THEIR reset_integrator_when ATTRIBUTE IS None
+                                                     IF A DICT: IT SETS THE CONDITION FOR ALL SPECIFIFED NODES
+                                                                OVERRIDING THEIR SPEC IF THEY HAVE ONE, AND LEAVING ANY
+                                                                NOT SPECIFIED IN THE DICT WITH THEIR CURRENT ASSIGNMENT
+        - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
+                                                                   INCLUDED IN reset_integrator_nodes_when ARG OF RUN
+        - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
+
+COMMENT
+
+`StatefulFunctions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
+`MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
+a record of the Function's `values <Parameter.values>` for each `execution context <Composition_Execution_Context>` in
+which it is executed, within and between calls to the Composition's `execute methods <Composition_Execution_Methods>`.
+This record can be cleared and `previous_value <StatefulFunction.previous_value>` reset to either the Function's
+`default value <Parameter_Defaults>` or another one, using either the Composition's `reset <Composition.reset>` method
+or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` methods, as described below (see
+`Composition_Examples_Reset` for examples):
+
+   * `reset <Composition.reset>` -- this is a method of the Composition that calls the `reset <Component.reset>` method
+     of Nodes in the Composition that have a `StatefulFunction`, each of which resets the `stateful parameters
+     <Component_Stateful_Parameters>` of those Functions.
+     COMMENT:
+        ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` ??
+     COMMENT
+     of its `StatefulFunction`. If it is called  without any arguments, it calls the `reset <Component.reset>` method
+     for every `Node <Component_Nodes>` in the Composition that has a `StatefulFunction`.  It can also be called with a
+     dictionary that specifies a subsset of Nodes to reset (see format descdribed for **reset_stateful_functions_when**
+     below).
+
+   * **reset_stateful_functions_when** and **reset_stateful_functions_to** -- these are arguments of the Composition's
+     `run <Composition.run>`  and `learn <Composition.learn>` methods, that can be used to specify the `Conditions
+     <Condition>` under which the `reset <Component.reset>` method of all or a particular subset of Nodes are called
+     during that run, and optionally the values they are assigned when reset.  As with `runtime_params
+     <Composition_Runtime_Params>`, these specifications apply only for the duration of the call to `run
+     <Composition.run>` or `learn <Composition.learn>`, and the `reset_stateful_function_when
+     <Component.reset_stateful_function_when>` of all Nodes are restored to their prior values upon completion.
+
+     - **reset_stateful_functions_when** -- this specifies the `Condition(s) <Condition>` under which the `reset
+       <Component.reset>` method will be called for Nodes with `StatefulFunctions <StatefulFunctions>`. If a single
+       `Condition` is specified, it is applied to all of the Composition's `Nodes <Composition_Nodes>` that have
+       `StatefulFunctions <StatefulFunctions>`; a dictionary can also be specified, in which the key for each entry
+       is a Node, its value is a `Condition` under which that Node's `reset <Component.reset>` method should be called.
+
+       .. note::
+           If a single `Condition` is specified, it applies only to Nodes for which the `reset_stateful_function_when
+           <Component.reset_stateful_function_when>` attribute has not otherwise been specified. If a dictionary is
+           specified, then the `Condition` specified for each Node applies to that Node, superceding any prior
+           specification of its `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute
+           for the duration of the call to `run <Composition.run>` or `learn <Composition.learn>`.
+
+     - **reset_stateful_functions_to** -- this specifies the values used by each `Node <Composition_Nodes>` to reset
+       the `stateful parameters <Component_Stateful_Parameters>` of its `StatefulFunction(s) <StatefulFunction>`.  It
+       must be a dictionary of {Node:value} pairs, in which the value specifies the value(s) passed to the
+       `reset<Component.reset>` method of the specified Node.  If the `reset <Component.reset>` method of a Node
+       takes more than one value (see Note below), then a list of values must be provided (i.e., as {node:[value_0,
+       value_1,... value_n]}) that matches the number of arguments taken by the `reset <Component.reset>` method.
+       Any Nodes *not* specified in the dictionary are reset using their `default value(s) <Parameter_Defaults>`.
+
+       .. note::
+          The `reset <Component.reset>` method of most Nodes with a `StatefulFunction` takes only a single value, that
+          is used to reset the `previous_value <StatefulFunction.previous_value>` attribute of the Function.  However
+          some (such as those that use `DualAdaptiveIntegrator <DualAdaptiveIntegrator>`) take more than one value.
+          For such Nodes, a list of values must be specified as the value of their dicitonary entry in
+          **reset_stateful_functions_to**.
+
+     The **reset_stateful_functions_when** and **reset_stateful_functions_to** arguments can be used in conjunction or
+     independently of one another. For example, the `Condition(s) <Condition>` under which a `Mechanism` with a
+     `StatefulFunction` is reset using to its `default values <Parameter_Defaults>` can be specified by including it in
+     **reset_stateful_functions_when** but not **reset_stateful_functions_to**.  Conversely, the value to which
+     the `StatefulFunction` of a Mechanism is reset can be specified without changing the Condition under which this
+     occurs, by including it in **reset_stateful_functions_to** but not **reset_stateful_functions_when** -- in that
+     case, the `Condition` specified by its own `reset_stateful_function_when <Component.reset_stateful_function_when>`
+     parameter will be used.
 
 
 .. _Composition_Compilation:
@@ -1695,101 +1576,32 @@ COMMENT:
     XXX - ADD DISCUSSION OF show_controller AND show_learning
 COMMENT
 
-The `show_graph <Composition.show_graph>` method generates a display of the graph structure of Nodes (Mechanisms and
-Nested Compositions) and Projections in the Composition (based on the Composition's `processing graph
-<Composition.processing_graph>`).
+The `show_graph <Composition.show_graph>` method generates a display of the graph structure of `Nodes
+<Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
+<Composition.graph>`).
 
-By default, Nodes are shown as ovals labeled by their `names <Mechanism.name>`, with the Composition's `INPUT
-<NodeRole.INPUT>` Mechanisms shown in green, its `OUTPUT <NodeRole.OUTPUT>` Mechanisms shown in red, and Projections
-shown as unlabeled arrows, as illustrated for the Composition in the example below:
-
-.. _Composition_show_graph_basic_figure:
-
-+-----------------------------------------------------------+----------------------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
-| >>> a = ProcessingMechanism(                              |                                                          |
-|               name='A',                                   |                                                          |
-| ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULT, MEAN]                 |                                                          |
-| ...           )                                           |                                                          |
-| >>> b = ProcessingMechanism(                              |                                                          |
-| ...           name='B',                                   |                                                          |
-| ...           size=5                                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> c = ProcessingMechanism(                              |                                                          |
-| ...           name='C',                                   |                                                          |
-| ...           size=2,                                     |                                                          |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp = Composition(                                   |                                                          |
-| ...           name='Comp',                                |                                                          |
-| ...           enable_controller=True                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
-| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
-| ...            name='Controller',                         |                                                          |
-| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
-| ...            control_signals=(GAIN, c),                 |                                                          |
-| ...            agent_rep=comp                             |                                                          |
-| ...            )                                          |                                                          |
-| >>> comp.add_controller(ctlr)                             |                                                          |
-+-----------------------------------------------------------+----------------------------------------------------------+
-
-Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
-can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
-method.  The figure below shows several examples.
-
-.. _Composition_show_graph_options_figure:
-
-**Output of show_graph using different options**
-
-.. figure:: _static/Composition_show_graph_options_fig.svg
-   :alt: Composition graph examples
-   :scale: 150 %
-
-   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
-   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
-   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
-   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
-   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
-   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
-
-If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
-**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
-and nested Compositions in an outer Composition, ``comp``:
-
-.. _Composition_show_graph_show_nested_figure:
-
-+------------------------------------------------------+---------------------------------------------------------------+
-| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
-| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
-| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
-| >>> comp1 = Composition(name='comp1')                |                                                               |
-| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
-| ...                                      mech_B1])   |                                                               |
-| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
-| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
-| >>> comp2 = Composition(name='comp2')                |                                                               |
-| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
-| ...                                      mech_B2])   |                                                               |
-| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
-| >>> comp = Composition()                             |                                                               |
-| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
-| ...                                     comp1, comp2,|                                                               |
-| ...                                     mech_resp])  |                                                               |
-| >>> comp.show_graph(show_nested=True)                |                                                               |
-+------------------------------------------------------+---------------------------------------------------------------+
+By default, Nodes are shown as ovals labeled by their `names <Registry_Naming>`, with the Composition's `INPUT`
+Nodes shown in green, its `OUTPUT` Nodes shown in red, any that are both (i.e., are `SINGLETON`\\s) shown in brown,
+and Projections shown as unlabeled arrows, as illustrated for the Composition in the `examples
+<Composition_Examples_Visualization>`.
 
 
 .. _Composition_Examples:
 
-Examples
---------
+Composition Examples
+--------------------
 
-.. _Composition_Creation_Examples:
+    * `Composition_Examples_Creation`
+    * `Composition_Examples_Run`
+    * `Composition_Examples_Learning`
+    * `Composition_Examples_Input`
+    * `Composition_Examples_Runtime_Params`
+    * `Composition_Examples_Cycles_Feedback`
+    * `Composition_Examples_Execution_Context`
+    * `Composition_Examples_Reset`
+    * `Composition_Examples_Visualization`
+
+.. _Composition_Examples_Creation:
 
 *Creating a Composition*
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1860,7 +1672,7 @@ Examples
     >>> input_dict = {outer_A: [[[1.0]]]}
 
 
-.. _Composition_Run_Examples
+.. _Composition_Examples_Run:
 
 *Run Composition*
 ~~~~~~~~~~~~~~~~~
@@ -1881,11 +1693,41 @@ brevity:*
     >>> input_dict = {outer_A: [[[1.0]]]}
     >>> outer_comp.run(inputs=input_dict)
 
+.. _Composition_Examples_Learning:
+
+*Learning*
+~~~~~~~~~~
+
+.. _Composition_Examples_Learning_XOR:
+
+The following example implements a simple three-layered network that learns the XOR function
+(see `figure <Composition_Learning_Output_vs_Terminal_Figure>`)::
+
+    # Construct Composition:
+    >>> input = TransferMechanism(name='Input', default_variable=np.zeros(2))
+    >>> hidden = TransferMechanism(name='Hidden', default_variable=np.zeros(10), function=Logistic())
+    >>> output = TransferMechanism(name='Output', default_variable=np.zeros(1), function=Logistic())
+    >>> input_weights = MappingProjection(name='Input Weights', matrix=np.random.rand(2,10))
+    >>> output_weights = MappingProjection(name='Output Weights', matrix=np.random.rand(10,1))
+    >>> xor_comp = Composition('XOR Composition')
+    >>> backprop_pathway = xor_comp.add_backpropagation_learning_pathway(
+    >>>                       pathway=[input, input_weights, hidden, output_weights, output])
+
+    # Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4
+    >>> xor_inputs = {'stimuli':[[0, 0],  [0, 1],  [1, 0],  [1, 1]],
+    >>>               'targets':[  [0],     [1],     [1],     [0] ]}
+    >>> xor_comp.learn(inputs={input:xor_inputs['stimuli'],
+    >>>                      backprop_pathway.target:xor_inputs['targets']},
+    >>>              num_trials=1,
+    >>>              animate={'show_learning':True})
+
 
 .. _Composition_Examples_Input:
 
 *Input Formats*
 ~~~~~~~~~~~~~~~
+- `Composition_Examples_Input_Dictionary`
+- `Composition_Examples_Programmatic_Input`
 
 .. _Composition_Examples_Input_Dictionary:
 
@@ -2131,9 +1973,7 @@ Complete input specification:
         >>> comp.run(inputs=input_dictionary)
 ..
 
-Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`
-
-::
+Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `INPUT` `Node <Composition_Nodes>`::
 
         >>> input_list = [[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]
 
@@ -2145,60 +1985,84 @@ Shorthand - specify **Mechanism a**'s inputs in a list because it is the only `I
 Examples of Programmatic Input Specification
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+[EXAMPLES TO BE ADDED]
+
 COMMENT:
     EXAMPLES HERE
 COMMENT
 
+.. _Composition_Examples_Cycles_Feedback:
 
-.. _Composition_Examples_Execution_Context:
+*Cycles and Feedback*
+~~~~~~~~~~~~~~~~~~~~~
 
-*Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
-
+[EXAMPLES TO BE ADDED]
 COMMENT:
-  REDUCE REDUNDANCY WITH SECTION ON EXECUTION CONTEXTS ABOVE
+   EXAMPLES:  [INCLUDE FIGURE WITH show_graph() FOR EACH
+        T1 = TransferMechanism(name='T1')
+        T2 = TransferMechanism(name='T2')
+        T3 = TransferMechanism(name='T3')
+        T4 = TransferMechanism(name='T4')
+        P4 = MappingProjection(sender=T4, receiver=T1)
+        P3 = MappingProjection(sender=T3, receiver=T1)
+
+        # # No feedback version (cycle)
+        # C = Composition([T1, T2, T3, T4, P4, T1])
+        # C.add_projection(P3)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[0.]]
+        T3:  [[0.]]
+        T4:  [[0.]]
+
+        # # One feedback version:
+        # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
+        # C.add_projection(P3)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[0.]]
+        T3:  [[0.]]
+        T4:  [[0.]]
+
+        # The other feedback version:
+        C = Composition([T1, T2, T3, T4, P4, T1])
+        C.add_projection(P3, feedback=FEEDBACK)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[0.]]
+        T3:  [[0.]]
+        T4:  [[0.]]
+
+        # # Dual feedback version:
+        # C = Composition([T1, T2, T3, T4, (P4, FEEDBACK), T1])
+        # C.add_projection(P3, feedback=FEEDBACK)
+        C.run({T1:3})
+        print('T1: ',T1.value)
+        print('T2: ',T2.value)
+        print('T3: ',T3.value)
+        print('T4: ',T4.value)
+        T1:  [[3.]]
+        T2:  [[3.]]
+        T3:  [[3.]]
+        T4:  [[3.]]
 COMMENT
-An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
-<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
-which often occurs when using multiple or nested Compositions, or running `simulations
-<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
-which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
-unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
-When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
 
-::
-
-        >>> import psyneulink as pnl
-        >>> c = pnl.Composition()
-        >>> d = pnl.Composition()
-        >>> t = pnl.TransferMechanism()
-        >>> c.add_node(t)
-        >>> d.add_node(t)
-
-        >>> t.execute(1)
-        array([[1.]])
-        >>> c.run({t: 5})
-        [[array([5.])]]
-        >>> d.run({t: 10})
-        [[array([10.])]]
-        >>> c.run({t: 20}, context='custom execution id')
-        [[array([20.])]]
-
-        # context None
-        >>> print(t.parameters.value.get())
-        [[1.]]
-        >>> print(t.parameters.value.get(c))
-        [[5.]]
-        >>> print(t.parameters.value.get(d))
-        [[10.]]
-        >>> print(t.parameters.value.get('custom execution id'))
-        [[20.]]Composition_Controller
-
+.. _Composition_Examples_Runtime_Params:
 
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
-
-.. _Composition_Examples_Runtime_Params
 
 If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
 `Condition` will be assigned by default:
@@ -2257,6 +2121,272 @@ the runtime intercept was used on trials 2, 3, and 4, and the runtime slope was 
 .. note::
     Runtime parameter values are subject to the same type, value, and shape requirements as the original parameter
     value.
+
+
+.. _Composition_Examples_Execution_Context:
+
+*Execution Contexts*
+~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+  REDUCE REDUNDANCY WITH SECTION ON EXECUTION CONTEXTS ABOVE
+COMMENT
+An *execution context* is a scope of execution which has its own set of values for Components and their `parameters
+<Parameters>`. This is designed to prevent computations from interfering with each other, when Components are reused,
+which often occurs when using multiple or nested Compositions, or running `simulations
+<OptimizationControlMechanism_Execution>`. Each execution context is or is associated with an *execution_id*,
+which is often a user-readable string. An *execution_id* can be specified in a call to `Composition.run`, or left
+unspecified, in which case the Composition's `default execution_id <Composition.default_execution_id>` would be used.
+When looking for values after a run, it's important to know the execution context you are interested in, as shown below.
+
+::
+
+        >>> import psyneulink as pnl
+        >>> c = pnl.Composition()
+        >>> d = pnl.Composition()
+        >>> t = pnl.TransferMechanism()
+        >>> c.add_node(t)
+        >>> d.add_node(t)
+
+        >>> t.execute(1)
+        array([[1.]])
+        >>> c.run({t: 5})
+        [[array([5.])]]
+        >>> d.run({t: 10})
+        [[array([10.])]]
+        >>> c.run({t: 20}, context='custom execution id')
+        [[array([20.])]]
+
+        # context None
+        >>> print(t.parameters.value.get())
+        [[1.]]
+        >>> print(t.parameters.value.get(c))
+        [[5.]]
+        >>> print(t.parameters.value.get(d))
+        [[10.]]
+        >>> print(t.parameters.value.get('custom execution id'))
+        [[20.]]Composition_Controller
+
+
+.. _Composition_Examples_Reset:
+
+*Reset Paramters of Stateful Functions*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Example composition with two Mechanisms containing stateful functions:
+
+    >>> A = TransferMechanism(
+    >>>     name='A',
+    >>>     integrator_mode=True,
+    >>>     integration_rate=0.5
+    >>> )
+    >>> B = TransferMechanism(
+    >>>     name='B',
+    >>>     integrator_mode=True,
+    >>>     integration_rate=0.5
+    >>> )
+    >>> C = TransferMechanism(name='C')
+    >>>
+    >>> comp = Composition(
+    >>>     pathways=[[A, C], [B, C]]
+    >>> )
+
+Example 1) A blanket reset of all stateful functions to their default values:
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     num_trials=3
+    >>> )
+    >>>
+    >>> # Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>>
+    >>> comp.reset()
+    >>>
+    >>> # The Mechanisms' stateful functions are now in their default states, which is identical
+    >>> # to their states prior to Trial 1. Thus, if we call run again with the same inputs,
+    >>> # we see the same results that we saw on Trial 1.
+    >>>
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>> )
+    >>>
+    >>> # Trial 3: 0.5
+    >>> print(A.value)
+    >>> # [[0.5]]
+
+Example 2) A blanket reset of all stateful functions to custom values:
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     num_trials=3
+    >>> )
+    >>>
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>> # Mechanism B is currently identical to Mechanism A
+    >>> print(B.value)
+    >>> # [[0.875]]
+    >>>
+    >>> # Reset Mechanism A to 0.5 and Mechanism B to 0.75, corresponding to their values at the end of
+    >>> # trials 0 and 1, respectively. Thus, if we call run again with the same inputs, the values of the
+    >>> # Mechanisms will match their values after trials 1 and 2, respectively.
+    >>> comp.reset({A: 0.5,
+    >>>             B: 0.75})
+    >>>
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>> )
+    >>>
+    >>> # Trial 3: 0.75
+    >>> print(A.value)
+    >>> # [[0.75]]
+    >>>
+    >>> # Trial 3: 0.875
+    >>> print(B.value)
+    >>> # [[0.875]]
+
+Example 3) Schedule resets for both Mechanisms to their default values, to occur at different times
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     reset_stateful_functions_when = {
+    >>>         A: AtTrial(1),
+    >>>         B: AtTrial(2)
+    >>>     },
+    >>>     num_trials=5
+    >>> )
+    >>> # Mechanism A - resets to its default (0) at the beginning of Trial 1. Its value at the end of Trial 1 will
+    >>> # be exactly one step of integration forward from its default.
+    >>> # Trial 0: 0.5, Trial 1: 0.5, Trial 2: 0.75, Trial 3: 0.875, Trial 4: 0.9375
+    >>> print(A.value)
+    >>> # [[0.9375]]
+    >>>
+    >>> # Mechanism B - resets to its default (0) at the beginning of Trial 2. Its value at the end of Trial 2 will
+    >>> # be exactly one step of integration forward from its default.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.5, Trial 3: 0.75. Trial 4: 0.875
+    >>> print(B.value)
+    >>> # [[0.875]]
+
+Example 4) Schedule resets for both Mechanisms to custom values, to occur at different times
+
+    >>> comp.run(
+    >>>     inputs={A: [1.0],
+    >>>             B: [1.0]},
+    >>>     reset_stateful_functions_when={
+    >>>         A: AtTrial(3),
+    >>>         B: AtTrial(4)
+    >>>     },
+    >>>     reset_stateful_functions_to={
+    >>>         A: 0.5,
+    >>>         B: 0.5
+    >>>     },
+    >>>     num_trials=5
+    >>> )
+    >>> # Mechanism A - resets to 0.5 at the beginning of Trial 3. Its value at the end of Trial 3 will
+    >>> # be exactly one step of integration forward from 0.5.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.75, Trial 4:  0.875
+    >>> print(A.value)
+    >>> # [[0.875]]
+    >>>
+    >>> # Mechanism B - resets to 0.5 at the beginning of Trial 4. Its value at the end of Trial 4 will
+    >>> # be exactly one step of integration forward from 0.5.
+    >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
+    >>> print(B.value)
+    >>> # [[0.75]]
+
+.. _Composition_Examples_Visualization:
+
+*Visualizing a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. _Composition_show_graph_basic_figure:
+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULT, MEAN]                 |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
+
+Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
+can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
+method.  The figure below shows several examples.
+
+.. _Composition_show_graph_options_figure:
+
+**Output of show_graph using different options**
+
+.. figure:: _static/Composition_show_graph_options_fig.svg
+   :alt: Composition graph examples
+   :scale: 150 %
+
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
+   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
+   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
+   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
+   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
+
+If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and nested Compositions in an outer Composition, ``comp``:
+
+.. _Composition_show_graph_show_nested_figure:
+
++------------------------------------------------------+---------------------------------------------------------------+
+| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
+| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
+| >>> comp1 = Composition(name='comp1')                |                                                               |
+| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
+| ...                                      mech_B1])   |                                                               |
+| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
+| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
+| >>> comp2 = Composition(name='comp2')                |                                                               |
+| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
+| ...                                      mech_B2])   |                                                               |
+| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
+| >>> comp = Composition()                             |                                                               |
+| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
+| ...                                     comp1, comp2,|                                                               |
+| ...                                     mech_resp])  |                                                               |
+| >>> comp.show_graph(show_nested=True)                |                                                               |
++------------------------------------------------------+---------------------------------------------------------------+
 
 
 .. _Composition_Class_Reference:
@@ -2393,12 +2523,10 @@ class EdgeType(enum.Enum):
     """
         Attributes:
             NON_FEEDBACK
-                A standard edge that if it exists in a cycle will only
-                be flattened, not pruned
+                A standard edge that if it exists in a cycle will only be flattened, not pruned
 
             FEEDBACK
-                A "feedbacK" edge that will be immediately pruned to
-                create an acyclic graph
+                A "feedbacK" edge that will be immediately pruned to create an acyclic graph
 
             FLEXIBLE
                 An edge that will be pruned only if it exists in a cycle
@@ -2450,9 +2578,8 @@ class Vertex(object):
 
         self.feedback = feedback
 
-        # when pruning a vertex for a processing graph, we store the
-        # connection type (the vertex.feedback) to the new child or
-        # parent here
+        # when pruning a vertex for a processing graph, we store the connection type (the vertex.feedback)
+        # to the new child or parent here
         # self.source_types = collections.defaultdict(EdgeType.NORMAL)
         self.source_types = {}
 
@@ -2610,14 +2737,11 @@ class Graph(object):
 
     def prune_feedback_edges(self):
         """
-            Produces an acyclic graph from this Graph. `Feedback
-            <EdgeType.FEEDBACK>` edges are pruned, as well as any edges
-            that are `potentially feedback <EdgeType.FLEXIBLE>` that are
-            in cycles. After these edges are removed, if cycles still
-            remain, they are "flattened." That is, each edge in the
-            cycle is pruned, and each the dependencies of each Node in
-            the cycle are set to the pre-flattened union of all cyclic
-            nodes' parents that are themselves not in a cycle.
+            Produces an acyclic graph from this Graph. `Feedback <EdgeType.FEEDBACK>` edges are pruned, as well as
+            any edges that are `potentially feedback <EdgeType.FLEXIBLE>` that are in cycles. After these edges are
+            removed, if cycles still remain, they are "flattened." That is, each edge in the cycle is pruned, and
+            each the dependencies of each Node in the cycle are set to the pre-flattened union of all cyclic nodes'
+            parents that are themselves not in a cycle.
 
             Returns:
                 a tuple containing
@@ -2815,18 +2939,18 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that belongs to a cycle. This role cannot be modified programmatically.
 
     FEEDBACK_SENDER
-        A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` the `feedback
-        <Projection.feedback>` attribute of which is True.  This means that the Node is at the end of a `Pathway`
-        that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be  modified directly,
-        but will be modified if the `feedback <Projection.feedback>` attribute of the relelvant `Projection
-        <Projection>`\\(s) is modified.
+        A `Node <Composition_Nodes>` with one or more efferent `Projections <Projection>` designated as `feedback
+        <Composition_Feedback_Designation>` in the Composition.  This means that the Node executes last in the
+        sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
+        modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
+        <Composition_Feedback_Designation>`.
 
     FEEDBACK_RECEIVER
-        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>`  the `feedback
-        <Projection.feedback>` attribute of which is True.  This means that the Node is at the start of a
-        `Pathway` that would otherwise form a `cycle <Composition_Feedback_Pathways>`. This role cannot be
-        modified directly, but will be modified if the `feedback <Projection.feedback>` attribute of the
-        relelvant `Projection <Projection>`\\(s) is modified.
+        A `Node <Composition_Nodes>` with one or more afferent `Projections <Projection>` designated as `feedback
+        <Composition_Feedback_Designation>` in the Composition. This means that the Node executes first in the
+        sequence of Nodes that would otherwise form a `cycle <Composition_Cycle_Structure>`. This role cannot be
+        modified directly, but is modified if the feedback status` of the Projection is `explicitly specified
+        <Composition_Feedback_Designation>`.
 
     CONTROL_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
@@ -2965,15 +3089,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ----------
 
     graph : `Graph`
-        the full `Graph` associated with the Composition. Contains both Nodes (`Mechanisms <Mechanism>` or
-        `Compositions <Composition>`) and `Projections <Projection>`
+        the full `Graph` associated with the Composition. Contains both `Nodes <Composition_Nodes>`
+        (`Mechanisms <Mechanism>` or `Compositions <Composition>`) and `Projections <Projection>`.
 
     nodes : ContentAddressableList[`Mechanism <Mechanism>` or `Composition`]
         a list of all `Nodes <Composition_Nodes>` in the Composition.
 
     node_ordering : list[`Mechanism <Mechanism>` or `Composition`]
         a list of all `Nodes <Composition_Nodes>` in the order in which they were added to the Composition.
-        COMENT:
+        COMMENT:
             FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
         COMMENT
 
@@ -2986,14 +3110,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     feedback_senders : ContentAddressableList[`Node <Composition_Nodes>`]
         list of `Nodes <Composition_Nodes>` that have one or more `efferent Projections <Mechanism_Base.efferents>`
-        assigned as `feedback <Composition_Feedback_Specification>`.
+        designated as `feedback <Composition_Feedback_Designation>`.
 
     feedback_receivers : ContentAddressableList[`Node <Composition_Nodes>`]
-        list of `Nodes <Composition_Nodes>` that have one or more `afferents <Mechanism_Base.afferents>` assigned as
-        `feedback <Composition_Feedback_Specification>`.
+        list of `Nodes <Composition_Nodes>` that have one or more `afferents <Mechanism_Base.afferents>` designated as
+        `feedback <Composition_Feedback_Designation>`.
 
     feedback_projections : ContentAddressableList[`Projection <Projection>`]
-        list of Projections that have been `assigned as `feedback <Composition_Feedback_Specification>`.
+        list of Projections in the Composition designated as `feedback <Composition_Feedback_Designation>`.
 
     mechanisms : `MechanismList`
         list of Mechanisms in Composition, that provides access to some of they key attributes.
@@ -3446,6 +3570,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 any NodeRoles roles that this Node should have in addition to those determined by analyze graph.
         """
 
+        # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
+        if node is self:
+            pathway_arg_str = ""
+            if context.source in {ContextFlags.INITIALIZING, ContextFlags.METHOD}:
+                pathway_arg_str = " in " + context.string
+            raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
+
         self._update_shadows_dict(node)
 
         try:
@@ -3573,7 +3704,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.control.append(control_signal)
                     self.controller._activate_projections_for_compositions(self)
 
-    def add_nodes(self, nodes, required_roles=None):
+    def add_nodes(self, nodes, required_roles=None, context=None):
         """
             Add a list of `Nodes <Composition_Nodes>` to the Composition.
 
@@ -3597,12 +3728,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"must be a list of nodes or (node, required_roles) tuples")
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
-                self.add_node(node, required_roles)
+                self.add_node(node, required_roles, context)
             elif isinstance(node, tuple):
                 node_specific_roles = convert_to_list(node[1])
                 if required_roles:
                     node_specific_roles.append(required_roles)
-                self.add_node(node=node[0], required_roles=node_specific_roles)
+                self.add_node(node=node[0], required_roles=node_specific_roles, context=context)
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
@@ -4182,7 +4313,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # else:
             #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
 
-
     def _determine_pathway_roles(self, context=None):
         from psyneulink.core.compositions.pathway import PathwayRole
         for pway in self.pathways:
@@ -4586,8 +4716,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert c == 0, f"PROGRAM ERROR:  Number of external control projections {c} is greater than 0. " \
                                f"This means there was a failure to route these projections through the PCIM."
 
-
-
     def _get_nested_node_CIM_port(self,
                                    node: Mechanism,
                                    node_state: tc.any(InputPort, OutputPort),
@@ -4765,19 +4893,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the receiver of **projection**.
 
         feedback : bool or FEEDBACK : False
-            if False, the Projection is *never* assigned as a feedback Projection, even if that may have been the
-            default behavior (e.g., for a `ControlProjection` that forms a `cycle <_Composition_Acyclic_Cyclic>`;
-            if True or *FEEDBACK*, and the Projection is in a cycle, it *always* assigned as a feedback Projection,
-            and used to "break" the cycle (see `Composition_Initial_Values_and_Feedback` for additional details.
-            COMMENT:
-                all `Nodes <Comopsition_Nodes>`  within a `cycle <Composition_Cycle>` containing this `Projection
-                <Projection>` execute in parallel. This means that each Projection within the cycle actually passes
-                to its `receiver <Projection_Base.receiver>` the `value <Projection_Base.value>` of its `sender
-                <Projection_Base.sender>` from the previous execution. When True, this Projection "breaks" the cycle,
-                such that all Nodes execute in sequence, and only the Projection marked as 'feedback' passes to its
-                `receiver <Projection_Base.receiver>` the `value <Projection_Base.value>` of its `sender
-                <Projection_Base.sender>` from the previous execution.
-            COMMENT
+            if False, the Projection is *never* designated as a `feedback Projection
+            <Composition_Feedback_Designation>`, even if that may have been the default behavior (e.g.,
+            for a `ControlProjection` that forms a `loop <Composition_Cycle_Structure>`; if True or *FEEDBACK*,
+            and the Projection is in a loop, it is *always* designated as a feedback Projection, and used to `break"
+            the cycle <Composition_Feedback_Designation>`.
 
         Returns
         -------
@@ -5183,6 +5303,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
 
+    def get_feedback_status(self, projection):
+        """Return True if **projection** is designated as a `feedback Projection <_Composition_Feedback_Designation>`
+        in the Composition, else False.
+        """
+        return projection in self.feedback_projections
+
     def _check_for_existing_projections(self,
                                        projection=None,
                                        sender=None,
@@ -5259,12 +5385,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
-        """Add an existing `Pathway <Component_Pathways>` to the Composition
+        """Add an existing `Pathway <Composition_Pathways>` to the Composition
 
         Arguments
         ---------
 
-        pathway : the `Pathway <Component_Pathways>` to be added
+        pathway : the `Pathway <Composition_Pathways>` to be added
 
         """
 
@@ -5309,12 +5435,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         pathway : `Node <Composition_Nodes>`, list or `Pathway`
-            specifies the nodes, and optionally Projections, used to construct a processing `Pathway <Pathway>`.
-            Any standard form of `Pathway specification <Pathway_Specification>` can be used, however if a 2-item (
-            Pathway, LearningFunction) tuple is used the `LearningFunction` will be ignored (this should be used with
-            `add_linear_learning_pathway` if a `learning Pathway <Composition_Learning_Pathway>` is desired).  A
-            `Pathway` object can also be used;  again, however, any learning-related specifications will be ignored,
-            as will its `name <Pathway.name>` if the **name** argument of add_linear_processing_pathway is specified.
+            specifies the `Nodes <Composition_Nodes>`, and optionally `Projections <Projection>`, used to construct a
+            processing `Pathway <Pathway>`. Any standard form of `Pathway specification <Pathway_Specification>` can
+            be used, however if a 2-item (Pathway, LearningFunction) tuple is used the `LearningFunction` will be
+            ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
+            <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
+            learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
+            argument of add_linear_processing_pathway is specified.
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -5333,6 +5460,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If called from add_pathways(), use its pathway_arg_str in error messages (in context.string)
         if context.source == ContextFlags.METHOD:
+            pathway_arg_str = context.string
+        # If call from _create_backpropagation_learning_pathway, use its pathway_arg_str
+        elif context.source == ContextFlags.INITIALIZING:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
@@ -5358,7 +5488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]} ,"
+                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
                               f"it will be ignored")
                 pathway = pathway[0]
             else:
@@ -5368,7 +5498,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Then, verify that the pathway begins with a node
         if _is_node_spec(pathway[0]):
-            self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
+            # Use add_nodes so that node spec can also be a tuple with required_roles
+            self.add_nodes(nodes=[pathway[0]],
+                           context=Context(source=ContextFlags.METHOD,
+                                           string=pathway_arg_str))
             nodes.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
@@ -5379,7 +5512,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if _is_node_spec(pathway[c]):
-                self.add_nodes([pathway[c]])
+                self.add_nodes(nodes=[pathway[c]],
+                               context=Context(source=ContextFlags.METHOD,
+                                               string=pathway_arg_str))
                 nodes.append(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
@@ -5522,6 +5657,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for i in range(len(projections)):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
+
+        # If pathway is an existing one, return that
+        existing_pathway = next((p for p in self.pathways if pathway==p.pathway), None)
+        if existing_pathway:
+            warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
+                          f"it will be ignored.")
+            return existing_pathway
+        # If the explicit pathway is shorter than the one specified, then something is wrong,
+        elif len(explicit_pathway) < len(pathway):
+            # Pathway without all Projections specified has same nodes in same order as existing one
+            #    (shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed)
+            existing_pathway = next((p for p in self.pathways
+                                     if [item for p in self.pathways for item in p.pathway
+                                         if not isinstance(item, Projection)]), None)
+            if explicit_pathway:
+                warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
+                              f"one already in {self.name}: {pathway}; it will be ignored.")
+                return existing_pathway
+            # Otherwise, something has gone wrong
+            assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
@@ -5705,17 +5860,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `learning method <Composition_Learning_Methods>` is called.  Some may allow the error_function
         to be specified, in which case it must be compatible with the class of LearningFunction specified.
 
-        If **learning_function** an instantiated function, it is assigned to all of the `LearningMechanisms
+        If **learning_function** is a custom function, it is assigned to all of the `LearningMechanisms
         <LearningMechanism>` created for the MappingProjections in the pathway.  A `ComparatorMechanism` is
         created to compute the error for the pathway, and assigned the function specified in **error_function**,
         which must be compatible with **learning_function**.
 
-        See `Composition_Learning` for for a more detailed description of how learning is implemented in a
+        See `Composition_Learning` for a more detailed description of how learning is implemented in a
         Composition, including the `learning components <Composition_Learning_Components>` that are created,
         as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
         algorithms.
 
-       The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
+        The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
+            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `output <Pathway.output>`
             *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
             *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`
             *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
@@ -5727,21 +5883,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        pathway : List
-            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
-            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
-            automatically generated for the learned projection.
-
-        COMMENT:
-             FIX: FROM add_linear_processing_pathway -- MODIFY TO INCLUDE HERE
-            specifies the nodes, and optionally Projections, used to construct a linear `processing Pathway
-            <Composition_Processing_Pathways>`.  Any standard form of `Pathway specification <Pathway_Specification>`
-            can be used, including a 2-item (Pathway, LearningFunction) tuple, but the `LearningFunction` will be
-            ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
-            <Composition_Learning_Pathway>` is wanted).  A `Pathway` object can also be used;  again, however,
-            any learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
-            argument of the method is specified.
-        COMMENT
+        pathway : List or `Pathway`
+            specifies the `learning Pathway <Composition_Learning_Pathway>` for which the `Projections <Projections>`
+            will be learned;  can be specified as a `Pathway` or as a list of `Nodes <Composition_Nodes>` and,
+            optionally, Projections between them (see `list <Pathway_Specification_List>`).
 
         learning_function : LearningFunction
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
@@ -5781,21 +5926,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
-        # FIX 4/4/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
-
-        # If called from add_pathways(), use its pathway_arg_str
 
         from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 
+        # If called from add_pathways(), use its pathway_arg_str
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/4/20 [JDC]: Reset for to None for now to replicate prior behavior,
-            #                   but need to implement proper behavior wrt call to analyze_graph()
-            #                   _check_initalization_state()
-            context = None
+        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
@@ -5814,7 +5954,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self._add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+                self._add_required_node_role(node, NodeRole.OUTPUT, context)
 
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
@@ -5823,7 +5963,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  learning_rate,
                                                                  error_function,
                                                                  learning_update,
-                                                                 name=pathway_name)
+                                                                 name=pathway_name,
+                                                                 context=context)
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
         #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
@@ -5837,10 +5978,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-        self._add_required_node_role(output_source, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+        self._add_required_node_role(output_source, NodeRole.OUTPUT, context)
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
                                                               name=pathway_name,
+                                                              # context=context)
                                                               context=context)
 
         # Learning Components
@@ -5860,7 +6002,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_nodes([(target, NodeRole.TARGET),
                         (comparator, NodeRole.LEARNING_OBJECTIVE),
                          learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
+                       required_roles=NodeRole.LEARNING,
+                       context=context)
 
         # Create Projections to and among learning-related Mechanisms and add to Composition
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -6248,7 +6391,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  error_function=None,
                                                  learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE,
                                                                                                   AFTER)))=AFTER,
-                                                 name=None):
+                                                 name=None,
+                                                 context=None):
 
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
@@ -6257,7 +6401,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING))
+        pathway_arg_str = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING,
+                                                                                     string=pathway_arg_str))
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
@@ -6301,7 +6447,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        loss_function,
                                                                        learned_projection,
                                                                        learning_rate,
-                                                                       learning_update)
+                                                                       learning_update,
+                                                                       context)
             sequence_end = path_length - 3
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTS TO ANY MECHANISMS WITH LEARNING ROLE
@@ -6358,7 +6505,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    loss_function,
                                                                    learned_projection,
                                                                    learning_rate,
-                                                                   learning_update)
+                                                                   learning_update,
+                                                                   context)
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
@@ -6456,7 +6604,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       loss_function,
                                                       learned_projection,
                                                       learning_rate,
-                                                      learning_update):
+                                                      learning_update,
+                                                      context):
         """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning Pathway"""
 
         # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
@@ -6501,7 +6650,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
                               (objective_mechanism, NodeRole.LEARNING_OBJECTIVE),
                               learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
+                       required_roles=NodeRole.LEARNING,
+                       context=context)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,
@@ -6860,7 +7010,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._analyze_graph(context=Context(source=ContextFlags.METHOD))
         else:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
-
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by nodes in the Composition
@@ -8988,7 +9137,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
             <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
             a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
-            (see `Composition_Initial_Values_and_Feedback` additional details).
+            (see `Composition_Cycles_and_Feedback` additional details).
 
             reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
                 object or iterable of objects to be passed as arguments to nodes' reset methods when their
@@ -9175,15 +9324,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if initialize_cycle_values is not None:
             for node in initialize_cycle_values:
                 if node not in self.nodes:
-                    raise CompositionError(f"{node.name} (entry in initialize_cycle_values arg) is not a node in '{self.name}'")
+                    raise CompositionError(f"{node.name} "
+                                           f"(entry in initialize_cycle_values arg) is not a node in '{self.name}'")
                 else:
-                    if node not in self.get_nodes_by_role(NodeRole.CYCLE):
+                    if (node not in self.get_nodes_by_role(NodeRole.CYCLE) and
+                            node not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)):
                         warnings.warn(
-                            f"A value is specified for node {node.name} in the initialize_cycle_values "
-                            f"argument, but this node is not part of a cycle. Setting initialization cycle values of nodes that "
-                            f"are not part of cycles is generally a mistake, because these values will be overwritten "
-                            f"when the node first executes, and therefore never used."
-                        )
+                            f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
+                            f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
+                            f"Its value will be overwritten when the node first executes, and therefore not used.")
                     node.initialize(initialize_cycle_values[node], context)
 
         if not reset_stateful_functions_to:
@@ -9486,8 +9635,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receives target values as input to the Composition for training `learning pathways
                 <Composition_Learning_Pathway>` The key of each entry can be either the `TARGET_MECHANISM
                 <Composition_Learning_Components>` for a learning pathway or the final Node in that Pathway, and
-                the value is the target value used for that Node on each trial (see `Composition_Target_Inputs`
-                for additonal details concerning the formatting of targets).
+                the value is the target value used for that Node on each trial (see `target inputs
+                <Composition_Target_Inputs>` for additonal details concerning the formatting of targets).
 
             num_trials : int (default=None)
                 typically, the composition will infer the number of trials from the length of its input specification.

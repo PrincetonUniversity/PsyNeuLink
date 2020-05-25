@@ -1015,6 +1015,8 @@ class ContentAddressableList(UserList):
     Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
     entries.  If called, returns list of items.
 
+    Instance is callable (with no arguments): returns list of its items.
+
     The key with which it is created is also assigned as a property of the class, that returns a list
     with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
     of a `Mechanism <Mechanism>` is a ContentAddressableList of the Mechanism's `OutputPorts <OutputPort>`, keyed by

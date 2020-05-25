@@ -1,12 +1,13 @@
-Projections
-===========
+Projection
+==========
+
+*Subclasses:*
 
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
-   Pathway Projections <PathwayProjection>
-   Modulatory Projections <ModulatoryProjection>
+   PathwayProjection
+   ModulatoryProjection
 
 .. automodule:: psyneulink.core.components.projections.projection
    :members:

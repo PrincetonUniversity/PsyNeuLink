@@ -1,5 +1,5 @@
 MaskedMappingProjection
-=========================
+=======================
 
 .. automodule:: psyneulink.library.components.projections.pathway.maskedmappingprojection
    :members:

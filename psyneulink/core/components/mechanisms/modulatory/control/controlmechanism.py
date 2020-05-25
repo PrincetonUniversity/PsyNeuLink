@@ -133,7 +133,7 @@ COMMENT
 
 Note that, in the figures above, the `ControlProjections <ControlProjection>` are designated with square "arrowheads",
 and the ControlMechanisms are shown as septagons to indicate that their ControlProjections create a feedback loop
-(see `Composition_Initial_Values_and_Feedback`;  also, see `below <ControlMechanism_Add_Linear_Processing_Pathway>`
+(see `Composition_Cycles_and_Feedback`;  also, see `below <ControlMechanism_Add_Linear_Processing_Pathway>`
 regarding specification of a ControlMechanism and associated ObjectiveMechanism in a Composition's
 `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method).
 
@@ -482,7 +482,7 @@ a Composition for which it is not a `controller <Composition.controller>`, then 
 `Mechanism <Mechanism>`, based on its place in the Composition's `graph <Composition.graph>`.  Because
 `ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the
 graph, the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL
-<TimeScale.TRIAL>` (see `Composition_Initial_Values_and_Feedback` for configuring the initialization of feedback
+<TimeScale.TRIAL>` (see `Composition_Cycles_and_Feedback` for configuring the initialization of feedback
 loops in a Composition; also see `Scheduler` for a description of additional ways in which a ControlMechanism and its
 dependents can be scheduled to execute).
 
