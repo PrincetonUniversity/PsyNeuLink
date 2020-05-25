@@ -3572,7 +3572,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         if node is self:
-            raise CompositionError(f"Attempt to add {node} as a Node in itself.")
+            raise CompositionError(f"Attempt to add {node.name} as a Node to itself.")
 
         self._update_shadows_dict(node)
 
