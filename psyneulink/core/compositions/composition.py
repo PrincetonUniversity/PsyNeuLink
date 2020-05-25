@@ -8591,7 +8591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ret = {}
         for node, values in targets.items():
             if NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
                 comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
                 target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self.get_roles_by_node(t) and NodeRole.LEARNING in self.get_roles_by_node(t))]
