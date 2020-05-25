@@ -5453,6 +5453,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If called from add_pathways(), use its pathway_arg_str in error messages (in context.string)
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
+        # If call from _create_backpropagation_learning_pathway, use its pathway_arg_str
+        elif context.source == ContextFlags.INITIALIZING:
+            pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
@@ -5477,7 +5480,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = list(pathway)
             # If tuple is (pathway, LearningFunction), get pathway and ignore LearningFunction
             elif isinstance(pathway[1],type) and issubclass(pathway[1], LearningFunction):
-                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]} ,"
+                warnings.warn(f"{LearningFunction.__name__} found in specification of {pathway_arg_str}: {pathway[1]}; "
                               f"it will be ignored")
                 pathway = pathway[0]
             else:
@@ -5643,11 +5646,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(nodes[i + 1])
 
         # FIX 5/24/20 [JDC]: CHECK THAT PATHWAY IS VIABLE AND NOT SAME AS EXISTING ONE
-        # # If the explicit pathway is shorter than the one specified, then something went wrong
-        # if len(explicit_pathway) < len(pathway):
-        #     # If no Projections were added, then Pathway is presumably identical
-
-
+        # If pathway is an existing one, return that
+        existing_pathway = next((p for p in self.pathways if pathway==p.pathway), None)
+        if existing_pathway:
+            warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
+                          f"it will be ignored.")
+            return existing_pathway
+        # If the explicit pathway is shorter than the one specified, then something is wrong,
+        elif len(explicit_pathway) < len(pathway):
+            # Duplicate Projetions were found and suppressed
+            # if any(pathway == [item for p in self.pathways for item in p.pathway if not isinstance(item, Projection)]):
+            existing_pathway = next((p for p in self.pathways if [item for p in self.pathways for item in p.pathway
+                                          if not isinstance(item, Projection)]), None)
+            if explicit_pathway:
+                warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
+                              f"it will be ignored.")
+                return existing_pathway
+            # Otherwise, something has gone wrong
+            assert False, f"Bad pathway specification in {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
@@ -5909,10 +5925,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # FIX 4/4/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
 
-        # If called from add_pathways(), use its pathway_arg_str
 
         from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 
+        # If called from add_pathways(), use its pathway_arg_str
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
@@ -6383,7 +6399,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING))
+        pathway_arg_str = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING,
+                                                                                     string=pathway_arg_str))
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
