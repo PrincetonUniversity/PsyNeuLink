@@ -5435,12 +5435,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         pathway : `Node <Composition_Nodes>`, list or `Pathway`
-            specifies the nodes, and optionally Projections, used to construct a processing `Pathway <Pathway>`.
-            Any standard form of `Pathway specification <Pathway_Specification>` can be used, however if a 2-item (
-            Pathway, LearningFunction) tuple is used the `LearningFunction` will be ignored (this should be used with
-            `add_linear_learning_pathway` if a `learning Pathway <Composition_Learning_Pathway>` is desired).  A
-            `Pathway` object can also be used;  again, however, any learning-related specifications will be ignored,
-            as will its `name <Pathway.name>` if the **name** argument of add_linear_processing_pathway is specified.
+            specifies the `Nodes <Composition_Nodes>`, and optionally `Projections <Projection>`, used to construct a
+            processing `Pathway <Pathway>`. Any standard form of `Pathway specification <Pathway_Specification>` can
+            be used, however if a 2-item (Pathway, LearningFunction) tuple is used the `LearningFunction` will be
+            ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
+            <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
+            learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
+            argument of add_linear_processing_pathway is specified.
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -5859,17 +5860,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `learning method <Composition_Learning_Methods>` is called.  Some may allow the error_function
         to be specified, in which case it must be compatible with the class of LearningFunction specified.
 
-        If **learning_function** an instantiated function, it is assigned to all of the `LearningMechanisms
+        If **learning_function** is a custom function, it is assigned to all of the `LearningMechanisms
         <LearningMechanism>` created for the MappingProjections in the pathway.  A `ComparatorMechanism` is
         created to compute the error for the pathway, and assigned the function specified in **error_function**,
         which must be compatible with **learning_function**.
 
-        See `Composition_Learning` for for a more detailed description of how learning is implemented in a
+        See `Composition_Learning` for a more detailed description of how learning is implemented in a
         Composition, including the `learning components <Composition_Learning_Components>` that are created,
         as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
         algorithms.
 
         The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
+            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `learning_output <Pathway.learning_output>`
             *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
             *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`
             *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
@@ -5881,21 +5883,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        pathway : List
-            list containing either [Node1, Node2] or [Node1, MappingProjection, Node2]. If a projection is
-            specified, that projection is the learned projection. Otherwise, a default MappingProjection is
-            automatically generated for the learned projection.
-
-        COMMENT:
-             FIX: FROM add_linear_processing_pathway -- MODIFY TO INCLUDE HERE
-            specifies the nodes, and optionally Projections, used to construct a linear `processing Pathway
-            <Composition_Processing_Pathways>`.  Any standard form of `Pathway specification <Pathway_Specification>`
-            can be used, including a 2-item (Pathway, LearningFunction) tuple, but the `LearningFunction` will be
-            ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
-            <Composition_Learning_Pathway>` is wanted).  A `Pathway` object can also be used;  again, however,
-            any learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
-            argument of the method is specified.
-        COMMENT
+        pathway : List or `Pathway`
+            specifies the `learning Pathway <Composition_Learning_Pathway>` for which the `Projections <Projections>`
+            will be learned;  can be specified as a `Pathway` or as a list of `Nodes <Composition_Nodes>` and,
+            optionally, Projections between them (see `list <Pathway_Specification_List>`).
 
         learning_function : LearningFunction
             specifies the type of `LearningFunction` to use for the `LearningMechanism` constructued for each
@@ -5935,22 +5926,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `learning Pathway` <Composition_Learning_Pathway>` added to the Composition.
 
         """
-        # FIX 4/4/20 [JDC]: DOCUMENT HANDLING of Pathway IN DOCSTRING ABOVE
-
 
         from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 
         # If called from add_pathways(), use its pathway_arg_str
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
-            context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/4/20 [JDC]: Reset for to None for now to replicate prior behavior,
-            #                   but need to implement proper behavior wrt call to analyze_graph()
-            #                   _check_initalization_state()
-            context = None
+        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
