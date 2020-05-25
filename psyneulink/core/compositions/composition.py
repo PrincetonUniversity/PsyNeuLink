@@ -3572,7 +3572,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         if node is self:
-            raise CompositionError(f"Attempt to add {node.name} as a Node to itself.")
+            pathway_arg_str = ""
+            if context:
+                pathway_arg_str = "in " + context.string
+            raise CompositionError(f"Attempt to add Composition as a Node to itself {pathway_arg_str}.")
 
         self._update_shadows_dict(node)
 
@@ -3701,7 +3704,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.control.append(control_signal)
                     self.controller._activate_projections_for_compositions(self)
 
-    def add_nodes(self, nodes, required_roles=None):
+    def add_nodes(self, nodes, required_roles=None, context=None):
         """
             Add a list of `Nodes <Composition_Nodes>` to the Composition.
 
@@ -3725,12 +3728,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"must be a list of nodes or (node, required_roles) tuples")
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
-                self.add_node(node, required_roles)
+                self.add_node(node, required_roles, context)
             elif isinstance(node, tuple):
                 node_specific_roles = convert_to_list(node[1])
                 if required_roles:
                     node_specific_roles.append(required_roles)
-                self.add_node(node=node[0], required_roles=node_specific_roles)
+                self.add_node(node=node[0], required_roles=node_specific_roles, context=context)
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
@@ -5505,7 +5508,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if _is_node_spec(pathway[c]):
-                self.add_nodes([pathway[c]])
+                self.add_nodes(nodes=[pathway[c]], context=context)
                 nodes.append(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
@@ -5649,7 +5652,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             explicit_pathway.append(projections[i])
             explicit_pathway.append(nodes[i + 1])
 
-        # FIX 5/24/20 [JDC]: CHECK THAT PATHWAY IS VIABLE AND NOT SAME AS EXISTING ONE
         # If pathway is an existing one, return that
         existing_pathway = next((p for p in self.pathways if pathway==p.pathway), None)
         if existing_pathway:
@@ -5668,7 +5670,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
             # Otherwise, something has gone wrong
-            assert False, f"Bad pathway specification in {pathway_arg_str}: {pathway}."
+            assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,

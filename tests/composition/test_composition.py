@@ -674,7 +674,7 @@ class TestCompositionPathwayAdditionMethods:
             c.add_linear_processing_pathway(pathway=p)
         assert ("LearningFunction found in specification of 'pathway' arg for " in w[0].message.args[0] and
                 "add_linear_procesing_pathway method" in w[0].message.args[0] and
-                "Reinforcement'> ,it will be ignored" in w[0].message.args[0])
+                "Reinforcement'>; it will be ignored" in w[0].message.args[0])
         assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT, NodeRole.ORIGIN}
         assert set(c.get_roles_by_node(B)) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
         assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
