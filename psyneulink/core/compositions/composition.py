@@ -5871,7 +5871,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         algorithms.
 
         The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
-            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `learning_output <Pathway.learning_output>`
+            *OUTPUT_MECHANISM*: `ProcessingMechanism` (assigned to `output <Pathway.output>`
             *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
             *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`
             *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
