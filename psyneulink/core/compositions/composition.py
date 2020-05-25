@@ -3573,9 +3573,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
         if node is self:
             pathway_arg_str = ""
-            if context:
-                pathway_arg_str = "in " + context.string
-            raise CompositionError(f"Attempt to add Composition as a Node to itself {pathway_arg_str}.")
+            if context.source in {ContextFlags.INITIALIZING, ContextFlags.METHOD}:
+                pathway_arg_str = " in " + context.string
+            raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
 
         self._update_shadows_dict(node)
 
@@ -5497,7 +5497,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Then, verify that the pathway begins with a node
         if _is_node_spec(pathway[0]):
-            self.add_nodes([pathway[0]]) # Use add_nodes so that node spec can also be a tuple with required_roles
+            # Use add_nodes so that node spec can also be a tuple with required_roles
+            self.add_nodes(nodes=[pathway[0]],
+                           context=Context(source=ContextFlags.METHOD,
+                                           string=pathway_arg_str))
             nodes.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
@@ -5508,7 +5511,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if _is_node_spec(pathway[c]):
-                self.add_nodes(nodes=[pathway[c]], context=context)
+                self.add_nodes(nodes=[pathway[c]],
+                               context=Context(source=ContextFlags.METHOD,
+                                               string=pathway_arg_str))
                 nodes.append(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
@@ -5864,7 +5869,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         as well as other `learning methods <Composition_Learning_Methods>` that can be used to implement specific
         algorithms.
 
-       The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
+        The `learning components <Composition_Learning_Components>` created are placed in a dict the following entries:
             *TARGET_MECHANISM*: `ProcessingMechanism` (assigned to `target <Pathway.target>`
             *OBJECTIVE_MECHANISM*: `ComparatorMechanism` (assigned to `learning_objective <Pathway.learning_objective>`
             *LEARNING_MECHANISMS*: `LearningMechanism` or list[`LearningMechanism`]
@@ -5938,6 +5943,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If called from add_pathways(), use its pathway_arg_str
         if context.source == ContextFlags.METHOD:
             pathway_arg_str = context.string
+            context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
@@ -5963,7 +5969,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.get_nodes_by_role(NodeRole.OUTPUT):
             if not any(node for node in [pathway for pathway in self.pathways
                                      if PathwayRole.LEARNING in pathway.roles]):
-                self._add_required_node_role(node, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+                self._add_required_node_role(node, NodeRole.OUTPUT, context)
 
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
@@ -5972,7 +5978,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                  learning_rate,
                                                                  error_function,
                                                                  learning_update,
-                                                                 name=pathway_name)
+                                                                 name=pathway_name,
+                                                                 context=context)
 
         # If BackPropagation is not specified, then the learning pathway is "one-layered"
         #   (Mechanism -> learned_projection -> Mechanism) with only one LearningMechanism, Target and Comparator
@@ -5986,10 +5993,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                          f'{learning_function.__name__} {LearningFunction.__name__}'))
 
         # Add required role before calling add_linear_process_pathway so NodeRole.OUTPUTS are properly assigned
-        self._add_required_node_role(output_source, NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+        self._add_required_node_role(output_source, NodeRole.OUTPUT, context)
 
         learning_pathway = self.add_linear_processing_pathway(pathway=[input_source, learned_projection, output_source],
                                                               name=pathway_name,
+                                                              # context=context)
                                                               context=context)
 
         # Learning Components
@@ -6009,7 +6017,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_nodes([(target, NodeRole.TARGET),
                         (comparator, NodeRole.LEARNING_OBJECTIVE),
                          learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
+                       required_roles=NodeRole.LEARNING,
+                       context=context)
 
         # Create Projections to and among learning-related Mechanisms and add to Composition
         learning_related_projections = self._create_learning_related_projections(input_source,
@@ -6397,7 +6406,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  error_function=None,
                                                  learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE,
                                                                                                   AFTER)))=AFTER,
-                                                 name=None):
+                                                 name=None,
+                                                 context=None):
 
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
@@ -6452,7 +6462,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                        loss_function,
                                                                        learned_projection,
                                                                        learning_rate,
-                                                                       learning_update)
+                                                                       learning_update,
+                                                                       context)
             sequence_end = path_length - 3
 
         # # FIX: ALTERNATIVE IS TO TEST WHETHER IT PROJECTS TO ANY MECHANISMS WITH LEARNING ROLE
@@ -6509,7 +6520,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                    loss_function,
                                                                    learned_projection,
                                                                    learning_rate,
-                                                                   learning_update)
+                                                                   learning_update,
+                                                                   context)
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
@@ -6607,7 +6619,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       loss_function,
                                                       learned_projection,
                                                       learning_rate,
-                                                      learning_update):
+                                                      learning_update,
+                                                      context):
         """Create ComparatorMechanism, LearningMechanism and LearningProjection for Component in learning Pathway"""
 
         # target = self._terminal_backprop_sequences[output_source][TARGET_MECHANISM]
@@ -6652,7 +6665,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
                               (objective_mechanism, NodeRole.LEARNING_OBJECTIVE),
                               learning_mechanism],
-                       required_roles=NodeRole.LEARNING)
+                       required_roles=NodeRole.LEARNING,
+                       context=context)
 
         learning_related_projections = self._create_learning_related_projections(input_source,
                                                                                  output_source,

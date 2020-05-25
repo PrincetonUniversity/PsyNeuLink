@@ -814,6 +814,22 @@ class TestCompositionPathwayAdditionMethods:
         assert ("Every item in the \'pathways\' arg for the add_pathways method" in str(error_text.value)
                 and "must be a Node, list, tuple or dict:" in str(error_text.value))
 
+    def test_for_add_processing_pathway_recursion_error(self):
+        A = TransferMechanism()
+        C = Composition()
+        with pytest.raises(pnl.CompositionError) as error_text:
+            C.add_linear_processing_pathway(pathway=[A,C])
+        assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
+               f"add_linear_procesing_pathway method of {C.name}." in str(error_text.value)
+
+    def test_for_add_learning_pathway_recursion_error(self):
+        A = TransferMechanism()
+        C = Composition()
+        with pytest.raises(pnl.CompositionError) as error_text:
+            C.add_backpropagation_learning_pathway(pathway=[A,C])
+        assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
+               f"add_backpropagation_learning_pathway method of {C.name}." in str(error_text.value)
+
 
 class TestDuplicatePathwayWarnings:
 
