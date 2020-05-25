@@ -3570,6 +3570,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 any NodeRoles roles that this Node should have in addition to those determined by analyze graph.
         """
 
+        # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
+        if node is self:
+            raise CompositionError(f"Attempt to add {node} as a Node in itself.")
+
         self._update_shadows_dict(node)
 
         try:
