@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -278,7 +278,7 @@ LCControlMechanism.</p>
 <span id="lccontrolmechanism-modulated-mechanisms"></span><h3><em>Mechanisms to Modulate</em><a class="headerlink" href="#mechanisms-to-modulate" title="Permalink to this headline">¶</a></h3>
 <p>The Mechanisms to be modulated by an LCControlMechanism are specified in the <strong>modulated_mechanisms</strong> argument of its
 constructor. An LCControlMechanism controls a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> by modifying the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Therefore, any Mechanism
-specified for control by an LCControlMechanism must be either a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a>, or a Mechanism that uses as its
+specified for control by an LCControlMechanism must be either a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>, or a Mechanism that uses as its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> a class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that implements a <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>.  The <strong>modulate_mechanisms</strong> argument must be either a list of such Mechanisms, or
 a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (to modulate all of the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in a Composition – see below).
 see below). If a Mechanism specified in the <strong>modulated_mechanisms</strong> argument does not implement a multiplicative_param,
@@ -288,7 +288,7 @@ it is ignored. A <a class="reference internal" href="ControlProjection.html"><sp
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms"><code class="xref any py py-attr docutils literal"><span class="pre">modulated_mechanisms</span></code></a> attribute).</p>
 <p>If <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> is assigned as the value of <strong>modulate_mechanisms</strong>, then the LCControlMechanism will modulate all
 of the <a class="reference internal" href="ProcessingMechanisms.html"><span class="doc">Processing Mechanisms</span></a> in that Composition, with the exception of any <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>s that are assigned
-a the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> of another <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>.  Note that only the
+a the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> of another <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.  Note that only the
 Mechanisms that already belong to that Composition are included at the time the LCControlMechanism is constructed.
 Therefore, to include <em>all</em> Mechanisms in the Composition at the time it is run, the LCControlMechanism should be
 constructed and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_node" title="psyneulink.core.compositions.composition.Composition.add_node"><code class="xref any py py-meth docutils literal"><span class="pre">added</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">Composition</span> <span class="pre">using</span> <span class="pre">the</span> <span class="pre">Composition's</span> <span class="pre">`add_node</span></code></a> method) after all
@@ -372,7 +372,7 @@ in its <a class="reference internal" href="#psyneulink.library.components.mechan
 <div class="section" id="execution">
 <span id="lccontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An LCControlMechanism executes within a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> at a point specified in the Composition’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> or, if it
-is the <code class="xref any docutils literal"><span class="pre">controller</span></code> for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, after all of the other Mechanisms in the Composition
+is the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, after all of the other Mechanisms in the Composition
 have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>
 takes the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the LCControlMechanism’s <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> as its input,
 and generates a response – under the influence of its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal"><span class="pre">mode</span></code></a> parameter – that is
@@ -417,7 +417,7 @@ a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.com
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.</code><code class="descname">LCControlMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_mechanism=None</em>, <em>monitor_for_control=None</em>, <em>modulated_mechanisms=None</em>, <em>modulation='multiplicative_param'</em>, <em>integration_method='RK4'</em>, <em>initial_w_FitzHughNagumo=0.0</em>, <em>initial_v_FitzHughNagumo=0.0</em>, <em>time_step_size_FitzHughNagumo=0.05</em>, <em>t_0_FitzHughNagumo=0.0</em>, <em>a_v_FitzHughNagumo=-0.3333333333333333</em>, <em>b_v_FitzHughNagumo=0.0</em>, <em>c_v_FitzHughNagumo=1.0</em>, <em>d_v_FitzHughNagumo=0.0</em>, <em>e_v_FitzHughNagumo=-1.0</em>, <em>f_v_FitzHughNagumo=1.0</em>, <em>time_constant_v_FitzHughNagumo=1.0</em>, <em>a_w_FitzHughNagumo=1.0</em>, <em>b_w_FitzHughNagumo=-0.8</em>, <em>c_w_FitzHughNagumo=0.7</em>, <em>threshold_FitzHughNagumo=-1.0</em>, <em>time_constant_w_FitzHughNagumo=12.5</em>, <em>mode_FitzHughNagumo=1.0</em>, <em>uncorrelated_activity_FitzHughNagumo=0.0</em>, <em>base_level_gain=0.5</em>, <em>scaling_factor_gain=3.0</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the
+<dd><p>Subclass of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
 See <a class="reference internal" href="ControlMechanism.html#controlmechanism-class-reference"><span class="std std-ref">ControlMechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -767,7 +767,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

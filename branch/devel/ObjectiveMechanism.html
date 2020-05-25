@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Modulatory Mechanisms" href="ModulatoryMechanism.html" />
-    <link rel="prev" title="IntegratorMechanism" href="IntegratorMechanism.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,14 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Mechanism.html">Mechanisms</a> &gt;</li>
-        
-          <li><a href="ProcessingMechanism.html">Processing Mechanisms</a> &gt;</li>
         
       <li>ObjectiveMechanism</li>
     
@@ -270,7 +260,7 @@ or <code class="xref any docutils literal"><span class="pre">size</span></code> 
 be monitored, the InputPort is created but will be ignored until an OutputPort (and MappingProjection from it) are
 specified for that InputPort.</p>
 <p>The OutputPorts monitored by the ObjectiveMechanism are listed in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> attribute.
-When an ObjectiveMechanism is created by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>, these may pass a set of OutputPorts to be monitored to
+When an ObjectiveMechanism is created by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, these may pass a set of OutputPorts to be monitored to
 the ObjectiveMechanism.  A ControlMechanism passes OutputPort specifications listed in its <strong>objective_mechanism</strong>
 argument (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">Objective Mechanism</span></a>).</p>
 </div>
@@ -445,7 +435,7 @@ specified, as it is not used.  However it, and the <a class="reference internal"
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>monitor</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, ‘InputPort`, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>] or dict) – specifies the OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of which will be monitored, and evaluated by
+<li><strong>monitor</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, ‘InputPort`, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>] or dict) – specifies the OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of which will be monitored, and evaluated by
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#objectivemechanism-monitor"><span class="std std-ref">Monitor</span></a> for details of specification).</li>
 <li><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
 (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for details).</li>
@@ -467,7 +457,7 @@ corresponding <a class="reference internal" href="InputPort.html"><span class="d
 <p class="first admonition-title">Note</p>
 <p class="last">If any of the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a> were specified to <a class="reference internal" href="InputPort.html#inputport-shadow-inputs"><span class="std std-ref">shadow
 the InputPort</span></a> of another Mechanism, and any of those shadowed InputPorts
-receives more than one <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, then the list of monitored OutputPorts in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> will be longer
+receives more than one <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, then the list of monitored OutputPorts in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal"><span class="pre">monitor</span></code></a> will be longer
 than the list of the ObjectiveMechanism’s <code class="xref any docutils literal"><span class="pre">input_ports</span></code>.</p>
 </div>
 </dd></dl>
@@ -540,7 +530,7 @@ ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.comp
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor">
 <code class="descname">add_to_monitor</code><span class="sig-paren">(</span><em>monitor_specs</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> to be monitored by the ObjectiveMechanism.</p>
-<p>Used by other Components to add a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> or list of Ports to be monitored by the ObjectiveMechanism.
+<p>Used by other Components to add a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> or list of Ports to be monitored by the ObjectiveMechanism.
 The <strong>monitor_spec</strong> can be any of the following:
 - MonitoredOutputPortTuple
 - <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>;
@@ -561,15 +551,6 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputPort.h
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ModulatoryMechanism.html" class="btn btn-neutral float-right" title="Modulatory Mechanisms" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="IntegratorMechanism.html" class="btn btn-neutral" title="IntegratorMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -633,7 +614,7 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputPort.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

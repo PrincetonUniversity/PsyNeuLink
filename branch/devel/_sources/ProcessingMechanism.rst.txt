@@ -1,7 +1,9 @@
-Processing Mechanisms
-=====================
+ProcessingMechanism
+===================
 
 .. _ProcessingMechanism_Subtypes:
+
+*Subclasses*
 
 .. toctree::
    :maxdepth: 1

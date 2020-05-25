@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="CombinationFunctions" href="CombinationFunctions.html" />
-    <link rel="prev" title="UserDefinedFunction" href="UserDefinedFunction.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,12 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Functions.html">Functions</a> &gt;</li>
         
       <li>TransferFunctions</li>
     
@@ -1222,7 +1214,7 @@ and <a class="reference internal" href="Projection.html#psyneulink.core.componen
 <li>a matrix keyword specification generates a matrix based on the sender and receiver shapes</li>
 </ul>
 </div></blockquote>
-<p>When LinearMatrix is instantiated on its own, or as the function of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>:</p>
+<p>When LinearMatrix is instantiated on its own, or as the function of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>:</p>
 <blockquote>
 <div><ul>
 <li>the matrix specification must be compatible with the function’s own <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></li>
@@ -1342,7 +1334,7 @@ were enabled.</p>
 <p>The <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> and <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">additive_param</span></a> of each
 <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost function</span></a> is assigned as a parameter of the TransferWithCost <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>.
 This makes them accessible for <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> when the Function is assigned to a
-<a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> (e.g., as the default <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>), or a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  They can be referred to in the <strong>modulation</strong> argument of a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a>’s constructor
+<a class="reference internal" href="Port.html"><span class="doc">Port</span></a> (e.g., as the default <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>), or a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  They can be referred to in the <strong>modulation</strong> argument of a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>’s constructor
 (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-types"><span class="std std-ref">Types of Modulation</span></a>) using the following keywords:</p>
 <blockquote>
 <div><em>INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM</em>
@@ -1913,15 +1905,6 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="CombinationFunctions.html" class="btn btn-neutral float-right" title="CombinationFunctions" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="UserDefinedFunction.html" class="btn btn-neutral" title="UserDefinedFunction" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -1971,7 +1954,7 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

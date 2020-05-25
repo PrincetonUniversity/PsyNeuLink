@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Scheduling" href="Scheduling.html" />
-    <link rel="prev" title="Composition" href="Composition.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,10 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Composition.html">Composition</a> &gt;</li>
         
       <li>Pathway</li>
     
@@ -258,7 +252,7 @@ its <a class="reference internal" href="Composition.html#composition-pathway-add
 other form of <a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway specification</span></a> for those arguments.  However, the Pathway object itself
 is not assigned to the Composition; rather, it serves as a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a> for a new Pathway object
 that is automatically created and assigned to the Composition.  The Composition’s <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">Pathway addition methods</span></a> return a Pathway object for each Pathway created and assigned to theComposition.
-All of the Pathways assigned to a Composition are listed in its <code class="xref any docutils literal"><span class="pre">pathways</span></code> attribute.</p>
+All of the Pathways assigned to a Composition are listed in its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.pathways" title="psyneulink.core.compositions.composition.Composition.pathways"><code class="xref any py py-attr docutils literal"><span class="pre">pathways</span></code></a> attribute.</p>
 </div>
 <div class="section" id="pathway-name">
 <span id="id1"></span><h3><em>Pathway Name</em><a class="headerlink" href="#pathway-name" title="Permalink to this headline">¶</a></h3>
@@ -279,7 +273,7 @@ of any of a Composition’s <a class="reference internal" href="Composition.html
 <ul class="simple" id="pathway-specification-list">
 <li><strong>list</strong>: [<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…] –
 each item of the list must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> – i.e., Mechanism or Composition, or a
-(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a> or a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-specification"><span class="std std-ref">feedback specification</span></a>) tuple interposed between a pair of nodes.
+(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a> or a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple interposed between a pair of nodes.
 The list must begin and end with a node.</li>
 </ul>
 <ul class="simple">
@@ -331,7 +325,7 @@ the <strong>pathway</strong> arg of its constructor; that is, depending upon how
 fully constructed <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  This is passed to the <strong>pathways</strong> argument of a Composition’s
 constructor or one of its <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a> when the Pathway is used
 in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
-<code class="xref any docutils literal"><span class="pre">pathways</span></code> attribute), then the actual <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism(s)</span></a> and/or <code class="xref any docutils literal"><span class="pre">Composition(s)</span></code>
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.pathways" title="psyneulink.core.compositions.composition.Composition.pathways"><code class="xref any py py-attr docutils literal"><span class="pre">pathways</span></code></a> attribute), then the actual <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism(s)</span></a> and/or <code class="xref any docutils literal"><span class="pre">Composition(s)</span></code>
 that comprise <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>, and the <a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a> between them, are listed in the
 Pathway’s <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> attribute.</li>
 <li><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="psyneulink.core.compositions.pathway.Pathway.composition"><code class="xref any py py-attr docutils literal"><span class="pre">composition</span></code></a> - contains the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that created the Pathway and to which it belongs,
@@ -432,7 +426,7 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 <dd><p><em>dict or None</em> – dict containing the following entries if the Pathway is a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>
 (and is assigned <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.LEARNING" title="psyneulink.core.compositions.pathway.PathwayRole.LEARNING"><code class="xref any py py-attr docutils literal"><span class="pre">PathwayRole.LEARNING</span></code></a> in <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal"><span class="pre">roles</span></code></a>):</p>
 <blockquote>
-<div><em>TARGET_MECHANISM</em>: <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> (assigned to <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.target" title="psyneulink.core.compositions.pathway.Pathway.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>)
+<div><em>TARGET_MECHANISM</em>: <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> (assigned to <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.target" title="psyneulink.core.compositions.pathway.Pathway.target"><code class="xref any py py-attr docutils literal"><span class="pre">target</span></code></a>)
 ..
 <em>OBJECTIVE_MECHANISM</em>: <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> (assigned to <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.learning_objective" title="psyneulink.core.compositions.pathway.Pathway.learning_objective"><code class="xref any py py-attr docutils literal"><span class="pre">learning_objective</span></code></a>)
 ..
@@ -517,15 +511,6 @@ See <code class="xref any docutils literal"><span class="pre">note</span></code>
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Scheduling.html" class="btn btn-neutral float-right" title="Scheduling" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="Composition.html" class="btn btn-neutral" title="Composition" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -587,7 +572,7 @@ See <code class="xref any docutils literal"><span class="pre">note</span></code>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

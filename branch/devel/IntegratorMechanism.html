@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ObjectiveMechanism" href="ObjectiveMechanism.html" />
-    <link rel="prev" title="TransferMechanism" href="TransferMechanism.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,14 +170,6 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Mechanism.html">Mechanisms</a> &gt;</li>
-        
-          <li><a href="ProcessingMechanism.html">Processing Mechanisms</a> &gt;</li>
-        
       <li>IntegratorMechanism</li>
     
   </ul>
@@ -211,8 +201,8 @@
 <div><ul class="simple">
 <li><a class="reference internal" href="#integratormechanism-overview"><span class="std std-ref">Overview</span></a></li>
 <li><a class="reference internal" href="#integratormechanism-creation"><span class="std std-ref">Creating an IntegratorMechanism</span></a></li>
-<li><code class="xref any docutils literal"><span class="pre">IntegratorMechanism_Structure</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">IntegratorMechanism_Execution</span></code></li>
+<li><a class="reference internal" href="#integratormechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#integratormechanism-execution"><span class="std std-ref">Execution</span></a></li>
 <li><a class="reference internal" href="#integratormechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
 </ul>
 </div></blockquote>
@@ -239,7 +229,7 @@ array), as well as the value to use if none is provided when Mechanism is execut
 argument can be used to specify the length of the array, in which case it will be initialized with all zeros.</p>
 </div>
 <div class="section" id="structure">
-<h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<span id="integratormechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism has a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, the <code class="xref any docutils literal"><span class="pre">value</span></code> of which is
 used as the  <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for its <code class="xref any docutils literal"><span class="pre">function</span></code>.
 The default for <code class="xref any docutils literal"><span class="pre">function</span></code> is <code class="xref any docutils literal"><span class="pre">AdaptiveIntegrator(rate=0.5)</span></code>. However,
@@ -249,7 +239,7 @@ the <code class="xref any docutils literal"><span class="pre">value</span></code
 <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </div>
 <div class="section" id="execution">
-<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<span id="integratormechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
 result to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>.  For the default
 function (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>), if the value specified for <strong>default_variable</strong> is a list or array, or <strong>size</strong> is greater
@@ -284,15 +274,6 @@ of values, and return one of the same form.</td>
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ObjectiveMechanism.html" class="btn btn-neutral float-right" title="ObjectiveMechanism" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="TransferMechanism.html" class="btn btn-neutral" title="TransferMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -348,7 +329,7 @@ of values, and return one of the same form.</td>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

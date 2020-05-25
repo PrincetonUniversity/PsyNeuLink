@@ -1,16 +1,17 @@
-Ports
-======
+Port
+====
 
 .. _Port_Subtypes:
+
+*Subclasses:*
 
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
    InputPort
    ParameterPort
    OutputPort
-   ModulatorySignals <ModulatorySignal>
+   ModulatorySignal
 
 .. automodule:: psyneulink.core.components.ports.port
    :members:

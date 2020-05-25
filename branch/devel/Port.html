@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Ports &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="InputPort" href="InputPort.html" />
-    <link rel="prev" title="GatingProjection" href="GatingProjection.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,11 +170,7 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-      <li>Ports</li>
+      <li>Port</li>
     
   </ul>
 
@@ -199,14 +193,15 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="ports">
-<h1>Ports<a class="headerlink" href="#ports" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="port">
+<h1>Port<a class="headerlink" href="#port" title="Permalink to this headline">¶</a></h1>
+<p id="port-subtypes"><em>Subclasses:</em></p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="InputPort.html">InputPort</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ParameterPort.html">ParameterPort</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OutputPort.html">OutputPort</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignals</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ModulatorySignal.html">ModulatorySignal</a></li>
 </ul>
 </div>
 <span class="target" id="module-psyneulink.core.components.ports.port"></span><div class="section" id="contents">
@@ -500,7 +495,7 @@ The following types of Projections can be specified for each type of Port:</p>
 <p class="last"><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a></p>
 </td>
 </tr>
-<tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">Modulatory Signals</span></a></td>
+<tr class="row-odd"><td><a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a></td>
 <td><a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a></td>
 <td><a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.efferents" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.efferents"><code class="xref any py py-attr docutils literal"><span class="pre">efferents</span></code></a></td>
 </tr>
@@ -565,7 +560,7 @@ with each type for a description of how they can be used to modulate the <a clas
 Port.</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>:  for an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> this is the combined value of the <a class="reference internal" href="PathwayProjections.html"><span class="doc">Pathway Projections</span></a> it
+<li><a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>:  for an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> this is the combined value of the <a class="reference internal" href="PathwayProjections.html"><span class="doc">PathwayProjections</span></a> it
 receives;  for a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>, this represents the value of the parameter that will be used by the Port’s
 owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; for an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, it is the item of the  owner Mechanism’s
 <code class="xref any docutils literal"><span class="pre">value</span></code> to which the OutputPort is assigned, possibly modified by its <code class="xref any docutils literal"><span class="pre">assign</span></code> attribute and/or a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a>, and used as the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
@@ -732,7 +727,7 @@ specifies that the InputPort of <code class="docutils literal"><span class="pre"
 </pre></div>
 </div>
 <p id="port-modulatory-projections-examples">Conversely, ModulatoryProjections can also be specified from a Mechanism to one or more Ports that it modulates.  In
-the following example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> is created that sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the
+the following example, a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> is created that sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the
 <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate"><code class="xref any py py-attr docutils literal"><span class="pre">drift_rate</span></code></a> and <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal"><span class="pre">threshold</span></code></a>
 ParameterPorts of a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
@@ -984,15 +979,6 @@ a default is assigned using <code class="xref any docutils literal"><span class=
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="InputPort.html" class="btn btn-neutral float-right" title="InputPort" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="GatingProjection.html" class="btn btn-neutral" title="GatingProjection" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -1021,7 +1007,7 @@ a default is assigned using <code class="xref any docutils literal"><span class=
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Ports</a><ul>
+<li><a class="reference internal" href="#">Port</a><ul>
 <li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#creating-a-port">Creating a Port</a><ul>
@@ -1058,7 +1044,7 @@ a default is assigned using <code class="xref any docutils literal"><span class=
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

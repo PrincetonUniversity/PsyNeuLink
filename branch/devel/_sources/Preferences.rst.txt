@@ -13,7 +13,7 @@ Standard prefereces:
 
 - functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
 
-[ADDITINAL DOCUMENTATION COMING...]
+[ADDITIONAL DOCUMENTATION COMING...]
 
 
 .. .. automodule:: psyneulink.core.globals.preferences

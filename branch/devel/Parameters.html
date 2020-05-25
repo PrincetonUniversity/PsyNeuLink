@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -222,10 +222,10 @@ class, and are used to validate compatibility between this instance and other Ps
 </div>
 <div class="section" id="statefulness-of-parameters">
 <span id="parameter-statefulness"></span><h2>Statefulness of Parameters<a class="headerlink" href="#statefulness-of-parameters" title="Permalink to this headline">¶</a></h2>
-<p>Parameters can have different values in different <code class="xref any docutils literal"><span class="pre">execution</span> <span class="pre">contexts</span></code> in order to ensure correctness
-of and allow access to <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulation</span></a> calculations. As a result, to inspect and use the values
-of a parameter, in general you need to know the execution context in which you are interested. Much of the time, this execution context
-is likely to be a Composition:</p>
+<p>Parameters can have different values in different <a class="reference internal" href="Composition.html#composition-execution-context"><span class="std std-ref">execution contexts</span></a> in order to
+ensure correctness of and allow access to <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulation</span></a> calculations. As a
+result, to inspect and use the values of a parameter, in general you need to know the execution context in which you
+are interested. Much of the time, this execution context is likely to be a Composition::</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
@@ -249,9 +249,9 @@ is likely to be a Composition:</p>
 <span class="go">[[10.]]</span>
 </pre></div>
 </div>
-<p>The TransferMechanism in the above snippet has a different <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for each Composition it is run in. This holds
-true for all of its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.stateful_parameters" title="psyneulink.core.components.component.Component.stateful_parameters"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span> <span class="pre">Parameters</span></code></a>, so they can behave differently in different execution contexts
-and be modulated during <code class="xref any docutils literal"><span class="pre">control</span></code>.</p>
+<p>The TransferMechanism in the above snippet has a different <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for each Composition it is run in.
+This holds true for all of its <a class="reference internal" href="Component.html#component-stateful-parameters"><span class="std std-ref">stateful Parameters</span></a>, so they can behave differently in
+different execution contexts and can be modified by modulated <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>.</p>
 <div class="admonition note" id="parameter-dot-notation">
 <p class="first admonition-title">Note</p>
 <p class="last">The “dot notation” version - <code class="docutils literal"><span class="pre">t.value</span></code> - refers to the most recent execution context in which <em>t</em> was executed. In
@@ -961,7 +961,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

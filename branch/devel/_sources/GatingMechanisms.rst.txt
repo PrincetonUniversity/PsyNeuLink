@@ -1,15 +1,5 @@
-GatingMechanisms
-================
-
-**Core class**:
-
-* `GatingMechanism`
-
-**Subtypes**:
-
-.. _GatingMechanism_Subtypes:
+GatingMechanism
+===============
 
 .. toctree::
    :maxdepth: 1
-
-[None]

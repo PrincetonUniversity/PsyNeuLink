@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Mechanisms" href="Mechanism.html" />
-    <link rel="prev" title="Core" href="Core.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,8 +170,6 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
       <li>Component</li>
     
   </ul>
@@ -199,6 +195,7 @@
               
   <div class="section" id="component">
 <h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
+<p><em>Subclasses:</em></p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
@@ -206,6 +203,21 @@
 <li class="toctree-l1"><a class="reference internal" href="Port.html">Ports</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>Related</em></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Log.html">Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Registry.html">Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Preferences.html">Preferences</a></li>
+</ul>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
 </div>
 <span class="target" id="module-psyneulink.core.components.component"></span><div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
@@ -433,6 +445,9 @@ parameter’s value, as in the example below:</p>
 parameter can be specified).</p>
 </li>
 </ul>
+<ul class="simple" id="component-stateful-parameters">
+<li><strong>stateful_parameters</strong> - a list containing all of the Component’s <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">stateful parameters</span></a>.</li>
+</ul>
 <ul class="simple" id="component-assign-params">
 <li><strong>reset_params</strong> - reset the value of all parameters to a set of default values as specified in its <strong>mode</strong>
 argument, using a value of <code class="xref any docutils literal"><span class="pre">ResetMode</span></code>.</li>
@@ -448,8 +463,8 @@ argument, using a value of <code class="xref any docutils literal"><span class="
 script).  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can also be executed, although this is usually just for the purposes of demonstration
 or debugging, and <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can only be executed if they are standalone (that is, they do not belong to
 another Component).  All other Components are executed only a Component that depends on them to do so.  This can be
-one to which a Components belongs (such as the Mechanism to which a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> belongs) or that otherwise requires it to
-execute (for example, a updating a <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> requires its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a> to <a class="reference internal" href="Port.html#port-execution"><span class="std std-ref">execute</span></a>).  This is referred to as “lazy updating”, since it means that most Components don’t execute unless
+one to which a Components belongs (such as the Mechanism to which a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> belongs) or that otherwise requires it to
+execute (for example, a updating a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> requires its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a> to <a class="reference internal" href="Port.html#port-execution"><span class="std std-ref">execute</span></a>).  This is referred to as “lazy updating”, since it means that most Components don’t execute unless
 and until they are required to do so.  While this reduces unecessary computation, it can sometimes be confusing. For
 example, when <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a> occurs in a Composition, the modification to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that occurs on a given <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
 does not acutally appear in its <a class="reference internal" href="ParameterPort.html"><span class="doc">value</span></a> until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, since it requires
@@ -470,7 +485,7 @@ arguments, so that the relevant <a class="reference internal" href="IntegratorFu
 <p class="first admonition-title">Note</p>
 <p class="last"><a class="reference internal" href="Mechanisms.html"><span class="doc">Mechanisms</span></a> &lt;Mechanism&gt;` are the only type of Component that reset when the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is satisfied. Other Component types do not reset,
 although <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> has a <code class="xref any docutils literal"><span class="pre">reset</span></code> method that can be used to reset all of its eligible
-Mechanisms.</p>
+Mechanisms (see <a class="reference internal" href="Composition.html#composition-reset"><span class="std std-ref">Resetting Parameters of StatefulFunctions</span></a>)</p>
 </div>
 </li>
 </ul>
@@ -620,6 +635,12 @@ override any assigned to those parameters in arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="psyneulink.core.components.component.Component.stateful_parameters">
+<code class="descname">stateful_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – see <a class="reference internal" href="#component-stateful-parameters"><span class="std std-ref">stateful_parameters</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.reset_stateful_function_when">
 <code class="descname">reset_stateful_function_when</code><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> – see <a class="reference internal" href="#component-reset-stateful-function-when"><span class="std std-ref">reset_stateful_function_when</span></a></p>
@@ -753,8 +774,8 @@ method of the Component’s <a class="reference internal" href="#psyneulink.core
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.stateful_parameters">
-<code class="descname">stateful_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">stateful_parameters</code></dt>
 <dd><p>A list of all of this object’s <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> whose values
 may change during runtime</p>
 </dd></dl>
@@ -769,15 +790,6 @@ may change during runtime</p>
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="Core.html" class="btn btn-neutral" title="Core" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -846,7 +858,7 @@ may change during runtime</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Modulatory Projections &mdash; PsyNeuLink 0.7.5.4+404.ge72a543 documentation</title>
+  <title>ModulatoryProjection &mdash; PsyNeuLink 0.7.5.4+405.g5719326 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="LearningProjection" href="LearningProjection.html" />
-    <link rel="prev" title="AutoAssociativeProjection" href="AutoAssociativeProjection.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+404
+                  0.7.5.4+405
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,13 +170,7 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Projection.html">Projections</a> &gt;</li>
-        
-      <li>Modulatory Projections</li>
+      <li>ModulatoryProjection</li>
     
   </ul>
 
@@ -201,9 +193,10 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="modulatory-projections">
-<h1>Modulatory Projections<a class="headerlink" href="#modulatory-projections" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound" id="modulatoryprojection-subtypes">
+  <div class="section" id="modulatoryprojection">
+<h1>ModulatoryProjection<a class="headerlink" href="#modulatoryprojection" title="Permalink to this headline">¶</a></h1>
+<p id="modulatoryprojection-subtypes"><em>Subclasses</em></p>
+<div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="LearningProjection.html">LearningProjection</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ControlProjection.html">ControlProjection</a></li>
@@ -241,7 +234,7 @@ and conveys it to the <em>MATRIX</em> <a class="reference internal" href="Parame
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
-<dd>takes the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> belonging to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a>,
+<dd>takes the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> belonging to a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>,
 and conveys it to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, for use in modulating the value of the parameter.</dd>
 </dl>
@@ -256,7 +249,7 @@ to the <a class="reference internal" href="InputPort.html"><span class="doc">Inp
 </dl>
 </li>
 </ul>
-<p>See <a class="reference internal" href="ModulatoryMechanism_OLD.html#modulatorymechanism-naming"><span class="std std-ref">ModulatoryMechanism</span></a> for conventions used for the names of Modulatory components.</p>
+<p>See <a class="reference internal" href="ModulatoryMechanism.html#modulatorymechanism-naming"><span class="std std-ref">ModulatoryMechanism</span></a> for conventions used for the names of Modulatory components.</p>
 </div>
 <div class="section" id="creating-a-modulatoryprojection">
 <span id="modulatoryprojection-creation"></span><h2>Creating a ModulatoryProjection<a class="headerlink" href="#creating-a-modulatoryprojection" title="Permalink to this headline">¶</a></h2>
@@ -322,15 +315,6 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="LearningProjection.html" class="btn btn-neutral float-right" title="LearningProjection" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="AutoAssociativeProjection.html" class="btn btn-neutral" title="AutoAssociativeProjection" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -359,7 +343,7 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Modulatory Projections</a><ul>
+<li><a class="reference internal" href="#">ModulatoryProjection</a><ul>
 <li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#creating-a-modulatoryprojection">Creating a ModulatoryProjection</a></li>
@@ -385,7 +369,7 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+404.ge72a543',
+               VERSION:'0.7.5.4+405.g5719326',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
