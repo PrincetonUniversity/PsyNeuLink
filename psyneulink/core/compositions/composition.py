@@ -5845,7 +5845,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination(),
-                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
+                                    # MODIFIED 5/25/20 OLD:
+                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                    # # MODIFIED 5/25/20 NEW:
+                                    # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
+                                    # MODIFIED 5/25/20 END
                                     name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
@@ -6031,8 +6035,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return learning_pathway
 
 
-    def add_reinforcement_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE, name:str=None):
+    def add_reinforcement_learning_pathway(self,
+                                           pathway,
+                                           learning_rate=0.05,
+                                           error_function=None,
+                                           learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                           name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
         Arguments
@@ -6075,8 +6083,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                 learning_update=learning_update,
                                                 name=name)
 
-    def add_td_learning_pathway(self, pathway, learning_rate=0.05, error_function=None,
-                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE, name:str=None):
+    def add_td_learning_pathway(self,
+                                pathway,
+                                learning_rate=0.05,
+                                error_function=None,
+                                learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`TDLearning`
 
         Arguments

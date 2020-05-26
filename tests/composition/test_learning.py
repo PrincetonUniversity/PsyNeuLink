@@ -408,6 +408,7 @@ class TestLearningPathwayMethods:
                     num_trials=2)
         assert np.allclose(comp2.results, comp1.results)
 
+
 class TestNoLearning:
 
     def test_multilayer(self):
@@ -1536,6 +1537,7 @@ class TestReinforcement:
         error_text = str(error)
         assert "Too many Nodes in learning pathway" in error_text
         assert "Use BackPropagation LearningFunction or see AutodiffComposition for other learning models" in error_text
+
 
 class TestNestedLearning:
 
