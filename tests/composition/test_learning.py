@@ -9,6 +9,8 @@ import pytest
 
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
+
 
 class TestTargetSpecs:
 
@@ -388,6 +390,23 @@ class TestLearningPathwayMethods:
             [1, 0],
             [1, 1]])
         xor_comp.run(inputs={input_comp:xor_inputs})
+
+    def test_indepedence_of_learning_pathways_using_same_mechs_in_different_comps(self):
+        A = TransferMechanism(name="Mech A")
+        B = TransferMechanism(name="Mech B")
+
+        comp1 = Composition(pathways=([A,B], BackPropagation))
+        comp1.learn(inputs={A: 1.0,
+                    comp1.pathways[0].target: 0.0},
+                    num_trials=2)
+        assert np.allclose(comp1.results, [[[1.]], [[0.9]]])
+
+        comp2 = Composition()
+        comp2.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
+        comp2.learn(inputs={A: 1.0},
+                    targets={B: 0.0},
+                    num_trials=2)
+        assert np.allclose(comp2.results, comp1.results)
 
 class TestNoLearning:
 

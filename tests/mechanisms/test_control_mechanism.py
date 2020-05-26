@@ -179,7 +179,7 @@ class TestLCControlMechanism:
         comp = pnl.Composition()
         backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=pathway,
-            loss_function=None
+            loss_function=None,
         )
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
@@ -190,10 +190,10 @@ class TestLCControlMechanism:
             backprop_pathway.target: [[0, 0, 1]]}
     
         comp.learn(num_trials=3, inputs=stim_list)
-    
-        expected_results = [[[0.81493513, 0.85129046, 0.88154205]],
-                            [[0.81250527, 0.84947508, 0.88159668]],
-                            [[0.81003707, 0.84762987, 0.88165066]]]
+
+        expected_results =[[[0.81493513, 0.85129046, 0.88154205]],
+                           [[0.81331773, 0.85008207, 0.88157851]],
+                           [[0.81168332, 0.84886047, 0.88161468]]]
         assert np.allclose(comp.results, expected_results)
     
         stim_list[Control_Mechanism]=[0.0]
@@ -203,7 +203,7 @@ class TestLCControlMechanism:
     
         stim_list[Control_Mechanism]=[2.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
-        expected_results = [[0.96801676, 0.98304415, 0.99225722]]
+        expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         assert np.allclose(results, expected_results)
 
     def test_control_of_all_input_ports(self):

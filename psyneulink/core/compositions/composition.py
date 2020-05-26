@@ -5843,9 +5843,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function:LearningFunction,
                                     loss_function=None,
-                                    learning_rate:tc.any(int,float) =0.05,
+                                    learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination(),
-                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
+                                    learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
                                     name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
@@ -5959,9 +5959,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Handle BackPropgation specially, since it is potentially multi-layered
         if isinstance(learning_function, type) and issubclass(learning_function, BackPropagation):
             return self._create_backpropagation_learning_pathway(pathway,
-                                                                 loss_function,
                                                                  learning_rate,
                                                                  error_function,
+                                                                 loss_function,
                                                                  learning_update,
                                                                  name=pathway_name,
                                                                  context=context)
@@ -6386,17 +6386,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _create_backpropagation_learning_pathway(self,
                                                  pathway,
-                                                 loss_function,
                                                  learning_rate=0.05,
                                                  error_function=None,
-                                                 learning_update:tc.optional(tc.any(bool, tc.enum(ONLINE,
-                                                                                                  AFTER)))=AFTER,
+                                                 loss_function=MSE,
+                                                 learning_update=AFTER,
                                                  name=None,
                                                  context=None):
 
         # FIX: LEARNING CONSOLIDATION - Can get rid of this:
         if not error_function:
             error_function = LinearCombination()
+        if not loss_function:
+            loss_function = MSE
 
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
@@ -8591,7 +8592,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ret = {}
         for node, values in targets.items():
             if NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
                 comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
                 target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self.get_roles_by_node(t) and NodeRole.LEARNING in self.get_roles_by_node(t))]
