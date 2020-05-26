@@ -1527,6 +1527,15 @@ class TestReinforcement:
 
         assert np.allclose(trial_50_expected, delta_vals[49][0])
 
+    def test_reinforcement_too_many_nodes(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        with pytest.raises(CompositionError) as error:
+            comp = Composition(([A,B,C],pnl.Reinforcement))
+        error_text = str(error)
+        assert "Too many Nodes in learning pathway" in error_text
+        assert "Use BackPropagation LearningFunction or see AutodiffComposition for other learning models" in error_text
 
 class TestNestedLearning:
 
