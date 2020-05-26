@@ -394,27 +394,18 @@ class TestLearningPathwayMethods:
     def test_indepedence_of_learning_pathways_using_same_mechs_in_different_comps(self):
         A = TransferMechanism(name="Mech A")
         B = TransferMechanism(name="Mech B")
-        # FIX: GENERATES DIFFERENT RESULT (0.95) THAN USE OF add_backprop_learning_pathway:
-        # comp1 = Composition(pathways=([A,B], BackPropagation))
-        comp1 = Composition()
-        comp1.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
-        comp1.learn(inputs={A: 1.0},
-                    targets={B: 0.0},
+
+        comp1 = Composition(pathways=([A,B], BackPropagation))
+        comp1.learn(inputs={A: 1.0,
+                    comp1.pathways[0].target: 0.0},
                     num_trials=2)
         assert np.allclose(comp1.results, [[[1.]], [[0.9]]])
 
-        # comp2 = Composition(pathways=([A,B], BackPropagation))
         comp2 = Composition()
         comp2.add_backpropagation_learning_pathway(pathway=[A,B], name='P1')
-        comp2.learn(inputs={A: 1.0,
-                            # PASSES:
-                            # comp2.pathways[0].target: 0.0
-                            },
-                    # FAILS:
+        comp2.learn(inputs={A: 1.0},
                     targets={B: 0.0},
                     num_trials=2)
-        # Should be same with default target specification but currently fails
-        # (succeeds if comp2 uses different mechs, as per test_target_spec_default_assignment)
         assert np.allclose(comp2.results, comp1.results)
 
 class TestNoLearning:

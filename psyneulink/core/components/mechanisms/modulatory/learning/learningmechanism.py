@@ -868,7 +868,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         end of each `TRIAL <TimeScale.TRIAL>` of execution of the Composition to which the LearningMechanism belongs.
 
         .. note::
-           the `learning_abled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
+           the `learning_enabled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
            default behavior of its `learning_projections <LearningMechanism.learning_projections>`.  However, this
            can be overridden for individual `LearningProjections <LearningProjection>` by assigning their
            `learning_enabled <LearningProjection.learning_enabled>` attributes either at or after construction.
