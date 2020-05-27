@@ -74,28 +74,6 @@ Gating_Mechanism = pnl.GatingMechanism(
     ]
 )
 
-p = pnl.Process(
-    size=2,
-    pathway=[
-        Input_Layer,
-        Output_Layer
-    ],
-    prefs={
-        pnl.VERBOSE_PREF: False,
-        pnl.REPORT_OUTPUT_PREF: False
-    }
-)
-
-g = pnl.Process(
-    default_variable=[1.0],
-    pathway=[Gating_Mechanism]
-)
-
-stim_list = {
-    Input_Layer: [[-1, 30], [-1, 30], [-1, 30], [-1, 30]],
-    Gating_Mechanism: [[0.0], [0.5], [1.0], [2.0]]
-}
-
 
 def print_header(system):
     print("\n\n**** Time: ", system.scheduler.get_clock(system).simple_time)
@@ -110,14 +88,28 @@ def show_target(context=None):
     print('- Output_Layer.output_port.variable: ', Output_Layer.output_port.parameters.variable.get(context))
     print('- Output_Layer.output_port.value:    ', Output_Layer.output_port.parameters.value.get(context))
 
-mySystem = pnl.System(processes=[p, g])
+# mySystem = pnl.System(processes=[p, g])
+#
+# mySystem.reportOutputPref = False
+# # mySystem.show_graph(show_learning=True)
 
-mySystem.reportOutputPref = False
-# mySystem.show_graph(show_learning=True)
+# results = mySystem.run(
+#     num_trials=4,
+#     inputs=stim_list,
+#     call_before_trial=functools.partial(print_header, mySystem),
+#     call_after_trial=show_target,
+# )
 
-results = mySystem.run(
-    num_trials=4,
-    inputs=stim_list,
-    call_before_trial=functools.partial(print_header, mySystem),
-    call_after_trial=show_target,
+# ----------------------------
+
+
+stim_list = {
+    Input_Layer: [[-1, 30], [-1, 30], [-1, 30], [-1, 30]],
+    Gating_Mechanism: [[0.0], [0.5], [1.0], [2.0]]
+}
+comp = pnl.Composition(pathways=[[Input_Layer, Output_Layer],[Gating_Mechanism]])
+comp.run(num_trials=4,
+         inputs=stim_list,
+         call_before_trial=functools.partial(print_header, comp),
+         call_after_trial=show_target,
 )
