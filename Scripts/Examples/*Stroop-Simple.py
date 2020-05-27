@@ -6,12 +6,12 @@ import psyneulink as pnl
 #        but not an "attention" mechanism that selects between them... stay tuned!
 import psyneulink.core.components.functions.transferfunctions
 
-process_prefs = {
+pathway_prefs = {
     pnl.REPORT_OUTPUT_PREF: True,
     pnl.VERBOSE_PREF: False
 }
 
-system_prefs = {
+comp_prefs = {
     pnl.REPORT_OUTPUT_PREF: True,
     pnl.VERBOSE_PREF: False
 }
@@ -63,47 +63,37 @@ HO_Weights = pnl.MappingProjection(
     matrix=HO_Weights_matrix
 )
 
-color_naming_process = pnl.Process(
-    default_variable=[1, 2.5],
+color_naming_pathway = pnl.Pathway(
     pathway=[colors, CH_Weights, hidden, HO_Weights, response],
-    learning=pnl.LEARNING,
-    target=[2, 2],
     name='Color Naming',
-    prefs=process_prefs
+    # prefs=pathway_prefs
 )
 
-word_reading_process = pnl.Process(
-    default_variable=[.5, 3],
+word_reading_pathway = pnl.Pathway(
     pathway=[words, WH_Weights, hidden],
     name='Word Reading',
-    learning=pnl.LEARNING,
-    target=[3, 3],
-    prefs=process_prefs
+    # prefs=pathway_prefs
 )
 
-# color_naming_process.execute()
-# word_reading_process.execute()
+# color_naming_pathway.execute()
+# word_reading_pathway.execute()
 
-mySystem = pnl.System(processes=[color_naming_process, word_reading_process],
-                      targets=[20, 20],
-                      name='Stroop Model',
-                      prefs=system_prefs)
+comp = pnl.Composition(pathways=[(color_naming_pathway, pnl.BackPropagation),
+                                 (word_reading_pathway, pnl.BackPropagation)],
+                       name='Stroop Model',
+                       prefs=comp_prefs)
 
-mySystem.show_graph(
+comp.show_graph(
     show_learning=pnl.ALL
 )
 
-
-def print_header(system):
-    print("\n\n**** Time: ", system.scheduler.get_clock(system).simple_time)
-
+def print_header(comp):
+    print("\n\n**** Time: ", comp.scheduler.get_clock(comp).simple_time)
 
 def show_target(context):
-    print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-          format(colors.input_ports.get_values_as_lists(context), mySystem.targets))
-    print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
-          # format(word_reading_process.input, word_reading_process.target))
-          format(words.input_ports.get_values_as_lists(context), mySystem.targets))
+    print(f'\nColor Naming\n\tInput: {colors.input_ports.get_values_as_lists(context)}.')
+    print(f'Wording Reading:\n\tInput: {words.input_ports.get_values_as_lists(context)}.')
+    print(f'Target: {comp.pathways[0].target.value}.')
     print('Response: \n', response.get_output_values(context)[0])
     print('Hidden-Output:')
     print(HO_Weights.get_mod_matrix(context))
@@ -113,6 +103,13 @@ def show_target(context):
     print(WH_Weights.get_mod_matrix(context))
 
 
+# FROM SYSTEM:
+#     COLOR     default_variable=[1, 2.5],
+#               target=[2, 2],
+#     WORD:      default_variable=[.5, 3],
+#                target=[3, 3],
+#     COMPOSITION:  targets=[20, 20],
+
 stim_list_dict = {
     colors: [[1, 1]],
     words: [[-2, -2]]
@@ -120,13 +117,13 @@ stim_list_dict = {
 
 target_list_dict = {response: [[1, 1]]}
 
-# mySystem.show_graph(show_learning=True)
+# comp.show_graph(show_learning=True)
 
-mySystem.run(
+comp.learn(
     num_trials=2,
     inputs=stim_list_dict,
     targets=target_list_dict,
-    call_before_trial=functools.partial(print_header, mySystem),
+    call_before_trial=functools.partial(print_header, comp),
     call_after_trial=show_target
 )
 
