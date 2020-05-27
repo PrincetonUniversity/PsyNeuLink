@@ -5,6 +5,7 @@ import matplotlib.axes as ax
 #matplotlib inline
 import psyneulink as pnl
 import psyneulink.core.components.functions.transferfunctions
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
 
 nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
 relations = ['is', 'has', 'can']
@@ -143,50 +144,44 @@ map_h2_can = pnl.MappingProjection(matrix=np.random.rand(16,len(can_list)),
 
 #################### THIS IS THE PART WHERE WE START BUILDING OUT ALL THE PROCESSES ########################
 
-p11 = pnl.Process(pathway=[nouns_in,
+p11 = pnl.Pathway(pathway=[nouns_in,
                            map_nouns_h1,
                            h1,
                            map_h1_h2,
-                           h2],
-                  learning=pnl.LEARNING)
+                           h2])
 
-p12 = pnl.Process(pathway=[rels_in,
-                            map_rel_h2,
-                            h2],
-                  learning=pnl.LEARNING)
+p12 = pnl.Pathway(pathway=[rels_in,
+                           map_rel_h2,
+                           h2])
 
-p21 = pnl.Process(pathway=[h2,
+p21 = pnl.Pathway(pathway=[h2,
                            map_h2_I,
-                           out_sig_I],
-                  learning=pnl.LEARNING)
+                           out_sig_I])
 
-p22 = pnl.Process(pathway=[h2,
+p22 = pnl.Pathway(pathway=[h2,
                            map_h2_is,
-                           out_sig_is],
-                  learning=pnl.LEARNING)
+                           out_sig_is])
 
-p23 = pnl.Process(pathway=[h2,
+p23 = pnl.Pathway(pathway=[h2,
                            map_h2_has,
-                           out_sig_has],
-                  learning=pnl.LEARNING)
+                           out_sig_has])
 
-p24 = pnl.Process(pathway=[h2,
+p24 = pnl.Pathway(pathway=[h2,
                            map_h2_can,
-                           out_sig_can],
-                  learning=pnl.LEARNING)
+                           out_sig_can])
 
-############################# THIS IS WHERE WE BUILD OUT THE SYSTEM ###################################
+############################# THIS IS WHERE WE BUILD OUT THE COMPOSITION ###################################
 
-rumel_sys = pnl.System(processes=[p11,
-                                  p12,
-                                  p21,
-                                  p22,
-                                  p23,
-                                  p24,
-                                  ],
-                       learning_rate=.5)
+rumel_comp = pnl.Composition(pathways=[(p11, BackPropagation),
+                                       (p12, BackPropagation),
+                                       (p21, BackPropagation),
+                                       (p22, BackPropagation),
+                                       (p23, BackPropagation),
+                                       (p24, BackPropagation),
+                                       ],
+                             learning_rate=.5)
 
-rumel_sys.show_graph(output_fmt='jupyter')
+rumel_comp.show_graph(output_fmt='jupyter')
 
 ############################## THIS IS WHERE WE SETUP THE LOOP VARIABLES #########################################
 
@@ -204,23 +199,23 @@ spits=np.arange(0,epochs,div)
 #CREATE KILLSWITCH:
 kill=0
 
-############################## THIS IS WHERE WE RUN THE SYSTEM #########################################
+############################## THIS IS WHERE WE RUN THE COMPOSITION #########################################
 
 for epoch in range(epochs):
     print("epoch number", epoch)
     for noun in range(len(nouns)):
         for rel_out in range(3):
-            # K GIVES THE OUTPUT OF THE SYSTEM
+            # K GIVES THE OUTPUT OF THE COMPOSITION
 
-            k = rumel_sys.run(inputs={nouns_in: nouns_onehot[noun],
-                                      rels_in: rels_onehot[rel_out],
-                                      },
-                              targets={out_sig_I: truth_nouns[noun],
-                                       out_sig_is: truth_is[noun],
-                                       out_sig_has: truth_has[noun],
-                                       out_sig_can: truth_can[noun]
-                                       },
-                              )
+            k = rumel_comp.learn(inputs={nouns_in: nouns_onehot[noun],
+                                         rels_in: rels_onehot[rel_out],
+                                         },
+                                 targets={out_sig_I: truth_nouns[noun],
+                                          out_sig_is: truth_is[noun],
+                                          out_sig_has: truth_has[noun],
+                                          out_sig_can: truth_can[noun]
+                                          },
+                                 )
 
             # PUT K INTO AN ARRAY SO WE CAN MANIPULATE ITS VALUES
 
