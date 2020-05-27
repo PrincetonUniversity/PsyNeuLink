@@ -5799,9 +5799,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
                                            f" has more than two items: {pway}")
                 pway, learning_function = pway
-                if isinstance(pway, Pathway):
-                    pway = pway.pathway
-                if not (_is_node_spec(pway) or isinstance(pway, (list))):
+                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
                     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
                                            f" {pathways_arg_str} must be a node or a list: {pway}")
                 if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
