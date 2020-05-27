@@ -345,8 +345,8 @@ graph.
 
 .. _Composition_Graph_Projection_Vertices:
 .. technical_note::
-   Because Projections are not strictly edges, they are implemented in the Composition's `graph <Composition.graph>`
-   as `vertices <Graph.vertices>` along with its Nodes.  The actual edges are implicit in the dependencies determined
+   Because Projections are not strictly edges, they are assigned to `vertices <Graph.vertices>` in the Composition's
+   `graph <Composition.graph>`, along with its Nodes.  The actual edges are implicit in the dependencies determined
    by the Projections, and listed in the graph's `dependency_dict <Graph.dependency_dict>`.
 
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
@@ -2632,8 +2632,8 @@ class Graph(object):
             the `Vertices <Vertex>` contained in this Graph;  each can be a `Node <Component_Nodes>` or a
             `Projection <Component_Projections>`.
 
-        dependency_dict : Dict[`Component` : Set(`Compnent`)]
-            maps each of the graph's `vertices <Graph.vertices>` to the others from which it receives input
+        dependency_dict : Dict[`Component` : Set(`Component`)]
+            maps each of the graph's Components to the others from which it receives input
             (i.e., their `value <Component.value>`).  For a `Node <Components_Nodes>`, this is one or more
             `Projections <Projection>`;  for a Projection, it is a single Node.
 
