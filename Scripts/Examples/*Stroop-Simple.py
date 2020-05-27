@@ -78,7 +78,8 @@ word_reading_pathway = pnl.Pathway(
 # color_naming_pathway.execute()
 # word_reading_pathway.execute()
 
-comp = pnl.Composition(pathways=[color_naming_pathway, word_reading_pathway],
+comp = pnl.Composition(pathways=[(color_naming_pathway, pnl.BackPropagation),
+                                 (word_reading_pathway, pnl.BackPropagation)],
                        name='Stroop Model',
                        prefs=comp_prefs)
 
@@ -90,11 +91,9 @@ def print_header(comp):
     print("\n\n**** Time: ", comp.scheduler.get_clock(comp).simple_time)
 
 def show_target(context):
-    print('\nColor Naming\n\tInput: {}\n\tTarget: {}'.
-          format(colors.input_ports.get_values_as_lists(context), comp.targets))
-    print('Wording Reading:\n\tInput: {}\n\tTarget: {}\n'.
-          # format(word_reading_pathway.input, word_reading_pathway.target))
-          format(words.input_ports.get_values_as_lists(context), comp.targets))
+    print(f'\nColor Naming\n\tInput: {colors.input_ports.get_values_as_lists(context)}.')
+    print(f'Wording Reading:\n\tInput: {words.input_ports.get_values_as_lists(context)}.')
+    print(f'Target: {comp.pathways[0].target.value}.')
     print('Response: \n', response.get_output_values(context)[0])
     print('Hidden-Output:')
     print(HO_Weights.get_mod_matrix(context))
