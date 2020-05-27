@@ -9,7 +9,7 @@ import psyneulink.core.components.functions.transferfunctions
 nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
 relations = ['is', 'has', 'can']
 is_list = ['living', 'living thing', 'plant', 'animal', 'tree', 'flower', 'bird', 'fish', 'big', 'green', 'red',
-           'yellow']
+           'yellfsow']
 has_list = ['roots', 'leaves', 'bark', 'branches', 'skin', 'feathers', 'wings', 'gills', 'scales']
 can_list = ['grow', 'move', 'swim', 'fly', 'breathe', 'breathe underwater', 'breathe air', 'walk', 'photosynthesize']
 descriptors = [nouns, is_list, has_list, can_list]

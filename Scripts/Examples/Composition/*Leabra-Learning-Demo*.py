@@ -30,11 +30,7 @@ T_input = pnl.TransferMechanism(size=n_input)
 T_target = pnl.TransferMechanism(size=n_output)
 # target_projection connects T_target to the TARGET InputPort of Leab
 target_projection = pnl.MappingProjection(sender=T_target, receiver = Leab.input_ports[1])
-
-p_input = pnl.Process(pathway=[T_input, Leab])
-p_target = pnl.Process(pathway=[T_target, target_projection, Leab])
-
-sys = pnl.System(processes=[p_input, p_target])
+comp = pnl.Composition(pathways=[[T_input, Leab], [T_target, target_projection, Leab]])
 
 ### building the learning data
 n = 1000
@@ -62,7 +58,7 @@ n_trials = 50
 for i in range(n_trials):
     if i % 10 == 0:
         print("trial", i, "out of", n_trials)
-    system_output = sys.run(inputs = {T_input: inputs, T_target: targets})
+    comp_output = comp.run(inputs = {T_input: inputs, T_target: targets})
 
 Leab.training_flag = False
 

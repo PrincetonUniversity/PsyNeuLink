@@ -88,21 +88,6 @@ def show_target(context=None):
     print('- Output_Layer.output_port.variable: ', Output_Layer.output_port.parameters.variable.get(context))
     print('- Output_Layer.output_port.value:    ', Output_Layer.output_port.parameters.value.get(context))
 
-# mySystem = pnl.System(processes=[p, g])
-#
-# mySystem.reportOutputPref = False
-# # mySystem.show_graph(show_learning=True)
-
-# results = mySystem.run(
-#     num_trials=4,
-#     inputs=stim_list,
-#     call_before_trial=functools.partial(print_header, mySystem),
-#     call_after_trial=show_target,
-# )
-
-# ----------------------------
-
-
 stim_list = {
     Input_Layer: [[-1, 30], [-1, 30], [-1, 30], [-1, 30]],
     Gating_Mechanism: [[0.0], [0.5], [1.0], [2.0]]
