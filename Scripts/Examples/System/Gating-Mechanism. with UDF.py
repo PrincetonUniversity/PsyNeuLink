@@ -108,6 +108,7 @@ stim_list = {
     Gating_Mechanism: [[0.0], [0.5], [1.0], [2.0]]
 }
 comp = pnl.Composition(pathways=[[Input_Layer, Output_Layer],[Gating_Mechanism]])
+comp.show_graph()
 comp.run(num_trials=4,
          inputs=stim_list,
          call_before_trial=functools.partial(print_header, comp),
