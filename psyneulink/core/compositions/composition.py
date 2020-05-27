@@ -2490,9 +2490,12 @@ from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativ
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions',
-    'MECH_FUNCTION_PARAMS', 'NodeRole', 'PORT_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'DURATION', 'EdgeType', 'EXECUTION_SET',
+    'get_compositions', 'INITIAL_FRAME', 'MECH_FUNCTION_PARAMS', 'MOVIE_DIR', 'MOVIE_NAME',
+    'NodeRole', 'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS',
+    'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'UNIT',
 ]
+
 
 # show_graph animation options
 NUM_TRIALS = 'num_trials'

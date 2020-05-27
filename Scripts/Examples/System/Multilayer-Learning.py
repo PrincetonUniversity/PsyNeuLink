@@ -52,8 +52,7 @@ Output_Weights = pnl.MappingProjection(
     matrix=Output_Weights_matrix
 )
 
-z = pnl.Process(
-    default_variable=[0, 0],
+z = pnl.Pathway(
     pathway=[
         Input_Layer,
         # The following reference to Input_Weights is needed to use it in the pathway
@@ -69,68 +68,63 @@ z = pnl.Process(
         # If Middle_Weights and/or Output_Weights is not declared above, then the Process
         #    will assign a default for rhe missing Projection
         Output_Layer
-    ],
-    clamp_input=pnl.SOFT_CLAMP,
-    learning=pnl.LEARNING,
-    target=[0, 0, 1],
-    prefs={
-        pnl.VERBOSE_PREF: False,
-        pnl.REPORT_OUTPUT_PREF: True
-    }
+    ]
 )
 
 
-def print_header(system):
-    print("\n\n**** Time: ", system.scheduler.clock.simple_time)
+def print_header(comp):
+    print("\n\n**** Time: ", comp.scheduler.clock.simple_time)
 
 
-def show_target(system):
-    i = system.input
-    t = system.target_input_ports[0].parameters.value.get(system)
+def show_target(comp):
+    i = comp.input
+    t = comp.target_input_ports[0].parameters.value.get(comp)
     print('\nOLD WEIGHTS: \n')
-    print('- Input Weights: \n', Input_Weights.parameters.matrix.get(system))
-    print('- Middle Weights: \n', Middle_Weights.parameters.matrix.get(system))
-    print('- Output Weights: \n', Output_Weights.parameters.matrix.get(system))
+    print('- Input Weights: \n', Input_Weights.parameters.matrix.get(comp))
+    print('- Middle Weights: \n', Middle_Weights.parameters.matrix.get(comp))
+    print('- Output Weights: \n', Output_Weights.parameters.matrix.get(comp))
 
     print('\nSTIMULI:\n\n- Input: {}\n- Target: {}\n'.format(i, t))
     print('ACTIVITY FROM OLD WEIGHTS: \n')
-    print('- Middle 1: \n', Hidden_Layer_1.parameters.value.get(system))
-    print('- Middle 2: \n', Hidden_Layer_2.parameters.value.get(system))
-    print('- Output:\n', Output_Layer.parameters.value.get(system))
+    print('- Middle 1: \n', Hidden_Layer_1.parameters.value.get(comp))
+    print('- Middle 2: \n', Hidden_Layer_2.parameters.value.get(comp))
+    print('- Output:\n', Output_Layer.parameters.value.get(comp))
 
 
-mySystem = pnl.System(
-        name='Multilayer-Learning',
-        processes=[z],
-        targets=[0, 0, 1],
-        learning_rate=2.0
+comp = pnl.Composition(name='Multilayer-Learning',
+                       pathways=[(z, pnl.BackPropagation)],
+                       targets=[0, 0, 1],
+                       learning_rate=2.0,
+                       prefs={pnl.VERBOSE_PREF: False,
+                              pnl.REPORT_OUTPUT_PREF: True}
 )
 
 # Log Middle_Weights of MappingProjection to Hidden_Layer_2
 # Hidden_Layer_2.set_log_conditions('Middle Weights')
 Middle_Weights.set_log_conditions('mod_matrix')
 
-mySystem.reportOutputPref = True
+comp.reportOutputPref = True
 # Shows graph will full information:
-mySystem.show_graph(show_dimensions=pnl.ALL)
-mySystem.show_graph(show_learning=pnl.ALL)
-# mySystem.show_graph(show_learning=pnl.ALL, show_processes=True)
-# mySystem.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
+comp.show_graph(show_dimensions=pnl.ALL)
+comp.show_graph(show_learning=pnl.ALL)
+# comp.show_graph(show_learning=pnl.ALL, show_processes=True)
+# comp.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
 # Shows minimal graph:
-# mySystem.show_graph()
+# comp.show_graph()
 
 
 stim_list = {Input_Layer: ['red']}
 target_list = {Output_Layer: [[0, 0, 1]]}
 
-mySystem.run(
-        num_trials=1,
-        inputs=stim_list,
-        targets=target_list,
-        call_before_trial=functools.partial(print_header, mySystem),
-        call_after_trial=functools.partial(show_target, mySystem),
-        termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)},
-        animate={'show_learning':pnl.ALL, 'unit':pnl.EXECUTION_SET, pnl.SAVE_IMAGES:True}
+comp.learn(
+    num_trials=1,
+    inputs=stim_list,
+    targets=target_list,
+    clamp_input=pnl.SOFT_CLAMP,
+    call_before_trial=functools.partial(print_header, comp),
+    call_after_trial=functools.partial(show_target, comp),
+    termination_processing={pnl.TimeScale.TRIAL: pnl.AfterNCalls(Output_Layer, 1)},
+    animate={'show_learning':pnl.ALL, 'unit':pnl.EXECUTION_SET, pnl.SAVE_IMAGES:True},
 )
 
 # Print out logged weights for Middle_Weights
