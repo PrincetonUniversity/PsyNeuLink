@@ -77,8 +77,8 @@ def print_header(comp):
 
 
 def show_target(comp):
-    i = comp.input
-    t = comp.target_input_ports[0].parameters.value.get(comp)
+    i = comp.external_input_values
+    t = comp.pathways[0].target.input_ports[0].parameters.value.get(comp)
     print('\nOLD WEIGHTS: \n')
     print('- Input Weights: \n', Input_Weights.parameters.matrix.get(comp))
     print('- Middle Weights: \n', Middle_Weights.parameters.matrix.get(comp))

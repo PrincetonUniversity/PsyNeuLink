@@ -3150,7 +3150,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
-        input_CIM and its InputPorts serve as proxies for the Composition itself in terms of afferent projections.
+        input_CIM and its InputPorts serve as proxies for the Composition itself for afferent projections.
 
     input_CIM_ports : dict
         a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
@@ -10123,8 +10123,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self._is_learning(context):
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
+
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit == EXECUTION_SET:
+                context.add_flag(ContextFlags.PROCESSING)
                 self._animate_execution(next_execution_set, context)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
@@ -10163,9 +10165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                                  execution_scheduler,
                                                                                                  context))
 
-                    # Set context.execution_phase
-
-                    # Set to PROCESSING by default
+                    # (Re)set context.execution_phase to PROCESSING by default
                     context.add_flag(ContextFlags.PROCESSING)
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
