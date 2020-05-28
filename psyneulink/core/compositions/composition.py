@@ -6906,10 +6906,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_controller(self, controller:ControlMechanism):
         """
-        Add an `OptimizationControlMechanism` as the `controller
-        <Composition.controller>` of the Composition, which gives the OCM access to the
-        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
-        an optimal Control policy.
+        Add an `OptimizationControlMechanism` as the `controller <Composition.controller>` of the Composition.
+
+        This gives the OCM access to the `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
+        OCM to use simulations to determine an optimal Control policy.
+
+        COMMENT:
+        It also assigns to it a `ControlSignal` for, and corresponding `ControlProjection` to the `ParameterPort`
+        for any `Parameter` of a Mechanism `specified for control <LINK>`
+        COMMENT
+
         """
 
         if not isinstance(controller, ControlMechanism):
@@ -6954,6 +6960,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller.composition = self
         self.controller = controller
+
+        # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
 
         invalid_aux_components = self._get_invalid_aux_components(controller)
 

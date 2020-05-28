@@ -19,8 +19,8 @@ input_layer = pnl.TransferMechanism(
 # Takes sum of input layer elements as external component of drift rate
 # Notes:
 #  - drift_rate parameter in constructor for DDM is the "internally modulated" component of the drift_rate;
-#  - arguments to DDM's function (DriftDiffusionAnalytical) are specified as CONTROL, so their values will be determined
-#      by the EVCControlMechanism of the Composition to which the action_selection Mechanism is assigned (see below)
+#  - arguments to DDM's function (DriftDiffusionAnalytical) are specified as CONTROL, so their values are determined
+#      by the OptimizationControlMechanism of the Composition to which the action_selection Mechanism is assigned
 #  - the input_format argument specifies that the input to the DDM should be one-hot encoded two-element array
 #  - the output_ports argument specifies use of the DECISION_VARIABLE_ARRAY OutputPort, which encodes the
 #      response in the same format as the ARRAY input_format/.
