@@ -541,7 +541,7 @@ class TestReinforcement:
                                    output_ports=[pnl.SELECTED_INPUT_ARRAY],
                                    name='DDM')
         c = pnl.Composition()
-        learning_components = c.add_reinforcement_learning_pathway([input_layer, action_selection], learning_rate=0.05)
+        c.add_reinforcement_learning_pathway([input_layer, action_selection], learning_rate=0.05)
 
         # LEARN:
         c.learn(inputs={input_layer: [[1, 1], [1, 1]]},
