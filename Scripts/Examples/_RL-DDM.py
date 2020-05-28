@@ -126,7 +126,22 @@ def reward(context=None):
 #    - rewards are specified by the reward function above
 inputs = {input_layer: [[1, 1],[1, 1]]}
 # targets = {action_selection: reward}
-targets = {action_selection: [[0],[10]]}
+# targets = {action_selection: [[0],[10]]}
+
+
+def generate_inputs_and_targets(trial_number):
+    input_list = [[1,1],[1,1]]
+    inputs = {input_layer:input_list[trial_number%2]}
+    targets = {action_selection: reward()}
+    return {
+        "inputs": inputs,
+        "targets": targets
+    }
+# def generate_targets(trial_number):
+#     return {
+#         "targets": {action_selection: reward()}
+#     }
+
 
 # # Shows graph of Composition (learning components are in orange)
 # comp.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
@@ -137,8 +152,9 @@ targets = {action_selection: [[0],[10]]}
 # Note: *targets* is specified as the reward() function (see above).
 comp.learn(
     num_trials=10,
-    inputs=inputs,
-    targets=targets,
+    # inputs=inputs,
+    # targets={action_selection:generate_targets},
+    inputs=generate_inputs_and_targets,
     call_before_trial=functools.partial(print_header, comp),
     call_after_trial=show_weights
 )

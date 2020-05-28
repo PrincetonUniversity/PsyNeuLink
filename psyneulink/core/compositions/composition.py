@@ -9362,7 +9362,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
-        context.execution_phase = ContextFlags.PREPARING
+        # FIX 5/28/20
+        # context.execution_phase = ContextFlags.PREPARING
+        # context.replace_flag(ContextFlags.IDLE, ContextFlags.PREPARING)
 
         if scheduler is None:
             scheduler = self.scheduler
@@ -9747,7 +9749,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         runner = CompositionRunner(self)
 
         context.add_flag(ContextFlags.LEARNING_MODE)
-        context.add_flag(ContextFlags.PREPARING)
+        # # FIX 5/28/20
+        # context.add_flag(ContextFlags.PREPARING)
+        # context.execution_phase=ContextFlags.PREPARING
 
         self._analyze_graph()
 
@@ -9992,6 +9996,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
 
+        # FIX 5/28/20
         context.remove_flag(ContextFlags.PREPARING)
 
         # EXECUTE INPUT CIM ********************************************************************************************
