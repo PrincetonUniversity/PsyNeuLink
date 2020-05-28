@@ -417,6 +417,12 @@ Composition's constructor, or using its `add_controller <Composition.add_control
 
 COMMENT:
 TBI FOR COMPOSITION
+CONTROLLER CAN BE SPECIFIED BY AS True, BY CLASS (E.G., OCM), OR CONSTRUCTOR
+IF TRUE, CLASS OR BY CONSTRUCTOR WITHOUT OBJECTIVE_MECHANISM SPEC, A DEFAULT IS OBJ_MECH IS CREATED
+IF A DEFAULT OBJ MECH IS CREATED, OR NEITHER OBJ_MECH NOR OCM HAVE MONITOR FOR CONTROL SPECIFIED, THEN
+PRIMARY OUTPUTPORT OF ALL OUTPUT NODES OF COMP ARE USED (MODULO SPEC ON INDIVIDUAL MECHS)
+
+
 Specyfing Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an

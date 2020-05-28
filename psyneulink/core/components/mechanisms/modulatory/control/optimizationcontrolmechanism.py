@@ -394,12 +394,15 @@ import typecheck as tc
 from collections.abc import Iterable
 
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, FunctionError
 from psyneulink.core.components.functions.optimizationfunctions import \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
+    OBJECTIVE_FUNCTION, SEARCH_SPACE
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    ObjectiveMechanism, ObjectiveMechanismError
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -408,7 +411,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS, \
+    OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
     CONTROL, AUTO_ASSIGN_MATRIX
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -863,8 +866,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_objective_mechanism(self, context=None):
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        # FIX: INTEGRATE WITH super()?
         # differs from parent because it should not use add_to_monitor on its
         # input_states (formerly monitor_for_control)
+
+        if not isinstance(self.objective_mechanism, ObjectiveMechanism):
+            try:
+                self.objective_mechanism = ObjectiveMechanism(function=LinearCombination(operation=PRODUCT),
+                                                              name=self.name + '_ObjectiveMechanism')
+            except (ObjectiveMechanismError, FunctionError) as e:
+                raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
 
         # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,

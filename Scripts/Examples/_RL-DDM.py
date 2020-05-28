@@ -48,6 +48,8 @@ p = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selecti
                                             learning_rate=0.5)
 comp.add_controller(
     pnl.OptimizationControlMechanism(
+        # objective_mechanism=True,
+        objective_mechanism=pnl.ObjectiveMechanism(monitor=action_selection),
         control_signals=(pnl.LEARNING_RATE,
                          p.learning_components[pnl.LEARNING_MECHANISMS])))
 
