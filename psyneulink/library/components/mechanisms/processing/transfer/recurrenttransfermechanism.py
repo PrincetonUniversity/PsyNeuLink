@@ -624,7 +624,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
-        learning_function = Parameter(Hebbian, stateful=False, loggable=False)
+        # learning_function is a reference because it is used for
+        # an auxiliary learning mechanism
+        learning_function = Parameter(
+            Hebbian,
+            stateful=False,
+            loggable=False,
+            reference=True
+        )
         learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
         has_recurrent_input_port = Parameter(None, stateful=False, loggable=False)

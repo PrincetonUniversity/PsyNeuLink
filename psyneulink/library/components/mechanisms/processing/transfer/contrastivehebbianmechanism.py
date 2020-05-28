@@ -931,7 +931,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
-        learning_function = Parameter(ContrastiveHebbian, stateful=False, loggable=False)
+        learning_function = Parameter(
+            ContrastiveHebbian,
+            stateful=False,
+            loggable=False,
+            reference=True
+        )
         max_passes = Parameter(1000, stateful=False)
 
         output_activity = Parameter(None, read_only=True, getter=_CHM_output_activity_getter)

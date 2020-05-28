@@ -680,7 +680,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
         """
         function = Parameter(None, stateful=False, loggable=False)
-        feature_function = Parameter(None, stateful=False, loggable=False)
+        feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
