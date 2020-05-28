@@ -77,9 +77,8 @@ Output_Weights = pnl.MappingProjection(
     matrix=Output_Weights_matrix
 )
 
-z = pnl.Process(
+z = pnl.Pathway(
     # default_variable=[0, 0],
-    size=2,
     pathway=[
         Input_Layer,
         # The following reference to Input_Weights is needed to use it in the pathway
@@ -96,19 +95,10 @@ z = pnl.Process(
         #    will assign a default for missing projection
         # Output_Weights,
         Output_Layer
-    ],
-    clamp_input=pnl.SOFT_CLAMP,
-    learning=pnl.LEARNING,
-    learning_rate=1.0,
-    target=[0, 0, 1],
-    prefs={
-        pnl.VERBOSE_PREF: False,
-        pnl.REPORT_OUTPUT_PREF: True
-    }
+    ]
 )
 
-g = pnl.Process(
-    default_variable=[1.0],
+g = pnl.Pathway(
     pathway=[Gating_Mechanism]
 )
 
@@ -126,8 +116,8 @@ def print_header(system):
 
 
 def show_target():
-    i = mySystem.input
-    t = mySystem.target_input_ports[0].value
+    i = comp.input
+    t = comp.target_input_ports[0].value
     print('\nOLD WEIGHTS: \n')
     print('- Input Weights: \n', Input_Weights.matrix)
     print('- Middle Weights: \n', Middle_Weights.matrix)
@@ -139,19 +129,25 @@ def show_target():
     print('- Output:\n', Output_Layer.value)
 
 
-mySystem = pnl.System(
-    processes=[z, g],
+comp = pnl.Composition(
+    pathways=[z, g],
     targets=[0, 0, 1],
     learning_rate=1.0
 )
 
-mySystem.reportOutputPref = True
+comp.reportOutputPref = True
 # mySystem.show_graph(show_learning=True)
 
-results = mySystem.run(
+results = comp.learn(
     num_trials=10,
     inputs=stim_list,
     targets=target_list,
-    call_before_trial=functools.partial(print_header, mySystem),
+    clamp_input=pnl.SOFT_CLAMP,
+    learning_rate=1.0,
+    prefs={
+        pnl.VERBOSE_PREF: False,
+        pnl.REPORT_OUTPUT_PREF: True
+    },
+    call_before_trial=functools.partial(print_header, comp),
     call_after_trial=show_target,
 )

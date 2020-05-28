@@ -24,21 +24,20 @@ myDDM = pnl.DDM(
     )
 )
 
-myProcess = pnl.Process(
+comp = pnl.Composition(
     name='Neural Network DDM Process',
-    default_variable=[0, 0],
-    pathway=[
-        myInputLayer,
-        psyneulink.core.components.functions.transferfunctions.get_matrix(pnl.RANDOM_CONNECTIVITY_MATRIX, 2, 5),
-        myHiddenLayer,
-        pnl.FULL_CONNECTIVITY_MATRIX,
-        myDDM
+    pathways=[
+        [myInputLayer,
+         psyneulink.core.components.functions.transferfunctions.get_matrix(pnl.RANDOM_CONNECTIVITY_MATRIX, 2, 5),
+         myHiddenLayer,
+         pnl.FULL_CONNECTIVITY_MATRIX,
+         myDDM]
     ]
 )
 
-myProcess.reportOutputPref = True
+comp.reportOutputPref = True
 myInputLayer.reportOutputPref = True
 myHiddenLayer.reportOutputPref = True
 myDDM.reportOutputPref = pnl.PreferenceEntry(True, pnl.PreferenceLevel.INSTANCE)
 
-pnl.run(myProcess, [[-1, 2], [2, 3], [5, 5]])
+comp.run([[-1, 2], [2, 3], [5, 5]])

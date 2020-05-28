@@ -24,6 +24,7 @@ Contents
      - `Composition_Graph`
      - `Composition_Nodes`
      - `Composition_Nested`
+     - `Composition_Projections`
      - `Composition_Pathways`
   * `Composition_Controller`
      - `Composition_Controller_Assignment`
@@ -244,10 +245,11 @@ describe these in greater detail, and how they are used to implement various for
 ~~~~~~~
 
 The structure of a Composition is a computational graph, the `Nodes <Composition_Nodes>` of which are `Mechanisms
-<Mechanism>` and/or `nested Composition(s) <Composition_Nested>` that carry out computations, and the edges of which
-are `Projections <Projection>` that transmit the computational results from one Node to another Node. The information
-about this structure is stored in the Composition`s `graph <Composition.graph>` attribute, that is a `Graph` object
-describing its Nodes and the dependencies defined by their edges.  There are no restrictions on the structure of the
+<Mechanism>` and/or `nested Composition(s) <Composition_Nested>` that carry out computations; and the edges of which
+can be thought of as Composition's `Projections <Projection>`, that transmit the computational results from one Node
+to another Node (though see `below <Composition_Projections>` for a fuller description). The information about a
+Composition's structure is stored in its `graph <Composition.graph>` attribute, that is a `Graph` object describing
+its Nodes and the dependencies determined by its Projections.  There are no restrictions on the structure of the
 graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
 `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
 displayed  using the `show_graph <Composition.show_graph>` method (see `Composition_Visualization`).
@@ -287,37 +289,22 @@ one or more `NodeRoles <NodeRole>` automatically when a Composition is construct
   * the **required_roles** argument of the Composition's `add_node <Composition.add_node>` or `add_nodes
     <Composition.add_nodes>` methods;
 
-  * a tuple specifying the `Node <Composition_Nodes>` in the **pathways** argument of the Compositon's constructor,
-    a `Pathway`\\'s constructor, or in one of the methods used to add a `Pathway <Composition_Pathways>` to the
-    Composition (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its
-    2nd item.
+  * a tuple specifying the Node in the **pathways** argument of the Compositon's constructor, a `Pathway`\\'s
+    constructor, or in one of the methods used to add a `Pathway <Composition_Pathways>` to the Composition
+    (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its 2nd item.
 
   * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an
     an existing `Node <Composition_Nodes>`.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
-receive its external input when it is `run <Composition.run>`), and similarly its `TERMINAL` Nodes are assigned as its
-`OUTPUT` Nodes (the values of which are reported as the `results <Composition.results>` of running the Composition).
-However, any other nodes can be specified as the `INPUT` or `OUTPUT` Nodes using the methods above, in which case
-the default assignents are ignored.
-COMMENT:
-    ??XXX(with the exception of any `OUTPUT` Nodes that are assigned as part of `learing pathway
-    <Composition_Learning_Pathway>` (see XXX).
-COMMENT
-.  A NodeRole can also be excluded from being assinged to a `Node <Composition_Nodes>` using the `exclude_node_roles
-<Composition.exclude_node_roles>` method.  All of the roles assigned assigned to a particular Node can be
-listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the nodes assigned a
-particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
-
-COMMENT:
-.. _Composition_Projection:
-
-*Projections*
-~~~~~~~~~~~~~
-
-Directed flow of info
-Can perform linear transformation
-COMMENT
+receive the `external input <Composition_Execution_Inputs>` when it is `run <Composition.run>`), and similarly its
+`TERMINAL` Nodes are assigned as its `OUTPUT` Nodes (the values of which are reported as the `results
+<Composition.results>` of running the Composition). However, any other Nodes can be specified as the `INPUT` or
+`OUTPUT` Nodes using the methods above, in addition to those assigned by default.  It is also possible to exclude some
+roles from being assigned by default, using the `exclude_node_roles <Composition.exclude_node_roles>` method.  The
+description of each `NodeRole` indicates whether it is modifiable using these methods.  All of the roles assigned
+to a particular Node can be listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the
+nodes assigned a particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
 
 .. _Composition_Nested:
 
@@ -337,18 +324,45 @@ If a nested Composition is an `INPUT` Node of the outermost Composition then, wh
 <Composition_Execution_Methods>` must include the InputPorts of the nested Composition.  These can be accessed
 using the Composition's `exernal_input_ports <Composition.external_input_ports>` attribute.
 
-COMMENT:
-FOR DEVELOPERS:
-Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
-as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
-<Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
-Projections to the specified Nodes within the nested Composition.
-COMMENT
-
 A nested Composition can also contain one or more `learning Pathways <Composition_Learning_Pathway>`,
-however a learning Pathway may not extend from an outer Composition to a nested Composition or vice versa.  The
+however a learning Pathway may not extend from an enclosing Composition to one nested within it or vice versa.  The
 learning Pathways within a nested Composition are executed when that Composition is run, just like any other (see
-`Composition_Learning_Execution`).  Any level of nesting of Compositions within others is allowed.
+`Composition_Learning_Execution`).  Any depth of nesting of Compositions within others is allowed.
+
+.. _Composition_Projections:
+
+*Projections*
+~~~~~~~~~~~~~
+
+`Projections <Projection>` can be thought of as directed edges of the Composition's `graph <Composition_Graph>`,
+insofar as they are always from one Node to a single other Node, and serve to convey the results of the sender's
+computation as input to the receiver. However, they are not edges in the strictest senese, for two reasons:
+First, they too can carry out (restricted) computations, such as matrix transformation by a `MappingProjection`.
+Second, they can be the receiver of a Projection, as in the case of a MappingProjection that receives a
+`LearningProjection` used to modify its `matrix <MappingProjection.matrix>` parameter.  Nevertheless, since they
+define the connections and therefore dependencies among the Composition's Nodes, they determine the structure of its
+graph.
+
+.. _Composition_Graph_Projection_Vertices:
+.. technical_note::
+   Because Projections are not strictly edges, they are assigned to `vertices <Graph.vertices>` in the Composition's
+   `graph <Composition.graph>`, along with its Nodes.  The actual edges are implicit in the dependencies determined
+   by the Projections, and listed in the graph's `dependency_dict <Graph.dependency_dict>`.
+
+Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
+(forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
+connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within it
+<Composition_Nested>`.
+
+.. _Composition_Projections_to_CIMs:
+.. technical_note::
+   Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
+   as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
+   <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
+   Projections to the specified Nodes within the nested Composition.
+
+Subsets of Nodes connected by Projections are often defined as a `Pathway <Pathway>`, as decribed in the next section.
+
 
 .. _Composition_Pathways:
 
@@ -2476,9 +2490,12 @@ from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativ
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions',
-    'MECH_FUNCTION_PARAMS', 'NodeRole', 'PORT_FUNCTION_PARAMS'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'DURATION', 'EdgeType', 'EXECUTION_SET',
+    'get_compositions', 'INITIAL_FRAME', 'MECH_FUNCTION_PARAMS', 'MOVIE_DIR', 'MOVIE_NAME',
+    'NodeRole', 'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS',
+    'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'UNIT',
 ]
+
 
 # show_graph animation options
 NUM_TRIALS = 'num_trials'
@@ -2615,10 +2632,13 @@ class Graph(object):
             maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
 
         vertices : List[Vertex]
-            the `Vertices <Vertex>` contained in this Graph.
+            the `Vertices <Vertex>` contained in this Graph;  each can be a `Node <Component_Nodes>` or a
+            `Projection <Component_Projections>`.
 
-        dependency_dict : Dict[`Component` : Set(`Compnent`)]
-            maps each Component to those from which it receives Projections
+        dependency_dict : Dict[`Component` : Set(`Component`)]
+            maps each of the graph's Components to the others from which it receives input
+            (i.e., their `value <Component.value>`).  For a `Node <Components_Nodes>`, this is one or more
+            `Projections <Projection>`;  for a Projection, it is a single Node.
 
     """
 
@@ -3130,7 +3150,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
-        input_CIM and its InputPorts serve as proxies for the Composition itself in terms of afferent projections.
+        input_CIM and its InputPorts serve as proxies for the Composition itself for afferent projections.
 
     input_CIM_ports : dict
         a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
@@ -5782,7 +5802,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"A tuple specified in the {pathways_arg_str}"
                                            f" has more than two items: {pway}")
                 pway, learning_function = pway
-                if not (_is_node_spec(pway) or isinstance(pway, (list))):
+                if not (_is_node_spec(pway) or isinstance(pway, (list, Pathway))):
                     raise CompositionError(f"The 1st item in {tuple_or_dict_str} specified in the "
                                            f" {pathways_arg_str} must be a node or a list: {pway}")
                 if not (isinstance(learning_function, type) and issubclass(learning_function, LearningFunction)):
@@ -6886,10 +6906,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_controller(self, controller:ControlMechanism):
         """
-        Add an `OptimizationControlMechanism` as the `controller
-        <Composition.controller>` of the Composition, which gives the OCM access to the
-        `Composition`'s `evaluate <Composition.evaluate>` method. This allows the OCM to use simulations to determine
-        an optimal Control policy.
+        Add an `OptimizationControlMechanism` as the `controller <Composition.controller>` of the Composition.
+
+        This gives the OCM access to the `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
+        OCM to use simulations to determine an optimal Control policy.
+
+        COMMENT:
+        It also assigns to it a `ControlSignal` for, and corresponding `ControlProjection` to the `ParameterPort`
+        for any `Parameter` of a Mechanism `specified for control <LINK>`
+        COMMENT
+
         """
 
         if not isinstance(controller, ControlMechanism):
@@ -6934,6 +6960,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller.composition = self
         self.controller = controller
+
+        # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
 
         invalid_aux_components = self._get_invalid_aux_components(controller)
 
@@ -7010,9 +7038,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Don't add any that are already on the ControlMechanism
 
                 # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                new_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                        context=Context(source=ContextFlags.COMPOSITION))
-                controller.control.append(new_signal)
+                controller.control.append(ctl_signal)
                 # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
                 #                ?DON'T ASSIGN ControlProjection?
                 #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
@@ -7025,19 +7053,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
     def _get_control_signals_for_composition(self):
-        """Return list of ControlSignals specified by nodes in the Composition
+        """Return list of ControlSignals specified by Nodes in the Composition
 
-        Generate list of control signal specifications
-            from ParameterPorts of Mechanisms that have been specified for control.
+        Generate list of ControlSignal specifications from ParameterPorts of Mechanisms specified for control.
         The specifications can be:
             ControlProjections (with deferred_init())
             # FIX: 9/14/19 - THIS SHOULD ALREADY HAVE BEEN PARSED INTO ControlProjection WITH DEFFERRED_INIT:
             #                OTHERWISE, NEED TO ADD HANDLING OF IT BELOW
             ControlSignals (e.g., in a 2-item tuple specification for the parameter);
+            *CONTROL* keyword
             Note:
                 The initialization of the ControlProjection and, if specified, the ControlSignal
                 are completed in the call to controller_instantiate_control_signal() in add_controller.
-        Mechanism can be in the Compositon itself, or in a nested Composition that does not have its own controller.
+        Mechanism can be in the Composition itself, or in a nested Composition that does not have its own controller.
         """
 
         control_signal_specs = []
@@ -8422,6 +8450,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
 
+        except CompositionError as e:
+            raise CompositionError(str(e.error_value))
+
         except:
             raise CompositionError(f"Problem displaying graph for {self.name}")
 
@@ -8603,15 +8634,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         ret = {}
         for node, values in targets.items():
-            if NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node):
+            if (NodeRole.TARGET not in self.get_roles_by_node(node)
+                    and NodeRole.LEARNING not in self.get_roles_by_node(node)):
                 node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
-                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                comparators = [x for x in node_efferent_mechanisms
+                               if (isinstance(x, ComparatorMechanism)
+                                   and NodeRole.LEARNING in self.get_roles_by_node(x))]
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.TARGET in self.get_roles_by_node(t) and NodeRole.LEARNING in self.get_roles_by_node(t))]
+                target_nodes = [t for t in comparator_afferent_mechanisms
+                                if (NodeRole.TARGET in self.get_roles_by_node(t)
+                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
 
                 if len(target_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node}!")
+                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
 
                 ret[target_nodes[0]] = values
             else:
@@ -10098,8 +10134,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not self._is_learning(context):
                 next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
+
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit == EXECUTION_SET:
+                context.add_flag(ContextFlags.PROCESSING)
                 self._animate_execution(next_execution_set, context)
 
             # EXECUTE (each node) --------------------------------------------------------------------------
@@ -10138,9 +10176,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                                  execution_scheduler,
                                                                                                  context))
 
-                    # Set context.execution_phase
-
-                    # Set to PROCESSING by default
+                    # (Re)set context.execution_phase to PROCESSING by default
                     context.add_flag(ContextFlags.PROCESSING)
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned

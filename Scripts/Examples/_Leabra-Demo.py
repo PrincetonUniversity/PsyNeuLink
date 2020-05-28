@@ -46,7 +46,7 @@ train_flag = False  # should the LeabraMechanism and leabra network learn?
 # The leabra network and LeabraMechanism experience this bug equally.
 
 # NOTE: The reason TransferMechanisms are used below is because there is currently a bug where LeabraMechanism
-# (and other `Mechanism` with multiple input ports) cannot be used as origin Mechanisms for a System. If you desire
+# (and other `Mechanism` with multiple input ports) cannot be used as origin Mechanisms for a Composition. If you desire
 # to use a LeabraMechanism as an origin Mechanism, you can work around this bug by creating two `TransferMechanism`s
 # as origin Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of
 # the LeabraMechanism.
@@ -66,14 +66,12 @@ T1 = pnl.TransferMechanism(name='T1', size=input_size, function=psyneulink.core.
                            .transferfunctions.Linear)
 T2 = pnl.TransferMechanism(name='T2', size=output_size, function=psyneulink.core.components.functions.transferfunctions.Linear)
 
-p1 = pnl.Process(pathway=[T1, L])
 proj = pnl.MappingProjection(sender=T2, receiver=L.input_ports[1])
-p2 = pnl.Process(pathway=[T2, proj, L])
-s = pnl.System(processes=[p1, p2])
+comp = pnl.Composition(pathways=[[T1, L], [T2, proj, L]])
 
 print('Running Leabra in PsyNeuLink...')
 start_time = time.process_time()
-outputs = s.run(inputs={T1: input_pattern.copy(), T2: training_pattern.copy()})
+outputs = comp.run(inputs={T1: input_pattern.copy(), T2: training_pattern.copy()})
 end_time = time.process_time()
 
 print('Time to run LeabraMechanism in PsyNeuLink: ', end_time - start_time, "seconds")

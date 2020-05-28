@@ -18,12 +18,12 @@ input_layer = pnl.TransferMechanism(
 
 # Takes sum of input layer elements as external component of drift rate
 # Notes:
-#    - drift_rate parameter in constructor for DDM is the "internally modulated" component of the drift_rate;
-#    - arguments to DDM's function (DriftDiffusionAnalytical) are specified as CONTROL, so that their values will be determined
-#        by the EVCControlMechanism of the System to which the action_selection Mechanism is assigned (see below)
-#    - the input_format argument specifies that the input to the DDM should be one-hot encoded two-element array
-#    - the output_ports argument specifies use of the DECISION_VARIABLE_ARRAY OutputPort, which encodes the
-#        response in the same format as the ARRAY input_format/.
+#  - drift_rate parameter in constructor for DDM is the "internally modulated" component of the drift_rate;
+#  - arguments to DDM's function (DriftDiffusionAnalytical) are specified as CONTROL, so their values are determined
+#      by the OptimizationControlMechanism of the Composition to which the action_selection Mechanism is assigned
+#  - the input_format argument specifies that the input to the DDM should be one-hot encoded two-element array
+#  - the output_ports argument specifies use of the DECISION_VARIABLE_ARRAY OutputPort, which encodes the
+#      response in the same format as the ARRAY input_format/.
 action_selection = pnl.DDM(
         input_format=pnl.ARRAY,
         function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
@@ -42,19 +42,14 @@ action_selection = pnl.DDM(
 #        which insures the left element of the input favors the left action (positive value of DDM decision variable),
 #        and the right element favors the right action (negative value of DDM decision variable)
 #    The learning argument specifies Reinforcement as the learning function for the Projection
-p = pnl.Process(
-    default_variable=[0, 0],
-    # pathway=[input_layer, np.array([[1],[-1]]), action_selection],
-    pathway=[input_layer, pnl.IDENTITY_MATRIX, action_selection],
-    learning=pnl.LearningProjection(learning_function=psyneulink.core.components.functions.learningfunctions
-                                    .Reinforcement(learning_rate=0.5)),
-    target=0
-)
 
-s = pnl.System(
-    processes=[p],
-    controller=pnl.EVCControlMechanism(control_signals=(pnl.LEARNING_RATE, p.learning_mechanisms[1]))
-)
+comp = pnl.Composition()
+p = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+                                            learning_rate=0.5)
+comp.add_controller(
+    pnl.OptimizationControlMechanism(
+        control_signals=(pnl.LEARNING_RATE,
+                         p.learning_components[pnl.LEARNING_MECHANISMS])))
 
 # EXECUTION:
 
@@ -64,8 +59,8 @@ print('reward prediction weights: \n', action_selection.input_port.path_afferent
 
 # Used by *call_before_trial* and *call_after_trial* to generate printouts.
 # Note:  should be replaced by use of logging functionality that has now been implemented.
-def print_header(system):
-    print("\n\n**** Time: ", system.scheduler.get_clock(system).simple_time)
+def print_header(comp):
+    print("\n\n**** Time: ", comp.scheduler.get_clock(comp).simple_time)
 
 
 def show_weights(context=None):
@@ -110,7 +105,7 @@ def show_weights(context=None):
 # reward_values = [10, 0]
 reward_values = [0, 10]
 
-# Used by System to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
+# Used by Composition to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
 def reward(context=None):
     """Return the reward associated with the selected action"""
     selected_action = action_selection.output_port.parameters.value.get(context)
@@ -120,27 +115,27 @@ def reward(context=None):
     return [reward_values[int(np.nonzero(selected_action)[0])]]
 
 
-# Input stimuli for run of the System.
+# Input stimuli for run of the Composition.
 # Notes:
 #    - for illustrative purposes, this list contains two sets of stimuli;
 #        they will be used in sequence, and the sequence will be recycled for as many trials as specified by the
-#        *num_trials* argument in the call the System's run method see below)
+#        *num_trials* argument in the call the Composition's run method see below)
 #    - rewards are specified by the reward function above
 input_list = {input_layer: [[1, 1],[1, 1]]}
 
-# # Shows graph of system (learning components are in orange)
-# s.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
-# s.show_graph(show_learning=pnl.ALL, show_mechanism_structure=True)
-# s.show_graph(show_mechanism_structure=True)
+# # Shows graph of Composition (learning components are in orange)
+# comp.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
+# comp.show_graph(show_learning=pnl.ALL, show_mechanism_structure=True)
+# comp.show_graph(show_mechanism_structure=True)
 
-# Run System.
+# Run Composition.
 # Note: *targets* is specified as the reward() function (see above).
-# s.run(
+# comp.run(
 #     num_trials=10,
 #     inputs=input_list,
 #     targets=reward,
-#     call_before_trial=functools.partial(print_header, s),
+#     call_before_trial=functools.partial(print_header, comp),
 #     call_after_trial=show_weights
 # )
 
-s.show_graph(show_learning=True)
+comp.show_graph(show_learning=True, show_controller=pnl.ALL)

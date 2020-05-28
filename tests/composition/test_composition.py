@@ -30,7 +30,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -1070,6 +1070,21 @@ class TestCompositionPathwaysArg:
             c = Composition(pathways=[{'P1':'A'}])
         assert ("The value in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
+ 
+    def test_composition_pathways_Pathway_in_learning_tuples(self):
+        pnl.clear_registry(pnl.PathwayRegistry)
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        P1 = Pathway(pathway=[A,B,C], name='P1')
+        P2 = Pathway(pathway=[D,E], name='P2')
+        c = Composition(pathways=[(P1, BackPropagation), (P2, BackPropagation)])
+        assert c.pathways['P1'].name == 'P1'
+        assert c.pathways['P2'].name == 'P2'
+        assert c.pathways['P1'].learning_components[OUTPUT_MECHANISM] is C
+        assert c.pathways['P2'].learning_components[OUTPUT_MECHANISM] is E
 
     def test_composition_processing_and_learning_pathways_pathwayroles_learning_components(self):
         pnl.clear_registry(pnl.PathwayRegistry)
