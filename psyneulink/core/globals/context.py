@@ -135,54 +135,56 @@ class ContextFlags(enum.IntFlag):
     """Set after completion of initialization of the Component."""
     RESET = 1 << 4  # 16
     """Set on stateful Components when they are re-initialized."""
-    UNINITIALIZED = 1 << 16
+    UNINITIALIZED = 1 << 17
     """Default value set before initialization"""
 
     INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | RESET | UNINITIALIZED
 
     # execution_phase flags
-    PROCESSING    = 1 << 5  # 32
+    PREPARING    = 1 << 5   # 32
+    """Set while `Composition is preparing to `execute <Composition_Execution>`."""
+    PROCESSING    = 1 << 6  # 64
     """Set while `Composition is `executing <Composition_Execution>` `ProcessingMechanisms <ProcessingMechanism>`."""
-    LEARNING      = 1 << 6 # 64
+    LEARNING      = 1 << 7 # 128
     """Set while `Composition is `executing <Composition_Execution>` `LearningMechanisms <LearningMechanism>`."""
-    CONTROL       = 1 << 7 # 128
+    CONTROL       = 1 << 8 # 256
     """Set while Composition's `controller <Composition.controller>` or its `ObjectiveMechanism` is executing."""
-    SIMULATION    = 1 << 8  # 256
+    SIMULATION    = 1 << 9  # 512
     """Set during simulation by Composition.controller"""
-    IDLE = 1 << 17
+    IDLE = 1 << 18
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
     """
 
     EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
-    EXECUTION_PHASE_MASK = EXECUTING | IDLE
+    EXECUTION_PHASE_MASK = IDLE | PREPARING | EXECUTING
 
     # source (source-of-call) flags
-    COMMAND_LINE  = 1 << 9  # 512
+    COMMAND_LINE  = 1 << 10  # 1024
     """Direct call by user (either interactively from the command line, or in a script)."""
-    CONSTRUCTOR   = 1 << 10 # 1024
+    CONSTRUCTOR   = 1 << 11 # 2048
     """Call from Component's constructor method."""
-    INSTANTIATE   = 1 << 11 # 2048
+    INSTANTIATE   = 1 << 12 # 4096
     """Call by an instantiation method."""
-    COMPONENT     = 1 << 12 # 4096
+    COMPONENT     = 1 << 13 # 8192
     """Call by Component __init__."""
-    METHOD        = 1 << 13 # 8192
+    METHOD        = 1 << 14 # 16384
     """Call by method of the Component other than its constructor."""
-    PROPERTY      = 1 << 14 # 16384
+    PROPERTY      = 1 << 15 # 32768
     """Call by property of the Component."""
-    COMPOSITION   = 1 << 15 # 32768
+    COMPOSITION   = 1 << 16 #
     """Call by a/the Composition to which the Component belongs."""
 
-    PROCESS   = 1 << 15     # 32768
+    PROCESS   = 1 << 16     # 65536
 
-    NONE      = 1 << 20
+    NONE      = 1 << 21
 
     """Call by a/the Composition to which the Component belongs."""
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | PROCESS | NONE
 
     # runmode flags
-    DEFAULT_MODE = 1 << 18
+    DEFAULT_MODE = 1 << 19
     """Default mode"""
-    LEARNING_MODE = 1 << 19
+    LEARNING_MODE = 1 << 20
     """Set during `compositon.learn`"""
 
     RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE
@@ -248,7 +250,8 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.RESET,
                                ContextFlags.UNINITIALIZED}
 
-EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,
+EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
+                         ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
                          ContextFlags.SIMULATION,
@@ -291,6 +294,7 @@ class Context():
         indicates the phase of execution of the Component;
         one or more of the following flags can be set:
 
+            * `PREPARING <ContextFlags.PREPARING>`
             * `PROCESSING <ContextFlags.PROCESSING>`
             * `LEARNING <ContextFlags.LEARNING>`
             * `CONTROL <ContextFlags.CONTROL>`
@@ -299,8 +303,8 @@ class Context():
 
         If `IDLE` is set, the Component is not being executed at the current time, and `flags_string
         <Context.flags_string>` will include *IDLE* in the string.  In some circumstances all of the
-        `execution_phase <Context.execution_phase>` flags may be set, in which case `flags_string
-        <Context.flags_string>` will include *EXECUTING* in the string.
+        `execution_phase <Context.execution_phase>` flags may be set (other than *IDLE* and *PREPARING*),
+        in which case `flags_string <Context.flags_string>` will include *EXECUTING* in the string.
 
     source : field of the flags attribute
         indicates the source of a call to a method belonging to or referencing the Component;
