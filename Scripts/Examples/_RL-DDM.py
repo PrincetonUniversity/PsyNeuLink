@@ -138,4 +138,4 @@ input_list = {input_layer: [[1, 1],[1, 1]]}
 #     call_after_trial=show_weights
 # )
 
-comp.show_graph(show_learning=True)
+comp.show_graph(show_learning=True, show_controller=pnl.ALL)

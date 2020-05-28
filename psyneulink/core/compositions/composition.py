@@ -7038,9 +7038,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Don't add any that are already on the ControlMechanism
 
                 # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                new_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                        context=Context(source=ContextFlags.COMPOSITION))
-                controller.control.append(new_signal)
+                controller.control.append(ctl_signal)
                 # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
                 #                ?DON'T ASSIGN ControlProjection?
                 #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
@@ -7053,19 +7053,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
     def _get_control_signals_for_composition(self):
-        """Return list of ControlSignals specified by nodes in the Composition
+        """Return list of ControlSignals specified by Nodes in the Composition
 
-        Generate list of control signal specifications
-            from ParameterPorts of Mechanisms that have been specified for control.
+        Generate list of ControlSignal specifications from ParameterPorts of Mechanisms specified for control.
         The specifications can be:
             ControlProjections (with deferred_init())
             # FIX: 9/14/19 - THIS SHOULD ALREADY HAVE BEEN PARSED INTO ControlProjection WITH DEFFERRED_INIT:
             #                OTHERWISE, NEED TO ADD HANDLING OF IT BELOW
             ControlSignals (e.g., in a 2-item tuple specification for the parameter);
+            *CONTROL* keyword
             Note:
                 The initialization of the ControlProjection and, if specified, the ControlSignal
                 are completed in the call to controller_instantiate_control_signal() in add_controller.
-        Mechanism can be in the Compositon itself, or in a nested Composition that does not have its own controller.
+        Mechanism can be in the Composition itself, or in a nested Composition that does not have its own controller.
         """
 
         control_signal_specs = []
