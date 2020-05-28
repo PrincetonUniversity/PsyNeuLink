@@ -103,7 +103,7 @@ def show_weights(context=None):
     ))
 
 
-# Specify reward values associated with each action (corresponding to elements of esaction_selection.output_port.value)
+# Specify reward values associated with each action (corresponding to elements of action_selection.output_port.value)
 # reward_values = [10, 0]
 reward_values = [0, 10]
 
@@ -114,7 +114,7 @@ def reward(context=None):
     if not any(selected_action):
         # Deal with initialization, during which action_selection.output_port.value may == [0,0]
         selected_action = np.array([1,0])
-    return [reward_values[int(np.nonzero(selected_action)[0])]]
+    return [reward_values[int(np.nonzero(selected_action))]]
 
 
 # Input stimuli for run of the Composition.
@@ -123,7 +123,8 @@ def reward(context=None):
 #        they will be used in sequence, and the sequence will be recycled for as many trials as specified by the
 #        *num_trials* argument in the call the Composition's run method see below)
 #    - rewards are specified by the reward function above
-input_list = {input_layer: [[1, 1],[1, 1]]}
+inputs = {input_layer: [[1, 1],[1, 1]]}
+targets = {action_selection: reward}
 
 # # Shows graph of Composition (learning components are in orange)
 # comp.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
@@ -132,12 +133,12 @@ input_list = {input_layer: [[1, 1],[1, 1]]}
 
 # Run Composition.
 # Note: *targets* is specified as the reward() function (see above).
-# comp.run(
-#     num_trials=10,
-#     inputs=input_list,
-#     targets=reward,
-#     call_before_trial=functools.partial(print_header, comp),
-#     call_after_trial=show_weights
-# )
+comp.learn(
+    num_trials=10,
+    inputs=inputs,
+    targets=targets,
+    call_before_trial=functools.partial(print_header, comp),
+    call_after_trial=show_weights
+)
 
 comp.show_graph(show_learning=True, show_controller=pnl.ALL)

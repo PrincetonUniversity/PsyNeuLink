@@ -1324,7 +1324,7 @@ class Mechanism_Base(Mechanism):
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputPort.value>`
-           of its `OutputPorts <Mechanism_Base.outputPorts>`.
+           of its `OutputPorts <Mechanism_Base.output_ports>`.
 
     output_port : OutputPort
         `primary OutputPort <OutputPort_Primary>` for the Mechanism;  same as first entry of its `output_ports
