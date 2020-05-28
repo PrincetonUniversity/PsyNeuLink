@@ -542,9 +542,10 @@ class TestReinforcement:
                                    name='DDM')
         c = pnl.Composition()
         learning_components = c.add_reinforcement_learning_pathway([input_layer, action_selection], learning_rate=0.05)
-        inputs = {input_layer: [[1, 1], [1, 1]],
-                  learning_components.target: [[10.], [10.]]}
-        results = c.learn(inputs=inputs)
+
+        # LEARN:
+        c.learn(inputs={input_layer: [[1, 1], [1, 1]]},
+                targets={action_selection: [[10.], [10.]]})
 
         assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
                                                     [2.08614798], [1.85006765], [2.30401336], [2.08614798], [1.85006765]])
