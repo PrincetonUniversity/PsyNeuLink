@@ -47,7 +47,8 @@ comp = pnl.Composition()
 p = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                             learning_rate=0.5)
 comp.add_controller(
-    pnl.OptimizationControlMechanism(
+    # pnl.OptimizationControlMechanism(
+    pnl.ControlMechanism(
         # objective_mechanism=True,
         objective_mechanism=pnl.ObjectiveMechanism(monitor=action_selection),
         control_signals=(pnl.LEARNING_RATE,
@@ -73,8 +74,8 @@ def show_weights(context=None):
     #         action_selection.output_port.value[np.nonzero(action_selection.output_port.value)][0]
     #     )
     # )
-    comparator = action_selection.output_port.efferents[0].receiver.owner
-    learn_mech = action_selection.output_port.efferents[1].receiver.owner
+    comparator = p.learning_objective
+    learn_mech = p.learning_components[pnl.LEARNING_MECHANISMS]
     print('\nact_sel_in_state variable:  {} '
           '\nact_sel_in_state value:     {} '
           '\naction_selection variable:  {} '
@@ -114,7 +115,7 @@ def reward(context=None):
     if not any(selected_action):
         # Deal with initialization, during which action_selection.output_port.value may == [0,0]
         selected_action = np.array([1,0])
-    return [reward_values[int(np.nonzero(selected_action))]]
+    return [reward_values[int(np.nonzero(selected_action)[0])]]
 
 
 # Input stimuli for run of the Composition.
@@ -124,7 +125,8 @@ def reward(context=None):
 #        *num_trials* argument in the call the Composition's run method see below)
 #    - rewards are specified by the reward function above
 inputs = {input_layer: [[1, 1],[1, 1]]}
-targets = {action_selection: reward}
+# targets = {action_selection: reward}
+targets = {action_selection: [[0],[10]]}
 
 # # Shows graph of Composition (learning components are in orange)
 # comp.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)

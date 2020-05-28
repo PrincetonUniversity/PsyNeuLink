@@ -9457,6 +9457,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 8/27/19 NEW:
         # FIX: MODIFIED FEEDBACK -
         #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
+        #      HOWEVER, WOULD BE GOOD IF CONTEXT WERE SET TO EXECUTE TO FILTER DEFERRED_INIT WARNINGS
+        #      (E.G., IN _check_projection_initialization_status)
+        #      MAYBE AT LEAST CALL _analzze_graph WITH APPOPRIATE FLAG SET?
         # If a scheduler was passed in, first call _analyze_graph with default scheduler
         if scheduler is not self.scheduler:
             if not skip_analyze_graph:
@@ -9738,8 +9741,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
 
-        self._analyze_graph()
         context.add_flag(ContextFlags.LEARNING_MODE)
+        self._analyze_graph()
 
         learning_results = runner.run_learning(
             inputs=inputs,
