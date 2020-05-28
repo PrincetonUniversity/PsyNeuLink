@@ -8442,6 +8442,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
 
+        except CompositionError as e:
+            raise CompositionError(str(e.error_value))
+
         except:
             raise CompositionError(f"Problem displaying graph for {self.name}")
 
@@ -8635,8 +8638,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     and NodeRole.LEARNING in self.get_roles_by_node(t))]
 
                 if len(target_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node}!")
+                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
 
                 ret[target_nodes[0]] = values
             else:
