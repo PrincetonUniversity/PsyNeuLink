@@ -7212,6 +7212,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 f"but {owner.name} is not in {self.name} or any of its nested Compositions."
                         )
 
+        # If Composition is not preparing to execute, allow deferred_inits to persist without warning
+        if context and ContextFlags.PREPARING not in context.execution_phase:
+            return
+
         for node in self.nodes:
             # Check for deferred init projections
             for projection in node.projections:
@@ -9358,6 +9362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
+        context.execution_phase = ContextFlags.PREPARING
 
         if scheduler is None:
             scheduler = self.scheduler
@@ -9742,6 +9747,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         runner = CompositionRunner(self)
 
         context.add_flag(ContextFlags.LEARNING_MODE)
+        context.add_flag(ContextFlags.PREPARING)
+
         self._analyze_graph()
 
         learning_results = runner.run_learning(
@@ -9985,6 +9992,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
 
+        context.remove_flag(ContextFlags.PREPARING)
+
         # EXECUTE INPUT CIM ********************************************************************************************
 
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
@@ -10085,7 +10094,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 
-        # EXECUTE (each execution_set) *********************************************************************************
+        # EXECUTE EACH EXECUTION SET *********************************************************************************
 
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
@@ -10149,7 +10158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.add_flag(ContextFlags.PROCESSING)
                 self._animate_execution(next_execution_set, context)
 
-            # EXECUTE (each node) --------------------------------------------------------------------------
+            # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:
