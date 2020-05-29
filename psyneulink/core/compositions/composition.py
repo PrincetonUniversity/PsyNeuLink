@@ -8391,7 +8391,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                if node.name+' ' in item:  # Space needed to filter out node.name that is a substring of another name
+                if node.name + ' ' in item:  # Space needed to filter out node.name that is a substring of another name
                     if node_type in {MECHANISM, BOTH}:
                         if not '->' in item:
                             return i
