@@ -7916,6 +7916,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
+                    if ctl_proj not in self.projections:
+                    # if ctl_proj.receiver.owner not in self.nodes:
+                        continue
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
                     if controller in active_items:
                         if active_color == BOLD:
