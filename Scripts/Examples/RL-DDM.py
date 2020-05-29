@@ -47,8 +47,8 @@ comp = pnl.Composition()
 p = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
                                             learning_rate=0.5)
 comp.add_controller(
-    # pnl.OptimizationControlMechanism(
-    pnl.ControlMechanism(
+    pnl.OptimizationControlMechanism(
+    # pnl.ControlMechanism(
         # objective_mechanism=True,
         objective_mechanism=pnl.ObjectiveMechanism(monitor=action_selection),
         control_signals=(pnl.LEARNING_RATE,
@@ -134,7 +134,7 @@ def generate_inputs_and_targets(trial_number):
 
 # Run Composition.
 comp.learn(
-    num_trials=10,
+    num_trials=20,
     inputs=generate_inputs_and_targets,
     call_before_trial=functools.partial(print_header, comp),
     call_after_trial=show_weights
