@@ -7740,6 +7740,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         cim_color = input_color
 
                 elif cim is self.parameter_CIM:
+                    if not (cim.afferents or cim.efferents):
+                        continue
                     if cim in active_items:
                         if active_color == BOLD:
                             cim_color = controller_color
