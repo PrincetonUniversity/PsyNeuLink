@@ -463,17 +463,17 @@ class TestTrainingCorrectness:
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
-        'eps, calls, opt, from_pnl_or_not', [
-            (100, 'single', 'adam', True),
-            # (50, 'multiple', 'adam', True),
-            (100, 'single', 'adam', False),
-            # (50, 'multiple', 'adam', False)
+        'eps, calls, opt, from_pnl_or_not, expected', [
+            (100, 'single', 'adam', True, [[[0.09823965]], [[0.81092879]], [[0.78179557]], [[0.25593583]]]),
+            (50, 'multiple', 'adam', True, [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
+            (100, 'single', 'adam', False, [[[0.12697489]], [[0.74632817]], [[0.80712739]], [[0.28699516]]]),
+            (50, 'multiple', 'adam', False, [[[0.2935138]], [[0.60503794]], [[0.57901045]], [[0.57705371]]])
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_not, mode, benchmark):
+    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_not, mode, benchmark, expected):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -510,22 +510,18 @@ class TestTrainingCorrectness:
                                         "targets": {xor_out:xor_targets},
                                         "epochs": eps}, bin_execute=mode)
 
-            assert len(results) == len(xor_targets)
-            for r, t in zip(results, xor_targets):
-                assert np.allclose(np.round(r[0]), t)
-
         else:
-            results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                                        "targets": {xor_out: xor_targets},
-                                        "epochs": 1}, bin_execute=mode)
+            input_dict = {"inputs": {xor_in: xor_inputs},
+                          "targets": {xor_out: xor_targets},
+                          "epochs": 1}
+            for i in range(eps):
+                results = xor.learn(inputs=input_dict, bin_execute=mode)
 
-            for i in range(eps - 1):
-                results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                                            "targets": {xor_out: xor_targets},
-                                            "epochs": 1}, bin_execute=mode)
-
-            for i in range(len(results[eps - 1])):
-                assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
+        # FIXME: Improve accuracy
+        atol = 0.1 if not from_pnl_or_not and mode == 'LLVMRun' else 0.001
+        assert len(results) == len(expected)
+        for r, t in zip(results, expected):
+            assert np.allclose(r[0], t, atol=atol)
 
         benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
                                      "targets": {xor_out: xor_targets},
