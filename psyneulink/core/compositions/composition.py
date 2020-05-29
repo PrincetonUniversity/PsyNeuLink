@@ -1363,8 +1363,8 @@ Composition. Execution contexts make several capabilities possible:
     the Compositions to which it is assigned.
 
   * The same Composition can be exectued independently in different contexts; this can be used for
-    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
-    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
+    parallelizing parameter estimation, both for data fitting (see `ParamEstimationFunction`), and for
+    simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
     (see `OptimizationControlMechanism`).
 
 If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
@@ -7035,7 +7035,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get rid of default ControlSignal if it has no ControlProjections
             controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
-            # Add any ControlSignals specified for ParameterPorts of nodes already in the Composition
+            # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
             control_signal_specs = self._get_control_signals_for_composition()
             for ctl_sig_spec in control_signal_specs:
                 # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port

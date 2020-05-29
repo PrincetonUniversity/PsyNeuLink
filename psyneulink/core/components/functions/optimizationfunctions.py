@@ -14,6 +14,7 @@
 * `GradientOptimization`
 * `GridSearch`
 * `GaussianProcess`
+* `ParamEstimationFunction`
 
 Overview
 --------
