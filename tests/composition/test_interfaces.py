@@ -590,6 +590,47 @@ class TestConnectCompositionsViaCIMS:
         assert ib.mod_afferents[0].sender == icomp.parameter_CIM.output_port
         assert icomp.parameter_CIM_ports[ib.parameter_ports['slope']][0].path_afferents[0].sender == cm.output_port
 
+    def test_nested_control_projection_count_controller(self):
+        # Inner Composition
+        ia = TransferMechanism(name='ia')
+        icomp = Composition(name='icomp', pathways=[ia])
+        # Outer Composition
+        ocomp = Composition(name='ocomp', pathways=[icomp])
+        ocm = OptimizationControlMechanism(name='ocm',
+                                           agent_rep=ocomp,
+                                           control_signals=[
+                                               ControlSignal(projections=[(NOISE, ia)]),
+                                               ControlSignal(projections=[(INTERCEPT, ia)]),
+                                               ControlSignal(projections=[(SLOPE, ia)]),
+                                           ]
+                                           )
+        ocomp.add_controller(ocm)
+        assert len(ocm.efferents) == 3
+        assert all([proj.receiver.owner == icomp.parameter_CIM for proj in ocm.efferents])
+        assert len(ia.mod_afferents) == 3
+        assert all([proj.sender.owner == icomp.parameter_CIM for proj in ia.mod_afferents])
+
+    # THIS TEST IS NOT CURRENTLY WORKING DUE TO PROJECTIONS BEING LEFTOVER WHEN PORTS DELETED
+    # def test_nested_control_projection_count_control_mech(self):
+    #     # Inner Composition
+    #     ia = TransferMechanism(name='ia')
+    #     icomp = Composition(name='icomp', pathways=[ia])
+    #     # Outer Composition
+    #     oa = TransferMechanism(name='oa')
+    #     cm = ControlMechanism(name='cm',
+    #         control=[
+    #         ControlSignal(projections=[(NOISE, ia)]),
+    #         ControlSignal(projections=[(INTERCEPT, ia)]),
+    #         ControlSignal(projections=[(SLOPE, ia)])
+    #         ]
+    #     )
+    #     ocomp = Composition(name='ocomp', pathways=[[oa, icomp], [cm]])
+    #     assert len(cm.efferents) == 3
+    #     assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
+    #     assert len(ia.mod_afferents) == 3
+    #     assert all([proj.sender.owner == icomp.parameter_CIM for proj in ia.mod_afferents])
+
+
 class TestInputCIMOutputPortToOriginOneToMany:
 
     def test_one_to_two(self):
