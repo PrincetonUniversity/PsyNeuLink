@@ -1162,6 +1162,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if input_ports is None:
                 return
 
+            # FIX 5/28/20:
             # TODO: uncomment this method or remove this block entirely.
             # This validation check was never being run due to an
             # unintentionally suppressed exception. Why is the default
