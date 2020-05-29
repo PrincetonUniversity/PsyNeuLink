@@ -6912,15 +6912,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_controller(self, controller:ControlMechanism):
         """
-        Add an `OptimizationControlMechanism` as the `controller <Composition.controller>` of the Composition.
+        Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
-        This gives the OCM access to the `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
-        OCM to use simulations to determine an optimal Control policy.
+        This gives the ControlMechanism access to the `Composition`'s `evaluate <Composition.evaluate>` method. This
+        allows subclasses of ControlMechanism that can use this (such as `OptimizationControlMechanism`) to execute
+        "simulations" of the Composition (that is, executions in an `execution context <Composition_Execution_Context>`
+        separate from the one used by the `execution method <Composition_Execution_Methods>` called by the user) to
+        evaluate the influence of parameters on performance.
 
-        COMMENT:
-        It also assigns to it a `ControlSignal` for, and corresponding `ControlProjection` to the `ParameterPort`
-        for any `Parameter` of a Mechanism `specified for control <LINK>`
-        COMMENT
+        It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
+        <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
         """
 
