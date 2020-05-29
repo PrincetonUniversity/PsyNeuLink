@@ -7605,12 +7605,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     node_shape = mechanism_shape
 
-                # Get condition if any associated with rcvr
-                if rcvr in self.scheduler.conditions:
-                    condition = self.scheduler.conditions[rcvr]
-                else:
-                    condition = None
-
+                # FIX 5/28/20:  INTEGRATE WITH CYCLE AND FEEDBACK ABOVE
                 # # Feedback Node
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     if rcvr in active_items:
@@ -7623,6 +7618,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     else:
                 #         rcvr_color = feedback_color
                 #         rcvr_penwidth = str(bold_width)
+
+                # Get condition if any associated with rcvr
+                if rcvr in self.scheduler.conditions:
+                    condition = self.scheduler.conditions[rcvr]
+                else:
+                    condition = None
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
