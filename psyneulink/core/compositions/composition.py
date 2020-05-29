@@ -6933,7 +6933,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note:  initialization_status here pertains to controller's own initialization status
         #        (i.e., whether it has been fully instantiated); if not, presumably this is because it is an
         #        OptimizationControlMechanism [OCM] for which the agent_rep has not yet been assigned
-        #        (e.g., was constructed in the controller argument of the Compositon), in which case assign it here.
+        #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
             controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
