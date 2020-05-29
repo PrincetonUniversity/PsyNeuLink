@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.7.5.4+417.g3bcb1ce documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.7.5.4+418.gaa3fcc6 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+417
+                  0.7.5.4+418
                 </div>
               
             
@@ -1291,8 +1291,8 @@ Composition. Execution contexts make several capabilities possible:</p>
 <li>A <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> can be assigned to, and executed in more than one Composition, preserving its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and that of its <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">parameters</span></a> independently for each of
 the Compositions to which it is assigned.</li>
 <li>The same Composition can be exectued independently in different contexts; this can be used for
-parallelizing parameter estimation, both for data fitting (see <code class="xref any docutils literal"><span class="pre">ParameterEstimationMechanism</span></code>), and
-for simulating the Composition in <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based optimization</span></a>
+parallelizing parameter estimation, both for data fitting (see <code class="xref any docutils literal"><span class="pre">ParamEstimationFunction</span></code>), and for
+simulating the Composition in <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based optimization</span></a>
 (see <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>).</li>
 </ul>
 </div></blockquote>
@@ -2640,9 +2640,13 @@ the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.c
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_controller">
 <code class="descname">add_controller</code><span class="sig-paren">(</span><em>controller</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_controller" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> as the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of the Composition.</p>
-<p>This gives the OCM access to the <a class="reference internal" href="#"><span class="doc">Composition</span></a>’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method. This allows the
-OCM to use simulations to determine an optimal Control policy.</p>
+<dd><p>Add an <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> as the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of the Composition.</p>
+<p>This gives the ControlMechanism access to the <a class="reference internal" href="#"><span class="doc">Composition</span></a>’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal"><span class="pre">evaluate</span></code></a> method. This
+allows subclasses of ControlMechanism that can use this (such as <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>) to execute
+“simulations” of the Composition (that is, executions in an <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a>
+separate from the one used by the <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execution method</span></a> called by the user) to
+evaluate the influence of parameters on performance.</p>
+<p>It also assigns a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for any <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="ParameterPort.html#parameterport-value-specification"><span class="std std-ref">specified for control</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to its correponding <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -3768,7 +3772,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+417.g3bcb1ce',
+               VERSION:'0.7.5.4+418.gaa3fcc6',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

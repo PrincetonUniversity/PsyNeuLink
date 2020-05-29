@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.7.5.4+417.g3bcb1ce documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.7.5.4+418.gaa3fcc6 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4+417
+                  0.7.5.4+418
                 </div>
               
             
@@ -423,17 +423,14 @@ next executed.</li>
 <span id="optimizationcontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.</code><code class="descname">OptimizationControlMechanism</code><span class="sig-paren">(</span><em>agent_rep=None</em>, <em>function=None</em>, <em>features=None</em>, <em>feature_function=None</em>, <em>num_estimates=None</em>, <em>search_function=None</em>, <em>search_termination_function=None</em>, <em>search_statefulness=None</em>, <em>params=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.</code><code class="descname">OptimizationControlMechanism</code><span class="sig-paren">(</span><em>agent_rep=None</em>, <em>function=None</em>, <em>features=None</em>, <em>feature_function=None</em>, <em>num_estimates=None</em>, <em>search_function=None</em>, <em>search_termination_function=None</em>, <em>search_statefulness=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that adjusts its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> to optimize
-performance of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which it belongs</p>
+performance of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which it belongs.  See parent class for additional arguments.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>objective_mechanism</strong> (<a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><em>ObjectiveMechanism</em></a><em> or </em><em>List</em><em>[</em><em>OutputPort specification</em><em>]</em>) – specifies either an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to use for the OptimizationControlMechanism, or a list of the
-<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>s it should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputPort specifications</span></a> is used, a default ObjectiveMechanism is created and the list
-is passed to its <strong>monitored_output_ports</strong> argument.</li>
 <li><strong>features</strong> (<em>Mechanism</em><em>, </em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>Projection</em><em>, </em><em>dict</em><em>, or </em><em>list containing any of these</em>) – specifies Components, the values of which are assigned to <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal"><span class="pre">feature_values</span></code></a> and used to predict <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a>.
 Any <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort specification</span></a> can be used that resolves to an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> that
 projects to the InputPort.</li>
@@ -625,7 +622,7 @@ and specified <a class="reference internal" href="ControlMechanism.html#psyneuli
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4+417.g3bcb1ce',
+               VERSION:'0.7.5.4+418.gaa3fcc6',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
