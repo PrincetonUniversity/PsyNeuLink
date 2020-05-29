@@ -610,25 +610,24 @@ class TestConnectCompositionsViaCIMS:
         assert len(ia.mod_afferents) == 3
         assert all([proj.sender.owner == icomp.parameter_CIM for proj in ia.mod_afferents])
 
-    # THIS TEST IS NOT CURRENTLY WORKING DUE TO PROJECTIONS BEING LEFTOVER WHEN PORTS DELETED
-    # def test_nested_control_projection_count_control_mech(self):
-    #     # Inner Composition
-    #     ia = TransferMechanism(name='ia')
-    #     icomp = Composition(name='icomp', pathways=[ia])
-    #     # Outer Composition
-    #     oa = TransferMechanism(name='oa')
-    #     cm = ControlMechanism(name='cm',
-    #         control=[
-    #         ControlSignal(projections=[(NOISE, ia)]),
-    #         ControlSignal(projections=[(INTERCEPT, ia)]),
-    #         ControlSignal(projections=[(SLOPE, ia)])
-    #         ]
-    #     )
-    #     ocomp = Composition(name='ocomp', pathways=[[oa, icomp], [cm]])
-    #     assert len(cm.efferents) == 3
-    #     assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
-    #     assert len(ia.mod_afferents) == 3
-    #     assert all([proj.sender.owner == icomp.parameter_CIM for proj in ia.mod_afferents])
+    def test_nested_control_projection_count_control_mech(self):
+        # Inner Composition
+        ia = TransferMechanism(name='ia')
+        icomp = Composition(name='icomp', pathways=[ia])
+        # Outer Composition
+        oa = TransferMechanism(name='oa')
+        cm = ControlMechanism(name='cm',
+            control=[
+            ControlSignal(projections=[(NOISE, ia)]),
+            ControlSignal(projections=[(INTERCEPT, ia)]),
+            ControlSignal(projections=[(SLOPE, ia)])
+            ]
+        )
+        ocomp = Composition(name='ocomp', pathways=[[oa, icomp], [cm]])
+        assert len(cm.efferents) == 3
+        assert all([proj.receiver.owner == icomp.parameter_CIM for proj in cm.efferents])
+        assert len(ia.mod_afferents) == 3
+        assert all([proj.sender.owner == icomp.parameter_CIM for proj in ia.mod_afferents])
 
 
 class TestInputCIMOutputPortToOriginOneToMany:

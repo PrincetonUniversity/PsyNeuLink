@@ -4489,22 +4489,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
-            for projection in input_port.path_afferents:
-
-                if projection.sender == self.input_CIM_ports[input_port][1]:
-                    # projection.receiver.efferents.remove(projection)
-                    # Bug? ^^ projection is not in receiver.efferents??
-
-                    # if the project is a shadow projection, we also need to remove it from the Composition's shadows
-                    # attribute
-                    if projection.receiver.owner in self.shadows and len(self.shadows[projection.receiver.owner]) > 0:
-                        for shadow in self.shadows[projection.receiver.owner]:
-                            for shadow_input_port in shadow.input_ports:
-                                for shadow_projection in shadow_input_port.path_afferents:
-                                    if shadow_projection.sender == self.input_CIM_ports[input_port][1]:
-                                        shadow_input_port.path_afferents.remove(shadow_projection)
-                                        self.remove_projection(shadow_projection)
-
             # remove the CIM input and output ports associated with this INPUT node InputPort
             self.input_CIM.remove_ports(self.input_CIM_ports[input_port][0])
             for proj in self.input_CIM_ports[input_port][1].efferents:
