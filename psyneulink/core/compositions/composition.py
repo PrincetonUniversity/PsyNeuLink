@@ -9659,7 +9659,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
                 node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
-        if ContextFlags.SIMULATION not in context.execution_phase:
+        if ContextFlags.SIMULATION not in context.runmode:
             try:
                 self.parameters.input_specification._set(copy(inputs), context)
             except:
@@ -9667,12 +9667,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
-        if ContextFlags.SIMULATION not in context.execution_phase:
+        if ContextFlags.SIMULATION not in context.runmode:
             self._check_projection_initialization_status()
 
         # MODIFIED 8/27/19 OLD:
         # try:
-        #     if ContextFlags.SIMULATION not in context.execution_phase:
+        #     if ContextFlags.SIMULATION not in context.runmode:
         #         self._analyze_graph()
         # except AttributeError:
         #     # if context is None, it has not been created for this context yet, so it is not
@@ -9690,7 +9690,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._analyze_graph(context=context)
         # Then call _analyze graph with scheduler actually being used (passed in or default)
         try:
-            if ContextFlags.SIMULATION not in context.execution_phase:
+            if ContextFlags.SIMULATION not in context.runmode:
                 if not skip_analyze_graph:
                     self._analyze_graph(scheduler=scheduler, context=context)
         except AttributeError:
@@ -9738,13 +9738,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this context
         if (not skip_initialization
-            and (context is None or ContextFlags.SIMULATION not in context.execution_phase)):
+            and (context is None or ContextFlags.SIMULATION not in context.runmode)):
             self._initialize_from_context(context, base_context, override=False)
 
         context.composition = self
 
         is_simulation = (context is not None and
-                         ContextFlags.SIMULATION in context.execution_phase)
+                         ContextFlags.SIMULATION in context.runmode)
 
         if (bin_execute is True or str(bin_execute).endswith('Run')):
             # There's no mode to run simulations.
@@ -9828,7 +9828,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 result_copy = trial_output
 
-            if ContextFlags.SIMULATION not in context.execution_phase:
+            if ContextFlags.SIMULATION not in context.runmode:
                 results.append(result_copy)
                 self.parameters.results._set(results, context)
 
@@ -10137,7 +10137,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # but still after the context has been initialized
         if bin_execute:
             is_simulation = (context is not None and
-                             ContextFlags.SIMULATION in context.execution_phase)
+                             ContextFlags.SIMULATION in context.runmode)
             # Try running in Exec mode first
             if (bin_execute is True or str(bin_execute).endswith('Exec')):
                 # There's no mode to execute simulations.
@@ -10246,7 +10246,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert not nested or len(self.parameter_CIM.afferents) == 0
         elif nested:
             # check that inputs are specified - autodiff does not in some cases
-            if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
+            if ContextFlags.SIMULATION in context.runmode and inputs is not None:
                 self.input_CIM.execute(build_CIM_input, context=context)
             else:
                 assert inputs is None, "Ignoring composition input!"
@@ -10297,7 +10297,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
             if (
                     self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION not in context.execution_phase
+                    and ContextFlags.SIMULATION not in context.runmode
             ):
                 if self.controller and not bin_execute:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -10491,7 +10491,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Pass outer context to nested Composition
                     context.composition = node
-                    if ContextFlags.SIMULATION in context.execution_phase:
+                    if ContextFlags.SIMULATION in context.runmode:
                         is_simulating = True
                         context.remove_flag(ContextFlags.SIMULATION)
                     else:
@@ -10580,7 +10580,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # control phase
             if (
                     self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION not in context.execution_phase
+                    and ContextFlags.SIMULATION not in context.runmode
             ):
                 context.add_flag(ContextFlags.CONTROL)
                 if self.controller and not bin_execute:
