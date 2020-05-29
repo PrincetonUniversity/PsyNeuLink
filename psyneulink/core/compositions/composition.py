@@ -7353,6 +7353,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    composition_color='pink',
                    control_projection_arrow='box',
                    feedback_shape = 'septagon',
+                   cycle_shape = 'doublecircle',
                    cim_shape='square',
                    output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
                    context=None,
@@ -7377,6 +7378,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            controller_color='blue',           \
            composition_color='pink',          \
            feedback_shape = 'septagon',       \
+           cycle_shape = 'doublecircle',      \
            cim_shape='square',                \
            output_fmt='pdf',                  \
            context=None)
@@ -7513,6 +7515,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         feedback_shape : keyword : default 'septagon'
             specifies the display shape of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
 
+        cycle_shape : keyword : default 'doublecircle'
+            specifies the display shape of nodes that are assigned the `NodeRole` `CYCLE`.
+
         cim_shape : default 'square'
             specifies the display color input_CIM and output_CIM nodes
 
@@ -7592,18 +7597,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Set rcvr shape, color, and penwidth based on node type
                 rcvr_rank = 'same'
 
-                # Feedback Node
+                # Cycle or Feedback Node
                 if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                     node_shape = feedback_shape
+                elif rcvr in self.get_nodes_by_role(NodeRole.CYCLE):
+                    node_shape = cycle_shape
                 else:
                     node_shape = mechanism_shape
 
-                # Get condition if any associated with rcvr
-                if rcvr in self.scheduler.conditions:
-                    condition = self.scheduler.conditions[rcvr]
-                else:
-                    condition = None
-
+                # FIX 5/28/20:  INTEGRATE WITH CYCLE AND FEEDBACK ABOVE
                 # # Feedback Node
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     if rcvr in active_items:
@@ -7616,6 +7618,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     else:
                 #         rcvr_color = feedback_color
                 #         rcvr_penwidth = str(bold_width)
+
+                # Get condition if any associated with rcvr
+                if rcvr in self.scheduler.conditions:
+                    condition = self.scheduler.conditions[rcvr]
+                else:
+                    condition = None
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -7731,6 +7739,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         cim_color = input_color
 
+                elif cim is self.parameter_CIM:
+                    if not (cim.afferents or cim.efferents):
+                        continue
+                    if cim in active_items:
+                        if active_color == BOLD:
+                            cim_color = controller_color
+                        else:
+                            cim_color = active_color
+                        cim_penwidth = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        cim_color = controller_color
+
                 elif cim is self.output_CIM:
                     if cim in active_items:
                         if active_color == BOLD:
@@ -7767,7 +7788,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Projections from input_CIM to INPUT nodes
                 if cim is self.input_CIM:
-
                     for output_port in self.input_CIM.output_ports:
                         projs = output_port.efferents
                         for proj in projs:
@@ -7782,10 +7802,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  not NodeRole.INPUT in self.nodes_to_roles[input_mech])
                                     and (proj.receiver.shadow_inputs in self.nodes_to_roles and
                                          not NodeRole.INPUT in self.nodes_to_roles[proj.receiver.shadow_inputs])):
-                                raise CompositionError("Projection from input_CIM of {} to node {} "
-                                                       "that is not an {} node or shadowing its {}".
-                                                       format(self.name, input_mech,
-                                                              NodeRole.INPUT.name, NodeRole.INPUT.name.lower()))
+                                raise CompositionError(f"Projection from input_CIM of {self.name} to node {input_mech} "
+                                                       f"that is not an {NodeRole.INPUT.name} node or shadowing its "
+                                                       f"{NodeRole.INPUT.name.lower()}.")
                             # Construct edge name
                             input_mech_label = self._get_graph_node_label(input_mech,
                                                                           show_types,
@@ -7817,6 +7836,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
                                    color=proj_color, penwidth=proj_width)
 
+
+                # Projections from parameter_CIM to Nodes that are being controlled
+                if cim is self.parameter_CIM:
+                    for output_port in self.parameter_CIM.output_ports:
+                        projs = output_port.efferents
+                        for proj in projs:
+                            modulated_mech = proj.receiver.owner
+                            if isinstance(modulated_mech, CompositionInterfaceMechanism):
+                                modulated_mech = modulated_mech.composition
+                            if modulated_mech is self.controller:
+                                # Projections to contoller are handled under _assign_controller_components
+                                # Note: at present controllers are not modulable; here for possible future condition(s)
+                                continue
+
+                            # Construct edge name
+                            modulated_mech_label = self._get_graph_node_label(modulated_mech,
+                                                                              show_types,
+                                                                              show_dimensions)
+                            if show_node_structure:
+                                cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                proc_mech_rcvr_label = \
+                                    f"{modulated_mech_label}:{ParameterPort.__name__}-{proj.receiver.name}"
+                            else:
+                                cim_proj_label = cim_label
+                                proc_mech_rcvr_label = modulated_mech_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.receiver.owner}):
+                                if active_color == BOLD:
+                                    proj_color = controller_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = controller_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
+                            else:
+                                label = ''
+                            g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
+                                   color=proj_color, penwidth=proj_width)
+
+
                 # Projections from OUTPUT nodes to output_CIM
                 if cim is self.output_CIM:
                     # Construct edge name
@@ -7828,8 +7892,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if isinstance(output_mech, CompositionInterfaceMechanism):
                                 output_mech = output_mech.composition
                             if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
-                                raise CompositionError("Projection to output_CIM of {self.name} from node {output_mech}"
-                                                       " that is not an {NodeRole.OUTPUT.name.lower()} node.")
+                                raise CompositionError(f"Projection to output_CIM of {self.name} "
+                                                       f"from node {output_mech} that is not "
+                                                       f"an {NodeRole.OUTPUT} node.")
                             # Construct edge name
                             output_mech_label = self._get_graph_node_label(output_mech,
                                                                            show_types,
@@ -8378,7 +8443,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add cim Components to graph if show_cim
         if show_cim:
-            _assign_cim_components(G, [self.input_CIM, self.output_CIM])
+            _assign_cim_components(G, [self.input_CIM, self.parameter_CIM, self.output_CIM])
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
