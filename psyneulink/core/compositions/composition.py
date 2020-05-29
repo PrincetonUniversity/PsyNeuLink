@@ -3720,6 +3720,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
+
+            # MODIFIED 5/28/20 NEW:
+            # FIX 5/28/20:  HOW ARE THESE HANDLED FOR A NESTED COMPOSITON?
+            #               ADD _get_parameter_port_deferred_init_control_specs() METHOD TO Composition?
+            if isinstance(node, Composition):
+                return
+            # MODIFIED 5/28/20 END
+
             deferred_init_control_specs = node._get_parameter_port_deferred_init_control_specs()
             if deferred_init_control_specs:
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
@@ -8391,10 +8399,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _assign_learning_components(G)
 
         # Sort nodes for display
+        # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
         def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                if node.name in item:
+                if node.name+' ' in item:  # Space needed to filter out node.name that is a substring of another name
                     if node_type in {MECHANISM, BOTH}:
                         if not '->' in item:
                             return i
