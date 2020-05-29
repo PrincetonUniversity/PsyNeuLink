@@ -3720,6 +3720,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
+
+            # MODIFIED 5/28/20 NEW:
+            # FIX 5/28/20:  HOW ARE THESE HANDLED FOR A NESTED COMPOSITON?
+            #               ADD _get_parameter_port_deferred_init_control_specs() METHOD TO Composition?
+            if isinstance(node, Composition):
+                return
+            # MODIFIED 5/28/20 END
+
             deferred_init_control_specs = node._get_parameter_port_deferred_init_control_specs()
             if deferred_init_control_specs:
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
@@ -6912,15 +6920,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_controller(self, controller:ControlMechanism):
         """
-        Add an `OptimizationControlMechanism` as the `controller <Composition.controller>` of the Composition.
+        Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
-        This gives the OCM access to the `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
-        OCM to use simulations to determine an optimal Control policy.
+        This gives the ControlMechanism access to the `Composition`'s `evaluate <Composition.evaluate>` method. This
+        allows subclasses of ControlMechanism that can use this (such as `OptimizationControlMechanism`) to execute
+        "simulations" of the Composition (that is, executions in an `execution context <Composition_Execution_Context>`
+        separate from the one used by the `execution method <Composition_Execution_Methods>` called by the user) to
+        evaluate the influence of parameters on performance.
 
-        COMMENT:
-        It also assigns to it a `ControlSignal` for, and corresponding `ControlProjection` to the `ParameterPort`
-        for any `Parameter` of a Mechanism `specified for control <LINK>`
-        COMMENT
+        It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
+        <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
         """
 
@@ -6933,7 +6942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note:  initialization_status here pertains to controller's own initialization status
         #        (i.e., whether it has been fully instantiated); if not, presumably this is because it is an
         #        OptimizationControlMechanism [OCM] for which the agent_rep has not yet been assigned
-        #        (e.g., was constructed in the controller argument of the Compositon), in which case assign it here.
+        #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
             controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
@@ -8390,10 +8399,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _assign_learning_components(G)
 
         # Sort nodes for display
+        # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
         def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                if node.name in item:
+                if node.name+' ' in item:  # Space needed to filter out node.name that is a substring of another name
                     if node_type in {MECHANISM, BOTH}:
                         if not '->' in item:
                             return i

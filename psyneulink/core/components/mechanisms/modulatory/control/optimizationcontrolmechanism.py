@@ -461,16 +461,10 @@ class OptimizationControlMechanism(ControlMechanism):
         compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
-    performance of the `Composition` to which it belongs
+    performance of the `Composition` to which it belongs.  See parent class for additional arguments.
 
     Arguments
     ---------
-
-    objective_mechanism : ObjectiveMechanism or List[OutputPort specification]
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
-        `OutputPort <OutputPort>`\\s it should monitor; if a list of `OutputPort specifications
-        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
-        is passed to its **monitored_output_ports** argument.
 
     features : Mechanism, OutputPort, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
@@ -724,7 +718,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
                  search_statefulness=None,
-                 params=None,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
@@ -756,7 +749,6 @@ class OptimizationControlMechanism(ControlMechanism):
             search_function=search_function,
             search_termination_function=search_termination_function,
             agent_rep=agent_rep,
-            params=params,
             **kwargs
         )
 
@@ -863,40 +855,6 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
-
-    def _instantiate_objective_mechanism(self, context=None):
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        # FIX: INTEGRATE WITH super()?
-        # differs from parent because it should not use add_to_monitor on its
-        # input_states (formerly monitor_for_control)
-
-        if not isinstance(self.objective_mechanism, ObjectiveMechanism):
-            try:
-                self.objective_mechanism = ObjectiveMechanism(function=LinearCombination(operation=PRODUCT),
-                                                              name=self.name + '_ObjectiveMechanism')
-            except (ObjectiveMechanismError, FunctionError) as e:
-                raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
-
-        # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
-        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
-                                                      receiver=self,
-                                                      matrix=AUTO_ASSIGN_MATRIX,
-                                                      context=context)
-
-        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
-
-        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
-        for input_port in self.objective_mechanism.input_ports:
-            input_port.internal_only = True
-
-        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
-        from psyneulink.core.compositions.composition import NodeRole
-        self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
-        self.aux_components.append(projection_from_objective)
-
-        # ASSIGN ATTRIBUTES
-
-        self._objective_projection = projection_from_objective
 
     def _update_input_ports(self, runtime_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
