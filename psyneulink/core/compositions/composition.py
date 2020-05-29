@@ -8404,7 +8404,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if isinstance(node, Composition):
                 continue
-
             roles = self.get_roles_by_node(node)
             # Put INPUT node(s) first
             if NodeRole.INPUT in roles:
