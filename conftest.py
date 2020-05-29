@@ -52,6 +52,9 @@ def pytest_runtest_call(item):
     np.random.seed(seed)
     set_global_seed(seed)
 
+    if 'pytorch' in item.keywords:
+        assert pytorch_available
+        torch.manual_seed(seed)
 
 
 def pytest_runtest_teardown(item):
