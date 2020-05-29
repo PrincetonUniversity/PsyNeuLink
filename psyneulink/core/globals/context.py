@@ -125,6 +125,7 @@ class ContextFlags(enum.IntFlag):
 
     UNSET = 0
 
+    # initialization_status flags:
     DEFERRED_INIT = 1 << 1  # 2
     """Set if flagged for deferred initialization."""
     INITIALIZING  = 1 << 2  # 4
@@ -137,10 +138,9 @@ class ContextFlags(enum.IntFlag):
     """Set on stateful Components when they are re-initialized."""
     UNINITIALIZED = 1 << 17
     """Default value set before initialization"""
-
     INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | RESET | UNINITIALIZED
 
-    # execution_phase flags
+    # execution_phase flags:
     PREPARING    = 1 << 5   # 32
     """Set while `Composition is preparing to `execute <Composition_Execution>`."""
     PROCESSING    = 1 << 6  # 64
@@ -154,11 +154,10 @@ class ContextFlags(enum.IntFlag):
     IDLE = 1 << 18
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
     """
-
     EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
     EXECUTION_PHASE_MASK = IDLE | PREPARING | EXECUTING
 
-    # source (source-of-call) flags
+    # source (source-of-call) flags:
     COMMAND_LINE  = 1 << 10  # 1024
     """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR   = 1 << 11 # 2048
@@ -179,14 +178,12 @@ class ContextFlags(enum.IntFlag):
     """Call by a/the Composition to which the Component belongs."""
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
 
-    # runmode flags
+    # runmode flags:
     DEFAULT_MODE = 1 << 19
     """Default mode"""
     LEARNING_MODE = 1 << 20
     """Set during `compositon.learn`"""
-
     RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE
-
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 

@@ -521,10 +521,15 @@ class AutodiffComposition(Composition):
                                             context,
                                             scheduler)
 
-            context.add_flag(ContextFlags.PROCESSING)
+            # FIX 5/28/20:
+            # context.add_flag(ContextFlags.PROCESSING)
+            execution_phase = context.execution_phase
+            context.execution_phase = ContextFlags.PROCESSING
 
             self.output_CIM.execute(output, context=context)
-            context.remove_flag(ContextFlags.PROCESSING)
+            # FIX 5/28/20:
+            context.execution_phase = execution_phase
+
 
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition

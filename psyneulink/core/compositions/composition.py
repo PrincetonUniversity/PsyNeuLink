@@ -417,6 +417,12 @@ Composition's constructor, or using its `add_controller <Composition.add_control
 
 COMMENT:
 TBI FOR COMPOSITION
+CONTROLLER CAN BE SPECIFIED BY AS True, BY CLASS (E.G., OCM), OR CONSTRUCTOR
+IF TRUE, CLASS OR BY CONSTRUCTOR WITHOUT OBJECTIVE_MECHANISM SPEC, A DEFAULT IS OBJ_MECH IS CREATED
+IF A DEFAULT OBJ MECH IS CREATED, OR NEITHER OBJ_MECH NOR OCM HAVE MONITOR FOR CONTROL SPECIFIED, THEN
+PRIMARY OUTPUTPORT OF ALL OUTPUT NODES OF COMP ARE USED (MODULO SPEC ON INDIVIDUAL MECHS)
+
+
 Specyfing Parameters to Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 A controller can also be specified for the System, in the **controller** argument of the `System`.  This can be an
@@ -1357,8 +1363,8 @@ Composition. Execution contexts make several capabilities possible:
     the Compositions to which it is assigned.
 
   * The same Composition can be exectued independently in different contexts; this can be used for
-    parallelizing parameter estimation, both for data fitting (see `ParameterEstimationMechanism`), and
-    for simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
+    parallelizing parameter estimation, both for data fitting (see `ParamEstimationFunction`), and for
+    simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
     (see `OptimizationControlMechanism`).
 
 If no `execution_id <Context.execution_id>` is specified, the `default execution_id <Composition.default_execution_id>`
@@ -3714,6 +3720,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
+
+            # MODIFIED 5/28/20 NEW:
+            # FIX 5/28/20:  HOW ARE THESE HANDLED FOR A NESTED COMPOSITON?
+            #               ADD _get_parameter_port_deferred_init_control_specs() METHOD TO Composition?
+            if isinstance(node, Composition):
+                return
+            # MODIFIED 5/28/20 END
+
             deferred_init_control_specs = node._get_parameter_port_deferred_init_control_specs()
             if deferred_init_control_specs:
                 self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
@@ -4489,22 +4503,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # For any port still registered on the CIM that does not map to a corresponding INPUT node I.S.:
         for input_port in sends_to_input_ports.difference(current_input_node_input_ports):
-            for projection in input_port.path_afferents:
-
-                if projection.sender == self.input_CIM_ports[input_port][1]:
-                    # projection.receiver.efferents.remove(projection)
-                    # Bug? ^^ projection is not in receiver.efferents??
-
-                    # if the project is a shadow projection, we also need to remove it from the Composition's shadows
-                    # attribute
-                    if projection.receiver.owner in self.shadows and len(self.shadows[projection.receiver.owner]) > 0:
-                        for shadow in self.shadows[projection.receiver.owner]:
-                            for shadow_input_port in shadow.input_ports:
-                                for shadow_projection in shadow_input_port.path_afferents:
-                                    if shadow_projection.sender == self.input_CIM_ports[input_port][1]:
-                                        shadow_input_port.path_afferents.remove(shadow_projection)
-                                        self.remove_projection(shadow_projection)
-
             # remove the CIM input and output ports associated with this INPUT node InputPort
             self.input_CIM.remove_ports(self.input_CIM_ports[input_port][0])
             for proj in self.input_CIM_ports[input_port][1].efferents:
@@ -6907,15 +6905,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def add_controller(self, controller:ControlMechanism):
         """
-        Add an `OptimizationControlMechanism` as the `controller <Composition.controller>` of the Composition.
+        Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
-        This gives the OCM access to the `Composition`'s `evaluate <Composition.evaluate>` method. This allows the
-        OCM to use simulations to determine an optimal Control policy.
+        This gives the ControlMechanism access to the `Composition`'s `evaluate <Composition.evaluate>` method. This
+        allows subclasses of ControlMechanism that can use this (such as `OptimizationControlMechanism`) to execute
+        "simulations" of the Composition (that is, executions in an `execution context <Composition_Execution_Context>`
+        separate from the one used by the `execution method <Composition_Execution_Methods>` called by the user) to
+        evaluate the influence of parameters on performance.
 
-        COMMENT:
-        It also assigns to it a `ControlSignal` for, and corresponding `ControlProjection` to the `ParameterPort`
-        for any `Parameter` of a Mechanism `specified for control <LINK>`
-        COMMENT
+        It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
+        <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
         """
 
@@ -6928,7 +6927,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note:  initialization_status here pertains to controller's own initialization status
         #        (i.e., whether it has been fully instantiated); if not, presumably this is because it is an
         #        OptimizationControlMechanism [OCM] for which the agent_rep has not yet been assigned
-        #        (e.g., was constructed in the controller argument of the Compositon), in which case assign it here.
+        #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
             controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
@@ -7030,7 +7029,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get rid of default ControlSignal if it has no ControlProjections
             controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
-            # Add any ControlSignals specified for ParameterPorts of nodes already in the Composition
+            # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
             control_signal_specs = self._get_control_signals_for_composition()
             for ctl_sig_spec in control_signal_specs:
                 # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
@@ -7206,6 +7205,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 f"The controller of {self.name} has been specified to project to {owner.name}, "
                                 f"but {owner.name} is not in {self.name} or any of its nested Compositions."
                         )
+
+        # If Composition is not preparing to execute, allow deferred_inits to persist without warning
+        if context and ContextFlags.PREPARING not in context.execution_phase:
+            return
 
         for node in self.nodes:
             # Check for deferred init projections
@@ -7769,6 +7772,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = output_port.efferents
                         for proj in projs:
                             input_mech = proj.receiver.owner
+                            if isinstance(input_mech, CompositionInterfaceMechanism):
+                                input_mech = input_mech.composition
                             if input_mech is self.controller:
                                 # Projections to contoller are handled under _assign_controller_components
                                 continue
@@ -7820,11 +7825,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for proj in projs:
                             # Validate the Projection is from an OUTPUT node
                             output_mech = proj.sender.owner
+                            if isinstance(output_mech, CompositionInterfaceMechanism):
+                                output_mech = output_mech.composition
                             if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
-                                raise CompositionError("Projection to output_CIM of {} from node {} "
-                                                       "that is not an {} node".
-                                                       format(self.name, output_mech,
-                                                              NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
+                                raise CompositionError("Projection to output_CIM of {self.name} from node {output_mech}"
+                                                       " that is not an {NodeRole.OUTPUT.name.lower()} node.")
                             # Construct edge name
                             output_mech_label = self._get_graph_node_label(output_mech,
                                                                            show_types,
@@ -7897,6 +7902,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # outgoing edges (from controller to ProcessingMechanisms)
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
+                    if ctl_proj not in self.projections:
+                    # if ctl_proj.receiver.owner not in self.nodes:
+                        continue
                     proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
                     if controller in active_items:
                         if active_color == BOLD:
@@ -8381,10 +8389,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _assign_learning_components(G)
 
         # Sort nodes for display
+        # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
         def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                if node.name in item:
+                if node.name + ' ' in item:  # Space needed to filter out node.name that is a substring of another name
                     if node_type in {MECHANISM, BOTH}:
                         if not '->' in item:
                             return i
@@ -9353,6 +9362,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
+        # FIX 5/28/20
+        # context.execution_phase = ContextFlags.PREPARING
+        # context.replace_flag(ContextFlags.IDLE, ContextFlags.PREPARING)
 
         if scheduler is None:
             scheduler = self.scheduler
@@ -9452,6 +9464,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 8/27/19 NEW:
         # FIX: MODIFIED FEEDBACK -
         #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
+        #      HOWEVER, WOULD BE GOOD IF CONTEXT WERE SET TO EXECUTE TO FILTER DEFERRED_INIT WARNINGS
+        #      (E.G., IN _check_projection_initialization_status)
+        #      MAYBE AT LEAST CALL _analzze_graph WITH APPOPRIATE FLAG SET?
         # If a scheduler was passed in, first call _analyze_graph with default scheduler
         if scheduler is not self.scheduler:
             if not skip_analyze_graph:
@@ -9733,8 +9748,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         from psyneulink.library.compositions import CompositionRunner
         runner = CompositionRunner(self)
 
-        self._analyze_graph()
         context.add_flag(ContextFlags.LEARNING_MODE)
+        # # FIX 5/28/20
+        # context.add_flag(ContextFlags.PREPARING)
+        # context.execution_phase=ContextFlags.PREPARING
+
+        self._analyze_graph()
 
         learning_results = runner.run_learning(
             inputs=inputs,
@@ -9977,6 +9996,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
 
+        # FIX 5/28/20
+        context.remove_flag(ContextFlags.PREPARING)
+
         # EXECUTE INPUT CIM ********************************************************************************************
 
         # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
@@ -10077,7 +10099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 
-        # EXECUTE (each execution_set) *********************************************************************************
+        # EXECUTE EACH EXECUTION SET *********************************************************************************
 
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
@@ -10141,7 +10163,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.add_flag(ContextFlags.PROCESSING)
                 self._animate_execution(next_execution_set, context)
 
-            # EXECUTE (each node) --------------------------------------------------------------------------
+            # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
             # execute each node with EXECUTING in context
             for node in next_execution_set:

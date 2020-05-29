@@ -48,6 +48,9 @@ p = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selecti
                                             learning_rate=0.5)
 comp.add_controller(
     pnl.OptimizationControlMechanism(
+    # pnl.ControlMechanism(
+        # objective_mechanism=True,
+        objective_mechanism=pnl.ObjectiveMechanism(monitor=action_selection),
         control_signals=(pnl.LEARNING_RATE,
                          p.learning_components[pnl.LEARNING_MECHANISMS])))
 
@@ -71,8 +74,9 @@ def show_weights(context=None):
     #         action_selection.output_port.value[np.nonzero(action_selection.output_port.value)][0]
     #     )
     # )
-    comparator = action_selection.output_port.efferents[0].receiver.owner
-    learn_mech = action_selection.output_port.efferents[1].receiver.owner
+    target = p.target
+    comparator = p.learning_objective
+    learn_mech = p.learning_components[pnl.LEARNING_MECHANISMS]
     print('\nact_sel_in_state variable:  {} '
           '\nact_sel_in_state value:     {} '
           '\naction_selection variable:  {} '
@@ -84,7 +88,8 @@ def show_weights(context=None):
           '\nlearning mech error in:     {} '
           '\nlearning mech error out:    {} '
           '\nlearning mech learning_sig: {} '
-          # '\npredicted reward:           {} '
+          '\npredicted reward:           {} '
+          '\nreward:                     {} '
         .format(
             action_selection.input_ports[0].parameters.variable.get(context),
             action_selection.input_ports[0].parameters.value.get(context),
@@ -97,45 +102,42 @@ def show_weights(context=None):
             learn_mech.input_ports[pnl.ERROR_SIGNAL].parameters.value.get(context),
             learn_mech.output_ports[pnl.ERROR_SIGNAL].parameters.value.get(context),
             learn_mech.output_ports[pnl.LEARNING_SIGNAL].parameters.value.get(context),
-            # action_selection.output_port.value[np.nonzero(action_selection.output_port.value)][0]
+            action_selection.output_port.value[np.nonzero(action_selection.output_port.value)][0],
+            target.parameters.value.get(context)
     ))
 
 
-# Specify reward values associated with each action (corresponding to elements of esaction_selection.output_port.value)
+input_list = [[1,1],[1,1]]
+# Specify reward values associated with each action (corresponding to elements of action_selection.output_port.value)
 # reward_values = [10, 0]
 reward_values = [0, 10]
 
-# Used by Composition to generate a reward on each trial based on the outcome of the action_selection (DDM) Mechanism
-def reward(context=None):
-    """Return the reward associated with the selected action"""
-    selected_action = action_selection.output_port.parameters.value.get(context)
+def generate_inputs_and_targets(trial_number):
+    """Get the input and target for the current trial"""
+
+    # Cycle through input_list:
+    inputs = {input_layer:input_list[trial_number%len(input_list)]}
+
+    # Get target as rewarded value for selected action
+    selected_action = action_selection.output_port.value
     if not any(selected_action):
         # Deal with initialization, during which action_selection.output_port.value may == [0,0]
         selected_action = np.array([1,0])
-    return [reward_values[int(np.nonzero(selected_action)[0])]]
+    # Get reward value for selected action
+    reward = [reward_values[int(np.nonzero(selected_action)[0])]]
+    targets = {p.target: reward}
 
-
-# Input stimuli for run of the Composition.
-# Notes:
-#    - for illustrative purposes, this list contains two sets of stimuli;
-#        they will be used in sequence, and the sequence will be recycled for as many trials as specified by the
-#        *num_trials* argument in the call the Composition's run method see below)
-#    - rewards are specified by the reward function above
-input_list = {input_layer: [[1, 1],[1, 1]]}
-
-# # Shows graph of Composition (learning components are in orange)
-# comp.show_graph(show_learning=pnl.ALL, show_control=True, show_dimensions=True)
-# comp.show_graph(show_learning=pnl.ALL, show_mechanism_structure=True)
-# comp.show_graph(show_mechanism_structure=True)
+    return {
+        "inputs": inputs,
+        "targets": targets
+    }
 
 # Run Composition.
-# Note: *targets* is specified as the reward() function (see above).
-# comp.run(
-#     num_trials=10,
-#     inputs=input_list,
-#     targets=reward,
-#     call_before_trial=functools.partial(print_header, comp),
-#     call_after_trial=show_weights
-# )
+comp.learn(
+    num_trials=20,
+    inputs=generate_inputs_and_targets,
+    call_before_trial=functools.partial(print_header, comp),
+    call_after_trial=show_weights
+)
 
 comp.show_graph(show_learning=True, show_controller=pnl.ALL)
