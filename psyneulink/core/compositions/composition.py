@@ -7772,6 +7772,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = output_port.efferents
                         for proj in projs:
                             input_mech = proj.receiver.owner
+                            if isinstance(input_mech, CompositionInterfaceMechanism):
+                                input_mech = input_mech.composition
                             if input_mech is self.controller:
                                 # Projections to contoller are handled under _assign_controller_components
                                 continue
@@ -7823,11 +7825,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for proj in projs:
                             # Validate the Projection is from an OUTPUT node
                             output_mech = proj.sender.owner
+                            if isinstance(output_mech, CompositionInterfaceMechanism):
+                                output_mech = output_mech.composition
                             if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
-                                raise CompositionError("Projection to output_CIM of {} from node {} "
-                                                       "that is not an {} node".
-                                                       format(self.name, output_mech,
-                                                              NodeRole.OUTPUT.name, NodeRole.OUTPUT.name.lower()))
+                                raise CompositionError("Projection to output_CIM of {self.name} from node {output_mech}"
+                                                       " that is not an {NodeRole.OUTPUT.name.lower()} node.")
                             # Construct edge name
                             output_mech_label = self._get_graph_node_label(output_mech,
                                                                            show_types,
