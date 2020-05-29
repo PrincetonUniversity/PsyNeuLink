@@ -181,10 +181,10 @@ class ContextFlags(enum.IntFlag):
     """Default mode"""
     LEARNING_MODE = enum.auto()
     """Set during `compositon.learn`"""
-    SIMULATION = enum.auto()
+    SIMULATION_MODE = enum.auto()
     """Set during simulation by Composition.controller"""
 
-    RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE | SIMULATION
+    RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE | SIMULATION_MODE
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
@@ -265,7 +265,7 @@ SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
 RUN_MODE_FLAGS = {
     ContextFlags.LEARNING_MODE,
     ContextFlags.DEFAULT_MODE,
-    ContextFlags.SIMULATION,
+    ContextFlags.SIMULATION_MODE,
 }
 
 
@@ -451,7 +451,7 @@ class Context():
         """Check that a flag is one and only one run mode flag"""
         if (
             flag in RUN_MODE_FLAGS
-            or (flag & ~ContextFlags.SIMULATION) in RUN_MODE_FLAGS
+            or (flag & ~ContextFlags.SIMULATION_MODE) in RUN_MODE_FLAGS
         ):
             self._runmode = flag
         elif not flag:

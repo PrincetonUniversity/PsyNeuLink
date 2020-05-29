@@ -407,7 +407,7 @@ class LogCondition(enum.IntFlag):
 
     .. note::
       The values of LogCondition are subset of (and directly reference) the ContextFlags bitwise enum,
-      with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
+      with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION_MODE value.
     """
     OFF = ContextFlags.UNSET
     """No recording."""
@@ -424,11 +424,11 @@ class LogCondition(enum.IntFlag):
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
     CONTROL = ContextFlags.CONTROL
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION = ContextFlags.SIMULATION
+    SIMULATION = ContextFlags.SIMULATION_MODE
     # Set during simulation by Composition.controller
-    TRIAL = ContextFlags.SIMULATION << 1
+    TRIAL = ContextFlags.SIMULATION_MODE << 1
     """Set at the end of a 'TRIAL'."""
-    RUN = ContextFlags.SIMULATION << 2
+    RUN = ContextFlags.SIMULATION_MODE << 2
     """Set at the end of a 'RUN'."""
     ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
