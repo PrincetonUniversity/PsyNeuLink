@@ -4637,6 +4637,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection._activate_for_compositions(self)
                 # remove the original direct projection from the target ParameterPort
                 receiver.mod_afferents.remove(comp_projection)
+                comp_projection.sender._remove_projection_from_port(comp_projection)
 
         for cim, type in zip([self.input_CIM, self.output_CIM, self.parameter_CIM], [INPUT, OUTPUT, PARAMETER]):
 
