@@ -172,11 +172,11 @@ class ContextFlags(enum.IntFlag):
     """Call by property of the Component."""
     COMPOSITION   = 1 << 16 #
     """Call by a/the Composition to which the Component belongs."""
-    PROCESS   = 1 << 16     # 65536
+
     NONE      = 1 << 21
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | PROCESS | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
 
     # runmode flags:
     DEFAULT_MODE = 1 << 19
