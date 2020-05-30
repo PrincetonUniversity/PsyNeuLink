@@ -7819,6 +7819,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                                 if isinstance(proj.receiver.owner, CompositionInterfaceMechanism):
+                                    # FIX 5/28/20:
+                                    #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
                                     comp_label = self._get_graph_node_label(proj.receiver.owner.composition,
                                                                             show_types,
                                                                             show_dimensions)
@@ -7855,24 +7857,60 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = output_port.efferents
                         for proj in projs:
                             modulated_mech = proj.receiver.owner
-                            if isinstance(modulated_mech, CompositionInterfaceMechanism):
-                                modulated_mech = modulated_mech.composition
+
+                            # # MODIFIED 5/28/20 OLD:
+                            # if isinstance(modulated_mech, CompositionInterfaceMechanism):
+                            #     modulated_mech = modulated_mech.composition
+                            #
+                            # if modulated_mech is self.controller:
+                            #     # Projections to contoller are handled under _assign_controller_components
+                            #     # Note: at present controllers are not modulable; here for possible future condition(s)
+                            #     continue
+                            #
+                            # # Construct edge name
+                            # modulated_mech_label = self._get_graph_node_label(modulated_mech,
+                            #                                                   show_types,
+                            #                                                   show_dimensions)
+                            #
+                            # if show_node_structure:
+                            #     cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                            #     proc_mech_rcvr_label = \
+                            #         f"{modulated_mech_label}:{ParameterPort.__name__}-{proj.receiver.name}"
+                            # else:
+                            #     cim_proj_label = cim_label
+                            #     proc_mech_rcvr_label = modulated_mech_label
+
+                            # MODIFIED 5/28/20 NEW:
                             if modulated_mech is self.controller:
                                 # Projections to contoller are handled under _assign_controller_components
                                 # Note: at present controllers are not modulable; here for possible future condition(s)
                                 continue
 
+                            if isinstance(modulated_mech, CompositionInterfaceMechanism):
+                                modulated_mech = modulated_mech.composition
+
                             # Construct edge name
                             modulated_mech_label = self._get_graph_node_label(modulated_mech,
                                                                               show_types,
                                                                               show_dimensions)
+
                             if show_node_structure:
                                 cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                proc_mech_rcvr_label = \
-                                    f"{modulated_mech_label}:{ParameterPort.__name__}-{proj.receiver.name}"
+                                if isinstance(proj.receiver.owner, CompositionInterfaceMechanism):
+                                    # FIX 5/28/20:
+                                    #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
+                                    #  SEE ABOVE, WHICH DID THAT SUCCESSFULLY, BUT NEEDS TO BE ADDED TO INPUT and OUTPUT
+                                    comp_label = self._get_graph_node_label(proj.receiver.owner.composition,
+                                                                            show_types,
+                                                                            show_dimensions)
+                                    proc_mech_rcvr_label = f"{comp_label}"
+                                else:
+                                    proc_mech_rcvr_label = \
+                                        f"{modulated_mech_label}:{ParameterPort.__name__}-{proj.receiver.name}"
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_rcvr_label = modulated_mech_label
+                            # MODIFIED 5/28/20 END
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
@@ -7913,17 +7951,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                            show_types,
                                                                            show_dimensions)
 
-                            # # MODIFIED 5/28/20 OLD:
-                            # if show_node_structure:
-                            #     proc_mech_sndr_label = f"{output_mech_label}:{output_mech_port_name}"
-                            #     cim_proj_label = f"{cim_label}:{cim._get_port_name(proj.receiver)}"
-                            # else:
-                            #     proc_mech_sndr_label = output_mech_label
-                            #     cim_proj_label = cim_label
-                            # MODIFIED 5/28/20 NEW:
                             if show_node_structure:
                                 cim_proj_label = f"{cim_label}:{cim._get_port_name(proj.receiver)}"
                                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                                    # FIX 5/28/20:
+                                    #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
                                     comp_label = self._get_graph_node_label(proj.sender.owner.composition,
                                                                             show_types,
                                                                             show_dimensions)
@@ -7933,7 +7965,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 proc_mech_sndr_label = output_mech_label
                                 cim_proj_label = cim_label
-                            # MODIFIED 5/28/20 END
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
@@ -8006,17 +8037,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Deal with whether ControlPojection should be shown to Composition or its CIM
                     #    (CIM if show_node_structure, else Composition)
                     if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
+
                         # FIX 5/28/20: ALT VERSIONS:
+
                         # This version projects from controller to nested comp
                         ctl_proj_rcvr = ctl_proj.receiver
-                        if show_node_structure:
-                            ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-                        else:
-                            ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+                        # FIX: THIS PROJECTS TO NESTED COMP:
+                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+                        # FIX: THIS PROJECTS TO NESTED COMP's parameter_CIM
+                        #      COULD ADD THIS AS OPTION (AND SAME FOR INPUT AND OUTPUT)
+                        # if show_node_structure:
+                        #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+                        # else:
+                        #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+
                         # # This version projects from controller to controlled Nodes in nested comp
                         # port_mapping = ctl_proj.receiver.owner.composition.parameter_CIM_ports
                         # ctl_proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is ctl_proj.receiver][0]
                         # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+
                     else:
                         ctl_proj_rcvr = ctl_proj.receiver
                         ctl_proj_rcvr_owner = ctl_proj.receiver.owner
