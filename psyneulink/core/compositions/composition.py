@@ -7968,9 +7968,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
                     if ctl_proj not in self.projections:
+                    # FIX: ALT VERSION
                     # if ctl_proj.receiver.owner not in self.nodes:
                         continue
-                    proc_mech_label = self._get_graph_node_label(ctl_proj.receiver.owner, show_types, show_dimensions)
+                    if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
+                        # This version projects from controller to nested comp
+                        ctl_proj_rcvr = ctl_proj.receiver
+                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+                        # This version projections from controller to controlled Nodes in nested comp
+                        # port_mapping = ctl_proj.receiver.owner.composition.parameter_CIM_ports
+                        # ctl_proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is ctl_proj.receiver][0]
+                    else:
+                        ctl_proj_rcvr = ctl_proj.receiver
+                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+                    proc_mech_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
                     if controller in active_items:
                         if active_color == BOLD:
                             ctl_proj_color = controller_color
@@ -7988,7 +7999,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if show_node_structure:
                         ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + controller._get_port_name(ctl_proj.receiver)
+                            proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
