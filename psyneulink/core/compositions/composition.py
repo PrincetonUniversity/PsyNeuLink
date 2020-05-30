@@ -8042,7 +8042,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # This version projects from controller to nested comp
                         ctl_proj_rcvr = ctl_proj.receiver
-                        # FIX: THIS PROJECTS TO NESTED COMP:
+                        # FIX: THIS PROJECTS TO NESTED COMP: [BUT CAUSES UNRECOGNIZED NODES]
                         ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
                         # FIX: THIS PROJECTS TO NESTED COMP's parameter_CIM
                         #      COULD ADD THIS AS OPTION (AND SAME FOR INPUT AND OUTPUT)
@@ -8080,8 +8080,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     if show_node_structure:
                         ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                        proc_mech_rcvr_label = \
-                            proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+                        if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
+                            # FIX 5/28/20:
+                            #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
+                            comp_label = self._get_graph_node_label(ctl_proj.receiver.owner.composition,
+                                                                    show_types,
+                                                                    show_dimensions)
+                            proc_mech_rcvr_label = f"{comp_label}"
+                        else:
+                            proc_mech_rcvr_label = \
+                                proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
