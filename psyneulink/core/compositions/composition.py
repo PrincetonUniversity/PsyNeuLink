@@ -8112,7 +8112,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # MODIFIED 5/30/20 END
 
-
                     proc_mech_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
 
 
@@ -8148,21 +8147,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # # FIX: DIRECT_TO_CIM - THIS PROJECTS FROM CIM TO CIM BUT NOT TO/FROM PORTS
                     #                        ADD FOR INPUT AND OUTPUT
                     if show_cim is DIRECT:
-                        ctl_sndr_label = ctlr_label
-                        proc_mech_rcvr_label = proc_mech_label
-                    else:
                         if show_node_structure:
                             ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                            proc_mech_rcvr_label = \
+                                proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+                        else:
+                            ctl_sndr_label = ctlr_label
+                            proc_mech_rcvr_label = proc_mech_label
+                    else:
+                        if show_node_structure:
                             if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
-                                # FIX 5/28/20:
-                                #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
+                                ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                                 comp_label = self._get_graph_node_label(ctl_proj.receiver.owner.composition,
                                                                         show_types,
                                                                         show_dimensions)
                                 proc_mech_rcvr_label = f"{comp_label}"
                             else:
+                                ctl_sndr_label = ctlr_label
                                 proc_mech_rcvr_label = \
                                     proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+                        else:
+                            ctl_sndr_label = ctlr_label
+                            proc_mech_rcvr_label = proc_mech_label
+
 
                     # MODIFIED 5/28/20 END
 
@@ -8495,6 +8502,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 self.active_item_rendered = True
 
                         # # MODIFIED 5/28/20 NEW:
+                        # # WORKING HERE NEXT
                         # # Only consider Projections to the rcvr
                         # if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                         #         or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
@@ -8516,24 +8524,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         #     else:
                         #         proj_sndr = proj.sender
                         #         proj_sndr_ownr = proj.sender.owner
-                        #
-                        #     # Deal with whether Projection should shown from Composition or its CIM
-                        #     #    (CIM if show_node_structure, else Composition)
-                        #     if isinstance(proj.receiver.owner, CompositionInterfaceMechanism):
-                        #         # FIX 5/28/20: ALT VERSIONS:
-                        #         # This version projects from controller to nested comp
-                        #         proj_rcvr = proj.receiver
-                        #         if show_node_structure:
-                        #             proj_rcvr_ownr = proj.receiver.owner
-                        #         else:
-                        #             proj_rcvr_ownr = proj.receiver.owner.composition
-                        #         # # This version projects from controller to controlled Nodes in nested comp
-                        #         # port_mapping = proj.receiver.owner.composition.input_CIM_ports
-                        #         # proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is proj.receiver][0]
-                        #         # proj_rcvr_owner = proj.receiver.owner
-                        #     else:
-                        #         proj_rcvr = proj.receiver
-                        #         proj_rcvr_ownr = proj.receiver.owner
                         #
                         #     if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
                         #         sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj_sndr)}'
@@ -8562,6 +8552,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         #             proj_color = active_color
                         #         proj_width = str(default_width + active_thicker_by)
                         #         self.active_item_rendered = True
+
                         # MODIFIED 5/28/20 END
 
                             # Projection to or from a LearningMechanism
