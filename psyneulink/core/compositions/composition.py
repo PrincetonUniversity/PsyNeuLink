@@ -7876,6 +7876,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Note: at present controllers are not modulable; here for possible future condition(s)
                                 continue
 
+                            if isinstance(modulated_mech, CompositionInterfaceMechanism):
+                                modulated_mech = modulated_mech.composition
+
                             # Construct edge name
                             modulated_mech_label = self._get_graph_node_label(modulated_mech,
                                                                               show_types,
@@ -7883,11 +7886,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                             if show_node_structure:
                                 cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                proc_mech_rcvr_label = \
-                                    f"{modulated_mech_label}:{ParameterPort.__name__}-{proj.receiver.name}"
+                                if isinstance(proj.receiver.owner, CompositionInterfaceMechanism):
+                                    # FIX 5/28/20:
+                                    #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
+                                    #  SEE ABOVE, WHICH DID THAT SUCCESSFULLY, BUT NEEDS TO BE ADDED TO INPUT and OUTPUT
+                                    comp_label = self._get_graph_node_label(proj.receiver.owner.composition,
+                                                                            show_types,
+                                                                            show_dimensions)
+                                    proc_mech_rcvr_label = f"{comp_label}"
+                                else:
+                                    proc_mech_rcvr_label = \
+                                        f"{modulated_mech_label}:{ParameterPort.__name__}-{proj.receiver.name}"
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_rcvr_label = modulated_mech_label
+                            # MODIFIED 5/28/20 END
 
                             # # MODIFIED 5/28/20 NEW:
                             # if modulated_mech is self.controller:
