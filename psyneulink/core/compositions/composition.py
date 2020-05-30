@@ -7605,12 +7605,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     node_shape = mechanism_shape
 
-                # Get condition if any associated with rcvr
-                if rcvr in self.scheduler.conditions:
-                    condition = self.scheduler.conditions[rcvr]
-                else:
-                    condition = None
-
+                # FIX 5/28/20:  INTEGRATE WITH CYCLE AND FEEDBACK ABOVE
                 # # Feedback Node
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
                 #     if rcvr in active_items:
@@ -7623,6 +7618,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     else:
                 #         rcvr_color = feedback_color
                 #         rcvr_penwidth = str(bold_width)
+
+                # Get condition if any associated with rcvr
+                if rcvr in self.scheduler.conditions:
+                    condition = self.scheduler.conditions[rcvr]
+                else:
+                    condition = None
 
                 # Input and Output Node
                 if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
@@ -7738,6 +7739,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         cim_color = input_color
 
+                elif cim is self.parameter_CIM:
+                    if not (cim.afferents or cim.efferents):
+                        continue
+                    if cim in active_items:
+                        if active_color == BOLD:
+                            cim_color = controller_color
+                        else:
+                            cim_color = active_color
+                        cim_penwidth = str(default_width + active_thicker_by)
+                        self.active_item_rendered = True
+                    else:
+                        cim_color = controller_color
+
                 elif cim is self.output_CIM:
                     if cim in active_items:
                         if active_color == BOLD:
@@ -7851,13 +7865,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
                                 if active_color == BOLD:
-                                    proj_color = default_node_color
+                                    proj_color = controller_color
                                 else:
                                     proj_color = active_color
                                 proj_width = str(default_width + active_thicker_by)
                                 self.active_item_rendered = True
                             else:
-                                proj_color = default_node_color
+                                proj_color = controller_color
                                 proj_width = str(default_width)
                             if show_projection_labels:
                                 label = self._get_graph_node_label(proj, show_types, show_dimensions)
@@ -8429,7 +8443,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add cim Components to graph if show_cim
         if show_cim:
-            _assign_cim_components(G, [self.input_CIM, self.output_CIM])
+            _assign_cim_components(G, [self.input_CIM, self.parameter_CIM, self.output_CIM])
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
