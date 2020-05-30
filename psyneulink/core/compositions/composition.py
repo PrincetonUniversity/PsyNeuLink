@@ -8045,12 +8045,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         continue
 
                     # MODIFIED 5/30/20 OLD:
-                    # FIX: THIS CAUSES CONTROL PROJECTIONS TO GO NEST COMP CIM (AT LEAST WHEN NOT show_node_structure)
+                    # FIX: THIS CAUSES CONTROL PROJECTIONS TO NESTED COMP *CIM* (AT LEAST WHEN NOT show_node_structure)
                     ctl_proj_rcvr = ctl_proj.receiver
                     ctl_proj_rcvr_owner = ctl_proj.receiver.owner
 
                     # # MODIFIED 5/30/20 NEW:
-                    # FIX: THIS CAUSES CONTROL PROJECTIONS TO GO NESTED COMP (AT LEAST WHEN NOT show_node_structure)
+                    # FIX: THIS CAUSES CONTROL PROJECTIONS TO GO TO NESTED COMP (AT LEAST WHEN NOT show_node_structure)
                     # # Deal with whether ControlPojection should be shown to Composition or its CIM
                     # #    (CIM if show_node_structure, else Composition)
                     # if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
@@ -8105,6 +8105,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         edge_label = ''
 
+                    # # MODIFIED 5/28/20 OLD:
+                    # # FIX: DIRECT_TO_CIM: THIS PROJECTS FROM CIM TO CIM BUT NOT TO/FROM PORTS
+                    # ctl_sndr_label = ctlr_label
+                    # proc_mech_rcvr_label = proc_mech_label
+
+                    # MODIFIED 5/28/20 NEW:
+                    # FIX: DIRECT_TO_CIM: THIS PROJECTS TO JUST TO COMP
                     if show_node_structure:
                         ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
@@ -8121,6 +8128,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         ctl_sndr_label = ctlr_label
                         proc_mech_rcvr_label = proc_mech_label
+
+                    # MODIFIED 5/28/20 END
 
                     g.edge(ctl_sndr_label,
                            proc_mech_rcvr_label,
