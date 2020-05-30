@@ -7722,7 +7722,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # ASSIGN CIM NODE ****************************************************************
 
                 # Assign color
-                # Also take opportunity to verify that cim is either input_CIM or output_CIM
+                # Also take opportunity to verify that cim is input_CIM, parameter_CIM or output_CIM
                 if cim is self.input_CIM:
                     if cim in active_items:
                         if active_color == BOLD:
@@ -8572,6 +8572,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(item, CompositionInterfaceMechanism):
             name = name.replace('Input_CIM','INPUT')
+            name = name.replace('Parameter_CIM', 'CONTROL')
             name = name.replace('Output_CIM', 'OUTPUT')
 
         return name
