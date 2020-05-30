@@ -8544,9 +8544,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Problem displaying graph for {self.name}")
 
     def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
+
         if not isinstance(item, (Mechanism, Composition, Projection)):
             raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
-        # TBI Show Dimensions
+
         name = item.name
 
         if show_types:
