@@ -7810,10 +7810,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                           show_types,
                                                                           show_dimensions)
                             if show_node_structure:
-                                cim_proj_label = '{}:{}-{}'. \
-                                    format(cim_label, OutputPort.__name__, proj.sender.name)
-                                proc_mech_rcvr_label = '{}:{}-{}'. \
-                                    format(input_mech_label, InputPort.__name__, proj.receiver.name)
+                                cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                proc_mech_rcvr_label = f"{input_mech_label}:{InputPort.__name__}-{proj.receiver.name}"
                             else:
                                 cim_proj_label = cim_label
                                 proc_mech_rcvr_label = input_mech_label
@@ -7889,6 +7887,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for proj in projs:
                             # Validate the Projection is from an OUTPUT node
                             output_mech = proj.sender.owner
+                            output_mech_port_name = output_mech._get_port_name(proj.sender)
                             if isinstance(output_mech, CompositionInterfaceMechanism):
                                 output_mech = output_mech.composition
                             if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
@@ -7900,14 +7899,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                            show_types,
                                                                            show_dimensions)
                             if show_node_structure:
-                                cim_proj_label = '{}:{}'. \
-                                    format(cim_label, cim._get_port_name(proj.receiver))
-                                proc_mech_sndr_label = '{}:{}'.\
-                                    format(output_mech_label, output_mech._get_port_name(proj.sender))
-                                    # format(output_mech_label, OutputPort.__name__, proj.sender.name)
+                                proc_mech_sndr_label = f"{output_mech_label}:{output_mech_port_name}"
+                                cim_proj_label = f"{cim_label}:{cim._get_port_name(proj.receiver)}"
                             else:
-                                cim_proj_label = cim_label
                                 proc_mech_sndr_label = output_mech_label
+                                cim_proj_label = cim_label
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
