@@ -7958,8 +7958,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             controller = self.controller
             if controller is None:
-                warnings.warn(f"{self.name} has not been assigned a \'controller\', "
-                              f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
+                # Only warn if there is no controller *and* no ControlProjections from an outer Composition
+                if not self.parameter_CIM.output_ports:
+                    warnings.warn(f"{self.name} has not been assigned a \'controller\', "
+                                  f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
                 return
 
             if controller in active_items:
