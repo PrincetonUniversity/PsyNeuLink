@@ -3085,8 +3085,8 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
 
-        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-        #   if you want more specific output, you can add conditional tests here
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #      if you want more specific output, you can add conditional tests here
         try:
             input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         except TypeError:
@@ -3104,7 +3104,7 @@ class Mechanism_Base(Mechanism):
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
-                #    input_ports or output_ports, as these are not really params
+                #    input_ports or output_ports, as these are inherent in the structure
                 if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
                     continue
                 param_is_function = False
@@ -3129,7 +3129,7 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
 
-        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
             output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
@@ -3212,10 +3212,10 @@ class Mechanism_Base(Mechanism):
 
         <<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">          <- MAIN TABLE
 
-        <tr>                                                                      <- BEGIN OutputPortS
-            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OutputPortS OUTER TABLE
+        <tr>                                                                      <- BEGIN OutputPorts
+            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OutputPorts OUTER TABLE
                 <tr>
-                    <td colspan="1"><b>OutputPorts</b></td>                      <- OutputPortS HEADER
+                    <td colspan="1"><b>OutputPorts</b></td>                      <- OutputPorts HEADER
                 </tr>
                 <tr>
                     <td><table border="0" cellborder="1">                         <- OutputPort CELLS TABLE
@@ -3228,11 +3228,11 @@ class Mechanism_Base(Mechanism):
             </table></td>
         </tr>
 
-        <tr>                                                                      <- BEGIN MECHANISM & ParameterPortS
+        <tr>                                                                      <- BEGIN MECHANISM & ParameterPorts
             <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
-            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPortS OUTER TABLE
+            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPorts OUTER TABLE
                 <tr>
-                    <td><b>ParameterPorts</b></td>                               <- ParameterPortS HEADER
+                    <td><b>ParameterPorts</b></td>                               <- ParameterPorts HEADER
                 </tr>
                 <tr>
                     <td><table border="0" cellborder="1">                         <- ParameterPort CELLS TABLE
@@ -3243,10 +3243,10 @@ class Mechanism_Base(Mechanism):
             </table></td>
         </tr>
 
-        <tr>                                                                      <- BEGIN InputPortS
+        <tr>                                                                      <- BEGIN InputPorts
             <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- InputPortS OUTER TABLE
                 <tr>
-                    <td colspan="1"><b>InputPorts</b></td>                       <- InputPortS HEADER
+                    <td colspan="1"><b>InputPorts</b></td>                       <- InputPorts HEADER
                 </tr>
                 <tr>
                     <td><table border="0" cellborder="1">                         <- InputPort CELLS TABLE
