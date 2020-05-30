@@ -7930,6 +7930,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     proc_mech_sndr_label = f"{comp_label}"
                                 else:
                                     proc_mech_sndr_label = f"{output_mech_label}:{output_mech_port_name}"
+                            else:
+                                proc_mech_sndr_label = output_mech_label
+                                cim_proj_label = cim_label
                             # MODIFIED 5/28/20 END
 
                             # Render Projection
