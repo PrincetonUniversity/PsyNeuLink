@@ -8057,46 +8057,47 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # if ctl_proj.receiver.owner not in self.nodes:
                         continue
 
-                    # MODIFIED 5/30/20 OLD:
-                    # FIX: THIS CAUSES CONTROL PROJECTIONS TO NESTED COMP *CIM* (AT LEAST WHEN NOT show_node_structure)
-                    ctl_proj_rcvr = ctl_proj.receiver
-                    ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+                    # # MODIFIED 5/30/20 OLD:
+                    # # FIX: THIS CAUSES CONTROL PROJECTIONS TO NESTED COMP *CIM* (AT LEAST WHEN NOT show_node_structure)
+                    # #      WANT THIS IF show_cim is DIRECT and show_node_structure is False
+                    # ctl_proj_rcvr = ctl_proj.receiver
+                    # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
 
-                    # # MODIFIED 5/30/20 NEW:
+                    # MODIFIED 5/30/20 NEW:
                     # FIX: THIS CAUSES CONTROL PROJECTIONS TO GO TO NESTED COMP (AT LEAST WHEN NOT show_node_structure)
-                    # # Deal with whether ControlPojection should be shown to Composition or its CIM
-                    # #    (CIM if show_node_structure, else Composition)
-                    # if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
-                    #
-                    #     # FIX 5/28/20: ALT VERSIONS:
-                    #
-                    #     # # MODIFIED 5/28/20 OLD:
-                    #     # # FIX: THIS PROJECTS TO NESTED COMP: [BUT CAUSES UNRECOGNIZED NODES]
-                    #     # # This version projects from controller to nested comp no matter what
-                    #     # ctl_proj_rcvr = ctl_proj.receiver
-                    #     # ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
-                    #
-                    #     # MODIFIED 5/28/20 NEW:
-                    #     # FIX: THIS PROJECTS TO NESTED COMP's parameter_CIM
-                    #     #      COULD ADD THIS AS OPTION (AND SAME FOR INPUT AND OUTPUT)
-                    #     # This version projects from controller to nested comp if not show_node_structure
-                    #     ctl_proj_rcvr = ctl_proj.receiver
-                    #     if show_node_structure:
-                    #         ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-                    #     else:
-                    #         ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
-                    #
-                    #     # # MODIFIED 5/28/20 NEWER:
-                    #     # # This version projects from controller to controlled Nodes in nested comp
-                    #     # port_mapping = ctl_proj.receiver.owner.composition.parameter_CIM_ports
-                    #     # ctl_proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is ctl_proj.receiver][0]
-                    #     # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-                    #
-                    #     # MODIFIED 5/28/20 END
-                    #
-                    # else:
-                    #     ctl_proj_rcvr = ctl_proj.receiver
-                    #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+                    # Deal with whether ControlPojection should be shown to Composition or its CIM
+                    #    (CIM if show_node_structure, else Composition)
+                    if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
+
+                        # FIX 5/28/20: ALT VERSIONS:
+
+                        # # MODIFIED 5/28/20 OLD:
+                        # # FIX: THIS PROJECTS TO NESTED COMP: [BUT CAUSES UNRECOGNIZED NODES]
+                        # # This version projects from controller to nested comp no matter what
+                        # ctl_proj_rcvr = ctl_proj.receiver
+                        # ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+
+                        # MODIFIED 5/28/20 NEW:
+                        # FIX: THIS PROJECTS TO NESTED COMP's parameter_CIM
+                        #      COULD ADD THIS AS OPTION (AND SAME FOR INPUT AND OUTPUT)
+                        # This version projects from controller to nested comp if not show_node_structure
+                        ctl_proj_rcvr = ctl_proj.receiver
+                        if show_node_structure:
+                            ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+                        else:
+                            ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+
+                        # # MODIFIED 5/28/20 NEWER:
+                        # # This version projects from controller to controlled Nodes in nested comp
+                        # port_mapping = ctl_proj.receiver.owner.composition.parameter_CIM_ports
+                        # ctl_proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is ctl_proj.receiver][0]
+                        # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+
+                        # MODIFIED 5/28/20 END
+
+                    else:
+                        ctl_proj_rcvr = ctl_proj.receiver
+                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner
 
                     # MODIFIED 5/30/20 END
 
