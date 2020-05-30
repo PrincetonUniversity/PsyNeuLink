@@ -7545,8 +7545,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def _assign_processing_components(g, rcvr, show_nested):
             """Assign nodes to graph"""
+
+            # DEAL WITH NESTED COMPOSITION
+
+            # User passed args for nested Composition
             if isinstance(rcvr, Composition) and show_nested:
-                # User passed args for nested Composition
                 output_fmt_arg = {'output_fmt':'gv'}
                 if isinstance(show_nested, dict):
                     args = show_nested
@@ -7577,6 +7580,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
 
+            # DEAL WITH LEARNING
             # If rcvr is a learning component and not an INPUT node,
             #    break and handle in _assign_learning_components()
             #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
@@ -7584,6 +7588,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
                 return
 
+            # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
             # If rcvr is ObjectiveMechanism for Composition's controller,
             #    break and handle in _assign_control_components()
             if (isinstance(rcvr, ObjectiveMechanism)
@@ -7591,11 +7596,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and rcvr is self.controller.objective_mechanism):
                 return
 
-            # Implement rcvr node
+            # IMPLEMENT RECEIVER NODE:
+            #    set rcvr shape, color, and penwidth based on node type
             else:
-
-                # Set rcvr shape, color, and penwidth based on node type
                 rcvr_rank = 'same'
+
+                # SET SPECIAL SHAPES
 
                 # Cycle or Feedback Node
                 if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
@@ -7605,19 +7611,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     node_shape = mechanism_shape
 
-                # FIX 5/28/20:  INTEGRATE WITH CYCLE AND FEEDBACK ABOVE
-                # # Feedback Node
-                # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
-                #     if rcvr in active_items:
-                #         if active_color == BOLD:
-                #             rcvr_color = feedback_color
-                #         else:
-                #             rcvr_color = active_color
-                #         rcvr_penwidth = str(bold_width + active_thicker_by)
-                #         self.active_item_rendered = True
-                #     else:
-                #         rcvr_color = feedback_color
-                #         rcvr_penwidth = str(bold_width)
+                # SET STROKE AND COLOR
+                #    Based on Input, Output, Composition and/or Active
 
                 # Get condition if any associated with rcvr
                 if rcvr in self.scheduler.conditions:
@@ -7964,16 +7959,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for control_signal in controller.control_signals:
                 for ctl_proj in control_signal.efferents:
                     if ctl_proj not in self.projections:
-                    # FIX: ALT VERSION
+                    # FIX 5/28/20: ALT VERSION:
                     # if ctl_proj.receiver.owner not in self.nodes:
                         continue
                     if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
+                        # FIX 5/28/20: ALT VERSIONS:
                         # This version projects from controller to nested comp
                         ctl_proj_rcvr = ctl_proj.receiver
-                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
-                        # This version projections from controller to controlled Nodes in nested comp
+                        if show_node_structure:
+                            ctl_proj_rcvr_owner = ctl_proj.receiver.owner
+                        else:
+                            ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+                        # # This version projects from controller to controlled Nodes in nested comp
                         # port_mapping = ctl_proj.receiver.owner.composition.parameter_CIM_ports
                         # ctl_proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is ctl_proj.receiver][0]
+                        # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
                     else:
                         ctl_proj_rcvr = ctl_proj.receiver
                         ctl_proj_rcvr_owner = ctl_proj.receiver.owner
@@ -8176,10 +8176,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sndrs = processing_graph[rcvr]
                 _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
-        def render_projection_as_node(g, proj, label,
-                                      proj_color, proj_width,
-                                      sndr_label=None,
-                                      rcvr_label=None):
+        def _render_projection_as_node(g, proj, label,
+                                       proj_color, proj_width,
+                                       sndr_label=None,
+                                       rcvr_label=None):
 
             proj_receiver = proj.receiver.owner
 
@@ -8305,12 +8305,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 #    (do it here rather than in _assign_learning_components,
                                 #     as it needs afferent and efferent edges to other nodes)
                                 # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
-                                deferred = not render_projection_as_node(g=g, proj=proj,
-                                                                         label=proc_mech_label,
-                                                                         rcvr_label=proc_mech_rcvr_label,
-                                                                         sndr_label=sndr_proj_label,
-                                                                         proj_color=proj_color,
-                                                                         proj_width=proj_width)
+                                deferred = not _render_projection_as_node(g=g, proj=proj,
+                                                                          label=proc_mech_label,
+                                                                          rcvr_label=proc_mech_rcvr_label,
+                                                                          sndr_label=sndr_proj_label,
+                                                                          proj_color=proj_color,
+                                                                          proj_width=proj_width)
                                 # Deferred if it is the last Mechanism in a learning Pathway
                                 # (see _render_projection_as_node)
                                 if deferred:
@@ -8459,6 +8459,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add learning-related Components to graph if show_learning
         if show_learning:
             _assign_learning_components(G)
+
+        # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
+        # _generate_output(G)
+        #
+        # def _generate_output(G):
 
         # Sort nodes for display
         # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
