@@ -7743,6 +7743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.active_item_rendered = True
                     else:
                         cim_color = input_color
+                    compact_cim = not cim.afferents or show_cim is not DIRECT
 
                 elif cim is self.parameter_CIM:
                     if not (cim.afferents or cim.efferents):
@@ -7756,6 +7757,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.active_item_rendered = True
                     else:
                         cim_color = controller_color
+                    compact_cim = not cim.afferents or show_cim is not DIRECT
 
                 elif cim is self.output_CIM:
                     if cim in active_items:
@@ -7767,16 +7769,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.active_item_rendered = True
                     else:
                         cim_color = output_color
+                    compact_cim = not cim.efferents or show_cim is not DIRECT
 
                 else:
-                    assert False, '_assignm_cim_components called with node that is not input_CIM or output_CIM'
+                    assert False, \
+                        f'PROGRAM ERROR: _assign_cim_components called with node ' \
+                        f'that is not input_CIM, parameter_CIM, or output_CIM'
 
                 # Assign lablel
                 cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
-
                 if show_node_structure:
                     g.node(cim_label,
-                           cim._show_structure(**node_struct_args, node_border=cim_penwidth, compact_cim=True),
+                           cim._show_structure(**node_struct_args,
+                                               node_border=cim_penwidth,
+                                               compact_cim=compact_cim),
                            shape=struct_shape,
                            color=cim_color,
                            rank=cim_rank,
@@ -8729,16 +8735,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 dim_string = "({})".format(len(value))
                 return "{}\n{}".format(item.name, dim_string)
 
-        if isinstance(item, CompositionInterfaceMechanism):
+        # if isinstance(item, CompositionInterfaceMechanism):
+        #     name = name.replace('Input_CIM','INPUT')
+        #     name = name.replace('Parameter_CIM', 'CONTROL')
+        #     name = name.replace('Output_CIM', 'OUTPUT')
+        if 'Input_CIM' in name and not item.afferents:
             name = name.replace('Input_CIM','INPUT')
+        if 'Parameter_CIM' in name and not item.afferents:
             name = name.replace('Parameter_CIM', 'CONTROL')
+        if 'Output_CIM' in name and not item.efferents:
             name = name.replace('Output_CIM', 'OUTPUT')
-            # if 'Input_CIM' in name and not item.afferents:
-            #     name = name.replace('Input_CIM','INPUT')
-            # if 'Parameter_CIM' in name and not item.afferents:
-            #     name = name.replace('Parameter_CIM', 'CONTROL')
-            # if 'Output_CIM' in name and not item.efferents:
-            #     name = name.replace('Output_CIM', 'OUTPUT')
 
         return name
 
