@@ -8059,45 +8059,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Get receiver label  ---------------------------------------------------
 
-                    # # MODIFIED 5/30/20 OLD:
-                    # # FIX: DIRECT_TO_CIM - PROJECTS TO NESTED *CIM*
-                    # ctl_proj_rcvr = ctl_proj.receiver
-                    # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-
-                    # # MODIFIED 5/30/20 NEW:
-                    # # FIX: DIRECT_TO_CIM - PROJECTS TO NESTED COMP
-                    # # Deal with whether ControlProjection should be shown to Composition or its CIM
-                    # #    (CIM if show_node_structure, else Composition)
-                    # if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
-                    #
-                    #     # FIX 5/28/20: ALT VERSIONS:
-                    #
-                    #     # # MODIFIED 5/28/20 OLD:
-                    #     # This version projects from controller to nested comp no matter what
-                    #     ctl_proj_rcvr = ctl_proj.receiver
-                    #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
-                    #
-                    #     # # MODIFIED 5/28/20 NEW:
-                    #     # # This version projects from controller to nested comp if not show_node_structure
-                    #     # ctl_proj_rcvr = ctl_proj.receiver
-                    #     # if show_node_structure:
-                    #     #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-                    #     # else:
-                    #     #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
-                    #
-                    #     # # MODIFIED 5/28/20 NEWER:
-                    #     # # This version projects from controller to controlled Nodes in nested comp
-                    #     # port_mapping = ctl_proj.receiver.owner.composition.parameter_CIM_ports
-                    #     # ctl_proj_rcvr = [key for key in port_mapping if port_mapping[key][0] is ctl_proj.receiver][0]
-                    #     # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-                    #
-                    #     # MODIFIED 5/28/20 END
-                    #
-                    # else:
-                    #     ctl_proj_rcvr = ctl_proj.receiver
-                    #     ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-
-                    # MODIFIED 5/30/20 NEWER:
+                    # MODIFIED 5/30/20 NEWEST:
                     # FIX: DIRECT_TO_CIM - PROJECTS TO NESTED *CIM* if DIRECT
                     #                      ADD FOR INPUT AND OUTPUT CIMS
                     # if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
@@ -8108,80 +8070,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         ctl_proj_rcvr = ctl_proj.receiver
                         ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
 
-                    # MODIFIED 5/30/20 END
-
-                    #
-                    proc_mech_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
+                    rcvr_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
 
 
                     # Get sender label ---------------------------------------------------
 
-                    # # MODIFIED 5/28/20 OLD:
-                    # # FIX: DIRECT_TO_CIM - THIS PROJECTS FROM CIM TO CIM BUT NOT TO/FROM PORTS
-                    #                        ADD FOR INPUT AND OUTPUT
-                    # ctl_sndr_label = ctlr_label
-                    # proc_mech_rcvr_label = proc_mech_label
-
-                    # # MODIFIED 5/28/20 NEW:
-                    # # FIX: DIRECT_TO_CIM: THIS PROJECTS FROM CIM TO COMP
-                    # #               COMP LABEL AS RECEIVER OF CONTROL PROJECTION TO ONE OF ITS NODES
-                    # if show_node_structure:
-                    #     ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                    #     if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
-                    #         # FIX 5/28/20:
-                    #         #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
-                    #         comp_label = self._get_graph_node_label(ctl_proj.receiver.owner.composition,
-                    #                                                 show_types,
-                    #                                                 show_dimensions)
-                    #         proc_mech_rcvr_label = f"{comp_label}"
-                    #     else:
-                    #         proc_mech_rcvr_label = \
-                    #             proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
-                    #
-                    # else:
-                    #     ctl_sndr_label = ctlr_label
-                    #     proc_mech_rcvr_label = proc_mech_label
-
-                    # # MODIFIED 5/28/20 NEWER:
+                    # # MODIFIED 5/28/20 NEWEST:
                     # # FIX: DIRECT_TO_CIM - WORKING FOR Controller -> Parameter_CIM OF NESTED
                     #                        ADD FOR INPUT AND OUTPUT
                     if show_cim is DIRECT:
                         if show_node_structure:
                             # Use controller and parameter_CIM's Ports
-                            ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                            proc_mech_rcvr_label = \
-                                proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+                            ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                            ctl_proj_rcvr_label = \
+                                rcvr_label + ':' + controller._get_port_name(ctl_proj_rcvr)
                         else:
                             # Use controller and
-                            ctl_sndr_label = ctlr_label
-                            proc_mech_rcvr_label = proc_mech_label
+                            ctl_proj_sndr_label = ctlr_label
+                            ctl_proj_rcvr_label = rcvr_label
 
                     else:
                         # FIX: MIGHT BE ABLE TO SIMPLIFY THIS:
                         if show_node_structure:
 
                             # Use Port since show_node_structure
-                            ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                            ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
 
                             if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
                                 # # Use Port since show_node_structure  - MOVED TO ABOVE
-                                # ctl_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                                # ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
 
                                 # Use Composition (since not DIRECT)
                                 comp_label = self._get_graph_node_label(ctl_proj.receiver.owner.composition,
                                                                         show_types,
                                                                         show_dimensions)
-                                proc_mech_rcvr_label = f"{comp_label}"
+                                ctl_proj_rcvr_label = f"{comp_label}"
 
                             else:
-                                # ctl_sndr_label = ctlr_label  - MOVED TO ABOVE
+                                # ctl_proj_sndr_label = ctlr_label  - MOVED TO ABOVE
 
-                                proc_mech_rcvr_label = \
-                                    proc_mech_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+                                ctl_proj_rcvr_label = \
+                                    rcvr_label + ':' + controller._get_port_name(ctl_proj_rcvr)
                         else:
-                            ctl_sndr_label = ctlr_label
-                            proc_mech_rcvr_label = proc_mech_label
-
+                            ctl_proj_sndr_label = ctlr_label
+                            ctl_proj_rcvr_label = rcvr_label
 
                     # MODIFIED 5/28/20 END
 
@@ -8202,8 +8134,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         edge_label = ''
 
                     # Construct edge -----------------------------------------------------------------------
-                    g.edge(ctl_sndr_label,
-                           proc_mech_rcvr_label,
+                    g.edge(ctl_proj_sndr_label,
+                           ctl_proj_rcvr_label,
                            label=edge_label,
                            color=ctl_proj_color,
                            penwidth=ctl_proj_width
