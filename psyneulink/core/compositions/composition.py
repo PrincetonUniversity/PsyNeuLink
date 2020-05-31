@@ -8742,12 +8742,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             name = name.replace('Input_CIM','INPUT')
             name = name.replace('Parameter_CIM', 'CONTROL')
             name = name.replace('Output_CIM', 'OUTPUT')
-        # if 'Input_CIM' in name and not item.afferents:
-        #     name = name.replace('Input_CIM','INPUT')
-        # if 'Parameter_CIM' in name and not item.afferents:
-        #     name = name.replace('Parameter_CIM', 'CONTROL')
-        # if 'Output_CIM' in name and not item.efferents:
-        #     name = name.replace('Output_CIM', 'OUTPUT')
 
         return name
 
