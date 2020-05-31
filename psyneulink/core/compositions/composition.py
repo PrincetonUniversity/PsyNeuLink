@@ -8034,13 +8034,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Skip ControlProjections not in the Composition
                     if ctl_proj not in self.projections:
-                    # FIX 5/28/20: ALT VERSION:  REPLACE WITH SEARCH ON Composition.graph
-                    # # Skip ControlProjections to Nodes not in the Composition
-                    # if ctl_proj.receiver.owner not in self.nodes:
                         continue
-
-                    # MODIFIED 5/30/20 NEWEST:
-                    # FIX: DIRECT_TO_CIM - controller -> Mech ParameterPorts or parameter_CIM
 
                     # Construct edge name  ---------------------------------------------------
 
@@ -8337,20 +8331,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             for sndr in senders:
 
-                # MODIFIED 5/28/20 OLD:
                 # Set sndr info
                 sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
-
-                # # MODIFIED 5/28/20 NEW:
-                # # Set sndr info
-                # # Deal with whether Projection should be shown from Composition or its CIM
-                # #    (CIM if show_node_structure, else Composition)
-                # if isinstance(sndr, CompositionInterfaceMechanism) and show_node_structure:
-                #     sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
-                # else:
-                #     sndr_label = self._get_graph_node_label(sndr.composition, show_types, show_dimensions)
-
-                # MODIFIED 5/28/20 END
 
                 # Iterate through all Projections from all OutputPorts of sndr
                 for output_port in sndr.output_ports:
@@ -8358,9 +8340,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Skip Projections not in the Composition
                         if proj not in self.projections:
-                        # FIX 5/28/20: ALT VERSION:  REPLACE WITH SEARCH ON Composition.graph
-                        # # Skip Projections to Nodes not in the Composition
-                        # if proj.receiver.owner not in self.nodes:
                             continue
 
                         # Skip any projections to ObjectiveMechanism for controller
@@ -8369,7 +8348,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj.receiver.owner in {self.controller, self.controller.objective_mechanism}):
                             continue
 
-                        # MODIFIED 5/28/20 OLD:
                         # Only consider Projections to the rcvr
                         if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                                 or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
@@ -8401,60 +8379,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     proj_color = active_color
                                 proj_width = str(default_width + active_thicker_by)
                                 self.active_item_rendered = True
-
-                        # # MODIFIED 5/28/20 NEW:
-                        # # WORKING HERE NEXT
-                        # # Only consider Projections to the rcvr
-                        # if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                        #         or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-                        #
-                        #     # Deal with whether Projection should be shown from Composition or its CIM
-                        #     #    (CIM if show_node_structure, else Composition)
-                        #     if isinstance(proj.sender.owner, CompositionInterfaceMechanism):
-                        #         # FIX 5/28/20: ALT VERSIONS:
-                        #         # This version projects from controller to nested comp
-                        #         proj_sndr = proj.sender
-                        #         if show_node_structure:
-                        #             proj_sndr_owner = proj.sender.owner
-                        #         else:
-                        #             proj_sndr_owner = proj.sender.owner.composition
-                        #         # # This version projects from controller to controlled Nodes in nested comp
-                        #         # port_mapping = proj.sender.owner.composition.output_CIM_ports
-                        #         # proj_sndr = [key for key in port_mapping if port_mapping[key][0] is proj.sender][0]
-                        #         # proj_sndr_owner = proj.sender.owner
-                        #     else:
-                        #         proj_sndr = proj.sender
-                        #         proj_sndr_ownr = proj.sender.owner
-                        #
-                        #     if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-                        #         sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj_sndr)}'
-                        #         proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj_rcvr)}'
-                        #     else:
-                        #         sndr_proj_label = sndr_label
-                        #         proc_mech_rcvr_label = rcvr_label
-                        #
-                        #     try:
-                        #         has_learning = proj.has_learning_projection is not None
-                        #     except AttributeError:
-                        #         has_learning = None
-                        #
-                        #     edge_label = self._get_graph_node_label(proj, show_types, show_dimensions)
-                        #     is_learning_component = rcvr in self.learning_components or sndr in self.learning_components
-                        #
-                        #     # Check if Projection or its receiver is active
-                        #     if any(item in active_items for item in {proj, proj_rcvr_ownr}):
-                        #         if active_color == BOLD:
-                        #             # if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
-                        #             if is_learning_component:
-                        #                 proj_color = learning_color
-                        #             else:
-                        #                 pass
-                        #         else:
-                        #             proj_color = active_color
-                        #         proj_width = str(default_width + active_thicker_by)
-                        #         self.active_item_rendered = True
-
-                        # MODIFIED 5/28/20 END
 
                             # Projection to or from a LearningMechanism
                             elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
