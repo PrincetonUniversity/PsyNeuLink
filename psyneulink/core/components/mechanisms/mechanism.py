@@ -3397,14 +3397,15 @@ class Mechanism_Base(Mechanism):
 
 
         # Construct InputPorts table
-        if len(self.input_ports) and (not compact_cim or self is not composition.input_CIM):
+        if (len(self.input_ports)
+                and (not compact_cim or (self is not composition.input_CIM and self is not composition.parameter_CIM))):
             input_ports_table = f'<tr>{port_table(self.input_ports, InputPort)}</tr>'
-
         else:
             input_ports_table = ''
 
         # Construct ParameterPorts table
         if len(self.parameter_ports):
+        # if len(self.parameter_ports) and (not compact_cim or self is not composition.parameter_CIM):
             parameter_ports_table = port_table(self.parameter_ports, ParameterPort)
         else:
             parameter_ports_table = ''
