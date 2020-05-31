@@ -8089,7 +8089,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         ctl_proj_sndr_label = ctlr_label
                         ctl_proj_rcvr_label = rcvr_label
 
-
                     # MODIFIED 5/28/20 END
 
                     # Assign colors, penwidth and label displayed for ControlProjection ---------------------
