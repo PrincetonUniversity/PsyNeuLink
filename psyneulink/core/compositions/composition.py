@@ -8103,7 +8103,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Skip ControlProjections not in the Composition
                     if ctl_proj not in self.projections:
-                    # FIX 5/28/20: ALT VERSION:
+                    # FIX 5/28/20: ALT VERSION:  REPLACE WITH SEARCH ON Composition.graph
                     # # Skip ControlProjections to Nodes not in the Composition
                     # if ctl_proj.receiver.owner not in self.nodes:
                         continue
@@ -8427,7 +8427,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Skip Projections not in the Composition
                         if proj not in self.projections:
-                        # FIX 5/28/20: ALT VERSION:
+                        # FIX 5/28/20: ALT VERSION:  REPLACE WITH SEARCH ON Composition.graph
                         # # Skip Projections to Nodes not in the Composition
                         # if proj.receiver.owner not in self.nodes:
                             continue
