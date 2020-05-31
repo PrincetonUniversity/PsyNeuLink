@@ -7701,7 +7701,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         show_types,
                                                         show_dimensions)
 
-                if show_node_structure and isinstance(rcvr, Mechanism):
+                if isinstance(rcvr, Composition) and show_cim == DIRECT:
+                    return
+                elif show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
                            rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                            shape=struct_shape,
@@ -7879,10 +7881,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 else:
                                     # rcvr_input_node_proj_label = rcvr_label + \
                                     #                         rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)
-                                    # rcvr_input_node_proj_label = f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
                                     rcvr_input_node_proj_label = \
-                                        f"{rcvr_label}:" \
-                                        f"{rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)}"
+                                        f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
+                                    # rcvr_input_node_proj_label = \
+                                    #     f"{rcvr_label}:" \
+                                    #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)}"
                             else:
                                 sndr_cim_proj_label = cim_label
                                 rcvr_input_node_proj_label = rcvr_label
@@ -8079,10 +8082,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     #     f"{input_mech_label}:{InputPort.__name__}-{proj.receiver.name}"
                                     # input_mech_rcvr_label = rcvr_label + \
                                     #                         sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)
-                                    # input_mech_rcvr_label = f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
                                     sndr_output_node_proj_label = \
-                                        f"{sndr_label}:" \
-                                        f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
+                                        f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                    # sndr_output_node_proj_label = \
+                                    #     f"{sndr_label}:" \
+                                    #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
                             else:
                                 sndr_output_node_proj_label = sndr_label
                                 rcvr_cim_proj_label = cim_label
