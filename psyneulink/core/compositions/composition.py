@@ -8057,63 +8057,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # if ctl_proj.receiver.owner not in self.nodes:
                         continue
 
-                    # Get receiver label  ---------------------------------------------------
+                    # Get receiver label for ControlProjection ---------------------------------------------------
 
                     # MODIFIED 5/30/20 NEWEST:
-                    # FIX: DIRECT_TO_CIM - PROJECTS TO NESTED *CIM* if DIRECT
+                    # FIX: DIRECT_TO_CIM - WORK FOR controller -> parameter_CIM
                     #                      ADD FOR INPUT AND OUTPUT CIMS
-                    # if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
-                    if show_cim is DIRECT:
-                        ctl_proj_rcvr = ctl_proj.receiver
-                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner
-                    else:
-                        ctl_proj_rcvr = ctl_proj.receiver
-                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
 
+                    # Get label for receiver of ControlProjection
+                    ctl_proj_rcvr = ctl_proj.receiver
+                    # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
+                    if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism) and show_cim is not DIRECT:
+                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner.composition
+                    # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
+                    else:
+                        ctl_proj_rcvr_owner = ctl_proj.receiver.owner
                     rcvr_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
 
-
-                    # Get sender label ---------------------------------------------------
-
-                    # # MODIFIED 5/28/20 NEWEST:
-                    # # FIX: DIRECT_TO_CIM - WORKING FOR Controller -> Parameter_CIM OF NESTED
-                    #                        ADD FOR INPUT AND OUTPUT
+                    # Get sender and receiver labels for edge
+                    # Default:  used controller and receiver labels
+                    ctl_proj_sndr_label = ctlr_label
+                    ctl_proj_rcvr_label = rcvr_label
                     if show_cim is DIRECT:
                         if show_node_structure:
                             # Use controller and parameter_CIM's Ports
                             ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                             ctl_proj_rcvr_label = \
                                 rcvr_label + ':' + controller._get_port_name(ctl_proj_rcvr)
-                        else:
-                            # Use controller and
-                            ctl_proj_sndr_label = ctlr_label
-                            ctl_proj_rcvr_label = rcvr_label
-
                     else:
-                        # FIX: MIGHT BE ABLE TO SIMPLIFY THIS:
                         if show_node_structure:
-
                             # Use Port since show_node_structure
                             ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
 
                             if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
-                                # # Use Port since show_node_structure  - MOVED TO ABOVE
-                                # ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-
-                                # Use Composition (since not DIRECT)
-                                comp_label = self._get_graph_node_label(ctl_proj.receiver.owner.composition,
-                                                                        show_types,
-                                                                        show_dimensions)
-                                ctl_proj_rcvr_label = f"{comp_label}"
-
+                                ctl_proj_rcvr_label = rcvr_label
                             else:
-                                # ctl_proj_sndr_label = ctlr_label  - MOVED TO ABOVE
-
                                 ctl_proj_rcvr_label = \
                                     rcvr_label + ':' + controller._get_port_name(ctl_proj_rcvr)
-                        else:
-                            ctl_proj_sndr_label = ctlr_label
-                            ctl_proj_rcvr_label = rcvr_label
 
                     # MODIFIED 5/28/20 END
 
