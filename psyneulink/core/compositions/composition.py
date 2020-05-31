@@ -7701,8 +7701,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         show_types,
                                                         show_dimensions)
 
+                # Don't show Node for nested Composition if Projections are being shown directly to it
+                #    (since Projections will be shown to its Components)
                 if isinstance(rcvr, Composition) and show_cim == DIRECT:
                     return
+
                 elif show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
                            rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
@@ -7832,7 +7835,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 # Get label for CIM's port as edge's sender
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                if (isinstance(rcvr_input_node_proj_owner, CompositionInterfaceMechanism)
+                                # if (isinstance(rcvr_input_node_proj_owner, CompositionInterfaceMechanism)
+                                if (isinstance(rcvr_input_node_proj_owner, Composition)
                                         and show_cim is not DIRECT):
                                     rcvr_input_node_proj_label = rcvr_label
                                 else:
@@ -7862,17 +7866,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
-                                g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
-                                   color=proj_color, penwidth=proj_width)
+                            g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
+                               color=proj_color, penwidth=proj_width)
 
                 # PARAMETER_CIM -------------------------------------------------------------------------
 
-                # Projections from parameter_CIM to Nodes that are being controlled
+                # Projections from parameter_CIM to Nodes that are being modulated
                 if cim is self.parameter_CIM:
                     for output_port in self.parameter_CIM.output_ports:
                         projs = output_port.efferents
                         for proj in projs:
-                            modulated_mech = proj.receiver.owner
 
                             # Get label for Node that receives modulation (modulated_mech_label)
                             rcvr_modulated_mech_proj = proj.receiver
@@ -7893,7 +7896,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 # Get label for CIM's port as edge's sender
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                if (isinstance(rcvr_modulated_mech_proj_owner, CompositionInterfaceMechanism)
+                                # if (isinstance(rcvr_modulated_mech_proj_owner, CompositionInterfaceMechanism)
+                                if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
                                         and not show_cim is not DIRECT):
                                     rcvr_modulated_mec_proj_label = rcvr_label
                                 else:
@@ -7954,7 +7958,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 # Get label of CIM's port as edge's receiver
                                 rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
-                                if (isinstance(sndr_output_node_proj_owner, CompositionInterfaceMechanism)
+                                # if (isinstance(sndr_output_node_proj_owner, CompositionInterfaceMechanism)
+                                if (isinstance(sndr_output_node_proj_owner, Composition)
                                         and show_cim is not DIRECT):
                                     sndr_output_node_proj_label = sndr_label
                                 else:
