@@ -7746,6 +7746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     compact_cim = not cim.afferents or show_cim is not DIRECT
 
                 elif cim is self.parameter_CIM:
+                    # Unlike input_CIM and output_CIM, parameter_CIM may not be used
                     if not (cim.afferents or cim.efferents):
                         continue
                     if cim in active_items:
@@ -8735,16 +8736,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 dim_string = "({})".format(len(value))
                 return "{}\n{}".format(item.name, dim_string)
 
-        # if isinstance(item, CompositionInterfaceMechanism):
-        #     name = name.replace('Input_CIM','INPUT')
-        #     name = name.replace('Parameter_CIM', 'CONTROL')
-        #     name = name.replace('Output_CIM', 'OUTPUT')
-        if 'Input_CIM' in name and not item.afferents:
+        if isinstance(item, CompositionInterfaceMechanism):
             name = name.replace('Input_CIM','INPUT')
-        if 'Parameter_CIM' in name and not item.afferents:
             name = name.replace('Parameter_CIM', 'CONTROL')
-        if 'Output_CIM' in name and not item.efferents:
             name = name.replace('Output_CIM', 'OUTPUT')
+        # if 'Input_CIM' in name and not item.afferents:
+        #     name = name.replace('Input_CIM','INPUT')
+        # if 'Parameter_CIM' in name and not item.afferents:
+        #     name = name.replace('Parameter_CIM', 'CONTROL')
+        # if 'Output_CIM' in name and not item.efferents:
+        #     name = name.replace('Output_CIM', 'OUTPUT')
 
         return name
 
