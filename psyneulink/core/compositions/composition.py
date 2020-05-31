@@ -8074,25 +8074,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
 
                     # Get sender and receiver labels for edge
-                    # Default:  used controller and receiver labels
-                    ctl_proj_sndr_label = ctlr_label
-                    ctl_proj_rcvr_label = rcvr_label
-                    if show_cim is DIRECT:
-                        if show_node_structure:
-                            # Use controller and parameter_CIM's Ports
-                            ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                    if show_node_structure:
+                        ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                        if show_cim is DIRECT:
                             ctl_proj_rcvr_label = \
                                 rcvr_label + ':' + controller._get_port_name(ctl_proj_rcvr)
-                    else:
-                        if show_node_structure:
-                            # Use Port since show_node_structure
-                            ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-
+                        else:
                             if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism):
                                 ctl_proj_rcvr_label = rcvr_label
                             else:
                                 ctl_proj_rcvr_label = \
                                     rcvr_label + ':' + controller._get_port_name(ctl_proj_rcvr)
+                    else:
+                        ctl_proj_sndr_label = ctlr_label
+                        ctl_proj_rcvr_label = rcvr_label
+
 
                     # MODIFIED 5/28/20 END
 
