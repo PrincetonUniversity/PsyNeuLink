@@ -8062,7 +8062,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # MODIFIED 5/30/20 NEWEST:
                     # FIX: DIRECT_TO_CIM - controller -> Mech ParameterPorts or parameter_CIM
 
-                    # Get label for receiver of ControlProjection
+                    # Get label for receiver's owner (Mechanism or nested Composition), needed below
                     ctl_proj_rcvr = ctl_proj.receiver
                     # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
                     if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism) and show_cim is not DIRECT:
@@ -8073,27 +8073,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     rcvr_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
 
                     # Get sender and receiver labels for edge
-                    # if show_node_structure:
-                    #     # Get label for controller's port
-                    #     ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                    #     # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
-                    #     if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism) and show_cim is not DIRECT:
-                    #         ctl_proj_rcvr_label = rcvr_label
-                    #     # In all other cases, use Port (ParameterPort of a Mech, or parameter_CIM for nested comp)
-                    #     else:
-                    #         ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
-                    # else:
-                    #     ctl_proj_sndr_label = ctlr_label
-                    #     ctl_proj_rcvr_label = rcvr_label
-
-                    # Get label for controller's port
-                    ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                    # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
-                    if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism) and show_cim is not DIRECT:
-                        ctl_proj_rcvr_label = rcvr_label
-                    # In all other cases, use Port (ParameterPort of a Mech, or parameter_CIM for nested comp)
+                    if show_node_structure:
+                        # Get label for controller's port
+                        ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
+                        # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
+                        if isinstance(ctl_proj.receiver.owner, CompositionInterfaceMechanism) and show_cim is not DIRECT:
+                            ctl_proj_rcvr_label = rcvr_label
+                        # In all other cases, use Port (ParameterPort of a Mech, or parameter_CIM for nested comp)
+                        else:
+                            ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
                     else:
-                        ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
+                        ctl_proj_sndr_label = ctlr_label
+                        ctl_proj_rcvr_label = rcvr_label
 
                     # MODIFIED 5/30/20 END
 
