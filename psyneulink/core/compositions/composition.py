@@ -8060,9 +8060,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Get receiver label  ---------------------------------------------------
 
                     # # MODIFIED 5/30/20 OLD:
-                    # # FIX: DIRECT_TO_CIM - PROJECTS TO NESTED *CIM* (ONLY WHEN NOT show_node_structure)
-                    # #      WANT THIS IF show_cim is DIRECT and show_node_structure is False
-                    # #      ADD FOR TO INPUT AND OUTPUT CIMs
+                    # # FIX: DIRECT_TO_CIM - PROJECTS TO NESTED *CIM*
                     # ctl_proj_rcvr = ctl_proj.receiver
                     # ctl_proj_rcvr_owner = ctl_proj.receiver.owner
 
