@@ -7835,7 +7835,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 # Get label for CIM's port as edge's sender
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                # if (isinstance(rcvr_input_node_proj_owner, CompositionInterfaceMechanism)
                                 if (isinstance(rcvr_input_node_proj_owner, Composition)
                                         and show_cim is not DIRECT):
                                     rcvr_input_node_proj_label = rcvr_label
@@ -7896,7 +7895,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 # Get label for CIM's port as edge's sender
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                # if (isinstance(rcvr_modulated_mech_proj_owner, CompositionInterfaceMechanism)
                                 if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
                                         and not show_cim is not DIRECT):
                                     rcvr_modulated_mec_proj_label = rcvr_label
@@ -7958,7 +7956,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if show_node_structure:
                                 # Get label of CIM's port as edge's receiver
                                 rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
-                                # if (isinstance(sndr_output_node_proj_owner, CompositionInterfaceMechanism)
                                 if (isinstance(sndr_output_node_proj_owner, Composition)
                                         and show_cim is not DIRECT):
                                     sndr_output_node_proj_label = sndr_label
