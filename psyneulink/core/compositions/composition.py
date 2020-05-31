@@ -7812,43 +7812,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = output_port.efferents
                         for proj in projs:
 
-                            # MODIFIED 5/30/20 OLD:
-                            # input_mech = proj.receiver.owner
-                            # if isinstance(input_mech, CompositionInterfaceMechanism):
-                            #     input_mech = input_mech.composition
-                            # if input_mech is self.controller:
-                            #     # Projections to contoller are handled under _assign_controller_components
-                            #     continue
-                            # # Validate the Projection is to an INPUT node or a node that is shadowing one
-                            # if ((input_mech in self.nodes_to_roles and
-                            #      not NodeRole.INPUT in self.nodes_to_roles[input_mech])
-                            #         and (proj.receiver.shadow_inputs in self.nodes_to_roles and
-                            #              not NodeRole.INPUT in self.nodes_to_roles[proj.receiver.shadow_inputs])):
-                            #     raise CompositionError(f"Projection from input_CIM of {self.name} to node {input_mech} "
-                            #                            f"that is not an {NodeRole.INPUT.name} node or shadowing its "
-                            #                            f"{NodeRole.INPUT.name.lower()}.")
-                            #
-                            # # Construct edge name
-                            # input_mech_label = self._get_graph_node_label(input_mech,
-                            #                                               show_types,
-                            #                                               show_dimensions)
-                            # if show_node_structure:
-                            #     cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                            #     if isinstance(proj.receiver.owner, CompositionInterfaceMechanism):
-                            #         # FIX 5/28/20: DIRECT_TO_CIM - COMP LABEL AS RECEIVER OF INPUT_CIM PROJECTION
-                            #         #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
-                            #         comp_label = self._get_graph_node_label(proj.receiver.owner.composition,
-                            #                                                 show_types,
-                            #                                                 show_dimensions)
-                            #         proc_mech_rcvr_label = f"{comp_label}"
-                            #     else:
-                            #         proc_mech_rcvr_label = \
-                            #             f"{input_mech_label}:{InputPort.__name__}-{proj.receiver.name}"
-                            # else:
-                            #     cim_proj_label = cim_label
-                            #     proc_mech_rcvr_label = input_mech_label
-
-                            # MODIFIED 5/30/20 NEW:
                             rcvr_input_node_proj = proj.receiver
                             if (isinstance(rcvr_input_node_proj.owner, CompositionInterfaceMechanism)
                                     and not show_cim is DIRECT):
@@ -7870,7 +7833,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        f"{NodeRole.INPUT.name.lower()}.")
                             rcvr_label = self._get_graph_node_label(rcvr_input_node_proj_owner,
                                                                     show_types, show_dimensions)
-
                             # Construct edge name
                             if show_node_structure:
                                 # Get label for CIM's port as edge's sender
@@ -7879,8 +7841,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         and show_cim is not DIRECT):
                                     rcvr_input_node_proj_label = rcvr_label
                                 else:
-                                    # rcvr_input_node_proj_label = rcvr_label + \
-                                    #                         rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)
+                                    # Need to use direct reference to proj.receiver rather than rcvr_input_node_proj
+                                    #    since could be Composition, which does not have a get_port_name attribute
                                     rcvr_input_node_proj_label = \
                                         f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
                                     # rcvr_input_node_proj_label = \
@@ -7889,8 +7851,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 sndr_cim_proj_label = cim_label
                                 rcvr_input_node_proj_label = rcvr_label
-                            # MODIFIED 5/30/20 END
-
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
@@ -7909,8 +7869,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = ''
                                 g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
                                    color=proj_color, penwidth=proj_width)
-                                # g.edge(cim_proj_label, proc_mech_rcvr_label, label=label,
-                                #    color=proj_color, penwidth=proj_width)
 
                 # PARAMETER_CIM -------------------------------------------------------------------------
 
@@ -8017,37 +7975,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = input_port.path_afferents
                         for proj in projs:
 
-                            # # MODIFIED 5/30/20 OLD:
-                            # # Validate the Projection is from an OUTPUT node
-                            # output_mech = proj.sender.owner
-                            # output_mech_port_name = output_mech._get_port_name(proj.sender)
-                            # if isinstance(output_mech, CompositionInterfaceMechanism):
-                            #     output_mech = output_mech.composition
-                            # if not NodeRole.OUTPUT in self.nodes_to_roles[output_mech]:
-                            #     raise CompositionError(f"Projection to output_CIM of {self.name} "
-                            #                            f"from node {output_mech} that is not "
-                            #                            f"an {NodeRole.OUTPUT} node.")
-                            # # Construct edge name
-                            # output_mech_label = self._get_graph_node_label(output_mech,
-                            #                                                show_types,
-                            #                                                show_dimensions)
-                            #
-                            # if show_node_structure:
-                            #     cim_proj_label = f"{cim_label}:{cim._get_port_name(proj.receiver)}"
-                            #     if isinstance(proj.sender.owner, CompositionInterfaceMechanism):
-                            #         # FIX 5/28/20: DIRECT_TO_CIM - COMP LABEL AS SENDER OF OUTPUT_CIM PROJECTION
-                            #         #  ADD ALTERNATIVE VERSION THAT OFFERS OPTION OF PROJECTION STRAIGHT TO INNER COMP
-                            #         comp_label = self._get_graph_node_label(proj.sender.owner.composition,
-                            #                                                 show_types,
-                            #                                                 show_dimensions)
-                            #         proc_mech_sndr_label = f"{comp_label}"
-                            #     else:
-                            #         proc_mech_sndr_label = f"{output_mech_label}:{output_mech_port_name}"
-                            # else:
-                            #     proc_mech_sndr_label = output_mech_label
-                            #     cim_proj_label = cim_label
-
-                            # MODIFIED 5/30 NEW:
                             sndr_output_node_proj = proj.sender
                             if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
                                     and not show_cim is DIRECT):
@@ -8056,8 +7983,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 sndr_output_node_proj_owner = sndr_output_node_proj.owner
 
                             # Validate the Projection is from an OUTPUT node
-                            # if not NodeRole.OUTPUT in self.nodes_to_roles[sndr_output_node_proj_owner]:
-
                             if ((sndr_output_node_proj_owner in self.nodes_to_roles and
                                  not NodeRole.OUTPUT in self.nodes_to_roles[sndr_output_node_proj_owner])):
                                 raise CompositionError(f"Projection to output_CIM of {self.name} "
@@ -8065,23 +7990,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                        f"an {NodeRole.OUTPUT} node.")
                             sndr_label = self._get_graph_node_label(sndr_output_node_proj_owner,
                                                                     show_types, show_dimensions)
-
                             # Construct edge name
                             if show_node_structure:
                                 # Get label of CIM's port as edge's receiver
                                 rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                                 if (isinstance(sndr_output_node_proj_owner, CompositionInterfaceMechanism)
                                         and show_cim is not DIRECT):
-                                    # comp_label = self._get_graph_node_label(proj.receiver.owner.composition,
-                                    #                                         show_types,
-                                    #                                         show_dimensions)
-                                    # proc_mech_rcvr_label = f"{comp_label}"
                                     sndr_output_node_proj_label = sndr_label
                                 else:
-                                    # proc_mech_rcvr_label = \
-                                    #     f"{input_mech_label}:{InputPort.__name__}-{proj.receiver.name}"
-                                    # input_mech_rcvr_label = rcvr_label + \
-                                    #                         sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)
+                                    # Need to use direct reference to proj.sender rather than sndr_output_node_proj
+                                    #    since could be Composition, which does not have a get_port_name attribute
                                     sndr_output_node_proj_label = \
                                         f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
                                     # sndr_output_node_proj_label = \
@@ -8090,8 +8008,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 sndr_output_node_proj_label = sndr_label
                                 rcvr_cim_proj_label = cim_label
-
-                            # MODIFIED 5/30 END
 
                             # Render Projection
                             if any(item in active_items for item in {proj, proj.receiver.owner}):
@@ -8108,8 +8024,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = self._get_graph_node_label(proj, show_types, show_dimensions)
                             else:
                                 label = ''
-                            # g.edge(proc_mech_sndr_label, cim_proj_label, label=label,
-                            #        color=proj_color, penwidth=proj_width)
                             g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
                                    color=proj_color, penwidth=proj_width)
 
