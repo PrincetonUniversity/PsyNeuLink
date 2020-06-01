@@ -8041,6 +8041,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for ctl_proj in control_signal.efferents:
 
                     # Skip ControlProjections not in the Composition
+                    # FIX 6/1/20:  ATTEND TO THIS ONCE INCREMENTAL aux_components UPDATING IS IMPLEMENTED
                     if ctl_proj not in self.projections:
                         continue
 
