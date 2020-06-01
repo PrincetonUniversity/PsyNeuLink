@@ -5684,44 +5684,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
                           f"it will be ignored.")
             return existing_pathway
-        # If the explicit pathway is shorter than the one specified, then something is wrong,
+        # If the explicit pathway is shorter than the one specified, then need to do more checking
         elif len(explicit_pathway) < len(pathway):
             # Pathway without all Projections specified has same nodes in same order as existing one
-            #    (shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed)
             existing_pathway = next((p for p in self.pathways
                                      if [item for p in self.pathways for item in p.pathway
                                          if not isinstance(item, Projection)]), None)
+            # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
             if existing_pathway:
                 warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
-            # Otherwise, something has gone wrong
-            assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
-
-        # # If pathway is an existing one, return that
-        # try:
-        #     existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
-        #     if existing_pathway:
-        #         warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
-        #                       f"it will be ignored.")
-        #         return existing_pathway
-        #     elif len(explicit_pathway) < len(pathway):
-        #         # If explicit_pathway came back short, it could be because Projection generated for unspecified ones
-        #         #    duplicated existing ones and were therefore suppressed - this is checked for below
-        #         raise ValueError
-        # except ValueError:
-        #     # Check of full explicit_pathway failed, possibly because of Projections, so check just nodes
-        #     existing_pathway = next((p for p in self.pathways
-        #                              if [item for p in self.pathways for item in p.pathway
-        #                                  if not isinstance(item, Projection)]), None)
-        #     if existing_pathway:
-        #         warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
-        #                       f"one already in {self.name}: {pathway}; it will be ignored.")
-        #         return existing_pathway
-        #     # Otherwise, something has gone wrong
-        #     assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
-
-
+            #
+            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified.
+            elif explicit_pathway == [m for m in pathway
+                                      if not (isinstance(m, ControlMechanism)
+                                              or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism)))]:
+                pass
+            else:
+                # Otherwise, something has gone wrong
+                assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
@@ -7387,7 +7369,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         show_graph(                           \
            show_node_structure=False,         \
-           show_nested=True,                  \
+           show_nested=ALL,                   \
            show_controller=True,              \
            show_cim=False,                    \
            show_learning=False,               \
@@ -7465,7 +7447,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
             **controller_color**.
 
-        show_cim : bool or DIRECT : default DIRECT
+        show_cim : bool or DIRECT : default False
             specifies whether or not to show the Composition's `input_CIM <Composition.input_CIM>`, `parameter_CIM
             <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>` `CompositionInterfaceMechanisms
             <CompositionInterfaceMechanism>` (CIMs).  If **show_node_structure** is specified (see above) and their
@@ -7728,7 +7710,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Don't show Node for nested Composition if Projections are being shown directly to it
                 #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and show_cim == DIRECT:
+                if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
                     return
 
                 elif show_node_structure and isinstance(rcvr, Mechanism):
