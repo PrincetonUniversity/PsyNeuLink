@@ -8083,8 +8083,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         ctl_proj_sndr_label = ctlr_label
                         ctl_proj_rcvr_label = rcvr_label
 
-                    # MODIFIED 5/30/20 END
-
                     # Assign colors, penwidth and label displayed for ControlProjection ---------------------
                     if controller in active_items:
                         if active_color == BOLD:
