@@ -8089,16 +8089,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Get label controller's port as edge's sender
                         ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         # Get label for edge's receiver:
-                        # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
                         if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                                and show_cim is not DIRECT):
-                            ctl_proj_rcvr_label = rcvr_label
-                        # Otherwise, use receiver's Port (ParameterPort of a Mech, or parameter_CIM for nested comp)
-                        else:
+                                and (show_nested is DIRECT or show_cim is DIRECT)):
+                            # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
                             ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
+                        else:
+                            # Otherwise use Composition
+                            ctl_proj_rcvr_label = rcvr_label
                     else:
                         ctl_proj_sndr_label = ctlr_label
                         ctl_proj_rcvr_label = rcvr_label
+
+                    # MODIFIED 5/30/20 END
 
                     # Assign colors, penwidth and label displayed for ControlProjection ---------------------
                     if controller in active_items:
