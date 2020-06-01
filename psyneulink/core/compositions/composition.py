@@ -5684,19 +5684,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
                           f"it will be ignored.")
             return existing_pathway
-        # If the explicit pathway is shorter than the one specified, then something is wrong,
+        # If the explicit pathway is shorter than the one specified, then need to do more checking
         elif len(explicit_pathway) < len(pathway):
             # Pathway without all Projections specified has same nodes in same order as existing one
-            #    (shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed)
             existing_pathway = next((p for p in self.pathways
                                      if [item for p in self.pathways for item in p.pathway
                                          if not isinstance(item, Projection)]), None)
+            # Shorter because Projections generated for unspecified ones duplicated existing ones & were suppressed
             if existing_pathway:
                 warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
                               f"one already in {self.name}: {pathway}; it will be ignored.")
                 return existing_pathway
-            # Otherwise, something has gone wrong
-            assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
+            #
+            # Shorter because it contained one or more ControlMechanisms with monitor_for_control specified.
+            elif explicit_pathway == [m for m in pathway
+                                      if not (isinstance(m, ControlMechanism)
+                                              or (isinstance(m, tuple) and isinstance(m[0], ControlMechanism)))]:
+                pass
+            else:
+                # Otherwise, something has gone wrong
+                assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
         # # If pathway is an existing one, return that
         # try:
