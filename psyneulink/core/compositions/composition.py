@@ -7369,7 +7369,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         show_graph(                           \
            show_node_structure=False,         \
-           show_nested=True,                  \
+           show_nested=ALL,                   \
            show_controller=True,              \
            show_cim=False,                    \
            show_learning=False,               \
@@ -7447,7 +7447,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
             **controller_color**.
 
-        show_cim : bool or DIRECT : default DIRECT
+        show_cim : bool or DIRECT : default False
             specifies whether or not to show the Composition's `input_CIM <Composition.input_CIM>`, `parameter_CIM
             <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>` `CompositionInterfaceMechanisms
             <CompositionInterfaceMechanism>` (CIMs).  If **show_node_structure** is specified (see above) and their
@@ -7710,7 +7710,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Don't show Node for nested Composition if Projections are being shown directly to it
                 #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and show_cim == DIRECT:
+                if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
                     return
 
                 elif show_node_structure and isinstance(rcvr, Mechanism):
