@@ -889,7 +889,7 @@ class TestDuplicatePathwayWarnings:
                 in  w[0].message.args[0] and  f"has same Nodes in same order as one already in {comp.name}"
                 in  w[0].message.args[0])
 
-    def test_add_backpropagation_pathway_inferred_duplicate_warning(self):
+    def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
@@ -901,7 +901,17 @@ class TestDuplicatePathwayWarnings:
                 in  w[0].message.args[0] and  f"has same Nodes in same order as one already in {comp.name}"
                 in  w[0].message.args[0])
 
-    def test_add_processing_pathway_same_nodes_but_different_order_is_OK(self):
+    def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
+        A = TransferMechanism()
+        B = TransferMechanism()
+        C = TransferMechanism()
+        comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[A,B,C])
+        comp.add_linear_processing_pathway(pathway=[A,C])
+        {A,B,C} == set(comp.nodes)
+        len(comp.pathways)==2
+
+    def test_add_processing_pathway_same_nodes_but_reversed_order_is_OK(self):
         A = TransferMechanism()
         B = TransferMechanism()
         comp = Composition()
