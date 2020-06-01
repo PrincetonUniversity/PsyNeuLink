@@ -428,7 +428,7 @@ from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType, convert_all_elements_to_np_array
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
@@ -852,6 +852,21 @@ class ControlSignal(ModulatorySignal):
         # invalid. Is it that tc.typecheck only runs if an argument is specified at
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
+
+        def _validate_allocation_samples(self, allocation_samples):
+            try:
+                samples_as_array = convert_all_elements_to_np_array(allocation_samples)
+                first_item_type = type(allocation_samples[0])
+                first_item_shape = samples_as_array[0].shape
+
+                for i in range(1, len(allocation_samples)):
+                    if not isinstance(allocation_samples[i], first_item_type):
+                        return 'all items must have the same type'
+                    if not samples_as_array[i].shape == first_item_shape:
+                        return 'all items must have the same shape'
+            except (TypeError, IndexError):
+                # not iterable, so assume single value
+                pass
 
     portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
                                                           COST_OPTIONS,
