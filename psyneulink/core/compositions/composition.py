@@ -5705,31 +5705,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Otherwise, something has gone wrong
                 assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
 
-        # # If pathway is an existing one, return that
-        # try:
-        #     existing_pathway = next((p for p in self.pathways if explicit_pathway==p.pathway), None)
-        #     if existing_pathway:
-        #         warnings.warn(f"Pathway specified in {pathway_arg_str} already exists in {self.name}: {pathway}; "
-        #                       f"it will be ignored.")
-        #         return existing_pathway
-        #     elif len(explicit_pathway) < len(pathway):
-        #         # If explicit_pathway came back short, it could be because Projection generated for unspecified ones
-        #         #    duplicated existing ones and were therefore suppressed - this is checked for below
-        #         raise ValueError
-        # except ValueError:
-        #     # Check of full explicit_pathway failed, possibly because of Projections, so check just nodes
-        #     existing_pathway = next((p for p in self.pathways
-        #                              if [item for p in self.pathways for item in p.pathway
-        #                                  if not isinstance(item, Projection)]), None)
-        #     if existing_pathway:
-        #         warnings.warn(f"Pathway specified in {pathway_arg_str} has same Nodes in same order as "
-        #                       f"one already in {self.name}: {pathway}; it will be ignored.")
-        #         return existing_pathway
-        #     # Otherwise, something has gone wrong
-        #     assert False, f"PROGRAM ERROR: Bad pathway specification for {self.name} in {pathway_arg_str}: {pathway}."
-
-
-
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
                           name=pathway_name,
