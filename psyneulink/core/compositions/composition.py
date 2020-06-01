@@ -7360,7 +7360,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
-                   show_cim:bool=DIRECT,
+                   show_cim:bool=False,
                    show_learning:bool=False,
                    show_headers:bool=True,
                    show_types:bool=False,
@@ -7388,7 +7388,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_graph(                           \
            show_node_structure=False,         \
            show_nested=True,                  \
-           show_controller=False,             \
+           show_controller=True,              \
            show_cim=False,                    \
            show_learning=False,               \
            show_headers=True,                 \
@@ -7458,11 +7458,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             passes all arguments specified for the main Composition to the nested one(s);  True uses the default
             values of show_graph args for the nested Composition(s).
 
-        show_controller :  bool or AGENT_REP : default False
+        show_controller :  bool or AGENT_REP : default True
             specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
             `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
             OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
-            *AGENT_REP* will also show that.  All of these items are displayed in the color specified for
+            *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
             **controller_color**.
 
         show_cim : bool or DIRECT : default DIRECT
