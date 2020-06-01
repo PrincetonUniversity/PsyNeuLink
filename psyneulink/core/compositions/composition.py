@@ -7713,6 +7713,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
                     return
 
+                # FIX: DIRECT_TO_NESTED
                 elif show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
                            rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
