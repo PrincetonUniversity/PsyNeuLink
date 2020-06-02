@@ -301,7 +301,7 @@ class TestTargetSpecs:
         p = comp.add_backpropagation_learning_pathway(pathway=[A,B])
         with pytest.raises(CompositionError) as error:
             comp.run(inputs={A: input_A, p.target: target_B})
-        error_text = str(error)
+        error_text = str(error.value)
         assert 'The input dictionary' in error_text
         assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
                'contains input specifications of different lengths ({2, 10})' in error_text
@@ -1535,7 +1535,7 @@ class TestReinforcement:
         C = TransferMechanism()
         with pytest.raises(CompositionError) as error:
             comp = Composition(([A,B,C],pnl.Reinforcement))
-        error_text = str(error)
+        error_text = str(error.value)
         assert "Too many Nodes in learning pathway" in error_text
         assert "Use BackPropagation LearningFunction or see AutodiffComposition for other learning models" in error_text
 

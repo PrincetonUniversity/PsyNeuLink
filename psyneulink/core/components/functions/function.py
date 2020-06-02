@@ -150,6 +150,7 @@ import warnings
 from enum import Enum, IntEnum
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -174,12 +175,8 @@ FunctionRegistry = {}
 function_keywords = {FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION}
 
 
-class FunctionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class FunctionError(ComponentError):
+    pass
 
 
 class FunctionOutputType(IntEnum):

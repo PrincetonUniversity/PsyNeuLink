@@ -614,11 +614,21 @@ class ComponentLog(IntEnum):
 
 
 class ComponentError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+    def __init__(self, message, component=None):
+        try:
+            component_str = component.name
+            try:
+                if component.owner is not None:
+                    component_str = f'{component_str} (owned by {component.owner.name})'
+            except AttributeError:
+                pass
+        except AttributeError:
+            component_str = None
 
-    def __str__(self):
-        return repr(self.error_value)
+        if component_str is not None:
+            message = f'{component_str}: {message}'
+
+        super().__init__(message)
 
 
 def make_parameter_property(name):
