@@ -7571,7 +7571,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         tc.typecheck
         _locals = locals().copy()
 
-        def _assign_processing_components(g, rcvr, show_nested):
+        def _assign_processing_components(g, rcvr, show_nested, show_nested_args):
             """Assign nodes to graph"""
 
             # DEAL WITH NESTED COMPOSITION
@@ -7723,7 +7723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Don't show Node for nested Composition if Projections are being shown directly to it
                 #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
+                if isinstance(rcvr, Composition) and (show_cim is DIRECT):
                     return
 
                 elif show_node_structure and isinstance(rcvr, Mechanism):
@@ -8074,7 +8074,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if show_cim is DIRECT:
                             # Use Composition's parameter_CIM port
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                        elif show_nested is DIRECT:
+                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
+                        elif not show_cim and show_nested is DIRECT:
                             # Use ParameterPort of modulated Mechanism in nested Composition
                             parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
                             ctl_proj_rcvr_owner = next((k for k,v in parameter_port_map.items()
@@ -8092,8 +8093,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Get label controller's port as edge's sender
                         ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         # Get label for edge's receiver:
+                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
                         if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                                and (show_nested is DIRECT or show_cim is DIRECT)):
+                                and (show_cim is DIRECT or not show_cim and show_nested is DIRECT)):
                             # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
                             ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
                         else:
@@ -8589,7 +8591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
-            _assign_processing_components(G, r, show_nested)
+            _assign_processing_components(G, r, show_nested, show_nested_args)
 
         # Add cim Components to graph if show_cim
         if show_cim:
