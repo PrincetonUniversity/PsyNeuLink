@@ -7346,6 +7346,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
+                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(DIRECT)))=DIRECT,
                    show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
                    show_cim:bool=False,
@@ -7375,7 +7376,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         show_graph(                           \
            show_node_structure=False,         \
-           show_nested=ALL,                   \
+           show_nested=DIRECT,                \
+           show_nested_args=ALL,              \
            show_controller=True,              \
            show_cim=False,                    \
            show_learning=False,               \
@@ -7440,11 +7442,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
-        show_nested : bool | dict : default ALL
-            specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
-            specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  *ALL*
-            passes all arguments specified for the main Composition to the nested one(s);  True uses the default
-            values of show_graph args for the nested Composition(s).
+        show_nested : bool | DIRECT : default DIRECT
+            specifies whether or not to show `nested Compositions <Composition_Nested>` and, if so, whether to
+            show them as separate insets (True) or integrated into a full representation of the entire graph (DIRECT).
+
+         show_nested_args : bool | dict : default ALL
+            specifies arguments in call to show_graph passed to `nested Composition(s) <Composition_Nested>` if
+            **show_nested** is True or DIRECT.  A dict can be used to specify any of the arguments allowed for
+            show_graph to be used for the nested Composition(s);  *ALL* passes all arguments specified for the main
+            Composition to the nested one(s);  True uses the default values of show_graph args for the nested
+            Composition(s).
 
         show_controller :  bool or AGENT_REP : default True
             specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
@@ -7564,7 +7571,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         tc.typecheck
         _locals = locals().copy()
 
-        def _assign_processing_components(g, rcvr, show_nested):
+        def _assign_processing_components(g, rcvr, show_nested_args):
             """Assign nodes to graph"""
 
             # DEAL WITH NESTED COMPOSITION
@@ -7572,8 +7579,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # User passed args for nested Composition
             if isinstance(rcvr, Composition) and show_nested:
                 output_fmt_arg = {'output_fmt':'gv'}
-                if isinstance(show_nested, dict):
-                    args = show_nested
+                if isinstance(show_nested_args, dict):
+                    args = show_nested_args
                     args.update(output_fmt_arg)
                 elif show_nested == ALL:
                     # Pass args from main call to show_graph to call for nested Composition
