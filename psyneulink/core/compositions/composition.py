@@ -8376,18 +8376,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for output_port in sndr.output_ports:
                     for proj in output_port.efferents:
 
+                        # FIX 6/1/20 OK TO LEAVE??
+                        # Skip Projections not in the Composition
+                        if proj not in self.projections:
+                            continue
+
                         # FIX 6/1/20:  MOVE THIS TO _assign_cim_components TO EXPLOIT CIM HANDLING THERE
                         #              (BY ALLOWING IT TO BE CALLED IF show_nested == DIRECT)
                         if isinstance(sndr, CompositionInterfaceMechanism):
                             assert show_nested is DIRECT, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
                                                           f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
-                            # trace project.sender.owner to source Node:
-                            #    - in outer composition (if input_CIM or parameter_CIM)
-                            #    - (??OUTPUT Node) in inner composition (if output_CIM)
-                            #    by looking it up in sndr.port_map (and checking whether
-                            #    it is an InputPort or ParameterPort, or OutputPort
-                            # Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
-                            # skip if source is a contrller (those are handled in _assign_control_components
+                            # FIX: STILL TODO:
+                            #  - Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
+                            #  - skip if source is a contrller (those are handled in _assign_control_components
 
                             # FIX 6/2/20: ABSTRACT AND CONSOLIDATE:
                             if sndr in {self.input_CIM or self.parameter_CIM}:
@@ -8411,11 +8412,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     f"PROGRAM ERROR: {sndr} of {self.name} has more than one efferent Projection."
                                 sndr = [k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender][0]
 
-                        # # MODIFIED 6/1/20 OLD: REMOVE THIS SINCE PROJECTIONS FROM CIM ARE NOT IN self.projections
-                        # # Skip Projections not in the Composition
-                        # elif proj not in self.projections:
-                        #     continue
-                        # MODIFIED 6/1/20 END
 
                         # Set sndr info
                         sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
