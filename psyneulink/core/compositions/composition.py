@@ -3726,7 +3726,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._instantiate_deferred_init_control(node)
 
     def _instantiate_deferred_init_control(self, node):
-        '''
+        """
         If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
         If it does not have a controller, but self does, activate them for self's controller.
 
@@ -3738,7 +3738,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         list of hanging control specs that were not able to be assigned for a controller at any level.
 
-        '''
+        """
         hanging_control_specs = []
         if node.componentCategory == 'Composition':
             for nested_node in node.nodes:
