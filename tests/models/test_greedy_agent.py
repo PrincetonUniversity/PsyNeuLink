@@ -176,7 +176,6 @@ def test_predator_prey(benchmark, mode, samples):
                                        objective_mechanism=ObjectiveMechanism(function=Distance(metric=NORMED_L0_SIMILARITY),
                                                                               monitor=[
                                                                                   player_obs,
-                                                                                  predator_obs,
                                                                                   prey_obs
                                                                               ]),
                                        control_signals=[ControlSignal(modulates=(VARIANCE,player_obs),
