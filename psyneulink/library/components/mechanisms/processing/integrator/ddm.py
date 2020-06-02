@@ -506,8 +506,8 @@ class DDM(ProcessingMechanism):
         based on the `function <DDM.function>` and/or any specifications made in the **output_ports** argument of the
         DDM's constructor (see `DDM_Output` for additional details).
 
-    output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        each item is the `value <OutputPort.value> of the corresponding OutputPort in `output_ports
+    output_values : List[array(float64)]
+        each item is the `value <OutputPort.value>` of the corresponding `OutputPort` in `output_ports
         <DDM.output_ports>`.  The first two items are always the `value <OutputPort.value>`\\s of the
         `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputPorts;  additional
         ones may be included, based on the `function <DDM.function>` and any specifications made in the

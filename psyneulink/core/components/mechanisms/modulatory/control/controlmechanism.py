@@ -1162,6 +1162,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if input_ports is None:
                 return
 
+            # FIX 5/28/20:
             # TODO: uncomment this method or remove this block entirely.
             # This validation check was never being run due to an
             # unintentionally suppressed exception. Why is the default
@@ -1309,7 +1310,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             each of which receives a Projection from a corresponding OutputPort in self.monitored_output_ports
         """
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+            ObjectiveMechanism, ObjectiveMechanismError
         from psyneulink.core.components.ports.inputport import EXPONENT_INDEX, WEIGHT_INDEX
         from psyneulink.core.components.functions.function import FunctionError
 
@@ -1372,6 +1374,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
         for input_port in self.objective_mechanism.input_ports:
             input_port.internal_only = True
+
         # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
         from psyneulink.core.compositions.composition import NodeRole
         self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
@@ -1635,7 +1638,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self.remove_ports(ctl_sig_attribute[0])
 
     def _activate_projections_for_compositions(self, composition=None):
-        """Activate eligible Projections to or from nodes in Composition.
+        """Activate eligible Projections to or from Nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
         """
