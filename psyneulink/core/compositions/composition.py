@@ -7346,7 +7346,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
+                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(DIRECT)))=DIRECT,
+                   show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
                    show_cim:bool=False,
                    show_learning:bool=False,
@@ -7375,7 +7376,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         show_graph(                           \
            show_node_structure=False,         \
-           show_nested=ALL,                   \
+           show_nested=DIRECT,                \
+           show_nested_args=ALL,              \
            show_controller=True,              \
            show_cim=False,                    \
            show_learning=False,               \
@@ -7440,11 +7442,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
-        show_nested : bool | dict : default ALL
-            specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
-            specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  *ALL*
-            passes all arguments specified for the main Composition to the nested one(s);  True uses the default
-            values of show_graph args for the nested Composition(s).
+        show_nested : bool | DIRECT : default DIRECT
+            specifies whether or not to show `nested Compositions <Composition_Nested>` and, if so, whether to
+            show them as separate insets (True) or integrated into a full representation of the entire graph (DIRECT).
+
+         show_nested_args : bool | dict : default ALL
+            specifies arguments in call to show_graph passed to `nested Composition(s) <Composition_Nested>` if
+            **show_nested** is True or DIRECT.  A dict can be used to specify any of the arguments allowed for
+            show_graph to be used for the nested Composition(s);  *ALL* passes all arguments specified for the main
+            Composition to the nested one(s);  True uses the default values of show_graph args for the nested
+            Composition(s).
 
         show_controller :  bool or AGENT_REP : default True
             specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
@@ -7564,7 +7571,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         tc.typecheck
         _locals = locals().copy()
 
-        def _assign_processing_components(g, rcvr, show_nested):
+        def _assign_processing_components(g, rcvr, show_nested, show_nested_args):
             """Assign nodes to graph"""
 
             # DEAL WITH NESTED COMPOSITION
@@ -7572,10 +7579,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # User passed args for nested Composition
             if isinstance(rcvr, Composition) and show_nested:
                 output_fmt_arg = {'output_fmt':'gv'}
-                if isinstance(show_nested, dict):
-                    args = show_nested
+                if isinstance(show_nested_args, dict):
+                    args = show_nested_args
                     args.update(output_fmt_arg)
-                elif show_nested == ALL:
+                elif show_nested_args == ALL:
                     # Pass args from main call to show_graph to call for nested Composition
                     args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
                     args.update(output_fmt_arg)
@@ -7716,7 +7723,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Don't show Node for nested Composition if Projections are being shown directly to it
                 #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
+                if isinstance(rcvr, Composition) and (show_cim is DIRECT):
                     return
 
                 elif show_node_structure and isinstance(rcvr, Mechanism):
@@ -8067,7 +8074,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if show_cim is DIRECT:
                             # Use Composition's parameter_CIM port
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                        elif show_nested is DIRECT:
+                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
+                        elif not show_cim and show_nested is DIRECT:
                             # Use ParameterPort of modulated Mechanism in nested Composition
                             parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
                             ctl_proj_rcvr_owner = next((k for k,v in parameter_port_map.items()
@@ -8085,8 +8093,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Get label controller's port as edge's sender
                         ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         # Get label for edge's receiver:
+                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
                         if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                                and (show_nested is DIRECT or show_cim is DIRECT)):
+                                and (show_cim is DIRECT or not show_cim and show_nested is DIRECT)):
                             # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
                             ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
                         else:
@@ -8582,7 +8591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
-            _assign_processing_components(G, r, show_nested)
+            _assign_processing_components(G, r, show_nested, show_nested_args)
 
         # Add cim Components to graph if show_cim
         if show_cim:

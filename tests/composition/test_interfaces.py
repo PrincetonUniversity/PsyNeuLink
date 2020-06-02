@@ -855,7 +855,7 @@ class TestSimplifedNestedCompositionSyntax:
         outer.add_nodes([inner1, inner2])
         outer.add_projection(sender=inner1, receiver=A2)
 
-        # CRASHING WITH:
+        # CRASHING WITH: FIX 6/1/20
         # subprocess.CalledProcessError: Command '['dot', '-Tpdf', '-O', 'outer']' returned non-zero exit status 1.
         # outer.show_graph(show_node_structure=True,
         #                  show_nested=True)
