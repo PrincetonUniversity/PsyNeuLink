@@ -7573,7 +7573,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         tc.typecheck
         _locals = locals().copy()
 
-        def _assign_processing_components(g, rcvr, show_nested, show_nested_args):
+        def _assign_processing_components(g, rcvr, show_nested, show_nested_args, enclosing_g):
             """Assign nodes to graph"""
 
             # DEAL WITH NESTED COMPOSITION
@@ -7595,6 +7595,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     # Use default args for nested Composition
                     args = output_fmt_arg
+                args.update({'enclosing_g':g})
                 nested_comp_graph = rcvr.show_graph(**args)
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
@@ -7749,11 +7750,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If Projections are being shown to Components in nested Compositions without including cims
             #    need to identify them and add to sndrs so their sources/destinations can be found
             if show_nested is DIRECT and not show_cim:
+                # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested = DIRECT
+                sndrs -= set([sndr for sndr in sndrs if isinstance(sndr, Composition)])
                 cims = set([proj.sender.owner for proj in rcvr.afferents
                             if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
                 sndrs.update(cims)
             # MODIFIED 6/1/20 END
-            _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
+            _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g)
 
         def _assign_cim_components(g, cims):
 
@@ -8257,7 +8260,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for i in controller.input_ports[1:]:
                 for p in i.path_afferents:
                     senders.add(p.sender.owner)
-            _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
+            _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color, enclosing_g=None)
 
         def _assign_learning_components(g):
             """Assign learning nodes and edges to graph"""
@@ -8365,7 +8368,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return True
 
         @tc.typecheck
-        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None):
+        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None, enclosing_g=None):
 
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
@@ -8381,6 +8384,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if proj not in self.projections:
                             continue
 
+                        assign_to_enclosing_comp = False
+
                         # FIX 6/1/20:  MOVE THIS TO _assign_cim_components TO EXPLOIT CIM HANDLING THERE
                         #              (BY ALLOWING IT TO BE CALLED IF show_nested == DIRECT)
                         if isinstance(sndr, CompositionInterfaceMechanism):
@@ -8388,7 +8393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
                             # FIX: STILL TODO:
                             #  - Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
-                            #  - skip if source is a contrller (those are handled in _assign_control_components
+                            #  - skip if source is a controller (those are handled in _assign_control_components
                             #  - skip rep of Comp node
 
                             # FIX 6/2/20: ABSTRACT AND CONSOLIDATE:
@@ -8402,6 +8407,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 assert len(sndr.port_map[proj.receiver][0].path_afferents)==1,\
                                     f"PROGRAM ERROR: {sndr} of {self.name} has more than one afferent Projection."
                                 sndr = sndr.port_map[proj.receiver][0].path_afferents[0].sender.owner
+                                assign_to_enclosing_comp = True
 
                             else:
                                 # FIX 6/2/20:
@@ -8465,10 +8471,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 proj_width = str(default_width)
                             proc_mech_label = edge_label
 
-                            # Render Projection as edge
+                            # RENDER PROJECTION AS EDGE
 
                             if show_learning and has_learning:
-                                # Render Projection as node
+                                # Render Projection as Node
                                 #    (do it here rather than in _assign_learning_components,
                                 #     as it needs afferent and efferent edges to other nodes)
                                 # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
@@ -8484,6 +8490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     continue
 
                             else:
+                                # Render Projection as edge
                                 from psyneulink.core.components.projections.modulatory.controlprojection \
                                     import ControlProjection
                                 if isinstance(proj, ControlProjection):
@@ -8494,7 +8501,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     label = proc_mech_label
                                 else:
                                     label = ''
-                                g.edge(sndr_proj_label, proc_mech_rcvr_label,
+
+                            if assign_to_enclosing_comp:
+                                graph = enclosing_g
+                            else:
+                                graph = g
+                            graph.edge(sndr_proj_label, proc_mech_rcvr_label,
                                        label=label,
                                        color=proj_color,
                                        penwidth=proj_width,
@@ -8507,10 +8519,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context.execution_id is NotImplemented:
             context.execution_id = self.default_execution_id
 
-        # For backward compatibility
-        if 'show_model_based_optimizer' in kwargs:
-            show_controller = kwargs['show_model_based_optimizer']
-            del kwargs['show_model_based_optimizer']
+        # FIX 6/2/20: DELETE IF PASSES TESTS:
+        # # For backward compatibility
+        # if 'show_model_based_optimizer' in kwargs:
+        #     show_controller = kwargs['show_model_based_optimizer']
+        #     del kwargs['show_model_based_optimizer']
+        enclosing_g = kwargs.pop('enclosing_g',None)
         if kwargs:
             raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
                                    f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
@@ -8613,7 +8627,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         rcvrs = list(processing_graph.keys())
 
         for r in rcvrs:
-            _assign_processing_components(G, r, show_nested, show_nested_args)
+            _assign_processing_components(G, r, show_nested, show_nested_args, enclosing_g)
 
         # Add cim Components to graph if show_cim
         if show_cim:

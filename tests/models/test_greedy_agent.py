@@ -8,7 +8,7 @@ from psyneulink.core.components.mechanisms.modulatory.control import Optimizatio
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
-from psyneulink.core.components.functions.transferfunctions import GaussianDistort
+from psyneulink.core.components.functions.transferfunctions import GaussianDistort, Exponential
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.compositions.composition import Composition, NodeRole
@@ -133,10 +133,8 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 ], ids=['2','4','6'])
 def test_predator_prey(benchmark, mode, samples):
     benchmark.group = "Predator-Prey " + str(len(samples))
-    # These should probably be replaced by reference to ForagerEnv constants:
     obs_len = 3
     obs_coords = 2
-    action_len = 2
     player_idx = 0
     player_obs_start_idx = player_idx * obs_len
     player_value_idx = player_idx * obs_len + obs_coords
@@ -172,6 +170,8 @@ def test_predator_prey(benchmark, mode, samples):
 
 
     # ControlMechanism
+    COST_RATE = -.05
+    COST_BIAS = 1
 
     ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
                                        agent_rep=agent_comp,
@@ -179,15 +179,24 @@ def test_predator_prey(benchmark, mode, samples):
                                                            save_values=True),
 
                                        objective_mechanism=ObjectiveMechanism(function=Distance(metric=NORMED_L0_SIMILARITY),
-                                                                              monitor=[player_obs,
-                                                                                       predator_obs,
-                                                                                       prey_obs]),
+                                                                              monitor=[
+                                                                                  player_obs,
+                                                                                  predator_obs,
+                                                                                  prey_obs
+                                                                              ]),
                                        control_signals=[ControlSignal(modulates=(VARIANCE,player_obs),
-                                                                      allocation_samples=samples),
+                                                                      allocation_samples=samples,
+                                                                      intensity_cost_function=Exponential(rate=COST_RATE,
+                                                                                                          bias=COST_BIAS)),
+
                                                         ControlSignal(modulates=(VARIANCE,predator_obs),
-                                                                      allocation_samples=samples),
+                                                                      allocation_samples=samples,
+                                                                      intensity_cost_function=Exponential(rate=COST_RATE,
+                                                                                                          bias=COST_BIAS)),
                                                         ControlSignal(modulates=(VARIANCE,prey_obs),
-                                                                      allocation_samples=samples),
+                                                                      allocation_samples=samples,
+                                                                  intensity_cost_function=Exponential(rate=COST_RATE,
+                                                                                                      bias=COST_BIAS)),
                                                         ],
                                        )
     agent_comp.add_controller(ocm)
