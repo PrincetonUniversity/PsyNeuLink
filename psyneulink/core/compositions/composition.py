@@ -7713,7 +7713,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
                     return
 
-                # FIX: DIRECT_TO_NESTED
                 elif show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
                            rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
@@ -7728,8 +7727,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            rank=rcvr_rank,
                            penwidth=rcvr_penwidth)
 
-            # Implement sender edges
+            # Implement sender edges from Nodes within Composition
             sndrs = processing_graph[rcvr]
+            # MODIFIED 6/1/20 NEW:
+            if not show_cim and show_nested is DIRECT:
+                cims = set([proj.sender.owner for proj in rcvr.afferents
+                            if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+                sndrs.update(cims)
+
+            # MODIFIED 6/1/20 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
         def _assign_cim_components(g, cims):
@@ -8346,6 +8352,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_arrow = default_projection_arrow
 
             for sndr in senders:
+
+                if isinstance(sndr, CompositionInterfaceMechanism):
+                    assert show_nested is DIRECT, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
+                                                  f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
+                    # Trace sndr to source in outer composition (if input_CIM or parameter_CIM)
+                    #    or inner composition (if output_CIM)
+                    sndr.composition.input_CIM_ports
+                    sndr.composition.parameter_CIM_ports
+                    sndr.composition.output_CIM_ports
 
                 # Set sndr info
                 sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
