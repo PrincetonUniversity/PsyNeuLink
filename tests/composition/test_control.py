@@ -227,6 +227,145 @@ class TestControlSpecification:
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
+    def test_partial_deferred_init(self):
+        deferred_node = pnl.ProcessingMechanism(name='deferred')
+        initial_node_a = pnl.TransferMechanism(name='ia')
+        initial_node_b = pnl.ProcessingMechanism(name='ib')
+        ocomp = pnl.Composition(name='ocomp',
+                                pathways=[initial_node_a, initial_node_b],
+                                controller_mode=pnl.BEFORE)
+
+        member_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, initial_node_a)],
+                                                       variable=1.0,
+                                                       intensity_cost_function=pnl.Linear(slope=0.0),
+                                                       allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                         stop=5.0,
+                                                                                         num=5))
+
+        deferred_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, deferred_node)],
+                                                         variable=1.0,
+                                                         intensity_cost_function=pnl.Linear(slope=0.0),
+                                                         allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                           stop=5.0,
+                                                                                           num=5))
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[initial_node_a.input_port,
+                          deferred_node.input_port],
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=initial_node_b.output_port,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[
+                    member_node_control_signal,
+                    deferred_node_control_signal
+                ])
+        )
+
+        with pytest.warns(UserWarning) as w:
+            # ocomp.show_graph(show_controller=True, show_cim=True)
+            # results = ocomp.run([5])
+            result = ocomp.run({
+                initial_node_a: [1]
+            })
+
+            # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
+            # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+            # Control Signal "deferred_node": disabled
+            warning_triggered = False
+            for warn in w:
+                if warn.message.args[0] == 'The controller of ocomp has been specified to project to deferred, but deferred is ' \
+                                   'not in ocomp or any of its nested Compositions. This projection will be deactivated ' \
+                                   'until deferred is added to ocomp in a compatible way.':
+                    warning_triggered = True
+                    break
+            assert warning_triggered
+
+        assert result == [[5]]
+
+        ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
+
+        result = ocomp.run({
+            initial_node_a: [1],
+            deferred_node: [1]
+        })
+
+        # result = 10, the sum of the input (1) multiplied by the value of the ControlSignals projecting, respectively, to Node "ia" and Node "deferred_node"
+        # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+        # Control Signal "deferred_node": Maximizes over the search space consisting of ints 1-5
+
+        assert result == [[10]]
+
+    def test_deferred_objective_mech(self):
+        initial_node = pnl.TransferMechanism(name='initial_node')
+        deferred_node = pnl.ProcessingMechanism(name='deferred')
+        ocomp = pnl.Composition(name='ocomp',
+                                pathways=[initial_node],
+                                controller_mode=pnl.BEFORE)
+
+        initial_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, initial_node)],
+                                                        variable=1.0,
+                                                        intensity_cost_function=pnl.Linear(slope=0.0),
+                                                        allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                          stop=5.0,
+                                                                                          num=5))
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[initial_node.input_port],
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=deferred_node.output_port,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[
+                    initial_node_control_signal
+                ])
+        )
+
+        with pytest.warns(UserWarning) as w:
+            result = ocomp.run({
+                initial_node: [1]
+            })
+            warning_triggered = False
+            for warn in w:
+                if warn.message.args[0] == 'The controller of ocomp has a specification that includes the ' \
+                                           'Mechanism oController Objective Mechanism, but oController ' \
+                                           'Objective Mechanism is not in ocomp or any of its nested Compositions. ' \
+                                           'This Mechanism will be deactivated until oController Objective Mechanism is ' \
+                                           'added to ocomp or one of its nested Compositions in a compatible way.':
+                    warning_triggered = True
+                    break
+            assert warning_triggered
+
+        assert result == [[1]]
+        # result = 1, the input (1) multiplied by the first value in the SearchSpace of the ControlSignal projecting to
+        # initial_node (1)
+
+        # The objective Mechanism is disabled because one of its aux components is a projection to
+        # deferred_node, which is not currently a member node of the composition. Therefore, the Controller
+        # has no basis to determine which set of values it should use for its efferent ControlProjections and
+        # simply goes with the first in the search space, which is 1.
+
+        # add deferred_node to the Composition
+        ocomp.add_linear_processing_pathway([initial_node, deferred_node])
+
+        # The objective mechanism's aux components are now all legal, so it will be activated on the following run
+        result = ocomp.run({
+            initial_node: [[1]]
+        })
+        assert result == [[5]]
+        # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
+        # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+
     def test_agent_rep_assignement_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
         comp = pnl.Composition(name='comp',
