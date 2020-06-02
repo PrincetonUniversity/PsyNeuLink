@@ -7745,6 +7745,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Implement sender edges from Nodes within Composition
             sndrs = processing_graph[rcvr]
             # MODIFIED 6/1/20 NEW:
+            # FIX 6/2/20: FILTER OUT cims FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
             # If Projections are being shown to Components in nested Compositions without including cims
             #    need to identify them and add to sndrs so their sources/destinations can be found
             if show_nested is DIRECT and not show_cim:
@@ -8375,6 +8376,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for output_port in sndr.output_ports:
                     for proj in output_port.efferents:
 
+                        # FIX 6/1/20:  MOVE THIS TO _assign_cim_components TO EXPLOIT CIM HANDLING THERE
+                        #              (BY ALLOWING IT TO BE CALLED IF show_nested == DIRECT)
                         if isinstance(sndr, CompositionInterfaceMechanism):
                             assert show_nested is DIRECT, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
                                                           f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
@@ -8385,9 +8388,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             #    it is an InputPort or ParameterPort, or OutputPort
                             # Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
                             # skip if source is a contrller (those are handled in _assign_control_components
-                            rcvr_port = proj.receiver
-                            assert len(sndr.port_map[proj.receiver][0].path_afferents)==1
-                            source = sndr.port_map[proj.receiver][0].path_afferents[0].sender.owner
+
+                            # FIX 6/2/20: ABSTRACT AND CONSOLIDATE:
+                            if sndr in {self.input_CIM or self.parameter_CIM}:
+                                # FIX 6/2/20:
+                                #     DELETE ONCE FILTER BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
+                                # Skip cims of outermost Composition
+                                if not sndr.afferents:
+                                    continue
+                                # Insure relevant InputPort of cim has only one afferent
+                                assert len(sndr.port_map[proj.receiver][0].path_afferents)==1,\
+                                    f"PROGRAM ERROR: {sndr} of {self.name} has more than one afferent Projection."
+                                sndr = sndr.port_map[proj.receiver][0].path_afferents[0].sender.owner
+
+                            else:
+                                # FIX 6/2/20:
+                                #     DELETE ONCE FILTER BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
+                                if not sndr.efferents:
+                                    continue
+                                # Insure cim has only one afferent
+                                assert len([k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender])==1, \
+                                    f"PROGRAM ERROR: {sndr} of {self.name} has more than one efferent Projection."
+                                sndr = [k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender][0]
 
                         # # MODIFIED 6/1/20 OLD: REMOVE THIS SINCE PROJECTIONS FROM CIM ARE NOT IN self.projections
                         # # Skip Projections not in the Composition
