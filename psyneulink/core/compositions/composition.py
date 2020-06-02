@@ -7713,6 +7713,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
                     return
 
+                # FIX: DIRECT_TO_NESTED
                 elif show_node_structure and isinstance(rcvr, Mechanism):
                     g.node(rcvr_label,
                            rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
@@ -8040,6 +8041,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for ctl_proj in control_signal.efferents:
 
                     # Skip ControlProjections not in the Composition
+                    # FIX 6/1/20:  ATTEND TO THIS ONCE INCREMENTAL aux_components UPDATING IS IMPLEMENTED
                     if ctl_proj not in self.projections:
                         continue
 
@@ -8048,10 +8050,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Get receiver label for ControlProjection as base for edge's receiver label
                     # First get label for receiver's owner node (Mechanism or nested Composition), used below
                     ctl_proj_rcvr = ctl_proj.receiver
-                    # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
-                    if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                            and show_cim is not DIRECT):
-                        ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
+                    # If receiver is a parameter_CIM
+                    if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
+                        if show_cim is DIRECT:
+                            # Use Composition's parameter_CIM port
+                            ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
+                        elif show_nested is DIRECT:
+                            # Use ParameterPort of modulated Mechanism in nested Composition
+                            parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
+                            ctl_proj_rcvr_owner = next((k for k,v in parameter_port_map.items()
+                                                        if parameter_port_map[k][0] is ctl_proj_rcvr), None).owner
+                        else:
+                            # Use Composition if show_cim is *not* DIRECT (i.e., just True or False)
+                            ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
                     # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                     else:
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
@@ -8062,18 +8073,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Get label controller's port as edge's sender
                         ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         # Get label for edge's receiver:
-                        # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
                         if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                                and show_cim is not DIRECT):
-                            ctl_proj_rcvr_label = rcvr_label
-                        # Otherwise, use receiver's Port (ParameterPort of a Mech, or parameter_CIM for nested comp)
-                        else:
+                                and (show_nested is DIRECT or show_cim is DIRECT)):
+                            # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
                             ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
+                        else:
+                            # Otherwise use Composition
+                            ctl_proj_rcvr_label = rcvr_label
                     else:
                         ctl_proj_sndr_label = ctlr_label
                         ctl_proj_rcvr_label = rcvr_label
-
-                    # MODIFIED 5/30/20 END
 
                     # Assign colors, penwidth and label displayed for ControlProjection ---------------------
                     if controller in active_items:
