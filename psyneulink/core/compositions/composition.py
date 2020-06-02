@@ -3279,6 +3279,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # Composition now inherits from Component, so registry inherits name None
     componentType = 'Composition'
+    # Set componentCategory for quick type checking of subclasses (e.g. AutodiffComposition)
+    componentCategory = 'Composition'
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     _model_spec_generic_type_name = 'graph'
@@ -3721,23 +3723,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
+            self._instantiate_deferred_init_control(node)
 
-            # MODIFIED 5/28/20 NEW:
-            # FIX 5/28/20:  HOW ARE THESE HANDLED FOR A NESTED COMPOSITON?
-            #               ADD _get_parameter_port_deferred_init_control_specs() METHOD TO Composition?
-            if isinstance(node, Composition):
-                return
-            # MODIFIED 5/28/20 END
+    def _instantiate_deferred_init_control(self, node):
+        '''
+        If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
+        If it does not have a controller, but self does, activate them for self's controller.
 
-            deferred_init_control_specs = node._get_parameter_port_deferred_init_control_specs()
-            if deferred_init_control_specs:
-                self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-                for ctl_sig_spec in deferred_init_control_specs:
-                    # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-                    control_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                           context=Context(source=ContextFlags.COMPOSITION))
-                    self.controller.control.append(control_signal)
-                    self.controller._activate_projections_for_compositions(self)
+        If node is a Node that has deferred init control specs and self has a controller, activate the deferred init
+        control specs for self's controller.
+
+        Returns
+        -------
+
+        list of hanging control specs that were not able to be assigned for a controller at any level.
+
+        '''
+        hanging_control_specs = []
+        if node.componentCategory == 'Composition':
+            for nested_node in node.nodes:
+                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node))
+        else:
+            hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
+        if not self.controller:
+            return hanging_control_specs
+        else:
+            for spec in hanging_control_specs:
+                control_signal = self.controller._instantiate_control_signal(control_signal=spec,
+                                                                             context=Context(
+                                                                                 source=ContextFlags.COMPOSITION))
+                self.controller.control.append(control_signal)
+                self.controller._activate_projections_for_compositions(self)
+        return []
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
