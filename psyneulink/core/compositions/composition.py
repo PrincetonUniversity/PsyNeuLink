@@ -8124,13 +8124,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                         # Get label for edge's receiver:
                         # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
-                        if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                                and (show_cim is DIRECT or not show_cim and show_nested is DIRECT)):
-                            # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
-                            ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
-                        else:
-                            # Otherwise use Composition
+                        # # MODIFIED 6/2/20 OLD:
+                        # if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
+                        #         and (show_cim is DIRECT or not show_cim and show_nested is DIRECT)):
+                        #     # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
+                        #     ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
+                        # else:
+                        #     # Otherwise use Composition
+                        #     ctl_proj_rcvr_label = rcvr_label
+                        # MODIFIED 6/2/20 NEW:
+                        if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism) and show_cim is not DIRECT):
                             ctl_proj_rcvr_label = rcvr_label
+                        else:
+                            ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
+                        # MODIFIED 6/2/20 END
                     else:
                         ctl_proj_sndr_label = ctlr_label
                         ctl_proj_rcvr_label = rcvr_label
@@ -8648,6 +8655,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._analyze_graph(context=context)
         processing_graph = self.graph_processing.dependency_dict
         rcvrs = list(processing_graph.keys())
+
+        if show_cim:
+            # Enforce show_nested but don't allow show_nested to be DIRECT (that is determined by show_cim)
+            show_nested = True
 
         for r in rcvrs:
             _assign_processing_components(G, r, show_nested, show_nested_args, enclosing_g)
