@@ -7344,7 +7344,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  skip_initialization=True,
                  )
         context.remove_flag(ContextFlags.SIMULATION_MODE)
-        context.add_flag(ContextFlags.CONTROL)
+        context.execution_phase = ContextFlags.CONTROL
         if buffer_animate_state:
             self._animate = buffer_animate_state
 
@@ -10233,7 +10233,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # method to properly validate input for those nodes.
         # -DS
 
-        context.add_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.PROCESSING
         if inputs is not None:
             inputs = self._validate_execution_inputs(inputs)
             build_CIM_input = self._build_variable_for_input_CIM(inputs)
@@ -10302,7 +10302,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self.controller and not bin_execute:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
-                    context.add_flag(ContextFlags.PROCESSING)
+                    context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
                 if bin_execute:
@@ -10311,7 +10311,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.remove_flag(ContextFlags.PROCESSING)
 
                 # Animate controller (before execution)
-                context.add_flag(ContextFlags.CONTROL)
+                context.execution_phase = ContextFlags.CONTROL
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
@@ -10320,7 +10320,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
-        context.add_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.PROCESSING
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, context=context)
@@ -10377,7 +10377,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit == EXECUTION_SET:
-                context.add_flag(ContextFlags.PROCESSING)
+                context.execution_phase = ContextFlags.PROCESSING
                 self._animate_execution(next_execution_set, context)
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
@@ -10417,7 +10417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                                  context))
 
                     # (Re)set context.execution_phase to PROCESSING by default
-                    context.add_flag(ContextFlags.PROCESSING)
+                    context.execution_phase = ContextFlags.PROCESSING
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
                     #   for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
@@ -10552,7 +10552,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         if self._is_learning(context) and not isinstance(self, AutodiffComposition):
-            context.add_flag(ContextFlags.LEARNING)
+            context.execution_phase = ContextFlags.LEARNING
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
                 matrix_parameter_port = projection.parameter_ports[MATRIX]
@@ -10582,7 +10582,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
-                context.add_flag(ContextFlags.CONTROL)
+                context.execution_phase = ContextFlags.CONTROL
                 if self.controller and not bin_execute:
                     self.controller.execute(context=context)
 
@@ -10608,9 +10608,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _comp_ex.execute_node(self.output_CIM)
             return _comp_ex.extract_node_output(self.output_CIM)
 
-        context.add_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=context)
-        context.remove_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.IDLE
 
         output_values = []
         for port in self.output_CIM.output_ports:
