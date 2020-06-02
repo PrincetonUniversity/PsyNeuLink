@@ -7571,7 +7571,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         tc.typecheck
         _locals = locals().copy()
 
-        def _assign_processing_components(g, rcvr, show_nested_args):
+        def _assign_processing_components(g, rcvr, show_nested):
             """Assign nodes to graph"""
 
             # DEAL WITH NESTED COMPOSITION
@@ -7582,7 +7582,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(show_nested_args, dict):
                     args = show_nested_args
                     args.update(output_fmt_arg)
-                elif show_nested == ALL:
+                elif show_nested_args == ALL:
                     # Pass args from main call to show_graph to call for nested Composition
                     args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
                     args.update(output_fmt_arg)
