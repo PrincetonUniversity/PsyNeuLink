@@ -1644,7 +1644,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         dependent_projections = set()
 
-        if self.objective_mechanism:
+        if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
             # Safe to add this, as it is already in the ControlMechanism's aux_components
             #    and will therefore be added to the Composition along with the ControlMechanism
             from psyneulink.core.compositions.composition import NodeRole
@@ -1662,7 +1662,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # ??ELIMINATE SYSTEM
         # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
         # assign any deferred init objective mech monitored OutputPort projections to this system
-        if self.objective_mechanism:
+        if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
             for output_port in self.objective_mechanism.monitored_output_ports:
                 for eff in output_port.efferents:
                     dependent_projections.add(eff)
