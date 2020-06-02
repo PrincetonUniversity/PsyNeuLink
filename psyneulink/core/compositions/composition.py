@@ -4646,9 +4646,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Enforce order of ports to same as node_order
             # Get node port mappings for cim
-            # FIX 6/1/20: SHOULD BE ABLE TO REPLACE THIS WITH <cim>.port_map ATTRIBUTE:
-            #             node_port_to_cim_port_tuples_mapping = cim.port_map
+            # MODIFIED 6/1/20 OLD:
             node_port_to_cim_port_tuples_mapping = getattr(self, f'{type}_CIM_ports')
+            # MODIFIED 6/1/20 NEW:
+            node_port_to_cim_port_tuples_mapping = cim.port_map
+            # MODIFIED 6/1/20 END
             # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
             # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
             cim_node_indices = []
@@ -7743,11 +7745,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Implement sender edges from Nodes within Composition
             sndrs = processing_graph[rcvr]
             # MODIFIED 6/1/20 NEW:
-            if not show_cim and show_nested is DIRECT:
+            # If Projections are being shown to Components in nested Compositions without including cims
+            #    need to identify them and add to sndrs so their sources/destinations can be found
+            if show_nested is DIRECT and not show_cim:
                 cims = set([proj.sender.owner for proj in rcvr.afferents
                             if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
                 sndrs.update(cims)
-
             # MODIFIED 6/1/20 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
 
@@ -8383,7 +8386,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
                             # skip if source is a contrller (those are handled in _assign_control_components
                             rcvr_port = proj.receiver
-                            source = sndr.port_map
+                            assert len(sndr.port_map[proj.receiver][0].path_afferents)==1
+                            source = sndr.port_map[proj.receiver][0].path_afferents[0].sender.owner
 
                         # # MODIFIED 6/1/20 OLD: REMOVE THIS SINCE PROJECTIONS FROM CIM ARE NOT IN self.projections
                         # # Skip Projections not in the Composition
