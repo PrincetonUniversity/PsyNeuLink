@@ -7725,7 +7725,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Don't show Node for nested Composition if Projections are being shown directly to it
                 #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and (show_cim is DIRECT):
+                if isinstance(rcvr, Composition) and (show_cim is DIRECT or show_nested is DIRECT):
                     return
 
                 elif show_node_structure and isinstance(rcvr, Mechanism):
@@ -7745,7 +7745,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Implement sender edges from Nodes within Composition
             sndrs = processing_graph[rcvr]
             # MODIFIED 6/1/20 NEW:
-            # FIX 6/2/20: FILTER OUT cims FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
+            # FIX 6/2/20: FILTER OUT cims HERE FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
             # If Projections are being shown to Components in nested Compositions without including cims
             #    need to identify them and add to sndrs so their sources/destinations can be found
             if show_nested is DIRECT and not show_cim:
@@ -8389,6 +8389,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # FIX: STILL TODO:
                             #  - Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
                             #  - skip if source is a contrller (those are handled in _assign_control_components
+                            #  - skip rep of Comp node
 
                             # FIX 6/2/20: ABSTRACT AND CONSOLIDATE:
                             if sndr in {self.input_CIM or self.parameter_CIM}:
@@ -8411,7 +8412,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 assert len([k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender])==1, \
                                     f"PROGRAM ERROR: {sndr} of {self.name} has more than one efferent Projection."
                                 sndr = [k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender][0]
-
 
                         # Set sndr info
                         sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
