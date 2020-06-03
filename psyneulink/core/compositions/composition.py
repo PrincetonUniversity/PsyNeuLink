@@ -7661,7 +7661,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
             # If rcvr is ObjectiveMechanism for Composition's controller,
-            #    break and handle in _assign_control_components()
+            #    break and handle in _assign_controller_components()
             if (isinstance(rcvr, ObjectiveMechanism)
                     and self.controller
                     and rcvr is self.controller.objective_mechanism):
@@ -8587,7 +8587,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
                             # FIX: STILL TODO??:
                             #  - Set sender to source and Projection to its efferent (for sndr_label, but not rcvr label)
-                            #  - skip if source is a controller (those are handled in _assign_control_components
+                            #  - skip if source is a controller (those are handled in _assign_controller_components
 
                             if sender in {self.input_CIM, self.parameter_CIM}:
                                 # FIX 6/2/20:
@@ -8632,7 +8632,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                         # Skip any projections to ObjectiveMechanism for controller
-                        #   (those are handled in _assign_control_components)
+                        #   (those are handled in _assign_controller_components)
                         # FIX 6/1/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
                         if (self.controller and
                                 proj.receiver.owner in {self.controller, self.controller.objective_mechanism}):
