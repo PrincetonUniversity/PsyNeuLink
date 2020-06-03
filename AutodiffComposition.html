@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -29,8 +29,8 @@
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Scheduling" href="Scheduling.html" />
-    <link rel="prev" title="RegressionCFA" href="RegressionCFA.html" /> 
+    <link rel="next" title="CompositionFunctionApproximator" href="CompositionFunctionApproximator.html" />
+    <link rel="prev" title="Compositions" href="Compositions.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -129,7 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,9 +172,9 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
+          <li><a href="Library.html">Library</a> &gt;</li>
         
-          <li><a href="Composition.html">Composition</a> &gt;</li>
+          <li><a href="Compositions.html">Compositions</a> &gt;</li>
         
       <li>AutodiffComposition</li>
     
@@ -315,7 +315,7 @@ See <a class="reference internal" href="Composition.html#composition-class-refer
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>learning_rate</strong> (<em>float : default 0.001</em>) – the learning rate, which is passed to the optimizer.</li>
-<li><strong>disable_learning</strong> (<em>bool: default False</em>) – specifies whether the AutodiffComposition should disable learning when ran in <a class="reference internal" href="Composition.html#composition-learning-mode"><span class="std std-ref">learning mode</span></a></li>
+<li><strong>disable_learning</strong> (<em>bool: default False</em>) – specifies whether the AutodiffComposition should disable learning when run in <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learning</span> <span class="pre">mode</span></code></a>.</li>
 <li><strong>optimizer_type</strong> (<em>str : default 'sgd'</em>) – the kind of optimizer used in training. The current options are ‘sgd’ or ‘adam’.</li>
 <li><strong>weight_decay</strong> (<em>float : default 0</em>) – specifies the L2 penalty (which discourages large weights) used by the optimizer.</li>
 <li><strong>loss_spec</strong> (<em>str</em><em> or </em><em>PyTorch loss function : default 'mse'</em>) – specifies the loss function for training. The current string options are ‘mse’ (the default), ‘crossentropy’,
@@ -343,10 +343,10 @@ arguments from initialization.</li>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Scheduling.html" class="btn btn-neutral float-right" title="Scheduling" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="CompositionFunctionApproximator.html" class="btn btn-neutral float-right" title="CompositionFunctionApproximator" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="RegressionCFA.html" class="btn btn-neutral" title="RegressionCFA" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="Compositions.html" class="btn btn-neutral" title="Compositions" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -407,7 +407,7 @@ arguments from initialization.</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

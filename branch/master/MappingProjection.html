@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -30,7 +30,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MaskedMappingProjection" href="MaskedMappingProjection.html" />
-    <link rel="prev" title="Pathway Projections" href="PathwayProjection.html" /> 
+    <link rel="prev" title="PathwayProjections" href="PathwayProjections.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -129,7 +129,7 @@
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,13 +172,13 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
+          <li><a href="Library.html">Library</a> &gt;</li>
         
-          <li><a href="Component.html">Component</a> &gt;</li>
+          <li><a href="Components.html">Components</a> &gt;</li>
         
-          <li><a href="Projection.html">Projections</a> &gt;</li>
+          <li><a href="Projections.html">Projections</a> &gt;</li>
         
-          <li><a href="PathwayProjection.html">Pathway Projections</a> &gt;</li>
+          <li><a href="PathwayProjections.html">PathwayProjections</a> &gt;</li>
         
       <li>MappingProjection</li>
     
@@ -211,7 +211,7 @@
 <div><ul class="simple">
 <li><a class="reference internal" href="#mappingprojection-overview"><span class="std std-ref">Overview</span></a></li>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">MappingProjection_Creation</span></code></dt>
+<dt><a class="reference internal" href="#mappingprojection-creation"><span class="std std-ref">Creating a MappingProjection</span></a></dt>
 <dd><ul class="first last">
 <li><a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">Specifying the Matrix Parameter</span></a></li>
 <li><a class="reference internal" href="#mappingprojection-learning-specification"><span class="std std-ref">Specifying Learning</span></a></li>
@@ -223,8 +223,8 @@
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="#mappingprojection-structure"><span class="std std-ref">Structure</span></a></dt>
 <dd><ul class="first last">
-<li><code class="xref any docutils literal"><span class="pre">MappingProjection_Sender</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">MappingProjection_Receiver</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">MappingProjection_Matrix</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">Mapping_Matrix_ParameterPort</span></code></li>
 </ul>
 </dd>
 </dl>
@@ -248,14 +248,14 @@
 value received from its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and provide the result to its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-mappingprojection">
-<span id="mapping-creation-overview"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mappingprojection" title="Permalink to this headline">¶</a></h2>
+<span id="mappingprojection-creation"></span><h2>Creating a MappingProjection<a class="headerlink" href="#creating-a-mappingprojection" title="Permalink to this headline">¶</a></h2>
 <p>A MappingProjection can be created in any of the ways that can be used to create a <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">Projection</span></a>
 (see <a class="reference internal" href="Projection.html#projection-sender"><span class="std std-ref">Sender</span></a> and <a class="reference internal" href="Projection.html#projection-receiver"><span class="std std-ref">Receiver</span></a> for specifying its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and
 <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> attributes, respectively), or simply by <a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">specifying it by its matrix parameter</span></a> wherever a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection can be specified</span></a>.</p>
 <p>MappingProjections are also generated automatically in the following circumstances, using a value for its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter appropriate to the circumstance:</p>
 <blockquote>
 <div><ul class="simple">
-<li>by a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, when two adjacent <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in its <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> do not already
+<li>by a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, when two adjacent <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in its <code class="xref any docutils literal"><span class="pre">pathway</span></code> do not already
 have a Projection assigned between them (<a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">AUTO_ASSIGN_MATRIX</span></code></a> is used as the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 specification, which determines the appropriate matrix by context);</li>
 </ul>
@@ -330,11 +330,11 @@ the constructor for a <a class="reference internal" href="LearningSignal.html#le
 the constructor for a <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">LearningMechanism</span></a></li>
 </ul>
 <ul class="simple">
-<li>specifying a MappingProjection in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>  for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>,
+<li>specifying a MappingProjection in the <code class="xref any docutils literal"><span class="pre">pathway</span></code>  for a <code class="xref any docutils literal"><span class="pre">Process</span></code>,
 using the <a class="reference internal" href="#mappingprojection-learning-tuple-specification"><span class="std std-ref">tuple format</span></a> to include a learning specification;</li>
 </ul>
 <ul class="simple">
-<li><a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">specifying learning</span></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process’ <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>;</li>
+<li><code class="xref any docutils literal"><span class="pre">specifying</span> <span class="pre">learning</span></code> for a <code class="xref any docutils literal"><span class="pre">Process</span></code>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process’ <code class="xref any docutils literal"><span class="pre">pathway</span></code>;</li>
 </ul>
 </div></blockquote>
 <p>See <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> documentation for an overview of <a class="reference internal" href="LearningMechanism.html#learningmechanism-overview"><span class="std std-ref">learning components</span></a> and a
@@ -342,7 +342,7 @@ detailed description of <a class="reference internal" href="LearningMechanism.ht
 description of how learning modifies a MappingProjection.</p>
 <div class="section" id="specifying-learning-in-a-tuple">
 <span id="mappingprojection-learning-tuple-specification"></span><h4>Specifying Learning in a Tuple<a class="headerlink" href="#specifying-learning-in-a-tuple" title="Permalink to this headline">¶</a></h4>
-<p>A tuple can be used to specify learning for a MappingProjection in the <strong>matrix</strong> <a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">argument of its constructor</span></a> or in the <a class="reference internal" href="Process.html#process-projections"><span class="std std-ref">pathway of a Process</span></a>.  In both cases,
+<p>A tuple can be used to specify learning for a MappingProjection in the <strong>matrix</strong> <a class="reference internal" href="#mappingprojection-matrix-specification"><span class="std std-ref">argument of its constructor</span></a> or in the <code class="xref any docutils literal"><span class="pre">pathway</span> <span class="pre">of</span> <span class="pre">a</span> <span class="pre">Process</span></code>.  In both cases,
 the second item of the tuple must be a learning specification, which can be any of the following:</p>
 <blockquote>
 <div><ul class="simple">
@@ -424,10 +424,10 @@ InputPort’s owner <a class="reference internal" href="Mechanism.html"><span cl
 updates its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter based on any <code class="xref any docutils literal"><span class="pre">LearningProjection(s)</span></code> it receives (listed in
 the ParameterPort’s <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute). This brings into effect any changes that
 occurred due to <a class="reference internal" href="#mappingprojection-learning"><span class="std std-ref">learning</span></a>.  Since this does not occur until the Mechanism that receives
-the MappingProjection is executed (in accord with <span class="xref std std-ref">Lazy Evaluation</span>), any changes due to learning do not
-take effect, and are not observable (e.g., through inspection of the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> attribute or
-the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ParameterPort) until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution (see <span class="xref std std-ref">Lazy Evaluation</span>
-for an explanation of “lazy” updating).</p>
+the MappingProjection is executed (in accord with <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>), any changes due to
+learning do not take effect, and are not observable (e.g., through inspection of the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
+attribute or the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its ParameterPort) until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of
+execution (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 <div class="section" id="learning">
 <span id="mappingprojection-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>Learning modifies the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a MappingProjection, under the influence
@@ -447,10 +447,9 @@ executed.  It is important to note that the accumulated weight changes received 
 LearningProjection(s) are stored by the <em>MATRIX</em> ParameterPort’s function, and not the MappingProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter itself; the latter stores the original value of the matrix before learning (that
 is, its unmodulated value, conforming to the general protocol for <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulation</span></a> in
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>MATRIX</em> ParameterPort. As noted <a class="reference internal" href="#mappingprojection-execution"><span class="std std-ref">above</span></a>, however, this does
-not reflect any changes due to learning on the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution; those are assigned to the ParameterPort’s
-<a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> when it executes, which does not occur until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives
-the MappingProjection is executed in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation
-of “lazy” updating)</p>
+not reflect any changes due to learning on the current <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution; those are assigned to the
+ParameterPort’s <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> when it executes, which does not occur until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives the MappingProjection is executed in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution
+(see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -458,7 +457,7 @@ of “lazy” updating)</p>
 <dl class="class">
 <dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.projections.pathway.mappingprojection.</code><code class="descname">MappingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>weight=None</em>, <em>exponent=None</em>, <em>matrix='AutoAssignMatrix'</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>learnable=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> that transmits the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of one <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of another (or possibly itself).  See <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a>
+<dd><p>Subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that transmits the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of one <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of another (or possibly itself).  See <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a>
 for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -515,7 +514,7 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>str</em> – the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
 it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
-<a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>). If the name is not specified in the <strong>name</strong> argument of its constructor, a default name is
+<a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>). If the name is not specified in the <strong>name</strong> argument of its constructor, a default name is
 assigned using the following format:
 ‘MappingProjection from &lt;sender Mechanism&gt;[&lt;OutputPort&gt;] to &lt;receiver Mechanism&gt;[InputPort]’
 (for example, <code class="docutils literal"><span class="pre">'MappingProjection</span> <span class="pre">from</span> <span class="pre">my_mech_1[OutputPort-0]</span> <span class="pre">to</span> <span class="pre">my_mech2[InputPort-0]'</span></code>).
@@ -548,7 +547,7 @@ then the parenthesized name of class is used in place of the unassigned attribut
         <a href="MaskedMappingProjection.html" class="btn btn-neutral float-right" title="MaskedMappingProjection" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="PathwayProjection.html" class="btn btn-neutral" title="Pathway Projections" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="PathwayProjections.html" class="btn btn-neutral" title="PathwayProjections" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   
@@ -618,7 +617,7 @@ then the parenthesized name of class is used in place of the unassigned attribut
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

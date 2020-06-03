@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Naming &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>Registry &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -170,7 +170,7 @@
       </li>
 
         
-      <li>Naming</li>
+      <li>Registry</li>
     
   </ul>
 
@@ -193,22 +193,29 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="naming">
-<h1>Naming<a class="headerlink" href="#naming" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="registry">
+<h1>Registry<a class="headerlink" href="#registry" title="Permalink to this headline">¶</a></h1>
+<p>A Registry is used to maintain a list of categories (subclasses) for a given base_class of <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>,
+and to ensure that the name of every Component created in each of those categories is unique.  If an item
+is created with the same name as one already in the Registry, its name is appended with a hyphenated index
+(e.g., name-n) that is incremented for each new item assigned the same base name, as described in greater
+detail below.</p>
+<div class="section" id="naming">
+<span id="registry-naming"></span><h2>Naming<a class="headerlink" href="#naming" title="Permalink to this headline">¶</a></h2>
 <p>Every object in PsyNeuLink has a <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.name" title="psyneulink.core.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute, that is a string used to refer to it in printouts
 and display. The name of a object can be specified in the <strong>name</strong> argument of its constructor.  An object’s name can
 be reassigned, but this should be done with caution, as other objects may depend on its name.</p>
 <div class="section" id="default-names">
-<h2>Default Names<a class="headerlink" href="#default-names" title="Permalink to this headline">¶</a></h2>
+<h3><em>Default Names</em><a class="headerlink" href="#default-names" title="Permalink to this headline">¶</a></h3>
 <p>If the name of an object is not specified in its constructor, a default name is assigned.  Some classes of objects use
 class-specific conventions for default names (see individual classes for specifics). Otherwise, the default name is
-handled by the <code class="xref any docutils literal"><span class="pre">Registry</span></code>, which assigns a default name based on the name of the class, with a hyphenated integer
+handled by the <a class="reference internal" href="#"><span class="doc">Registry</span></a>, which assigns a default name based on the name of the class, with a hyphenated integer
 suffix (&lt;object class name&gt;-n), beginning with ‘0’, that is incremented for each additional object of that type
 requiring a default name.  For example, the first TransferMechanism to be constructed without specifying its name
 will be assigned the name ‘TransferMechanism-0’, the next ‘TransferMechanism-1’, etc..</p>
 </div>
 <div class="section" id="duplicate-names">
-<h2>Duplicate Names<a class="headerlink" href="#duplicate-names" title="Permalink to this headline">¶</a></h2>
+<h3><em>Duplicate Names</em><a class="headerlink" href="#duplicate-names" title="Permalink to this headline">¶</a></h3>
 <p>If the name of an object specified in its constructor is the same as the name of an existing object of that type, its
 name is appended with a hyphenated integer suffix (&lt;object name&gt;-n) that is incremented for each additional
 duplicated name, beginning with ‘1’.  The object with the original name (implicitly instance ‘0’) is left intact.</p>
@@ -217,6 +224,7 @@ different <a class="reference internal" href="Mechanism.html"><span class="doc">
 can both have an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> named input_port-0 (the default name for the first InputPort);  however, if a Port
 is assigned a name that is the same as another Port of that type belonging to the <em>same</em> Mechanism, it is treated as
 a duplicate, and its name is suffixed as described above.</p>
+</div>
 </div>
 </div>
 
@@ -254,9 +262,12 @@ a duplicate, and its name is suffixed as described above.</p>
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Naming</a><ul>
-<li><a class="reference internal" href="#default-names">Default Names</a></li>
-<li><a class="reference internal" href="#duplicate-names">Duplicate Names</a></li>
+<li><a class="reference internal" href="#">Registry</a><ul>
+<li><a class="reference internal" href="#naming">Naming</a><ul>
+<li><a class="reference internal" href="#default-names"><em>Default Names</em></a></li>
+<li><a class="reference internal" href="#duplicate-names"><em>Duplicate Names</em></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -276,7 +287,7 @@ a duplicate, and its name is suffixed as described above.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

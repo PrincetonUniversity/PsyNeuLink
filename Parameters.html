@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -195,32 +195,37 @@
               
   <div class="section" id="module-psyneulink.core.globals.parameters">
 <span id="parameters"></span><h1>Parameters<a class="headerlink" href="#module-psyneulink.core.globals.parameters" title="Permalink to this headline">¶</a></h1>
-<p id="parameter-attributes">PsyNeuLink <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">parameters</span></code></a> are objects that represent the user-modifiable parameters of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>. <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>s have
-names, default values, and other attributes that define how they are used in models. <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> s also maintain and provide
-access to the data used in actual computations - <a class="reference internal" href="#parameter-defaults"><span class="std std-ref">default values</span></a>, <a class="reference internal" href="#parameter-statefulness"><span class="std std-ref">current values</span></a>, <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal"><span class="pre">previous</span> <span class="pre">values</span></code></a>,
-and <a class="reference internal" href="Log.html"><span class="doc">logged values</span></a>.</p>
+<p id="parameter-attributes">PsyNeuLink <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">parameters</span></code></a> are objects that represent the user-modifiable parameters of a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.
+<a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>s have names, default values, and other attributes that define how they are used in Compositions.
+<a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> s also maintain and provide access to the data used in actual computations - <a class="reference internal" href="#parameter-defaults"><span class="std std-ref">default values</span></a>, <a class="reference internal" href="#parameter-statefulness"><span class="std std-ref">current values</span></a>, <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal"><span class="pre">previous</span> <span class="pre">values</span></code></a>, and
+<a class="reference internal" href="Log.html"><span class="doc">logged values</span></a>.</p>
 <div class="section" id="defaults">
 <span id="parameter-defaults"></span><h2>Defaults<a class="headerlink" href="#defaults" title="Permalink to this headline">¶</a></h2>
-<p>Parameters have two types of defaults: <em>instance</em> defaults and <em>class</em> defaults. Class defaults belong to a PNL class,
-and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class,
-and are used to validate compatibility between this instance and other PNL objects. Given a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> <em>t</em>:</p>
+<p>The Defaults class is used to represent the default values for a <a class="reference internal" href="Component.html#component-parameters"><span class="std std-ref">Component's parameters</span></a>.
+Parameters have two types of defaults: <em>instance</em> defaults and <em>class</em> defaults. Class defaults belong to a PsyNeuLink
+class, and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PsyNeuLink
+class, and are used to validate compatibility between this instance and other PsyNeuLink objects. For example, given a
+<a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> <em>t</em>:</p>
 <blockquote>
 <div><ul class="simple">
-<li>instance defaults are accessible by <code class="docutils literal"><span class="pre">t.defaults</span></code></li>
-<li>class defaults are accessible by <code class="docutils literal"><span class="pre">t.class_defaults</span></code> or <code class="docutils literal"><span class="pre">TransferMechanism.defaults</span></code></li>
+<li>instance defaults are accessible by <code class="docutils literal"><span class="pre">t.defaults</span></code> (e.g., for the <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> parameter,
+<code class="docutils literal"><span class="pre">t.defaults.noise.defaults.noise</span></code>)</li>
+<li>class defaults are accessible by <code class="docutils literal"><span class="pre">t.class_defaults</span></code> or <code class="docutils literal"><span class="pre">TransferMechanism.defaults</span></code> (e.g.,</li>
 </ul>
+<p><code class="docutils literal"><span class="pre">t.class_defaults.noise</span></code> or <a href="#id1"><span class="problematic" id="id2">`</span></a>TransferMechanism.defaults.noise)</p>
 </div></blockquote>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last"><code class="docutils literal"><span class="pre">t.defaults.noise</span></code> is shorthand for <code class="docutils literal"><span class="pre">t.parameters.noise.default_value</span></code>, and they both refer to the default noise value for <em>t</em></p>
+<p class="last"><code class="docutils literal"><span class="pre">t.defaults.noise</span></code> is shorthand for <code class="docutils literal"><span class="pre">t.parameters.noise.default_value</span></code>, and they both refer to the default
+<code class="docutils literal"><span class="pre">noise</span></code> value for <em>t</em></p>
 </div>
 </div>
 <div class="section" id="statefulness-of-parameters">
 <span id="parameter-statefulness"></span><h2>Statefulness of Parameters<a class="headerlink" href="#statefulness-of-parameters" title="Permalink to this headline">¶</a></h2>
-<p>Parameters can have different values in different <a class="reference internal" href="Run.html#run-scope-of-execution"><span class="std std-ref">execution contexts</span></a> in order to ensure correctness
-of and allow access to <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulation</span></a> calculations. As a result, to inspect and use the values
-of a parameter, in general you need to know the execution context in which you are interested. Much of the time, this execution context
-is likely to be a Composition:</p>
+<p>Parameters can have different values in different <a class="reference internal" href="Composition.html#composition-execution-context"><span class="std std-ref">execution contexts</span></a> in order to
+ensure correctness of and allow access to <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulation</span></a> calculations. As a
+result, to inspect and use the values of a parameter, in general you need to know the execution context in which you
+are interested. Much of the time, this execution context is likely to be a Composition::</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">d</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">()</span>
@@ -244,9 +249,9 @@ is likely to be a Composition:</p>
 <span class="go">[[10.]]</span>
 </pre></div>
 </div>
-<p>The TransferMechanism in the above snippet has a different <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for each Composition it is run in. This holds
-true for all of its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.stateful_parameters" title="psyneulink.core.components.component.Component.stateful_parameters"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span> <span class="pre">Parameters</span></code></a>, so they can behave differently in different execution contexts
-and be modulated during <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">control</span></a>.</p>
+<p>The TransferMechanism in the above snippet has a different <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for each Composition it is run in.
+This holds true for all of its <a class="reference internal" href="Component.html#component-stateful-parameters"><span class="std std-ref">stateful Parameters</span></a>, so they can behave differently in
+different execution contexts and can be modified by modulated <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>.</p>
 <div class="admonition note" id="parameter-dot-notation">
 <p class="first admonition-title">Note</p>
 <p class="last">The “dot notation” version - <code class="docutils literal"><span class="pre">t.value</span></code> - refers to the most recent execution context in which <em>t</em> was executed. In
@@ -255,7 +260,7 @@ if there is doubt, it is best to explicitly specify the execution context.</p>
 </div>
 <div class="section" id="for-developers">
 <h3>For Developers<a class="headerlink" href="#for-developers" title="Permalink to this headline">¶</a></h3>
-<p>Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a <a class="reference internal" href="Run.html#run-overview"><span class="std std-ref">run</span></a>
+<p>Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a <code class="xref any docutils literal"><span class="pre">run</span></code>
 must become stateful Parameters, or they are at risk of computational errors like those encountered in parallel programming.</p>
 <div class="section" id="creating-parameters">
 <h4>Creating Parameters<a class="headerlink" href="#creating-parameters" title="Permalink to this headline">¶</a></h4>
@@ -385,7 +390,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>function_parameter=False</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>function_parameter=False</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
@@ -956,7 +961,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="SelectionFunctions" href="SelectionFunctions.html" />
-    <link rel="prev" title="TransferFunctions" href="TransferFunctions.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,12 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Functions.html">Functions</a> &gt;</li>
         
       <li>CombinationFunctions</li>
     
@@ -243,7 +235,7 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
 <li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
 </td>
 </tr>
@@ -277,15 +269,16 @@ applied (if it is specified).</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Concatenate.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Concatenate.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for
+details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -332,7 +325,7 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
 <li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
 </td>
 </tr>
@@ -373,15 +366,16 @@ applied (if it is specified).</p>
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -419,7 +413,7 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
 <li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
 </td>
 </tr>
@@ -462,15 +456,16 @@ and <a class="reference internal" href="#psyneulink.core.components.functions.co
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Reduce.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Reduce.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -509,7 +504,7 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
 <li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
 </td>
 </tr>
@@ -572,15 +567,16 @@ and <a class="reference internal" href="#psyneulink.core.components.functions.co
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -619,7 +615,7 @@ function.  Values specified for parameters in the dictionary override any assign
 arguments of the constructor.</li>
 <li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
 <li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
 </td>
 </tr>
@@ -685,15 +681,16 @@ and <a class="reference internal" href="#psyneulink.core.components.functions.co
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans.name">
 <code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a
-default is assigned by FunctionRegistry (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -715,15 +712,6 @@ constructor, a default is assigned using <code class="xref any docutils literal"
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="SelectionFunctions.html" class="btn btn-neutral float-right" title="SelectionFunctions" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="TransferFunctions.html" class="btn btn-neutral" title="TransferFunctions" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -774,7 +762,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

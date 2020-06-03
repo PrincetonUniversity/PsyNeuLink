@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -262,7 +262,7 @@ the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.libr
 </div>
 <div class="section" id="function">
 <span id="agtcontrolmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
-<p>An AGTControlMechanism uses the default function for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">Control Mechanisms</span></a> (a default <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> Function), that simply passes
+<p>An AGTControlMechanism uses the default function for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> (a default <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> Function), that simply passes
 its input to its output.  Thus, it is the output of the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> that determines its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>
 and the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal(s)</span></a>.</p>
 </div>
@@ -283,26 +283,25 @@ ControlSignal’s <a class="reference internal" href="ControlProjection.html"><s
 </div>
 <div class="section" id="execution">
 <span id="agtcontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of
-its <em>OUTCOME</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
-its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it
-receives from its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to all of its ControlSignals.  Each
-ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>, which is used by its
-<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterPort(s) for the parameter(s) it
-controls, which are then used in the subsequent <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
+<p>An AGTControlMechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> takes as its input the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>
+of its <em>OUTCOME</em> <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal"><span class="pre">input_port</span></code></a>, and uses that to determine its <code class="xref any docutils literal"><span class="pre">control_allocation</span></code> which specifies the value assigned to the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal"><span class="pre">allocation</span></code></a> of each of
+its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  An AGTControlMechanism assigns the same value (the <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> it receives from its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> to
+all of its ControlSignals.  Each ControlSignal uses that value to calculate its <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal"><span class="pre">intensity</span></code></a>,
+which is used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> to modulate the value of the ParameterPort(s) for the
+parameter(s) it controls, which are then used in the subsequent <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of execution.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">A <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism
-executes (see <code class="xref any docutils literal"><span class="pre">Lazy</span> <span class="pre">Evaluation</span></code> for an explanation of “lazy” updating).  This means that even if a
-ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
-to which it belongs has executed.</p>
+<p class="last">A <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> that receives a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> does not update its value until its owner Mechanism executes
+(see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).  This means that even if a
+ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism to
+which it belongs has executed.</p>
 </div>
 </div>
 <div class="section" id="class-reference">
 <span id="agtcontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</code><code class="descname">AGTControlMechanism</code><span class="sig-paren">(</span><em>system=None</em>, <em>monitored_output_ports=None</em>, <em>function=None</em>, <em>control_signals=None</em>, <em>modulation='multiplicative_param'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</code><code class="descname">AGTControlMechanism</code><span class="sig-paren">(</span><em>monitored_output_ports=None</em>, <em>function=None</em>, <em>control_signals=None</em>, <em>modulation='multiplicative_param'</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
 See <a class="reference internal" href="ControlMechanism.html#controlmechanism-class-reference"><span class="std std-ref">ControlMechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -310,7 +309,7 @@ See <a class="reference internal" href="ControlMechanism.html#controlmechanism-c
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>monitored_output_ports</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>] or Dict) – specifies the OutputPorts to be monitored by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>
+<li><strong>monitored_output_ports</strong> (List[<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, str, value, dict, <code class="xref any docutils literal"><span class="pre">MonitoredOutputPortsOption</span></code>] or Dict) – specifies the OutputPorts to be monitored by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>
 (see <code class="xref any docutils literal"><span class="pre">monitored_output_ports</span></code> for details of specification).</li>
 <li><strong>control_signals</strong> (<em>List</em><em>[</em><a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort"><em>ParameterPort</em></a><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Mechanism</em><em>] or </em><em>dict</em><em>]</em>) – specifies the parameters to be controlled by the AGTControlMechanism; a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is created for each
 (see <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">Specifying ControlSignals</span></a> for details of specification).</li>
@@ -432,7 +431,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

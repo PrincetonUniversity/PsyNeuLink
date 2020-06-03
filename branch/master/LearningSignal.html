@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningSignal &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>LearningSignal &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="ControlSignal" href="ControlSignal.html" />
-    <link rel="prev" title="Modulatory Signals" href="ModulatorySignal.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,14 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Port.html">Ports</a> &gt;</li>
-        
-          <li><a href="ModulatorySignal.html">Modulatory Signals</a> &gt;</li>
         
       <li>LearningSignal</li>
     
@@ -343,8 +333,8 @@ multiplicatively to the LearningProjection`s <a class="reference internal" href=
 used to modulate the learning_rate in addition to (and on top of) one specified for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> or its
 <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Specification of the <code class="xref any docutils literal"><span class="pre">learning_rate</span></code> for a
 LearningSignal supersedes the <a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for its LearningProjections,
-as well the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.learning_rate" title="psyneulink.core.components.process.Process.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for any Process(es) and/or the
-<a class="reference internal" href="System.html#psyneulink.core.components.system.System.learning_rate" title="psyneulink.core.components.system.System.learning_rate"><code class="xref any py py-attr docutils literal"><span class="pre">learning_rate</span></code></a> for any System(s) to which the LearningSignal’s owner belongs
+as well the <code class="xref any docutils literal"><span class="pre">learning_rate</span></code> for any Process(es) and/or the
+<code class="xref any docutils literal"><span class="pre">learning_rate</span></code> for any System(s) to which the LearningSignal’s owner belongs
 (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a> of LearningMechanism for additional details).</p>
 <p>The <code class="xref any docutils literal"><span class="pre">function</span></code> of a LearningSignal converts the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal"><span class="pre">learning_signal</span></code></a> it receives from the LearningMechanism to which it belongs to its <code class="xref any docutils literal"><span class="pre">value</span></code> (i.e., the LearningSignal’s <code class="xref any docutils literal"><span class="pre">learning_signal</span></code>). By default
 this is an identity function (<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> with <strong>slope</strong>=1 and <strong>intercept</strong>=0), that simply uses the
@@ -369,8 +359,8 @@ projects.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes in a MappingProjection’s matrix parameter in response to the execution of a LearningSignal are not
-applied until the MappingProjection is next executed; see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of
-“lazy” updating).</p>
+applied until the MappingProjection is next executed; see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an
+explanation of “lazy” updating).</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -437,15 +427,6 @@ LearningSignal’s <a class="reference internal" href="LearningProjection.html">
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="ControlSignal.html" class="btn btn-neutral float-right" title="ControlSignal" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="ModulatorySignal.html" class="btn btn-neutral" title="Modulatory Signals" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -508,7 +489,7 @@ LearningSignal’s <a class="reference internal" href="LearningProjection.html">
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

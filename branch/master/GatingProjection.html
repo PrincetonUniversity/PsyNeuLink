@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingProjection &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>GatingProjection &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Ports" href="Port.html" />
-    <link rel="prev" title="ControlProjection" href="ControlProjection.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,14 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Projection.html">Projections</a> &gt;</li>
-        
-          <li><a href="ModulatoryProjection.html">Modulatory Projections</a> &gt;</li>
         
       <li>GatingProjection</li>
     
@@ -262,17 +252,14 @@ it simply conveys the value of its <a class="reference internal" href="#psyneuli
 <span id="gatingprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A GatingProjection cannot be executed directly.  It is executed when the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> to which it
 projects is updated.  Note that this only occurs when the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> belongs
-is executed (see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of “lazy” updating). When a GatingProjection is
-executed, its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> gets the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.gating_signal" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> from
-its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and conveys that to its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  This is used
-by the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> to modify the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Port gated by the
-GatingProjection (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>, <a class="reference internal" href="InputPort.html#inputport-execution"><span class="std std-ref">InputPort Execution</span></a> and <a class="reference internal" href="OutputPort.html#outputport-execution"><span class="std std-ref">OutputPort
-Execution</span></a> for how modulation operates and how this applies to a InputPorts and OutputPorts).</p>
+is executed (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating). When a
+GatingProjection is executed, its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> gets the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.gating_signal" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.gating_signal"><code class="xref any py py-attr docutils literal"><span class="pre">gating_signal</span></code></a> from its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and conveys that to its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  This is used by the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> to modify the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Port gated by the GatingProjection (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>, <a class="reference internal" href="InputPort.html#inputport-execution"><span class="std std-ref">InputPort Execution</span></a> and <a class="reference internal" href="OutputPort.html#outputport-execution"><span class="std std-ref">OutputPort Execution</span></a> for how modulation operates and how this
+applies to a InputPorts and OutputPorts).</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The changes in an InputPort or OutputPort’s <code class="xref any docutils literal"><span class="pre">value</span></code> in response to the execution of a
 GatingProjection are not applied until the Mechanism to which the Port belongs is next executed;
-see <span class="xref std std-ref">Lazy Evaluation</span> for an explanation of “lazy” updating).</p>
+see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -351,15 +338,6 @@ and OutputPorts).</p>
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Port.html" class="btn btn-neutral float-right" title="Ports" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="ControlProjection.html" class="btn btn-neutral" title="ControlProjection" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -417,7 +395,7 @@ and OutputPorts).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

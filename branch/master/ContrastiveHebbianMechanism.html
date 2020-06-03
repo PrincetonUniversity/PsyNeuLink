@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -270,7 +270,7 @@ described below.</p>
 <div class="section" id="size">
 <span id="contrastivehebbian-size"></span><h3><em>Size</em><a class="headerlink" href="#size" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>input_size</strong> argument of the constructor must always be specified (this is comparable to specifying the
-<strong>size</strong> or <em>default_variable*</em> arguments of other types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>).  If it is specified on its own,
+<strong>size</strong> or <em>default_variable*</em> arguments of other types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  If it is specified on its own,
 it determines the total number of processing units.  If either the <strong>hidden_size</strong> and/or <strong>target_size</strong> arguments
 are specified, then those units are treated as distinct from the input units (see <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">Execution</span></a> for
 details).</p>
@@ -328,7 +328,7 @@ are ignored.</p>
 <ul class="simple">
 <li><em>TARGET:</em> only implemented if <strong>target_size</strong> is specified, <a href="#id1"><span class="problematic" id="id2">**</span></a>separated = <code class="xref any docutils literal"><span class="pre">True</span></code> (default), and
 mode is not <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN</span></a>;  receives the <code class="xref any docutils literal"><span class="pre">target</span></code>
-specified in the <a class="reference internal" href="System.html#psyneulink.core.components.system.System.run" title="psyneulink.core.components.system.System.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method of any <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the Mechanism belongs.</li>
+specified in the <code class="xref any docutils literal"><span class="pre">run</span></code> method of any <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the Mechanism belongs.</li>
 </ul>
 </div></blockquote>
 <p>The sizes of these are determined by arguments in its constructor, which generally conform to one of two
@@ -427,7 +427,7 @@ is met. At that point, the <em>minus phase</em> is completed, the <a class="refe
 ContrastiveHebbianMechanism is assigned to its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity"><code class="xref any py py-attr docutils literal"><span class="pre">minus_phase_activity</span></code></a> attribute, and the <em>plus phase</em> is begun.</li>
 </ul>
 <ul class="simple" id="contrastivehebbian-plus-phase">
-<li><em>plus phase:</em>  if <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous"><code class="xref any py py-attr docutils literal"><span class="pre">continuous</span></code></a> is <code class="xref any docutils literal"><span class="pre">False</span></code>, then <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal"><span class="pre">current_activity</span></code></a> is reinitialized to
+<li><em>plus phase:</em>  if <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous"><code class="xref any py py-attr docutils literal"><span class="pre">continuous</span></code></a> is <code class="xref any docutils literal"><span class="pre">False</span></code>, then <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal"><span class="pre">current_activity</span></code></a> is reset to
 <code class="xref any docutils literal"><span class="pre">initial_value</span></code>, and the Mechanism’s
 previous <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is reset to <code class="docutils literal"><span class="pre">None</span></code>;
 otherwise, these retain their value from the last execution in the
@@ -471,9 +471,9 @@ it is assigned the value of the <a class="reference internal" href="#contrastive
 <span id="id3"></span><h3><em>Learning</em><a class="headerlink" href="#contrastivehebbian-learning-execution" title="Permalink to this headline">¶</a></h3>
 <p>If a ContrastiveHebbianMechanism is <a class="reference internal" href="#contrastivehebbian-learning"><span class="std std-ref">configured for learning</span></a>, at the end of each
 <a class="reference internal" href="#contrastivehebbian-processing"><span class="std std-ref">trial of execution</span></a> the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>ACTIVITY_DIFFERENCE</em>
-<a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> is passed to its <code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code>.  If the Mechanism is part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, then the
-<code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code> is executed during the <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">execution phase</span></a> of the System’s execution.  Note that this is distinct from the behavior of supervised learning
-algorithms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> and <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">BackPropagation</span></code></a>), that are executed during the <a class="reference internal" href="System.html#system-execution"><span class="std std-ref">learning phase</span></a> of a System’s execution</p>
+<a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> is passed to its <code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code>.  If the Mechanism is part of a <code class="xref any docutils literal"><span class="pre">System</span></code>, then the
+<code class="xref any docutils literal"><span class="pre">learning_mechanism</span></code> is executed during the <code class="xref any docutils literal"><span class="pre">execution</span> <span class="pre">phase</span></code> of the System’s execution.  Note that this is distinct from the behavior of supervised learning
+algorithms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal"><span class="pre">Reinforcement</span></code></a> and <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">BackPropagation</span></code></a>), that are executed during the <code class="xref any docutils literal"><span class="pre">learning</span> <span class="pre">phase</span></code> of a System’s execution</p>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -503,7 +503,7 @@ the ContrastiveHebbianMechanism’s combination_function method is used.</li>
 <li><strong>clamp</strong> (<em>HARD_CLAMP</em><em> or </em><em>SOFT_CLAMP : default HARD_CLAMP</em>) – specifies the manner in which the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the  <em>INPUT</em> and <em>TARGET</em> (if specified)
 <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPorts</span></a> are combined with the <em>RECURRENT</em> <a class="reference internal" href="#contrastivehebbian-input"><span class="std std-ref">InputPort</span></a> in each execution (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.clamp" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.clamp"><code class="xref any py py-attr docutils literal"><span class="pre">clamp</span></code></a> for additional
 details.</li>
-<li><strong>continuous</strong> (<em>bool : default True</em>) – specifies whether or not to reinitialize <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal"><span class="pre">current_activity</span></code></a>
+<li><strong>continuous</strong> (<em>bool : default True</em>) – specifies whether or not to reset <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal"><span class="pre">current_activity</span></code></a>
 at the beginning of the <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase</span></a> of a trial.</li>
 <li><strong>minus_phase_termination_condition</strong> (<em>COUNT</em><em> or </em><em>CONVERGENCE : default CONVERGENCE</em>) – specifies the type of condition used to terminate the <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus_phase</span></a> of
 execution (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition"><code class="xref any py py-attr docutils literal"><span class="pre">minus_phase_termination_condition</span></code></a> for additional details).</li>
@@ -608,7 +608,7 @@ of the <em>RECURRENT</em> InputPort by <a class="reference internal" href="#psyn
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous">
 <code class="descname">continuous</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.continuous" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>bool : default True</em> – determines whether or not <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal"><span class="pre">current_activity</span></code></a> is reinitialized
+<dd><p><em>bool : default True</em> – determines whether or not <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.current_activity"><code class="xref any py py-attr docutils literal"><span class="pre">current_activity</span></code></a> is reset
 at the beginning of the <a class="reference internal" href="#contrastivehebbian-minus-phase"><span class="std std-ref">minus phase</span></a> of execution. If <code class="xref any docutils literal"><span class="pre">False</span></code>, it is set to <code class="xref any docutils literal"><span class="pre">initial_value</span></code>.</p>
 </dd></dl>
 
@@ -876,7 +876,7 @@ differences in activity between the plus and minus phases at the end of an <a cl
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

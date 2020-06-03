@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="LearningFunctions" href="LearningFunctions.html" />
-    <link rel="prev" title="ObjectiveFunctions" href="ObjectiveFunctions.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,12 +170,6 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Functions.html">Functions</a> &gt;</li>
-        
       <li>OptimizationFunctions</li>
     
   </ul>
@@ -210,6 +202,7 @@
 <li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization"><code class="xref any py py-class docutils literal"><span class="pre">GradientOptimization</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch"><code class="xref any py py-class docutils literal"><span class="pre">GridSearch</span></code></a></li>
 <li><a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess"><code class="xref any py py-class docutils literal"><span class="pre">GaussianProcess</span></code></a></li>
+<li><code class="xref any docutils literal"><span class="pre">ParamEstimationFunction</span></code></li>
 </ul>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
@@ -260,7 +253,7 @@ its parameters when specifying the OptimizationFunction in the constructor for a
 example, an OptimizationFunction may use for its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
 or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a> a method of the Component to which it is being
 assigned;  however, those methods will not yet be available, as the Component itself has not yet been
-constructed. This can be handled by calling the OptimizationFunction’s <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reinitialize" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method after the Component has been instantiated, with a parameter
+constructed. This can be handled by calling the OptimizationFunction’s <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method after the Component has been instantiated, with a parameter
 specification dictionary with a key for each entry that is the name of a parameter and its value the value to
 be assigned to the parameter.  This is done automatically for Mechanisms that take an ObjectiveFunction as
 their <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (such as the <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>), but will require it be
@@ -371,12 +364,12 @@ to iterate; if exceeded, a warning is issued and the function returns the last s
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reinitialize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reinitialize parameters of the OptimizationFunction</p>
-<p>Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
+<dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset parameters of the OptimizationFunction</p>
+<p>Parameters to be reset should be specified in a parameter specification dictionary, in which they key
 for each entry is the name of one of the following parameters, and its value is the value to be assigned to the
-parameter.  The following parameters can be reinitialized:</p>
+parameter.  The following parameters can be reset:</p>
 <blockquote>
 <div><ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">default_variable</span></code></li>
@@ -687,8 +680,8 @@ and evaluated by the  <a class="reference internal" href="#psyneulink.core.compo
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reinitialize" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign size of <a href="#id5"><span class="problematic" id="id6">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
@@ -877,15 +870,6 @@ deterministic function.</p>
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="LearningFunctions.html" class="btn btn-neutral float-right" title="LearningFunctions" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="ObjectiveFunctions.html" class="btn btn-neutral" title="ObjectiveFunctions" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -935,7 +919,7 @@ deterministic function.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

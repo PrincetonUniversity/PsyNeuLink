@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Mechanisms" href="Mechanism.html" />
-    <link rel="prev" title="Core" href="Core.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,8 +170,6 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
       <li>Component</li>
     
   </ul>
@@ -199,6 +195,7 @@
               
   <div class="section" id="component">
 <h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
+<p><em>Subclasses:</em></p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="Mechanism.html">Mechanisms</a></li>
@@ -206,6 +203,21 @@
 <li class="toctree-l1"><a class="reference internal" href="Port.html">Ports</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Functions.html">Functions</a></li>
 </ul>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p><em>Related</em></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Parameters.html">Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Log.html">Log</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Registry.html">Registry</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Preferences.html">Preferences</a></li>
+</ul>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
 </div>
 <span class="target" id="module-psyneulink.core.components.component"></span><div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
@@ -236,7 +248,6 @@
 </dl>
 </li>
 <li><a class="reference internal" href="#user-modifiable-parameters"><span class="std std-ref">Parameters</span></a></li>
-<li><a class="reference internal" href="#component-methods"><span class="std std-ref">Methods</span></a></li>
 </ul>
 </dd>
 </dl>
@@ -245,7 +256,7 @@
 <dt><a class="reference internal" href="#component-execution"><span class="std std-ref">Execution</span></a></dt>
 <dd><ul class="first last">
 <li><a class="reference internal" href="#component-execution-initialization"><span class="std std-ref">Initialization</span></a></li>
-<li><code class="xref any docutils literal"><span class="pre">Component_Execution_Termination</span></code></li>
+<li><a class="reference internal" href="#component-execution-termination"><span class="std std-ref">Termination</span></a></li>
 <li><a class="reference internal" href="#component-execution-count-and-time"><span class="std std-ref">Count and Time</span></a></li>
 </ul>
 </dd>
@@ -263,7 +274,7 @@ It defines a common set of attributes possessed, and methods used by all Compone
 <span id="component-creation"></span><h2>Creating a Component<a class="headerlink" href="#creating-a-component" title="Permalink to this headline">¶</a></h2>
 <p>A Component is never created by calling the constructor for the Component base class.  However, its <code class="docutils literal"><span class="pre">__init__()</span></code>
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
-(listed <a class="reference internal" href="#component-methods"><span class="std std-ref">below</span></a>) as part of the initialization procedure.  Every Component has a core set of
+(listed <code class="xref any docutils literal"><span class="pre">below</span></code>) as part of the initialization procedure.  Every Component has a core set of
 <a class="reference internal" href="Parameters.html"><span class="doc">configurable parameters</span></a> that can be specified in the arguments of the constructor, as well
 as additional parameters and attributes that may be specific to particular Components, many of which can be modified
 by the user, and some of which provide useful information about the Component (see <a class="reference internal" href="#user-modifiable-parameters"><span class="std std-ref">Parameters</span></a>
@@ -277,7 +288,7 @@ full initialization is deferred until its the information is available (e.g., th
 available (e.g., at the beginning of a script). However, for the Component to be operational, its initialization must
 be completed by a call to it <code class="xref any docutils literal"><span class="pre">deferred_init</span></code> method.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a Port to a Mechanism) or to a Composition (e.g.,
-a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>) of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>), as appropriate.</p>
+a Projection to the <code class="xref any docutils literal"><span class="pre">pathway</span></code>) of a <code class="xref any docutils literal"><span class="pre">Process</span></code>), as appropriate.</p>
 </div>
 </div>
 <div class="section" id="component-structure">
@@ -286,11 +297,14 @@ a Projection to the <code class="xref any docutils literal"><span class="pre">pa
 <span id="component-structural-attributes"></span><h3><em>Core Structural Attributes</em><a class="headerlink" href="#core-structural-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
 user once the component is constructed, with the one exception of <a class="reference internal" href="#component-prefs"><span class="std std-ref">prefs</span></a>.</p>
+<ul class="simple" id="component-type">
+<li><strong>componentType</strong> - species the type of Component.</li>
+</ul>
 <ul id="component-variable">
 <li><p class="first"><strong>variable</strong> - used as the input to its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  Specification of the <strong>default_variable</strong>
 argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
-dimensionality and shape if it is an array, etc.) as well as its default value (the value used when the Component
-is executed and no input is provided), and takes precedence over the specification of <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a>.</p>
+dimensionality and shape if it is an array, etc.) as well as its <a class="reference internal" href="#psyneulink.core.components.component.Component.defaults" title="psyneulink.core.components.component.Component.defaults"><code class="xref any py py-attr docutils literal"><span class="pre">default</span> <span class="pre">value</span></code></a> (the value
+used when the Componentis executed and no input is provided), and takes precedence over the specification of <a class="reference internal" href="#component-size"><span class="std std-ref">size</span></a>.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Internally, the attribute <strong>variable</strong> is not directly used as input to functions, to allow for parallelization.
@@ -370,14 +384,14 @@ corresponding methods of its Log, used to identify, configure and track items fo
 </ul>
 <ul class="simple" id="component-name">
 <li><strong>name</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.name" title="psyneulink.core.components.component.Component.name"><code class="xref any py py-attr docutils literal"><span class="pre">name</span></code></a> attribute contains the name assigned to the Component when it was created.
-If it was not specified, a default is assigned by the registry for subclass (see <span class="xref std std-doc">Registry</span> for
+If it was not specified, a default is assigned by the <a class="reference internal" href="Registry.html"><span class="doc">registry</span></a> for subclass (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for
 conventions used in assigning default names and handling of duplicate names).</li>
 </ul>
 <ul class="simple" id="component-prefs">
-<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> assigned to the Component when
+<li><strong>prefs</strong> - the <code class="xref any docutils literal"><span class="pre">prefs</span></code> attribute contains the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> assigned to the Component when
 it was created.  If it was not specified, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in <code class="docutils literal"><span class="pre">__init__.py</span></code>
 Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
-preference (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for details).</li>
+preference (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for details).</li>
 </ul>
 </div>
 <div class="section" id="parameters">
@@ -387,29 +401,27 @@ preference (see <code class="xref any docutils literal"><span class="pre">Prefer
 <a class="reference internal" href="Parameters.html#parameter-attributes-table"><span class="std std-ref">properties</span></a> of the parameter.</p>
 <ul>
 <li><dl class="first docutils">
-<dt><code class="xref any docutils literal"><span class="pre">Parameters</span></code> - a <a class="reference internal" href="Parameters.html"><span class="doc">Parameters class</span></a> defining parameters and their default values that</dt>
-<dd><p class="first last">are used for all Components, unless overridden.</p>
-</dd>
-</dl>
-<p>All of the parameters listed in the <em>parameters</em> class can be modified by the user (as described above).  Some
-can also be modified by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> when a <a class="reference internal" href="System.html#system-execution-control"><span class="std std-ref">System executes</span></a>. In
-general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
+<dt><code class="xref any docutils literal"><span class="pre">Parameters</span></code> - a <a class="reference internal" href="Parameters.html"><span class="doc">Parameters class</span></a> defining parameters and their default values</dt>
+<dd><p class="first">that are used for all Components, unless overridden.</p>
+<p class="last">All of the parameters listed in the <em>parameters</em> class can be modified by the user (as described above).  Some
+can also be modified by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> when a <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">Composition executes</span></a>.
+In general, only parameters that take numerical values and/or do not affect the structure, mode of operation,
 or format of the values associated with a Component can be subject to modulation.  For example, for a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal"><span class="pre">clip</span></code></a>, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a>,
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a>, <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a>,
 <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>, and <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, are all listed in parameters, and are user-modifiable,
-but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a> can all be subject to modulation.
-Parameters that are subject to modulation have the
-<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> attribute set to True and are
-associated with a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> to which the ControlSignals
-can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
+but are not subject to modulation; whereas <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> and <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">integration_rate</span></code></a> can all be subject to modulation. Parameters that are subject to modulation
+have the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> attribute set to True and are associated with a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> to which
+the ControlSignals can project (by way of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>).</p>
+</dd>
+</dl>
 </li>
 </ul>
 <ul id="component-function-params">
-<li><p class="first"><strong>initial_function_parameters</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">initial_function_parameters</span></code></a> attribute contains a dictionary of the parameters
-for the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values, to be used to instantiate the function.  Each entry is the name of a parameter, and its
-value is the value of that parameter. The parameters for a function can be specified when the Component is created in one of
-the following ways:</p>
+<li><p class="first"><strong>initial_function_parameters</strong> - the <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">initial_function_parameters</span></code></a> attribute contains a
+dictionary of the parameters for the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and their values, to be used to
+instantiate the function.  Each entry is the name of a parameter, and its value is the value of that parameter.
+The parameters for a function can be specified when the Component is created in one of the following ways:</p>
 <blockquote>
 <div><ul>
 <li><p class="first">in an argument of the <strong>Component’s constructor</strong> – if all of the allowable functions for a Component’s
@@ -433,46 +445,60 @@ parameter’s value, as in the example below:</p>
 parameter can be specified).</p>
 </li>
 </ul>
-</div>
-<div class="section" id="component-methods">
-<span id="id2"></span><h3><em>Component Methods</em><a class="headerlink" href="#component-methods" title="Permalink to this headline">¶</a></h3>
+<ul class="simple" id="component-stateful-parameters">
+<li><strong>stateful_parameters</strong> - a list containing all of the Component’s <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">stateful parameters</span></a>.</li>
+</ul>
 <ul class="simple" id="component-assign-params">
 <li><strong>reset_params</strong> - reset the value of all parameters to a set of default values as specified in its <strong>mode</strong>
-argument, using a value of <a class="reference internal" href="#component-resetmode"><span class="std std-ref">ResetMode</span></a>.</li>
+argument, using a value of <code class="xref any docutils literal"><span class="pre">ResetMode</span></code>.</li>
 </ul>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>Calls the <code class="xref std std-keyword docutils literal"><span class="pre">execute</span></code> method of the subclass that, in turn, calls its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>.
-The following attributes control and provide information about the execution of a Component:</p>
+<p>A Component is executed when its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method is called, which in turn calls its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.</p>
+<div class="section" id="lazy-updating">
+<span id="component-lazy-updating"></span><h3><em>Lazy Updating</em><a class="headerlink" href="#lazy-updating" title="Permalink to this headline">¶</a></h3>
+<p>In general, only <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> are executed from the command line (i.e., from the console or in a
+script).  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can also be executed, although this is usually just for the purposes of demonstration
+or debugging, and <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> can only be executed if they are standalone (that is, they do not belong to
+another Component).  All other Components are executed only a Component that depends on them to do so.  This can be
+one to which a Components belongs (such as the Mechanism to which a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> belongs) or that otherwise requires it to
+execute (for example, a updating a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> requires its <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">afferent Projections</span></a> to <a class="reference internal" href="Port.html#port-execution"><span class="std std-ref">execute</span></a>).  This is referred to as “lazy updating”, since it means that most Components don’t execute unless
+and until they are required to do so.  While this reduces unecessary computation, it can sometimes be confusing. For
+example, when <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">learning</span></a> occurs in a Composition, the modification to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that occurs on a given <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>
+does not acutally appear in its <a class="reference internal" href="ParameterPort.html"><span class="doc">value</span></a> until the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>, since it requires
+that the ParameterPort for the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> be executed, which does not occur until the next
+time the MappingProjection is executed (i.e., in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>).  Therefore, in tracking the
+<a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of Components during execution, it is important to carefully consider the state of
+execution of the Components to which they belong or on which they depend for execution.</p>
+<p>The following attributes and methods control and provide information about the execution of a Component:</p>
+</div>
 <div class="section" id="initialization">
 <span id="component-execution-initialization"></span><h3><em>Initialization</em><a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
-<ul id="component-reinitialize-when">
-<li><p class="first"><strong>reinitialize_when</strong> - contains a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>; when this condition is satisfied, the Component calls its
-<a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method. The <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method is executed
-without arguments, meaning that the relevant function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attribute
-(or equivalent – initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-the <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize" title="psyneulink.core.components.component.Component.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reinitialize_when" title="psyneulink.core.components.component.Component.reinitialize_when"><code class="xref any py py-attr docutils literal"><span class="pre">reinitialize_when</span></code></a> attribute
-only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters, or that have a <code class="xref any docutils literal"><span class="pre">function</span></code> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters.</p>
+<ul id="component-reset-stateful-function-when">
+<li><p class="first"><strong>reset_stateful_function_when</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> that determines when the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a>
+method is called.  The <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> attribute only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a>, or that have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal"><span class="pre">stateful</span></code></a> Parameters.  When the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method is called, this is done without any
+arguments, so that the relevant <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attributes (or their equivalents
+– initialization attributes vary among functions) are used for reinitialization.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
-<p class="last">Currently, only Mechanisms reinitialize when their reinitialize_when Conditions are satisfied. Other types of
-Components do not reinitialize.</p>
+<p class="last"><a class="reference internal" href="Mechanisms.html"><span class="doc">Mechanisms</span></a> &lt;Mechanism&gt;` are the only type of Component that reset when the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal"><span class="pre">reset_stateful_function_when</span></code></a> <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is satisfied. Other Component types do not reset,
+although <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> has a <code class="xref any docutils literal"><span class="pre">reset</span></code> method that can be used to reset all of its eligible
+Mechanisms (see <a class="reference internal" href="Composition.html#composition-reset"><span class="std std-ref">Resetting Parameters of StatefulFunctions</span></a>)</p>
 </div>
 </li>
 </ul>
-<p>Component_Execution_Termination
-<em>Termniation</em>
-~~~~~~~~~~~~~</p>
+</div>
+<div class="section" id="termination">
+<span id="component-execution-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-is-finished">
-<li><strong>is_finished</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  it is only
-used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</li>
+<li><strong>is_finished()</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</li>
 </ul>
 <ul class="simple" id="component-execute-until-finished">
-<li><strong>execute_until_finished</strong> – determines whether Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method returns True.  If
-it is False, then the Component executes only once per call to its <code class="xref any docutils literal"><span class="pre">execute</span></code> method,  irrespective
-of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
+<li><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method returns True.
+If it is False, then the Component executes only once per call to its <code class="xref any docutils literal"><span class="pre">execute</span></code> method,
+irrespective of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
 <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <code class="xref any docutils literal"><span class="pre">execute</span></code> method.</li>
 </ul>
 <ul class="simple" id="component-num-executions-before-finished">
@@ -514,9 +540,9 @@ last execution.</li>
 <span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.component.Component">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>reinitialize_when=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for Component.
-The arguments below are ones that can be used in the constructor for any Component subclass.</p>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">Component</code><span class="sig-paren">(</span><em>default_variable</em>, <em>param_defaults</em>, <em>size=NotImplemented</em>, <em>function=None</em>, <em>name=None</em>, <em>reset_stateful_function_when=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for Component.</p>
+<p>The arguments below are ones that can be used in the constructor for any Component subclass.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">Component is an abstract class and should <em>never</em> be instantiated by a direct call to its constructor.
@@ -530,13 +556,12 @@ It should be instantiated using the constructor for a subclass.</p>
 <li><strong>default_variable</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>array : default</em><em> [</em><em>[</em><em>0</em><em>]</em><em>]</em>) – specifies template for the input to the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 <li><strong>size</strong> (<em>int</em><em>, </em><em>list</em><em> or </em><em>np.ndarray of ints : default None</em>) – specifies default_variable as array(s) of zeros if <strong>default_variable</strong> is not passed as an argument;
 if <strong>default_variable</strong> is specified, it takes precedence over the specification of <strong>size</strong>.</li>
-<li><strong>function</strong> (<em>function : default Linear</em>) – specifies function used to transform <a class="reference internal" href="#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> into <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>;  must take an input of the same shape as <a class="reference internal" href="#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
 <li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that can be used to specify the parameters for
 the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
 override any assigned to those parameters in arguments of the constructor.</li>
-<li><strong>name</strong> (str : default see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a>) – a string used for the name of the Component;  default is assigned by relevant <code class="xref any docutils literal"><span class="pre">Registry</span></code> for Component
-(see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a> for conventions used for default and duplicate names).</li>
-<li><strong>prefs</strong> (<a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><em>PreferenceSet</em></a><em> or </em><em>specification dict : default Component.classPreferences</em>) – specifies the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the Component (see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details).</li>
+<li><strong>name</strong> (str : for default see <a class="reference internal" href="#component-name"><span class="std std-ref">name</span></a>) – a string used for the name of the Component;  default is assigned by relevant <a class="reference internal" href="Registry.html"><span class="doc">Registry</span></a> for Component
+(see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Component.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Component (see <code class="xref any docutils literal"><span class="pre">prefs</span></code> for details).</li>
 <li><strong>context</strong> (<em>Context : default None</em>) – specifies <a class="reference internal" href="Context.html"><span class="doc">context</span></a> in which Component is being initialized or executed.</li>
 </ul>
 </td>
@@ -610,9 +635,15 @@ override any assigned to those parameters in arguments of the constructor.</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.reinitialize_when">
-<code class="descname">reinitialize_when</code><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize_when" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> – see <a class="reference internal" href="#component-reinitialize-when"><span class="std std-ref">reinitialize_when</span></a></p>
+<dt id="psyneulink.core.components.component.Component.stateful_parameters">
+<code class="descname">stateful_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – see <a class="reference internal" href="#component-stateful-parameters"><span class="std std-ref">stateful_parameters</span></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component.reset_stateful_function_when">
+<code class="descname">reset_stateful_function_when</code><a class="headerlink" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> – see <a class="reference internal" href="#component-reset-stateful-function-when"><span class="std std-ref">reset_stateful_function_when</span></a></p>
 </dd></dl>
 
 <dl class="attribute">
@@ -630,13 +661,14 @@ override any assigned to those parameters in arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.parameters">
 <code class="descname">parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.parameters" title="Permalink to this definition">¶</a></dt>
-<dd><p>see <a class="reference internal" href="#component-parameters"><span class="std std-ref">parameters</span></a></p>
+<dd><p><em>Parameters</em> – see <a class="reference internal" href="#component-parameters"><span class="std std-ref">parameters</span></a> and <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> for additional information.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.defaults">
 <code class="descname">defaults</code><a class="headerlink" href="#psyneulink.core.components.component.Component.defaults" title="Permalink to this definition">¶</a></dt>
-<dd><p>an object that provides access to the default values of a <code class="xref any docutils literal"><span class="pre">Component's</span></code> <a class="reference internal" href="#psyneulink.core.components.component.Component.parameters" title="psyneulink.core.components.component.Component.parameters"><code class="xref any py py-attr docutils literal"><span class="pre">parameters</span></code></a></p>
+<dd><p><em>Defaults</em> – an object that provides access to the default values of a <code class="xref any docutils literal"><span class="pre">Component's</span></code> <a class="reference internal" href="#psyneulink.core.components.component.Component.parameters" title="psyneulink.core.components.component.Component.parameters"><code class="xref any py py-attr docutils literal"><span class="pre">parameters</span></code></a>;
+see <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">parameter defaults</span></a> for additional information.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -650,7 +682,7 @@ one and only one of the following flags is always set:</p>
 <li><code class="xref any docutils literal"><span class="pre">INITIALIZING</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">VALIDATING</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">INITIALIZED</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">REINITIALIZED</span></code></li>
+<li><code class="xref any docutils literal"><span class="pre">RESET</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">UNINITIALIZED</span></code></li>
 </ul>
 </div></blockquote>
@@ -665,9 +697,8 @@ one and only one of the following flags is always set:</p>
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.is_finished">
 <code class="descname">is_finished</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.is_finished" title="Permalink to this definition">¶</a></dt>
-<dd><p>set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.trial" title="psyneulink.core.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>; used by
-<a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the execution of one or more other
-Components on a Component.</p>
+<dd><p>set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>; used by <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the
+execution of one or more other Components on a Component.</p>
 </dd></dl>
 
 <dl class="method">
@@ -701,8 +732,8 @@ This is a convenience method that calls the <a class="reference internal" href="
 </dd></dl>
 
 <dl class="method">
-<dt id="psyneulink.core.components.component.Component.reinitialize">
-<code class="descname">reinitialize</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reinitialize" title="Permalink to this definition">¶</a></dt>
+<dt id="psyneulink.core.components.component.Component.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
@@ -736,81 +767,19 @@ value based on its default_variable.</p>
 
 <dl class="method">
 <dt id="psyneulink.core.components.component.Component.set_log_conditions">
-<code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>log_condition=&lt;LogCondition.EXECUTION: 480&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>log_condition=&lt;LogCondition.EXECUTION: 960&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">set_log_conditions</span></code></a>
 method of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="psyneulink.core.components.component.Component.stateful_parameters">
-<code class="descname">stateful_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.stateful_parameters" title="Permalink to this definition">¶</a></dt>
+<dt>
+<code class="descname">stateful_parameters</code></dt>
 <dd><p>A list of all of this object’s <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> whose values
 may change during runtime</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">DefaultsFlexibility</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>Denotes how rigid an assignment to a default is. That is, how much, if at all
-it can be modified to suit the purpose of a method/owner/etc.</p>
-<p>e.g. when assigning a Function to a Mechanism:</p>
-<blockquote>
-<div><p><code class="docutils literal"><span class="pre">pnl.TransferMechanism(default_variable=[0,</span> <span class="pre">0],</span> <span class="pre">function=pnl.Linear())</span></code></p>
-<p>the Linear function is assigned a default variable ([0]) based on it’s ClassDefault,
-which conflicts with the default variable specified by its future owner ([0, 0]). Since
-the default for Linear was not explicitly stated, we allow the TransferMechanism to
-reassign the Linear’s default variable as needed (<a class="reference internal" href="#psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE" title="psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE"><code class="xref any py py-attr docutils literal"><span class="pre">FLEXIBLE</span></code></a>)</p>
-</div></blockquote>
-</div></blockquote>
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE">
-<code class="descname">FLEXIBLE</code><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility.FLEXIBLE" title="Permalink to this definition">¶</a></dt>
-<dd><p>can be modified in any way</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility.RIGID">
-<code class="descname">RIGID</code><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility.RIGID" title="Permalink to this definition">¶</a></dt>
-<dd><p>cannot be modifed in any way</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.components.component.DefaultsFlexibility.INCREASE_DIMENSION">
-<code class="descname">INCREASE_DIMENSION</code><a class="headerlink" href="#psyneulink.core.components.component.DefaultsFlexibility.INCREASE_DIMENSION" title="Permalink to this definition">¶</a></dt>
-<dd><p>can be wrapped in a single extra dimension</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="psyneulink.core.components.component.ResetMode">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.component.</code><code class="descname">ResetMode</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.ResetMode" title="Permalink to this definition">¶</a></dt>
-<dd><p id="component-resetmode">ResetModes used for <strong>reset_params</strong>:</p>
-<dl class="docutils" id="current-to-instance-defaults">
-<dt><em>CURRENT_TO_INSTANCE_DEFAULTS</em></dt>
-<dd><ul class="first last simple">
-<li>resets all current values to instance default values.</li>
-</ul>
-</dd>
-</dl>
-<dl class="docutils" id="instance-to-class">
-<dt><em>INSTANCE_TO_CLASS</em></dt>
-<dd><ul class="first last simple">
-<li>resets all instance default values to class default values.</li>
-</ul>
-</dd>
-</dl>
-<dl class="docutils" id="all-to-class-defaults">
-<dt><em>ALL_TO_CLASS_DEFAULTS</em></dt>
-<dd><ul class="first last simple">
-<li>resets all current values and instance default values to       class default values</li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </div>
@@ -821,15 +790,6 @@ reassign the Linear’s default variable as needed (<a class="reference internal
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="Mechanism.html" class="btn btn-neutral float-right" title="Mechanisms" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="Core.html" class="btn btn-neutral" title="Core" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -869,11 +829,12 @@ reassign the Linear’s default variable as needed (<a class="reference internal
 <li><a class="reference internal" href="#component-structure">Component Structure</a><ul>
 <li><a class="reference internal" href="#core-structural-attributes"><em>Core Structural Attributes</em></a></li>
 <li><a class="reference internal" href="#parameters"><em>Parameters</em></a></li>
-<li><a class="reference internal" href="#component-methods"><em>Component Methods</em></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#execution">Execution</a><ul>
+<li><a class="reference internal" href="#lazy-updating"><em>Lazy Updating</em></a></li>
 <li><a class="reference internal" href="#initialization"><em>Initialization</em></a></li>
+<li><a class="reference internal" href="#termination"><em>Termination</em></a></li>
 <li><a class="reference internal" href="#count-and-time"><em>Count and Time</em></a></li>
 </ul>
 </li>
@@ -897,7 +858,7 @@ reassign the Linear’s default variable as needed (<a class="reference internal
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -219,7 +219,7 @@
 </div>
 <div class="section" id="overview">
 <span id="leabramechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A LeabraMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that wraps a leabra network. Leabra is an artificial neural
+<p>A LeabraMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that wraps a leabra network. Leabra is an artificial neural
 network algorithm (<a class="reference external" href="ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf">O’Reilly, 1996</a>). For more
 info about leabra, please see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a>.</p>
 <div class="admonition note">
@@ -259,7 +259,7 @@ target for the LeabraMechanism. The input to the <em>MAIN_INPUT</em> InputPort s
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>Currently, there is a bug where LeabraMechanism (and other Mechanisms with multiple input ports) cannot be
-used as <a class="reference internal" href="System.html#system-mechanisms"><span class="std std-ref">ORIGIN Mechanisms</span></a> for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>. If you desire to use a LeabraMechanism as an ORIGIN
+used as <code class="xref any docutils literal"><span class="pre">ORIGIN</span> <span class="pre">Mechanisms</span></code> for a <code class="xref any docutils literal"><span class="pre">System</span></code>. If you desire to use a LeabraMechanism as an ORIGIN
 Mechanism, you can work around this bug by creating two <a class="reference internal" href="TransferMechanism.html#transfermechanism-overview"><span class="std std-ref">TransferMechanisms</span></a> as ORIGIN
 Mechanisms instead, and have these two TransferMechanisms pass their output to the InputPorts of the
 LeabraMechanism. Here is an example of how to do this. In the example, T2 passes the training_data to the
@@ -327,8 +327,9 @@ arguments of the constructor.</li>
 <dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraFunction.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <a class="reference internal" href="Preferences.html#psyneulink.core.globals.preferences.PreferenceSet" title="psyneulink.core.globals.preferences.PreferenceSet"><code class="xref any py py-class docutils literal"><span class="pre">PreferenceSet</span></code></a> for the LeabraMechanism; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <span class="xref std std-doc">PreferenceSet</span> for details).</p>
+<dd><p><em>PreferenceSet or specification dict</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the LeabraMechanism; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
 </dd></dl>
 
 </dd></dl>
@@ -336,7 +337,7 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism">
 <em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.leabramechanism.</code><code class="descname">LeabraMechanism</code><span class="sig-paren">(</span><em>network=None</em>, <em>input_size=1</em>, <em>output_size=1</em>, <em>hidden_layers=0</em>, <em>hidden_sizes=None</em>, <em>training_flag=None</em>, <em>quarter_size=50</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that is a wrapper for a Leabra network in PsyNeuLink.
+<dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that is a wrapper for a Leabra network in PsyNeuLink.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -507,7 +508,7 @@ please see the <code class="xref any docutils literal"><span class="pre">leabra<
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

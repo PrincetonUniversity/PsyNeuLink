@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projections &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Pathway Projections" href="PathwayProjection.html" />
-    <link rel="prev" title="Learning Mechanism" href="LearningMechanism.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -172,11 +170,7 @@
       </li>
 
         
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-      <li>Projections</li>
+      <li>Projection</li>
     
   </ul>
 
@@ -199,12 +193,13 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="projections">
-<h1>Projections<a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="projection">
+<h1>Projection<a class="headerlink" href="#projection" title="Permalink to this headline">¶</a></h1>
+<p><em>Subclasses:</em></p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="PathwayProjection.html">Pathway Projections</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ModulatoryProjection.html">Modulatory Projections</a></li>
+<li class="toctree-l1"><a class="reference internal" href="PathwayProjection.html">PathwayProjection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ModulatoryProjection.html">ModulatoryProjection</a></li>
 </ul>
 </div>
 <span class="target" id="module-psyneulink.core.components.projections.projection"></span><div class="section" id="contents">
@@ -223,7 +218,7 @@
 </dl>
 </li>
 <li><a class="reference internal" href="#projection-execution"><span class="std std-ref">Execution</span></a></li>
-<li><code class="xref any docutils literal"><span class="pre">Projection_Class_Reference</span></code></li>
+<li><a class="reference internal" href="#projection-class-reference"><span class="std std-ref">Class Reference</span></a></li>
 </ul>
 </div></blockquote>
 </div>
@@ -239,7 +234,7 @@ each of which has subtypes that differ in the type of information they transmit,
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjection</span></a></dt>
 <dd><p class="first last">Used in conjunction with <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> to convey information along a processing
-<a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a>.  There is currently one on type of PathwayProjection:</p>
+<code class="xref any docutils literal"><span class="pre">pathway</span></code>.  There is currently one on type of PathwayProjection:</p>
 </dd>
 </dl>
 <ul class="simple">
@@ -248,7 +243,7 @@ each of which has subtypes that differ in the type of information they transmit,
 <dd>takes the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>
 converts it by convolving it with the MappingProjection’s <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
 parameter, and transmits the result to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of another ProcessingMechanism.  Typically,
-MappingProjections are used to connect Mechanisms in the <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> of a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, though they can be use for
+MappingProjections are used to connect Mechanisms in the <a class="reference internal" href="Pathway.html#module-psyneulink.core.compositions.pathway" title="psyneulink.core.compositions.pathway"><code class="xref any py py-mod docutils literal"><span class="pre">pathway</span></code></a> of a <code class="xref any docutils literal"><span class="pre">Process</span></code>, though they can be use for
 other purposes as well (for example, to convey the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>).</dd>
 </dl>
 </li>
@@ -267,9 +262,10 @@ that project to different types of <a class="reference internal" href="Port.html
 <ul class="simple">
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a></dt>
-<dd>takes the <code class="xref any docutils literal"><span class="pre">value</span></code> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> of a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmits
-this to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that uses this to modify its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter. LearningProjections are used when learning has
-been specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>.</dd>
+<dd>takes the <code class="xref any docutils literal"><span class="pre">value</span></code> of a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> of a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, and transmits this
+to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that uses it to modify its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
+parameter. LearningProjections are used in the <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway(s)</span></a> of a
+<a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</dd>
 </dl>
 </li>
 </ul>
@@ -277,9 +273,9 @@ been specified for a <a class="reference internal" href="Process.html#process-le
 <li><dl class="first docutils">
 <dt><a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a></dt>
 <dd>takes the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, and
-transmit this to the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ParameterPort of a `ProcessingMechanism</span></a> that uses this to modify
-the parameter of the (or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) for which it is responsible.
-ControlProjections are used when control has been used specified for a <a class="reference internal" href="System.html"><span class="doc">System</span></a>.</dd>
+transmit this to the <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ParameterPort of a `ProcessingMechanism</span></a> that uses it to modify
+the parameter of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> (or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>) for which it is
+responsible.</dd>
 </dl>
 </li>
 </ul>
@@ -288,7 +284,7 @@ ControlProjections are used when control has been used specified for a <a class=
 <dt><a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a></dt>
 <dd>takes the <a class="reference internal" href="GatingSignal.html#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of a <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> of a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and transmits this to
 the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that uses this to modify the
-Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></dd>
+Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  GatingProjections are a special subclass of ControlProjections.</dd>
 </dl>
 </li>
 </ul>
@@ -303,7 +299,7 @@ automatically</span></a>, as described below.</p>
 <div class="section" id="specifying-a-projection">
 <span id="projection-specification"></span><h3><em>Specifying a Projection</em><a class="headerlink" href="#specifying-a-projection" title="Permalink to this headline">¶</a></h3>
 <p>Projections can be specified in a number of places where they are required or permitted, for example in the
-specification of a <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>, where the value of a parameter is specified
+specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <code class="xref any docutils literal"><span class="pre">Process</span></code>, where the value of a parameter is specified
 (e.g., to assign a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>) or where a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is specified  (to assign it a
 <a class="reference internal" href="MappingProjection.html#mappingprojection-tuple-specification"><span class="std std-ref">LearningProjection</span></a>).  Any of the following can be used to specify a
 Projection in context:</p>
@@ -325,17 +321,23 @@ specifications.</li>
 <div><ul class="simple">
 <li><em>MAPPING_PROJECTION</em> – if the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or its <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> cannot be inferred from the context in which this specification occurs, then its
 <a class="reference internal" href="MappingProjection.html#mappingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until both of those have been
-determined (e.g., it is used in the specification of a <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> for a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a>). For
+determined (e.g., it is used in the specification of a <code class="xref any docutils literal"><span class="pre">pathway</span></code> for a <code class="xref any docutils literal"><span class="pre">Process</span></code>). For
 MappingProjections, a <a class="reference internal" href="MappingProjection.html#mappingprojection-matrix-specification"><span class="std std-ref">matrix specification</span></a> can also be used to
 specify the projection (see <strong>value</strong> below).</li>
-<li><em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>) – this can be used when specifying a parameter using the <a class="reference internal" href="ParameterPort.html#parameterport-tuple-specification"><span class="std std-ref">tuple format</span></a>, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for that
-parameter.  If the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs is part of a <a class="reference internal" href="System.html"><span class="doc">System</span></a>, then a
-<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned as the
+</ul>
+<p># FIX 5/8/20 [JDC] ELIMINATE SYSTEM:  IS IT TRUE THAT CONTROL SIGNALS ARE AUTOMATICALLY CREATED BY COMPOSITIONS?
+* <em>CONTROL_PROJECTION</em> (or <em>CONTROL</em>) – this can be used when specifying a parameter using the <a href="#id1"><span class="problematic" id="id2">`</span></a>tuple format</p>
+<blockquote>
+<div><p>&lt;ParameterPort_Tuple_Specification&gt;`, to create a default <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for that
+parameter.  If the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs is part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, then a
+<a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned as the
 ControlProjection’s <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>;  otherwise, the ControlProjection’s <a class="reference internal" href="ControlProjection.html#controlprojection-deferred-initialization"><span class="std std-ref">initialization
-is deferred</span></a> until the Mechanism is assigned to a System,
-at which time the ControlSignal is added to the System’s <a class="reference internal" href="System.html#psyneulink.core.components.system.System.controller" title="psyneulink.core.components.system.System.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned
+is deferred</span></a> until the Mechanism is assigned to a Composition, at
+which time the ControlSignal is added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and assigned
 as its the ControlProjection’s <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>.  See <a class="reference internal" href="ControlMechanism.html#controlmechanism-controlsignals"><span class="std std-ref">Specifying Parameters to Control</span></a> for
-additional details.</li>
+additional details.</p>
+</div></blockquote>
+<ul class="simple">
 <li><em>GATING_PROJECTION</em> (or <em>GATING</em>) – this can be used when specifying an <a class="reference internal" href="InputPort.html#inputport-projection-source-specification"><span class="std std-ref">InputPort</span></a> or an <code class="xref any docutils literal"><span class="pre">OutputPort</span></code>, to create a
 default <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>. If the GatingProjection’s <a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>
 cannot be inferred from the context in which this specification occurs, then its <a class="reference internal" href="GatingProjection.html#gatingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until it can be determined (e.g., a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> or
@@ -358,7 +360,7 @@ attribute of its <a class="reference internal" href="MappingProjection.html#psyn
 <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>, depending on the type of Mechanism and context of the specification.</li>
 </ul>
 <ul class="simple">
-<li><strong>Port</strong> – creates a <a class="reference internal" href="#"><span class="doc">Projections</span></a> to or from the specified <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>, depending on the type of Port and the
+<li><strong>Port</strong> – creates a <a class="reference internal" href="#"><span class="doc">Projection</span></a> to or from the specified <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>, depending on the type of Port and the
 context of the specification.</li>
 </ul>
 <ul id="projection-specification-dictionary">
@@ -416,9 +418,10 @@ be compatible  (see <a class="reference internal" href="Port.html#port-projectio
 </div>
 <div class="section" id="automatic-creation">
 <span id="projection-automatic-creation"></span><h3><em>Automatic creation</em><a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
-<p>Under some circumstances Projections are created automatically. For example, a <a class="reference internal" href="Process.html"><span class="doc">Process</span></a> automatically creates a
-<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in its <a class="reference internal" href="Process.html#psyneulink.core.components.process.Process.pathway" title="psyneulink.core.components.process.Process.pathway"><code class="xref any py py-attr docutils literal"><span class="pre">pathway</span></code></a> if none is specified; and <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are automatically created
-when <code class="xref std std-keyword docutils literal"><span class="pre">learning</span></code> is specified for a <a class="reference internal" href="Process.html#process-learning-sequence"><span class="std std-ref">Process</span></a> or <a class="reference internal" href="System.html#system-execution-learning"><span class="std std-ref">System</span></a>).</p>
+<p>Under some circumstances Projections are created automatically. For example, a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> automatically creates
+a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> between adjacent <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> specified in the <strong>pathways</strong>
+argument of its constructor (if none is specified) or in its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal"><span class="pre">add_linear_processing_pathway</span></code></a> method;  and, similarly, <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> are
+automatically created when a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathway</span></a> is added to a Composition.</p>
 </div>
 <div class="section" id="deferred-initialization">
 <span id="projection-deferred-initialization"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
@@ -440,8 +443,8 @@ assigned to these, and the attributes of those Ports to which Projections of eac
 summarized in the following table, and described in greater detail in the subsections below.  In addition to the
 Port attributes to which different types of Projections are assigned (shown in the table), all of the Projections
 of a Port are listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.projections" title="psyneulink.core.components.ports.port.Port_Base.projections"><code class="xref any py py-attr docutils literal"><span class="pre">projections</span></code></a> attribute.</p>
-<span id="projection-table"></span><table border="1" class="docutils align-center" id="id1">
-<caption><span class="caption-text"><strong>Sender, Receiver and Attribute Assignments for Projection Types</strong></span><a class="headerlink" href="#id1" title="Permalink to this table">¶</a></caption>
+<span id="projection-table"></span><table border="1" class="docutils align-center" id="id3">
+<caption><span class="caption-text"><strong>Sender, Receiver and Attribute Assignments for Projection Types</strong></span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col width="20%" />
 <col width="35%" />
@@ -535,7 +538,7 @@ determined by the type of Projection —&nbsp;see subclasses for details).</li>
 <span id="projection-weight-exponent"></span><h3><em>Weight and Exponent</em><a class="headerlink" href="#weight-and-exponent" title="Permalink to this headline">¶</a></h3>
 <p>Every Projection has a <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> attribute. These
 are applied to its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> before combining it with other Projections that project to the same
-<a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>.  If both are specified, the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> is applied before the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>.  These attributes determine both how the Projection’s <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is
+<a class="reference internal" href="Port.html"><span class="doc">Port</span></a>.  If both are specified, the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a> is applied before the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>.  These attributes determine both how the Projection’s <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is
 combined with others to determine the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the Port to which they project.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -559,11 +562,14 @@ Projection are listed in its <a class="reference internal" href="#psyneulink.cor
 executed. When a Projection executes, it gets the value of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>, assigns this as the
 <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, calls the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and provides the result as to its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.  The <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Projection converts the value received from its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to
 a form suitable as input for its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>.</p>
-<span class="target" id="projection-class-reference"></span><dl class="class">
+</div>
+<div class="section" id="class-reference">
+<span id="projection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
 <dt id="psyneulink.core.components.projections.projection.Projection_Base">
 <em class="property">class </em><code class="descclassname">psyneulink.core.components.projections.projection.</code><code class="descname">Projection_Base</code><span class="sig-paren">(</span><em>receiver</em>, <em>sender=None</em>, <em>weight=None</em>, <em>exponent=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for all Projections.
-The arguments below can be used in the constructor for any subclass of Mechanism.
+<dd><p>Base class for all Projections.</p>
+<p>The arguments below can be used in the constructor for any subclass of Mechanism.
 See <a class="reference internal" href="Component.html#component-class-reference"><span class="std std-ref">Component</span></a> and subclasses for additional arguments and attributes.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -579,7 +585,8 @@ It should be created by calling the constructor for a subclass` or by using any 
 <li><strong>sender</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the source of the Projection’s input. If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used. If it is not specified, it is assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
-<li><strong>function</strong> (<em>TransferFunction : default LinearMatrix</em>) – specifies function used to convey (and potentially convert) <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
+<li><strong>function</strong> (<em>TransferFunction : default LinearMatrix</em>) – specifies function used to convey (and potentially convert) <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> to <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
+Port.</li>
 <li><strong>receiver</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the destination of the Projection’s output.  If a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is specified, its
 <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> will be used. If it is not specified, it will be assigned in
 the context in which the Projection is used, or its initialization will be <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</li>
@@ -629,14 +636,14 @@ in the same manner as they can for a <a class="reference internal" href="Mechani
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.projection.Projection_Base.weight">
 <code class="descname">weight</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number</em> – multiplies the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection after applying the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a>, and before combining with any other Projections that project to the same <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>
+<dd><p><em>number</em> – multiplies the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection after applying the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="psyneulink.core.components.projections.projection.Projection_Base.exponent"><code class="xref any py py-attr docutils literal"><span class="pre">exponent</span></code></a>, and before combining with any other Projections that project to the same <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>
 to determine that Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#projection-weight-exponent"><span class="std std-ref">Weight and Exponent</span></a> for details).</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="psyneulink.core.components.projections.projection.Projection_Base.exponent">
 <code class="descname">exponent</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base.exponent" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number</em> – exponentiates the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection, before applying <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>, and before combining it with any other Projections that project to the same <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>
+<dd><p><em>number</em> – exponentiates the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Projection, before applying <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.weight" title="psyneulink.core.components.projections.projection.Projection_Base.weight"><code class="xref any py py-attr docutils literal"><span class="pre">weight</span></code></a>, and before combining it with any other Projections that project to the same <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>
 to determine that Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#projection-weight-exponent"><span class="std std-ref">Weight and Exponent</span></a> for details).</p>
 </dd></dl>
 
@@ -646,8 +653,8 @@ to determine that Port’s <a class="reference internal" href="Port.html#psyneul
 <dd><p><em>str</em> – the name of the Projection. If the Projection’s <a class="reference internal" href="#projection-deferred-initialization"><span class="std std-ref">initialization has been deferred</span></a>, it is assigned a temporary name (indicating its deferred initialization
 status) until initialization is completed, at which time it is assigned its designated name.  If that is the
 name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
-same base name (see <a class="reference internal" href="Naming.html"><span class="doc">Naming</span></a>). If the name is not  specified in the <strong>name</strong> argument of its constructor, a
-default name is assigned by the subclass (see subclass for details)</p>
+same base name (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>). If the name is not  specified in the <strong>name</strong> argument of its
+constructor, a default name is assigned by the subclass (see subclass for details)</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -666,15 +673,6 @@ default name is assigned by the subclass (see subclass for details)</p>
              
             </div>
             <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="PathwayProjection.html" class="btn btn-neutral float-right" title="Pathway Projections" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="LearningMechanism.html" class="btn btn-neutral" title="Learning Mechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
   
 
   
@@ -704,7 +702,7 @@ default name is assigned by the subclass (see subclass for details)</p>
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Projections</a><ul>
+<li><a class="reference internal" href="#">Projection</a><ul>
 <li><a class="reference internal" href="#contents">Contents</a></li>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#creating-a-projection">Creating a Projection</a><ul>
@@ -721,6 +719,7 @@ default name is assigned by the subclass (see subclass for details)</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#execution">Execution</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
 </ul>
 </li>
 </ul>
@@ -740,7 +739,7 @@ default name is assigned by the subclass (see subclass for details)</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

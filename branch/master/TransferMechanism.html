@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.7.5.4 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.7.5.4+432.g510a3d8 documentation</title>
   
 
   
@@ -28,9 +28,7 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="IntegratorMechanism" href="IntegratorMechanism.html" />
-    <link rel="prev" title="Processing Mechanisms" href="ProcessingMechanism.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.7.5.4
+                  0.7.5.4+432
                 </div>
               
             
@@ -125,11 +123,11 @@
               
             
             
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
@@ -171,14 +169,6 @@
         </a> &gt;
       </li>
 
-        
-          <li><a href="Core.html">Core</a> &gt;</li>
-        
-          <li><a href="Component.html">Component</a> &gt;</li>
-        
-          <li><a href="Mechanism.html">Mechanisms</a> &gt;</li>
-        
-          <li><a href="ProcessingMechanism.html">Processing Mechanisms</a> &gt;</li>
         
       <li>TransferMechanism</li>
     
@@ -237,7 +227,7 @@
 </div>
 <div class="section" id="overview">
 <span id="transfermechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A TransferMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">Processing Mechanisms</span></a> that adds the ability to integrate its input.</p>
+<p>A TransferMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that adds the ability to integrate its input.</p>
 <p>Like a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
 (dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
 array), or several independent ones. The function used to carry out the transformation can be selected from the
@@ -305,12 +295,12 @@ the specified value of <code class="docutils literal"><span class="pre">0.1</spa
 <p>When switching between <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> = True and <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> = False, the behavior of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> is determined by <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.on_resume_integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.on_resume_integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">on_resume_integrator_mode</span></code></a>. There are three options for how the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> may resume accumulating when the Mechanism returns to <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> = True.</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>INSTANTANEOUS_MODE_VALUE</em> - reinitialize the Mechanism with its own current value,
+<li><em>INSTANTANEOUS_MODE_VALUE</em> - reset the Mechanism with its own current value,
 so that the value computed by the Mechanism during “Instantaneous Mode” is where the
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> begins accumulating.</li>
 <li><em>INTEGRATOR_MODE_VALUE</em> - resume accumulation wherever the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> left off the last time <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> was True.</li>
-<li><em>REINITIALIZE</em> - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>s
-<code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method, so that accumulation begins at
+<li><em>RESET</em> - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>s
+<code class="xref any docutils literal"><span class="pre">reset</span></code> method, so that accumulation begins at
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a></li>
 </ul>
 </div></blockquote>
@@ -327,7 +317,7 @@ before setting it as the TransferMechanism’s <a class="reference internal" hre
 <div class="section" id="inputports">
 <span id="transfermechanism-inputports"></span><h3><em>InputPorts</em><a class="headerlink" href="#inputports" title="Permalink to this headline">¶</a></h3>
 <p>By default, a TransferMechanism has a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;  however, more than one can be specified
-using the <strong>default_variable</strong> or <strong>size</strong> arguments of its constructor (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>).  The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each InputPort is used as a separate item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and transformed independently by its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
+using the <strong>default_variable</strong> or <strong>size</strong> arguments of its constructor (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each InputPort is used as a separate item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and transformed independently by its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.
 Like any InputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of any or all of the TransferMechanism’s InputPorts can be
 modulated by one or more <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">GatingSignals</span></a> prior to transformation by its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </div>
@@ -504,11 +494,11 @@ as in the following example:</p>
 the string “&gt;=”, which is a key in the <code class="xref any docutils literal"><span class="pre">comparison_operators</span></code> dict for the Python <code class="docutils literal"><span class="pre">operator.ge</span></code>; any of these
 can be used to specify <strong>termination_comparison_op</strong>).</p>
 <p id="transfermechanism-termination-by-time"><em>Termination by time</em>.  This terminates execution when the Mechanism has executed at least a number of times equal
-to the <strong>threshold</strong> at a particular TimeScale (e.g., within a <a class="reference internal" href="Run.html"><span class="doc">Run</span></a> or a <code class="xref any docutils literal"><span class="pre">Trial</span></code>). This is specified by assigning
-a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> to <strong>termination_measure</strong>;  execution terminates when the number of executions at that TimeScale
-equals the <strong>termination_threshold</strong>.  Note that, in this case, the <strong>termination_comparison_op</strong> argument is
-ignored (the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> is automatically set to
-<em>GREATER_THAN_OR_EQUAL</em>).  For example, <code class="docutils literal"><span class="pre">my_mech</span></code> is configured below to execute at least twice per trial:</p>
+to the <strong>threshold</strong> at a particular TimeScale (e.g., within a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> or a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>). This is
+specified by assigning a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal"><span class="pre">TimeScale</span></code></a> to <strong>termination_measure</strong>;  execution terminates when the number of
+executions at that TimeScale equals the <strong>termination_threshold</strong>.  Note that, in this case,
+the <strong>termination_comparison_op</strong> argument is ignored (the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_comparison_op"><code class="xref any py py-attr docutils literal"><span class="pre">termination_comparison_op</span></code></a> is automatically set to <em>GREATER_THAN_OR_EQUAL</em>).  For example,
+<code class="docutils literal"><span class="pre">my_mech</span></code> is configured below to execute at least twice per trial:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">termination_measure</span><span class="o">=</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">,</span>
@@ -637,9 +627,9 @@ since it begins closer to its threshold in that trial.</p>
 <div class="section" id="reinitialization">
 <span id="transfermechanism-reinitialization"></span><h3><em>Reinitialization</em><a class="headerlink" href="#reinitialization" title="Permalink to this headline">¶</a></h3>
 <p>In some cases, it may be useful to reset the accumulation of a Mechanism back to its original starting point, or a new
-starting point. This is done using the <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method on the
-mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, or the mechanisms’s own <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method.</p>
-<p>The <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> sets:</p>
+starting point. This is done using the <code class="xref any docutils literal"><span class="pre">reset</span></code> method on the
+mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>, or the mechanisms’s own <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method.</p>
+<p>The <code class="xref any docutils literal"><span class="pre">reset</span></code> method of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> sets:</p>
 <blockquote>
 <div><ul class="simple">
 <li>the integrator_function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator.previous_value" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> attribute and</li>
@@ -647,7 +637,7 @@ mechanism’s <a class="reference internal" href="#psyneulink.core.components.me
 </ul>
 <p>to the specified value.</p>
 </div></blockquote>
-<p>The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reinitialize"><code class="xref any py py-meth docutils literal"><span class="pre">reinitialize</span></code></a> method of the <a class="reference internal" href="#"><span class="doc">TransferMechanism</span></a> first sets:</p>
+<p>The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a> method of the <a class="reference internal" href="#"><span class="doc">TransferMechanism</span></a> first sets:</p>
 <blockquote>
 <div><ul class="simple">
 <li>the Mechanismn’s <code class="xref any docutils literal"><span class="pre">previous_value</span></code> attribute,</li>
@@ -662,8 +652,8 @@ mechanism’s <a class="reference internal" href="#psyneulink.core.components.me
 - the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attribute is set to the output of the function
 - the TransferMechanism updates its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a></p>
 </div></blockquote>
-<p>A use case for <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> is demonstrated in the following example:</p>
-<p>Create a <a class="reference internal" href="System.html"><span class="doc">System</span></a> with a TransferMechanism in integrator_mode:</p>
+<p>A use case for <code class="xref any docutils literal"><span class="pre">reset</span></code> is demonstrated in the following example:</p>
+<p>Create a <code class="xref any docutils literal"><span class="pre">System</span></code> with a TransferMechanism in integrator_mode:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_time_averaged_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>        
 <span class="gp">... </span>                                                       <span class="n">integrator_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            
 <span class="gp">... </span>                                                       <span class="n">integration_rate</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>            
@@ -689,11 +679,11 @@ where it left off:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">my_time_averaged_transfer_mechanism</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>  <span class="mf">0.72105725</span><span class="p">)</span>  
 </pre></div>
 </div>
-<p>The integrator_function’s <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method and the TransferMechanism’s
-<code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method are useful in cases when the integration should instead start
+<p>The integrator_function’s <code class="xref any docutils literal"><span class="pre">reset</span></code> method and the TransferMechanism’s
+<code class="xref any docutils literal"><span class="pre">reset</span></code> method are useful in cases when the integration should instead start
 over at the original initial value, or a new one.</p>
-<p>Use <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> to re-start the integrator_function’s accumulation at 0.2:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_time_averaged_transfer_mechanism</span><span class="o">.</span><span class="n">integrator_function</span><span class="o">.</span><span class="n">reinitialize</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.2</span><span class="p">]]))</span>  
+<p>Use <code class="xref any docutils literal"><span class="pre">reset</span></code> to re-start the integrator_function’s accumulation at 0.2:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_time_averaged_transfer_mechanism</span><span class="o">.</span><span class="n">integrator_function</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.2</span><span class="p">]]))</span>  
 </pre></div>
 </div>
 <p>Run the system again to observe that my_time_averaged_transfer_mechanism’s integrator_function will begin accumulating
@@ -704,11 +694,11 @@ at 0.2, following the exact same trajectory as in RUN 1:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">my_time_averaged_transfer_mechanism</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>  <span class="mf">0.527608</span><span class="p">)</span>  
 </pre></div>
 </div>
-<p>Because <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> was set to 0.2 (its original initial_value),
+<p>Because <code class="xref any docutils literal"><span class="pre">reset</span></code> was set to 0.2 (its original initial_value),
 my_time_averaged_transfer_mechanism’s integrator_function effectively started RUN 3 in the same state as it began RUN 1.
 As a result, it arrived at the exact same value after 5 trials (with identical inputs).</p>
-<p>In the examples above, <code class="xref any docutils literal"><span class="pre">reinitialize</span></code> was applied directly to the
-integrator function. The key difference between the <code class="xref any docutils literal"><span class="pre">integrator_function's</span> <span class="pre">reinitialize</span></code> and the <code class="xref any docutils literal"><span class="pre">TransferMechanism's</span> <span class="pre">reinitialize</span></code> is
+<p>In the examples above, <code class="xref any docutils literal"><span class="pre">reset</span></code> was applied directly to the
+integrator function. The key difference between the <code class="xref any docutils literal"><span class="pre">integrator_function's</span> <span class="pre">reset</span></code> and the <code class="xref any docutils literal"><span class="pre">TransferMechanism's</span> <span class="pre">reset</span></code> is
 that the latter will also execute the mechanism’s function and update its output ports. This is useful if the
 mechanism’s value or any of its OutputPort values will be used or checked <em>before</em> the mechanism’s next execution. (
 This may be true if, for example, the mechanism is <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">recurrent</span></a>, the mechanism is
@@ -738,12 +728,12 @@ executed with <a class="reference internal" href="#psyneulink.core.components.me
 when the Mechanism was most recently in “Instantaneous Mode” (<code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> = False) and has just switched to “IntegratorFunction Mode”
 (<code class="xref any docutils literal"><span class="pre">integrator_mode</span></code> = True);  can be one of the following keywords:</p>
 <ul>
-<li><em>INSTANTANEOUS_MODE_VALUE</em> - reinitialize the Mechanism with its own current value,
+<li><em>INSTANTANEOUS_MODE_VALUE</em> - reset the Mechanism with its own current value,
 so that the value computed by the Mechanism during “Instantaneous Mode” is where the
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> begins accumulating.</li>
 <li><em>INTEGRATOR_MODE_VALUE</em> - resume accumulation wherever the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> left off the last time <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> was True.</li>
-<li><em>REINITIALIZE</em> - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>s
-<code class="xref any docutils literal"><span class="pre">reinitialize</span></code> method, so that accumulation begins at
+<li><em>RESET</em> - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>s
+<code class="xref any docutils literal"><span class="pre">reset</span></code> method, so that accumulation begins at
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a></li>
 </ul>
 </li>
@@ -831,10 +821,10 @@ for additional details).</p>
 when the Mechanism was most recently in “Instantaneous Mode” (integrator_mode = False) and has just switched to
 “IntegratorFunction Mode” (integrator_mode = True). There are three options:</p>
 <ol class="arabic simple">
-<li>INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value
+<li>INSTANTANEOUS_MODE_VALUE - reset the Mechanism with its own current value, so that the value
 cmoputed by the Mechanism during “Instantaneous Mode” is where the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> begins accumulating.</li>
 <li>INTEGRATOR_MODE_VALUE - resume accumulation wherever the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> left off the last time <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_mode</span></code></a> was True.</li>
-<li>REINITIALIZE - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function's</span></code></a> <code class="xref any docutils literal"><span class="pre">reinitialize</span>
+<li>RESET - call the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function's</span></code></a> <code class="xref any docutils literal"><span class="pre">reset</span>
 <span class="pre">method</span></code> so that accumulation Mechanism begins at <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value"><code class="xref any py py-attr docutils literal"><span class="pre">initial_value</span></code></a></li>
 </ol>
 </dd></dl>
@@ -951,15 +941,6 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
             </div>
             <footer>
   
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="IntegratorMechanism.html" class="btn btn-neutral float-right" title="IntegratorMechanism" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
-      
-      
-        <a href="ProcessingMechanism.html" class="btn btn-neutral" title="Processing Mechanisms" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
-      
-    </div>
-  
 
   
 
@@ -1024,7 +1005,7 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.7.5.4',
+               VERSION:'0.7.5.4+432.g510a3d8',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

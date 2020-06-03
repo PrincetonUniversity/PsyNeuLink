@@ -361,15 +361,15 @@ for node in Bidirectional_Stroop.mechanisms:
 #     response_all.append(rrr)  # .shape[0])
 #     response_all2.append(rrr.shape[0])
 #
-#     # Clear log & reinitialize ----------------------------------------------------------------------------------------
+#     # Clear log & reset ----------------------------------------------------------------------------------------
 #     response_layer.log.clear_entries(delete_entry=False)
 #     colors_hidden_layer.log.clear_entries(delete_entry=False)
 #     words_hidden_layer.log.clear_entries(delete_entry=False)
 #     task_layer.log.clear_entries(delete_entry=False)
-#     colors_hidden_layer.reinitialize([[0, 0, 0]])
-#     words_hidden_layer.reinitialize([[0, 0, 0]])
-#     response_layer.reinitialize([[0, 0]])
-#     task_layer.reinitialize([[0, 0]])
+#     colors_hidden_layer.reset([[0, 0, 0]])
+#     words_hidden_layer.reset([[0, 0, 0]])
+#     response_layer.reset([[0, 0]])
+#     task_layer.reset([[0, 0]])
 #     print('response_all: ', response_all)
 #
 # # Run color naming trials ----------------------------------------------------------------------------------------------
@@ -412,15 +412,15 @@ for node in Bidirectional_Stroop.mechanisms:
 #     response_all3.append(rrr2)  # .shape[0])
 #     response_all4.append(rrr2.shape[0])
 #
-#     # Clear log & reinitialize ----------------------------------------------------------------------------------------
+#     # Clear log & reset ----------------------------------------------------------------------------------------
 #     response_layer.log.clear_entries(delete_entry=False)
 #     colors_hidden_layer.log.clear_entries(delete_entry=False)
 #     words_hidden_layer.log.clear_entries(delete_entry=False)
 #     task_layer.log.clear_entries(delete_entry=False)
-#     colors_hidden_layer.reinitialize([[0, 0, 0]])
-#     words_hidden_layer.reinitialize([[0, 0, 0]])
-#     response_layer.reinitialize([[0, 0]])
-#     task_layer.reinitialize([[0, 0]])
+#     colors_hidden_layer.reset([[0, 0, 0]])
+#     words_hidden_layer.reset([[0, 0, 0]])
+#     response_layer.reset([[0, 0]])
+#     task_layer.reset([[0, 0]])
 #     print('response_all: ', response_all)
 #
 #
