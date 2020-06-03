@@ -3050,7 +3050,7 @@ class NodeRole(Enum):
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
 PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
-DIRECT = "direct_to_cim"
+DIRECT = "direct"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -8403,51 +8403,57 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
 
-            for sndr in senders:
+            for sender in senders:
 
-                # Iterate through all Projections from all OutputPorts of sndr
-                for output_port in sndr.output_ports:
+                # Iterate through all Projections from all OutputPorts of sender
+                for output_port in sender.output_ports:
                     for proj in output_port.efferents:
 
-                        # FIX 6/1/20 OK TO LEAVE??
+                        # FIX 6/1/20 OK TO LEAVE?? DELETE
                         # Skip Projections not in the Composition
                         if proj not in self.projections:
                             continue
 
-                        assign_to_enclosing_comp = False
+                        assign_proj_to_enclosing_comp = False
 
                         # FIX 6/1/20:  MOVE THIS TO _assign_cim_components TO EXPLOIT CIM HANDLING THERE
                         #              (BY ALLOWING IT TO BE CALLED IF show_nested == DIRECT)
-                        if isinstance(sndr, CompositionInterfaceMechanism):
+                        if isinstance(sender, CompositionInterfaceMechanism):
                             assert show_nested is DIRECT, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
                                                           f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
                             # FIX: STILL TODO:
-                            #  - Set sndr to source and Projection to its efferent (for sndr_label, but not rcvr label)
+                            #  - Set sender to source and Projection to its efferent (for sndr_label, but not rcvr label)
                             #  - skip if source is a controller (those are handled in _assign_control_components
-                            #  - skip rep of Comp node
 
-                            # FIX 6/2/20: ABSTRACT AND CONSOLIDATE:
-                            if sndr in {self.input_CIM or self.parameter_CIM}:
+                            if sender in {self.input_CIM, self.parameter_CIM}:
                                 # FIX 6/2/20:
-                                #     DELETE ONCE FILTER BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
-                                # Skip cims of outermost Composition
-                                if not sndr.afferents:
+                                #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
+                                # If cim has no afferents, presumably it is for the outermost Composition,
+                                #     and therefore is not passing an afferent Projection from that Composition
+                                if not sender.afferents:
                                     continue
                                 # Insure relevant InputPort of cim has only one afferent
-                                assert len(sndr.port_map[proj.receiver][0].path_afferents)==1,\
-                                    f"PROGRAM ERROR: {sndr} of {self.name} has more than one afferent Projection."
-                                sndr = sndr.port_map[proj.receiver][0].path_afferents[0].sender.owner
-                                assign_to_enclosing_comp = True
+                                assert len(sender.port_map[proj.receiver][0].path_afferents)==1,\
+                                    f"PROGRAM ERROR: {sender} of {self.name} has more than one afferent Projection."
+                                sndr = sender.port_map[proj.receiver][0].path_afferents[0].sender.owner
+                                # Skip cims as sources (handled in _assign_cim_compmoents)
+                                if (isinstance(sndr, CompositionInterfaceMechanism)
+                                        or (isinstance(sndr, ControlMechanism) and sndr.composition)):
+                                    continue
+                                assign_proj_to_enclosing_comp = True
 
                             else:
                                 # FIX 6/2/20:
-                                #     DELETE ONCE FILTER BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
-                                if not sndr.efferents:
+                                #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
+                                if not sender.efferents:
                                     continue
                                 # Insure cim has only one afferent
-                                assert len([k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender])==1, \
-                                    f"PROGRAM ERROR: {sndr} of {self.name} has more than one efferent Projection."
-                                sndr = [k.owner for k,v in sndr.port_map.items() if v[1] is proj.sender][0]
+                                assert len([k.owner for k,v in sender.port_map.items() if v[1] is proj.sender])==1, \
+                                    f"PROGRAM ERROR: {sender} of {self.name} has more than one efferent Projection."
+                                sndr = [k.owner for k,v in sender.port_map.items() if v[1] is proj.sender][0]
+
+                        else:
+                            sndr = sender
 
                         # Set sndr info
                         sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
@@ -8532,7 +8538,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 else:
                                     label = ''
 
-                            if assign_to_enclosing_comp:
+                            if assign_proj_to_enclosing_comp:
                                 graph = enclosing_g
                             else:
                                 graph = g
@@ -8660,8 +8666,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Enforce show_nested but don't allow show_nested to be DIRECT (that is determined by show_cim)
             show_nested = True
 
-        for r in rcvrs:
-            _assign_processing_components(G, r, show_nested, show_nested_args, enclosing_g)
+        for rcvr in rcvrs:
+            _assign_processing_components(G, rcvr, show_nested, show_nested_args, enclosing_g)
 
         # Add cim Components to graph if show_cim
         if show_cim:
