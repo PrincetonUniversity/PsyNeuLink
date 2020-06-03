@@ -7781,63 +7781,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # MODIFIED 6/1/20 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g)
 
-        def _assign_cim_components(g, cims):
+        def _assign_cim_components(g, cims, enclosing_g):
 
             cim_rank = 'same'
 
             for cim in cims:
 
-                cim_penwidth = str(default_width)
+                # Skip cim if it is not doing anything
+                if not (cim.afferents or cim.efferents):
+                    continue
 
                 # ASSIGN CIM NODE ****************************************************************
 
-                # Assign color
-                # Also take opportunity to verify that cim is input_CIM, parameter_CIM or output_CIM
+                # Assign Node attributes
+
+                # Also take opportunity to validate that cim is input_CIM, parameter_CIM or output_CIM
                 if cim is self.input_CIM:
-                    if cim in active_items:
-                        if active_color == BOLD:
-                            cim_color = input_color
-                        else:
-                            cim_color = active_color
-                        cim_penwidth = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        cim_color = input_color
-                    compact_cim = not cim.afferents or show_cim is not DIRECT
-
+                    cim_type_color = input_color
                 elif cim is self.parameter_CIM:
-                    # Unlike input_CIM and output_CIM, parameter_CIM may not be used
-                    if not (cim.afferents or cim.efferents):
-                        continue
-                    if cim in active_items:
-                        if active_color == BOLD:
-                            cim_color = controller_color
-                        else:
-                            cim_color = active_color
-                        cim_penwidth = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        cim_color = controller_color
-                    compact_cim = not cim.afferents or show_cim is not DIRECT
-
+                    cim_type_color = controller_color
                 elif cim is self.output_CIM:
-                    if cim in active_items:
-                        if active_color == BOLD:
-                            cim_color = output_color
-                        else:
-                            cim_color = active_color
-                        cim_penwidth = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        cim_color = output_color
-                    compact_cim = not cim.efferents or show_cim is not DIRECT
-
+                    cim_type_color = output_color
                 else:
                     assert False, \
                         f'PROGRAM ERROR: _assign_cim_components called with node ' \
                         f'that is not input_CIM, parameter_CIM, or output_CIM'
+                cim_penwidth = str(default_width)
+                if cim in active_items:
+                    if active_color == BOLD:
+                        cim_color = cim_type_color
+                    else:
+                        cim_color = active_color
+                    cim_penwidth = str(default_width + active_thicker_by)
+                    self.active_item_rendered = True
+                else:
+                    cim_color = cim_type_color
 
-                # Assign lablel
+                compact_cim = not cim.afferents or show_cim is not DIRECT
+
+                # Assign Node lablel
                 cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
                 if show_node_structure:
                     g.node(cim_label,
@@ -7856,12 +7838,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            rank=cim_rank,
                            penwidth=cim_penwidth)
 
+                # FIX 6/2/20:  THIS CAN BE CONDENSED (ABSTACTED INTO GENERIC FUNCTION TAKING cim-SPECIFIC PARAMETERS)
                 # ASSIGN CIM PROJECTIONS ****************************************************************
 
                 # INPUT_CIM -----------------------------------------------------------------------------
 
-                # Projections from input_CIM to INPUT nodes
                 if cim is self.input_CIM:
+
+                    # Projections from Node(s) in enclosing Composition to input_CIM from
+                    for input_port in self.input_CIM.input_ports:
+                        projs = input_port.path_afferents
+                        for proj in projs:
+
+                            # Get label for Node that sends the input (sndr_label)
+                            sndr_node_output_port = proj.sender
+                            # Skip if cim (handled by enclosing Composition's call to this method)
+                            if isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism):
+                                continue
+                            else:
+                                sndr_node_output_port_owner = sndr_node_output_port.owner
+
+                            sndr_label = self._get_graph_node_label(sndr_node_output_port_owner,
+                                                                    show_types, show_dimensions)
+                            # Construct edge name
+                            if show_node_structure:
+                                # Get label for CIM's port as edge's receiver
+                                rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
+                                if (isinstance(sndr_node_output_port_owner, Composition)
+                                        and show_cim is not DIRECT):
+                                    sndr_output_node_proj_label = sndr_label
+                                else:
+                                    # Need to use direct reference to proj.sender rather than snder_input_node
+                                    #    since could be Composition, which does not have a get_port_name attribute
+                                    sndr_output_node_proj_label = \
+                                        f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                    # rcvr_input_node_proj_label = \
+                                    #     f"{rcvr_label}:" \
+                                    #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)}"
+                            else:
+                                rcvr_cim_proj_label = cim_label
+                                sndr_output_node_proj_label = sndr_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                                if active_color == BOLD:
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
+                            else:
+                                label = ''
+
+                            enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
+                                             color=proj_color, penwidth=proj_width)
+
+                    # Projections from input_CIM to INPUT nodes
                     for output_port in self.input_CIM.output_ports:
                         projs = output_port.efferents
                         for proj in projs:
@@ -7877,6 +7914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if rcvr_input_node_proj_owner is self.controller:
                                 # Projections to contoller are handled under _assign_controller_components
                                 continue
+
                             # Validate the Projection is to an INPUT node or a node that is shadowing one
                             if ((rcvr_input_node_proj_owner in self.nodes_to_roles and
                                  not NodeRole.INPUT in self.nodes_to_roles[rcvr_input_node_proj_owner])
@@ -7927,8 +7965,63 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # PARAMETER_CIM -------------------------------------------------------------------------
 
-                # Projections from parameter_CIM to Nodes that are being modulated
                 if cim is self.parameter_CIM:
+
+                    # Projections from ControlMechanism(s) in enclosing Composition parameter_CIM
+                    # (other than controller;  that is handled in _assign_controller_compoents)
+                    for input_port in self.parameter_CIM.input_ports:
+                        projs = input_port.path_afferents
+                        for proj in projs:
+
+                            # Get label for Node that sends the ControlProjection (sndr label)
+                            ctl_mech_output_port = proj.sender
+                            # Skip if cim (handled by enclosing Compositoin's call to this method)
+                            if isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism):
+                                continue
+                            else:
+                                ctl_mech_output_port_owner = ctl_mech_output_port.owner
+                            assert isinstance(ctl_mech_output_port_owner, ControlMechanism), \
+                                f"PROGRAM ERROR: parameter_CIM of {self.name} recieves a Projection " \
+                                f"from a Node from other than a {ControlMechanism.__name__}."
+                            # Skip Projections from controller (handled in _assign_controller_components)
+                            if ctl_mech_output_port_owner.composition:
+                                continue
+                            sndr_label = self._get_graph_node_label(ctl_mech_output_port_owner,
+                                                                    show_types, show_dimensions)
+                            # Construct edge name
+                            if show_node_structure:
+                                # Get label for CIM's port as edge's receiver
+                                rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
+                                # Need to use direct reference to proj.sender rather than snder_input_node
+                                #    since could be Composition, which does not have a get_port_name attribute
+                                # sndr_output_node_proj_label = \
+                                #     f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                rcvr_input_node_proj_label = \
+                                    f"{sndr_label}:" \
+                                    f"{ctl_mech_output_port_owner._get_port_name(ctl_mech_output_port)}"
+                            else:
+                                rcvr_cim_proj_label = cim_label
+                                sndr_output_node_proj_label = sndr_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                                if active_color == BOLD:
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
+                            else:
+                                label = ''
+                            enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
+                                             color=proj_color, penwidth=proj_width)
+
+                    # Projections from parameter_CIM to Nodes that are being modulated
                     for output_port in self.parameter_CIM.output_ports:
                         projs = output_port.efferents
                         for proj in projs:
@@ -7987,9 +8080,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # OUTPUT_CIM ----------------------------------------------------------------------------
 
-                # Projections from OUTPUT nodes to output_CIM
                 if cim is self.output_CIM:
-                    # Construct edge name
+
+                    # Projections from OUTPUT nodes to output_CIM
                     for input_port in self.output_CIM.input_ports:
                         projs = input_port.path_afferents
                         for proj in projs:
@@ -8045,6 +8138,58 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = ''
                             g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
                                    color=proj_color, penwidth=proj_width)
+
+                    # Projections from output_CIM to Node(s) in enclosing Composition
+                    for output_port in self.output_CIM.output_ports:
+                        projs = output_port.efferents
+                        for proj in projs:
+
+                            rcvr_node_input_port = proj.receiver
+                            # Skip if cim (handled by enclosing Composition's call to this method
+                            if isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism):
+                                continue
+                            else:
+                                rcvr_node_input_port_owner = rcvr_node_input_port.owner
+
+                            rcvr_label = self._get_graph_node_label(rcvr_node_input_port_owner,
+                                                                    show_types, show_dimensions)
+                            # Construct edge name
+                            if show_node_structure:
+                                # Get label of CIM's port as edge's receiver
+                                sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                if (isinstance(rcvr_node_input_port_owner, Composition)
+                                        and show_cim is not DIRECT):
+                                    rcvr_input_node_proj_label = rcvr_label
+                                else:
+                                    # Need to use direct reference to proj.sender rather than sndr_output_node_proj
+                                    #    since could be Composition, which does not have a get_port_name attribute
+                                    rcvr_input_node_proj_label = \
+                                        f"{rcvr}:{InputPort.__name__}-{proj.receiver.name}"
+                                    # rcvr_input_node_proj_label = \
+                                    #     f"{sndr_label}:" \
+                                    #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
+                            else:
+                                rcvr_input_node_proj_label = rcvr_label
+                                sndr_cim_proj_label = cim_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                                if active_color == BOLD:
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
+                            else:
+                                label = ''
+                            enclosing_g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
+                                             color=proj_color, penwidth=proj_width)
+
 
         def _assign_controller_components(g):
             """Assign control nodes and edges to graph"""
@@ -8399,6 +8544,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         @tc.typecheck
         def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None, enclosing_g=None):
+            # FIX 6/2/20 MOVE HANDLING OF cims FROM _assign_cim_components TO HERE
 
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
@@ -8409,19 +8555,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for output_port in sender.output_ports:
                     for proj in output_port.efferents:
 
-                        # FIX 6/1/20 OK TO LEAVE?? DELETE
                         # Skip Projections not in the Composition
                         if proj not in self.projections:
                             continue
 
                         assign_proj_to_enclosing_comp = False
 
-                        # FIX 6/1/20:  MOVE THIS TO _assign_cim_components TO EXPLOIT CIM HANDLING THERE
-                        #              (BY ALLOWING IT TO BE CALLED IF show_nested == DIRECT)
+                        # Skip if Composition and show_cim=DIRECT (handled by _assign_cim_components)
+                        if isinstance(sender, Composition) and show_cim is DIRECT:
+                            continue
+
                         if isinstance(sender, CompositionInterfaceMechanism):
                             assert show_nested is DIRECT, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
                                                           f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
-                            # FIX: STILL TODO:
+                            # FIX: STILL TODO??:
                             #  - Set sender to source and Projection to its efferent (for sndr_label, but not rcvr label)
                             #  - skip if source is a controller (those are handled in _assign_control_components
 
@@ -8436,12 +8583,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 assert len(sender.port_map[proj.receiver][0].path_afferents)==1,\
                                     f"PROGRAM ERROR: {sender} of {self.name} has more than one afferent Projection."
                                 sndr = sender.port_map[proj.receiver][0].path_afferents[0].sender.owner
-                                # Skip cims as sources (handled in _assign_cim_compmoents)
+                                # Skip:
+                                # - cims as sources (handled in _assign_cim_compmoents)
+                                # - controller (handled in _assign_controller_components)
                                 if (isinstance(sndr, CompositionInterfaceMechanism)
                                         or (isinstance(sndr, ControlMechanism) and sndr.composition)):
                                     continue
                                 assign_proj_to_enclosing_comp = True
 
+                            # sender is output_CIM
                             else:
                                 # FIX 6/2/20:
                                 #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -8451,7 +8601,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 assert len([k.owner for k,v in sender.port_map.items() if v[1] is proj.sender])==1, \
                                     f"PROGRAM ERROR: {sender} of {self.name} has more than one efferent Projection."
                                 sndr = [k.owner for k,v in sender.port_map.items() if v[1] is proj.sender][0]
-
+                                # Skip:
+                                # - cims as sources (handled in _assign_cim_compmoents)
+                                # - controller (handled in _assign_controller_components)
+                                if (isinstance(sndr, CompositionInterfaceMechanism)
+                                        or (isinstance(sndr, ControlMechanism) and sndr.composition)):
+                                    continue
                         else:
                             sndr = sender
 
@@ -8671,7 +8826,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Add cim Components to graph if show_cim
         if show_cim:
-            _assign_cim_components(G, [self.input_CIM, self.parameter_CIM, self.output_CIM])
+            _assign_cim_components(G, [self.input_CIM, self.parameter_CIM, self.output_CIM], enclosing_g)
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
