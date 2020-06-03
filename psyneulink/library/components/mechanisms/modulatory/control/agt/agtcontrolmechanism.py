@@ -138,20 +138,20 @@ COMMENT
 Execution
 ---------
 
-An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputPort.value>` of
-its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determine its `control_allocation
+An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputPort.value>`
+of its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determine its `control_allocation
 <ITC.control_allocation>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
-its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
-receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
-ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
-`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it
-controls, which are then used in the subsequent `TRIAL` of execution.
+its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input
+<AGTControlMechanism_Input>` it receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to
+all of its ControlSignals.  Each ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`,
+which is used by its `ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterPort(s) for the
+parameter(s) it controls, which are then used in the subsequent `TRIAL <TimeScale.TRIAL>` of execution.
 
 .. note::
-   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
-   to which it belongs has executed.
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism executes
+   (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).  This means that even if a
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism to
+   which it belongs has executed.
 
 
 .. _AGTControlMechanism_Class_Reference:
@@ -247,7 +247,6 @@ class AGTControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System_Base)=None,
                  monitored_output_ports=None,
                  function=None,
                  # control_signals:tc.optional(list) = None,
@@ -258,7 +257,6 @@ class AGTControlMechanism(ControlMechanism):
                  prefs:is_pref_set=None):
 
         super().__init__(
-            system=system,
             objective_mechanism=ObjectiveMechanism(
                 monitored_output_ports=monitored_output_ports,
                 function=DualAdaptiveIntegrator
@@ -271,7 +269,6 @@ class AGTControlMechanism(ControlMechanism):
         )
 
         self.objective_mechanism.name = self.name + '_ObjectiveMechanism'
-        self.objective_mechanism._role = CONTROL
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS

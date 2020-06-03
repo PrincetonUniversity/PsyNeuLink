@@ -121,7 +121,7 @@ When switching between `integrator_mode <TransferMechanism.integrator_mode>` = T
 <TransferMechanism.integrator_function>` may resume accumulating when the Mechanism returns to `integrator_mode
 <TransferMechanism.integrator_mode>` = True.
 
-    * *INSTANTANEOUS_MODE_VALUE* - reinitialize the Mechanism with its own current value,
+    * *INSTANTANEOUS_MODE_VALUE* - reset the Mechanism with its own current value,
       so that the value computed by the Mechanism during "Instantaneous Mode" is where the
       `integrator_function <TransferMechanism.integrator_function>` begins accumulating.
 
@@ -129,8 +129,8 @@ When switching between `integrator_mode <TransferMechanism.integrator_mode>` = T
       <TransferMechanism.integrator_function>` left off the last time `integrator_mode
       <TransferMechanism.integrator_mode>` was True.
 
-    * *REINITIALIZE* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
-      `reinitialize <AdaptiveIntegrator.reinitialize>` method, so that accumulation begins at
+    * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
+      `reset <AdaptiveIntegrator.reset>` method, so that accumulation begins at
       `initial_value <TransferMechanism.initial_value>`
 
 Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
@@ -369,11 +369,12 @@ accepts a single argument that is a 2d array with two entries.
     .. _TransferMechanism_Termination_By_Time:
 
     *Termination by time*.  This terminates execution when the Mechanism has executed at least a number of times equal
-    to the **threshold** at a particular TimeScale (e.g., within a `Run` or a `Trial`). This is specified by assigning
-    a `TimeScale` to **termination_measure**;  execution terminates when the number of executions at that TimeScale
-    equals the **termination_threshold**.  Note that, in this case, the **termination_comparison_op** argument is
-    ignored (the `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically set to
-    *GREATER_THAN_OR_EQUAL*).  For example, ``my_mech`` is configured below to execute at least twice per trial::
+    to the **threshold** at a particular TimeScale (e.g., within a `RUN` or a `TRIAL <TimeScale.TRIAL>`). This is
+    specified by assigning a `TimeScale` to **termination_measure**;  execution terminates when the number of
+    executions at that TimeScale equals the **termination_threshold**.  Note that, in this case,
+    the **termination_comparison_op** argument is ignored (the `termination_comparison_op
+    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
+    ``my_mech`` is configured below to execute at least twice per trial::
 
         >>> my_mech = pnl.TransferMechanism(size=2,
         ...                                 integrator_mode=True,
@@ -505,11 +506,11 @@ accepts a single argument that is a 2d array with two entries.
 ~~~~~~~~~~~~~~~~~~
 
 In some cases, it may be useful to reset the accumulation of a Mechanism back to its original starting point, or a new
-starting point. This is done using the `reinitialize <AdaptiveIntegrator.reinitialize>` method on the
-mechanism's `integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reinitialize
-<Mechanism_Base.reinitialize>` method.
+starting point. This is done using the `reset <AdaptiveIntegrator.reset>` method on the
+mechanism's `integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reset
+<Mechanism_Base.reset>` method.
 
-The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_function
+The `reset <AdaptiveIntegrator.reset>` method of the `integrator_function
 <TransferMechanism.integrator_function>` sets:
 
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute and
@@ -517,7 +518,7 @@ The `reinitialize <AdaptiveIntegrator.reinitialize>` method of the `integrator_f
 
     to the specified value.
 
-The `reinitialize <Mechanism_Base.reinitialize>` method of the `TransferMechanism` first sets:
+The `reset <Mechanism_Base.reset>` method of the `TransferMechanism` first sets:
 
     - the Mechanismn's `previous_value <Mechanism_Base.previous_value>` attribute,
     - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute, and
@@ -530,7 +531,7 @@ The `reinitialize <Mechanism_Base.reinitialize>` method of the `TransferMechanis
     - the TransferMechanism's `value <Mechanism_Base.value>` attribute is set to the output of the function
     - the TransferMechanism updates its `output_ports <Mechanism_Base.output_ports>`
 
-A use case for `reinitialize <AdaptiveIntegrator.reinitialize>` is demonstrated in the following example:
+A use case for `reset <AdaptiveIntegrator.reset>` is demonstrated in the following example:
 
 Create a `System` with a TransferMechanism in integrator_mode:
 
@@ -559,13 +560,13 @@ where it left off:
     ...               num_trials=5)                                                 #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
 
-The integrator_function's `reinitialize <AdaptiveIntegrator.reinitialize>` method and the TransferMechanism's
-`reinitialize <TransferMechanism.reinitialize>` method are useful in cases when the integration should instead start
+The integrator_function's `reset <AdaptiveIntegrator.reset>` method and the TransferMechanism's
+`reset <TransferMechanism.reset>` method are useful in cases when the integration should instead start
 over at the original initial value, or a new one.
 
-Use `reinitialize <AdaptiveIntegrator.reinitialize>` to re-start the integrator_function's accumulation at 0.2:
+Use `reset <AdaptiveIntegrator.reset>` to re-start the integrator_function's accumulation at 0.2:
 
-    >>> my_time_averaged_transfer_mechanism.integrator_function.reinitialize(np.array([[0.2]]))  #doctest: +SKIP
+    >>> my_time_averaged_transfer_mechanism.integrator_function.reset(np.array([[0.2]]))  #doctest: +SKIP
 
 Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function will begin accumulating
 at 0.2, following the exact same trajectory as in RUN 1:
@@ -575,13 +576,13 @@ at 0.2, following the exact same trajectory as in RUN 1:
     ...               num_trials=5)                                               #doctest: +SKIP
     >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
 
-Because `reinitialize <AdaptiveIntegrator.reinitialize>` was set to 0.2 (its original initial_value),
+Because `reset <AdaptiveIntegrator.reset>` was set to 0.2 (its original initial_value),
 my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
 As a result, it arrived at the exact same value after 5 trials (with identical inputs).
 
-In the examples above, `reinitialize <AdaptiveIntegrator.reinitialize>` was applied directly to the
-integrator function. The key difference between the `integrator_function's reinitialize
-<AdaptiveIntegrator.reinitialize>` and the `TransferMechanism's reinitialize <TransferMechanism.reinitialize>` is
+In the examples above, `reset <AdaptiveIntegrator.reset>` was applied directly to the
+integrator function. The key difference between the `integrator_function's reset
+<AdaptiveIntegrator.reset>` and the `TransferMechanism's reset <TransferMechanism.reset>` is
 that the latter will also execute the mechanism's function and update its output ports. This is useful if the
 mechanism's value or any of its OutputPort values will be used or checked *before* the mechanism's next execution. (
 This may be true if, for example, the mechanism is `recurrent <RecurrentTransferMechanism>`, the mechanism is
@@ -634,7 +635,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
-    NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RATE, REINITIALIZE, RESULT, RESULTS, \
+    NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RATE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -688,9 +689,9 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
         ):
             if owning_component.integrator_function is not None:
                 if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                    owning_component.reinitialize(owning_component.parameters.value._get(context), context=context)
-                elif owning_component.on_resume_integrator_mode == REINITIALIZE:
-                    owning_component.reinitialize(context=context)
+                    owning_component.reset(owning_component.parameters.value._get(context), context=context)
+                elif owning_component.on_resume_integrator_mode == RESET:
+                    owning_component.reset(context=context)
             owning_component._parameter_components.add(owning_component.integrator_function)
         owning_component.parameters.has_initializers._set(True, context)
         if (
@@ -702,8 +703,8 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
             owning_component._needs_integrator_function_init = True
     elif value is False:
         owning_component.parameters.has_initializers._set(False, context)
-        if not hasattr(owning_component, "reinitialize_when"):
-            owning_component.reinitialize_when = Never()
+        if not hasattr(owning_component, "reset_stateful_function_when"):
+            owning_component.reset_stateful_function_when = Never()
 
     return value
 
@@ -757,7 +758,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         <TransferMechanism.intergrator_mode>` = False) and has just switched to "IntegratorFunction Mode"
         (`integrator_mode <TransferMechanism.intergrator_mode>` = True);  can be one of the following keywords:
 
-        * *INSTANTANEOUS_MODE_VALUE* - reinitialize the Mechanism with its own current value,
+        * *INSTANTANEOUS_MODE_VALUE* - reset the Mechanism with its own current value,
           so that the value computed by the Mechanism during "Instantaneous Mode" is where the
           `integrator_function <TransferMechanism.integrator_function>` begins accumulating.
 
@@ -765,8 +766,8 @@ class TransferMechanism(ProcessingMechanism_Base):
           <TransferMechanism.integrator_function>` left off the last time `integrator_mode
           <TransferMechanism.integrator_mode>` was True.
 
-        * *REINITIALIZE* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
-          `reinitialize <AdaptiveIntegrator.reinitialize>` method, so that accumulation begins at
+        * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
+          `reset <AdaptiveIntegrator.reset>` method, so that accumulation begins at
           `initial_value <TransferMechanism.initial_value>`
 
     noise : float or function : default 0.0
@@ -859,7 +860,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         when the Mechanism was most recently in "Instantaneous Mode" (integrator_mode = False) and has just switched to
         "IntegratorFunction Mode" (integrator_mode = True). There are three options:
 
-        (1)     INSTANTANEOUS_MODE_VALUE - reinitialize the Mechanism with its own current value, so that the value
+        (1)     INSTANTANEOUS_MODE_VALUE - reset the Mechanism with its own current value, so that the value
                 cmoputed by the Mechanism during "Instantaneous Mode" is where the `integrator_function
                 <TransferMechanism.integrator_function>` begins accumulating.
 
@@ -867,8 +868,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 <TransferMechanism.integrator_function>` left off the last time `integrator_mode
                 <TransferMechanism.integrator_mode>` was True.
 
-        (3)     REINITIALIZE - call the `integrator_function's <TransferMechanism.integrator_function>` `reinitialize
-                method <AdaptiveIntegrator.reinitialize>` so that accumulation Mechanism begins at `initial_value
+        (3)     RESET - call the `integrator_function's <TransferMechanism.integrator_function>` `reset
+                method <AdaptiveIntegrator.reset>` so that accumulation Mechanism begins at `initial_value
                 <TransferMechanism.initial_value>`
 
     noise : float or function
@@ -1357,7 +1358,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     - if both differ, warn and give precedence to the value specified for the Function
         else:
 
-            # FIX: 12/9/18 USE CALL TO reinitialize HERE??
+            # FIX: 12/9/18 USE CALL TO reset HERE??
 
             # Relabel to identify parameters passed in as the Mechainsm's values,
             #    and standardize format for comparison against values specified for functiom (by user or defaults)
@@ -1521,15 +1522,15 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = self.integrator_function.noise
             self._needs_integrator_function_init = False
 
-        current_input = self.integrator_function.execute(
-            function_variable,
-            context=context,
-            # Should we handle runtime params?
-            runtime_params={
-                INITIALIZER: initial_value,
-                NOISE: noise,
-                RATE: integration_rate
-            },
+        current_input = self.integrator_function.execute(function_variable,
+                                                         context=context,
+                                                         # Should we handle runtime paramsd?
+                                                         # JDC: NOT SURE THEY ARE NEEDED, PARAMS ASSIGNED VALUES ABOVE
+                                                         runtime_params={
+                                                             INITIALIZER: initial_value,
+                                                             NOISE: noise,
+                                                             RATE: integration_rate
+                                                         },
 
         )
 
@@ -1551,19 +1552,25 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Update previous value to make sure that repeated executions work
         builder.store(builder.load(current), prev_val_ptr)
 
-        if self.parameters.termination_threshold.get(None) is None:
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                    "termination_threshold")
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
             # Threshold is not defined, return the old value of finished flag
+            assert len(threshold_ptr.type.pointee) == 0
             is_finished_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                           "is_finished_flag")
             is_finished_flag = builder.load(is_finished_ptr)
             return builder.fcmp_ordered("!=", is_finished_flag,
                                               is_finished_flag.type(0))
 
-        threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                    "termination_threshold")
+        # If modulated, termination threshold is single element array
+        if isinstance(threshold_ptr.type.pointee, pnlvm.ir.ArrayType):
+            assert len(threshold_ptr.type.pointee) == 1
+            threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0),
+                                                        ctx.int32_ty(0)])
+
         threshold = builder.load(threshold_ptr)
         cmp_val_ptr = builder.alloca(threshold.type)
-        builder.store(threshold, cmp_val_ptr)
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
             # Get inside of the structure
@@ -1716,7 +1723,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # EXECUTE TransferMechanism FUNCTION ---------------------------------------------------------------------
 
-        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO AN STANDARD OUTPUT_PORT
+        # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO A STANDARD OUTPUT_PORT
         # Clip outputs
         clip = self._get_current_mechanism_param("clip", context)
 
@@ -1730,8 +1737,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         return value
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
-        super().reinitialize(*args, context=context)
+    def reset(self, *args, context=None):
+        super().reset(*args, context=context)
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):

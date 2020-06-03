@@ -6,7 +6,6 @@ import psyneulink.core.components.functions.statefulfunctions.integratorfunction
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.globals.utilities
 
-
 class TestModels:
 
     # This implements the model by Cohen, J. D., & Huston, T. A. (1994). Progress in the use of interactive
@@ -221,7 +220,11 @@ class TestModels:
                                         task_layer]
 
         bidirectional_stroop.add_linear_processing_pathway(pathway=task_word_response_pathway_2)
-        bidirectional_stroop.add_required_node_role(response_layer, psyneulink.core.globals.utilities.NodeRole.TERMINAL)
+        # # MODIFIED 4/25/20 OLD:
+        # bidirectional_stroop.add_required_node_role(response_layer, pnl.NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 NEW:
+        bidirectional_stroop.require_node_roles(response_layer, pnl.NodeRole.OUTPUT)
+        # MODIFIED 4/25/20 END
 
         input_dict = {colors_input_layer: [0, 0, 0],
                       words_input_layer: [0, 0, 0],
@@ -284,13 +287,13 @@ class TestModels:
             # which WILL FAIL unless you gather higher precision values to use as reference
             np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
 
-    def test_lauras_cohen_1990_model(self):
+    # FIX: 5/8/20 [JDC] Needs assertions
+    def test_bustamante_Stroop_model(self):
         #  INPUT UNITS
 
         #  colors: ('red', 'green'), words: ('RED','GREEN')
         colors_input_layer = pnl.TransferMechanism(size=2,
-                                                   function=psyneulink.core.components.functions.transferfunctions
-                                                   .Linear,
+                                                   function=psyneulink.core.components.functions.transferfunctions.Linear,
                                                    name='COLORS_INPUT')
 
         words_input_layer = pnl.TransferMechanism(size=2,
@@ -310,7 +313,8 @@ class TestModels:
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
         colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
+                                                    function=psyneulink.core.components.functions.transferfunctions
+                                                    .Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
                                                     integrator_mode=True,
                                                     noise=psyneulink.core.components.functions.distributionfunctions
@@ -319,9 +323,10 @@ class TestModels:
                                                     name='COLORS HIDDEN')
         #    words_hidden: ('RED','GREEN')
         words_hidden_layer = pnl.TransferMechanism(size=2,
-                                                   function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
+                                                   function=pnl.Logistic(gain=1.0, x_0=4.0),
                                                    integrator_mode=True,
-                                                   noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                                   noise=pnl.NormalDist(mean=0,
+                                                                        standard_deviation=unit_noise).function,
                                                    integration_rate=0.1,
                                                    name='WORDS HIDDEN')
 
@@ -341,14 +346,13 @@ class TestModels:
         #   sigma = noise = 0.1
         #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
         accumulator_noise = 0.1
-        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0,
-                                                                                                                                                                    standard_deviation=accumulator_noise).function,
+        respond_red_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
+                                                                                                             standard_deviation=accumulator_noise).function,
                                                                                         rate=0.1),
                                                           name='respond_red_accumulator')
         #   Respond green accumulator
-        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=psyneulink
-                                                                                          .core.components.functions.distributionfunctions.NormalDist(mean=0,
-                                                                                                                                                                              standard_deviation=accumulator_noise).function,
+        respond_green_accumulator = pnl.IntegratorMechanism(function=pnl.SimpleIntegrator(noise=pnl.NormalDist(mean=0,
+                                                                                                               standard_deviation=accumulator_noise).function,
                                                                                           rate=0.1),
                                                             name='respond_green_accumulator')
 
@@ -412,47 +416,34 @@ class TestModels:
         respond_green_differencing_weights = pnl.MappingProjection(matrix=np.atleast_2d([[-1.0], [1.0]]),
                                                                    name='RESPOND_GREEN_WEIGHTS')
 
-        my_Stroop = pnl.Composition()
+        # CREATE COMPOSITION FROM PATHWAYS
+        my_Stroop = pnl.Composition(pathways=[
+            {'WORD_PATHWAY':[words_input_layer,
+                             word_weights,
+                             words_hidden_layer,
+                             word_response_weights,
+                             response_layer]},
+            {'COLO_PATHWAY': [colors_input_layer,
+                              color_weights,
+                              colors_hidden_layer,
+                              color_response_weights,
+                              response_layer]},
+            {'TASK_CN_PATHWAY':[task_layer,
+                                task_CN_weights,
+                                colors_hidden_layer]},
+            {'TASK_WR_PATHWAY':[task_layer,
+                                task_WR_weights,
+                                words_hidden_layer]},
+            {'RESPOND_RED_PATHWAY':[response_layer,
+                                    respond_red_differencing_weights,
+                                    respond_red_accumulator]},
+            {'RESPOND_GREEN_PATHWAY': [response_layer,
+                                       respond_green_differencing_weights,
+                                       respond_green_accumulator]},
+        ])
 
-        #   CREATE PATHWAYS
-        #   Words pathway
-        words_pathway = [words_input_layer,
-                         word_weights,
-                         words_hidden_layer,
-                         word_response_weights,
-                         response_layer]
-        my_Stroop.add_linear_processing_pathway(words_pathway)
-
-        #   Colors pathway
-        colors_pathway = [colors_input_layer,
-                          color_weights,
-                          colors_hidden_layer,
-                          color_response_weights,
-                          response_layer]
-        my_Stroop.add_linear_processing_pathway(colors_pathway)
-
-        #   Task representation pathway
-        task_CN_pathway = [task_layer,
-                           task_CN_weights,
-                           colors_hidden_layer]
-        my_Stroop.add_linear_processing_pathway(task_CN_pathway)
-
-        #   Task representation pathway
-        task_WR_pathway = [task_layer,
-                           task_WR_weights,
-                           words_hidden_layer]
-        my_Stroop.add_linear_processing_pathway(task_WR_pathway)
-
-        #   Evidence accumulation pathway
-        respond_red_pathway = [response_layer,
-                               respond_red_differencing_weights,
-                               respond_red_accumulator]
-        my_Stroop.add_linear_processing_pathway(respond_red_pathway)
-
-        respond_green_pathway = [response_layer,
-                                 respond_green_differencing_weights,
-                                 respond_green_accumulator]
-        my_Stroop.add_linear_processing_pathway(respond_green_pathway)
+        # my_Stroop.show()
+        # my_Stroop.show_graph(show_dimensions=pnl.ALL)
 
         # Function to create test trials
         # a RED word input is [1,0] to words_input_layer and GREEN word is [0,1]
@@ -470,6 +461,8 @@ class TestModels:
 
         #   CREATE THRESHOLD FUNCTION
         # first value of DDM's value is DECISION_VARIABLE
+        # context is always passed to Condition functions and is the context
+        # in which the function gets called - below, during system execution
         def pass_threshold(mech1, mech2, thresh, context=None):
             results1 = mech1.output_ports[0].parameters.value.get(context)
             results2 = mech2.output_ports[0].parameters.value.get(context)
@@ -499,23 +492,27 @@ class TestModels:
             # Turn off noise
             switch_noise(mechanisms, 0)
             # Execute once per trial
-            my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.AllHaveRun()}
+            my_Stroop.termination_PATHWAYing = {pnl.TimeScale.TRIAL: pnl.AllHaveRun()}
 
-        def switch_to_processing_trial(mechanisms):
+        def switch_to_PATHWAYing_trial(mechanisms):
             # Turn on accumulation
             switch_integrator_mode(mechanisms, True)
             # Turn on noise
             switch_noise(mechanisms, psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
-            my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.While(pass_threshold,
-                                                                               respond_red_accumulator,
-                                                                               respond_green_accumulator,
-                                                                               accumulator_threshold)}
+            my_Stroop.termination_PATHWAYing = {
+                pnl.TimeScale.TRIAL: pnl.While(
+                    pass_threshold,
+                    respond_red_accumulator,
+                    respond_green_accumulator,
+                    accumulator_threshold
+                )
+            }
 
         def switch_trial_type():
             # Next trial will be a processing trial
-            if isinstance(my_Stroop.termination_processing[pnl.TimeScale.TRIAL], pnl.AllHaveRun):
-                switch_to_processing_trial(mechanisms_to_update)
+            if isinstance(my_Stroop.termination_PATHWAYing[pnl.TimeScale.TRIAL], pnl.AllHaveRun):
+                switch_to_PATHWAYing_trial(mechanisms_to_update)
             # Next trial will be an initialization trial
             else:
                 switch_to_initialization_trial(mechanisms_to_update)
@@ -528,10 +525,9 @@ class TestModels:
         switch_to_initialization_trial(mechanisms_to_update)
 
         my_Stroop.run(inputs=trial_dict(0, 1, 1, 0, 1, 0),
-                      # termination_processing=change_termination_processing,
+                      # termination_PATHWAYing=change_termination_PATHWAYing,
                       num_trials=4,
-                      call_after_trial=switch_trial_type
-                      )
+                      call_after_trial=switch_trial_type)
 
         # {colors_input_layer: [[0, 0], [1, 0]],
         #                       words_input_layer: [[0, 0], [1, 0]],
@@ -541,7 +537,6 @@ class TestModels:
     # A Computational Theory of the Stroop Task. Psychol Rev. 2018 Jan;125(1):59-82. doi: 10.1037/rev0000083.
     # Epub 2017 Oct 16.
     # #https://www.ncbi.nlm.nih.gov/pubmed/29035077
-
     def test_kalanthroff(self):
 
         # Define Variables ------------------------------------------------------------------------------------------
@@ -780,7 +775,7 @@ class TestModels:
 
         PCTC = pnl.Composition(name="PCTC")
 
-        composition_pathways = [color_response_pathway,
+        Composition_Pathwayss = [color_response_pathway,
                                 word_response_pathway,
                                 task_pathway,
                                 task_color_pathway_1,
@@ -791,7 +786,7 @@ class TestModels:
                                 bias_word_pathway,
                                 conflict_pathway]
 
-        for pathway in composition_pathways:
+        for pathway in Composition_Pathwayss:
             PCTC.add_linear_processing_pathway(pathway)
 
         def pass_threshold(response_layer, thresh, context=None):
@@ -1030,12 +1025,12 @@ class TestModels:
     #             results.append(res)
     #             res = comp.run(inputs=stim[1], num_trials=ntrials)
     #             results.append(res)
-    #             # reinitialize after condition was run
-    #             colors_hidden_layer.reinitialize([[0, 0, 0]])
-    #             words_hidden_layer.reinitialize([[0, 0, 0]])
-    #             response_layer.reinitialize([[0, 0]])
-    #             task_layer.reinitialize([[0, 0]])
-    #             comp.reinitialize()
+    #             # reset after condition was run
+    #             colors_hidden_layer.reset([[0, 0, 0]])
+    #             words_hidden_layer.reset([[0, 0, 0]])
+    #             response_layer.reset([[0, 0]])
+    #             task_layer.reset([[0, 0]])
+    #             comp.reset()
     #
     #         return results
     #

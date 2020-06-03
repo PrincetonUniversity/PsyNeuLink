@@ -1,6 +1,13 @@
 CompositionFunctionApproximator
 ===============================
 
+*Subclasses*
+
+.. toctree::
+   :maxdepth: 1
+
+   RegressionCFA
+
 .. toctree::
    :maxdepth: 2
 

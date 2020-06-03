@@ -381,8 +381,8 @@ class TestProjectionSpecificationFormats:
                                     mask=[[1,0],[0,1]],
                                     mask_operation=pnl.ADD
                                     )
-        p = pnl.Process(pathway=[t1, proj, t2])
-        val = p.execute(input=[1,2])
+        c = pnl.Composition(pathways=[[t1, proj, t2]])
+        val = c.execute(inputs={t1:[1,2]})
         assert np.allclose(val, [[8, 12]])
 
         t1 = pnl.TransferMechanism(size=2)
@@ -393,8 +393,8 @@ class TestProjectionSpecificationFormats:
                                     mask=[[1,0],[0,1]],
                                     mask_operation=pnl.MULTIPLY
                                     )
-        p = pnl.Process(pathway=[t1, proj, t2])
-        val = p.execute(input=[1,2])
+        c = pnl.Composition(pathways=[[t1, proj, t2]])
+        val = c.execute(inputs={t1:[1,2]})
         assert np.allclose(val, [[1, 8]])
 
         t1 = pnl.TransferMechanism(size=2)
@@ -404,8 +404,8 @@ class TestProjectionSpecificationFormats:
                                     mask=[[1,2],[3,4]],
                                     mask_operation=pnl.MULTIPLY
                                     )
-        p = pnl.Process(pathway=[t1, proj, t2])
-        val = p.execute(input=[1,2])
+        c = pnl.Composition(pathways=[[t1, proj, t2]])
+        val = c.execute(inputs={t1:[1,2]})
         assert np.allclose(val, [[1, 8]])
 
     def test_masked_mapping_projection_mask_conficts_with_matrix(self):

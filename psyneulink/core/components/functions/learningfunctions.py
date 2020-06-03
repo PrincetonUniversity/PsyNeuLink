@@ -522,7 +522,7 @@ class BayesGLM(LearningFunction):
         self.gamma_size_n = self.gamma_size_0
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:
@@ -1792,7 +1792,7 @@ class BackPropagation(LearningFunction):
         `activation_output <BackPropagation.activation_output>`.
 
     error_signal : 1d array
-        the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
+        the error signal for the next matrix (layer above) in the learning pathway, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>`.
 

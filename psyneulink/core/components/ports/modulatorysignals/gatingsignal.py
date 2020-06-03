@@ -150,7 +150,7 @@ modulation operates).
 .. note::
    The change in the `value <Port_Base.value>` of InputPorts and OutputPorts in response to the execution of a
    GatingSignal are not applied until the Mechanism(s) to which those ports belong are next executed;
-   see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _GatingSignal_Examples:
 

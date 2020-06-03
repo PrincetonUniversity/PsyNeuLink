@@ -182,7 +182,7 @@ stabilityFlexibility.show_graph(show_node_structure=pnl.ALL, show_model_based_op
 
 # print("Beginning of Run")
 # for i in range(1, len(stabilityFlexibility.model_based_optimizer.input_ports)):
-# 	stabilityFlexibility.model_based_optimizer.input_ports[i].function.reinitialize()
+# 	stabilityFlexibility.model_based_optimizer.input_ports[i].function.reset()
 #
 # 	stabilityFlexibility.run(inputs)
 #

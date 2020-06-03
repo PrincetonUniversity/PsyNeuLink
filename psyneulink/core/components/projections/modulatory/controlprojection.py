@@ -43,14 +43,11 @@ or by including it in a `tuple <ParameterPort_Tuple_Specification>` that specifi
 <Mechanism>`, `MappingProjection`, or the `function <Component.function>` of either of these.  If a ControlProjection
 is created explicitly (using its constructor), and either its **receiver** or **sender** argument is not specified,
 its initialization is `deferred <ControlProjection_Deferred_Initialization>`.  If it is included in a `parameter
-specification <ParameterPort_Specification>`, the  `ParameterPort` for the parameter being specified will be assigned
-as the ControlProjection's `receiver <ControlProjection.receiver>`.
-COMMENT:
-TBI FOR COMPOSITION
-If the **receiver** belongs to a Mechanism that is part of a `System`, then the ControlProjection's
-`sender <ControlProjection.sender>` is assigned to a `ControlSignal` of the System's `controller`.  Otherwise,
-its initialization is `deferred <ControlProjection_Deferred_Initialization>`.
-COMMENT
+specification <ParameterPort_Specification>`, the `ParameterPort` for the parameter being specified will be assigned
+as the ControlProjection's `receiver <ControlProjection.receiver>`. If the **receiver** belongs to a Mechanism that
+is part of a `Composition`, then the ControlProjection's `sender <ControlProjection.sender>` is assigned to a
+`ControlSignal` of the Composition's `controller <Composition.controller>`.  Otherwise, its initialization is
+`deferred <ControlProjection_Deferred_Initialization>`.
 
 .. _ControlProjection_Deferred_Initialization:
 
@@ -91,17 +88,17 @@ Execution
 
 A ControlProjection cannot be executed directly.  It is executed when the `ParameterPort` to which it projects is
 updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `ParameterPort` belongs is executed
-(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a ControlProjection is executed, its
-`function <Projection_Base.function>` gets the `control_signal <ControlProjection.control_signal>` from its `sender
-<ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used by the
-`receiver <ControlProjection.receiver>` to modify the parameter controlled by the ControlProjection (see
+(see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating). When a ControlProjection is
+executed, its `function <Projection_Base.function>` gets the `control_signal <ControlProjection.control_signal>` from
+its `sender <ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used
+by the `receiver <ControlProjection.receiver>` to modify the parameter controlled by the ControlProjection (see
 `ModulatorySignal_Modulation` and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and
 how this applies to a ParameterPort).
 
 .. note::
    The changes to a parameter in response to the execution of a ControlProjection are not applied until the `Mechanism
-   <Mechanism>` that receives the ControlProjection are next executed; see :ref:`Lazy Evaluation` for an explanation of
-   "lazy" updating).
+   <Mechanism>` that receives the ControlProjection are next executed; see `Lazy Evaluation <Component_Lazy_Updating>`
+   for an explanation of "lazy" updating).
 
 .. _ControlProjection_Class_Reference:
 

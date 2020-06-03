@@ -204,7 +204,8 @@ or if you downloaded the source:
 
 
 To access the tutorial, make sure you fulfill the requirements
-mentioned above, download the :download:`tutorial notebook <../../tutorial/PsyNeuLink Tutorial.ipynb>`, then run the terminal command
+mentioned above, download the :download:`tutorial notebook <../../tutorial/PsyNeuLink Tutorial.ipynb>`,
+then run the terminal command
 
 ::
 

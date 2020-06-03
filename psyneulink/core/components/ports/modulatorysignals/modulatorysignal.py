@@ -220,7 +220,7 @@ Types of Modulation
 ^^^^^^^^^^^^^^^^^^^
 
 The `modulation <ModulatorySignal.modulation>` attribute of a ModulatorySignal determines the way in which it
-modulates the `value <Port_Base.value>` of a `Port <Port>`, by specifying which paramter of the Port's `function
+modulates the `value <Port_Base.value>` of a `Port <Port>`, by specifying which parameter of the Port's `function
 <Port_Base.function>` that it modifies (see `figure <ModulatorySignal_Detail_Figure>` below).  This is specified
 in a tuple containing the Port and the name of the parameter to be modified (see `example
 <ControlSignal_Example_Modulate_Costs>`). Alternatively, a keyword can be used in place of the parameter's name.
@@ -250,7 +250,7 @@ four keywords that can be used to specify generic forms of modulation supported 
   * *DISABLE* - suppresses the modulatory effect of the ModulatorySignal;  the Port's `function <Port_Base.function>`
     will operate as if it did not receive a `ModulatoryProjection <ModulatoryProjection>` from that ModulatorySignal.
 
-   .. note:
+   .. note::
 
       the *MULTPLICATIVE_PARAM* and *ADDITIVE_PARAM* keywords can be used only with `Functions <Function>` that
       specify a `multiplicative_param and/or additive_param <Function_Modulatory_Params>`, respectively.
@@ -351,9 +351,12 @@ multiplied by the base value of the `bias <Logistic.bias>` parameter, before tha
 
 COMMENT
 
+# FIX 5/8/20 -- REWORK TO BE ALIGNED WITH ModulatoryMechanism
+
 .. note::
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
-   which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   which the port belongs is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
+   "lazy" updating).
 
 COMMENT:
 
@@ -511,8 +514,8 @@ class ModulatorySignal(OutputPort):
         <Port_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each Port with
-        the same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor,
-        a default name is assigned as follows; if the ModulatorySignal has:
+        the same base name (see `Registry_Naming`). If the name is not  specified in the **name** argument of its
+        constructor, a default name is assigned as follows; if the ModulatorySignal has:
 
         * no projections (which are used to name it) -- the name of its class is used, with an index that is
           incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;

@@ -6,7 +6,7 @@
 # See the License for the specific language governing permissions and limitations under the License.
 #
 #
-# ********************************************  System Defaults ********************************************************
+# *************************************************  Context ***********************************************************
 
 """
 .. _Context_Overview:
@@ -125,6 +125,7 @@ class ContextFlags(enum.IntFlag):
 
     UNSET = 0
 
+    # initialization_status flags:
     DEFERRED_INIT = 1 << 1  # 2
     """Set if flagged for deferred initialization."""
     INITIALIZING  = 1 << 2  # 4
@@ -133,60 +134,56 @@ class ContextFlags(enum.IntFlag):
     """Set during validation of the value of a Component or its attribute."""
     INITIALIZED   = 1 << 4  # 16
     """Set after completion of initialization of the Component."""
-    REINITIALIZED = 1 << 4  # 16
+    RESET = 1 << 4  # 16
     """Set on stateful Components when they are re-initialized."""
-    UNINITIALIZED = 1 << 16
+    UNINITIALIZED = 1 << 17
     """Default value set before initialization"""
+    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | RESET | UNINITIALIZED
 
-    INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | REINITIALIZED | UNINITIALIZED
-
-    # execution_phase flags
-    PROCESSING    = 1 << 5  # 32
-    """Set during the `processing phase <System_Execution_Processing>` of execution of a Composition."""
-    LEARNING      = 1 << 6 # 64
-    """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
-    CONTROL       = 1 << 7 # 128
-    """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION    = 1 << 8  # 256
+    # execution_phase flags:
+    PREPARING    = 1 << 5   # 32
+    """Set while `Composition is preparing to `execute <Composition_Execution>`."""
+    PROCESSING    = 1 << 6  # 64
+    """Set while `Composition is `executing <Composition_Execution>` `ProcessingMechanisms <ProcessingMechanism>`."""
+    LEARNING      = 1 << 7 # 128
+    """Set while `Composition is `executing <Composition_Execution>` `LearningMechanisms <LearningMechanism>`."""
+    CONTROL       = 1 << 8 # 256
+    """Set while Composition's `controller <Composition.controller>` or its `ObjectiveMechanism` is executing."""
+    SIMULATION    = 1 << 9  # 512
     """Set during simulation by Composition.controller"""
-    IDLE = 1 << 17
+    IDLE = 1 << 18
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
     """
-
     EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
-    EXECUTION_PHASE_MASK = EXECUTING | IDLE
+    EXECUTION_PHASE_MASK = IDLE | PREPARING | EXECUTING
 
-    # source (source-of-call) flags
-    COMMAND_LINE  = 1 << 9  # 512
+    # source (source-of-call) flags:
+    COMMAND_LINE  = 1 << 10  # 1024
     """Direct call by user (either interactively from the command line, or in a script)."""
-    CONSTRUCTOR   = 1 << 10 # 1024
+    CONSTRUCTOR   = 1 << 11 # 2048
     """Call from Component's constructor method."""
-    INSTANTIATE   = 1 << 11 # 2048
+    INSTANTIATE   = 1 << 12 # 4096
     """Call by an instantiation method."""
-    COMPONENT     = 1 << 12 # 4096
+    COMPONENT     = 1 << 13 # 8192
     """Call by Component __init__."""
-    METHOD        = 1 << 13 # 8192
+    METHOD        = 1 << 14 # 16384
     """Call by method of the Component other than its constructor."""
-    PROPERTY      = 1 << 14 # 16384
+    PROPERTY      = 1 << 15 # 32768
     """Call by property of the Component."""
-    COMPOSITION   = 1 << 15 # 32768
+    COMPOSITION   = 1 << 16 #
     """Call by a/the Composition to which the Component belongs."""
 
-    PROCESS   = 1 << 15     # 32768
-
-    NONE      = 1 << 20
+    NONE      = 1 << 21
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | PROCESS | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
 
-    # runmode flags
-    DEFAULT_MODE = 1 << 18
+    # runmode flags:
+    DEFAULT_MODE = 1 << 19
     """Default mode"""
-    LEARNING_MODE = 1 << 19
+    LEARNING_MODE = 1 << 20
     """Set during `compositon.learn`"""
-
     RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE
-
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
@@ -245,10 +242,11 @@ INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
                                ContextFlags.VALIDATING,
                                ContextFlags.INITIALIZED,
-                               ContextFlags.REINITIALIZED,
+                               ContextFlags.RESET,
                                ContextFlags.UNINITIALIZED}
 
-EXECUTION_PHASE_FLAGS = {ContextFlags.PROCESSING,
+EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
+                         ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
                          ContextFlags.SIMULATION,
@@ -291,6 +289,7 @@ class Context():
         indicates the phase of execution of the Component;
         one or more of the following flags can be set:
 
+            * `PREPARING <ContextFlags.PREPARING>`
             * `PROCESSING <ContextFlags.PROCESSING>`
             * `LEARNING <ContextFlags.LEARNING>`
             * `CONTROL <ContextFlags.CONTROL>`
@@ -299,8 +298,8 @@ class Context():
 
         If `IDLE` is set, the Component is not being executed at the current time, and `flags_string
         <Context.flags_string>` will include *IDLE* in the string.  In some circumstances all of the
-        `execution_phase <Context.execution_phase>` flags may be set, in which case `flags_string
-        <Context.flags_string>` will include *EXECUTING* in the string.
+        `execution_phase <Context.execution_phase>` flags may be set (other than *IDLE* and *PREPARING*),
+        in which case `flags_string <Context.flags_string>` will include *EXECUTING* in the string.
 
     source : field of the flags attribute
         indicates the source of a call to a method belonging to or referencing the Component;
@@ -314,7 +313,7 @@ class Context():
     composition : Composition
       the `Composition <Composition>` in which the `owner <Context.owner>` is currently being executed.
 
-    execution_id
+    execution_id : str
       the execution_id assigned to the Component by the Composition in which it is currently being executed.
 
     execution_time : TimeScale
@@ -378,14 +377,12 @@ class Context():
         # if isinstance(composition, Composition):
         if (
             composition is None
-            or composition.__class__.__name__ in {
-                'Composition', 'SystemComposition', 'PathwayComposition', 'AutodiffComposition', 'System', 'Process'
-            }
+            or composition.__class__.__name__ in {'Composition', 'AutodiffComposition'}
         ):
             self._composition = composition
         else:
-            raise ContextError("Assignment to context.composition for {} ({}) "
-                               "must be a Composition (or \'None\').".format(self.owner.name, composition))
+            raise ContextError("Assignment to context.composition for {self.owner.name} ({composition}) "
+                               "must be a Composition (or \'None\').")
 
     @property
     def flags(self):
@@ -553,7 +550,7 @@ def _get_context(context:tc.any(ContextFlags, Context, str)):
 
 
 def _get_time(component, context):
-    """Get time from Scheduler of System in which Component is being executed.
+    """Get time from Scheduler of Composition in which Component is being executed.
 
     Returns tuple with (run, trial, time_step) if being executed during Processing or Learning
     Otherwise, returns (None, None, None)
@@ -584,52 +581,24 @@ def _get_time(component, context):
                            format(component.__class__.__name__,
                                   Mechanism.__name__, Port.__name__, Projection.__name__))
 
-    # Get System in which it is being (or was last) executed (if any):
+    # Get Composition in which it is being (or was last) executed (if any):
 
-    system = context.composition
-    if system is None:
+    composition = context.composition
+    if composition is None:
         # If called from COMMAND_LINE, get context for last time value was assigned:
-        system = component.most_recent_context.composition
+        composition = component.most_recent_context.composition
 
-    if system and hasattr(system, 'scheduler'):
+    if composition and hasattr(composition, 'scheduler'):
         execution_flags = context.execution_phase
-        # # MODIFIED 7/15/19 OLD:
-        # try:
-        #     if execution_flags == ContextFlags.PROCESSING or not execution_flags:
-        #         t = system.scheduler.get_clock(context).time
-        #         t = time(t.run, t.trial, t.pass_, t.time_step)
-        #     elif execution_flags == ContextFlags.CONTROL:
-        #         t = system.scheduler.get_clock(context).time
-        #         t = time(t.run, t.trial, t.pass_, t.time_step)
-        #     elif execution_flags == ContextFlags.LEARNING:
-        #         if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-        #             t = system.scheduler_learning.get_clock(context).time
-        #             t = time(t.run, t.trial, t.pass_, t.time_step)
-        #         # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        #         # Add autoassociative learning mechanism + related projections to composition as processing components
-        #         else:
-        #             t = None
-        #     else:
-        #         t = None
-        # MODIFIED 7/15/19 NEW:  ACCOMODATE LEARNING IN COMPOSITION DONE WITH scheduler
         try:
             if execution_flags & (ContextFlags.PROCESSING | ContextFlags.LEARNING | ContextFlags.IDLE):
-                t = system.scheduler.get_clock(context).time
+                t = composition.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
             elif execution_flags & ContextFlags.CONTROL:
-                t = system.scheduler.get_clock(context).time
+                t = composition.scheduler.get_clock(context).time
                 t = time(t.run, t.trial, t.pass_, t.time_step)
-            # elif execution_flags == ContextFlags.LEARNING:
-            #     if hasattr(system, "scheduler_learning") and system.scheduler_learning is not None:
-            #         t = system.scheduler_learning.get_clock(context).time
-            #         t = time(t.run, t.trial, t.pass_, t.time_step)
-            #     # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-            #     # Add autoassociative learning mechanism + related projections to composition as processing components
-            #     else:
-            #         t = None
             else:
                 t = None
-        # MODIFIED 7/15/19 END:
         except KeyError:
             t = None
 
@@ -638,8 +607,8 @@ def _get_time(component, context):
             offender = "\'{}\'".format(component.name)
             if ref_mech is not component:
                 offender += " [{} of {}]".format(component.__class__.__name__, ref_mech.name)
-            warnings.warn("Attempt to log {} which is not in a System (logging is currently supported only "
-                          "when running Components within a System".format(offender))
+            warnings.warn("Attempt to log {offender} which is not in a Composition; "
+                          "logging is currently supported only when executing Components within a Composition.")
         t = None
 
     return t or no_time
@@ -659,8 +628,7 @@ def handle_external_context(
         ---------
 
         source
-            default ContextFlags to be used for source field when Context is not
-            specified
+            default ContextFlags to be used for source field when Context is not specified
 
         execution_phase
             default ContextFlags to be used for execution_phase field when
@@ -673,8 +641,7 @@ def handle_external_context(
         Returns
         -------
 
-        a decorator that ensures a Context argument is passed in to the
-        decorated method
+        a decorator that ensures a Context argument is passed in to the decorated method
 
     """
     def decorator(func):

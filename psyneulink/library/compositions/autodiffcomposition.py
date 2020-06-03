@@ -132,11 +132,10 @@ from psyneulink.core.components.functions.transferfunctions import Linear, Logis
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
-from psyneulink.core.globals.utilities import NodeRole
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
@@ -154,10 +153,11 @@ try:
     import torch
     from torch import nn
     import torch.optim as optim
-    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
     torch_available = True
 except ImportError:
     torch_available = False
+else:
+    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 logger = logging.getLogger(__name__)
 
@@ -188,7 +188,8 @@ class AutodiffComposition(Composition):
         the learning rate, which is passed to the optimizer.
 
     disable_learning : bool: default False
-        specifies whether the AutodiffComposition should disable learning when ran in `learning mode <Composition_Learning_Mode>`
+        specifies whether the AutodiffComposition should disable learning when run in `learning mode
+        <Composition.learn>`.
 
     optimizer_type : str : default 'sgd'
         the kind of optimizer used in training. The current options are 'sgd' or 'adam'.
@@ -489,6 +490,7 @@ class AutodiffComposition(Composition):
                 call_before_pass=None,
                 call_after_time_step=None,
                 call_after_pass=None,
+                reset_stateful_functions_to=None,
                 context=None,
                 base_context=Context(execution_id=None),
                 clamp_input=SOFT_CLAMP,
@@ -519,10 +521,15 @@ class AutodiffComposition(Composition):
                                             context,
                                             scheduler)
 
-            context.add_flag(ContextFlags.PROCESSING)
+            # FIX 5/28/20:
+            # context.add_flag(ContextFlags.PROCESSING)
+            execution_phase = context.execution_phase
+            context.execution_phase = ContextFlags.PROCESSING
 
             self.output_CIM.execute(output, context=context)
-            context.remove_flag(ContextFlags.PROCESSING)
+            # FIX 5/28/20:
+            context.execution_phase = execution_phase
+
 
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
@@ -537,6 +544,7 @@ class AutodiffComposition(Composition):
                                                         call_before_pass=call_before_pass,
                                                         call_after_time_step=call_after_time_step,
                                                         call_after_pass=call_after_pass,
+                                                        reset_stateful_functions_to=reset_stateful_functions_to,
                                                         context=context,
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,

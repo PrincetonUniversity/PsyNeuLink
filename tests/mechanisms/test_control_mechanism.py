@@ -12,7 +12,7 @@ class TestLCControlMechanism:
     @pytest.mark.control_mechanism
     @pytest.mark.benchmark(group="LCControlMechanism Default")
     @pytest.mark.parametrize("mode", ['Python'])
-    def test_default_lc_control_mechanism(self, benchmark, mode):
+    def test_lc_control_mechanism_as_controller(self, benchmark, mode):
         G = 1.0
         k = 0.5
         starting_value_LC = 2.0
@@ -20,8 +20,7 @@ class TestLCControlMechanism:
 
         A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
         B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
-
-        S = pnl.Composition()
+        C = pnl.Composition()
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
             base_level_gain=G,
@@ -32,14 +31,13 @@ class TestLCControlMechanism:
                 name='LC ObjectiveMechanism'
             )
         )
-        S.add_linear_processing_pathway([A,B])
-        S.add_controller(LC)
-
+        C.add_linear_processing_pathway([A,B])
+        C.add_controller(LC)
 
         for output_port in LC.output_ports:
-            output_port.parameters.value.set(output_port.value * starting_value_LC, S, override=True)
+            output_port.parameters.value.set(output_port.value * starting_value_LC, C, override=True)
 
-        LC.reinitialize_when = pnl.Never()
+        LC.reset_stateful_function_when = pnl.Never()
 
         gain_created_by_LC_output_port_1 = []
         mod_gain_assigned_to_A = []
@@ -47,18 +45,18 @@ class TestLCControlMechanism:
         mod_gain_assigned_to_B = []
         base_gain_assigned_to_B = []
 
-        def report_trial(system):
+        def report_trial(composition):
             from psyneulink import parse_context
-            context = parse_context(system)
+            context = parse_context(composition)
             gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
-            mod_gain_assigned_to_A.append([A.get_mod_gain(system)])
-            mod_gain_assigned_to_B.append([B.get_mod_gain(system)])
+            mod_gain_assigned_to_A.append([A.get_mod_gain(composition)])
+            mod_gain_assigned_to_B.append([B.get_mod_gain(composition)])
             base_gain_assigned_to_A.append(A.function.gain)
             base_gain_assigned_to_B.append(B.function.gain)
 
-        S._analyze_graph()
-        benchmark(S.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
-              call_after_trial=functools.partial(report_trial, S))
+        C._analyze_graph()
+        benchmark(C.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
+              call_after_trial=functools.partial(report_trial, C))
 
         # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
         assert mod_gain_assigned_to_A[0] == [starting_value_LC]
@@ -116,10 +114,11 @@ class TestLCControlMechanism:
         T_1 = pnl.TransferMechanism(name='T_1')
         T_2 = pnl.TransferMechanism(name='T_2')
 
+        # S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
+        C = pnl.Composition(pathways=[T_1, T_2])
         LC = pnl.LCControlMechanism(monitor_for_control=[T_1, T_2],
-                                    modulated_mechanisms=pnl.ALL
-                                    )
-        S = pnl.System(processes=[pnl.proc(T_1, T_2, LC)])
+                                    modulated_mechanisms=C)
+        C.add_node(LC)
 
         assert len(LC.control_signals)==1
         assert len(LC.control_signals[0].efferents)==2
@@ -137,15 +136,12 @@ class TestLCControlMechanism:
                 objective_mechanism=True,
                 control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
                                                   modulates=(pnl.SLOPE, Tz)))
-        P1=pnl.Process(pathway=[Tx,Tz])
-        P2=pnl.Process(pathway=[Ty, C])
-        S=pnl.System(processes=[P1, P2])
-        from pprint import pprint
-        pprint(S.execution_graph)
+        comp=pnl.Composition(pathways=[[Tx, Tz],[Ty, C]])
+        # comp.show_graph()
 
         assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
-        result = S.run(inputs={Tx:[1,1], Ty:[4,4]})
-        assert result == [[[4.], [4.]], [[4.], [4.]]]
+        result = comp.run(inputs={Tx:[1,1], Ty:[4,4]})
+        assert comp.results == [[[4.], [4.]], [[4.], [4.]]]
 
     def test_identicalness_of_control_and_gating(self):
         """Tests same configuration as gating in tests/mechansims/test_gating_mechanism"""
@@ -181,9 +177,9 @@ class TestLCControlMechanism:
     
         pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
         comp = pnl.Composition()
-        learning_components = comp.add_backpropagation_learning_pathway(
+        backprop_pathway = comp.add_backpropagation_learning_pathway(
             pathway=pathway,
-            loss_function=None
+            loss_function=None,
         )
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
@@ -191,13 +187,13 @@ class TestLCControlMechanism:
         stim_list = {
             Input_Layer: [[-1, 30]],
             Control_Mechanism: [1.0],
-            learning_components[pnl.TARGET_MECHANISM]: [[0, 0, 1]]}
+            backprop_pathway.target: [[0, 0, 1]]}
     
         comp.learn(num_trials=3, inputs=stim_list)
-    
-        expected_results = [[[0.81493513, 0.85129046, 0.88154205]],
-                            [[0.81250527, 0.84947508, 0.88159668]],
-                            [[0.81003707, 0.84762987, 0.88165066]]]
+
+        expected_results =[[[0.81493513, 0.85129046, 0.88154205]],
+                           [[0.81331773, 0.85008207, 0.88157851]],
+                           [[0.81168332, 0.84886047, 0.88161468]]]
         assert np.allclose(comp.results, expected_results)
     
         stim_list[Control_Mechanism]=[0.0]
@@ -207,7 +203,7 @@ class TestLCControlMechanism:
     
         stim_list[Control_Mechanism]=[2.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
-        expected_results = [[0.96801676, 0.98304415, 0.99225722]]
+        expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         assert np.allclose(results, expected_results)
 
     def test_control_of_all_input_ports(self):
@@ -218,14 +214,21 @@ class TestLCControlMechanism:
         results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
         np.allclose(results, [[4],[4],[4]])
 
-    def test_control_of_all_output_ports(self):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_control_of_all_output_ports(self, mode):
         mech = pnl.ProcessingMechanism(output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)},
                                                       {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],)
         control_mech = pnl.ControlMechanism(control=mech.output_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2)
+        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, bin_execute=mode)
         np.allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):

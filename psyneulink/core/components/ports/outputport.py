@@ -120,8 +120,8 @@ Unlike specification in the constructor, this **does not** replace any OutputPor
 Doing so appends them to the list of OutputPorts in the Mechanism's `output_ports <Mechanism_Base.output_ports>`
 attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
 of an OutputPort added to a Mechanism is the same as one that is already exists on the Mechanism, its name is suffixed
-with a numerical index (incremented for each OutputPort with that name; see `Naming`), and the OutputPort is added
-to the list (that is, it does *not* replace the one that was already there).
+with a numerical index (incremented for each OutputPort with that name; see `Registry_Naming`), and the OutputPort is
+added to the list (that is, it does *not* replace the one that was already there).
 
 
 .. _OutputPort_Variable_and_Value:
@@ -175,15 +175,16 @@ which it should project. Each of these is described below:
     * **OutputPort class**, **keyword** *OUTPUT_PORT*, or a **string** -- creates a default OutputPort that uses
       the first item of the `owner <Port.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
       <OutputPort.variable>`, and assigns it as the `owner <Port.owner>` Mechanism's `primary OutputPort
-      <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to the
-      Port; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort  (see `Naming`).
+      <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to
+      the Port; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort
+      (see `Registry_Naming`).
 
     .. _OutputPort_Specification_by_Variable:
 
     * **variable** -- creates an OutputPort using the specification as the OutputPort's `variable
       <OutputPort.variable>` (see `OutputPort_Customization`).  This must be compatible with (have the same number
       and type of elements as) the OutputPort's `function <OutputPort.function>`.  A default name is assigned based
-      on the name of the Mechanism (see `Naming`).
+      on the name of the Mechanism (see `Registry_Naming`).
     ..
     .. _OutputPort_Specification_Dictionary:
 
@@ -868,7 +869,7 @@ class OutputPort(Port_Base):
         Mechanisms automatically create one or more `Standard OutputPorts <OutputPort_Standard>`, that have
         pre-specified names.  However, if any OutputPorts are specified in the **input_ports** argument of the
         Mechanism's constructor, those replace its Standard OutputPorts (see `note
-        <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
+        <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Registry_Naming>` apply to the
         OutputPorts specified, as well as any that are added to the Mechanism once it is created (see `note
         <Port_Naming_Note>`).
 
@@ -1181,7 +1182,7 @@ class OutputPort(Port_Base):
         )
         return np.atleast_1d(value)
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         # fall back to specified item(s) of owner's value
         try:
             return self.parameters.variable._get(context)
@@ -1584,7 +1585,7 @@ class StandardOutputPorts():
         for port in dict_list:
             if INDEX in port:
                 if port[INDEX] in ALL:
-                    port._update({VARIABLE:OWNER_VALUE})
+                    port._update(params={VARIABLE:OWNER_VALUE})
                 elif port[INDEX] in PRIMARY:
                     port_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
                 elif port[INDEX] in SEQUENTIAL:

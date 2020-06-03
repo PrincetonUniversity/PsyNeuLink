@@ -40,7 +40,7 @@ more numpy functions).  There are two reasons PsyNeuLink packages functions in a
 ..
 * **Modularity** -- by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
   replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
-  standards (the PsyNeuLink :ref:`Function API <LINK>`).
+  standards (the PsyNeuLink `Function API <LINK>`).
 
 .. _Function_Creation:
 
@@ -208,7 +208,7 @@ def is_function_type(x):
         return False
     elif isinstance(x, (Function, types.FunctionType, types.MethodType, types.BuiltinFunctionType, types.BuiltinMethodType)):
         return True
-    elif issubclass(x, Function):
+    elif isinstance(x, type) and issubclass(x, Function):
         return True
     else:
         return False
@@ -458,13 +458,13 @@ class Function_Base(Function):
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     """
 
@@ -791,13 +791,13 @@ class ArgumentTherapy(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
 
     """

@@ -159,8 +159,8 @@ of its constructor.  This transforms its input (including from the `recurrent_pr
 a RecurrentTransferMechanism can be configured to integrate its input, by setting its `integration_mode
 <TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Integration`), and to do so for a
 single step of integration or until it reaches some termination condition each time it is executed (see
-`TransferMechanism_Termination`). Finally, it can be reinitialized using its `reinitialize
-<TransferMechanism.reinitialize>` method (see `TransferMechanism_Reinitialization`).
+`TransferMechanism_Termination`). Finally, it can be reset using its `reset
+<TransferMechanism.reset>` method (see `TransferMechanism_Reinitialization`).
 
 .. _RecurrentTransferMechanism_Execution_Learning:
 
@@ -204,7 +204,6 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.outputport import PRIMARY, StandardOutputPorts
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import _instantiate_port
 from psyneulink.core.globals.context import handle_external_context
@@ -214,7 +213,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec, NodeRole
+from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.core.scheduling.condition import Condition, TimeScale, WhenFinished
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
@@ -989,13 +988,13 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 del self.output_ports[ENTROPY_OUTPUT_PORT_NAME]
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_params=None, context=None):
         for port in self._parameter_ports:
             # (8/2/17 CW) because the auto and hetero params are solely used by the AutoAssociativeProjection
             # (the RecurrentTransferMechanism doesn't use them), the auto and hetero param ports are updated in the
             # projection's _update_parameter_ports, and accordingly are not updated here
             if port.name != AUTO and port.name != HETERO:
-                port._update(context=context, params=runtime_params)
+                port._update(params=runtime_params, context=context)
 
     @property
     def recurrent_size(self):
@@ -1021,7 +1020,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             param_port = self._parameter_ports['matrix']
 
             if hasattr(param_port.function, 'initializer'):
-                param_port.function.reinitialize = val
+                param_port.function.reset = val
 
     @property
     def auto(self):
@@ -1126,6 +1125,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         # Add autoassociative learning mechanism + related projections to composition as processing components
         # (via aux_components attr)
 
+        from psyneulink.core.compositions.composition import NodeRole
+
         learning_mechanism.condition = learning_condition
         # # MODIFIED 10/23/19 OLD:
         # self.aux_components.append(learning_mechanism)
@@ -1221,9 +1222,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input, context)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         if self.parameters.integrator_mode.get(context):
-            super().reinitialize(*args, context=context)
+            super().reset(*args, context=context)
         self.parameters.value.clear_history(context)
 
     @property
@@ -1264,8 +1265,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         retval_init = (tuple(op.parameters.value.get(context)) if not np.isscalar(op.parameters.value.get(context)) else op.parameters.value.get(context) for op in self.output_ports)
         return (*transfer_init, tuple(retval_init), projection_init)
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
 
         # Check if we have reinitializers
         has_reinitializers_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "has_initializers")

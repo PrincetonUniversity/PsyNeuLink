@@ -14,6 +14,7 @@
 * `GradientOptimization`
 * `GridSearch`
 * `GaussianProcess`
+* `ParamEstimationFunction`
 
 Overview
 --------
@@ -129,8 +130,8 @@ class OptimizationFunction(Function_Base):
         example, an OptimizationFunction may use for its `objective_function <OptimizationFunction.objective_function>`
         or `search_function <OptimizationFunction.search_function>` a method of the Component to which it is being
         assigned;  however, those methods will not yet be available, as the Component itself has not yet been
-        constructed. This can be handled by calling the OptimizationFunction's `reinitialize
-        <OptimizationFunction.reinitialize>` method after the Component has been instantiated, with a parameter
+        constructed. This can be handled by calling the OptimizationFunction's `reset
+        <OptimizationFunction.reset>` method after the Component has been instantiated, with a parameter
         specification dictionary with a key for each entry that is the name of a parameter and its value the value to
         be assigned to the parameter.  This is done automatically for Mechanisms that take an ObjectiveFunction as
         their `function <Mechanism_Base.function>` (such as the `OptimizationControlMechanism`), but will require it be
@@ -145,7 +146,7 @@ class OptimizationFunction(Function_Base):
       that subclasses can be used interchangeably by OptimizationMechanisms.
 
     - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-      `reinitialize <OptimizationFunction.reinitialize>` method, that calls super().reinitialize(*args) and then
+      `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
       reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
       `NotImplemented` should be passed as the argument's value in the call to super (i.e., the OptimizationFunction's
       constructor).
@@ -425,12 +426,12 @@ class OptimizationFunction(Function_Base):
                     raise
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
-        """Reinitialize parameters of the OptimizationFunction
+    def reset(self, *args, context=None):
+        """Reset parameters of the OptimizationFunction
 
-        Parameters to be reinitialized should be specified in a parameter specification dictionary, in which they key
+        Parameters to be reset should be specified in a parameter specification dictionary, in which they key
         for each entry is the name of one of the following parameters, and its value is the value to be assigned to the
-        parameter.  The following parameters can be reinitialized:
+        parameter.  The following parameters can be reset:
 
             * `default_variable <OptimizationFunction.default_variable>`
             * `objective_function <OptimizationFunction.objective_function>`
@@ -913,8 +914,8 @@ class GradientOptimization(OptimizationFunction):
                                                     f"must be or resolve to a 2-item list or tuple; this doesn't: {s}.")
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
-        super().reinitialize(*args)
+    def reset(self, *args, context=None):
+        super().reset(*args)
 
         # Differentiate objective_function using autograd.grad()
         if OBJECTIVE_FUNCTION in args[0]:
@@ -1317,11 +1318,11 @@ class GridSearch(OptimizationFunction):
             #                                            ))
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """Assign size of `search_space <GridSearch.search_space>"""
         if context.execution_id is NotImplemented:
             context.execution_id = self.most_recent_context.execution_id
-        super(GridSearch, self).reinitialize(*args, context=context)
+        super(GridSearch, self).reset(*args, context=context)
         sample_iterators = args[0]['search_space']
         owner_str = ''
         if self.owner:

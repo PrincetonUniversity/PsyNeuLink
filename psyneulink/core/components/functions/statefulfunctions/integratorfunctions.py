@@ -177,13 +177,13 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = INTEGRATOR_FUNCTION_TYPE
@@ -520,13 +520,13 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
@@ -771,13 +771,13 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -1006,13 +1006,13 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
@@ -1419,13 +1419,13 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
@@ -1749,7 +1749,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         return value + offset
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, short=None, long=None, context=NotImplemented):
+    def reset(self, short=None, long=None, context=NotImplemented):
         """
         Effectively begins accumulation over again at the specified utilities.
 
@@ -1942,13 +1942,13 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
@@ -2303,13 +2303,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
@@ -2728,13 +2728,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
@@ -3067,13 +3067,13 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LEAKY_COMPETING_INTEGRATOR_FUNCTION
@@ -4208,7 +4208,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         def _get_state_ptr(x):
             ptr = pnlvm.helpers.get_state_ptr(builder, self, state, x)
             return pnlvm.helpers.unwrap_2d_array(builder, ptr)
-        prev = {s: _get_state_ptr(s) for s in self._get_state_ids()}
+        prev = {s: _get_state_ptr(s) for s in self.llvm_state_ids}
 
         # Output locations
         def _get_out_ptr(i):
@@ -4220,7 +4220,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         def _get_param_val(x):
             ptr = pnlvm.helpers.get_param_ptr(builder, self, params, x)
             return pnlvm.helpers.load_extract_scalar_array_one(builder, ptr)
-        param_vals = {p: _get_param_val(p) for p in self._get_param_ids()}
+        param_vals = {p: _get_param_val(p) for p in self.llvm_param_ids}
 
         inner_args = {"ctx": ctx, "var_ptr": arg_in, "param_vals": param_vals,
                       "out_v": out['v'], "out_w": out['w'],

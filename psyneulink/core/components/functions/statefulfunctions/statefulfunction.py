@@ -150,13 +150,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = STATEFUL_FUNCTION_TYPE
@@ -470,16 +470,16 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         return val
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
             to the specified value(s).
 
-            If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
+            If arguments are passed into the reset method, then reset sets each of the attributes in
             `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument.
             Next, it sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
 
-            If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
+            If reset is called without arguments, then it sets each of the attributes in `stateful_attributes
             <StatefulFunction.stateful_attributes>` to the value of the corresponding attribute in `initializers
             <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing
             the values of each of the attributes in `initializers <StatefulFunction.initializers>`.
@@ -487,11 +487,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             Often, the only attribute in `stateful_attributes <StatefulFunction.stateful_attributes>` is
             `previous_value <StatefulFunction.previous_value>` and the only attribute in `initializers
             <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case
-            the reinitialize method sets `previous_value <StatefulFunction.previous_value>` and `value
+            the reset method sets `previous_value <StatefulFunction.previous_value>` and `value
             <StatefulFunction.value>` to either the value of the argument (if an argument was passed into
-            reinitialize) or the current value of `initializer <StatefulFunction.initializer>`.
+            reset) or the current value of `initializer <StatefulFunction.initializer>`.
 
-            For specific types of StatefulFunction functions, the reinitialize method may carry out other
+            For specific types of StatefulFunction functions, the reset method may carry out other
             reinitialization steps.
 
         """
@@ -535,10 +535,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 initializers_string += self.initializers[len(self.initializers) - 1]
 
             raise FunctionError("Invalid arguments ({}) specified for {}. If arguments are specified for the "
-                                "reinitialize method of {}, then a value must be passed to reinitialize each of its "
-                                "stateful_attributes: {}, in that order. Alternatively, reinitialize may be called "
+                                "reset method of {}, then a value must be passed to reset each of its "
+                                "stateful_attributes: {}, in that order. Alternatively, reset may be called "
                                 "without any arguments, in which case the current values of {}'s initializers: {}, will"
-                                " be used to reinitialize their corresponding stateful_attributes."
+                                " be used to reset their corresponding stateful_attributes."
                                 .format(args,
                                         self.name,
                                         self.name,
@@ -560,8 +560,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.parameters.value.set(value, context, override=True)
         return value
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
         for i, a in enumerate(self.stateful_attributes):
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)

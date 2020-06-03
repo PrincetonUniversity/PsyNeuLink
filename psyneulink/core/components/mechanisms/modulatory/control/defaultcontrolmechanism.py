@@ -39,7 +39,7 @@ import typecheck as tc
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.globals.defaults import defaultControlAllocation
-from psyneulink.core.globals.keywords import CONTROL, FUNCTION, FUNCTION_PARAMS, INPUT_PORTS, INTERCEPT, MODULATION, NAME, OBJECTIVE_MECHANISM, SLOPE
+from psyneulink.core.globals.keywords import CONTROL, INPUT_PORTS, NAME
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList
@@ -91,9 +91,6 @@ class DefaultControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 # default_variable=None,
-                 # size=None,
-                 system=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  control_signals:tc.optional(list)=None,
                  params=None,
@@ -104,8 +101,6 @@ class DefaultControlMechanism(ControlMechanism):
                  ):
 
         super(DefaultControlMechanism, self).__init__(
-                # default_variable=default_variable,
-                # size=size,
                 objective_mechanism=objective_mechanism,
                 control_signals=control_signals,
                 function=function,

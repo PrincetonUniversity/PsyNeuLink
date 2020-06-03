@@ -4,6 +4,7 @@ elfi
 graphviz
 llvmlite
 matplotlib
+networkx==1.11
 numpy
 pillow
 toposort==1.4

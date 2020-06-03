@@ -2,10 +2,11 @@
 
 .. _Parameter_Attributes:
 
-PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`. `Parameter`\\ s have
-names, default values, and other attributes that define how they are used in models. `Parameter` \\s also maintain and provide
-access to the data used in actual computations - `default values <Parameter_Defaults>`, `current values <Parameter_statefulness>`, `previous values <Parameter.history>`,
-and `logged values <Log>`.
+PsyNeuLink `parameters <Parameter>` are objects that represent the user-modifiable parameters of a `Component`.
+`Parameter`\\ s have names, default values, and other attributes that define how they are used in Compositions.
+`Parameter` \\s also maintain and provide access to the data used in actual computations - `default values
+<Parameter_Defaults>`, `current values <Parameter_Statefulness>`, `previous values <Parameter.history>`, and
+`logged values <Log>`.
 
 
 .. _Parameter_Defaults:
@@ -13,29 +14,32 @@ and `logged values <Log>`.
 Defaults
 ========
 
-Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PNL class,
-and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PNL class,
-and are used to validate compatibility between this instance and other PNL objects. Given a `TransferMechanism` *t*:
+The Defaults class is used to represent the default values for a `Component's parameters <Component_Parameters>`.
+Parameters have two types of defaults: *instance* defaults and *class* defaults. Class defaults belong to a PsyNeuLink
+class, and suggest valid types and shapes of Parameter values. Instance defaults belong to an instance of a PsyNeuLink
+class, and are used to validate compatibility between this instance and other PsyNeuLink objects. For example, given a
+`TransferMechanism` *t*:
 
-    - instance defaults are accessible by ``t.defaults``
-    - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults``
+    - instance defaults are accessible by ``t.defaults`` (e.g., for the `noise <TransferMechanism.noise>` parameter,
+      ``t.defaults.noise.defaults.noise``)
 
+    - class defaults are accessible by ``t.class_defaults`` or ``TransferMechanism.defaults`` (e.g.,
+    ``t.class_defaults.noise`` or `TransferMechanism.defaults.noise)
 
 .. note::
-    ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default noise value for *t*
+    ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default
+    ``noise`` value for *t*
 
 
-.. _Parameter_statefulness:
+.. _Parameter_Statefulness:
 
 Statefulness of Parameters
 ==========================
 
-Parameters can have different values in different `execution contexts <Run_Scope_of_Execution>` in order to ensure correctness
-of and allow access to `simulation <OptimizationControlMechanism_Execution>` calculations. As a result, to inspect and use the values
-of a parameter, in general you need to know the execution context in which you are interested. Much of the time, this execution context
-is likely to be a Composition:
-
-::
+Parameters can have different values in different `execution contexts <Composition_Execution_Context>` in order to
+ensure correctness of and allow access to `simulation <OptimizationControlMechanism_Execution>` calculations. As a
+result, to inspect and use the values of a parameter, in general you need to know the execution context in which you
+are interested. Much of the time, this execution context is likely to be a Composition:::
 
         >>> import psyneulink as pnl
         >>> c = pnl.Composition()
@@ -60,9 +64,9 @@ is likely to be a Composition:
         [[10.]]
 
 
-The TransferMechanism in the above snippet has a different `value <Component.value>` for each Composition it is run in. This holds
-true for all of its `stateful Parameters <Component.stateful_parameters>`, so they can behave differently in different execution contexts
-and be modulated during `control <System_Execution_Control>`.
+The TransferMechanism in the above snippet has a different `value <Component.value>` for each Composition it is run in.
+This holds true for all of its `stateful Parameters <Component_Stateful_Parameters>`, so they can behave differently in
+different execution contexts and can be modified by modulated `ModulatorySignal_Modulation`.
 
 .. _Parameter_Dot_Notation:
 
@@ -79,7 +83,7 @@ must become stateful Parameters, or they are at risk of computational errors lik
 
 
 Creating Parameters
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 To create new Parameters, reference this example of a new class *B*
 
@@ -144,7 +148,7 @@ To create new Parameters, reference this example of a new class *B*
 
 
 Using Parameters
-^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
 
 Methods that are called during runtime in general must take *context* as an argument and must pass this *context* along to other
 PNL methods. The most likely place this will come up would be for the *function* method on a PNL `Function` class, or *_execute* method on other
@@ -227,8 +231,6 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |execution context; if True, the Parameter's |                                         |
 |                  |               |default_value will be returned instead      |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
-
-
 
 
 
@@ -334,7 +336,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
 
 
 class ParametersTemplate:
-    _deepcopy_shared_keys = ['_parent', '_params', '_owner', '_children']
+    _deepcopy_shared_keys = ['_parent', '_params', '_owner_ref', '_children']
     _values_default_excluded_attrs = {'user': False}
 
     def __init__(self, owner, parent=None):
@@ -365,6 +367,12 @@ class ParametersTemplate:
         return self.show()
 
     __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
+
+    def __del__(self):
+        try:
+            self._parent._children.remove(weakref.ref(self))
+        except (AttributeError, KeyError):
+            pass
 
     def __iter__(self):
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
@@ -398,7 +406,7 @@ class ParametersTemplate:
                 show_all : False
                     if `True`, includes non-`user<Parameter.user` parameters
 
-            :return: a dictionary with {parameter name: parameter value} key-value pairs for each Par
+            :return: a dictionary with {parameter name: parameter value} key-value pairs for each Parameter
         """
         result = {}
         for k in self._params:
@@ -428,14 +436,14 @@ class ParametersTemplate:
 
     @property
     def _owner(self):
-        return unproxy_weakproxy(self.__owner)
+        return unproxy_weakproxy(self._owner_ref)
 
     @_owner.setter
     def _owner(self, value):
         try:
-            self.__owner = weakref.proxy(value)
+            self._owner_ref = weakref.proxy(value)
         except TypeError:
-            self.__owner = value
+            self._owner_ref = value
 
 
 class Defaults(ParametersTemplate):
@@ -701,6 +709,10 @@ class Parameter(types.SimpleNamespace):
         valid_types=None,
         _owner=None,
         _inherited=False,
+        # this stores a reference to the Parameter object that is the
+        # closest non-inherited parent. This parent is where the
+        # attributes will be taken from
+        _inherited_source=None,
         _user_specified=False,
     ):
         if isinstance(aliases, str):
@@ -750,12 +762,15 @@ class Parameter(types.SimpleNamespace):
             parse_spec=parse_spec,
             valid_types=valid_types,
             _inherited=_inherited,
+            _inherited_source=_inherited_source,
             _user_specified=_user_specified,
         )
 
         self._owner = _owner
         self._param_attrs = [k for k in self.__dict__ if k[0] != '_'] \
             + [k for k in self.__class__.__dict__ if k in self._additional_param_attr_properties]
+
+        self._is_invalid_source = False
         self._inherited_attrs_cache = {}
         self.__inherited = False
         self._inherited = _inherited
@@ -795,8 +810,36 @@ class Parameter(types.SimpleNamespace):
     def __getattr__(self, attr):
         # runs when the object doesn't have an attr attribute itself
         # attempt to get from its parent, which is also a Parameter
+
+        # this is only called when self._inherited is True. We know
+        # there must be a source if attr exists at all. So, find it this
+        # time and only recompute lazily when the current source becomes
+        # inherited itself, or a closer parent becomes uninherited. Both
+        # will be indicated by the following conditional
         try:
-            return getattr(self._parent, attr)
+            inherited_source = self._inherited_source()
+        except TypeError:
+            inherited_source = None
+
+        if (
+            self._parent is not None
+            and (
+                inherited_source is None
+                # this condition indicates the cache was invalidated
+                # since it was set
+                or inherited_source._is_invalid_source
+            )
+        ):
+            next_parent = self._parent
+            while next_parent is not None:
+                if not next_parent._is_invalid_source:
+                    self._inherit_from(next_parent)
+                    inherited_source = next_parent
+                    break
+                next_parent = next_parent._parent
+
+        try:
+            return getattr(inherited_source, attr)
         except AttributeError:
             raise AttributeError("Parameter '%s' has no attribute '%s'" % (self.name, attr)) from None
 
@@ -842,12 +885,34 @@ class Parameter(types.SimpleNamespace):
     @_inherited.setter
     def _inherited(self, value):
         if value is not self._inherited:
+            # invalid if set to inherited
+            self._is_invalid_source = value
+
             if value:
                 for attr in self._param_attrs:
                     if attr not in self._uninherited_attrs:
                         self._inherited_attrs_cache[attr] = getattr(self, attr)
                         delattr(self, attr)
             else:
+                # This is a rare operation, so we can just immediately
+                # trickle down sources without performance issues.
+                # Children are stored as weakref.ref, so call to deref
+                children = [*self._owner._children]
+                while len(children) > 0:
+                    next_child_ref = children.pop()
+                    next_child = next_child_ref()
+
+                    if next_child is None:
+                        # child must have been garbage collected, remove
+                        # here optionally
+                        pass
+                    else:
+                        next_child = getattr(next_child, self.name)
+
+                        if next_child._inherited:
+                            next_child._inherit_from(self)
+                            children.extend(next_child._owner._children)
+
                 for attr in self._param_attrs:
                     if (
                         attr not in self._uninherited_attrs
@@ -856,6 +921,9 @@ class Parameter(types.SimpleNamespace):
                         setattr(self, attr, self._inherited_attrs_cache[attr])
 
             self.__inherited = value
+
+    def _inherit_from(self, parent):
+        self._inherited_source = weakref.ref(parent)
 
     def _cache_inherited_attrs(self):
         for attr in self._param_attrs:
@@ -1388,15 +1456,14 @@ class ParametersBase(ParametersTemplate):
             self._validate(param, value.default_value)
 
     def __getattr__(self, attr):
-        try:
-            return getattr(self._parent, attr)
-        except AttributeError:
+        def throw_error():
             try:
                 param_owner = self._owner
                 if isinstance(param_owner, type):
                     owner_string = f' of {param_owner}'
                 else:
                     owner_string = f' of {param_owner.name}'
+
                 if hasattr(param_owner, 'owner') and param_owner.owner:
                     owner_string += f' for {param_owner.owner.name}'
                     if hasattr(param_owner.owner, 'owner') and param_owner.owner.owner:
@@ -1404,7 +1471,20 @@ class ParametersBase(ParametersTemplate):
             except AttributeError:
                 owner_string = ''
 
-            raise AttributeError(f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}.") from None
+            raise AttributeError(
+                f"No attribute '{attr}' exists in the parameter hierarchy{owner_string}."
+            ) from None
+
+        # underscored attributes don't need special handling because
+        # they're not Parameter objects. This includes parsing and
+        # validation methods
+        if attr[0] == '_':
+            throw_error()
+        else:
+            try:
+                return getattr(self._parent, attr)
+            except AttributeError:
+                throw_error()
 
     def __setattr__(self, attr, value):
         # handles parsing: Parameter or ParameterAlias housekeeping if assigned, or creation of a Parameter
@@ -1447,15 +1527,23 @@ class ParametersBase(ParametersTemplate):
                         )
                 super().__setattr__(attr, value)
             else:
+                try:
+                    current_value = getattr(self, attr)
+                except AttributeError:
+                    current_value = None
+
                 # assign value to default_value
-                if hasattr(self, attr) and isinstance(getattr(self, attr), Parameter):
-                    current_param = getattr(self, attr)
+                if isinstance(current_value, (Parameter, ParameterAlias)):
                     # construct a copy because the original may be used as a base for reset()
-                    new_param = copy.deepcopy(current_param)
+                    new_param = copy.deepcopy(current_value)
                     # set _inherited before default_value because it will
                     # restore from cache
                     new_param._inherited = False
                     new_param.default_value = value
+
+                    # the old/replaced Parameter should be discarded
+                    current_value._is_invalid_source = True
+
                 else:
                     new_param = Parameter(name=attr, default_value=value, _owner=self)
 

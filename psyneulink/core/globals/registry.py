@@ -7,7 +7,6 @@
 #
 #
 # ***********************************************  Registry ************************************************************
-#
 
 import re
 
@@ -17,7 +16,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL_PROJECTION, DDM_MECHANISM, GATING_SIGNAL, INPUT_PORT, MAPPING_PROJECTION, OUTPUT_PORT, \
     FUNCTION_COMPONENT_CATEGORY, COMPONENT_PREFERENCE_SET, MECHANISM_COMPONENT_CATEGORY, \
     PARAMETER_PORT, PREFERENCE_SET, PROCESS_COMPONENT_CATEGORY, PROJECTION_COMPONENT_CATEGORY, \
-    PORT_COMPONENT_CATEGORY, SYSTEM_COMPONENT_CATEGORY
+    PORT_COMPONENT_CATEGORY
 
 __all__ = [
     'RegistryError',
@@ -33,8 +32,6 @@ DEFAULT_REGISTRY_VERBOSITY = False
 RegistryVerbosePrefs = {
     PREFERENCE_SET: DEFAULT_REGISTRY_VERBOSITY,
     COMPONENT_PREFERENCE_SET: DEFAULT_REGISTRY_VERBOSITY,
-    SYSTEM_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
-    PROCESS_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
     MECHANISM_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
     PORT_COMPONENT_CATEGORY: DEFAULT_REGISTRY_VERBOSITY,
     INPUT_PORT: DEFAULT_REGISTRY_VERBOSITY,
@@ -68,14 +65,19 @@ def register_category(entry,
                       context='Registry'):
     """Create a category within the specified registry.
 
-    A Registry is used to maintain a list of categories (subclasses) for a given type of base_class of Component,
-    and to insure that the name of every Component created in each of those categories is uniquie.  If an item
-    is created (using the `register_instance` function below) with the same name as one already in the Registry,
-    its name is appended with a hyphenated index (e.g., name-n) that is incremented for each new item assigned
-    the same base name.
-
     Arguments
     ---------
+
+    base_class : Class
+        PsyNeuLink Base class of Category to be added to Registry.
+
+    name : str
+        PsyNeuLink Base class of Category for which Registry is to be created.
+
+    Registry : Dict
+        Registry to which Category should be added.
+
+    context : Context or str
 
     COMMENT:
     - entry (object or class)

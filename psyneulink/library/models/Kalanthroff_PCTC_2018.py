@@ -364,16 +364,16 @@ r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')       # Log respon
 rr = r[PCTC]['SPECIAL_LOGISTIC']
 rrr_cong = rr.reshape(n_con, 2)
 
-# Clear log & reinitialize --------------------------------------------------------------------------------------------
+# Clear log & reset --------------------------------------------------------------------------------------------
 response_layer.log.clear_entries()
 color_feature_layer.log.clear_entries()
 word_feature_layer.log.clear_entries()
 task_demand_layer.log.clear_entries()
 
-color_feature_layer.reinitialize([[0, 0]], context=PCTC)
-word_feature_layer.reinitialize([[0, 0]], context=PCTC)
-response_layer.reinitialize([[0, 0]], context=PCTC)
-task_demand_layer.reinitialize([[0, 0]], context=PCTC)
+color_feature_layer.reset([[0, 0]], context=PCTC)
+word_feature_layer.reset([[0, 0]], context=PCTC)
+response_layer.reset([[0, 0]], context=PCTC)
+task_demand_layer.reset([[0, 0]], context=PCTC)
 
 # Run neutral trials --------------------------------------------------------------------------------------------------
 # Set input projections back to 0 for settling period
@@ -429,17 +429,17 @@ www_neutral = ww.reshape(n_neutral, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
 rr = r[PCTC]['SPECIAL_LOGISTIC']
 rrr_neutral = rr.reshape(n_neutral, 2)
-# Clear log & reinitialize --------------------------------------------------------------------------------------------
+# Clear log & reset --------------------------------------------------------------------------------------------
 
 response_layer.log.clear_entries()
 color_feature_layer.log.clear_entries()
 word_feature_layer.log.clear_entries()
 task_demand_layer.log.clear_entries()
 
-color_feature_layer.reinitialize([[0, 0]], context=PCTC)
-word_feature_layer.reinitialize([[0, 0]], context=PCTC)
-response_layer.reinitialize([[0, 0]], context=PCTC)
-task_demand_layer.reinitialize([[0, 0]], context=PCTC)
+color_feature_layer.reset([[0, 0]], context=PCTC)
+word_feature_layer.reset([[0, 0]], context=PCTC)
+response_layer.reset([[0, 0]], context=PCTC)
+task_demand_layer.reset([[0, 0]], context=PCTC)
 
 # Run incongruent trials ----------------------------------------------------------------------------------------------
 # Set input projections back to 0 for settling period
