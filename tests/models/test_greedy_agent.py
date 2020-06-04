@@ -168,11 +168,6 @@ def test_predator_prey(benchmark, mode, samples):
     agent_comp.add_node(greedy_action_mech)
     agent_comp.exclude_node_roles(predator_obs, NodeRole.OUTPUT)
 
-
-    # ControlMechanism
-    COST_RATE = -.05
-    COST_BIAS = 1
-
     ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
                                        agent_rep=agent_comp,
                                        function=GridSearch(direction=MINIMIZE,
@@ -185,18 +180,11 @@ def test_predator_prey(benchmark, mode, samples):
                                                                                   prey_obs
                                                                               ]),
                                        control_signals=[ControlSignal(modulates=(VARIANCE,player_obs),
-                                                                      allocation_samples=samples,
-                                                                      intensity_cost_function=Exponential(rate=COST_RATE,
-                                                                                                          bias=COST_BIAS)),
-
+                                                                      allocation_samples=samples),
                                                         ControlSignal(modulates=(VARIANCE,predator_obs),
-                                                                      allocation_samples=samples,
-                                                                      intensity_cost_function=Exponential(rate=COST_RATE,
-                                                                                                          bias=COST_BIAS)),
+                                                                      allocation_samples=samples),
                                                         ControlSignal(modulates=(VARIANCE,prey_obs),
-                                                                      allocation_samples=samples,
-                                                                  intensity_cost_function=Exponential(rate=COST_RATE,
-                                                                                                      bias=COST_BIAS)),
+                                                                      allocation_samples=samples)
                                                         ],
                                        )
     agent_comp.add_controller(ocm)
