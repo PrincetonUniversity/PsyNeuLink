@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.8.0.0 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.8.0.0+5.g6c79ea4 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.0.0
+                  0.8.0.0+5
                 </div>
               
             
@@ -715,7 +715,7 @@ if the context strings are long and/or the values are arrays).</li>
 
 <dl class="method">
 <dt id="psyneulink.core.globals.log.Log.set_log_conditions">
-<code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>log_condition=&lt;LogCondition.EXECUTION: 960&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>log_condition=&lt;LogCondition.EXECUTION: 896&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged under the specified <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a>(s).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -748,7 +748,7 @@ For convenience, the name of a LogCondition can be used in place of its full spe
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The values of LogCondition are subset of (and directly reference) the ContextFlags bitwise enum,
-with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.</p>
+with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION_MODE value.</p>
 </div>
 </dd></dl>
 
@@ -818,7 +818,7 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.0.0',
+               VERSION:'0.8.0.0+5.g6c79ea4',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
