@@ -2466,7 +2466,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
-    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DIRECT, \
     FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
@@ -2496,7 +2496,7 @@ from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativ
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'DURATION', 'DIRECT', 'EdgeType', 'EXECUTION_SET',
+    'Composition', 'CompositionError', 'CompositionRegistry', 'DURATION', 'EdgeType', 'EXECUTION_SET',
     'get_compositions', 'INITIAL_FRAME', 'MECH_FUNCTION_PARAMS', 'MOVIE_DIR', 'MOVIE_NAME',
     'NodeRole', 'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS',
     'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'UNIT',
@@ -3050,7 +3050,6 @@ class NodeRole(Enum):
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
 PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
-DIRECT = "direct"
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -3780,8 +3779,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         if not isinstance(nodes, list):
-            raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-                                   f"must be a list of nodes or (node, required_roles) tuples")
+            # raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+            #                        f"must be a list of nodes or (node, required_roles) tuples")
+            nodes = convert_to_list(nodes)
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
                 self.add_node(node, required_roles, context)

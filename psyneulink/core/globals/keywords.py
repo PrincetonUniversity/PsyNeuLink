@@ -41,7 +41,7 @@ __all__ = [
     'DDM_MECHANISM', 'DECAY', 'DEFAULT', 'DEFAULT_CONTROL_MECHANISM', 'DEFAULT_MATRIX',
     'DEFAULT_PREFERENCE_SET_OWNER', 'DEFAULT_PROCESSING_MECHANISM', 'DEFAULT_VARIABLE',
     'DEFERRED_ASSIGNMENT', 'DEFERRED_DEFAULT_NAME', 'DEFERRED_INITIALIZATION',
-    'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
+    'DIFFERENCE', 'DIFFERENCE', 'DIFFUSION', 'DIRECT', 'DISABLE', 'DISABLE_PARAM', 'DIST_FUNCTION_TYPE', 'DIST_MEAN',
     'DIST_SHAPE', 'DISTANCE_FUNCTION', 'DISTANCE_METRICS', 'DISTRIBUTION_FUNCTION_TYPE', 'DIVISION',
     'DRIFT_DIFFUSION_INTEGRATOR_FUNCTION', 'DUAL_ADAPTIVE_INTEGRATOR_FUNCTION',
     'EID_SIMULATION', 'EID_FROZEN', 'EITHER', 'ENABLE_CONTROLLER', 'ENABLED', 'ENERGY', 'ENTROPY', 'EQUAL',
@@ -355,7 +355,7 @@ EID_FROZEN = '-frozen'
 
 #endregion
 
-#region -------------------------------------------    Preferences    --------------------------------------------------
+#region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 PREFS = "Prefs"
 PREFS_OWNER = "PrefsOwner"
@@ -364,9 +364,6 @@ PREF_CURRENT_VALUE = 'PrefCurrentValue'
 PREF_BASE_VALUE = 'PrefBaseValue'
 PREFERENCE_SET_NAME = 'PreferenceSetName'
 DEFAULT_PREFERENCE_SET_OWNER = 'DefaultPreferenceSetOwner'
-#endregion
-
-#region --------------------------------------------    PREFERENCES    -------------------------------------------------
 
 PREFERENCE_SET = 'PreferenceSet'
 COMPONENT_PREFERENCE_SET = 'BasePreferenceSet'
@@ -401,6 +398,7 @@ CONTROL_PATHWAY = "control_pathway"
 LEARNING_PATHWAY = "learning_pathway"
 NODE = 'NODE'
 INPUTS = 'inputs'
+DIRECT = 'direct' # Used for show_nested in show_graph()
 
 #endregion
 
