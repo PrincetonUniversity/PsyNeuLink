@@ -7764,6 +7764,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         show_types,
                                                         show_dimensions)
 
+                # FIX: 6/3/20
                 # Skip showing Node for nested Composition if Projections are being shown directly to it
                 #    (since Projections will be shown to its cim and/or Components)
                 # FIX: 6/3/20
@@ -8840,6 +8841,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         processing_graph = self.graph_processing.dependency_dict
         rcvrs = list(processing_graph.keys())
 
+        # FIX 6/3/20
         if show_cim:
             # Enforce show_nested but don't allow show_nested to be DIRECT (that is determined by show_cim)
             show_nested = True
@@ -8929,6 +8931,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             elif output_fmt == 'gv':
                 return G
+
+            elif output_fmt == 'source':
+                return G.source
 
             elif not output_fmt:
                 return None
