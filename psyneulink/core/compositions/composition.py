@@ -7747,9 +7747,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         show_types,
                                                         show_dimensions)
 
-                # Don't show Node for nested Composition if Projections are being shown directly to it
-                #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and (show_cim is DIRECT or show_nested is DIRECT):
+                # Skip showing Node for nested Composition if Projections are being shown directly to it
+                #    (since Projections will be shown to its cim and/or Components)
+                # FIX: 6/3/20
+                #  - IF show_cim is DIRECT IS INCLUDED, icomp DOESN'T SHOW FOR show_cim=DIRECT, show_node_structure=True
+                #    IN Scratch Pad cim_direct_test_with_exogenous_control_projection_in_show_graph()
+                # if isinstance(rcvr, Composition) and (show_cim is DIRECT or show_nested is DIRECT):
+                #  - IF show_cim is DIRECT IS NOT INCLUDED, icomp SHOWS IN ADDITION TO NESTED VERSION OF icomp FOR
+                #    show_nested=False and show_cim=True IN Scratch Pad projection_from_outer_to_inner_to_outer_comp()
+                if isinstance(rcvr, Composition) and (show_cim or show_nested is DIRECT):
                     return
 
                 elif show_node_structure and isinstance(rcvr, Mechanism):
@@ -8190,7 +8196,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             enclosing_g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
                                              color=proj_color, penwidth=proj_width)
 
-
         def _assign_controller_components(g):
             """Assign control nodes and edges to graph"""
 
@@ -8253,8 +8258,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         elif not show_cim and show_nested is DIRECT:
                             # Use ParameterPort of modulated Mechanism in nested Composition
                             parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
-                            ctl_proj_rcvr_owner = next((k for k,v in parameter_port_map.items()
-                                                        if parameter_port_map[k][0] is ctl_proj_rcvr), None).owner
+                            ctl_proj_rcvr = next((k for k,v in parameter_port_map.items()
+                                                        if parameter_port_map[k][0] is ctl_proj_rcvr), None)
+                            ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
                         else:
                             # Use Composition if show_cim is *not* DIRECT (i.e., just True or False)
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
@@ -8561,8 +8567,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         assign_proj_to_enclosing_comp = False
 
-                        # Skip if Composition and show_cim=DIRECT (handled by _assign_cim_components)
-                        if isinstance(sender, Composition) and show_cim is DIRECT:
+                        # Skip if Composition and show_cim (handled by _assign_cim_components)
+                        if isinstance(sender, Composition) and show_cim:
                             continue
 
                         if isinstance(sender, CompositionInterfaceMechanism):
