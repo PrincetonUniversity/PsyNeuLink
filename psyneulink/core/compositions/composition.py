@@ -7633,7 +7633,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # Use default args for nested Composition
                     args = output_fmt_arg
                 args.update({'enclosing_g':g})
+
+                # Get subgraph for nested Composition
                 nested_comp_graph = rcvr.show_graph(**args)
+
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
                 # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
@@ -7647,6 +7650,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_comp_graph.attr(color=output_color)
                 nested_comp_graph.attr(label=rcvr_label)
                 g.subgraph(nested_comp_graph)
+                return
 
             # DEAL WITH LEARNING
             # If rcvr is a learning component and not an INPUT node,
