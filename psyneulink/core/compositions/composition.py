@@ -8210,7 +8210,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     # Need to use direct reference to proj.sender rather than sndr_output_node_proj
                                     #    since could be Composition, which does not have a get_port_name attribute
                                     rcvr_input_node_proj_label = \
-                                        f"{rcvr}:{InputPort.__name__}-{proj.receiver.name}"
+                                        f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
                                     # rcvr_input_node_proj_label = \
                                     #     f"{sndr_label}:" \
                                     #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
