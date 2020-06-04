@@ -7876,7 +7876,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if cim is self.input_CIM:
 
-                    # Projections from Node(s) in enclosing Composition to input_CIM from
+                    # Projections from Node(s) in enclosing Composition to input_CIM
                     for input_port in self.input_CIM.input_ports:
                         projs = input_port.path_afferents
                         for proj in projs:
@@ -7885,10 +7885,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             sndr_node_output_port = proj.sender
                             # Skip if cim (handled by enclosing Composition's call to this method)
                             # FIX 6/4/20 NEW
-                            # if isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism):
+                            if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
+                                    or show_nested is not DIRECT):
                             # if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
                             #     and show_nested is not DIRECT):
-                            if show_nested is not DIRECT:
+                            # if show_nested is not DIRECT:
                                 continue
                             else:
                                 sndr_node_output_port_owner = sndr_node_output_port.owner
@@ -8012,10 +8013,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             ctl_mech_output_port = proj.sender
                             # Skip if cim (handled by enclosing Compositoin's call to this method)
                             # FIX 6/4/20 NEW
-                            # if isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism):
+                            if (isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism)
+                                    or show_nested is not DIRECT):
                             # if (isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism)
                             #     and not show_nested is DIRECT):
-                            if not show_nested is DIRECT:
+                            # if not show_nested is DIRECT:
                                 continue
                             else:
                                 ctl_mech_output_port_owner = ctl_mech_output_port.owner
@@ -8184,12 +8186,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for proj in projs:
 
                             rcvr_node_input_port = proj.receiver
-                            # Skip if cim (handled by enclosing Composition's call to this method
+                            # Skip if cim (handled by enclosing Composition's call to this method)
                             # FIX 6/4/20 NEW
-                            # if isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism):
+                            if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
+                                    or show_nested is not DIRECT):
                             # if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
                             #     and not show_nested is DIRECT):
-                            if not show_nested is DIRECT:
+                            # if not show_nested is DIRECT:
                                 continue
                             else:
                                 rcvr_node_input_port_owner = rcvr_node_input_port.owner
@@ -8605,7 +8608,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         assign_proj_to_enclosing_comp = False
 
                         # Skip if Composition and show_cim (handled by _assign_cim_components)
-                        if isinstance(sender, Composition) and show_cim:
+                        # FIX 6/4/20:
+                        if isinstance(sender, Composition) and show_cim and show_nested is DIRECT:
                             continue
 
                         if isinstance(sender, CompositionInterfaceMechanism):
