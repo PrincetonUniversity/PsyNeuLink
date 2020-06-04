@@ -385,6 +385,64 @@ class TestControlSpecification:
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
+    def test_hanging_control_spec_outer_controller(self):
+        internal_mech = pnl.ProcessingMechanism(
+            name='internal_mech',
+            function=pnl.Linear(slope=pnl.CONTROL)
+        )
+
+        inner_comp = pnl.Composition(
+            name='inner',
+            pathways=[internal_mech],
+        )
+
+        controller = pnl.ControlMechanism(
+            name='controller',
+            default_variable=5
+        )
+
+        outer_comp = pnl.Composition(
+            name='outer_with_controller',
+            pathways=[inner_comp],
+            controller=controller
+        )
+
+        result = outer_comp.run([1])
+        assert result == [[5]]
+        assert internal_mech.mod_afferents[0].sender.owner == inner_comp.parameter_CIM
+
+    def test_hanging_control_spec_nearest_controller(self):
+        inner_controller = pnl.ControlMechanism(
+            name='inner_controller',
+            default_variable=5
+        )
+
+        inner_comp = pnl.Composition(
+            name='inner_comp',
+            controller=inner_controller
+        )
+
+        outer_controller = pnl.ControlMechanism(
+            name='outer_controller',
+            default_variable=10
+        )
+
+        outer_comp = pnl.Composition(
+            name='outer_with_controller',
+            pathways=[inner_comp],
+            controller=outer_controller
+        )
+
+        internal_mech = pnl.ProcessingMechanism(
+            name='internal_mech',
+            function=pnl.Linear(slope=pnl.CONTROL)
+        )
+
+        inner_comp.add_node(internal_mech)
+
+        result = outer_comp.run([1])
+        assert result == [[5]]
+        assert internal_mech.mod_afferents[0].sender.owner == inner_comp.controller
 
 class TestControlMechanisms:
 
