@@ -4663,11 +4663,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Enforce order of ports to same as node_order
             # Get node port mappings for cim
-            # MODIFIED 6/1/20 OLD:
-            node_port_to_cim_port_tuples_mapping = getattr(self, f'{type}_CIM_ports')
-            # MODIFIED 6/1/20 NEW:
             node_port_to_cim_port_tuples_mapping = cim.port_map
-            # MODIFIED 6/1/20 END
             # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
             # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
             cim_node_indices = []
@@ -7786,7 +7782,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Implement sender edges from Nodes within Composition
             sndrs = processing_graph[rcvr]
-            # MODIFIED 6/1/20 NEW:
             # FIX 6/2/20: FILTER OUT cims HERE FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
             # If Projections are being shown to Components in nested Compositions without including cims
             #    need to identify them and add to sndrs so their sources/destinations can be found
@@ -7796,7 +7791,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 cims = set([proj.sender.owner for proj in rcvr.afferents
                             if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
                 sndrs.update(cims)
-            # MODIFIED 6/1/20 END
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g)
 
         def _assign_cim_components(g, cims, enclosing_g):
@@ -8258,7 +8252,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for ctl_proj in control_signal.efferents:
 
                     # Skip ControlProjections not in the Composition
-                    # FIX 6/1/20:  ATTEND TO THIS ONCE INCREMENTAL aux_components UPDATING IS IMPLEMENTED
                     if ctl_proj not in self.projections:
                         continue
 
@@ -8272,7 +8265,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if show_cim and show_nested is NESTED:
                             # Use Composition's parameter_CIM port
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to NESTED)
                         elif show_nested is NESTED:
                             # Use ParameterPort of modulated Mechanism in nested Composition
                             parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
@@ -8558,7 +8550,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         @tc.typecheck
         def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None, enclosing_g=None):
-            # FIX 6/2/20 MOVE HANDLING OF cims FROM _assign_cim_components TO HERE
 
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
@@ -8714,6 +8705,88 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        penwidth=proj_width,
                                        arrowhead=arrowhead)
 
+        def _generate_output(G):
+            # Sort nodes for display
+            # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
+            def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
+                """Get index of node in G.body"""
+                for i, item in enumerate(G.body):
+                    if node.name + ' ' in item:  # Space needed to filter out node.name that is a substring of another name
+                        if node_type in {MECHANISM, BOTH}:
+                            if not '->' in item:
+                                return i
+                        elif node_type in {PROJECTION, BOTH}:
+                            if '->' in item:
+                                return i
+                        else:
+                            assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
+
+            for node in self.nodes:
+                if isinstance(node, Composition):
+                    continue
+                roles = self.get_roles_by_node(node)
+                # Put INPUT node(s) first
+                if NodeRole.INPUT in roles:
+                    i = get_index_of_node_in_G_body(node, MECHANISM)
+                    if i is not None:
+                        G.body.insert(0,G.body.pop(i))
+                # Put OUTPUT node(s) last (except for ControlMechanisms)
+                if NodeRole.OUTPUT in roles:
+                    i = get_index_of_node_in_G_body(node, MECHANISM)
+                    if i is not None:
+                        G.body.insert(len(G.body),G.body.pop(i))
+                # Put ControlMechanism(s) last
+                if isinstance(node, ControlMechanism):
+                    i = get_index_of_node_in_G_body(node, MECHANISM)
+                    if i is not None:
+                        G.body.insert(len(G.body),G.body.pop(i))
+
+            for proj in self.projections:
+                # Put ControlProjection(s) last (along with ControlMechanis(s))
+                if isinstance(proj, ControlProjection):
+                    i = get_index_of_node_in_G_body(node, PROJECTION)
+                    if i is not None:
+                        G.body.insert(len(G.body),G.body.pop(i))
+
+            if self.controller and show_controller:
+                i = get_index_of_node_in_G_body(self.controller, MECHANISM)
+                G.body.insert(len(G.body),G.body.pop(i))
+
+            # GENERATE OUTPUT ---------------------------------------------------------------------
+
+            # Show as pdf
+            try:
+                if output_fmt == 'pdf':
+                    # G.format = 'svg'
+                    G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
+
+                # Generate images for animation
+                elif output_fmt == 'gif':
+                    if self.active_item_rendered or INITIAL_FRAME in active_items:
+                        self._generate_gifs(G, active_items, context)
+
+                # Return graph to show in jupyter
+                elif output_fmt == 'jupyter':
+                    return G
+
+                elif output_fmt == 'gv':
+                    return G
+
+                elif output_fmt == 'source':
+                    return G.source
+
+                elif not output_fmt:
+                    return None
+
+                else:
+                    raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
+
+            except CompositionError as e:
+                raise CompositionError(str(e.error_value))
+
+            except:
+                raise CompositionError(f"Problem displaying graph for {self.name}")
+
         # SETUP AND CONSTANTS -----------------------------------------------------------------
 
         INITIAL_FRAME = "INITIAL_FRAME"
@@ -8842,90 +8915,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _assign_learning_components(G)
 
         # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
-        # return _generate_output(G)
-        #
-        # def _generate_output(G):
-
-        # Sort nodes for display
-        # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
-        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
-            """Get index of node in G.body"""
-            for i, item in enumerate(G.body):
-                if node.name + ' ' in item:  # Space needed to filter out node.name that is a substring of another name
-                    if node_type in {MECHANISM, BOTH}:
-                        if not '->' in item:
-                            return i
-                    elif node_type in {PROJECTION, BOTH}:
-                        if '->' in item:
-                            return i
-                    else:
-                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
-
-        for node in self.nodes:
-            if isinstance(node, Composition):
-                continue
-            roles = self.get_roles_by_node(node)
-            # Put INPUT node(s) first
-            if NodeRole.INPUT in roles:
-                i = get_index_of_node_in_G_body(node, MECHANISM)
-                if i is not None:
-                    G.body.insert(0,G.body.pop(i))
-            # Put OUTPUT node(s) last (except for ControlMechanisms)
-            if NodeRole.OUTPUT in roles:
-                i = get_index_of_node_in_G_body(node, MECHANISM)
-                if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
-            # Put ControlMechanism(s) last
-            if isinstance(node, ControlMechanism):
-                i = get_index_of_node_in_G_body(node, MECHANISM)
-                if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
-
-        for proj in self.projections:
-            # Put ControlProjection(s) last (along with ControlMechanis(s))
-            if isinstance(proj, ControlProjection):
-                i = get_index_of_node_in_G_body(node, PROJECTION)
-                if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
-
-        if self.controller and show_controller:
-            i = get_index_of_node_in_G_body(self.controller, MECHANISM)
-            G.body.insert(len(G.body),G.body.pop(i))
-
-        # GENERATE OUTPUT ---------------------------------------------------------------------
-
-        # Show as pdf
-        try:
-            if output_fmt == 'pdf':
-                # G.format = 'svg'
-                G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
-
-            # Generate images for animation
-            elif output_fmt == 'gif':
-                if self.active_item_rendered or INITIAL_FRAME in active_items:
-                    self._generate_gifs(G, active_items, context)
-
-            # Return graph to show in jupyter
-            elif output_fmt == 'jupyter':
-                return G
-
-            elif output_fmt == 'gv':
-                return G
-
-            elif output_fmt == 'source':
-                return G.source
-
-            elif not output_fmt:
-                return None
-
-            else:
-                raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
-
-        except CompositionError as e:
-            raise CompositionError(str(e.error_value))
-
-        except:
-            raise CompositionError(f"Problem displaying graph for {self.name}")
+        return _generate_output(G)
 
     def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
 
