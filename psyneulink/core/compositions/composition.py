@@ -8809,8 +8809,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nesting_level = 0
         num_nesting_levels=None
         # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
-        # if type(show_nested) is int:
-        if isinstance(show_nested, int):
+        if type(show_nested) is int:
             num_nesting_levels = show_nested
         if num_nesting_levels is not None:
             if nesting_level <= num_nesting_levels:
