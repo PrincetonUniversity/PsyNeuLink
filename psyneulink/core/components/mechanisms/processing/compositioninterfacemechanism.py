@@ -125,6 +125,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                  input_ports: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
                  function=None,
                  composition=None,
+                 port_map=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
@@ -132,6 +133,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         if default_variable is None and size is None:
             default_variable = self.class_defaults.variable
         self.composition = composition
+        self.port_map = port_map
         self.connected_to_composition = False
         self.user_added_ports = {
             INPUT_PORTS: set(),
