@@ -7870,13 +7870,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                             # Get label for Node that sends the input (sndr_label)
                             sndr_node_output_port = proj.sender
-                            # Skip if cim (handled by enclosing Composition's call to this method)
-                            # FIX 6/4/20 NEW
+                            # Skip if sender is cim (handled by enclosing Composition's call to this method)
+                            #   or Projections to cim aren't being shown (not NESTED)
                             if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
                                     or show_nested is not NESTED):
-                            # if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
-                            #     and show_nested is not NESTED):
-                            # if show_nested is not NESTED:
                                 continue
                             else:
                                 sndr_node_output_port_owner = sndr_node_output_port.owner
@@ -7990,21 +7987,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 if cim is self.parameter_CIM:
 
-                    # Projections from ControlMechanism(s) in enclosing Composition parameter_CIM
-                    # (other than controller;  that is handled in _assign_controller_compoents)
+                    # Projections from ControlMechanism(s) in enclosing Composition to parameter_CIM
+                    # (other than from controller;  that is handled in _assign_controller_compoents)
                     for input_port in self.parameter_CIM.input_ports:
                         projs = input_port.path_afferents
                         for proj in projs:
 
                             # Get label for Node that sends the ControlProjection (sndr label)
                             ctl_mech_output_port = proj.sender
-                            # Skip if cim (handled by enclosing Compositoin's call to this method)
-                            # FIX 6/4/20 NEW
+                            # Skip if sender is cim (handled by enclosing Composition's call to this method)
+                            #   or Projections to cim aren't being shown (not NESTED)
                             if (isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism)
                                     or show_nested is not NESTED):
-                            # if (isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism)
-                            #     and not show_nested is NESTED):
-                            # if not show_nested is NESTED:
                                 continue
                             else:
                                 ctl_mech_output_port_owner = ctl_mech_output_port.owner
@@ -8173,13 +8167,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         for proj in projs:
 
                             rcvr_node_input_port = proj.receiver
-                            # Skip if cim (handled by enclosing Composition's call to this method)
-                            # FIX 6/4/20 NEW
+                            # Skip if receiver is cim (handled by enclosing Composition's call to this method)
+                            #   or Projections from cim aren't being shown (not NESTED)
                             if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
                                     or show_nested is not NESTED):
-                            # if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
-                            #     and not show_nested is NESTED):
-                            # if not show_nested is NESTED:
                                 continue
                             else:
                                 rcvr_node_input_port_owner = rcvr_node_input_port.owner
@@ -8584,8 +8575,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         assign_proj_to_enclosing_comp = False
 
-                        # Skip if Composition and show_cim (handled by _assign_cim_components)
-                        # FIX 6/4/20:
+                        # Skip if sender is Composition and Projections to and from cim are being shown
+                        #    (show_cim and show_nested) -- handled by _assign_cim_components
                         if isinstance(sender, Composition) and show_cim and show_nested is NESTED:
                             continue
 
