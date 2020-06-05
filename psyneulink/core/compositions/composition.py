@@ -8730,22 +8730,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context.execution_id is NotImplemented:
             context.execution_id = self.default_execution_id
 
-        # FIX 6/2/20: DELETE IF PASSES TESTS:
-        # # For backward compatibility
-        # if 'show_model_based_optimizer' in kwargs:
-        #     show_controller = kwargs['show_model_based_optimizer']
-        #     del kwargs['show_model_based_optimizer']
         enclosing_g = kwargs.pop('enclosing_g',None)
         if kwargs:
             raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
                                    f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
-        if show_nested == True:
+        if show_nested and show_nested != INSET:
             show_nested = NESTED
 
         if show_dimensions == True:
             show_dimensions = ALL
-
 
         active_items = active_items or []
         if active_items:
