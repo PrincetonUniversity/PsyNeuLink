@@ -7609,7 +7609,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         tc.typecheck
         _locals = locals().copy()
 
-        def _assign_processing_components(g, rcvr, show_nested, show_nested_args, enclosing_g):
+        def _assign_processing_components(g, rcvr, show_nested, show_nested_args, enclosing_g, nesting_level):
             """Assign nodes to graph"""
 
             # DEAL WITH NESTED COMPOSITION
@@ -7633,7 +7633,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Use default args for nested Composition
                         args = output_fmt_arg
                     args.update({ENCLOSING_G:g,
-                                 NESTING_LEVEL:nesting_level})
+                                 NESTING_LEVEL:nesting_level+1})
 
                     # Get subgraph for nested Composition
                     nested_comp_graph = rcvr.show_graph(**args)
@@ -8919,7 +8919,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         rcvrs = list(processing_graph.keys())
 
         for rcvr in rcvrs:
-            _assign_processing_components(G, rcvr, show_nested, show_nested_args, enclosing_g)
+            _assign_processing_components(G, rcvr, show_nested, show_nested_args, enclosing_g, nesting_level)
 
         # Add cim Components to graph if show_cim
         if show_cim:
