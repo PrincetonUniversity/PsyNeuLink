@@ -7388,6 +7388,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
+                   show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(NESTED, INSET)))=NESTED,
                    show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_cim:bool=False,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
@@ -8158,6 +8159,59 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 label = ''
                             g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
                                    color=proj_color, penwidth=proj_width)
+
+                    # Projections from output_CIM to Node(s) in enclosing Composition
+                    for output_port in self.output_CIM.output_ports:
+                        projs = output_port.efferents
+                        for proj in projs:
+
+                            rcvr_node_input_port = proj.receiver
+                            # Skip if receiver is cim (handled by enclosing Composition's call to this method)
+                            #   or Projections from cim aren't being shown (not NESTED)
+                            if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
+                                    or show_nested is not NESTED):
+                                continue
+                            else:
+                                rcvr_node_input_port_owner = rcvr_node_input_port.owner
+
+                            rcvr_label = self._get_graph_node_label(rcvr_node_input_port_owner,
+                                                                    show_types, show_dimensions)
+                            # Construct edge name
+                            if show_node_structure:
+                                # Get label of CIM's port as edge's receiver
+                                sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                                if (isinstance(rcvr_node_input_port_owner, Composition)
+                                        and show_nested is not NESTED):
+                                    rcvr_input_node_proj_label = rcvr_label
+                                else:
+                                    # Need to use direct reference to proj.sender rather than sndr_output_node_proj
+                                    #    since could be Composition, which does not have a get_port_name attribute
+                                    rcvr_input_node_proj_label = \
+                                        f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
+                                    # rcvr_input_node_proj_label = \
+                                    #     f"{sndr_label}:" \
+                                    #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
+                            else:
+                                rcvr_input_node_proj_label = rcvr_label
+                                sndr_cim_proj_label = cim_label
+
+                            # Render Projection
+                            if any(item in active_items for item in {proj, proj.sender.owner}):
+                                if active_color == BOLD:
+                                    proj_color = default_node_color
+                                else:
+                                    proj_color = active_color
+                                proj_width = str(default_width + active_thicker_by)
+                                self.active_item_rendered = True
+                            else:
+                                proj_color = default_node_color
+                                proj_width = str(default_width)
+                            if show_projection_labels:
+                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
+                            else:
+                                label = ''
+                            enclosing_g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
+                                             color=proj_color, penwidth=proj_width)
 
                     # Projections from output_CIM to Node(s) in enclosing Composition
                     for output_port in self.output_CIM.output_ports:
