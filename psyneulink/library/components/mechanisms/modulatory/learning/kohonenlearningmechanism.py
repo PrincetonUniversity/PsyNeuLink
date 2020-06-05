@@ -417,7 +417,7 @@ class KohonenLearningMechanism(LearningMechanism):
         super()._update_output_ports(context, runtime_params)
 
         if context.composition is not None and ContextFlags.LEARNING_MODE in context.runmode:
-            context.add_flag(ContextFlags.LEARNING)
+            context.execution_phase = ContextFlags.LEARNING
             self.learned_projection.execute(context=context)
             context.remove_flag(ContextFlags.LEARNING)
 

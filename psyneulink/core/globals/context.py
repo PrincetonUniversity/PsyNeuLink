@@ -126,64 +126,65 @@ class ContextFlags(enum.IntFlag):
     UNSET = 0
 
     # initialization_status flags:
-    DEFERRED_INIT = 1 << 1  # 2
+    DEFERRED_INIT = enum.auto()
     """Set if flagged for deferred initialization."""
-    INITIALIZING  = 1 << 2  # 4
+    INITIALIZING = enum.auto()
     """Set during initialization of the Component."""
-    VALIDATING    = 1 << 3  # 8
+    VALIDATING = enum.auto()
     """Set during validation of the value of a Component or its attribute."""
-    INITIALIZED   = 1 << 4  # 16
+    INITIALIZED = enum.auto()
     """Set after completion of initialization of the Component."""
-    RESET = 1 << 4  # 16
+    RESET = enum.auto()
     """Set on stateful Components when they are re-initialized."""
-    UNINITIALIZED = 1 << 17
+    UNINITIALIZED = enum.auto()
     """Default value set before initialization"""
     INITIALIZATION_MASK = DEFERRED_INIT | INITIALIZING | VALIDATING | INITIALIZED | RESET | UNINITIALIZED
 
     # execution_phase flags:
-    PREPARING    = 1 << 5   # 32
+    PREPARING = enum.auto()
     """Set while `Composition is preparing to `execute <Composition_Execution>`."""
-    PROCESSING    = 1 << 6  # 64
+    PROCESSING = enum.auto()
     """Set while `Composition is `executing <Composition_Execution>` `ProcessingMechanisms <ProcessingMechanism>`."""
-    LEARNING      = 1 << 7 # 128
+    LEARNING = enum.auto()
     """Set while `Composition is `executing <Composition_Execution>` `LearningMechanisms <LearningMechanism>`."""
-    CONTROL       = 1 << 8 # 256
+    CONTROL = enum.auto()
     """Set while Composition's `controller <Composition.controller>` or its `ObjectiveMechanism` is executing."""
-    SIMULATION    = 1 << 9  # 512
-    """Set during simulation by Composition.controller"""
-    IDLE = 1 << 18
+    IDLE = enum.auto()
     """Identifies condition in which no flags in the `execution_phase <Context.execution_phase>` are set.
     """
-    EXECUTING = PROCESSING | LEARNING | CONTROL | SIMULATION
+    EXECUTING = PROCESSING | LEARNING | CONTROL
     EXECUTION_PHASE_MASK = IDLE | PREPARING | EXECUTING
 
     # source (source-of-call) flags:
-    COMMAND_LINE  = 1 << 10  # 1024
+    COMMAND_LINE = enum.auto()
     """Direct call by user (either interactively from the command line, or in a script)."""
-    CONSTRUCTOR   = 1 << 11 # 2048
+    CONSTRUCTOR = enum.auto()
     """Call from Component's constructor method."""
-    INSTANTIATE   = 1 << 12 # 4096
+    INSTANTIATE = enum.auto()
     """Call by an instantiation method."""
-    COMPONENT     = 1 << 13 # 8192
+    COMPONENT = enum.auto()
     """Call by Component __init__."""
-    METHOD        = 1 << 14 # 16384
+    METHOD = enum.auto()
     """Call by method of the Component other than its constructor."""
-    PROPERTY      = 1 << 15 # 32768
+    PROPERTY = enum.auto()
     """Call by property of the Component."""
-    COMPOSITION   = 1 << 16 #
+    COMPOSITION = enum.auto()
     """Call by a/the Composition to which the Component belongs."""
 
-    NONE      = 1 << 21
+    NONE = enum.auto()
 
     """Call by a/the Composition to which the Component belongs."""
     SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
 
     # runmode flags:
-    DEFAULT_MODE = 1 << 19
+    DEFAULT_MODE = enum.auto()
     """Default mode"""
-    LEARNING_MODE = 1 << 20
+    LEARNING_MODE = enum.auto()
     """Set during `compositon.learn`"""
-    RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE
+    SIMULATION_MODE = enum.auto()
+    """Set during simulation by Composition.controller"""
+
+    RUN_MODE_MASK = LEARNING_MODE | DEFAULT_MODE | SIMULATION_MODE
 
     ALL_FLAGS = INITIALIZATION_MASK | EXECUTION_PHASE_MASK | SOURCE_MASK | RUN_MODE_MASK
 
@@ -249,7 +250,6 @@ EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
                          ContextFlags.PROCESSING,
                          ContextFlags.LEARNING,
                          ContextFlags.CONTROL,
-                         ContextFlags.SIMULATION,
                          ContextFlags.IDLE
                          }
 
@@ -262,8 +262,12 @@ SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.COMPOSITION,
                 ContextFlags.NONE}
 
-RUN_MODE_FLAGS = {ContextFlags.LEARNING_MODE,
-                  ContextFlags.DEFAULT_MODE}
+RUN_MODE_FLAGS = {
+    ContextFlags.LEARNING_MODE,
+    ContextFlags.DEFAULT_MODE,
+    ContextFlags.SIMULATION_MODE,
+}
+
 
 class Context():
     """Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
@@ -293,7 +297,6 @@ class Context():
             * `PROCESSING <ContextFlags.PROCESSING>`
             * `LEARNING <ContextFlags.LEARNING>`
             * `CONTROL <ContextFlags.CONTROL>`
-            * `SIMULATION <ContextFlags.SIMULATION>`
             * `IDLE <ContextFlags.IDLE>`
 
         If `IDLE` is set, the Component is not being executed at the current time, and `flags_string
@@ -346,7 +349,7 @@ class Context():
         self._execution_phase = execution_phase
         self._source = source
         self._runmode = runmode
-        
+
         if flags:
             if (execution_phase and not (flags & ContextFlags.EXECUTION_PHASE_MASK & execution_phase)):
                 raise ContextError("Conflict in assignment to flags ({}) and execution_phase ({}) arguments "
@@ -410,20 +413,16 @@ class Context():
         """Check that flag is a valid execution_phase flag assignment"""
         if not flag:
             self._execution_phase = ContextFlags.IDLE
+        elif flag not in EXECUTION_PHASE_FLAGS:
+            raise ContextError(
+                f"Attempt to assign more than one non-SIMULATION flag ({str(flag)}) to execution_phase"
+            )
         elif (flag & ~ContextFlags.EXECUTION_PHASE_MASK):
             raise ContextError("Attempt to assign a flag ({}) to execution_phase "
                                "that is not an execution phase flag".
                                format(str(flag)))
         else:
-            if (
-                flag in EXECUTION_PHASE_FLAGS
-                or (flag & ~ContextFlags.SIMULATION) in EXECUTION_PHASE_FLAGS
-            ):
-                self._execution_phase = flag
-            else:
-                raise ContextError(
-                    f"Attempt to assign more than one non-SIMULATION flag ({str(flag)}) to execution_phase"
-                )
+            self._execution_phase = flag
 
     @property
     def source(self):
@@ -446,11 +445,14 @@ class Context():
     @property
     def runmode(self):
         return self._runmode
-    
+
     @runmode.setter
     def runmode(self, flag):
         """Check that a flag is one and only one run mode flag"""
-        if flag in RUN_MODE_FLAGS:
+        if (
+            flag in RUN_MODE_FLAGS
+            or (flag & ~ContextFlags.SIMULATION_MODE) in RUN_MODE_FLAGS
+        ):
             self._runmode = flag
         elif not flag:
             self._runmode = ContextFlags.DEFAULT_MODE
@@ -458,7 +460,7 @@ class Context():
             raise ContextError("Attempt to assign a flag ({}) to run mode that is not a run mode flag".
                                format(str(flag)))
         else:
-            raise ContextError("Attempt to assign more than one flag ({}) to run mode".
+            raise ContextError("Attempt to assign more than one non-SIMULATION flag ({}) to run mode".
                                format(str(flag)))
 
     @property
