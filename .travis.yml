@@ -14,7 +14,30 @@ arch:
   - amd64
   - ppc64le
 
+stages:
+  - precache
+  - test
+
 jobs:
+  include:
+    - script: true
+      after_script: true
+      before_cache: true
+      stage: precache
+      env: PYTHON=3.8
+      arch: ppc64le
+    - script: true
+      after_script: true
+      before_cache: true
+      stage: precache
+      env: PYTHON=3.7
+      arch: ppc64le
+    - script: true
+      after_script: true
+      before_cache: true
+      stage: precache
+      env: PYTHON=3.6
+      arch: ppc64le
   allow_failures:
     - arch: ppc64le
 
