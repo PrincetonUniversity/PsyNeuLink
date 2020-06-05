@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.0.0+5.g6c79ea4 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.0.0+6.g28e6501 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.0.0+5
+                  0.8.0.0+6
                 </div>
               
             
@@ -3401,7 +3401,7 @@ when it is <a class="reference internal" href="#composition-execution"><span cla
 
 <dl class="method">
 <dt id="psyneulink.core.compositions.composition.Composition.show_graph">
-<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_node_structure=False</em>, <em>show_nested='all'</em>, <em>show_controller=True</em>, <em>show_cim=False</em>, <em>show_learning=False</em>, <em>show_headers=True</em>, <em>show_types=False</em>, <em>show_dimensions=False</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>controller_color='blue'</em>, <em>learning_color='orange'</em>, <em>composition_color='pink'</em>, <em>control_projection_arrow='box'</em>, <em>feedback_shape='septagon'</em>, <em>cycle_shape='doublecircle'</em>, <em>cim_shape='square'</em>, <em>output_fmt='pdf'</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_node_structure=False</em>, <em>show_nested='nested'</em>, <em>show_nested_args='all'</em>, <em>show_cim=False</em>, <em>show_controller=True</em>, <em>show_learning=False</em>, <em>show_headers=True</em>, <em>show_types=False</em>, <em>show_dimensions=False</em>, <em>show_projection_labels=False</em>, <em>direction='BT'</em>, <em>active_items=None</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>controller_color='blue'</em>, <em>learning_color='orange'</em>, <em>composition_color='pink'</em>, <em>control_projection_arrow='box'</em>, <em>feedback_shape='septagon'</em>, <em>cycle_shape='doublecircle'</em>, <em>cim_shape='square'</em>, <em>output_fmt='pdf'</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show graphical display of Components in a Composition’s graph.</p>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
@@ -3434,21 +3434,25 @@ Mechanisms in the <a class="reference internal" href="#"><span class="doc">Compo
 the values, if specified – see above), including parameters for all functions.</li>
 </ul>
 </li>
-<li><strong>show_nested</strong> (<em>bool | dict : default ALL</em>) – specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
-specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  <em>ALL</em>
-passes all arguments specified for the main Composition to the nested one(s);  True uses the default
-values of show_graph args for the nested Composition(s).</li>
+<li><strong>show_nested</strong> (<em>bool | NESTED | INSET : default NESTED</em>) – <dl class="docutils">
+<dt>specifies whether or not to show <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a> and, if so, whether to</dt>
+<dd>show them in nested form (<em>NESTED</em> or True) with Projections shown directly from Components in the
+enclosing Composition to and from ones in the nested Composition, or each nested Composition as a
+separate inset (<em>INSET</em>)</dd>
+<dt>show_nested_args <span class="classifier-delimiter">:</span> <span class="classifier">bool | dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">default ALL</span></dt>
+<dd>specifies arguments in call to show_graph passed to <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Composition(s)</span></a> if
+<strong>show_nested</strong> is specified.  A dict can be used to specify any of the arguments allowed for
+show_graph to be used for the nested Composition(s);  <em>ALL</em> passes all arguments specified for the main
+Composition to the nested one(s);  True uses the default values of show_graph args for the nested
+Composition(s).</dd>
+</dl>
+</li>
+<li><strong>show_cim</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">input_CIM</span></code></a>, <code class="xref any docutils literal"><span class="pre">parameter_CIM</span></code>, and <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.output_CIM" title="psyneulink.core.compositions.composition.Composition.output_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">output_CIM</span></code></a> <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanisms</span></a> (CIMs).</li>
 <li><strong>show_controller</strong> (<em>bool</em><em> or </em><em>AGENT_REP : default True</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and associated
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> if it has one.  If the controller is an
 OptimizationControlMechanism and it has an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">agent_rep</span></a>, then specifying
 <em>AGENT_REP</em> will also show that.  All control-related items are displayed in the color specified for
 <strong>controller_color</strong>.</li>
-<li><strong>show_cim</strong> (<em>bool</em><em> or </em><em>DIRECT : default False</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">input_CIM</span></code></a>, <code class="xref any docutils literal"><span class="pre">parameter_CIM</span></code>, and <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.output_CIM" title="psyneulink.core.compositions.composition.Composition.output_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">output_CIM</span></code></a> <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanisms</span></a> (CIMs).  If <strong>show_node_structure</strong> is specified (see above) and their
-are <a class="reference internal" href="#composition-nested"><span class="std std-ref">nested Compositions</span></a>, then specifying <strong>show_cim</strong> as True or <em>DIRECT</em> determines
-how projections are shown between an enclosing Composition and the CIMs of the nested one:  if specified
-as <em>DIRECT</em>, then those Projections are connected directly to the relevvant <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> of the nested
-Composition’s CIMs; if True, then the nested Composition is rendered separated from its enclosing one,
-without showing direct Projections from one to the other.</li>
 <li><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a> of the
 <a class="reference internal" href="#"><span class="doc">Composition</span></a>; they will all be displayed in the color specified for <strong>learning_color</strong>.
 Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.
@@ -3778,7 +3782,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.0.0+5.g6c79ea4',
+               VERSION:'0.8.0.0+6.g28e6501',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
