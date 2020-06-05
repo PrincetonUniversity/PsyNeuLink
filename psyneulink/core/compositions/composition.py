@@ -8812,7 +8812,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if type(show_nested) is int:
             num_nesting_levels = show_nested
         if num_nesting_levels is not None:
-            if nesting_level <= num_nesting_levels:
+            if nesting_level < num_nesting_levels:
                 show_nested = NESTED
             else:
                 show_nested = False
