@@ -2466,15 +2466,15 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
-    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DIRECT, \
-    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
+    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
-    SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
+    ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -7388,10 +7388,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(DIRECT)))=DIRECT,
+                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(NESTED, INSET)))=NESTED,
                    show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
                    show_cim:bool=False,
+                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
                    show_learning:bool=False,
                    show_headers:bool=True,
                    show_types:bool=False,
@@ -7418,10 +7418,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         show_graph(                           \
            show_node_structure=False,         \
-           show_nested=DIRECT,                \
+           show_nested=NESTED,                \
            show_nested_args=ALL,              \
-           show_controller=True,              \
            show_cim=False,                    \
+           show_controller=True,              \
            show_learning=False,               \
            show_headers=True,                 \
            show_types=False,                  \
@@ -7484,18 +7484,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
-        show_nested : bool | DIRECT : default DIRECT
+        show_nested : bool | NESTED | INSET : default NESTED
             specifies whether or not to show `nested Compositions <Composition_Nested>` and, if so, whether to
-            show them as separate insets (True) or integrated into a full representation of the entire graph (DIRECT),
-            with Projections shown directly from Components in the enclosing Composition to and from ones in the nested
-            Composition.
+            show them in nested form (*NESTED* or True) with Projections shown directly from Components in the
+            enclosing Composition to and from ones in the nested Composition, or each nested Composition as a
+            separate inset (*INSET*)
 
          show_nested_args : bool | dict : default ALL
             specifies arguments in call to show_graph passed to `nested Composition(s) <Composition_Nested>` if
-            **show_nested** is True or DIRECT.  A dict can be used to specify any of the arguments allowed for
+            **show_nested** is specified.  A dict can be used to specify any of the arguments allowed for
             show_graph to be used for the nested Composition(s);  *ALL* passes all arguments specified for the main
             Composition to the nested one(s);  True uses the default values of show_graph args for the nested
             Composition(s).
+
+        show_cim : bool : default False
+            specifies whether or not to show the Composition's `input_CIM <Composition.input_CIM>`, `parameter_CIM
+            <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>` `CompositionInterfaceMechanisms
+            <CompositionInterfaceMechanism>` (CIMs).
 
         show_controller :  bool or AGENT_REP : default True
             specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
@@ -7503,11 +7508,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
             *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
             **controller_color**.
-
-        show_cim : bool : default False
-            specifies whether or not to show the Composition's `input_CIM <Composition.input_CIM>`, `parameter_CIM
-            <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>` `CompositionInterfaceMechanisms
-            <CompositionInterfaceMechanism>` (CIMs).
 
         show_learning : bool or ALL : default False
             specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
@@ -7652,21 +7652,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_comp_graph.attr(label=rcvr_label)
                     g.subgraph(nested_comp_graph)
 
-                    if show_nested is DIRECT:
+                    if show_nested is NESTED:
                         return
-
-                # # FIX: 6/3/20
-                # # Skip showing Node for nested Composition if Projections are being shown directly to it
-                # #    (since Projections will be shown to its cim and/or Components)
-                # # FIX: 6/3/20
-                # #  - IF show_cim is DIRECT IS INCLUDED, icomp DOESN'T SHOW FOR show_cim=DIRECT, show_node_structure=True
-                # #    IN Scratch Pad cim_direct_test_with_exogenous_control_projection_in_show_graph()
-                # # if isinstance(rcvr, Composition) and (show_cim or show_nested is DIRECT):
-                # #  - IF show_cim is DIRECT IS NOT INCLUDED, icomp SHOWS IN ADDITION TO NESTED VERSION OF icomp FOR
-                # #    show_nested=False and show_cim=True IN Scratch Pad projection_from_outer_to_inner_to_outer_comp()
-                # if isinstance(rcvr, Composition) and show_nested is DIRECT:
-                #     return
-
 
             # DEAL WITH LEARNING
             # If rcvr is a learning component and not an INPUT node,
@@ -7752,7 +7739,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 rcvr_rank = output_rank
 
             # Composition that is neither an INPUT Node nor an OUTPUT Node
-            elif isinstance(rcvr, Composition) and show_nested is not DIRECT:
+            elif isinstance(rcvr, Composition) and show_nested is not NESTED:
                 if rcvr in active_items:
                     if active_color == BOLD:
                         rcvr_color = composition_color
@@ -7803,8 +7790,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX 6/2/20: FILTER OUT cims HERE FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
             # If Projections are being shown to Components in nested Compositions without including cims
             #    need to identify them and add to sndrs so their sources/destinations can be found
-            if show_nested is DIRECT and not show_cim:
-                # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested = DIRECT
+            if show_nested is NESTED and not show_cim:
+                # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested = NESTED
                 sndrs -= set([sndr for sndr in sndrs if isinstance(sndr, Composition)])
                 cims = set([proj.sender.owner for proj in rcvr.afferents
                             if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
@@ -7848,7 +7835,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     cim_color = cim_type_color
 
-                compact_cim = not cim.afferents or show_nested is not DIRECT
+                compact_cim = not cim.afferents or show_nested is not NESTED
 
                 # Create CIM node
                 cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
@@ -7886,10 +7873,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Skip if cim (handled by enclosing Composition's call to this method)
                             # FIX 6/4/20 NEW
                             if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
-                                    or show_nested is not DIRECT):
+                                    or show_nested is not NESTED):
                             # if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
-                            #     and show_nested is not DIRECT):
-                            # if show_nested is not DIRECT:
+                            #     and show_nested is not NESTED):
+                            # if show_nested is not NESTED:
                                 continue
                             else:
                                 sndr_node_output_port_owner = sndr_node_output_port.owner
@@ -7901,7 +7888,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Get label for CIM's port as edge's receiver
                                 rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                                 if (isinstance(sndr_node_output_port_owner, Composition)
-                                        and show_nested is not DIRECT):
+                                        and show_nested is not NESTED):
                                     sndr_output_node_proj_label = sndr_label
                                 else:
                                     # Need to use direct reference to proj.sender rather than snder_input_node
@@ -7942,7 +7929,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Get label for Node that receives the input (rcvr_label)
                             rcvr_input_node_proj = proj.receiver
                             if (isinstance(rcvr_input_node_proj.owner, CompositionInterfaceMechanism)
-                                    and not show_nested is DIRECT):
+                                    and not show_nested is NESTED):
                                 rcvr_input_node_proj_owner = rcvr_input_node_proj.owner.composition
                             else:
                                 rcvr_input_node_proj_owner = rcvr_input_node_proj.owner
@@ -7967,7 +7954,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Get label for CIM's port as edge's sender
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                                 if (isinstance(rcvr_input_node_proj_owner, Composition)
-                                        and show_nested is not DIRECT):
+                                        and show_nested is not NESTED):
                                     rcvr_input_node_proj_label = rcvr_label
                                 else:
                                     # Need to use direct reference to proj.receiver rather than rcvr_input_node_proj
@@ -8014,10 +8001,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Skip if cim (handled by enclosing Compositoin's call to this method)
                             # FIX 6/4/20 NEW
                             if (isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism)
-                                    or show_nested is not DIRECT):
+                                    or show_nested is not NESTED):
                             # if (isinstance(ctl_mech_output_port.owner, CompositionInterfaceMechanism)
-                            #     and not show_nested is DIRECT):
-                            # if not show_nested is DIRECT:
+                            #     and not show_nested is NESTED):
+                            # if not show_nested is NESTED:
                                 continue
                             else:
                                 ctl_mech_output_port_owner = ctl_mech_output_port.owner
@@ -8070,7 +8057,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Get label for Node that receives modulation (modulated_mech_label)
                             rcvr_modulated_mech_proj = proj.receiver
                             if (isinstance(rcvr_modulated_mech_proj.owner, CompositionInterfaceMechanism)
-                                    and not show_nested is DIRECT):
+                                    and not show_nested is NESTED):
                                 rcvr_modulated_mech_proj_owner = rcvr_modulated_mech_proj.owner.composition
                             else:
                                 rcvr_modulated_mech_proj_owner = rcvr_modulated_mech_proj.owner
@@ -8087,7 +8074,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Get label for CIM's port as edge's sender
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                                 if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
-                                        and not show_nested is not DIRECT):
+                                        and not show_nested is not NESTED):
                                     rcvr_modulated_mec_proj_label = rcvr_label
                                 else:
                                     # Need to use direct reference to proj.receiver rather than rcvr_modulated_mec_proj
@@ -8130,7 +8117,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                             sndr_output_node_proj = proj.sender
                             if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
-                                    and not show_nested is DIRECT):
+                                    and not show_nested is NESTED):
                                 sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
                             else:
                                 sndr_output_node_proj_owner = sndr_output_node_proj.owner
@@ -8148,7 +8135,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Get label of CIM's port as edge's receiver
                                 rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                                 if (isinstance(sndr_output_node_proj_owner, Composition)
-                                        and show_nested is not DIRECT):
+                                        and show_nested is not NESTED):
                                     sndr_output_node_proj_label = sndr_label
                                 else:
                                     # Need to use direct reference to proj.sender rather than sndr_output_node_proj
@@ -8189,10 +8176,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # Skip if cim (handled by enclosing Composition's call to this method)
                             # FIX 6/4/20 NEW
                             if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
-                                    or show_nested is not DIRECT):
+                                    or show_nested is not NESTED):
                             # if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
-                            #     and not show_nested is DIRECT):
-                            # if not show_nested is DIRECT:
+                            #     and not show_nested is NESTED):
+                            # if not show_nested is NESTED:
                                 continue
                             else:
                                 rcvr_node_input_port_owner = rcvr_node_input_port.owner
@@ -8204,7 +8191,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Get label of CIM's port as edge's receiver
                                 sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                                 if (isinstance(rcvr_node_input_port_owner, Composition)
-                                        and show_nested is not DIRECT):
+                                        and show_nested is not NESTED):
                                     rcvr_input_node_proj_label = rcvr_label
                                 else:
                                     # Need to use direct reference to proj.sender rather than sndr_output_node_proj
@@ -8291,18 +8278,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     ctl_proj_rcvr = ctl_proj.receiver
                     # If receiver is a parameter_CIM
                     if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
-                        if show_cim and show_nested is DIRECT:
+                        if show_cim and show_nested is NESTED:
                             # Use Composition's parameter_CIM port
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
-                        elif show_nested is DIRECT:
+                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to NESTED)
+                        elif show_nested is NESTED:
                             # Use ParameterPort of modulated Mechanism in nested Composition
                             parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
                             ctl_proj_rcvr = next((k for k,v in parameter_port_map.items()
                                                         if parameter_port_map[k][0] is ctl_proj_rcvr), None)
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
                         else:
-                            # Use Composition if show_cim is *not* DIRECT (i.e., just True or False)
+                            # Use Composition if show_cim is *not* NESTED (i.e., just True or False)
                             ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
                     # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                     else:
@@ -8311,24 +8298,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Get sender and receiver labels for edge
                     if show_node_structure:
-                        # Get label controller's port as edge's sender
+                        # Get label for controller's port as edge's sender
                         ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                        # Get label for edge's receiver:
-                        # FIX 6/2/20: PROBLEM FOR CASE IN WHICH show_cim=True (and show_nested defaults to DIRECT)
-                        # # MODIFIED 6/2/20 OLD:
-                        # if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                        #         and (show_cim is DIRECT or not show_cim and show_nested is DIRECT)):
-                        #     # Use receiver's ParameterPort if show_nested, or InputPort of a parameter_CIM if show_cim
-                        #     ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
-                        # else:
-                        #     # Otherwise use Composition
-                        #     ctl_proj_rcvr_label = rcvr_label
-                        # MODIFIED 6/2/20 NEW:
-                        if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism) and show_nested is not DIRECT):
+                        # Get label for edge's receiver as owner Mechanism:
+                        if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism) and show_nested is not NESTED):
                             ctl_proj_rcvr_label = rcvr_label
+                        # Get label for edge's receiver as Port:
                         else:
                             ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
-                        # MODIFIED 6/2/20 END
                     else:
                         ctl_proj_sndr_label = ctlr_label
                         ctl_proj_rcvr_label = rcvr_label
@@ -8609,16 +8586,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Skip if Composition and show_cim (handled by _assign_cim_components)
                         # FIX 6/4/20:
-                        if isinstance(sender, Composition) and show_cim and show_nested is DIRECT:
+                        if isinstance(sender, Composition) and show_cim and show_nested is NESTED:
                             continue
 
                         if isinstance(sender, CompositionInterfaceMechanism):
-                            assert show_nested is DIRECT, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
-                                                          f"in list of senders to {rcvr} but 'show_nested' != DIRECT."
-                            # FIX: STILL TODO??:
-                            #  - Set sender to source and Projection to its efferent (for sndr_label, but not rcvr label)
-                            #  - skip if source is a controller (those are handled in _assign_controller_components
-
+                            assert show_nested is NESTED, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
+                                                          f"in list of senders to {rcvr} but 'show_nested' != NESTED."
                             if sender in {self.input_CIM, self.parameter_CIM}:
                                 # FIX 6/2/20:
                                 #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -8767,8 +8740,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
                                    f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
+        if show_nested == True:
+            show_nested = NESTED
+
         if show_dimensions == True:
             show_dimensions = ALL
+
 
         active_items = active_items or []
         if active_items:
