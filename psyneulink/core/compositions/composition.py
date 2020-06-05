@@ -7388,7 +7388,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
-                   show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(NESTED, INSET)))=NESTED,
                    show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_cim:bool=False,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
