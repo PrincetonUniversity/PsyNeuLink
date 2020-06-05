@@ -54,6 +54,7 @@ from psyneulink.core.components.functions.function import (
     Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
 )
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
@@ -66,7 +67,7 @@ from psyneulink.core.globals.keywords import \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
     Parameter, get_validator_by_function
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
@@ -2200,11 +2201,12 @@ class SoftMax(TransferFunction):
                     :default value: True
                     :type: ``bool``
         """
-        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[0.0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
+        one_hot_function = Parameter(OneHot, stateful=False, loggable=False)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -2217,21 +2219,47 @@ class SoftMax(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  gain: parameter_spec = 1.0,
-                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
+                 output=None,
                  per_item=True,
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
+
+        try:
+            # needed because one_hot_function is initialized here based
+            # on output argument, which may also be passed in params
+            output = params['output']
+        except (TypeError, KeyError):
+            pass
+
+        if output not in {None, ALL}:
+            one_hot_function = OneHot(mode=output)
+        else:
+            one_hot_function = None
 
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             per_item=per_item,
             output=output,
+            one_hot_function=one_hot_function,
             params=params,
             owner=owner,
             prefs=prefs,
         )
+
+    def _parse_one_hot_function_variable(self, variable):
+        if self.defaults.per_item:
+            variable = variable[0]
+
+        if self.defaults.output in {PROB, PROB_INDICATOR}:
+            prob_dist = np.asarray(variable)
+            # creates probability distribution in shape of variable
+            prob_dist = np.ones(variable.shape) / safe_len(prob_dist)
+
+            variable = np.asarray([variable, prob_dist])
+
+        return variable
 
     def _validate_variable(self, variable, context=None):
         if variable is None:
@@ -2241,18 +2269,6 @@ class SoftMax(TransferFunction):
                 return self.class_defaults.variable
 
         return np.asarray(variable)
-
-    def _instantiate_function(self, function, function_params=None, context=None):
-
-        self.one_hot_function = None
-        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
-        bounds = None
-
-        if not output_type == ALL:
-            from psyneulink.core.components.functions.selectionfunctions import OneHot
-            self.one_hot_function = OneHot(mode=output_type).function
-
-        super()._instantiate_function(function, function_params=function_params, context=context)
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
