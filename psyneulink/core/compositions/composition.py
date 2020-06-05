@@ -3051,6 +3051,9 @@ class NodeRole(Enum):
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
 PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
+ENCLOSING_G = 'enclosing_g'
+NESTING_LEVEL = 'nesting_level'
+
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
@@ -7384,7 +7387,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(NESTED, INSET)))=NESTED,
+                   show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
                    show_nested_args:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
                    show_cim:bool=False,
                    show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
@@ -7480,11 +7483,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
               the values, if specified -- see above), including parameters for all functions.
 
-        show_nested : bool | NESTED | INSET : default NESTED
-            specifies whether or not to show `nested Compositions <Composition_Nested>` and, if so, whether to
-            show them in nested form (*NESTED* or True) with Projections shown directly from Components in the
-            enclosing Composition to and from ones in the nested Composition, or each nested Composition as a
-            separate inset (*INSET*)
+        show_nested : bool | int | NESTED | INSET : default NESTED
+            specifies whether or not to show `nested Compositions <Composition_Nested>` and, if so, how many
+            levels of nesting to show (*NESTED*, True or int) -- with Projections shown directly from Components
+            in an enclosing Composition to and from ones in the nested Composition, or each nested Composition as
+            a separate inset (*INSET*)
 
          show_nested_args : bool | dict : default ALL
             specifies arguments in call to show_graph passed to `nested Composition(s) <Composition_Nested>` if
@@ -7629,7 +7632,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         # Use default args for nested Composition
                         args = output_fmt_arg
-                    args.update({'enclosing_g':g})
+                    args.update({ENCLOSING_G:g,
+                                 NESTING_LEVEL:nesting_level})
 
                     # Get subgraph for nested Composition
                     nested_comp_graph = rcvr.show_graph(**args)
@@ -8794,13 +8798,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context.execution_id is NotImplemented:
             context.execution_id = self.default_execution_id
 
-        enclosing_g = kwargs.pop('enclosing_g',None)
+        enclosing_g = kwargs.pop(ENCLOSING_G,None)
+        nesting_level = kwargs.pop(NESTING_LEVEL,None)
         if kwargs:
             raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
                                    f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
-        if show_nested and show_nested != INSET:
+        # Get show_nested based on arg and current_nesting_level
+        if enclosing_g is None:
+            nesting_level = 0
+        num_nesting_levels=None
+        # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
+        # if type(show_nested) is int:
+        if isinstance(show_nested, int):
+            num_nesting_levels = show_nested
+        if num_nesting_levels is not None:
+            if nesting_level <= num_nesting_levels:
+                show_nested = NESTED
+            else:
+                show_nested = False
+        # Otherwise, use set show_nested as NESTED unless it was specified as INSET
+        elif show_nested and show_nested != INSET:
             show_nested = NESTED
+
 
         if show_dimensions == True:
             show_dimensions = ALL
