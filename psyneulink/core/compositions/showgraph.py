@@ -296,12 +296,13 @@ def show_graph(self,
                 else:
                     # Use default args for nested Composition
                     args = output_fmt_arg
-                args.update({ENCLOSING_G:g,
+                args.update({'self': rcvr,
+                             ENCLOSING_G:g,
                              NESTING_LEVEL:nesting_level+1,
                              NUM_NESTING_LEVELS:num_nesting_levels})
 
                 # Get subgraph for nested Composition
-                nested_comp_graph = show_graph(rcvr, **args)
+                nested_comp_graph = show_graph(**args)
 
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
