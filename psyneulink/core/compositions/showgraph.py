@@ -31,7 +31,7 @@ from psyneulink.core.globals.keywords import \
     ALL, BOLD, BOTH, COMPONENT, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
     PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
 
-__all__ = ['MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS']
+__all__ = ['MECH_FUNCTION_PARAMS', 'PORT_FUNCTION_PARAMS', 'show_graph']
 
 # Options for show_node_structure argument of show_graph()
 MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
@@ -1640,10 +1640,10 @@ def show_graph(self,
     # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
     return _generate_output(G)
 
-def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
+def _get_graph_node_label(composition, item, show_types=None, show_dimensions=None):
 
     if not isinstance(item, (Mechanism, Composition, Projection)):
-        raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
+        raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, composition.name))
 
     name = item.name
 
