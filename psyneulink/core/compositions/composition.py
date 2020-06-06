@@ -8551,32 +8551,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
 
-            # FIX 6/2/20: FILTER OUT cims HERE FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
-            # If Projections are being shown to Components in nested Compositions without including cims
-            #    need to identify them and add to sndrs so their sources/destinations can be found
-            # FIX 6/5/20:
-            # if show_nested is NESTED and not show_cim:
-            # if (show_nested is NESTED or enclosing_g) and not show_cim:
-            #     # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested=NESTED
-            #     senders -= set([sndr for sndr in senders if isinstance(sndr, Composition)])
-            #     cims = set([proj.sender.owner for proj in rcvr.afferents
-            #                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
-            #     senders.update(cims)
-
+            # If not showing CIMs, then set up to find node for sender in inner or outer Composition
             if not show_cim:
+                # Get sender node from inner Composition
                 if show_nested is NESTED:
                     # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested=NESTED
                     senders -= set([sndr for sndr in senders if isinstance(sndr, Composition)])
-                    cims = set([proj.sender.owner for proj in rcvr.afferents
-                                if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
-                    senders.update(cims)
-                elif enclosing_g:
-                    senders -= set([proj.sender.owner for proj in rcvr.afferents
-                                    if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
-                    # REMOVE FOR mb BUT NEEDED FOR ma:
+                    # Add output_CIMs for nested Comps to find sender nodes
                     cims = set([proj.sender.owner for proj in rcvr.afferents
                                 if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-                                    and proj.sender.owner.composition is self)])
+                                    and (proj.sender.owner is proj.sender.owner.composition.output_CIM))])
+                    senders.update(cims)
+                # Get sender Node from outer Composition (enclosing_g)
+                elif enclosing_g:
+                    # Remove any CIMs from sndrs, since Composition node is used as sender if show_nested is False
+                    senders -= set([proj.sender.owner for proj in rcvr.afferents
+                                    if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+                    # Add input_CIM for current Composition to find senders from enclosing_g
+                    cims = set([proj.sender.owner for proj in rcvr.afferents
+                                if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                                    and proj.sender.owner is self.input_CIM)])
                     senders.update(cims)
 
 
