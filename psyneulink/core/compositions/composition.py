@@ -8645,24 +8645,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
                         if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                                 or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-
-                            # MODIFIED 6/6/20 OLD:
-                            # if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-                            #     sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj.sender)}'
-                            #     proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
-                            # else:
-                            #     sndr_proj_label = sndr_label
-                            #     proc_mech_rcvr_label = rcvr_label
-                            # MODIFIED 6/6/20 NEW:
                             if show_node_structure and isinstance(sndr, Mechanism):
-                                sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj.sender)}'
+                                if isinstance(sndr, CompositionInterfaceMechanism):
+                                    sndr_port = [k for k,v in sender.port_map.items() if v[1] is proj.sender][0]
+                                else:
+                                    sndr_port = proj.sender
+                                sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
                             else:
                                 sndr_proj_label = sndr_label
                             if show_node_structure and isinstance(rcvr, Mechanism):
                                 proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
                             else:
                                 proc_mech_rcvr_label = rcvr_label
-                            # MODIFIED 6/6/20 END
 
                             try:
                                 has_learning = proj.has_learning_projection is not None
