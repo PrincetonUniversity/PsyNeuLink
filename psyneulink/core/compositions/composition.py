@@ -7487,8 +7487,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_nested : bool | int | NESTED | INSET : default NESTED
             specifies whether or not to show `nested Compositions <Composition_Nested>` and, if so, how many
             levels of nesting to show (*NESTED*, True or int) -- with Projections shown directly from Components
-            in an enclosing Composition to and from ones in the nested Composition, or each nested Composition as
-            a separate inset (*INSET*)
+            in an enclosing Composition to and from ones in the nested Composition; or each nested Composition as
+            a separate inset (*INSET*).  *NESTED* specifies all levels of nesting shown; 0 specifies none (same as
+            False), and a non-zero integer species that number of nested levels to shown.  Compsitions nested at the
+            specified level are shown as a node (pink box by default). and ones below the specified level are not
+            shown at all.
 
          show_nested_args : bool | dict : default ALL
             specifies arguments in call to show_graph passed to `nested Composition(s) <Composition_Nested>` if
