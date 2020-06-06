@@ -12,7 +12,7 @@ import enum
 import inspect
 import typecheck as tc
 
-from psyneulink.core.compositions.composition import Composition, NodeRole
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
