@@ -287,7 +287,7 @@ def show_graph(self,
                     args.update(output_fmt_arg)
                 elif show_nested_args == ALL:
                     # Pass args from main call to show_graph to call for nested Composition
-                    args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
+                    args = dict({k:_locals[k] for k in list(inspect.signature(show_graph).parameters)})
                     args.update(output_fmt_arg)
                     if kwargs:
                         args['kwargs'] = kwargs
