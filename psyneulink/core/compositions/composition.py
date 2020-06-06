@@ -3053,6 +3053,7 @@ PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 
 ENCLOSING_G = 'enclosing_g'
 NESTING_LEVEL = 'nesting_level'
+NUM_NESTING_LEVELS = 'num_nesting_levels'
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -7633,7 +7634,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Use default args for nested Composition
                         args = output_fmt_arg
                     args.update({ENCLOSING_G:g,
-                                 NESTING_LEVEL:nesting_level+1})
+                                 NESTING_LEVEL:nesting_level+1,
+                                 NUM_NESTING_LEVELS:num_nesting_levels})
 
                     # Get subgraph for nested Composition
                     nested_comp_graph = rcvr.show_graph(**args)
@@ -7786,15 +7788,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Implement sender edges from Nodes within Composition
             sndrs = processing_graph[rcvr]
-            # FIX 6/2/20: FILTER OUT cims HERE FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
-            # If Projections are being shown to Components in nested Compositions without including cims
-            #    need to identify them and add to sndrs so their sources/destinations can be found
-            if show_nested is NESTED and not show_cim:
-                # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested = NESTED
-                sndrs -= set([sndr for sndr in sndrs if isinstance(sndr, Composition)])
-                cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
-                sndrs.update(cims)
             _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g)
 
         def _assign_cim_components(g, cims, enclosing_g):
@@ -8558,7 +8551,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
 
+            # FIX 6/2/20: FILTER OUT cims HERE FOR OUTER COMPOSITION ONCE nesting_level IS IMPLEMENTED
+            # If Projections are being shown to Components in nested Compositions without including cims
+            #    need to identify them and add to sndrs so their sources/destinations can be found
+            # FIX 6/5/20:
+            # if show_nested is NESTED and not show_cim:
+            # if (show_nested is NESTED or enclosing_g) and not show_cim:
+            #     # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested=NESTED
+            #     senders -= set([sndr for sndr in senders if isinstance(sndr, Composition)])
+            #     cims = set([proj.sender.owner for proj in rcvr.afferents
+            #                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+            #     senders.update(cims)
+
+            if not show_cim:
+                if show_nested is NESTED:
+                    # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested=NESTED
+                    senders -= set([sndr for sndr in senders if isinstance(sndr, Composition)])
+                    cims = set([proj.sender.owner for proj in rcvr.afferents
+                                if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+                    senders.update(cims)
+                elif enclosing_g:
+                    senders -= set([proj.sender.owner for proj in rcvr.afferents
+                                    if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
+                    # REMOVE FOR mb BUT NEEDED FOR ma:
+                    cims = set([proj.sender.owner for proj in rcvr.afferents
+                                if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                                    and proj.sender.owner.composition is self)])
+                    senders.update(cims)
+
+
             for sender in senders:
+
+                # if isinstance(sender, Composition) and show_nested is NESTED and not show_cim:
+                #     continue
 
                 # Iterate through all Projections from all OutputPorts of sender
                 for output_port in sender.output_ports:
@@ -8576,8 +8601,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
 
                         if isinstance(sender, CompositionInterfaceMechanism):
-                            assert show_nested is NESTED, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
-                                                          f"in list of senders to {rcvr} but 'show_nested' != NESTED."
+                            # FIX 6/5/20:
+                            # assert show_nested is NESTED, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
+                            #                               f"in list of senders to {rcvr} but 'show_nested' != NESTED."
+                            assert show_nested is NESTED or enclosing_g, \
+                                f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
+                                f"in list of senders to {rcvr} but no enclosing Composition."
                             if sender in {self.input_CIM, self.parameter_CIM}:
                                 # FIX 6/2/20:
                                 #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -8606,6 +8635,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 # Insure cim has only one afferent
                                 assert len([k.owner for k,v in sender.port_map.items() if v[1] is proj.sender])==1, \
                                     f"PROGRAM ERROR: {sender} of {self.name} has more than one efferent Projection."
+                                # Get Node from nested Composition that projects to rcvr
                                 sndr = [k.owner for k,v in sender.port_map.items() if v[1] is proj.sender][0]
                                 # Skip:
                                 # - cims as sources (handled in _assign_cim_compmoents)
@@ -8800,6 +8830,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         enclosing_g = kwargs.pop(ENCLOSING_G,None)
         nesting_level = kwargs.pop(NESTING_LEVEL,None)
+        num_nesting_levels= kwargs.pop(NUM_NESTING_LEVELS,None)
         if kwargs:
             raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
                                    f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
@@ -8807,7 +8838,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get show_nested based on arg and current_nesting_level
         if enclosing_g is None:
             nesting_level = 0
-        num_nesting_levels=None
         # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
         if type(show_nested) is int:
             num_nesting_levels = show_nested
