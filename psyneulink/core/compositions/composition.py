@@ -8555,8 +8555,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not show_cim:
                 # Get sender node from inner Composition
                 if show_nested is NESTED:
-                    # Remove any Compositions from sndrs, since the Nodes for those are bypassed with show_nested=NESTED
-                    senders -= set([sndr for sndr in senders if isinstance(sndr, Composition)])
                     # Add output_CIMs for nested Comps to find sender nodes
                     cims = set([proj.sender.owner for proj in rcvr.afferents
                                 if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
@@ -8564,20 +8562,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     senders.update(cims)
                 # Get sender Node from outer Composition (enclosing_g)
                 if enclosing_g and show_nested is not INSET:
-                    # Remove any CIMs from sndrs, since Composition node is used as sender if show_nested is False
-                    senders -= set([proj.sender.owner for proj in rcvr.afferents
-                                    if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
                     # Add input_CIM for current Composition to find senders from enclosing_g
                     cims = set([proj.sender.owner for proj in rcvr.afferents
                                 if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                     and proj.sender.owner is self.input_CIM)])
                     senders.update(cims)
 
-
             for sender in senders:
 
-                # if isinstance(sender, Composition) and show_nested is NESTED and not show_cim:
-                #     continue
+                # Remove any Compositions from sndrs if show_cim is False and show_nested is True
+                #    (since in that case the nodes for Compositions are bypassed)
+                if not show_cim and show_nested is NESTED and isinstance(sender, Composition):
+                    continue
 
                 # Iterate through all Projections from all OutputPorts of sender
                 for output_port in sender.output_ports:
