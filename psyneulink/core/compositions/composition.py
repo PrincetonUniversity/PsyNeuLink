@@ -8563,7 +8563,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     and (proj.sender.owner is proj.sender.owner.composition.output_CIM))])
                     senders.update(cims)
                 # Get sender Node from outer Composition (enclosing_g)
-                elif enclosing_g:
+                elif enclosing_g and show_nested is not INSET:
                     # Remove any CIMs from sndrs, since Composition node is used as sender if show_nested is False
                     senders -= set([proj.sender.owner for proj in rcvr.afferents
                                     if isinstance(proj.sender.owner, CompositionInterfaceMechanism)])
