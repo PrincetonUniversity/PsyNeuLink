@@ -8551,6 +8551,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             proj_color = proj_color or default_node_color
             proj_arrow = default_projection_arrow
 
+            # Deal with Projections from outer (enclosing_g) and inner (nested) Compositions
             # If not showing CIMs, then set up to find node for sender in inner or outer Composition
             if not show_cim:
                 # Get sender node from inner Composition
@@ -8591,12 +8592,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             continue
 
                         if isinstance(sender, CompositionInterfaceMechanism):
-                            # FIX 6/5/20:
-                            # assert show_nested is NESTED, f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
-                            #                               f"in list of senders to {rcvr} but 'show_nested' != NESTED."
-                            assert show_nested is NESTED or enclosing_g, \
-                                f"PROGRAM ERROR:  {CompositionInterfaceMechanism.__name__} " \
-                                f"in list of senders to {rcvr} but no enclosing Composition."
                             if sender in {self.input_CIM, self.parameter_CIM}:
                                 # FIX 6/2/20:
                                 #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -8651,12 +8646,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                                 or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
 
-                            if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
+                            # MODIFIED 6/6/20 OLD:
+                            # if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
+                            #     sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj.sender)}'
+                            #     proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
+                            # else:
+                            #     sndr_proj_label = sndr_label
+                            #     proc_mech_rcvr_label = rcvr_label
+                            # MODIFIED 6/6/20 NEW:
+                            if show_node_structure and isinstance(sndr, Mechanism):
                                 sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj.sender)}'
-                                proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
                             else:
                                 sndr_proj_label = sndr_label
+                            if show_node_structure and isinstance(rcvr, Mechanism):
+                                proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
+                            else:
                                 proc_mech_rcvr_label = rcvr_label
+                            # MODIFIED 6/6/20 END
 
                             try:
                                 has_learning = proj.has_learning_projection is not None
