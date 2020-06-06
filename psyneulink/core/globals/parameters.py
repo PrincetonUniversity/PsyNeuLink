@@ -794,9 +794,14 @@ class Parameter(types.SimpleNamespace):
         return self.name < other.name
 
     def __deepcopy__(self, memo):
+        if 'no_shared' in memo and memo['no_shared']:
+            shared_types = tuple()
+        else:
+            shared_types = None
+
         result = Parameter(
             **{
-                k: copy_parameter_value(getattr(self, k), memo=memo)
+                k: copy_parameter_value(getattr(self, k), memo=memo, shared_types=shared_types)
                 for k in self._param_attrs
             },
             _owner=self._owner,

@@ -534,10 +534,6 @@ component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, 
 DeferredInitRegistry = {}
 
 
-def get_deepcopy_with_shared_Components(shared_keys=None):
-    return get_deepcopy_with_shared(shared_keys, (Component, ComponentsMeta))
-
-
 class ResetMode(Enum):
     """
 
@@ -1205,7 +1201,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return self.name < other.name
 
     def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
+        if 'no_shared' in memo and memo['no_shared']:
+            shared_types = tuple()
+        else:
+            shared_types = (Component, ComponentsMeta)
+
+        fun = get_deepcopy_with_shared(
+            self._deepcopy_shared_keys,
+            shared_types
+        )
         newone = fun(self, memo)
 
         if newone.parameters is not newone.class_parameters:
