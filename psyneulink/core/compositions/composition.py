@@ -8646,8 +8646,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
                                 or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
                             if show_node_structure and isinstance(sndr, Mechanism):
-                                if isinstance(sndr, CompositionInterfaceMechanism):
-                                    sndr_port = [k for k,v in sender.port_map.items() if v[1] is proj.sender][0]
+                                # if isinstance(sndr, CompositionInterfaceMechanism):
+                                #     sndr_port = [k for k,v in sender.port_map.items() if v[0] is proj.sender][0]
+                                # else:
+                                #     sndr_port = proj.sender
+                                # sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
+                                sndr_port = proj.sender
+                                sndr_port_owner = sndr_port.owner
+                                if isinstance(sndr_port_owner, CompositionInterfaceMechanism):
+                                    if sndr_port_owner is sndr_port_owner.composition.input_CIM:
+                                        sndr_port = [v[0] for k,v in sender.port_map.items()
+                                                     if k is proj.receiver][0].path_afferents[0].sender
+                                    else:
+                                        sndr_port = [k for k,v in sender.port_map.items() if v[1] is proj.sender][0]
                                 else:
                                     sndr_port = proj.sender
                                 sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
