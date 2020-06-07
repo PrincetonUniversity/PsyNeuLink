@@ -954,18 +954,49 @@ def show_graph(self,
                 ctl_proj_rcvr = ctl_proj.receiver
                 # If receiver is a parameter_CIM
                 if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
-                    if show_cim and show_nested is NESTED:
+                    # PATCH 6/7/20 to deal with ControlProjections across more than one level of nesting:
+                    rcvr_comp = ctl_proj_rcvr.owner.composition
+                    def find_rcvr_comp(r, c, l):
+                        # if r in c.nodes:
+                        if l > num_nesting_levels or r in c.nodes:
+                            # return r, l
+                            return c, l
+                        l+=1
+                        for nested_c in [nc for nc in c.nodes if isinstance(nc, Composition)]:
+                            return find_rcvr_comp(r, nested_c, l)
+                        return None
+                    project_to_node = False
+                    try:
+                        in_comp, l = find_rcvr_comp(rcvr_comp, self, 0)
+                    except TypeError:
+                        raise CompositionError(f"ControlProjection not found from {controller} in "
+                                               f"{self.name} to {rcvr_comp}")
+                    if show_nested is NESTED:
+                        if l < num_nesting_levels:
+                            project_to_node = True
+                        elif l == num_nesting_levels:
+                            pass
+                        else:
+                            rcvr_comp = in_comp
+                    else:
+                        rcvr_comp = in_comp
+                    # PATCH END
+
+                    # if show_cim and show_nested is NESTED:
+                    if show_cim and project_to_node:
                         # Use Composition's parameter_CIM port
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                    elif show_nested is NESTED:
+                    # elif show_nested is NESTED:
+                    elif project_to_node:
                         # Use ParameterPort of modulated Mechanism in nested Composition
                         parameter_port_map = ctl_proj_rcvr.owner.composition.parameter_CIM_ports
                         ctl_proj_rcvr = next((k for k,v in parameter_port_map.items()
                                                     if parameter_port_map[k][0] is ctl_proj_rcvr), None)
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
                     else:
-                        # Use Composition if show_cim is *not* NESTED (i.e., just True or False)
-                        ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
+                        # Use Composition if show_cim is False
+                        # ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
+                        ctl_proj_rcvr_owner = rcvr_comp
                 # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                 else:
                     ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
