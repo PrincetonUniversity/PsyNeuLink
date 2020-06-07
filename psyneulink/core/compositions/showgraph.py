@@ -527,13 +527,6 @@ def show_graph(self,
 
                         # Get label for Node that sends the input (sndr_label)
                         sndr_node_output_port = proj.sender
-                        # Skip if sender is cim (handled by enclosing Composition's call to this method)
-                        #   or Projections to cim aren't being shown (not NESTED)
-                        # # MODIFIED 6/6/20 OLD:
-                        # if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
-                        #         or show_nested is not NESTED):
-                        #     continue
-                        # MODIFIED 6/6/20 NEW:
                         # Skip if sender is a CIM (handled by enclosing Composition's call to this method)
                         if isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism):
                             continue
@@ -541,7 +534,6 @@ def show_graph(self,
                         #    or Projections between Compositions are not being shown (show_nested=INSET)
                         if not enclosing_g or show_nested is INSET:
                             continue
-                        # MODIFIED 6/6/20 END
                         sndr_node_output_port_owner = sndr_node_output_port.owner
 
                         sndr_label = _get_graph_node_label(self,
@@ -842,15 +834,6 @@ def show_graph(self,
                     for proj in projs:
 
                         rcvr_node_input_port = proj.receiver
-                        # # MODIFIED 6/6/20 OLD:
-                        # # Skip if receiver is cim (handled by enclosing Composition's call to this method)
-                        # #   or Projections from cim aren't being shown (not NESTED)
-                        # if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
-                        #         or show_nested is not NESTED):
-                        #     continue
-                        # else:
-                        #     rcvr_node_input_port_owner = rcvr_node_input_port.owner
-                        # MODIFIED 6/6/20 NEW:
                         # Skip if receiver is cim (handled by enclosing Composition's call to this method)
                         if isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism):
                             continue
@@ -859,7 +842,6 @@ def show_graph(self,
                         if not enclosing_g or show_nested is INSET:
                             continue
                         rcvr_node_input_port_owner = rcvr_node_input_port.owner
-                        # MODIFIED 6/6/20 END
 
                         rcvr_label = _get_graph_node_label(self,
                                                            rcvr_node_input_port_owner,
@@ -1606,23 +1588,6 @@ def show_graph(self,
                                f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
     # Get show_nested based on arg and current_nesting_level
-    # # MODIFIED 6/7/20 OLD:
-    # if enclosing_g is None:
-    #     nesting_level = 0
-    #     # FIX 6/7/20: MOVE ASSIGNMENT OF num_nesting_levels to here
-    #     #             IF show_nestes is not False and is not an int, then set to float("inf")
-    # # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
-    # if type(show_nested) is int:
-    #     num_nesting_levels = show_nested
-    # if num_nesting_levels is not None:
-    #     if nesting_level < num_nesting_levels:
-    #         show_nested = NESTED
-    #     else:
-    #         show_nested = False
-    # # Otherwise, use set show_nested as NESTED unless it was specified as INSET
-    # elif show_nested and show_nested != INSET:
-    #     show_nested = NESTED
-    # MODIFIED 6/7/20 NEW:
     if enclosing_g is None:
         nesting_level = 0
         # FIX 6/7/20: MOVE ASSIGNMENT OF num_nesting_levels to here
@@ -1642,8 +1607,6 @@ def show_graph(self,
     # Otherwise, use set show_nested as NESTED unless it was specified as INSET
     elif show_nested and show_nested != INSET:
         show_nested = NESTED
-    # MODIFIED 6/7/20 END
-
 
     if show_dimensions == True:
         show_dimensions = ALL
