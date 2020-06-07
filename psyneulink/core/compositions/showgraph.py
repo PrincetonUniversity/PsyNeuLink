@@ -528,11 +528,20 @@ def show_graph(self,
                         sndr_node_output_port = proj.sender
                         # Skip if sender is cim (handled by enclosing Composition's call to this method)
                         #   or Projections to cim aren't being shown (not NESTED)
-                        if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
-                                or show_nested is not NESTED):
+                        # # MODIFIED 6/6/20 OLD:
+                        # if (isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism)
+                        #         or show_nested is not NESTED):
+                        #     continue
+                        # MODIFIED 6/6/20 NEW:
+                        # Skip if sender is a CIM (handled by enclosing Composition's call to this method)
+                        if isinstance(sndr_node_output_port.owner, CompositionInterfaceMechanism):
                             continue
-                        else:
-                            sndr_node_output_port_owner = sndr_node_output_port.owner
+                        # Skip if there is no outer Composition (enclosing_g),
+                        #    or Projections between Compositions are not being shown (show_nested=INSET)
+                        if not enclosing_g or show_nested is INSET:
+                            continue
+                        # MODIFIED 6/6/20 END
+                        sndr_node_output_port_owner = sndr_node_output_port.owner
 
                         sndr_label = _get_graph_node_label(self,
                                                            sndr_node_output_port_owner,
@@ -666,6 +675,10 @@ def show_graph(self,
                         # Skip Projections from controller (handled in _assign_controller_components)
                         if ctl_mech_output_port_owner.composition:
                             continue
+                        # Skip if there is no outer Composition (enclosing_g),
+                        #    or Projections acorss nested Compositions are not being shown (show_nested=INSET)
+                        if not enclosing_g or show_nested is INSET:
+                            continue
                         sndr_label = _get_graph_node_label(self,
                                                            ctl_mech_output_port_owner,
                                                            show_types, show_dimensions)
@@ -781,6 +794,7 @@ def show_graph(self,
                             raise CompositionError(f"Projection to output_CIM of {self.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
+
                         sndr_label = _get_graph_node_label(self,
                                                            sndr_output_node_proj_owner,
                                                            show_types, show_dimensions)
@@ -827,13 +841,24 @@ def show_graph(self,
                     for proj in projs:
 
                         rcvr_node_input_port = proj.receiver
+                        # # MODIFIED 6/6/20 OLD:
+                        # # Skip if receiver is cim (handled by enclosing Composition's call to this method)
+                        # #   or Projections from cim aren't being shown (not NESTED)
+                        # if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
+                        #         or show_nested is not NESTED):
+                        #     continue
+                        # else:
+                        #     rcvr_node_input_port_owner = rcvr_node_input_port.owner
+                        # MODIFIED 6/6/20 NEW:
                         # Skip if receiver is cim (handled by enclosing Composition's call to this method)
-                        #   or Projections from cim aren't being shown (not NESTED)
-                        if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism)
-                                or show_nested is not NESTED):
+                        if isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism):
                             continue
-                        else:
-                            rcvr_node_input_port_owner = rcvr_node_input_port.owner
+                        # Skip if there is no inner Composition (show_nested!=NESTED) or
+                        #   or Projections across nested Compositions are not being shown (show_nested=INSET)
+                        if not enclosing_g or show_nested is INSET:
+                            continue
+                        rcvr_node_input_port_owner = rcvr_node_input_port.owner
+                        # MODIFIED 6/6/20 END
 
                         rcvr_label = _get_graph_node_label(self,
                                                            rcvr_node_input_port_owner,
@@ -1239,7 +1264,7 @@ def show_graph(self,
                 # Add input_CIM for current Composition to find senders from enclosing_g
                 cims = set([proj.sender.owner for proj in rcvr.afferents
                             if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
-                                and proj.sender.owner is self.input_CIM)])
+                                and proj.sender.owner in {self.input_CIM, self.parameter_CIM})])
                 senders.update(cims)
 
         for sender in senders:
@@ -1315,22 +1340,31 @@ def show_graph(self,
                             proj.receiver.owner in {self.controller, self.controller.objective_mechanism}):
                         continue
 
+                    # FIX 6/6/20: ADD HANDLING OF parameter_CIM HERE??
                     # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
                     if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                            or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
+                            or (isinstance(rcvr, Composition)
+                                and proj.receiver.owner in {rcvr.input_CIM,
+                                                            # MODIFIED 6/6/20 NEW:
+                                                            rcvr.parameter_CIM
+                                                            # MODIFIED 6/6/20 END
+                                                            })):
                         if show_node_structure and isinstance(sndr, Mechanism):
-                            # if isinstance(sndr, CompositionInterfaceMechanism):
-                            #     sndr_port = [k for k,v in sender.port_map.items() if v[0] is proj.sender][0]
-                            # else:
-                            #     sndr_port = proj.sender
-                            # sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
                             sndr_port = proj.sender
                             sndr_port_owner = sndr_port.owner
                             if isinstance(sndr_port_owner, CompositionInterfaceMechanism):
-                                if sndr_port_owner is sndr_port_owner.composition.input_CIM:
+                                # Sender is input_CIM or parameter_CIM
+                                if sndr_port_owner in {sndr_port_owner.composition.input_CIM,
+                                                       # MODIFIED 6/6/20 NEW:
+                                                       sndr_port_owner.composition.parameter_CIM
+                                                       # MODIFIED 6/6/20 END
+                                                       }:
+                                    # Get port for node of outer Composition that projects to it
                                     sndr_port = [v[0] for k,v in sender.port_map.items()
                                                  if k is proj.receiver][0].path_afferents[0].sender
+                                # Sender is output_CIM
                                 else:
+                                    # Get port for node of inner Composition that projects to it
                                     sndr_port = [k for k,v in sender.port_map.items() if v[1] is proj.sender][0]
                             else:
                                 sndr_port = proj.sender
