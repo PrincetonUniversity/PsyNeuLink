@@ -497,7 +497,11 @@ def show_graph(self,
             else:
                 cim_color = cim_type_color
 
-            compact_cim = not cim.afferents or show_nested is not NESTED
+            # MODIFIED 6/7/20 OLD:
+            # compact_cim = not cim.afferents or show_nested is not NESTED
+            # # MODIFIED 6/7/20 NEW:
+            compact_cim = not cim.afferents or not enclosing_g or show_nested is INSET
+            # MODIFIED 6/7/20 END
 
             # Create CIM node
             cim_label = _get_graph_node_label(self, cim, show_types, show_dimensions)
