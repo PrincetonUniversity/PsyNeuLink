@@ -1,4 +1,5 @@
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.showgraph import _get_graph_node_label
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -7,7 +8,6 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.globals.keywords import ALL, INSET, INTERCEPT, NESTED, NOISE, SLOPE
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
-from psyneulink.core.compositions.showgraph import _get_graph_node_label
 
 class TestSimpleCompositions:
     def test_process(self):
