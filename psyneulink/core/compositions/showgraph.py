@@ -13,7 +13,7 @@ import inspect
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -42,6 +42,11 @@ ENCLOSING_G = 'enclosing_g'
 NESTING_LEVEL = 'nesting_level'
 NUM_NESTING_LEVELS = 'num_nesting_levels'
 
+
+class ShowGraphError(Exception):
+
+    def __init__(self, error_value):
+        self.error_value = error_value
 
 @tc.typecheck
 @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
@@ -599,7 +604,7 @@ def show_graph(self,
                              not NodeRole.INPUT in self.nodes_to_roles[rcvr_input_node_proj_owner])
                                 and (proj.receiver.shadow_inputs in self.nodes_to_roles and
                                      not NodeRole.INPUT in self.nodes_to_roles[proj.receiver.shadow_inputs])):
-                            raise CompositionError(f"Projection from input_CIM of {self.name} to node "
+                            raise ShowGraphError(f"Projection from input_CIM of {self.name} to node "
                                                    f"{rcvr_input_node_proj_owner} that is not an "
                                                    f"{NodeRole.INPUT.name} node or shadowing its "
                                                    f"{NodeRole.INPUT.name.lower()}.")
@@ -784,7 +789,7 @@ def show_graph(self,
                         # Validate the Projection is from an OUTPUT node
                         if ((sndr_output_node_proj_owner in self.nodes_to_roles and
                              not NodeRole.OUTPUT in self.nodes_to_roles[sndr_output_node_proj_owner])):
-                            raise CompositionError(f"Projection to output_CIM of {self.name} "
+                            raise ShowGraphError(f"Projection to output_CIM of {self.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
 
@@ -953,7 +958,7 @@ def show_graph(self,
                     try:
                         enclosing_comp, l = find_rcvr_comp(rcvr_comp, self, 0)
                     except TypeError:
-                        raise CompositionError(f"ControlProjection not found from {controller} in "
+                        raise ShowGraphError(f"ControlProjection not found from {controller} in "
                                                f"{self.name} to {rcvr_comp}")
                     if show_nested is NESTED:
                         # Node that receives ControlProjection is within num_nesting_levels, so show it
@@ -1546,13 +1551,13 @@ def show_graph(self,
                 return None
 
             else:
-                raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
+                raise ShowGraphError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
 
-        except CompositionError as e:
-            raise CompositionError(str(e.error_value))
+        except ShowGraphError as e:
+            raise ShowGraphError(str(e.error_value))
 
         except:
-            raise CompositionError(f"Problem displaying graph for {self.name}")
+            raise ShowGraphError(f"Problem displaying graph for {self.name}")
 
     # SETUP AND CONSTANTS -----------------------------------------------------------------
 
@@ -1565,7 +1570,7 @@ def show_graph(self,
     nesting_level = kwargs.pop(NESTING_LEVEL,None)
     num_nesting_levels= kwargs.pop(NUM_NESTING_LEVELS,None)
     if kwargs:
-        raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
+        raise ShowGraphError(f'Unrecognized argument(s) in call to show_graph method '
                                f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
     # Get show_nested based on arg and current_nesting_level
@@ -1601,7 +1606,7 @@ def show_graph(self,
 
         for item in active_items:
             if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                raise CompositionError(
+                raise ShowGraphError(
                     "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
                     format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
 
@@ -1707,7 +1712,7 @@ def show_graph(self,
 def _get_graph_node_label(composition, item, show_types=None, show_dimensions=None):
 
     if not isinstance(item, (Mechanism, Composition, Projection)):
-        raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, composition.name))
+        raise ShowGraphError("Unrecognized node type ({}) in graph for {}".format(item, composition.name))
 
     name = item.name
 
@@ -1761,38 +1766,38 @@ def _set_up_animation(self, context):
         self._save_images = self._animate.pop(SAVE_IMAGES, False)
         self._show_animation = self._animate.pop(SHOW, False)
         if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-            raise CompositionError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
+            raise ShowGraphError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
                                    f"of {repr('run')} ({self._animate_unit}) "
                                    f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
         if not isinstance(self._image_duration, (int, float)):
-            raise CompositionError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method "
+            raise ShowGraphError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method "
                                    f"of {self.name} ({self._image_duration}) must be an int or a float.")
         if not isinstance(self._animate_num_runs, int):
-            raise CompositionError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
+            raise ShowGraphError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
                                    f"method of {self.name} ({self._animate_num_runs}) must an integer.")
         if not isinstance(self._animate_num_trials, int):
-            raise CompositionError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for "
+            raise ShowGraphError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for "
                                    f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
                                    f"must an integer.")
         if not isinstance(self._animate_simulations, bool):
-            raise CompositionError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
+            raise ShowGraphError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
                                    f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
                                    f"must a boolean.")
         if not isinstance(self._animation_directory, str):
-            raise CompositionError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
+            raise ShowGraphError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
                                    f"method of {self.name} ({self._animation_directory}) must be a string.")
         if not isinstance(self._movie_filename, str):
-            raise CompositionError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
+            raise ShowGraphError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
                                    f"method of {self.name} ({self._movie_filename}) must be a string.")
         if not isinstance(self._save_images, bool):
-            raise CompositionError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')}"
+            raise ShowGraphError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')}"
                                    f"method of {self.name} ({self._save_images}) must be a boolean")
         if not isinstance(self._show_animation, bool):
-            raise CompositionError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
+            raise ShowGraphError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
                                    f"method of {self.name} ({self._show_animation}) must be a boolean.")
     elif self._animate:
         # self._animate should now be False or a dict
-        raise CompositionError("{} argument for {} method of {} ({}) must be a boolean or "
+        raise ShowGraphError("{} argument for {} method of {} ({}) must be a boolean or "
                                "a dictionary of argument specifications for its {} method".
                                format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
 
@@ -1846,7 +1851,7 @@ def _generate_gifs(self, G, active_items, context):
         time_string = create_time_string(time, 'TIME')
 
     else:
-        raise CompositionError(
+        raise ShowGraphError(
             f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
 
     label = f'\n{self.name}\n{phase_string}{time_string}\n'
