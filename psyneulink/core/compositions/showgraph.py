@@ -960,23 +960,26 @@ def show_graph(self,
                         """Find deepestest enclosing composition within range of num_nesting_levels"""
                         # ----
                         # if (num_nesting_levels is not None and l > num_nesting_levels) or r in c.nodes:
-                        #     return c, l
+                        #     return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
+                        #     # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
+                        # ---- BREAKS IN show_graph_omni_test (PRESUMABLY BECAUSE num_nesting_levels is None
+                        # if (l > num_nesting_levels) or r in c.nodes:
+                        #     return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
+                        #     # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
                         # ----
                         # if l > num_nesting_levels or r in c.nodes:
                         #     return c, l
+                        # ----
+                        if (num_nesting_levels is not None and l > num_nesting_levels):
+                            return c, l
+                        elif r in c.nodes:
+                            return r, l
                         # ---- WORKS FOR show_graph_omni_test
-                        # if r in c.nodes and num_nesting_levels is None:
-                        #     return r, l
-                        # elif r in c.nodes:
-                        #     return c, l
+                        # if r in c.nodes:
+                        #     return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
+                        #     # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
                         # elif num_nesting_levels is not None and l > num_nesting_levels:
                         #     return r, l
-                        # ---- WORKS FOR show_graph_omni_test
-                        if r in c.nodes:
-                            return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
-                            # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
-                        elif num_nesting_levels is not None and l > num_nesting_levels:
-                            return r, l
                         # ----
                         l+=1
                         for nested_c in [nc for nc in c.nodes if isinstance(nc, Composition)]:
@@ -1602,11 +1605,34 @@ def show_graph(self,
                                f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
     # Get show_nested based on arg and current_nesting_level
+    # # MODIFIED 6/7/20 OLD:
+    # if enclosing_g is None:
+    #     nesting_level = 0
+    #     # FIX 6/7/20: MOVE ASSIGNMENT OF num_nesting_levels to here
+    #     #             IF show_nestes is not False and is not an int, then set to float("inf")
+    # # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
+    # if type(show_nested) is int:
+    #     num_nesting_levels = show_nested
+    # if num_nesting_levels is not None:
+    #     if nesting_level < num_nesting_levels:
+    #         show_nested = NESTED
+    #     else:
+    #         show_nested = False
+    # # Otherwise, use set show_nested as NESTED unless it was specified as INSET
+    # elif show_nested and show_nested != INSET:
+    #     show_nested = NESTED
+    # MODIFIED 6/7/20 NEW:
     if enclosing_g is None:
         nesting_level = 0
-    # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
-    if type(show_nested) is int:
-        num_nesting_levels = show_nested
+        # FIX 6/7/20: MOVE ASSIGNMENT OF num_nesting_levels to here
+        #             IF show_nestes is not False and is not an int, then set to float("inf")
+        # show_nested arg specified number of nested levels to show, so set current show_nested value based on that
+        if type(show_nested) is int:
+            num_nesting_levels = show_nested
+        elif show_nested is False:
+            num_nesting_levels = 0
+        elif show_nested is NESTED:
+            num_nesting_levels = float("inf")
     if num_nesting_levels is not None:
         if nesting_level < num_nesting_levels:
             show_nested = NESTED
@@ -1615,6 +1641,7 @@ def show_graph(self,
     # Otherwise, use set show_nested as NESTED unless it was specified as INSET
     elif show_nested and show_nested != INSET:
         show_nested = NESTED
+    # MODIFIED 6/7/20 END
 
 
     if show_dimensions == True:
