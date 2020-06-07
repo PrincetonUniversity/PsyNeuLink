@@ -940,30 +940,11 @@ def show_graph(self,
                     # PATCH 6/7/20 to deal with ControlProjections across more than one level of nesting:
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
-                        """Find deepestest enclosing composition within range of num_nesting_levels"""
-                        # ----
-                        # if (num_nesting_levels is not None and l > num_nesting_levels) or r in c.nodes:
-                        #     return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
-                        #     # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
-                        # ---- BREAKS IN show_graph_omni_test (PRESUMABLY BECAUSE num_nesting_levels is None
-                        # if (l > num_nesting_levels) or r in c.nodes:
-                        #     return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
-                        #     # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
-                        # ----
-                        # if l > num_nesting_levels or r in c.nodes:
-                        #     return c, l
-                        # ----
+                        """Find deepest enclosing composition within range of num_nesting_levels"""
                         if (num_nesting_levels is not None and l > num_nesting_levels):
                             return c, l
                         elif r in c.nodes:
                             return r, l
-                        # ---- WORKS FOR show_graph_omni_test
-                        # if r in c.nodes:
-                        #     return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
-                        #     # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
-                        # elif num_nesting_levels is not None and l > num_nesting_levels:
-                        #     return r, l
-                        # ----
                         l+=1
                         for nested_c in [nc for nc in c.nodes if isinstance(nc, Composition)]:
                             return find_rcvr_comp(r, nested_c, l)
