@@ -958,9 +958,26 @@ def show_graph(self,
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
                         """Find deepestest enclosing composition within range of num_nesting_levels"""
-                        # if r in c.nodes:
-                        if l > num_nesting_levels or r in c.nodes:
-                            return c, l
+                        # ----
+                        # if (num_nesting_levels is not None and l > num_nesting_levels) or r in c.nodes:
+                        #     return c, l
+                        # ----
+                        # if l > num_nesting_levels or r in c.nodes:
+                        #     return c, l
+                        # ---- WORKS FOR show_graph_omni_test
+                        # if r in c.nodes and num_nesting_levels is None:
+                        #     return r, l
+                        # elif r in c.nodes:
+                        #     return c, l
+                        # elif num_nesting_levels is not None and l > num_nesting_levels:
+                        #     return r, l
+                        # ---- WORKS FOR show_graph_omni_test
+                        if r in c.nodes:
+                            return r, l # WORKS FOR show_graph_omni_test (Projection over one level)
+                            # return c, l # WORKS FOR nesting_levels_show_graph_full_test (Projection over two levels)
+                        elif num_nesting_levels is not None and l > num_nesting_levels:
+                            return r, l
+                        # ----
                         l+=1
                         for nested_c in [nc for nc in c.nodes if isinstance(nc, Composition)]:
                             return find_rcvr_comp(r, nested_c, l)
@@ -973,7 +990,7 @@ def show_graph(self,
                                                f"{self.name} to {rcvr_comp}")
                     if show_nested is NESTED:
                         # Node that receives ControlProjection is within num_nesting_levels, so show it
-                        if l < num_nesting_levels:
+                        if num_nesting_levels is None or l < num_nesting_levels:
                             project_to_node = True
                         # Node is not within range, but its Composition is,
                         #     so leave rcvr_comp assigned to that, and don't project_to_node
