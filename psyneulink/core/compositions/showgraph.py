@@ -10,6 +10,7 @@
 
 import enum
 import inspect
+import numpy as np
 import typecheck as tc
 
 from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError
