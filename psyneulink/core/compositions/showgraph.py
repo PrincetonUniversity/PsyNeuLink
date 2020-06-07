@@ -298,7 +298,7 @@ def show_graph(self,
                     args = output_fmt_arg
                 args.update({'self': rcvr,
                              ENCLOSING_G:g,
-                             NESTING_LEVEL:nesting_level+1,
+                             NESTING_LEVEL:nesting_level + 1,
                              NUM_NESTING_LEVELS:num_nesting_levels})
 
                 # Get subgraph for nested Composition
