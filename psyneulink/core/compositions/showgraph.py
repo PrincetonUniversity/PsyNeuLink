@@ -278,189 +278,6 @@ def show_graph(self,
     tc.typecheck
     _locals = locals().copy()
 
-    def _assign_processing_components(g, rcvr, show_nested, show_nested_args, enclosing_g, nesting_level):
-        """Assign nodes to graph"""
-
-        from psyneulink.core.compositions.composition import Composition, NodeRole
-        # DEAL WITH NESTED COMPOSITION
-
-        # User passed args for nested Composition
-        if isinstance(rcvr, Composition):
-            if show_nested:
-                output_fmt_arg = {'output_fmt':'gv'}
-                if isinstance(show_nested_args, dict):
-                    args = show_nested_args
-                    args.update(output_fmt_arg)
-                elif show_nested_args == ALL:
-                    # Pass args from main call to show_graph to call for nested Composition
-                    args = dict({k:_locals[k] for k in list(inspect.signature(show_graph).parameters)})
-                    args.update(output_fmt_arg)
-                    if kwargs:
-                        args['kwargs'] = kwargs
-                    else:
-                        del  args['kwargs']
-                else:
-                    # Use default args for nested Composition
-                    args = output_fmt_arg
-                args.update({'self': rcvr,
-                             ENCLOSING_G:g,
-                             NESTING_LEVEL:nesting_level + 1,
-                             NUM_NESTING_LEVELS:num_nesting_levels})
-
-                # Get subgraph for nested Composition
-                nested_comp_graph = show_graph(**args)
-
-                nested_comp_graph.name = "cluster_" + rcvr.name
-                rcvr_label = rcvr.name
-                # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
-                #     nested_comp_graph.attr(color=feedback_color)
-                if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
-                        rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph.attr(color=input_and_output_color)
-                elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
-                    nested_comp_graph.attr(color=input_color)
-                elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph.attr(color=output_color)
-                nested_comp_graph.attr(label=rcvr_label)
-                g.subgraph(nested_comp_graph)
-
-                if show_nested is NESTED:
-                    return
-
-        # DEAL WITH LEARNING
-        # If rcvr is a learning component and not an INPUT node,
-        #    break and handle in _assign_learning_components()
-        #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-        if (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
-                and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
-            return
-
-        # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
-        # If rcvr is ObjectiveMechanism for Composition's controller,
-        #    break and handle in _assign_controller_components()
-        if (isinstance(rcvr, ObjectiveMechanism)
-                and self.controller
-                and rcvr is self.controller.objective_mechanism):
-            return
-
-        # IMPLEMENT RECEIVER NODE:
-        #    set rcvr shape, color, and penwidth based on node type
-        rcvr_rank = 'same'
-
-        # SET SPECIAL SHAPES
-
-        # Cycle or Feedback Node
-        if isinstance(rcvr, Composition):
-            node_shape = composition_shape
-        elif rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
-            node_shape = feedback_shape
-        elif rcvr in self.get_nodes_by_role(NodeRole.CYCLE):
-            node_shape = cycle_shape
-        else:
-            node_shape = mechanism_shape
-
-        # SET STROKE AND COLOR
-        #    Based on Input, Output, Composition and/or Active
-
-        # Get condition if any associated with rcvr
-        if rcvr in self.scheduler.conditions:
-            condition = self.scheduler.conditions[rcvr]
-        else:
-            condition = None
-
-        # INPUT and OUTPUT Node
-        if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
-                rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-            if rcvr in active_items:
-                if active_color == BOLD:
-                    rcvr_color = input_and_output_color
-                else:
-                    rcvr_color = active_color
-                rcvr_penwidth = str(bold_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                rcvr_color = input_and_output_color
-                rcvr_penwidth = str(bold_width)
-
-        # INPUT Node
-        elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
-            if rcvr in active_items:
-                if active_color == BOLD:
-                    rcvr_color = input_color
-                else:
-                    rcvr_color = active_color
-                rcvr_penwidth = str(bold_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                rcvr_color = input_color
-                rcvr_penwidth = str(bold_width)
-            rcvr_rank = input_rank
-
-        # OUTPUT Node
-        elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-            if rcvr in active_items:
-                if active_color == BOLD:
-                    rcvr_color = output_color
-                else:
-                    rcvr_color = active_color
-                rcvr_penwidth = str(bold_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                rcvr_color = output_color
-                rcvr_penwidth = str(bold_width)
-            rcvr_rank = output_rank
-
-        # Composition that is neither an INPUT Node nor an OUTPUT Node
-        elif isinstance(rcvr, Composition) and show_nested is not NESTED:
-            if rcvr in active_items:
-                if active_color == BOLD:
-                    rcvr_color = composition_color
-                else:
-                    rcvr_color = active_color
-                rcvr_penwidth = str(bold_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                rcvr_color = composition_color
-                rcvr_penwidth = str(bold_width)
-
-        # Active Node that is none of the above
-        elif rcvr in active_items:
-            if active_color == BOLD:
-                rcvr_color = default_node_color
-            else:
-                rcvr_color = active_color
-            rcvr_penwidth = str(default_width + active_thicker_by)
-            self.active_item_rendered = True
-
-        # Inactive Node that is none of the above
-        else:
-            rcvr_color = default_node_color
-            rcvr_penwidth = str(default_width)
-
-        # Implement rcvr node
-        rcvr_label = _get_graph_node_label(self,
-                                           rcvr,
-                                           show_types,
-                                           show_dimensions)
-
-        if show_node_structure and isinstance(rcvr, Mechanism):
-            g.node(rcvr_label,
-                   rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
-                   shape=struct_shape,
-                   color=rcvr_color,
-                   rank=rcvr_rank,
-                   penwidth=rcvr_penwidth)
-        else:
-            g.node(rcvr_label,
-                   shape=node_shape,
-                   color=rcvr_color,
-                   rank=rcvr_rank,
-                   penwidth=rcvr_penwidth)
-
-        # Implement sender edges from Nodes within Composition
-        sndrs = processing_graph[rcvr]
-        _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g)
-
     def _assign_cim_components(g, cims, enclosing_g):
 
         cim_rank = 'same'
@@ -1691,8 +1508,16 @@ def show_graph(self,
     processing_graph = self.graph_processing.dependency_dict
     rcvrs = list(processing_graph.keys())
 
+    _locals.update({'show_nested':show_nested})
+
+    class args_class():
+        def __init__(self, args):
+            for k,v in args.items():
+                args.__setattr__(k, v)
+    args = args_class(_locals)
+
     for rcvr in rcvrs:
-        _assign_processing_components(G, rcvr, show_nested, show_nested_args, enclosing_g, nesting_level)
+        _assign_processing_components(G, rcvr, enclosing_g, nesting_level, args)
 
     # Add cim Components to graph if show_cim
     if show_cim:
@@ -1708,6 +1533,191 @@ def show_graph(self,
 
     # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
     return _generate_output(G)
+
+
+def _assign_processing_components(g, rcvr, enclosing_g, nesting_level, args):
+    """Assign nodes to graph"""
+
+    # DEAL WITH NESTED COMPOSITION
+
+    # User passed args for nested Composition
+    if isinstance(rcvr, Composition):
+        if show_nested:
+            output_fmt_arg = {'output_fmt':'gv'}
+            if isinstance(show_nested_args, dict):
+                args = show_nested_args
+                args.update(output_fmt_arg)
+            elif show_nested_args == ALL:
+                # Pass args from main call to show_graph to call for nested Composition
+                args = dict({k:_locals[k] for k in list(inspect.signature(show_graph).parameters)})
+                args.update(output_fmt_arg)
+                if kwargs:
+                    args['kwargs'] = kwargs
+                else:
+                    del  args['kwargs']
+            else:
+                # Use default args for nested Composition
+                args = output_fmt_arg
+            args.update({'self': rcvr,
+                         ENCLOSING_G:g,
+                         NESTING_LEVEL:nesting_level + 1,
+                         NUM_NESTING_LEVELS:num_nesting_levels})
+
+            # Get subgraph for nested Composition
+            nested_comp_graph = show_graph(**args)
+
+            nested_comp_graph.name = "cluster_" + rcvr.name
+            rcvr_label = rcvr.name
+            # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+            #     nested_comp_graph.attr(color=feedback_color)
+            if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
+                    rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
+                nested_comp_graph.attr(color=input_and_output_color)
+            elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
+                nested_comp_graph.attr(color=input_color)
+            elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
+                nested_comp_graph.attr(color=output_color)
+            nested_comp_graph.attr(label=rcvr_label)
+            g.subgraph(nested_comp_graph)
+
+            if show_nested is NESTED:
+                return
+
+    # DEAL WITH LEARNING
+    # If rcvr is a learning component and not an INPUT node,
+    #    break and handle in _assign_learning_components()
+    #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
+    if (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
+            and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
+        return
+
+    # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
+    # If rcvr is ObjectiveMechanism for Composition's controller,
+    #    break and handle in _assign_controller_components()
+    if (isinstance(rcvr, ObjectiveMechanism)
+            and self.controller
+            and rcvr is self.controller.objective_mechanism):
+        return
+
+    # IMPLEMENT RECEIVER NODE:
+    #    set rcvr shape, color, and penwidth based on node type
+    rcvr_rank = 'same'
+
+    # SET SPECIAL SHAPES
+
+    # Cycle or Feedback Node
+    if isinstance(rcvr, Composition):
+        node_shape = composition_shape
+    elif rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
+        node_shape = feedback_shape
+    elif rcvr in self.get_nodes_by_role(NodeRole.CYCLE):
+        node_shape = cycle_shape
+    else:
+        node_shape = mechanism_shape
+
+    # SET STROKE AND COLOR
+    #    Based on Input, Output, Composition and/or Active
+
+    # Get condition if any associated with rcvr
+    if rcvr in self.scheduler.conditions:
+        condition = self.scheduler.conditions[rcvr]
+    else:
+        condition = None
+
+    # INPUT and OUTPUT Node
+    if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
+            rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
+        if rcvr in active_items:
+            if active_color == BOLD:
+                rcvr_color = input_and_output_color
+            else:
+                rcvr_color = active_color
+            rcvr_penwidth = str(bold_width + active_thicker_by)
+            self.active_item_rendered = True
+        else:
+            rcvr_color = input_and_output_color
+            rcvr_penwidth = str(bold_width)
+
+    # INPUT Node
+    elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
+        if rcvr in active_items:
+            if active_color == BOLD:
+                rcvr_color = input_color
+            else:
+                rcvr_color = active_color
+            rcvr_penwidth = str(bold_width + active_thicker_by)
+            self.active_item_rendered = True
+        else:
+            rcvr_color = input_color
+            rcvr_penwidth = str(bold_width)
+        rcvr_rank = input_rank
+
+    # OUTPUT Node
+    elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
+        if rcvr in active_items:
+            if active_color == BOLD:
+                rcvr_color = output_color
+            else:
+                rcvr_color = active_color
+            rcvr_penwidth = str(bold_width + active_thicker_by)
+            self.active_item_rendered = True
+        else:
+            rcvr_color = output_color
+            rcvr_penwidth = str(bold_width)
+        rcvr_rank = output_rank
+
+    # Composition that is neither an INPUT Node nor an OUTPUT Node
+    elif isinstance(rcvr, Composition) and show_nested is not NESTED:
+        if rcvr in active_items:
+            if active_color == BOLD:
+                rcvr_color = composition_color
+            else:
+                rcvr_color = active_color
+            rcvr_penwidth = str(bold_width + active_thicker_by)
+            self.active_item_rendered = True
+        else:
+            rcvr_color = composition_color
+            rcvr_penwidth = str(bold_width)
+
+    # Active Node that is none of the above
+    elif rcvr in active_items:
+        if active_color == BOLD:
+            rcvr_color = default_node_color
+        else:
+            rcvr_color = active_color
+        rcvr_penwidth = str(default_width + active_thicker_by)
+        self.active_item_rendered = True
+
+    # Inactive Node that is none of the above
+    else:
+        rcvr_color = default_node_color
+        rcvr_penwidth = str(default_width)
+
+    # Implement rcvr node
+    rcvr_label = _get_graph_node_label(self,
+                                       rcvr,
+                                       show_types,
+                                       show_dimensions)
+
+    if show_node_structure and isinstance(rcvr, Mechanism):
+        g.node(rcvr_label,
+               rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
+               shape=struct_shape,
+               color=rcvr_color,
+               rank=rcvr_rank,
+               penwidth=rcvr_penwidth)
+    else:
+        g.node(rcvr_label,
+               shape=node_shape,
+               color=rcvr_color,
+               rank=rcvr_rank,
+               penwidth=rcvr_penwidth)
+
+    # Implement sender edges from Nodes within Composition
+    sndrs = processing_graph[rcvr]
+    _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g)
+
+
 
 def _get_graph_node_label(composition, item, show_types=None, show_dimensions=None):
 
