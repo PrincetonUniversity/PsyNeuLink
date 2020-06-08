@@ -2496,26 +2496,8 @@ from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativ
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'DURATION', 'EdgeType', 'EXECUTION_SET',
-    'get_compositions', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME', 'NodeRole', 'NUM_TRIALS', 'NUM_RUNS',
-    'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'UNIT',
-]
-
-
-# show_graph animation options
-NUM_TRIALS = 'num_trials'
-NUM_RUNS = 'num_Runs'
-UNIT = 'unit'
-DURATION = 'duration'
-MOVIE_DIR = 'movie_dir'
-MOVIE_NAME = 'movie_name'
-SAVE_IMAGES = 'save_images'
-SHOW = 'show'
-INITIAL_FRAME = 'INITIAL_FRAME'
-EXECUTION_SET = 'EXECUTION_SET'
-SHOW_CIM = 'show_cim'
-SHOW_CONTROLLER = 'show_controller'
-SHOW_LEARNING = 'show_learning'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
+    ]
 
 
 logger = logging.getLogger(__name__)
