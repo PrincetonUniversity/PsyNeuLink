@@ -61,6 +61,7 @@ PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
 ENCLOSING_G = 'enclosing_g'
 NESTING_LEVEL = 'nesting_level'
 NUM_NESTING_LEVELS = 'num_nesting_levels'
+NODE_STRUCT_ARGS = 'node_struct_args'
 
 INITIAL_FRAME = "INITIAL_FRAME"
 
@@ -307,42 +308,112 @@ def show_graph(self,
     if context.execution_id is NotImplemented:
         context.execution_id = self.default_execution_id
 
+    # Args not specified by user but used in calls to show_graph for nested Compositions
     enclosing_g = kwargs.pop(ENCLOSING_G,None)
     nesting_level = kwargs.pop(NESTING_LEVEL,None)
     num_nesting_levels= kwargs.pop(NUM_NESTING_LEVELS,None)
-    # FIX 6/8/20:  FILTER DEFAULTS ATTRS HERE
+    # FIX 6/8/20:  FILTER OUT ANY OTHERS ADDED BELOW:  DEFAULT ATTRS + ANY OTHERS IN locals()
+
+
+    # ATTRIBUTES ----------------------------------------------------------------------
+
+    # Create attrs object if outermost Composition ----------------------------------------
+    # MODIFIED 6/8/20 OLD:
+    # if not nesting_level:
+    # MODIFIED 6/8/20 NEW:
+    if nesting_level is None:
+    # MODIFIED 6/8/20 END
+        attrs = ShowGraphAttributes()
+
+        # Defaults
+        attrs.default_node_color = 'black'
+        attrs.mechanism_shape = 'oval'
+        attrs.learning_projection_shape = 'diamond'
+        attrs.struct_shape = 'plaintext' # assumes use of html
+        attrs.cim_shape = 'rectangle'
+        attrs.composition_shape = 'rectangle'
+        attrs.agent_rep_shape = 'egg'
+        attrs.default_projection_arrow = 'normal'
+        attrs.bold_width = 3
+        attrs.default_width = 1
+        attrs.active_thicker_by = 2
+        attrs.input_rank = 'source'
+        attrs.control_rank = 'min'
+        attrs.learning_rank = 'min'
+        attrs.output_rank = 'max'
+
+        # Argments that need to be parsed in initial call to show_graph (i.e., for outermost Composition)
+
+        if show_dimensions == True:
+            show_dimensions = ALL
+        attrs.show_dimensions = show_dimensions
+
+        # Argument values for calls to Mechanism._show_structure()
+        if show_node_structure is not None:
+            if isinstance(show_node_structure, (list, tuple, set)):
+                attrs.node_struct_args = {
+                    'composition': self,
+                    'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
+                    'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
+                    'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
+                    'show_mech_function_params': any(key in show_node_structure
+                                                     for key in {MECH_FUNCTION_PARAMS, ALL}),
+                    'show_port_function_params': any(key in show_node_structure
+                                                     for key in {PORT_FUNCTION_PARAMS, ALL}),
+                    'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
+                    'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
+                    'show_headers': show_headers,
+                    'output_fmt': 'struct',
+                    'context':context
+                }
+            else:
+                attrs.node_struct_args = {
+                    'composition': self,
+                    'show_roles': show_node_structure in {ROLES, ALL},
+                    'show_conditions': show_node_structure in {CONDITIONS, ALL},
+                    'show_functions': show_node_structure in {FUNCTIONS, ALL},
+                    'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
+                    'show_port_function_params': show_node_structure in {PORT_FUNCTION_PARAMS, ALL},
+                    'show_values': show_node_structure in {VALUES, LABELS, ALL},
+                    'use_labels': show_node_structure in {LABELS, ALL},
+                    'show_headers': show_headers,
+                    'output_fmt': 'struct',
+                    'context': context
+                }
+            attrs.show_node_structure = None
+
+
+        # Get user specified attributes in args of call to show_graph
+        attrs.update(locals())
+        attrs.default_attrs_keys = attrs().keys()
+
+    else:
+        attrs.default_attrs_keys = []
+
+    # Pop default attributes
+    for arg in attrs.default_attrs_keys:
+        kwargs.pop(arg, None)
     if kwargs:
         raise ShowGraphError(f'Unrecognized argument(s) in call to show_graph method '
                                f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
 
-    # Create attrs object if outermost Composition ----------------------------------------
 
-    # ATTRIBUTES ----------------------------------------------------------------------
+    # SETUP ATTRIBUTES SPECIFIC TO COMPOSITION AND/OR NESTING LEVEL ---------------------------------------------------
 
-    if not nesting_level:
-        attrs = ShowGraphAttributes()
+    processing_graph = self.graph_processing.dependency_dict
 
-    # Defaults
-    attrs.default_node_color = 'black'
-    attrs.mechanism_shape = 'oval'
-    attrs.learning_projection_shape = 'diamond'
-    attrs.struct_shape = 'plaintext' # assumes use of html
-    attrs.cim_shape = 'rectangle'
-    attrs.composition_shape = 'rectangle'
-    attrs.agent_rep_shape = 'egg'
-    attrs.default_projection_arrow = 'normal'
-    attrs.bold_width = 3
-    attrs.default_width = 1
-    attrs.active_thicker_by = 2
-    attrs.input_rank = 'source'
-    attrs.control_rank = 'min'
-    attrs.learning_rank = 'min'
-    attrs.output_rank = 'max'
-
-    # Get user specified attributes in args of call to show_graph
-    attrs.update(locals())
-
-    # SETUP AND CONSTANTS -----------------------------------------------------------------
+    attrs.active_items = active_items or []
+    if attrs.active_items:
+        attrs.active_items = convert_to_list(attrs.active_items)
+        if (self.scheduler.get_clock(context).time.run >= self._animate_num_runs or
+                self.scheduler.get_clock(context).time.trial >= self._animate_num_trials):
+            return
+        for item in attrs.active_items:
+            if not isinstance(item, Component) and item is not INITIAL_FRAME:
+                raise ShowGraphError(
+                    "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
+                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
+    self.active_item_rendered = False
 
     # For outermost Composition:
     # - initialize nesting level
@@ -369,53 +440,7 @@ def show_graph(self,
     elif show_nested and show_nested != INSET:
         show_nested = NESTED
 
-    if attrs.show_dimensions == True:
-        attrs.show_dimensions = ALL
-
-    attrs.active_items = active_items or []
-    if attrs.active_items:
-        attrs.active_items = convert_to_list(attrs.active_items)
-        if (self.scheduler.get_clock(context).time.run >= self._animate_num_runs or
-                self.scheduler.get_clock(context).time.trial >= self._animate_num_trials):
-            return
-        for item in attrs.active_items:
-            if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                raise ShowGraphError(
-                    "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                    format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
-
-    self.active_item_rendered = False
-
-    # Argument values used to call Mechanism._show_structure()
-    if isinstance(show_node_structure, (list, tuple, set)):
-        attrs.node_struct_args = {'composition': self,
-                                  'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
-                                  'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
-                                  'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
-                                  'show_mech_function_params': any(key in show_node_structure
-                                                                   for key in {MECH_FUNCTION_PARAMS, ALL}),
-                                  'show_port_function_params': any(key in show_node_structure
-                                                                   for key in {PORT_FUNCTION_PARAMS, ALL}),
-                                  'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
-                                  'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
-                                  'show_headers': show_headers,
-                                  'output_fmt': 'struct',
-                                  'context':context}
-    else:
-        attrs.node_struct_args = {'composition': self,
-                                  'show_roles': show_node_structure in {ROLES, ALL},
-                                  'show_conditions': show_node_structure in {CONDITIONS, ALL},
-                                  'show_functions': show_node_structure in {FUNCTIONS, ALL},
-                                  'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
-                                  'show_port_function_params': show_node_structure in {PORT_FUNCTION_PARAMS, ALL},
-                                  'show_values': show_node_structure in {VALUES, LABELS, ALL},
-                                  'use_labels': show_node_structure in {LABELS, ALL},
-                                  'show_headers': show_headers,
-                                  'output_fmt': 'struct',
-                                  'context': context}
-
-    attrs.processing_graph = self.graph_processing.dependency_dict
-
+    attrs.num_nesting_levels = num_nesting_levels
 
     # BUILD GRAPH ------------------------------------------------------------------------
 
@@ -445,10 +470,10 @@ def show_graph(self,
     # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
     if output_fmt != 'gv':
         self._analyze_graph(context=context)
-    rcvrs = list(attrs.processing_graph.keys())
+    rcvrs = list(processing_graph.keys())
 
     for rcvr in rcvrs:
-        _assign_processing_components(G, rcvr, enclosing_g, show_nested, nesting_level, attrs)
+        _assign_processing_components(G, rcvr, processing_graph, enclosing_g, show_nested, nesting_level, attrs)
 
     # Add cim Components to graph if show_cim
     if show_cim:
@@ -464,13 +489,13 @@ def show_graph(self,
 
     # Add learning-related Components to graph if show_learning
     if show_learning:
-        _assign_learning_components(G, show_nested, attrs)
+        _assign_learning_components(G, processing_graph, show_nested, attrs)
 
     # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
     return _generate_output(G, attrs)
 
 
-def _assign_processing_components(g, rcvr, enclosing_g, show_nested, nesting_level, attrs):
+def _assign_processing_components(g, rcvr, processing_graph, enclosing_g, show_nested, nesting_level, attrs):
     """Assign nodes to graph"""
 
     # DEAL WITH NESTED COMPOSITION
@@ -651,7 +676,7 @@ def _assign_processing_components(g, rcvr, enclosing_g, show_nested, nesting_lev
                penwidth=rcvr_penwidth)
 
     # Implement sender edges from Nodes within Composition
-    sndrs = attrs.processing_graph[rcvr]
+    sndrs = processing_graph[rcvr]
     _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g, show_nested=show_nested, attrs=attrs)
 
 
@@ -1368,7 +1393,7 @@ def _assign_controller_components(g, show_nested, attrs):
     _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color, enclosing_g=None)
 
 
-def _assign_learning_components(g, show_nested, attrs):
+def _assign_learning_components(g, processing_graph, show_nested, attrs):
     """Assign learning nodes and edges to graph"""
 
     self = attrs.self
@@ -1411,7 +1436,7 @@ def _assign_learning_components(g, show_nested, attrs):
                     rank=attrs.learning_rank, shape=attrs.mechanism_shape)
 
         # Implement sender edges
-        sndrs = attrs.processing_graph[rcvr]
+        sndrs = processing_graph[rcvr]
         _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, show_nested=show_nested, attrs=attrs)
 
 
