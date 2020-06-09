@@ -8,19 +8,18 @@
 
 # ********************************************* show_graph *************************************************************
 
-import enum
 import inspect
 import warnings
 import numpy as np
 import typecheck as tc
+from PIL import Image
 
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism, AGENT_REP
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.components.ports.inputport import InputPort
@@ -70,9 +69,6 @@ SAVE_IMAGES = 'save_images'
 SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
-SHOW_CIM = 'show_cim'
-SHOW_CONTROLLER = 'show_controller'
-SHOW_LEARNING = 'show_learning'
 
 ENCLOSING_G = 'enclosing_g'
 NESTING_LEVEL = 'nesting_level'
@@ -506,16 +502,19 @@ class ShowGraph():
         elif show_nested and show_nested != INSET:
             show_nested = NESTED
 
+        # Get args passed in from main call to show_graph (to be passed to helper methods)
+        show_graph_args = locals().copy()
+        # Update any modified above
+        show_graph_args[ACTIVE_ITEMS] = active_items
+        show_graph_args[NODE_STRUCT_ARGS] = node_struct_args
+        show_graph_args[SHOW_NESTED] = show_nested
+
         # Assign nested_args  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        # to be passed in call to show_graph for nested Composition(s)
         nested_args = show_nested_args or {}
         if nested_args == ALL:
-            # Get args passed in from main call to show_graph
-            show_graph_args = locals().copy()
+            # Use show_graph args (passed in from main call to show_graph, updated as above)
             nested_args = dict({k:show_graph_args[k] for k in list(inspect.signature(self.show_graph).parameters)})
-            # Update any modified above
-            nested_args[ACTIVE_ITEMS] = active_items
-            nested_args[NODE_STRUCT_ARGS] = node_struct_args
-            nested_args[SHOW_NESTED] = show_nested
 
         # BUILD GRAPH ------------------------------------------------------------------------
 
@@ -548,31 +547,89 @@ class ShowGraph():
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
-            self._assign_processing_components(G, rcvr, processing_graph, enclosing_g, active_items,
-                                               show_nested, nesting_level, nested_args)
+            self._assign_processing_components(G,
+                                               rcvr,
+                                               processing_graph,
+                                               enclosing_g,
+                                               nesting_level,
+                                               active_items,
+                                               show_nested,
+                                               show_cim,
+                                               show_learning,
+                                               show_node_structure,
+                                               node_struct_args,
+                                               show_types,
+                                               show_dimensions,
+                                               show_projection_labels,
+                                               nested_args)
 
         # Add cim Components to graph if show_cim
         if show_cim:
             self._assign_cim_components(G,
                                         [composition.input_CIM, composition.parameter_CIM, composition.output_CIM],
-                                        enclosing_g, active_items, show_nested)
+                                        enclosing_g,
+                                        active_items,
+                                        show_nested,
+                                        show_types,
+                                        show_dimensions,
+                                        show_node_structure,
+                                        node_struct_args,
+                                        show_projection_labels)
 
         # Add controller-related Components to graph if show_controller
         if show_controller:
-            self._assign_controller_components(G, active_items, show_nested)
+            self._assign_controller_components(G,
+                                               active_items,
+                                               show_nested,
+                                               show_cim,
+                                               show_controller,
+                                               show_learning,
+                                               show_types,
+                                               show_dimensions,
+                                               show_node_structure,
+                                               node_struct_args,
+                                               show_projection_labels)
 
         # Add learning-related Components to graph if show_learning
         if show_learning:
-            self._assign_learning_components(G, processing_graph, active_items, show_nested)
+            self._assign_learning_components(G,
+                                             processing_graph,
+                                             active_items,
+                                             show_nested,
+                                             show_cim,
+                                             show_learning,
+                                             show_types,
+                                             show_dimensions,
+                                             show_node_structure,
+                                             node_struct_args,
+                                             show_projection_labels)
 
         # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
-        return self._generate_output(G, active_items, output_fmt)
+        return self._generate_output(G,
+                                     active_items,
+                                     show_controller,
+                                     output_fmt,
+                                     context)
 
     def __call__(self, composition, **args):
         self.show_graph(composition, **args)
 
-    def _assign_processing_components(self, g, rcvr, processing_graph, enclosing_g, active_items,
-                                      show_nested, nesting_level, nested_args):
+    def _assign_processing_components(self,
+                                      g,
+                                      rcvr,
+                                      processing_graph,
+                                      enclosing_g,
+                                      nesting_level,
+                                      active_items,
+                                      show_nested,
+                                      show_cim,
+                                      show_learning,
+                                      show_node_structure,
+                                      node_struct_args,
+                                      show_types,
+                                      show_dimensions,
+                                      show_projection_labels,
+                                      nested_args):
         """Assign nodes to graph"""
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
@@ -720,12 +777,12 @@ class ShowGraph():
         # Implement rcvr node
         rcvr_label = self._get_graph_node_label(composition,
                                                 rcvr,
-                                                nested_args[SHOW_TYPES],
-                                                nested_args[SHOW_DIMENSIONS])
+                                                show_types,
+                                                show_dimensions)
 
-        if nested_args['show_node_structure'] and isinstance(rcvr, Mechanism):
+        if show_node_structure and isinstance(rcvr, Mechanism):
             g.node(rcvr_label,
-                   rcvr._show_structure(**attrs.node_struct_args, node_border=rcvr_penwidth, condition=condition),
+                   rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                    shape=self.struct_shape,
                    color=rcvr_color,
                    rank=rcvr_rank,
@@ -739,11 +796,35 @@ class ShowGraph():
 
         # Implement sender edges from Nodes within Composition
         sndrs = processing_graph[rcvr]
-        self._assign_incoming_edges(g, rcvr, rcvr_label, sndrs, enclosing_g=enclosing_g, show_nested=show_nested)
+        self._assign_incoming_edges(g,
+                                    rcvr,
+                                    rcvr_label,
+                                    sndrs,
+                                    active_items,
+                                    show_nested,
+                                    show_cim,
+                                    show_learning,
+                                    show_types,
+                                    show_dimensions,
+                                    show_node_structure,
+                                    show_projection_labels,
+                                    proj_color=None,
+                                    proj_arrow=None,
+                                    enclosing_g=enclosing_g)
 
-    def _assign_cim_components(self, g, cims, enclosing_g, active_items, show_nested):
+    def _assign_cim_components(self,
+                               g,
+                               cims,
+                               enclosing_g,
+                               active_items,
+                               show_nested,
+                               show_types,
+                               show_dimensions,
+                               show_node_structure,
+                               node_struct_args,
+                               show_projection_labels):
 
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
 
         cim_rank = 'same'
@@ -783,10 +864,10 @@ class ShowGraph():
             compact_cim = not cim.afferents or not enclosing_g or show_nested is INSET
 
             # Create CIM node
-            cim_label = _get_graph_node_label(composition, cim, attrs.show_types, attrs.show_dimensions)
-            if attrs.show_node_structure:
+            cim_label = self._get_graph_node_label(composition, cim, show_types, show_dimensions)
+            if show_node_structure:
                 g.node(cim_label,
-                       cim._show_structure(**attrs.node_struct_args,
+                       cim._show_structure(**node_struct_args,
                                            node_border=cim_penwidth,
                                            compact_cim=compact_cim),
                        shape=self.struct_shape,
@@ -824,11 +905,11 @@ class ShowGraph():
                             continue
                         sndr_node_output_port_owner = sndr_node_output_port.owner
 
-                        sndr_label = _get_graph_node_label(composition,
+                        sndr_label = self._get_graph_node_label(composition,
                                                            sndr_node_output_port_owner,
-                                                           attrs.show_types, attrs.show_dimensions)
+                                                           show_types, show_dimensions)
                         # Construct edge name
-                        if attrs.show_node_structure:
+                        if show_node_structure:
                             # Get label for CIM's port as edge's receiver
                             rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                             if (isinstance(sndr_node_output_port_owner, Composition)
@@ -857,8 +938,8 @@ class ShowGraph():
                         else:
                             proj_color = self.default_node_color
                             proj_width = str(self.default_width)
-                        if attrs.show_projection_labels:
-                            label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        if show_projection_labels:
+                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
 
@@ -891,11 +972,11 @@ class ShowGraph():
                                                    f"{rcvr_input_node_proj_owner} that is not an "
                                                    f"{NodeRole.INPUT.name} node or shadowing its "
                                                    f"{NodeRole.INPUT.name.lower()}.")
-                        rcvr_label = _get_graph_node_label(composition,
+                        rcvr_label = self._get_graph_node_label(composition,
                                                            rcvr_input_node_proj_owner,
-                                                           attrs.show_types, attrs.show_dimensions)
+                                                           show_types, show_dimensions)
                         # Construct edge name
-                        if attrs.show_node_structure:
+                        if show_node_structure:
                             # Get label for CIM's port as edge's sender
                             sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_input_node_proj_owner, Composition)
@@ -924,8 +1005,8 @@ class ShowGraph():
                         else:
                             proj_color = self.default_node_color
                             proj_width = str(self.default_width)
-                        if attrs.show_projection_labels:
-                            label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        if show_projection_labels:
+                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
                         g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
@@ -960,11 +1041,11 @@ class ShowGraph():
                         #    or Projections acorss nested Compositions are not being shown (show_nested=INSET)
                         if not enclosing_g or show_nested is INSET:
                             continue
-                        sndr_label = _get_graph_node_label(composition,
+                        sndr_label = self._get_graph_node_label(composition,
                                                            ctl_mech_output_port_owner,
-                                                           attrs.show_types, attrs.show_dimensions)
+                                                           show_types, show_dimensions)
                         # Construct edge name
-                        if attrs.show_node_structure:
+                        if show_node_structure:
                             # Get label for CIM's port as edge's receiver
                             rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                             # Need to use direct reference to proj.sender rather than snder_input_node
@@ -989,8 +1070,8 @@ class ShowGraph():
                         else:
                             proj_color = self.default_node_color
                             proj_width = str(self.default_width)
-                        if attrs.show_projection_labels:
-                            label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        if show_projection_labels:
+                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
                         enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
@@ -1013,11 +1094,11 @@ class ShowGraph():
                             # Projections to contoller are handled under _assign_controller_components
                             # Note: at present controllers are not modulable; here for possible future condition(s)
                             continue
-                        rcvr_label = _get_graph_node_label(composition,
-                                                           rcvr_modulated_mech_proj_owner,
-                                                           attrs.show_types, attrs.show_dimensions)
+                        rcvr_label = self._get_graph_node_label(composition,
+                                                                rcvr_modulated_mech_proj_owner,
+                                                                show_types, show_dimensions)
                         # Construct edge name
-                        if attrs.show_node_structure:
+                        if show_node_structure:
                             # Get label for CIM's port as edge's sender
                             sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
@@ -1046,8 +1127,8 @@ class ShowGraph():
                         else:
                             proj_color = self.controller_color
                             proj_width = str(self.default_width)
-                        if attrs.show_projection_labels:
-                            label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        if show_projection_labels:
+                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
                         g.edge(sndr_cim_proj_label, rcvr_modulated_mec_proj_label, label=label,
@@ -1076,11 +1157,11 @@ class ShowGraph():
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
 
-                        sndr_label = _get_graph_node_label(composition,
-                                                           sndr_output_node_proj_owner,
-                                                           attrs.show_types, attrs.show_dimensions)
+                        sndr_label = self._get_graph_node_label(composition,
+                                                                sndr_output_node_proj_owner,
+                                                                show_types, show_dimensions)
                         # Construct edge name
-                        if attrs.show_node_structure:
+                        if show_node_structure:
                             # Get label of CIM's port as edge's receiver
                             rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                             if (isinstance(sndr_output_node_proj_owner, Composition)
@@ -1109,8 +1190,8 @@ class ShowGraph():
                         else:
                             proj_color = self.default_node_color
                             proj_width = str(self.default_width)
-                        if attrs.show_projection_labels:
-                            label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        if show_projection_labels:
+                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
                         g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
@@ -1131,11 +1212,11 @@ class ShowGraph():
                             continue
                         rcvr_node_input_port_owner = rcvr_node_input_port.owner
 
-                        rcvr_label = _get_graph_node_label(composition,
-                                                           rcvr_node_input_port_owner,
-                                                           attrs.show_types, attrs.show_dimensions)
+                        rcvr_label = self._get_graph_node_label(composition,
+                                                                rcvr_node_input_port_owner,
+                                                                show_types, show_dimensions)
                         # Construct edge name
-                        if attrs.show_node_structure:
+                        if show_node_structure:
                             # Get label of CIM's port as edge's receiver
                             sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_node_input_port_owner, Composition)
@@ -1164,15 +1245,28 @@ class ShowGraph():
                         else:
                             proj_color = self.default_node_color
                             proj_width = str(self.default_width)
-                        if attrs.show_projection_labels:
-                            label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        if show_projection_labels:
+                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
                         enclosing_g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
                                          color=proj_color, penwidth=proj_width)
 
-    def _assign_controller_components(self, g, active_items, show_nested):
+    def _assign_controller_components(self,
+                                      g,
+                                      active_items,
+                                      show_nested,
+                                      show_cim,
+                                      show_controller,
+                                      show_learning,
+                                      show_types,
+                                      show_dimensions,
+                                      show_node_structure,
+                                      node_struct_args,
+                                      show_projection_labels
+                                      ):
         """Assign control nodes and edges to graph"""
+        from psyneulink.core.compositions.composition import Composition
 
         composition = self.composition
 
@@ -1197,11 +1291,11 @@ class ShowGraph():
 
         # Assign controller node
         node_shape = self.mechanism_shape
-        ctlr_label = _get_graph_node_label(composition, controller, attrs.show_types, attrs.show_dimensions)
-        if attrs.show_node_structure:
+        ctlr_label = self._get_graph_node_label(composition, controller, show_types, show_dimensions)
+        if show_node_structure:
             g.node(ctlr_label,
-                   controller._show_structure(**attrs.node_struct_args, node_border=ctlr_width,
-                                             condition=composition.controller_condition),
+                   controller._show_structure(**node_struct_args, node_border=ctlr_width,
+                                              condition=composition.controller_condition),
                    shape=self.struct_shape,
                    color=ctlr_color,
                    penwidth=ctlr_width,
@@ -1262,7 +1356,7 @@ class ShowGraph():
 
                     # PATCH 6/6/20:
                     # if show_cim and show_nested is NESTED:
-                    if attrs.show_cim and project_to_node:
+                    if show_cim and project_to_node:
                     # PATCH 6/6/20 END
                         # Use Composition's parameter_CIM port
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
@@ -1284,10 +1378,10 @@ class ShowGraph():
                 # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                 else:
                     ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                rcvr_label = _get_graph_node_label(composition, ctl_proj_rcvr_owner, attrs.show_types, attrs.show_dimensions)
+                rcvr_label = self._get_graph_node_label(composition, ctl_proj_rcvr_owner, show_types, show_dimensions)
 
                 # Get sender and receiver labels for edge
-                if attrs.show_node_structure:
+                if show_node_structure:
                     # Get label for controller's port as edge's sender
                     ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
                     # Get label for edge's receiver as owner Mechanism:
@@ -1352,14 +1446,14 @@ class ShowGraph():
                 objmech_color = self.controller_color
                 objmech_width = str(self.default_width)
 
-            objmech_label = _get_graph_node_label(composition, objmech, attrs.show_types, attrs.show_dimensions)
-            if attrs.show_node_structure:
+            objmech_label = self._get_graph_node_label(composition, objmech, show_types, show_dimensions)
+            if show_node_structure:
                 if objmech in composition.scheduler.conditions:
                     condition = composition.scheduler.conditions[objmech]
                 else:
                     condition = None
                 g.node(objmech_label,
-                       objmech._show_structure(**attrs.node_struct_args, node_border=ctlr_width, condition=condition),
+                       objmech._show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
                        shape=self.struct_shape,
                        color=objmech_color,
                        penwidth=ctlr_width,
@@ -1371,11 +1465,11 @@ class ShowGraph():
                         rank=self.control_rank)
 
             # objmech to controller edge
-            if attrs.show_projection_labels:
+            if show_projection_labels:
                 edge_label = objmech_ctlr_proj.name
             else:
                 edge_label = ''
-            if attrs.show_node_structure:
+            if show_node_structure:
                 obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
                 ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
             else:
@@ -1397,23 +1491,23 @@ class ShowGraph():
                     else:
                         proj_color = self.controller_color
                         proj_width = str(self.default_width)
-                    if attrs.show_node_structure:
-                        sndr_proj_label = _get_graph_node_label(composition,
+                    if show_node_structure:
+                        sndr_proj_label = self._get_graph_node_label(composition,
                                                                 projection.sender.owner,
-                                                                attrs.show_types,
-                                                                attrs.show_dimensions) + \
-                                          ':' + objmech._get_port_name(projection.sender)
+                                                                show_types,
+                                                                show_dimensions)
+                        sndr_proj_label += ':' + objmech._get_port_name(projection.sender)
                         objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
                     else:
-                        sndr_proj_label = _get_graph_node_label(composition,
+                        sndr_proj_label = self._get_graph_node_label(composition,
                                                                 projection.sender.owner,
-                                                                attrs.show_types,
-                                                                attrs.show_dimensions)
-                        objmech_proj_label = _get_graph_node_label(composition,
+                                                                show_types,
+                                                                show_dimensions)
+                        objmech_proj_label = self._get_graph_node_label(composition,
                                                                    objmech,
-                                                                   attrs.show_types,
-                                                                   attrs.show_dimensions)
-                    if attrs.show_projection_labels:
+                                                                   show_types,
+                                                                   show_dimensions)
+                    if show_projection_labels:
                         edge_label = projection.name
                     else:
                         edge_label = ''
@@ -1421,7 +1515,7 @@ class ShowGraph():
                            color=proj_color, penwidth=proj_width)
 
         # If controller has an agent_rep, assign its node and edges (not Projections per se)
-        if hasattr(controller, 'agent_rep') and controller.agent_rep and attrs.show_controller==AGENT_REP :
+        if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
             # get agent_rep
             agent_rep = controller.agent_rep
             # controller is active, treat
@@ -1437,7 +1531,7 @@ class ShowGraph():
                 agent_rep_width = str(self.default_width)
 
             # agent_rep node
-            agent_rep_label = _get_graph_node_label(composition, agent_rep, attrs.show_types, attrs.show_dimensions)
+            agent_rep_label = self._get_graph_node_label(composition, agent_rep, show_types, show_dimensions)
             g.node(agent_rep_label,
                     color=agent_rep_color, penwidth=agent_rep_width, shape=self.agent_rep_shape,
                     rank=self.control_rank)
@@ -1451,9 +1545,33 @@ class ShowGraph():
         for i in controller.input_ports[1:]:
             for p in i.path_afferents:
                 senders.add(p.sender.owner)
-        _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color, enclosing_g=None)
+        self._assign_incoming_edges(g,
+                                    controller,
+                                    ctlr_label,
+                                    senders,
+                                    active_items,
+                                    show_nested,
+                                    show_cim,
+                                    show_learning,
+                                    show_types,
+                                    show_dimensions,
+                                    show_node_structure,
+                                    show_projection_labels,
+                                    proj_color=ctl_proj_color,
+                                    enclosing_g=None)
 
-    def _assign_learning_components(self, g, processing_graph, active_items, show_nested):
+    def _assign_learning_components(self,
+                                    g,
+                                    processing_graph,
+                                    active_items,
+                                    show_nested,
+                                    show_cim,
+                                    show_learning,
+                                    show_types,
+                                    show_dimensions,
+                                    show_node_structure,
+                                    node_struct_args,
+                                    show_projection_labels):
         """Assign learning nodes and edges to graph"""
 
         from psyneulink.core.compositions.composition import NodeRole
@@ -1473,7 +1591,7 @@ class ShowGraph():
                 return
 
             # Get rcvr info
-            rcvr_label = _get_graph_node_label(composition, rcvr, attrs.show_types, attrs.show_dimensions)
+            rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.learning_color
@@ -1487,9 +1605,9 @@ class ShowGraph():
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             # Implement node for Mechanism
-            if attrs.show_node_structure:
+            if show_node_structure:
                 g.node(rcvr_label,
-                        rcvr._show_structure(**attrs.node_struct_args),
+                        rcvr._show_structure(**node_struct_args),
                         rank=self.learning_rank, color=rcvr_color, penwidth=rcvr_width)
             else:
                 g.node(rcvr_label,
@@ -1498,9 +1616,32 @@ class ShowGraph():
 
             # Implement sender edges
             sndrs = processing_graph[rcvr]
-            _assign_incoming_edges(g, rcvr, rcvr_label, sndrs, show_nested=show_nested)
+            self._assign_incoming_edges(g,
+                                        rcvr,
+                                        rcvr_label,
+                                        sndrs,
+                                        active_items,
+                                        show_nested,
+                                        show_cim,
+                                        show_learning,
+                                        show_types,
+                                        show_dimensions,
+                                        show_node_structure,
+                                        show_projection_labels)
 
-    def _render_projection_as_node(self, g, proj, label, proj_color, proj_width, sndr_label=None, rcvr_label=None):
+    def _render_projection_as_node(self,
+                                   g,
+                                   enclosing_g,  # FIX CORRECT?
+                                   active_items,
+                                   show_types,
+                                   show_dimensions,
+                                   show_projection_labels,
+                                   proj,
+                                   label,
+                                   proj_color,
+                                   proj_width,
+                                   sndr_label=None,
+                                   rcvr_label=None):
 
         composition = self.composition
 
@@ -1509,7 +1650,6 @@ class ShowGraph():
         # Node for Projection
         g.node(label, shape=self.learning_projection_shape, color=proj_color, penwidth=proj_width)
 
-        # FIX: ??
         if proj_receiver in active_items:
             # edge_color = proj_color
             # edge_width = str(proj_width)
@@ -1524,10 +1664,12 @@ class ShowGraph():
 
         # Edges to and from Projection node
         if sndr_label:
-            G.edge(sndr_label, label, arrowhead='none',
+            # FIX CORRECT? (WAS G)
+            enclosing_g.edge(sndr_label, label, arrowhead='none',
                    color=edge_color, penwidth=edge_width)
         if rcvr_label:
-            G.edge(label, rcvr_label,
+            # FIX CORRECT? (WAS G)
+            enclosing_g.edge(label, rcvr_label,
                    color=edge_color, penwidth=edge_width)
 
         # LearningProjection(s) to node
@@ -1544,26 +1686,43 @@ class ShowGraph():
             learning_proj_width = str(self.default_width)
         sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
         for sndr in sndrs:
-            sndr_label = _get_graph_node_label(composition, sndr.sender.owner, attrs.show_types, attrs.show_dimensions)
-            rcvr_label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
-            if attrs.show_projection_labels:
+            sndr_label = self._get_graph_node_label(composition, sndr.sender.owner, show_types, show_dimensions)
+            rcvr_label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
+            if show_projection_labels:
                 edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
             else:
                 edge_label = ''
             if self.show_node_structure:
-                G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # FIX CORRECT? (WAS G)
+                enclosing_g.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
                        rcvr_label,
                        label=edge_label,
                        color=learning_proj_color, penwidth=learning_proj_width)
             else:
-                G.edge(sndr_label, rcvr_label, label = edge_label,
+                # FIX CORRECT? (WAS G)
+                enclosing_g.edge(sndr_label, rcvr_label, label = edge_label,
                        color=learning_proj_color, penwidth=learning_proj_width)
         return True
 
     @tc.typecheck
-    def _assign_incoming_edges(self, g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None,
-                               enclosing_g=None, show_nested=None):
+    def _assign_incoming_edges(self,
+                               g,
+                               rcvr,
+                               rcvr_label,
+                               senders,
+                               active_items,
+                               show_nested,
+                               show_cim,
+                               show_learning,
+                               show_types,
+                               show_dimensions,
+                               show_node_structure,
+                               show_projection_labels,
+                               proj_color=None,
+                               proj_arrow=None,
+                               enclosing_g=None):
 
+        from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
 
         proj_color = proj_color or self.default_node_color
@@ -1571,7 +1730,7 @@ class ShowGraph():
 
         # Deal with Projections from outer (enclosing_g) and inner (nested) Compositions
         # If not showing CIMs, then set up to find node for sender in inner or outer Composition
-        if not attrs.show_cim:
+        if not show_cim:
             # Get sender node from inner Composition
             if show_nested is NESTED:
                 # Add output_CIMs for nested Comps to find sender nodes
@@ -1591,7 +1750,7 @@ class ShowGraph():
 
             # Remove any Compositions from sndrs if show_cim is False and show_nested is True
             #    (since in that case the nodes for Compositions are bypassed)
-            if not attrs.show_cim and show_nested is NESTED and isinstance(sender, Composition):
+            if not show_cim and show_nested is NESTED and isinstance(sender, Composition):
                 continue
 
             # Iterate through all Projections from all OutputPorts of sender
@@ -1606,7 +1765,7 @@ class ShowGraph():
 
                     # Skip if sender is Composition and Projections to and from cim are being shown
                     #    (show_cim and show_nested) -- handled by _assign_cim_components
-                    if isinstance(sender, Composition) and attrs.show_cim and show_nested is NESTED:
+                    if isinstance(sender, Composition) and show_cim and show_nested is NESTED:
                         continue
 
                     if isinstance(sender, CompositionInterfaceMechanism):
@@ -1650,7 +1809,7 @@ class ShowGraph():
                         sndr = sender
 
                     # Set sndr info
-                    sndr_label = _get_graph_node_label(composition, sndr, attrs.show_types, attrs.show_dimensions)
+                    sndr_label = self._get_graph_node_label(composition, sndr, show_types, show_dimensions)
 
 
                     # Skip any projections to ObjectiveMechanism for controller
@@ -1669,7 +1828,7 @@ class ShowGraph():
                                                             rcvr.parameter_CIM
                                                             # MODIFIED 6/6/20 END
                                                             })):
-                        if attrs.show_node_structure and isinstance(sndr, Mechanism):
+                        if show_node_structure and isinstance(sndr, Mechanism):
                             sndr_port = proj.sender
                             sndr_port_owner = sndr_port.owner
                             if isinstance(sndr_port_owner, CompositionInterfaceMechanism):
@@ -1691,7 +1850,7 @@ class ShowGraph():
                             sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
                         else:
                             sndr_proj_label = sndr_label
-                        if attrs.show_node_structure and isinstance(rcvr, Mechanism):
+                        if show_node_structure and isinstance(rcvr, Mechanism):
                             proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
                         else:
                             proc_mech_rcvr_label = rcvr_label
@@ -1701,7 +1860,7 @@ class ShowGraph():
                         except AttributeError:
                             has_learning = None
 
-                        edge_label = _get_graph_node_label(composition, proj, attrs.show_types, attrs.show_dimensions)
+                        edge_label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         is_learning_component = rcvr in composition.learning_components or sndr in composition.learning_components
 
                         # Check if Projection or its receiver is active
@@ -1728,17 +1887,23 @@ class ShowGraph():
 
                         # RENDER PROJECTION AS EDGE
 
-                        if attrs.show_learning and has_learning:
+                        if show_learning and has_learning:
                             # Render Projection as Node
                             #    (do it here rather than in _assign_learning_components,
                             #     as it needs afferent and efferent edges to other nodes)
                             # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
-                            deferred = not _render_projection_as_node(g=g, proj=proj,
-                                                                      label=proc_mech_label,
-                                                                      rcvr_label=proc_mech_rcvr_label,
-                                                                      sndr_label=sndr_proj_label,
-                                                                      proj_color=proj_color,
-                                                                      proj_width=proj_width)
+                            deferred = not self._render_projection_as_node(g,
+                                                                           enclosing_g,  # FIX CORRECT?
+                                                                           active_items,
+                                                                           show_types,
+                                                                           show_dimensions,
+                                                                           show_projection_labels,
+                                                                           proj,
+                                                                           label=proc_mech_label,
+                                                                           rcvr_label=proc_mech_rcvr_label,
+                                                                           sndr_label=sndr_proj_label,
+                                                                           proj_color=proj_color,
+                                                                           proj_width=proj_width)
                             # Deferred if it is the last Mechanism in a learning Pathway
                             # (see _render_projection_as_node)
                             if deferred:
@@ -1752,7 +1917,7 @@ class ShowGraph():
                                 arrowhead=self.control_projection_arrow
                             else:
                                 arrowhead=proj_arrow
-                            if attrs.show_projection_labels:
+                            if show_projection_labels:
                                 label = proc_mech_label
                             else:
                                 label = ''
@@ -1767,7 +1932,15 @@ class ShowGraph():
                                    penwidth=proj_width,
                                    arrowhead=arrowhead)
 
-    def _generate_output(self, G, active_items, output_fmt):
+    def _generate_output(self,
+                         G,
+                         active_items,
+                         show_controller,
+                         output_fmt,
+                         context
+                         ):
+
+        from psyneulink.core.compositions.composition import Composition, NodeRole
 
         composition = self.composition
 
@@ -1813,7 +1986,7 @@ class ShowGraph():
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
-        if composition.controller and attrs.show_controller:
+        if composition.controller and show_controller:
             i = get_index_of_node_in_G_body(composition.controller, MECHANISM)
             G.body.insert(len(G.body),G.body.pop(i))
 
@@ -1828,7 +2001,7 @@ class ShowGraph():
             # Generate images for animation
             elif output_fmt == 'gif':
                 if composition.active_item_rendered or INITIAL_FRAME in active_items:
-                    composition._generate_gifs(G, active_items, attrs.context)
+                    composition._generate_gifs(G, active_items, context)
 
             # Return graph to show in jupyter
             elif output_fmt == 'jupyter':
@@ -1856,7 +2029,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition
         if not isinstance(item, (Mechanism, Composition, Projection)):
-            raise ShowGraphError("Unrecognized node type ({item}) in graph for {}".format(item, composition.name))
+            raise ShowGraphError(f"Unrecognized node type ({item}) in graph for {composition.name}.")
 
         name = item.name
 
