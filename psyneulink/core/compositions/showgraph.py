@@ -14,7 +14,6 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -35,7 +34,7 @@ from psyneulink.core.globals.keywords import \
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME',
            'MECH_FUNCTION_PARAMS', 'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS',
-           'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'show_graph', 'SHOW_LEARNING', 'UNIT',]
+           'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'ShowGraph', 'UNIT',]
 
 
 # show_graph animation options
@@ -248,7 +247,7 @@ class ShowGraph():
     @tc.typecheck
     @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
     def show_graph(self,
-                   composition:Composition,
+                   composition,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
@@ -473,7 +472,8 @@ class ShowGraph():
         nested_args = show_nested_args or {}
         if nested_args == ALL:
             # Pass args from main call to show_graph to call for nested Composition
-            nest_args = dict({k:locals().copy()[k] for k in list(inspect.signature(self.show_graph).parameters)})
+            show_graph_args = locals().copy()
+            nested_args = dict({k:show_graph_args[k] for k in list(inspect.signature(self.show_graph).parameters)})
 
         # BUILD GRAPH ------------------------------------------------------------------------
 
@@ -526,9 +526,14 @@ class ShowGraph():
         # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
         return self._generate_output(G, active_items, output_fmt)
 
+    def __call__(self, composition, **args):
+        self.show_graph(composition, **args)
+
     def _assign_processing_components(self, g, rcvr, processing_graph, enclosing_g, active_items,
                                       show_nested, nesting_level, nested_args):
         """Assign nodes to graph"""
+
+        from psyneulink.core.compositions.composition import Composition, NodeRole
 
         # DEAL WITH NESTED COMPOSITION
         composition = self.composition
@@ -671,12 +676,12 @@ class ShowGraph():
             rcvr_penwidth = str(self.default_width)
 
         # Implement rcvr node
-        rcvr_label = _get_graph_node_label(composition,
-                                           rcvr,
-                                           attrs.show_types,
-                                           attrs.show_dimensions)
+        rcvr_label = self._get_graph_node_label(composition,
+                                                rcvr,
+                                                nested_args['show_types'],
+                                                nested_args['show_dimensions'])
 
-        if attrs.show_node_structure and isinstance(rcvr, Mechanism):
+        if nested_args['show_node_structure'] and isinstance(rcvr, Mechanism):
             g.node(rcvr_label,
                    rcvr._show_structure(**attrs.node_struct_args, node_border=rcvr_penwidth, condition=condition),
                    shape=self.struct_shape,
@@ -696,6 +701,7 @@ class ShowGraph():
 
     def _assign_cim_components(self, g, cims, enclosing_g, active_items, show_nested):
 
+        from psyneulink.core.compositions.composition import NodeRole
         composition = self.composition
 
         cim_rank = 'same'
@@ -1408,6 +1414,7 @@ class ShowGraph():
     def _assign_learning_components(self, g, processing_graph, active_items, show_nested):
         """Assign learning nodes and edges to graph"""
 
+        from psyneulink.core.compositions.composition import NodeRole
         composition = self.composition
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
@@ -1803,10 +1810,11 @@ class ShowGraph():
         except:
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
 
-    def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
+    def _get_graph_node_label(self, composition, item, show_types=None, show_dimensions=None):
 
+        from psyneulink.core.compositions.composition import Composition
         if not isinstance(item, (Mechanism, Composition, Projection)):
-            raise ShowGraphError("Unrecognized node type ({}) in graph for {}".format(item, composition.name))
+            raise ShowGraphError("Unrecognized node type ({item}) in graph for {}".format(item, composition.name))
 
         name = item.name
 

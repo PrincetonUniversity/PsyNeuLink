@@ -2435,6 +2435,7 @@ from inspect import isgenerator, isgeneratorfunction
 from enum import Enum
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.compositions.showgraph import ShowGraph
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
@@ -3433,6 +3434,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
+
+        self._show_graph = ShowGraph(self)
 
     @property
     def graph_processing(self):
@@ -9692,8 +9695,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             yield self.controller
 
     def show_graph(self, **kwargs):
-        from psyneulink.core.compositions.showgraph import show_graph
-        return show_graph(self, **kwargs)
+        from psyneulink.core.compositions.showgraph import ShowGraph
+        return self._show_graph(self, **kwargs)
 
     def _set_up_animation(self, **kwargs):
         from psyneulink.core.compositions.showgraph import _animate_execution
