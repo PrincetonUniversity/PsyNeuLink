@@ -25,6 +25,38 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of AutodiffComposition class that are new (not in Composition)
 # or override functions in Composition
 
+@pytest.mark.pytorch
+@pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    ])
+def test_autodiff_forward(mode):
+            # create xor model mechanisms and projections
+    xor_in = TransferMechanism(name='xor_in',
+                                default_variable=np.zeros(2))
+
+    xor_hid = TransferMechanism(name='xor_hid',
+                                default_variable=np.zeros(10),
+                                function=Logistic())
+
+    xor_out = TransferMechanism(name='xor_out',
+                                default_variable=np.zeros(1),
+                                function=Logistic())
+
+    hid_map = MappingProjection(matrix=np.random.rand(2,10))
+    out_map = MappingProjection(matrix=np.random.rand(10,1))
+
+    # put the mechanisms and projections together in an autodiff composition (AC)
+    xor = AutodiffComposition(param_init_from_pnl=True)
+
+    xor.add_node(xor_in)
+    xor.add_node(xor_hid)
+    xor.add_node(xor_out)
+
+    xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+    xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+    outputs = xor.run(inputs=[0,0], bin_execute=mode)
+    assert np.allclose(outputs, [[0.9479085241082691]])
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
@@ -463,11 +495,9 @@ class TestTrainingCorrectness:
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
-        'eps, calls, opt, from_pnl_or_not, expected', [
-            (100, 'single', 'adam', True, [[[0.09823965]], [[0.81092879]], [[0.78179557]], [[0.25593583]]]),
-            (50, 'multiple', 'adam', True, [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
-            (100, 'single', 'adam', False, [[[0.12697489]], [[0.74632817]], [[0.80712739]], [[0.28699516]]]),
-            (50, 'multiple', 'adam', False, [[[0.2935138]], [[0.60503794]], [[0.57901045]], [[0.57705371]]])
+        'eps, calls, opt, expected', [
+            (100, 'single', 'adam', [[[0.09823965]], [[0.81092879]], [[0.78179557]], [[0.25593583]]]),
+            (50, 'multiple', 'adam', [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
@@ -2318,6 +2348,10 @@ class TestACLogging:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_in.set_log_conditions('value', pnl.LogCondition.TRIAL)
+        xor_hid.set_log_conditions('value', pnl.LogCondition.TRIAL)
+        xor_out.set_log_conditions('value', pnl.LogCondition.TRIAL)
 
         hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
