@@ -28,7 +28,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, BOTH, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
+    ALL, BOLD, BOTH, COMPONENT, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
     PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME',
@@ -549,6 +549,7 @@ class ShowGraph():
         for rcvr in rcvrs:
             self._assign_processing_components(G,
                                                rcvr,
+                                               composition,
                                                processing_graph,
                                                enclosing_g,
                                                nesting_level,
@@ -617,6 +618,7 @@ class ShowGraph():
     def _assign_processing_components(self,
                                       g,
                                       rcvr,
+                                      composition,
                                       processing_graph,
                                       enclosing_g,
                                       nesting_level,
@@ -635,13 +637,13 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import Composition, NodeRole
 
         # DEAL WITH NESTED COMPOSITION
-        composition = self.composition
+        # composition = self.composition
 
         # User passed attrs for nested Composition
         if isinstance(rcvr, Composition):
             if show_nested:
                 nested_args.update({OUTPUT_FMT:'gv',
-                                    COMPOSITION: rcvr,
+                                    'composition': rcvr,
                                     ENCLOSING_G:g,
                                     NESTING_LEVEL:nesting_level + 1})
                 # Get subgraph for nested Composition
@@ -1562,6 +1564,7 @@ class ShowGraph():
 
     def _assign_learning_components(self,
                                     g,
+                                    composition,
                                     processing_graph,
                                     active_items,
                                     show_nested,
@@ -1575,7 +1578,7 @@ class ShowGraph():
         """Assign learning nodes and edges to graph"""
 
         from psyneulink.core.compositions.composition import NodeRole
-        composition = self.composition
+        # composition = self.composition
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
         #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
@@ -1648,7 +1651,7 @@ class ShowGraph():
                                    sndr_label=None,
                                    rcvr_label=None):
 
-        composition = self.composition
+        # composition = self.composition
 
         proj_receiver = proj.receiver.owner
 
