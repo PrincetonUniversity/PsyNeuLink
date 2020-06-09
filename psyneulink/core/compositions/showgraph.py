@@ -29,7 +29,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, BOTH, COMPONENT, COMPOSITION, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
+    ALL, BOLD, BOTH, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
     PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME',
@@ -440,6 +440,34 @@ class ShowGraph():
                         f"PROGRAM ERROR: Item ({item}) specified in 'active_items' argument for 'show_graph' method of "
                         f"{composition.name} is not a { Component.__name__}.")
         composition.active_item_rendered = False
+
+        # Argument values used to call Mechanism._show_structure()
+        if isinstance(show_node_structure, (list, tuple, set)):
+            node_struct_args = {'composition': self,
+                                'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
+                                'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
+                                'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
+                                'show_mech_function_params': any(key in show_node_structure
+                                                                 for key in {MECH_FUNCTION_PARAMS, ALL}),
+                                'show_port_function_params': any(key in show_node_structure
+                                                                  for key in {PORT_FUNCTION_PARAMS, ALL}),
+                                'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
+                                'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
+                                'show_headers': show_headers,
+                                'output_fmt': 'struct',
+                                'context':context}
+        else:
+            node_struct_args = {'composition': self,
+                                'show_roles': show_node_structure in {ROLES, ALL},
+                                'show_conditions': show_node_structure in {CONDITIONS, ALL},
+                                'show_functions': show_node_structure in {FUNCTIONS, ALL},
+                                'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
+                                'show_port_function_params': show_node_structure in {PORT_FUNCTION_PARAMS, ALL},
+                                'show_values': show_node_structure in {VALUES, LABELS, ALL},
+                                'use_labels': show_node_structure in {LABELS, ALL},
+                                'show_headers': show_headers,
+                                'output_fmt': 'struct',
+                                'context': context}
 
         # For outermost Composition:
         # - initialize nesting level
