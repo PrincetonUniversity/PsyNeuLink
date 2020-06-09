@@ -9696,7 +9696,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def show_graph(self, **kwargs):
         from psyneulink.core.compositions.showgraph import ShowGraph
-        return self._show_graph(self, **kwargs)
+        return self._show_graph(**kwargs)
 
     def _set_up_animation(self, **kwargs):
         from psyneulink.core.compositions.showgraph import _animate_execution

@@ -256,7 +256,6 @@ class ShowGraph():
     @tc.typecheck
     @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
     def show_graph(self,
-                   composition,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
@@ -417,6 +416,8 @@ class ShowGraph():
 
         """
 
+        composition = self.composition
+
         if context.execution_id is NotImplemented:
             context.execution_id = composition.default_execution_id
 
@@ -476,6 +477,7 @@ class ShowGraph():
         # For outermost Composition:
         # - initialize nesting level
         # - set num_nesting_levels
+        self.num_nesting_levels = None
         if enclosing_g is None:
             # initialize nesing_level
             nesting_level = 0
@@ -612,8 +614,8 @@ class ShowGraph():
                                      output_fmt,
                                      context)
 
-    def __call__(self, composition, **args):
-        self.show_graph(composition, **args)
+    def __call__(self, **args):
+        self.show_graph(**args)
 
     def _assign_processing_components(self,
                                       g,
@@ -643,11 +645,11 @@ class ShowGraph():
         if isinstance(rcvr, Composition):
             if show_nested:
                 nested_args.update({OUTPUT_FMT:'gv',
-                                    'composition': rcvr,
+                                    # 'composition': rcvr,
                                     ENCLOSING_G:g,
                                     NESTING_LEVEL:nesting_level + 1})
                 # Get subgraph for nested Composition
-                nested_comp_graph = self.show_graph(**nested_args)
+                nested_comp_graph = rcvr.show_graph(**nested_args)
 
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
