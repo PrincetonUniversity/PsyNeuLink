@@ -143,7 +143,6 @@ from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
 import ctypes
-import warnings
 from collections.abc import Iterable
 from toposort import toposort
 from inspect import isgenerator
@@ -281,17 +280,11 @@ class AutodiffComposition(Composition):
     def _build_pytorch_representation(self, context=None):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.execution_sets is None:
-            self.execution_sets = [ x - set(self.get_nodes_by_role(NodeRole.LEARNING)) for x in self.scheduler.run(context=context)]
-            self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
-        if self.parameters.pytorch_representation._get(context) is None:
-            model = PytorchModelCreator(self.graph_processing,
-                                        self.param_init_from_pnl,
-                                        self.execution_sets,
-                                        self.device,
-                                        context=context,
-                                        composition = self,
-                                        )
+        if self.parameters.pytorch_representation._get(context=context) is None:
+            model = PytorchModelCreator(composition=self,
+                                        device=self.device,
+                                        context=context)
+
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
@@ -379,7 +372,6 @@ class AutodiffComposition(Composition):
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
             curr_tensor_inputs,
             context,
-            scheduler=scheduler,
         )
 
         for component in curr_tensor_outputs.keys():
@@ -529,9 +521,6 @@ class AutodiffComposition(Composition):
             context.execution_phase = execution_phase
 
 
-            # note that output[-1] might not be the truly most recent value
-            # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
-            # is not having its parameters populated correctly, and this should be fixed in the long run.
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
             return output
 
