@@ -70,8 +70,10 @@ SHOW = 'show'
 INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
 
+# Values for nested Compositions (passed from level to level)
 ENCLOSING_G = 'enclosing_g'
 NESTING_LEVEL = 'nesting_level'
+NUM_NESTING_LEVELS = 'num_nesting_levels'
 
 
 class ShowGraphError(Exception):
@@ -424,6 +426,7 @@ class ShowGraph():
         # Args not specified by user but used in calls to show_graph for nested Compositions
         enclosing_g = kwargs.pop(ENCLOSING_G,None)
         nesting_level = kwargs.pop(NESTING_LEVEL,None)
+        self.num_nesting_levels = kwargs.pop(NUM_NESTING_LEVELS,None)
 
         processing_graph = composition.graph_processing.dependency_dict
 
@@ -477,7 +480,6 @@ class ShowGraph():
         # For outermost Composition:
         # - initialize nesting level
         # - set num_nesting_levels
-        self.num_nesting_levels = None
         if enclosing_g is None:
             # initialize nesing_level
             nesting_level = 0
@@ -504,19 +506,20 @@ class ShowGraph():
         elif show_nested and show_nested != INSET:
             show_nested = NESTED
 
-        # Get args passed in from main call to show_graph (to be passed to helper methods)
-        show_graph_args = locals().copy()
-        # Update any modified above
-        show_graph_args[ACTIVE_ITEMS] = active_items
-        show_graph_args[NODE_STRUCT_ARGS] = node_struct_args
-        show_graph_args[SHOW_NESTED] = show_nested
 
         # Assign nested_args  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # to be passed in call to show_graph for nested Composition(s)
+        # Get args passed in from main call to show_graph (to be passed to helper methods)
+        show_graph_args = locals().copy()
+        # Update any modified above
         nested_args = show_nested_args or {}
         if nested_args == ALL:
             # Use show_graph args (passed in from main call to show_graph, updated as above)
             nested_args = dict({k:show_graph_args[k] for k in list(inspect.signature(self.show_graph).parameters)})
+        nested_args[ACTIVE_ITEMS] = active_items
+        nested_args[NODE_STRUCT_ARGS] = node_struct_args
+        nested_args[SHOW_NESTED] = show_nested
+        nested_args[NUM_NESTING_LEVELS] = self.num_nesting_levels
 
         # BUILD GRAPH ------------------------------------------------------------------------
 
@@ -615,7 +618,7 @@ class ShowGraph():
                                      context)
 
     def __call__(self, **args):
-        self.show_graph(**args)
+        return self.show_graph(**args)
 
     def _assign_processing_components(self,
                                       g,
