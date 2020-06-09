@@ -539,23 +539,6 @@ class AutodiffComposition(Composition):
                                                         bin_execute=bin_execute,
                                                         )
 
-    # gives user weights and biases of the model (from the pytorch representation)
-    @handle_external_context(execution_id=NotImplemented)
-    def get_parameters(self, context=None):
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.default_execution_id
-
-        pytorch_representation = self.parameters.pytorch_representation._get(context)
-
-        if pytorch_representation is None:
-            raise AutodiffCompositionError("{0} has not been run yet so parameters have not been created "
-                                           "in Pytorch."
-                                           .format(self.name))
-
-        weights = pytorch_representation.get_weights_for_projections()
-
-        return weights
-
     def _get_state_struct_type(self, ctx):
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
         proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)

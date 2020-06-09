@@ -410,83 +410,6 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    # test whether the autodiff composition's get_parameters method works as desired
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #   LLVM test is disabled since parameters are currently not written back
-
-                                     ])
-    def test_get_params(self, mode):
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
-
-        hid_map = MappingProjection(matrix=np.random.rand(2,10))
-        out_map = MappingProjection(matrix=np.random.rand(10,1))
-
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=1.0)
-
-        xor.add_node(xor_in)
-        xor.add_node(xor_hid)
-        xor.add_node(xor_out)
-
-        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
-
-        # call run to only process the inputs, so that pytorch representation of AC gets created
-        # results = xor.run(inputs={xor_in:xor_inputs})
-
-        #KAM Changed 11/1/18
-
-        # mini version of xor.execute just to build up pytorch representation
-        xor._analyze_graph()
-        # CW changed 12/3/18
-        xor._build_pytorch_representation(xor.default_execution_id)
-        # OLD
-        # xor._build_pytorch_representation()
-
-        # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
-        # and get the parameters straight from pytorch
-        weights_get_params = xor.get_parameters()
-        weights_straight_1 = xor.parameters.pytorch_representation.get(xor).params[0]
-        weights_straight_2 = xor.parameters.pytorch_representation.get(xor).params[1]
-
-        # check that parameter copies obtained from get_parameters are the same as the
-        # projections and parameters from pytorch
-        assert np.allclose(hid_map.parameters.matrix.get(None), weights_get_params[hid_map])
-        assert np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-        assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
-        assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
-
-        # call run to train the pytorch parameters
-        results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                  "targets": {xor_out:xor_targets},
-                                  "epochs": 10}, bin_execute=mode)
-
-
-        # check that the parameter copies obtained from get_parameters have not changed with the
-        # pytorch parameters during training (and are thus at a different memory location)
-        # (only makes sense in Python mode)
-        if mode == 'Python':
-            assert not np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-            assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
-
-
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
 class TestTrainingCorrectness:
@@ -1992,8 +1915,6 @@ class TestTrainingIdenticalness():
 
         result = sem_net.run(inputs=inputs_dict)
 
-        # comp_weights = sem_net.get_parameters()[0]
-
         # TRAIN COMPOSITION
         def g_f():
             yield {"inputs": inputs_dict,
@@ -2001,8 +1922,6 @@ class TestTrainingIdenticalness():
                    "epochs": eps}
         g = g_f()
         result = sem_net.learn(inputs=g_f)
-
-        comp_weights = sem_net.get_parameters()
 
         # SET UP SYSTEM
         sem_net_sys = Composition()
@@ -2059,13 +1978,13 @@ class TestTrainingIdenticalness():
 
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
-        assert np.allclose(comp_weights[map_nouns_h1], map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_rels_h2], map_rels_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h1_h2], map_h1_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_I], map_h2_I_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_is], map_h2_is_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net), map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net), map_rels_h2_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net), map_h1_h2_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net), map_h2_I_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net), map_h2_is_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net), map_h2_has_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net), map_h2_can_sys.get_mod_matrix(sem_net_sys))
 
     def test_identicalness_of_input_types(self):
         # SET UP MECHANISMS FOR COMPOSITION
@@ -2921,8 +2840,6 @@ class TestNested:
                 targets_dict[out_sig_is].append(truth_is[i])
                 targets_dict[out_sig_has].append(truth_has[i])
                 targets_dict[out_sig_can].append(truth_can[i])
-
-        # comp_weights = sem_net.get_parameters()[0]
 
         # TRAIN COMPOSITION
         input_dict = {"inputs": inputs_dict,
