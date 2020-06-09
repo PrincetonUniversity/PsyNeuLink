@@ -1633,8 +1633,8 @@ class ShowGraph():
                                    g,
                                    # MODIFIED 6/9/20 NEW:
                                    # enclosing_g,
-                                   # MODIFIED 6/9/20 NEWER:
-                                   G,
+                                   # # MODIFIED 6/9/20 NEWER:
+                                   # G,
                                    # MODIFIED 6/9/20 END
                                    active_items,
                                    show_node_structure,
@@ -1922,8 +1922,8 @@ class ShowGraph():
                             deferred = not self._render_projection_as_node(g,
                                                                            # # MODIFIED 6/9/20 NEW:
                                                                            # enclosing_g,
-                                                                           # # MODIFIED 6/9/20 NEWER:
-                                                                           G,
+                                                                           # # # MODIFIED 6/9/20 NEWER:
+                                                                           # G,
                                                                            # MODIFIED 6/9/20 END
                                                                            active_items,
                                                                            show_node_structure,
