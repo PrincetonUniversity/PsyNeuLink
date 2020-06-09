@@ -159,7 +159,7 @@ class ShowGraph():
             specifies the shape in which `LearningProjetions`\\s are displayed
             when **show_learning** is specified as True in a call to `show_graph <ShowGraph.show_graph>`.
 
-        control_projection_shape : default 'box'
+        control_projection_arrow : default 'box'
             specifies the shape in which the head of a `ControlProjetion` is
             when **show_learning** is specified in a call to `show_graph <ShowGraph.show_graph>`.
 
@@ -223,7 +223,7 @@ class ShowGraph():
 
         # Node shapes:
         self.mechanism_shape = mechanism_shape
-        feedback_shape = feedback_shape
+        self.feedback_shape = feedback_shape
         self.cycle_shape = cycle_shape
         self.struct_shape = 'plaintext' # assumes use of html
         self.cim_shape = cim_shape
@@ -1405,7 +1405,7 @@ class ShowGraph():
                 else:
                     ctl_proj_color = self.controller_color
                     ctl_proj_width = str(self.default_width)
-                if self.show_projection_labels:
+                if show_projection_labels:
                     edge_label = ctl_proj.name
                 else:
                     edge_label = ''
@@ -1633,6 +1633,7 @@ class ShowGraph():
                                    g,
                                    enclosing_g,  # FIX CORRECT?
                                    active_items,
+                                   show_node_structure,
                                    show_types,
                                    show_dimensions,
                                    show_projection_labels,
@@ -1692,7 +1693,7 @@ class ShowGraph():
                 edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
             else:
                 edge_label = ''
-            if self.show_node_structure:
+            if show_node_structure:
                 # FIX CORRECT? (WAS G)
                 enclosing_g.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
                        rcvr_label,
@@ -1895,6 +1896,7 @@ class ShowGraph():
                             deferred = not self._render_projection_as_node(g,
                                                                            enclosing_g,  # FIX CORRECT?
                                                                            active_items,
+                                                                           show_node_structure,
                                                                            show_types,
                                                                            show_dimensions,
                                                                            show_projection_labels,
