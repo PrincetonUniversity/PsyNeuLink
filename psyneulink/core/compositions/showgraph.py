@@ -37,6 +37,28 @@ __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAM
            'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'ShowGraph', 'UNIT',]
 
 
+
+# Arguments passed to each nested Composition
+
+
+SHOW_NODE_STRUCTURE = 'show_node_structure'
+NODE_STRUCT_ARGS = 'node_struct_args'
+# Options for show_node_structure argument of show_graph()
+MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
+PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
+
+SHOW_NESTED = 'show_nested'
+SHOW_NESTED_ARGS = 'show_nested_args'
+SHOW_CIM = 'show_cim'
+SHOW_CONTROLLER = 'show_controller'
+SHOW_LEARNING = 'show_learning'
+SHOW_HEADERS = 'show_headers'
+SHOW_TYPES = 'show_types'
+SHOW_DIMENSIONS = 'show_dimensions'
+SHOW_PROJECTION_LABELS = 'show_projection_labels'
+ACTIVE_ITEMS = 'active_items'
+OUTPUT_FMT = 'output_fmt'
+
 # show_graph animation options
 NUM_TRIALS = 'num_trials'
 NUM_RUNS = 'num_Runs'
@@ -52,17 +74,8 @@ SHOW_CIM = 'show_cim'
 SHOW_CONTROLLER = 'show_controller'
 SHOW_LEARNING = 'show_learning'
 
-
-# Options for show_node_structure argument of show_graph()
-MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
-
-OUTPUT_FMT = 'output_fmt'
 ENCLOSING_G = 'enclosing_g'
 NESTING_LEVEL = 'nesting_level'
-NODE_STRUCT_ARGS = 'node_struct_args'
-
-INITIAL_FRAME = "INITIAL_FRAME"
 
 
 class ShowGraphError(Exception):
@@ -414,20 +427,10 @@ class ShowGraph():
         # Args not specified by user but used in calls to show_graph for nested Compositions
         enclosing_g = kwargs.pop(ENCLOSING_G,None)
         nesting_level = kwargs.pop(NESTING_LEVEL,None)
-        # FIX 6/8/20:  FILTER OUT ANY OTHERS ADDED BELOW:  DEFAULT ATTRS + ANY OTHERS IN locals()
-
-
-        # ATTRIBUTES ----------------------------------------------------------------------
-
-        # Create attrs object if outermost Composition ----------------------------------------
-        # MODIFIED 6/8/20 OLD:
-        # if not nesting_level:
-        # MODIFIED 6/8/20 NEW:
-
-        # SETUP ATTRIBUTES SPECIFIC TO COMPOSITION AND/OR NESTING LEVEL ---------------------------------------------------
 
         processing_graph = composition.graph_processing.dependency_dict
 
+        # Validate active_items  ~~~~~~~~~~~~~~~~~~~~~~~~~
         active_items = active_items or []
         if active_items:
             active_items = convert_to_list(active_items)
@@ -441,6 +444,9 @@ class ShowGraph():
                         f"{composition.name} is not a { Component.__name__}.")
         composition.active_item_rendered = False
 
+        # ASSIGN ATTRIBUTES PASSED TO NESTED COMPOSITIONS  -----------------------------------------------
+
+        # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
             node_struct_args = {'composition': self,
@@ -469,6 +475,8 @@ class ShowGraph():
                                 'output_fmt': 'struct',
                                 'context': context}
 
+        # Assign num_nesting_levels ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        #  (note:  this is assigned to self since it applies to all levels)
         # For outermost Composition:
         # - initialize nesting level
         # - set num_nesting_levels
@@ -487,6 +495,7 @@ class ShowGraph():
             else:
                 self.num_nesting_levels = None
 
+        # Assign show_nested  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # If num_nesting_levels is specified, set show_nested based on current nesting_level
         if self.num_nesting_levels is not None:
             if nesting_level < self.num_nesting_levels:
@@ -497,11 +506,16 @@ class ShowGraph():
         elif show_nested and show_nested != INSET:
             show_nested = NESTED
 
+        # Assign nested_args  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         nested_args = show_nested_args or {}
         if nested_args == ALL:
-            # Pass args from main call to show_graph to call for nested Composition
+            # Get args passed in from main call to show_graph
             show_graph_args = locals().copy()
             nested_args = dict({k:show_graph_args[k] for k in list(inspect.signature(self.show_graph).parameters)})
+            # Update any modified above
+            nested_args[ACTIVE_ITEMS] = active_items
+            nested_args[NODE_STRUCT_ARGS] = node_struct_args
+            nested_args[SHOW_NESTED] = show_nested
 
         # BUILD GRAPH ------------------------------------------------------------------------
 
@@ -706,8 +720,8 @@ class ShowGraph():
         # Implement rcvr node
         rcvr_label = self._get_graph_node_label(composition,
                                                 rcvr,
-                                                nested_args['show_types'],
-                                                nested_args['show_dimensions'])
+                                                nested_args[SHOW_TYPES],
+                                                nested_args[SHOW_DIMENSIONS])
 
         if nested_args['show_node_structure'] and isinstance(rcvr, Mechanism):
             g.node(rcvr_label,
