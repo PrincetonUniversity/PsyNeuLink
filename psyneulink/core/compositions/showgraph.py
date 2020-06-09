@@ -2022,10 +2022,10 @@ class ShowGraph():
         for proj in composition.projections:
             # Put ControlProjection(s) last (along with ControlMechanis(s))
             if isinstance(proj, ControlProjection):
-                # # MODIFIED 6/9/20 OLD:
-                # i = get_index_of_node_in_G_body(node, PROJECTION)
-                # MODIFIED 6/9/20 NEW:
-                i = get_index_of_node_in_G_body(proj, PROJECTION)
+                # MODIFIED 6/9/20 OLD:
+                i = get_index_of_node_in_G_body(node, PROJECTION)
+                # # MODIFIED 6/9/20 NEW:
+                # i = get_index_of_node_in_G_body(proj, PROJECTION)
                 # MODIFIED 6/9/20 END
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
