@@ -423,8 +423,6 @@ class AutodiffComposition(Composition):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
-        elif "learning" in tags:
-            return pnlvm.codegen.gen_autodiffcomp_learning_exec(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_autodiffcomp_exec(ctx, self, tags=tags)
 
