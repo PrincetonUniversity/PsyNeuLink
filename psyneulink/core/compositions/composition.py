@@ -6624,7 +6624,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         p.insert(0, curr_node)
                         curr_node = prev[curr_node]
                     p.insert(0, curr_node)
-                    pathways.append(p)
+                    # we only consider input -> projection -> ... -> output pathways (since we can't learn on only one mechanism)
+                    if len(p) >= 3:
+                        pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
                     if (not hasattr(projection,'learnable')) or (projection.learnable is False):
