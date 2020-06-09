@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 @pytest.mark.pytorch
 @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                 ])
 def test_autodiff_forward(mode):
-            # create xor model mechanisms and projections
+    # create xor model mechanisms and projections
     xor_in = TransferMechanism(name='xor_in',
-                                default_variable=np.zeros(2))
+                               default_variable=np.zeros(2))
 
     xor_hid = TransferMechanism(name='xor_hid',
                                 default_variable=np.zeros(10),
@@ -93,7 +93,6 @@ class TestACConstructor:
     # def test_patience(self):
         # comp = AutodiffComposition()
         # assert comp.patience == 10
-
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
