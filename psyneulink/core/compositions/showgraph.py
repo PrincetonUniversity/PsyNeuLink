@@ -445,7 +445,7 @@ class ShowGraph():
         # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
         if isinstance(show_node_structure, (list, tuple, set)):
-            node_struct_args = {'composition': self,
+            node_struct_args = {'composition': self.composition,
                                 'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
                                 'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
                                 'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
@@ -459,7 +459,7 @@ class ShowGraph():
                                 'output_fmt': 'struct',
                                 'context':context}
         else:
-            node_struct_args = {'composition': self,
+            node_struct_args = {'composition': self.composition,
                                 'show_roles': show_node_structure in {ROLES, ALL},
                                 'show_conditions': show_node_structure in {CONDITIONS, ALL},
                                 'show_functions': show_node_structure in {FUNCTIONS, ALL},
@@ -1984,7 +1984,11 @@ class ShowGraph():
         for proj in composition.projections:
             # Put ControlProjection(s) last (along with ControlMechanis(s))
             if isinstance(proj, ControlProjection):
-                i = get_index_of_node_in_G_body(node, PROJECTION)
+                # # MODIFIED 6/9/20 OLD:
+                # i = get_index_of_node_in_G_body(node, PROJECTION)
+                # MODIFIED 6/9/20 NEW:
+                i = get_index_of_node_in_G_body(proj, PROJECTION)
+                # MODIFIED 6/9/20 END
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
