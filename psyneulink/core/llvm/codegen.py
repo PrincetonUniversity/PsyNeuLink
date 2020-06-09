@@ -544,23 +544,6 @@ def gen_multirun_wrapper(ctx, function: ir.Function) -> ir.Function:
     return multirun_f
 
 
-def gen_autodiffcomp_learning_exec(ctx, composition, *, tags:frozenset):
-    composition._build_pytorch_representation(composition.default_execution_id)
-    pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-    with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
-        state, _, comp_in, data, cond, = builder.function.args
-        pytorch_model._gen_llvm_training_function_body(ctx, builder, state,
-                                                       params, data)
-        node_tags = tags.union({"node_wrapper"})
-        # Call output CIM
-        output_cim_w = ctx.get_node_wrapper(composition, composition.output_CIM)
-        output_cim_f = ctx.import_llvm_function(output_cim_w, tags=node_tags)
-        builder.block.name = "invoke_" + output_cim_f.name
-        builder.call(output_cim_f, [state, params, comp_in, data, data])
-
-        return builder.function
-
-
 def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     """Creates llvm bin execute for autodiffcomp"""
     assert composition.controller is None
@@ -569,8 +552,8 @@ def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        pytorch_forward_func = ctx.import_llvm_function(pytorch_model, tags=tags)
-        builder.call(pytorch_forward_func, [state, params, data])
+        pytorch_func = ctx.import_llvm_function(pytorch_model, tags=tags)
+        builder.call(pytorch_func, [state, params, data])
 
         node_tags = tags.union({"node_wrapper"})
         # Call output CIM
