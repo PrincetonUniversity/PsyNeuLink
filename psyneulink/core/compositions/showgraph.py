@@ -1631,7 +1631,11 @@ class ShowGraph():
 
     def _render_projection_as_node(self,
                                    g,
-                                   enclosing_g,  # FIX CORRECT?
+                                   # MODIFIED 6/9/20 NEW:
+                                   # enclosing_g,
+                                   # MODIFIED 6/9/20 NEWER:
+                                   G,
+                                   # MODIFIED 6/9/20 END
                                    active_items,
                                    show_node_structure,
                                    show_types,
@@ -1665,13 +1669,23 @@ class ShowGraph():
 
         # Edges to and from Projection node
         if sndr_label:
-            # FIX CORRECT? (WAS G)
-            enclosing_g.edge(sndr_label, label, arrowhead='none',
+            # MODIFIED 6/9/20 OLD:
+            G.edge(sndr_label, label, arrowhead='none',
+            # # MODIFIED 6/9/20 NEW:
+            # enclosing_g.edge(sndr_label, label, arrowhead='none',
+            # # MODIFIED 6/9/20 NEWER:
+            # self.G.edge(sndr_label, label, arrowhead='none',
+            # MODIFIED 6/9/20 END
                    color=edge_color, penwidth=edge_width)
         if rcvr_label:
-            # FIX CORRECT? (WAS G)
-            enclosing_g.edge(label, rcvr_label,
+            # MODIFIED 6/9/20 OLD:
+            G.edge(label, rcvr_label,
+            # # MODIFIED 6/9/20 NEW:
+            # enclosing_g.edge(label, rcvr_label,
+            # # MODIFIED 6/9/20 NEWER:
+            # self.G.edge(label, rcvr_label,
                    color=edge_color, penwidth=edge_width)
+            # MODIFIED 6/9/20 END
 
         # LearningProjection(s) to node
         # if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
@@ -1694,15 +1708,27 @@ class ShowGraph():
             else:
                 edge_label = ''
             if show_node_structure:
-                # FIX CORRECT? (WAS G)
-                enclosing_g.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # MODIFIED 6/9/20 OLD:
+                G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # # MODIFIED 6/9/20 NEW:
+                # enclosing_g.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # # MODIFIED 6/9/20 NEWER:
+                # self.G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # MODIFIED 6/9/20 END
                        rcvr_label,
                        label=edge_label,
                        color=learning_proj_color, penwidth=learning_proj_width)
             else:
-                # FIX CORRECT? (WAS G)
-                enclosing_g.edge(sndr_label, rcvr_label, label = edge_label,
+                # MODIFIED 6/9/20 OLD:
+                G.edge(sndr_label, rcvr_label, label = edge_label,
                        color=learning_proj_color, penwidth=learning_proj_width)
+                # # MODIFIED 6/9/20 OLD:
+                # enclosing_g.edge(sndr_label, rcvr_label, label = edge_label,
+                #        color=learning_proj_color, penwidth=learning_proj_width)
+                # # MODIFIED 6/9/20 OLD:
+                # self.G.edge(sndr_label, rcvr_label, label = edge_label,
+                #        color=learning_proj_color, penwidth=learning_proj_width)
+                # MODIFIED 6/9/20 END
         return True
 
     @tc.typecheck
@@ -1894,7 +1920,11 @@ class ShowGraph():
                             #     as it needs afferent and efferent edges to other nodes)
                             # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
                             deferred = not self._render_projection_as_node(g,
-                                                                           enclosing_g,  # FIX CORRECT?
+                                                                           # # MODIFIED 6/9/20 NEW:
+                                                                           # enclosing_g,
+                                                                           # # MODIFIED 6/9/20 NEWER:
+                                                                           G,
+                                                                           # MODIFIED 6/9/20 END
                                                                            active_items,
                                                                            show_node_structure,
                                                                            show_types,
