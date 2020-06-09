@@ -546,11 +546,9 @@ class TestTrainingCorrectness:
             for i in range(eps):
                 results = xor.learn(inputs=input_dict, bin_execute=mode)
 
-        # FIXME: Improve accuracy
-        atol = 0.1 if not from_pnl_or_not and mode == 'LLVMRun' else 0.001
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
-            assert np.allclose(r[0], t, atol=atol)
+            assert np.allclose(r[0], t)
 
         benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
                                      "targets": {xor_out: xor_targets},
@@ -834,10 +832,7 @@ class TestTrainingCorrectness:
 
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
-                if mode == 'Python':
-                    assert np.allclose(r, e)
-                else:
-                    assert np.allclose(r, e, atol=0.01)
+                assert np.allclose(r, e)
         benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
                                          'targets': targets_dict,
                                          'epochs': eps}, bin_execute=mode)
