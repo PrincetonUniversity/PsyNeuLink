@@ -1877,7 +1877,7 @@ class TestBackProp:
         input_dictionary = {backprop_pathway.target: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}
 
-        # comp.show_graph()
+        comp.show_graph(show_learning=True)
 
         comp.learn(inputs=input_dictionary,
                  num_trials=10)
