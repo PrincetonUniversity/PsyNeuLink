@@ -8,6 +8,14 @@
 
 # ********************************************* show_graph *************************************************************
 
+"""
+.. _ShowGraph_Class_Reference:
+
+Class Reference
+---------------
+
+"""
+
 import inspect
 import warnings
 import numpy as np
@@ -36,10 +44,7 @@ __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAM
            'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'ShowGraph', 'UNIT',]
 
 
-
 # Arguments passed to each nested Composition
-
-
 SHOW_NODE_STRUCTURE = 'show_node_structure'
 NODE_STRUCT_ARGS = 'node_struct_args'
 # Options for show_node_structure argument of show_graph()
@@ -83,6 +88,109 @@ class ShowGraphError(Exception):
 
 
 class ShowGraph():
+    """
+    ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+
+    Arguments
+    ---------
+
+    composition : Composition
+        specifies the `Composition` to which the instance of ShowGraph is assigned.
+
+    direction : keyword : default 'BT'
+        specifies the orientation of the graph (input -> output):
+        - 'BT': bottom to top;
+        - 'TB': top to bottom;
+        - 'LR': left to right;
+        - 'RL`: right to left.
+
+    mechanism_shape : keyword : default 'oval'
+        specifies the display shape of nodes that are not assigned a `NodeRole` associated with a dedicated shape.
+
+    feedback_shape : keyword : default 'septagon'
+        specifies the display shape of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
+
+    cycle_shape : keyword : default 'doublecircle'
+        specifies the display shape of nodes that are assigned the `NodeRole` `CYCLE`.
+
+    cim_shape : default 'square'
+        specifies the shape in which `CompositionInterfaceMechanism`\\s are displayed
+        when **show_cim** is specified as True a call to `show_graph <ShowGraph.show_graph>`.
+
+    composition_shape : default 'rectangle'
+        specifies the shape in which nodes that represent `nested Compositions <Composition_Nested> are displayed
+        when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
+        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+
+    agent_rep_shape : default 'egg'
+        specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed
+        when **show_controller** is specified as *AGENT_REP* in a call to `show_graph <ShowGraph.show_graph>`.
+
+     default_projection_arrow : keywrod : default 'normal'
+         specifies the shape of the arrow used to display `MappingProjection`\\s.
+
+    learning_projection_shape : default 'diamond'
+        specifies the shape in which `LearningProjetions`\\s are displayed
+        when **show_learning** is specified as True in a call to `show_graph <ShowGraph.show_graph>`.
+
+    control_projection_arrow : default 'box'
+        specifies the shape in which the head of a `ControlProjetion` is
+        when **show_learning** is specified in a call to `show_graph <ShowGraph.show_graph>`.
+
+    default_node_color : keyword : default 'black'
+        specifies the color in which nodes not assigned another color are displayed.
+
+    active_color : keyword : default BOLD
+        specifies how to highlight the item(s) specified in the **active_items** argument of a call to `show_graph
+        <ShowGraph.show_graph>`:  either a color recognized by GraphViz, or the keyword *BOLD*.
+
+    input_color : keyword : default 'green',
+        specifies the color in which `INPUT <NodeRole.INPUT>` Nodes of the Composition are displayed.
+
+    output_color : keyword : default 'red',
+        specifies the color in which `OUTPUT <NodeRole.OUTPUT>` Nodes of the Composition are displayed.
+
+    input_and_output_color : keyword : default 'brown'
+        specifies the color in which nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
+        <NodeRole.OUTPUT>` Node of the Composition are displayed.
+
+    COMMENT:
+    feedback_color : keyword : default 'yellow'
+        specifies the display color of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
+    COMMENT
+
+    controller_color : keyword : default 'blue'
+        specifies the color in which the `controller <Composition_Controller>` components are displayed.
+
+    learning_color : keyword : default 'orange'
+        specifies the color in which the `learning components <Composition_Learning_Components>` are displayed.
+
+    composition_color : keyword : default 'pink'
+        specifies the color in which nodes that represent `nested Compositions <Composition_Nested> are displayed
+        when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
+        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+
+    default_width : int : default 1
+        specifies the width to use for the outline of nodes and the body of Projection arrows.
+
+    active_thicker_by : int : default 2
+        specifies the amount by which to increase the width of the outline of Components specified in the
+        **active_items** argument of a call to `show_graph <ShowGraph.show_graph>`.
+
+    bold_width : int : default 3,
+        specifies the width of the outline for `INPUT` and `OUTPUT` Nodes of the Composition.
+
+    COMMENT:
+    input_rank : keyword : default 'source',
+
+    control_rank : keyword : default 'min',
+
+    learning_rank : keyword : default 'min',
+
+    output_rank : keyword : default 'max'
+    COMMENT
+
+    """
 
     def __init__(self,
                  composition,
@@ -118,107 +226,6 @@ class ShowGraph():
                  learning_rank = 'min',
                  output_rank = 'max'
                  ):
-        """
-        Arguments
-        ---------
-
-        composition : Composition
-            specifies the `Composition` to which the instance of ShowGraph is assigned.
-
-        direction : keyword : default 'BT'
-            specifies the orientation of the graph (input -> output):
-            - 'BT': bottom to top;
-            - 'TB': top to bottom;
-            - 'LR': left to right;
-            - 'RL`: right to left.
-
-        mechanism_shape : keyword : default 'oval'
-            specifies the display shape of nodes that are not assigned a `NodeRole` associated with a dedicated shape.
-
-        feedback_shape : keyword : default 'septagon'
-            specifies the display shape of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
-
-        cycle_shape : keyword : default 'doublecircle'
-            specifies the display shape of nodes that are assigned the `NodeRole` `CYCLE`.
-
-        cim_shape : default 'square'
-            specifies the shape in which `CompositionInterfaceMechanism`\\s are displayed
-            when **show_cim** is specified as True a call to `show_graph <ShowGraph.show_graph>`.
-
-        composition_shape : default 'rectangle'
-            specifies the shape in which nodes that represent `nested Compositions <Composition_Nested> are displayed
-            when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-            level specified in a call to `show_graph <ShowGraph.show_graph>`.
-
-        agent_rep_shape : default 'egg'
-            specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed
-            when **show_controller** is specified as *AGENT_REP* in a call to `show_graph <ShowGraph.show_graph>`.
-
-         default_projection_arrow : keywrod : default 'normal'
-             specifies the shape of the arrow used to display `MappingProjection`\\s.
-
-        learning_projection_shape : default 'diamond'
-            specifies the shape in which `LearningProjetions`\\s are displayed
-            when **show_learning** is specified as True in a call to `show_graph <ShowGraph.show_graph>`.
-
-        control_projection_arrow : default 'box'
-            specifies the shape in which the head of a `ControlProjetion` is
-            when **show_learning** is specified in a call to `show_graph <ShowGraph.show_graph>`.
-
-        default_node_color : keyword : default 'black'
-            specifies the color in which nodes not assigned another color are displayed.
-
-        active_color : keyword : default BOLD
-            specifies how to highlight the item(s) specified in the **active_items** argument of a call to `show_graph
-            <ShowGraph.show_graph>`:  either a color recognized by GraphViz, or the keyword *BOLD*.
-
-        input_color : keyword : default 'green',
-            specifies the color in which `INPUT <NodeRole.INPUT>` Nodes of the Composition are displayed.
-
-        output_color : keyword : default 'red',
-            specifies the color in which `OUTPUT <NodeRole.OUTPUT>` Nodes of the Composition are displayed.
-
-        input_and_output_color : keyword : default 'brown'
-            specifies the color in which nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
-            <NodeRole.OUTPUT>` Node of the Composition are displayed.
-
-        COMMENT:
-        feedback_color : keyword : default 'yellow'
-            specifies the display color of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
-        COMMENT
-
-        controller_color : keyword : default 'blue'
-            specifies the color in which the `controller <Composition_Controller>` components are displayed.
-
-        learning_color : keyword : default 'orange'
-            specifies the color in which the `learning components <Composition_Learning_Components>` are displayed.
-
-        composition_color : keyword : default 'pink'
-            specifies the color in which nodes that represent `nested Compositions <Composition_Nested> are displayed
-            when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-            level specified in a call to `show_graph <ShowGraph.show_graph>`.
-
-        default_width : int : default 1
-            specifies the width to use for the outline of nodes and the body of Projection arrows.
-
-        active_thicker_by : int : default 2
-            specifies the amount by which to increase the width of the outline of Components specified in the
-            **active_items** argument of a call to `show_graph <ShowGraph.show_graph>`.
-
-        bold_width : int : default 3,
-            specifies the width of the outline for `INPUT` and `OUTPUT` Nodes of the Composition.
-
-        COMMENT:
-        input_rank : keyword : default 'source',
-
-        control_rank : keyword : default 'min',
-
-        learning_rank : keyword : default 'min',
-
-        output_rank : keyword : default 'max'
-        COMMENT
-
-        """
 
         self.composition = composition
         self.direction = direction

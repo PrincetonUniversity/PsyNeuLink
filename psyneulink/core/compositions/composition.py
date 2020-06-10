@@ -252,7 +252,7 @@ Composition's structure is stored in its `graph <Composition.graph>` attribute, 
 its Nodes and the dependencies determined by its Projections.  There are no restrictions on the structure of the
 graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
 `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
-displayed  using the `show_graph <Composition.show_graph>` method (see `Composition_Visualization`).
+displayed  using the `show_graph <ShowGraph.show_graph>` method (see `Composition_Visualization`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -1596,7 +1596,7 @@ COMMENT:
     XXX - ADD DISCUSSION OF show_controller AND show_learning
 COMMENT
 
-The `show_graph <Composition.show_graph>` method generates a display of the graph structure of `Nodes
+The `show_graph <ShowGraph.show_graph>` method generates a display of the graph structure of `Nodes
 <Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
 <Composition.graph>`).
 
@@ -2362,7 +2362,7 @@ Example 4) Schedule resets for both Mechanisms to custom values, to occur at dif
 +-----------------------------------------------------------+----------------------------------------------------------+
 
 Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
-can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
+can be shown, along with other information, using options in the Composition's `show_graph <ShowGraph.show_graph>`
 method.  The figure below shows several examples.
 
 .. _Composition_show_graph_options_figure:
@@ -2374,7 +2374,7 @@ method.  The figure below shows several examples.
    :scale: 150 %
 
    Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
-   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   options of its `show_graph <ShowGraph.show_graph>` method. **Panel A** shows the graph with its Projections labeled
    and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
    Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
    Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
@@ -7983,16 +7983,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             COMMENT
 
         animate : dict or bool : default False
-            specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
+            specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
             sequence of Components executed in a run.  A dict can be specified containing options to pass to
-            the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
-            <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
+            the `show_graph <ShowGraph.show_graph>` method;  each key must be a legal argument for the `show_graph
+            <ShowGraph.show_graph>` method, and its value a specification for that argument.  The entries listed
             below can also be included in the dict to specify parameters of the animation.  If the **animate**
             argument is specified simply as `True`, defaults are used for all arguments of `show_graph
-            <Composition.show_graph>` and the options below:
+            <ShowGraph.show_graph>` and the options below:
 
             * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
-              to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
+              to treat as active in each call to `show_graph <ShowGraph.show_graph>`. *COMPONENT* generates an
               image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
               <Component.execution_sets>`, showing all of the Components in that set as active.
 
@@ -8053,7 +8053,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         --------
 
         This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_learning** argument specified as *ALL*:
+        the `show_graph <ShowGraph.show_graph>` **show_learning** argument specified as *ALL*:
 
         .. _Composition_XXX_movie:
 
@@ -8061,8 +8061,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            :alt: Animation of Composition in XXX example script
            :scale: 50 %
 
-        This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+        This figure shows an animation of the Composition in the XXX example script, with the `show_graph
+        <ShowGraph.show_graph>` **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
 
         .. _Composition_XXX_movie:
 
