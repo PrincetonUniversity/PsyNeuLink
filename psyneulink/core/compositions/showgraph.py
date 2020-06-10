@@ -647,8 +647,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
 
-        # DEAL WITH NESTED COMPOSITION
-        # composition = self.composition
+        composition = self.composition
 
         # User passed attrs for nested Composition
         if isinstance(rcvr, Composition):
