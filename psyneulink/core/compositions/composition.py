@@ -2435,7 +2435,7 @@ from inspect import isgenerator, isgeneratorfunction
 from enum import Enum
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.compositions.showgraph import ShowGraph
+from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
@@ -9698,11 +9698,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         from psyneulink.core.compositions.showgraph import ShowGraph
         return self._show_graph(**kwargs)
 
-    def _set_up_animation(self, **kwargs):
-        self._show_graph._set_up_animation(self, **kwargs)
+    def _set_up_animation(self, context):
+        self._show_graph._set_up_animation(context)
 
-    def _animate_execution(self, **kwargs):
-        self.show_graph._animate_execution(self, **kwargs)
+    def _animate_execution(self, active_items, context):
+        self._show_graph._animate_execution(active_items, context)
 
 
 def get_compositions():

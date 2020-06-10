@@ -2005,7 +2005,7 @@ class ShowGraph():
             # Generate images for animation
             elif output_fmt == 'gif':
                 if composition.active_item_rendered or INITIAL_FRAME in active_items:
-                    composition._generate_gifs(G, active_items, context)
+                    self._generate_gifs(G, active_items, context)
 
             # Return graph to show in jupyter
             elif output_fmt == 'jupyter':
