@@ -5901,9 +5901,11 @@ class TestProperties:
                                       pytest.param('PTXExec', marks=(pytest.mark.xfail, pytest.mark.llvm))])
     def test_llvm_fallback(self, mode):
         comp = Composition()
-        def myFunc(variable, params, context):
+        # FIXME: using num_executions is a hack. The name collides with
+        #        a stateful param of every component and thus it's not supported
+        def myFunc(variable, params, context, num_executions):
             return variable * 2
-        U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]])
+        U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]], num_executions=0)
         A = TransferMechanism(name="composition-pytests-A",
                               default_variable=[[1.0, 2.0], [3.0, 4.0]],
                               function=U)
