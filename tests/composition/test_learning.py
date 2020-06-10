@@ -72,6 +72,7 @@ class TestTargetSpecs:
                            p.target:[[2.0]]})
 
         assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
+        comp.show_graph(show_learning=True)
 
     def test_target_dict_spec_multi_trial_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
