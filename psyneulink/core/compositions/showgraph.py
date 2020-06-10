@@ -1912,13 +1912,7 @@ class ShowGraph():
                             # (see _render_projection_as_node)
                             if deferred:
                                 continue
-                            # MODIFIED 6/9/20 NEW:
-                            else:
-                                label = proc_mech_label
-                                arrowhead=proj_arrow
-                            # MODIFIED 6/9/20 NEWER:
-                            return
-                            # MODIFIED 6/9/20 END
+
                         else:
                             # Render Projection as edge
                             from psyneulink.core.components.projections.modulatory.controlprojection \
@@ -1932,15 +1926,15 @@ class ShowGraph():
                             else:
                                 label = ''
 
-                        if assign_proj_to_enclosing_comp:
-                            graph = enclosing_g
-                        else:
-                            graph = g
-                        graph.edge(sndr_proj_label, proc_mech_rcvr_label,
-                                   label=label,
-                                   color=proj_color,
-                                   penwidth=proj_width,
-                                   arrowhead=arrowhead)
+                            if assign_proj_to_enclosing_comp:
+                                graph = enclosing_g
+                            else:
+                                graph = g
+                            graph.edge(sndr_proj_label, proc_mech_rcvr_label,
+                                       label=label,
+                                       color=proj_color,
+                                       penwidth=proj_width,
+                                       arrowhead=arrowhead)
 
     def _generate_output(self,
                          G,
