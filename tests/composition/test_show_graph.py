@@ -62,9 +62,7 @@ class TestLearning:
         b = TransferMechanism(name="b-sg")
 
         comp = Composition()
-        comp.add_linear_learning_pathway(
-            [a, b], learning_function=BackPropagation
-        )
+        comp.add_linear_learning_pathway([a, b], learning_function=BackPropagation)
 
         a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
         b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
