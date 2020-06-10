@@ -2744,7 +2744,7 @@ class TestRumelhartSemanticNetwork:
         comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, act_out])
         comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 
-        # comp.show_graph(show_learning=True)
+        comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)
 
         comp.learn(
