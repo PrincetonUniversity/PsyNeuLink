@@ -18,6 +18,7 @@ Composition
 
    Pathway
    Scheduling
+   Visualization
 |
 .. automodule:: psyneulink.core.compositions.composition
    :members: Composition, NodeRole

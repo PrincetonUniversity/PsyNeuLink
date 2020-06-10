@@ -49,7 +49,6 @@ Contents
      - `Composition_Execution_Context`
      - `Composition_Reset`
      - `Composition_Compilation`
-  * `Composition_Visualization`
   * `Composition_Examples`
      - `Composition_Examples_Creation`
      - `Composition_Examples_Run`
@@ -59,7 +58,7 @@ Contents
      - `Composition_Examples_Cycles_Feedback`
      - `Composition_Examples_Execution_Context`
      - `Composition_Examples_Reset`
-     - `Composition_Examples_Visualization`
+     - `ShowGraph_Examples_Visualization`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -1586,25 +1585,21 @@ GPU thread, and therefore does not produce any performance benefits over running
 `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
 in compiled modes).
 
+COMMENT:
 .. _Composition_Visualization:
 
 Visualizing a Composition
 -------------------------
 
-COMMENT:
+XCOMMENTX:
     XXX - ADD EXAMPLE OF NESTED COMPOSITION
     XXX - ADD DISCUSSION OF show_controller AND show_learning
-COMMENT
+XCOMMENTX
 
 The `show_graph <ShowGraph.show_graph>` method generates a display of the graph structure of `Nodes
 <Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
 <Composition.graph>`).
-
-By default, Nodes are shown as ovals labeled by their `names <Registry_Naming>`, with the Composition's `INPUT`
-Nodes shown in green, its `OUTPUT` Nodes shown in red, any that are both (i.e., are `SINGLETON`\\s) shown in brown,
-and Projections shown as unlabeled arrows, as illustrated for the Composition in the `examples
-<Composition_Examples_Visualization>`.
-
+COMMENT
 
 .. _Composition_Examples:
 
@@ -2321,93 +2316,6 @@ Example 4) Schedule resets for both Mechanisms to custom values, to occur at dif
     >>> # Trial 0: 0.5, Trial 1: 0.75, Trial 2: 0.875, Trial 3: 0.9375. Trial 4: 0.75
     >>> print(B.value)
     >>> # [[0.75]]
-
-.. _Composition_Examples_Visualization:
-
-*Visualizing a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-.. _Composition_show_graph_basic_figure:
-
-+-----------------------------------------------------------+----------------------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
-| >>> a = ProcessingMechanism(                              |                                                          |
-|               name='A',                                   |                                                          |
-| ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULT, MEAN]                 |                                                          |
-| ...           )                                           |                                                          |
-| >>> b = ProcessingMechanism(                              |                                                          |
-| ...           name='B',                                   |                                                          |
-| ...           size=5                                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> c = ProcessingMechanism(                              |                                                          |
-| ...           name='C',                                   |                                                          |
-| ...           size=2,                                     |                                                          |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp = Composition(                                   |                                                          |
-| ...           name='Comp',                                |                                                          |
-| ...           enable_controller=True                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
-| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
-| ...            name='Controller',                         |                                                          |
-| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
-| ...            control_signals=(GAIN, c),                 |                                                          |
-| ...            agent_rep=comp                             |                                                          |
-| ...            )                                          |                                                          |
-| >>> comp.add_controller(ctlr)                             |                                                          |
-+-----------------------------------------------------------+----------------------------------------------------------+
-
-Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
-can be shown, along with other information, using options in the Composition's `show_graph <ShowGraph.show_graph>`
-method.  The figure below shows several examples.
-
-.. _Composition_show_graph_options_figure:
-
-**Output of show_graph using different options**
-
-.. figure:: _static/Composition_show_graph_options_fig.svg
-   :alt: Composition graph examples
-   :scale: 150 %
-
-   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
-   options of its `show_graph <ShowGraph.show_graph>` method. **Panel A** shows the graph with its Projections labeled
-   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
-   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
-   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
-   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
-
-If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
-**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
-and nested Compositions in an outer Composition, ``comp``:
-
-.. _Composition_show_graph_show_nested_figure:
-
-+------------------------------------------------------+---------------------------------------------------------------+
-| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
-| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
-| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
-| >>> comp1 = Composition(name='comp1')                |                                                               |
-| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
-| ...                                      mech_B1])   |                                                               |
-| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
-| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
-| >>> comp2 = Composition(name='comp2')                |                                                               |
-| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
-| ...                                      mech_B2])   |                                                               |
-| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
-| >>> comp = Composition()                             |                                                               |
-| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
-| ...                                     comp1, comp2,|                                                               |
-| ...                                     mech_resp])  |                                                               |
-| >>> comp.show_graph(show_nested=True)                |                                                               |
-+------------------------------------------------------+---------------------------------------------------------------+
-
 
 .. _Composition_Class_Reference:
 
@@ -3132,15 +3040,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
 
     input_CIM : `CompositionInterfaceMechanism`
-        mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
-        input_CIM and its InputPorts serve as proxies for the Composition itself for afferent projections.
+        mediates input values for the `INPUT` `Nodes <Composition_Nodes>` of the Composition. If the Composition is
+        `nested <Composition_Nested>`, then the input_CIM and its `InputPorts <InputPort> serve as proxies for the
+        Composition itself for its afferent `PathwayProjections <PathwayProjection>`.
 
     input_CIM_ports : dict
-        a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
-        containing two items: the corresponding InputPort and OutputPort on the input_CIM.
+        a dictionary in which the key of each entry is the `InputPort` of an `INPUT` `Node <Composition_Nodes>` in
+        the Composition, and its value is a list containing two items:
+        
+        - the `InputPort` of the `input_CIM <Composition.input_CIM>` that receives the input destined for that `INPUT`
+          Node -- either from the `input <Composition_Execution_Inputs>` specified for the Node in a call to one of the
+          Composition's `execution methods <Composition_Execution_Methods>`, or from a `MappingProjection` from a
+          Node in an `enclosing Composition <Composition_Nested>` that has specified the `INPUT` Node as its `receiver
+          <Projection_Base.receiver>`;
+        
+        - the `OutputPort` of the `input_CIM <Composition.input_CIM>` that sends a `MappingProjection` to the
+          `InputPort` of the `INPUT` Node.
+
+    parameter_CIM : `CompositionInterfaceMechanism`
+        mediates modulatory values for all `Nodes <Composition_Nodes>` of the Composition. If the Composition is
+        `nested <Composition_Nested>`, then the parameter_CIM and its `InputPorts <InputPort>` serve as proxies for
+        the Composition itself for its afferent `ModulatoryProjections <ModulatoryProjection>`.
+
+    parameter_CIM_ports : dict
+        a dictionary in which keys are `ParameterPorts <ParameterPort>` of `Nodes <Composition_Nodes>` in the
+        Composition, and values are lists containing two items:
+
+        - the `InputPort` of the `parameter_CIM <Composition.parameter_CIM>` that receives a `MappingProjection` from
+          a `ModulatorySignal` of a `ModulatoryMechanism` in the `enclosing Composition <Composition_Nested>`;
+
+        - the `OutputPort` of the parameter_CIM that sends a `ModulatoryProjection` to the `ParameterPort` of the Node
+          in the Composition with the parameter to be modulated.
 
     afferents : ContentAddressableList[`Projection <Projection>`]
-        a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
+        a list of all of the `Projections <Projection>` to either the Composition's `input_CIM` (`PathwayProjections
+        <PathwayProjection>` and `ModulatoryProjections <ModulatoryProjection>`).
 
     external_input_ports : list[InputPort]
         a list of the InputPorts of the Composition's `input_CIM <Composition.input_CIM>`;  these receive input
@@ -3161,8 +3095,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
 
     output_CIM_ports : dict
-        a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
-        containing two items: the corresponding InputPort and OutputPort on the input_CIM.
+        a dictionary in which the key of each entry is the `OutputPort` of an `OUTPUT` `Node <Composition_Nodes>` in
+        the Composition, and its value is a list containing two items:
+        
+        - the `InputPort` of the output_CIM that receives a `MappingProjection` from the `OutputPort` of the `OUTPUT`
+          Node;
+        
+        - the `OutputPort` of the `output_CIM <Composition.output_CIM>` that is either recorded in the `results
+          <Composition.results>` attrribute of the Composition, or sends a `MappingProjection` to a Node in the
+          `enclosing Composition <Composition_Nested>` that has specified the `OUTPUT` Node as its `sender
+          <Projection_Base.sender>`.
 
     efferents : ContentAddressableList[`Projection <Projection>`]
         a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.

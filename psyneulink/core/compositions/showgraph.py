@@ -9,6 +9,127 @@
 # ********************************************* show_graph *************************************************************
 
 """
+
+Every `Composition` has a `show_graph <ShowGraph.show_graph>` method that can be used to generate a graphical display
+of the Composition and, optionally, any `nested Compositions <Composition_Nested>` within it.  Each `Node
+<Composition_Nodes>` of the Composition is represented as a node in the graph, and `Projections <Projection>` between
+them as edges.
+
+.. technical_note:
+   Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
+   The `show_graph <Compositoin.show_graph>` method of a Composition directly calls the `show_graph
+   <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
+   `show_graph`.
+
+By default, all nodes within a Composition, including any `Compositions nested <Composition_Nested>` within it, are
+shown, each displayed as an oval (if the node is a `Mechanism`) or a rectangle (if it is a nested Composition),
+and labeled by its `name <Registry_Naming>`.  Each Composition's `INPUT` Nodes are shown in green, its `OUTPUT`
+Nodes are shown in red, and any that are both (i.e., are `SINGLETON`\\s) are shown in brown.  Projections shown as
+unlabeled arrows, as illustrated for the Composition in the `examples <CShowGraph_Examples_Visualization>`. However,
+these and other attributes of the graph can be modified using arguments in the call to the `show_graph
+<ShowGraph.show_graph>` method.
+
+*Display structure* -- how much information is displayed for a Composition and any nested within it can be modified
+using the *show_xxx* arguments;  for example, **show_node_structure** determines how much detail is shown about each
+Node; **show_nested** determines whether nested Compositions are shown embedded within their enclosing Compositions
+or as separate insets, and how many levels of nesting to show; **show_controller** determines whether or not to show
+a Composition's `controller <Composition_Controller>`;  and **show_learning** determines whether or not to show its
+`learning compnents <Composition_Learning_Components>`.  These are listed as the arguments for the show_graph
+<ShowGraph.show_graph>` method below.
+
+*Display attributes* -- features (such as the colors and shapes) in which different types of nodes are displayed can
+be modified by assigning a dictionary of attribute:values pairs to the **show_graph_configuration** argument of the
+Composition's constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
+in the `class reference <ShowGraph_Class_Reference>` below.
+
+
+.. _ShowGraph_Examples_Visualization:
+
+*Visualizing a Composition*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+.. _Composition_show_graph_basic_figure:
+
++-----------------------------------------------------------+----------------------------------------------------------+
+| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
+| >>> a = ProcessingMechanism(                              |                                                          |
+|               name='A',                                   |                                                          |
+| ...           size=3,                                     |                                                          |
+| ...           output_ports=[RESULT, MEAN]                 |                                                          |
+| ...           )                                           |                                                          |
+| >>> b = ProcessingMechanism(                              |                                                          |
+| ...           name='B',                                   |                                                          |
+| ...           size=5                                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> c = ProcessingMechanism(                              |                                                          |
+| ...           name='C',                                   |                                                          |
+| ...           size=2,                                     |                                                          |
+| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp = Composition(                                   |                                                          |
+| ...           name='Comp',                                |                                                          |
+| ...           enable_controller=True                      |                                                          |
+| ...           )                                           |                                                          |
+| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
+| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
+| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
+| ...            name='Controller',                         |                                                          |
+| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
+| ...            control_signals=(GAIN, c),                 |                                                          |
+| ...            agent_rep=comp                             |                                                          |
+| ...            )                                          |                                                          |
+| >>> comp.add_controller(ctlr)                             |                                                          |
++-----------------------------------------------------------+----------------------------------------------------------+
+
+Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
+can be shown, along with other information, using options in the Composition's `show_graph <ShowGraph.show_graph>`
+method.  The figure below shows several examples.
+
+.. _Composition_show_graph_options_figure:
+
+**Output of show_graph using different options**
+
+.. figure:: _static/Composition_show_graph_options_fig.svg
+   :alt: Composition graph examples
+   :scale: 150 %
+
+   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
+   options of its `show_graph <ShowGraph.show_graph>` method. **Panel A** shows the graph with its Projections labeled
+   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
+   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
+   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
+   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
+   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
+   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
+
+If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
+**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
+and nested Compositions in an outer Composition, ``comp``:
+
+.. _Composition_show_graph_show_nested_figure:
+
++------------------------------------------------------+---------------------------------------------------------------+
+| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
+| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
+| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
+| >>> comp1 = Composition(name='comp1')                |                                                               |
+| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
+| ...                                      mech_B1])   |                                                               |
+| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
+| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
+| >>> comp2 = Composition(name='comp2')                |                                                               |
+| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
+| ...                                      mech_B2])   |                                                               |
+| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
+| >>> comp = Composition()                             |                                                               |
+| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
+| ...                                     comp1, comp2,|                                                               |
+| ...                                     mech_resp])  |                                                               |
+| >>> comp.show_graph(show_nested=True)                |                                                               |
++------------------------------------------------------+---------------------------------------------------------------+
+
+
 .. _ShowGraph_Class_Reference:
 
 Class Reference
@@ -94,8 +215,11 @@ class ShowGraph():
     Arguments
     ---------
 
+    COMMENT:
+    NOT FOR USER'S EYES!
     composition : Composition
         specifies the `Composition` to which the instance of ShowGraph is assigned.
+    COMMENT
 
     direction : keyword : default 'BT'
         specifies the orientation of the graph (input -> output):
@@ -118,7 +242,7 @@ class ShowGraph():
         when **show_cim** is specified as True a call to `show_graph <ShowGraph.show_graph>`.
 
     composition_shape : default 'rectangle'
-        specifies the shape in which nodes that represent `nested Compositions <Composition_Nested> are displayed
+        specifies the shape in which nodes that represent `nested Compositions <Composition_Nested>` are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
         level specified in a call to `show_graph <ShowGraph.show_graph>`.
 
@@ -126,7 +250,7 @@ class ShowGraph():
         specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed
         when **show_controller** is specified as *AGENT_REP* in a call to `show_graph <ShowGraph.show_graph>`.
 
-     default_projection_arrow : keywrod : default 'normal'
+    default_projection_arrow : keywrod : default 'normal'
          specifies the shape of the arrow used to display `MappingProjection`\\s.
 
     learning_projection_shape : default 'diamond'
@@ -302,8 +426,6 @@ class ShowGraph():
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
            (standard with PsyNeuLink pip install)
 
-        See `Visualizing a Composition <Composition_Visualization>` for details and examples.
-
         Arguments
         ---------
 
@@ -348,7 +470,7 @@ class ShowGraph():
             specified level are shown as a node (pink box by default). and ones below the specified level are not
             shown at all.
 
-         show_nested_args : bool | dict : default ALL
+        show_nested_args : bool | dict : default ALL
             specifies arguments in call to show_graph passed to `nested Composition(s) <Composition_Nested>` if
             **show_nested** is specified.  A dict can be used to specify any of the arguments allowed for
             show_graph to be used for the nested Composition(s);  *ALL* passes all arguments specified for the main
