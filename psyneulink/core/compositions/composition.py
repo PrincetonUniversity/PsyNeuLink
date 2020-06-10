@@ -251,7 +251,7 @@ Composition's structure is stored in its `graph <Composition.graph>` attribute, 
 its Nodes and the dependencies determined by its Projections.  There are no restrictions on the structure of the
 graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
 `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
-displayed  using the `show_graph <ShowGraph.show_graph>` method (see `Composition_Visualization`).
+displayed using the Compositon's `show_graph <ShowGraph.show_graph>` method (see `ShowGraph_show_graph_Method`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -1596,7 +1596,7 @@ XCOMMENTX:
     XXX - ADD DISCUSSION OF show_controller AND show_learning
 XCOMMENTX
 
-The `show_graph <ShowGraph.show_graph>` method generates a display of the graph structure of `Nodes
+The `show_graph <ShowGraph_show_graph_Method>` method generates a display of the graph structure of `Nodes
 <Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
 <Composition.graph>`).
 COMMENT

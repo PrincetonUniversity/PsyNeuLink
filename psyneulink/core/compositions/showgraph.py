@@ -10,6 +10,11 @@
 
 """
 
+.. _ShowGraph_show_graph_Method:
+
+*Use of the show_graph Method*
+------------------------------
+
 Every `Composition` has a `show_graph <ShowGraph.show_graph>` method that can be used to generate a graphical display
 of the Composition and, optionally, any `nested Compositions <Composition_Nested>` within it.  Each `Node
 <Composition_Nodes>` of the Composition is represented as a node in the graph, and `Projections <Projection>` between
@@ -45,8 +50,8 @@ in the `class reference <ShowGraph_Class_Reference>` below.
 
 .. _ShowGraph_Examples_Visualization:
 
-*Visualizing a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Examples*
+----------
 
 
 .. _Composition_show_graph_basic_figure:
