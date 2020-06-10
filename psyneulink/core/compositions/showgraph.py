@@ -544,6 +544,7 @@ class ShowGraph():
                 'overlap': "False"
             },
         )
+        self.G = G
 
         # get all Nodes
         # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
@@ -1656,7 +1657,7 @@ class ShowGraph():
                                    sndr_label=None,
                                    rcvr_label=None):
 
-        # composition = self.composition
+        composition = self.composition
 
         proj_receiver = proj.receiver.owner
 
@@ -1677,21 +1678,21 @@ class ShowGraph():
 
         # Edges to and from Projection node
         if sndr_label:
-            # MODIFIED 6/9/20 OLD:
-            G.edge(sndr_label, label, arrowhead='none',
+            # # MODIFIED 6/9/20 OLD:
+            # G.edge(sndr_label, label, arrowhead='none',
             # # MODIFIED 6/9/20 NEW:
             # enclosing_g.edge(sndr_label, label, arrowhead='none',
-            # # MODIFIED 6/9/20 NEWER:
-            # self.G.edge(sndr_label, label, arrowhead='none',
+            # MODIFIED 6/9/20 NEWER:
+            self.G.edge(sndr_label, label, arrowhead='none',
             # MODIFIED 6/9/20 END
                    color=edge_color, penwidth=edge_width)
         if rcvr_label:
-            # MODIFIED 6/9/20 OLD:
-            G.edge(label, rcvr_label,
+            # # MODIFIED 6/9/20 OLD:
+            # G.edge(label, rcvr_label,
             # # MODIFIED 6/9/20 NEW:
             # enclosing_g.edge(label, rcvr_label,
-            # # MODIFIED 6/9/20 NEWER:
-            # self.G.edge(label, rcvr_label,
+            # MODIFIED 6/9/20 NEWER:
+            self.G.edge(label, rcvr_label,
                    color=edge_color, penwidth=edge_width)
             # MODIFIED 6/9/20 END
 
@@ -1716,26 +1717,26 @@ class ShowGraph():
             else:
                 edge_label = ''
             if show_node_structure:
-                # MODIFIED 6/9/20 OLD:
-                G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # # MODIFIED 6/9/20 OLD:
+                # G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
                 # # MODIFIED 6/9/20 NEW:
                 # enclosing_g.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
-                # # MODIFIED 6/9/20 NEWER:
-                # self.G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
+                # MODIFIED 6/9/20 NEWER:
+                self.G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
                 # MODIFIED 6/9/20 END
                        rcvr_label,
                        label=edge_label,
                        color=learning_proj_color, penwidth=learning_proj_width)
             else:
-                # MODIFIED 6/9/20 OLD:
-                G.edge(sndr_label, rcvr_label, label = edge_label,
-                       color=learning_proj_color, penwidth=learning_proj_width)
                 # # MODIFIED 6/9/20 OLD:
+                # G.edge(sndr_label, rcvr_label, label = edge_label,
+                #        color=learning_proj_color, penwidth=learning_proj_width)
+                # # MODIFIED 6/9/20 NEW:
                 # enclosing_g.edge(sndr_label, rcvr_label, label = edge_label,
                 #        color=learning_proj_color, penwidth=learning_proj_width)
-                # # MODIFIED 6/9/20 OLD:
-                # self.G.edge(sndr_label, rcvr_label, label = edge_label,
-                #        color=learning_proj_color, penwidth=learning_proj_width)
+                # MODIFIED 6/9/20 NEWER:
+                self.G.edge(sndr_label, rcvr_label, label = edge_label,
+                       color=learning_proj_color, penwidth=learning_proj_width)
                 # MODIFIED 6/9/20 END
         return True
 
@@ -1948,7 +1949,13 @@ class ShowGraph():
                             # (see _render_projection_as_node)
                             if deferred:
                                 continue
-
+                            # # MODIFIED 6/9/20 NEW:
+                            # else:
+                            #     label = proc_mech_label
+                            #     arrowhead=proj_arrow
+                            # MODIFIED 6/9/20 NEWER:
+                            return
+                            # MODIFIED 6/9/20 END
                         else:
                             # Render Projection as edge
                             from psyneulink.core.components.projections.modulatory.controlprojection \
