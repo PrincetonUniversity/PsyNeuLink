@@ -547,7 +547,6 @@ class ShowGraph():
         self.G = G
 
         # get all Nodes
-        # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
         if output_fmt != 'gv':
             composition._analyze_graph(context=context)
 
@@ -611,7 +610,6 @@ class ShowGraph():
                                              node_struct_args,
                                              show_projection_labels)
 
-        # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
         return self._generate_output(G,
                                      active_items,
                                      show_controller,
@@ -1818,7 +1816,7 @@ class ShowGraph():
 
                     # Skip any projections to ObjectiveMechanism for controller
                     #   (those are handled in _assign_controller_components)
-                    # FIX 6/1/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
+                    # FIX 6/2/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
                     if (composition.controller and
                             proj.receiver.owner in {composition.controller, composition.controller.objective_mechanism}):
                         continue
@@ -1949,7 +1947,7 @@ class ShowGraph():
         composition = self.composition
 
         # Sort nodes for display
-        # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
+        # FIX 5/28/20:  ADD HANDLING OF NESTED COMP:  SEARCH FOR 'subgraph cluster_'
         def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):

@@ -72,7 +72,6 @@ class TestTargetSpecs:
                            p.target:[[2.0]]})
 
         assert np.allclose(comp.results, [[[1.]], [[1.]], [[1.21]], [[1.40873161]]])
-        comp.show_graph(show_learning=True)
 
     def test_target_dict_spec_multi_trial_lists_rl(self):
         A = TransferMechanism(name="learning-process-mech-A")
@@ -2745,7 +2744,7 @@ class TestRumelhartSemanticNetwork:
         comp.add_backpropagation_learning_pathway(pathway=[rel_hidden, act_out])
         comp.add_backpropagation_learning_pathway(pathway=[rep_in, rep_hidden, rel_hidden])
 
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
         # validate_learning_mechs(comp)
 
         comp.learn(

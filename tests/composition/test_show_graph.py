@@ -17,8 +17,8 @@ class TestSimpleCompositions:
         comp = Composition()
         comp.add_linear_processing_pathway([a, b])
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -31,9 +31,9 @@ class TestSimpleCompositions:
         comp.add_linear_processing_pathway([a, b])
         comp.add_linear_processing_pathway([a, c])
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
-        c_label = _get_graph_node_label(comp, c, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
+        c_label = comp._show_graph._get_graph_node_label(comp, c, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -47,9 +47,9 @@ class TestSimpleCompositions:
         comp.add_linear_processing_pathway([a, c])
         comp.add_linear_processing_pathway([b, c])
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
-        c_label = _get_graph_node_label(comp, c, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
+        c_label = comp._show_graph._get_graph_node_label(comp, c, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -66,8 +66,8 @@ class TestLearning:
             [a, b], learning_function=BackPropagation
         )
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -84,9 +84,9 @@ class TestLearning:
             [a, c], learning_function=BackPropagation
         )
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
-        c_label = _get_graph_node_label(comp, c, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
+        c_label = comp._show_graph._get_graph_node_label(comp, c, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -104,9 +104,9 @@ class TestLearning:
             [b, c], learning_function=BackPropagation
         )
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
-        c_label = _get_graph_node_label(comp, c, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
+        c_label = comp._show_graph._get_graph_node_label(comp, c, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -127,8 +127,8 @@ class TestControl:
         comp = Composition()
         comp.add_linear_processing_pathway([a, b])
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -148,9 +148,9 @@ class TestControl:
         comp.add_linear_processing_pathway([a, b])
         comp.add_linear_processing_pathway([a, c])
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
-        c_label = _get_graph_node_label(comp, c, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
+        c_label = comp._show_graph._get_graph_node_label(comp, c, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
@@ -171,9 +171,9 @@ class TestControl:
         comp.add_linear_processing_pathway([a, c])
         comp.add_linear_processing_pathway([b, c])
 
-        a_label = _get_graph_node_label(comp, a, show_dimensions=ALL)
-        b_label = _get_graph_node_label(comp, b, show_dimensions=ALL)
-        c_label = _get_graph_node_label(comp, c, show_dimensions=ALL)
+        a_label = comp._show_graph._get_graph_node_label(comp, a, show_dimensions=ALL)
+        b_label = comp._show_graph._get_graph_node_label(comp, b, show_dimensions=ALL)
+        c_label = comp._show_graph._get_graph_node_label(comp, c, show_dimensions=ALL)
 
         assert "out (3)" in a_label and "in (3)" in a_label
         assert "out (1)" in b_label and "in (1)" in b_label
