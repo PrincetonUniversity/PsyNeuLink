@@ -957,7 +957,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     standard_output_ports = ProcessingMechanism_Base.standard_output_ports.copy()
     standard_output_ports.extend([{NAME: COMBINE,
                                    VARIABLE: OWNER_VALUE,
-                                   FUNCTION: LinearCombination(operation=SUM).function}])
+                                   FUNCTION: LinearCombination(operation=SUM)}])
     standard_output_port_names = ProcessingMechanism_Base.standard_output_port_names.copy()
     standard_output_port_names.extend([COMBINE])
 
