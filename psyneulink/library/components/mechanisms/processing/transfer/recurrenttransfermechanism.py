@@ -194,7 +194,6 @@ from psyneulink.core.components.functions.function import Function, is_function_
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -648,7 +647,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  auto=None,
                  hetero=None,
                  integrator_mode=False,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
                  integration_rate: is_numeric_or_none=0.5,
                  noise=0.0,
