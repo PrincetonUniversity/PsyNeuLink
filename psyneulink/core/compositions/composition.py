@@ -8367,7 +8367,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 1. For each pair, the key is the  and the value is an input, the shape of which must match the Node's
                    default variable. This is identical to the input dict in the `run <Composition.run>` method
-                   (see `Composition_Input_Dictionary` for additional details).
+                   (see `Input Dictionary <Composition_Input_Dictionary>` for additional details).
 
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
                    same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
@@ -8470,9 +8470,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bin_execute=False,
             ):
         """
-            Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
-            coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
-            termination conditions are met.
+            Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
+            argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
+            `termination conditions <Scheduler_Termination_Conditions>` are met.
 
             Arguments
             ---------
@@ -8482,14 +8482,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 receives inputs from the user. For each pair, the key is the `Node <Composition_Nodes>` (a `Mechanism
                 <Mechanism>` or `Composition`) and the value is an input, the shape of which must match the Node's
                 default variable. If **inputs** is not specified, the `default_variable <Component_Variable>` for
-                each `INPUT` Node is used as its input (see `Composition_Execution_Inputs` for additional details).
+                each `INPUT` Node is used as its input (see `Input Formats <Composition_Execution_Inputs>` for
+                additional details).
 
             clamp_input : SOFT_CLAMP : default SOFT_CLAMP
 
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 specifies alternate parameter values to be used only during this `EXECUTION` when the specified
-                `Condition` is met. See `Composition_Runtime_Params` for more details and examples of valid
-                dictionaries.
+                `Condition` is met (see `Composition_Runtime_Params` for more details and examples of valid
+                dictionaries).
 
             skip_initialization :  : default False
                 COMMENT:
