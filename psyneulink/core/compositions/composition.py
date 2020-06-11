@@ -7992,10 +7992,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
             CUDA compilation.
 
-        context : `Context.execution_id>` : default `default_execution_id`
+        context : `execution_id <Context.execution_id>` : default `default_execution_id`
             context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
-        base_context : `Context.execution_id>` : Context(execution_id=None)
+        base_context : `execution_id <Context.execution_id>` : Context(execution_id=None)
             the context corresponding to the execution context from which this execution will be initialized,
             if values currently do not exist for **context**
 
