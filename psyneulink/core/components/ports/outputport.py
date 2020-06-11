@@ -614,6 +614,7 @@ Class Reference
 
 """
 
+import copy
 import inspect
 import numpy as np
 import typecheck as tc
@@ -1399,8 +1400,16 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                 #    - use the named Standard OutputPort
                 #    - merge initial specifications into std_output_port (giving precedence to user's specs)
                 if output_port[NAME] and hasattr(owner, STANDARD_OUTPUT_PORTS):
-                    std_output_port = owner.standard_output_ports.get_port_dict(output_port[NAME])
+                    std_output_port = copy.copy(owner.standard_output_ports.get_port_dict(output_port[NAME]))
                     if std_output_port is not None:
+                        try:
+                            if isinstance(std_output_port[FUNCTION], Function):
+                                # we should not reuse standard_output_port Function
+                                # instances across multiple ports
+                                std_output_port[FUNCTION] = copy.deepcopy(std_output_port[FUNCTION], memo={'no_shared': True})
+                        except KeyError:
+                            pass
+
                         _maintain_backward_compatibility(std_output_port, output_port[NAME], owner)
                         recursive_update(output_port, std_output_port, non_destructive=True)
 
