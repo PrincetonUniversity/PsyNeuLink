@@ -12,6 +12,7 @@ Core
    - `CompositionFunctionApproximator`
 
 * `Services`
+   - `Visualization`
    - `Log`
    - `Registry`
    - `Preferences`
