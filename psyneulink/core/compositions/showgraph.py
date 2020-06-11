@@ -383,6 +383,7 @@ class ShowGraph():
         self.output_color = output_color
         self.input_and_output_color = input_and_output_color
         # self.feedback_color = self.feedback_color
+        self.control_color =control_color
         self.controller_color =controller_color
         self.learning_color =learning_color
         self.composition_color =composition_color
@@ -834,8 +835,6 @@ class ShowGraph():
         # Cycle or Feedback Node
         if isinstance(rcvr, Composition):
             node_shape = self.composition_shape
-        elif isinstance(rcvr, ControlMechanism):
-            node_shape = self.control
         elif rcvr in composition.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
             node_shape = self.feedback_shape
         elif rcvr in composition.get_nodes_by_role(NodeRole.CYCLE):
@@ -891,6 +890,20 @@ class ShowGraph():
                 composition.active_item_rendered = True
             else:
                 rcvr_color = self.output_color
+                rcvr_penwidth = str(self.bold_width)
+            rcvr_rank = self.output_rank
+
+        # OUTPUT Node
+        elif isinstance(rcvr, ControlMechanism):
+            if rcvr in active_items:
+                if self.active_color == BOLD:
+                    rcvr_color = self.control_color
+                else:
+                    rcvr_color = self.active_color
+                rcvr_penwidth = str(self.bold_width + self.active_thicker_by)
+                composition.active_item_rendered = True
+            else:
+                rcvr_color = self.control_color
                 rcvr_penwidth = str(self.bold_width)
             rcvr_rank = self.output_rank
 
@@ -990,14 +1003,28 @@ class ShowGraph():
             if cim is composition.input_CIM:
                 cim_type_color = self.input_color
             elif cim is composition.parameter_CIM:
-                cim_type_color = self.controller_color
+                def check_senders_for_controller(cim):
+                    for input_port in cim.input_ports:
+                        for proj in input_port.path_afferents:
+                            owner = proj.sender.owner
+                            if hasattr(owner, 'composition') and owner.composition:
+                                return True
+                            if isinstance(owner, CompositionInterfaceMechanism):
+                                return check_senders_for_controller(owner)
+                    return False
+                if check_senders_for_controller(cim):
+                    cim_type_color = self.controller_color
+                else:
+                    cim_type_color = self.control_color
             elif cim is composition.output_CIM:
                 cim_type_color = self.output_color
             else:
                 assert False, \
                     f'PROGRAM ERROR: _assign_cim_components called with node ' \
                     f'that is not input_CIM, parameter_CIM, or output_CIM'
+
             cim_penwidth = str(self.default_width)
+
             if cim in active_items:
                 if self.active_color == BOLD:
                     cim_color = cim_type_color
@@ -1206,13 +1233,13 @@ class ShowGraph():
                         # Render Projection
                         if any(item in active_items for item in {proj, proj.sender.owner}):
                             if self.active_color == BOLD:
-                                proj_color = self.default_node_color
+                                proj_color = self.control_color
                             else:
                                 proj_color = self.active_color
                             proj_width = str(self.default_width + self.active_thicker_by)
                             composition.active_item_rendered = True
                         else:
-                            proj_color = self.default_node_color
+                            proj_color = self.control_color
                             proj_width = str(self.default_width)
                         if show_projection_labels:
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
@@ -1263,13 +1290,13 @@ class ShowGraph():
                         # Render Projection
                         if any(item in active_items for item in {proj, proj.receiver.owner}):
                             if self.active_color == BOLD:
-                                proj_color = self.controller_color
+                                proj_color = self.control_color
                             else:
                                 proj_color = self.active_color
                             proj_width = str(self.default_width + self.active_thicker_by)
                             composition.active_item_rendered = True
                         else:
-                            proj_color = self.controller_color
+                            proj_color = self.control_color
                             proj_width = str(self.default_width)
                         if show_projection_labels:
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
