@@ -234,7 +234,7 @@ The figure belows shows the model using the Composition's `show_graph <ShowGraph
 .. _BasicsAndPrimer_Simple_Stroop_Example_Figure:
 
 .. figure:: _static/BasicsAndPrimer_Stroop_Model.svg
-   :width: 50%
+   :width: 100%
 
    **Stroop Model.** Representation of the Composition in the example above.
 
@@ -319,7 +319,7 @@ creating one or more `Conditions <Condition>` for execution of those Mechanisms 
 in each `trial <TimeScale.TRIAL>`), its behavior relative to one or more other Components (e.g., how many times it
 should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
 criterion for the settling of a recurrent network). For example, the following implements a version of the model above
-that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
+that uses a `leaky competing accumulator <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
 ``task`` Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
 execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli::
 
@@ -506,6 +506,7 @@ internal simulations to optimize the amount of control to optimize some criterio
 `expected value of control <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
+.. FIX: ADD LINKS TO SCRIPTS ABOVE
 
 .. _BasicsAndPrimer_Parameters:
 
