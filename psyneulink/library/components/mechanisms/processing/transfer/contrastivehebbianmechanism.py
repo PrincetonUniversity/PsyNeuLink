@@ -336,7 +336,6 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -976,7 +975,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  matrix=HOLLOW_MATRIX,
                  auto=None,
                  hetero=None,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
                  noise=0.0,
                  integration_rate: is_numeric_or_none=0.5,

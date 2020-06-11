@@ -99,8 +99,8 @@ class TestMechanismRuntimeParams:
         T = TransferMechanism()
         with pytest.raises(ComponentError) as error_text:
             T.execute(runtime_params={"glunfump": 10.0}, input=2.0)
-        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
-                "'glunfump'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for TransferMechanism" in str(error_text.value) and
+                "'glunfump'" in str(error_text.value))
 
     # FIX 5/8/20 [JDC]:  ADDD TEST FOR INVALID FUNCTION PARAM
     # def test_mechanism_execute_mechanism_fuction_runtime_param_errors(self):
@@ -108,8 +108,8 @@ class TestMechanismRuntimeParams:
     #     T = TransferMechanism()
     #     with pytest.raises(ComponentError) as error_text:
     #         T.function.execute(runtime_params={"spranit": 23})
-    #     assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value and
-    #             "'spranit'" in error_text.value.error_value)
+    #     assert ("Invalid specification in runtime_params arg for TransferMechanism" in str(error_text.value) and
+    #             "'spranit'" in str(error_text.value))
 
 class TestCompositionRuntimeParams:
 
@@ -697,8 +697,8 @@ class TestCompositionRuntimeParams:
                               FUNCTION_PARAMS:{'weights':10}}
                       }
                   })
-        assert ("Invalid specification in runtime_params arg for TransferMechanism" in error_text.value.error_value
-                and "'glorp'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for TransferMechanism" in str(error_text.value)
+                and "'glorp'" in str(error_text.value))
 
         # Bad param specified in INPUT_PORT_PARAMS
         with pytest.raises(ComponentError) as error_text:
@@ -716,8 +716,8 @@ class TestCompositionRuntimeParams:
                                                }}
                       }
                   })
-        assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
-                "of TransferMechanism" in error_text.value.error_value and "'trigot'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for InputPort" in str(error_text.value) and
+                "of TransferMechanism" in str(error_text.value) and "'trigot'" in str(error_text.value))
 
         # Bad param specified in FUNCTION_PARAMS of INPUT_PORT_PARAMS
         with pytest.raises(ComponentError) as error_text:
@@ -735,8 +735,8 @@ class TestCompositionRuntimeParams:
                                                }}
                       }
                   })
-        assert ("Invalid specification in runtime_params arg for InputPort" in error_text.value.error_value and
-                "of TransferMechanism" in error_text.value.error_value and "'flurb'" in error_text.value.error_value)
+        assert ("Invalid specification in runtime_params arg for InputPort" in str(error_text.value) and
+                "of TransferMechanism" in str(error_text.value) and "'flurb'" in str(error_text.value))
 
 
         # Bad param specified in <TYPE>_PROJECTION_PARAMS
@@ -761,7 +761,7 @@ class TestCompositionRuntimeParams:
                  num_trials=2
                  )
         assert ("Invalid specification in runtime_params arg for matrix of SAMPLE PROJECTION: 'glarfip'."
-                in error_text.value.error_value)
+                in str(error_text.value))
 
         # Bad param specified for Projection specified within <TYPE>_PROJECTION_PARAMS
         with pytest.raises(ComponentError) as error_text:
@@ -785,7 +785,7 @@ class TestCompositionRuntimeParams:
                  num_trials=2
                  )
         assert ("Invalid specification in runtime_params arg for matrix of SAMPLE PROJECTION: 'scrulip'."
-                in error_text.value.error_value)
+                in str(error_text.value))
 
         # Bad param specified in Projection specified by name within <TYPE>_PROJECTION_PARAMS
         with pytest.raises(ComponentError) as error_text:
@@ -808,5 +808,5 @@ class TestCompositionRuntimeParams:
                  num_trials=2
                  )
         assert ("Invalid specification in runtime_params arg for matrix of TARGET PROJECTION: 'amiby'."
-                in error_text.value.error_value)
+                in str(error_text.value))
 

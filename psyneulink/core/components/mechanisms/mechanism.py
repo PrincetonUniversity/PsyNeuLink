@@ -2930,7 +2930,7 @@ class Mechanism_Base(Mechanism):
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {port} parsed value does not match output port: mech value: "
+                warnings.warn(f"Shape mismatch: {port} parsed value does not match output port: mech value: "
                               "{self.defaults.value} spec: {port._variable_spec} parsed {port.defaults.variable}.")
                 input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)

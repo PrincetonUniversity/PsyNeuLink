@@ -1693,7 +1693,7 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         C = Composition(pathways=[T])
-        
+
         T.reset_stateful_function_when = Never()
 
         assert np.allclose(T.integrator_function.previous_value, 0.5)

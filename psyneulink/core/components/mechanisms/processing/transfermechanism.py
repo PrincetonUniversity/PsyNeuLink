@@ -1100,7 +1100,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                  input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
                  function=Linear,
                  integrator_mode=False,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
                  integration_rate=0.5,
                  on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
@@ -1225,7 +1225,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             self._validate_noise(target_set[NOISE])
 
         # Validate INTEGRATOR_FUNCTION:
-        if INTEGRATOR_FUNCTION in target_set:
+        if INTEGRATOR_FUNCTION in target_set and target_set[INTEGRATOR_FUNCTION] is not None:
             integtr_fct = target_set[INTEGRATOR_FUNCTION]
             if not (isinstance(integtr_fct, IntegratorFunction)
                     or (isinstance(integtr_fct, type) and issubclass(integtr_fct, IntegratorFunction))):
