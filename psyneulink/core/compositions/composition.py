@@ -2949,6 +2949,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller_mode=AFTER,             \
         controller_condition=Always,       \
         retain_old_simulation_data=None,   \
+        show_graph_attributes=None,        \
         name=None,                         \
         prefs=Composition.classPreference  \
         )
@@ -2989,6 +2990,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     controller_condition: Condition : default Always
         specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
+
+    retain_old_simulation_data : bool : default False
+        specifies whether or not to retain Parameter values generated during `simulations
+        <OptimizationControlMechanism_Execution>` of the Composition (see `retain_old_simulation_data
+        <Composition.retain_old_simulation_data>` for additional details).
+
+    show_graph_attributes : dict : None
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
+        is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph` for
+        list of attributes and their values).
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -3173,12 +3184,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition's Nodes when one or more is a `nested Composition <Composition_Nested>`.
 
     simulation_results : list[list[list]]
-        a list of the `results <Composition.results>` for executions of the Composition when it is executed using
-        its `evaluate <Composition.evaluate>` method.
+        a list of the `results <Composition.results>` for `simulations <OptimizationControlMechanism_Execution>`
+        of the Composition when it is executed using its `evaluate <Composition.evaluate>` method by an
+        `OptimizationControlMechanism`.
 
     retain_old_simulation_data : bool
-        if True, all Parameter values generated during simulations will be saved for later inspection;
-        if False, simulation values will be deleted unless otherwise specified by individual Parameters
+        if True, all `Parameter` values generated during `simulations <OptimizationControlMechanism_Execution>` are saved;
+        if False, simulation values are deleted unless otherwise specified by individual Parameters.
 
     input_specification : None or dict or list or generator or function
         stores the `inputs` for executions of the Composition when it is executed using its `run <Composition.run>`
@@ -3258,6 +3270,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
             retain_old_simulation_data=None,
+            show_graph_attributes=None,
             name=None,
             prefs=None,
             **param_defaults
@@ -3377,7 +3390,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
 
-        self._show_graph = ShowGraph(self)
+        show_graph_attributes = show_graph_attributes or {}
+        self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @property
     def graph_processing(self):
