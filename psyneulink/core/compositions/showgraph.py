@@ -1174,7 +1174,8 @@ class ShowGraph():
                             f"PROGRAM ERROR: parameter_CIM of {composition.name} recieves a Projection " \
                             f"from a Node from other than a {ControlMechanism.__name__}."
                         # Skip Projections from controller (handled in _assign_controller_components)
-                        if ctl_mech_output_port_owner.composition:
+                        if (hasattr(ctl_mech_output_port_owner, 'composition')
+                                and ctl_mech_output_port_owner.composition):
                             continue
                         # Skip if there is no outer Composition (enclosing_g),
                         #    or Projections acorss nested Compositions are not being shown (show_nested=INSET)
@@ -1185,18 +1186,14 @@ class ShowGraph():
                                                            show_types, show_dimensions)
                         # Construct edge name
                         if show_node_structure:
-                            # Get label for CIM's port as edge's receiver
+                            # Get label for ctl_mech's OutputPrt as edge's sender
+                            sndr_output_node_proj_label = \
+                                f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
+                            # Get label for CIM's InputPort as edge's receiver
                             rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
-                            # Need to use direct reference to proj.sender rather than snder_input_node
-                            #    since could be Composition, which does not have a get_port_name attribute
-                            # sndr_output_node_proj_label = \
-                            #     f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
-                            rcvr_input_node_proj_label = \
-                                f"{sndr_label}:" \
-                                f"{ctl_mech_output_port_owner._get_port_name(ctl_mech_output_port)}"
                         else:
-                            rcvr_cim_proj_label = cim_label
                             sndr_output_node_proj_label = sndr_label
+                            rcvr_cim_proj_label = cim_label
 
                         # Render Projection
                         if any(item in active_items for item in {proj, proj.sender.owner}):
@@ -1919,7 +1916,9 @@ class ShowGraph():
                             # - cims as sources (handled in _assign_cim_compmoents)
                             # - controller (handled in _assign_controller_components)
                             if (isinstance(sndr, CompositionInterfaceMechanism)
-                                    or (isinstance(sndr, ControlMechanism) and sndr.composition)):
+                                    or (isinstance(sndr, ControlMechanism)
+                                        and hasattr(sndr, 'composition')
+                                        and sndr.composition)):
                                 continue
                             assign_proj_to_enclosing_comp = True
 
