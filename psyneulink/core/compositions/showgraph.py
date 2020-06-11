@@ -371,6 +371,7 @@ class ShowGraph():
         self.struct_shape = 'plaintext' # assumes use of html
         self.cim_shape = cim_shape
         self.composition_shape = composition_shape
+        self.controller_shape = controller_shape
         self.agent_rep_shape = agent_rep_shape
         # Projection shapes
         self.learning_projection_shape = learning_projection_shape
@@ -833,6 +834,8 @@ class ShowGraph():
         # Cycle or Feedback Node
         if isinstance(rcvr, Composition):
             node_shape = self.composition_shape
+        elif isinstance(rcvr, ControlMechanism):
+            node_shape = self.control
         elif rcvr in composition.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
             node_shape = self.feedback_shape
         elif rcvr in composition.get_nodes_by_role(NodeRole.CYCLE):
@@ -1404,14 +1407,13 @@ class ShowGraph():
                                       show_dimensions,
                                       show_node_structure,
                                       node_struct_args,
-                                      show_projection_labels
-                                      ):
+                                      show_projection_labels):
         """Assign control nodes and edges to graph"""
         from psyneulink.core.compositions.composition import Composition
 
         composition = self.composition
-
         controller = composition.controller
+
         if controller is None:
             # Only warn if there is no controller *and* no ControlProjections from an outer Composition
             if not composition.parameter_CIM.output_ports:
@@ -1444,8 +1446,8 @@ class ShowGraph():
                    )
         else:
             g.node(ctlr_label,
-                    color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
-                    rank=self.control_rank)
+                   color=ctlr_color, penwidth=ctlr_width, shape=self.controller_shape,
+                   rank=self.control_rank)
 
         # outgoing edges (from controller to ProcessingMechanisms)
         for control_signal in controller.control_signals:
