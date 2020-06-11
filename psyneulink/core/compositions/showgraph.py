@@ -243,8 +243,10 @@ class ShowGraph():
         specifies the display shape of nodes that are assigned the `NodeRole` `CYCLE`.
 
     cim_shape : default 'square'
-        specifies the shape in which `CompositionInterfaceMechanism`\\s are displayed
-        when **show_cim** is specified as True a call to `show_graph <ShowGraph.show_graph>`.
+        specifies the shape in which `CompositionInterfaceMechanism`\\s are displayed.
+
+    controller_shape : default 'doubleoctagon'
+        specifies the shape in which a Composition's `controller <Composition.controller>` is displayed.
 
     composition_shape : default 'rectangle'
         specifies the shape in which nodes that represent `nested Compositions <Composition_Nested>` are displayed
@@ -252,19 +254,16 @@ class ShowGraph():
         level specified in a call to `show_graph <ShowGraph.show_graph>`.
 
     agent_rep_shape : default 'egg'
-        specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed
-        when **show_controller** is specified as *AGENT_REP* in a call to `show_graph <ShowGraph.show_graph>`.
+        specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed.
 
     default_projection_arrow : keywrod : default 'normal'
          specifies the shape of the arrow used to display `MappingProjection`\\s.
 
     learning_projection_shape : default 'diamond'
-        specifies the shape in which `LearningProjetions`\\s are displayed
-        when **show_learning** is specified as True in a call to `show_graph <ShowGraph.show_graph>`.
+        specifies the shape in which `LearningProjetions`\\s are displayed.
 
     control_projection_arrow : default 'box'
-        specifies the shape in which the head of a `ControlProjetion` is
-        when **show_learning** is specified in a call to `show_graph <ShowGraph.show_graph>`.
+        specifies the shape in which the head of a `ControlProjection` is displayed.
 
     default_node_color : keyword : default 'black'
         specifies the color in which nodes not assigned another color are displayed.
@@ -288,8 +287,12 @@ class ShowGraph():
         specifies the display color of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
     COMMENT
 
-    controller_color : keyword : default 'blue'
-        specifies the color in which the `controller <Composition_Controller>` components are displayed.
+    control_color : keyword : default 'blue'
+        specifies the color in which `ControlMechanisms <ControlMechanism>` (other than a Composition's
+        `controller <Composition.controller>` and `ControlProjections <ControlProjection>` are displayed.
+
+    controller_color : keyword : default 'purple'
+        specifies the color in which a Composition's `controller <Composition.controller>` is displayed.
 
     learning_color : keyword : default 'orange'
         specifies the color in which the `learning components <Composition_Learning_Components>` are displayed.
@@ -326,9 +329,10 @@ class ShowGraph():
                  direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
                  # Node shapes:
                  mechanism_shape = 'oval',
-                 feedback_shape = 'septagon',
+                 feedback_shape = 'octagon',
                  cycle_shape = 'doublecircle',
                  cim_shape = 'rectangle',
+                 controller_shape = 'doubleoctagon',
                  composition_shape = 'rectangle',
                  agent_rep_shape = 'egg',
                  # Projection shapes
@@ -342,7 +346,8 @@ class ShowGraph():
                  output_color='red',
                  input_and_output_color='brown',
                  # feedback_color='yellow',
-                 controller_color='blue',
+                 control_color='blue',
+                 controller_color='purple',
                  learning_color='orange',
                  composition_color='pink',
                  # Lines:
