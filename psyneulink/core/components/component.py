@@ -1901,18 +1901,40 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.defaults = Defaults(owner=self, **defaults)
 
+        def _is_user_specified(parameter):
+            return (
+                parameter.name in param_defaults
+                and param_defaults[parameter.name] is not None
+            )
+
         for p in self.parameters:
+            p._user_specified = _is_user_specified(p)
+
+            if isinstance(p, ParameterAlias):
+                if p._user_specified:
+                    if _is_user_specified(p.source):
+                        if param_defaults[p.name] is not param_defaults[p.source.name]:
+                            raise ComponentError(
+                                f"Multiple values ({p.name}: {param_defaults[p.name]}"
+                                f"\t{p.source.name}: {param_defaults[p.source.name]} "
+                                f"assigned to identical Parameters. {p.name} is an alias "
+                                f"of {p.source.name}",
+                                component=self,
+                            )
+
+                    else:
+                        param_defaults[p.source.name] = param_defaults[p.name]
+
+                continue
+
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
             if not isinstance(p.spec, (Component, ComponentsMeta)):
                 p.spec = copy_parameter_value(p.spec)
 
-            if p.name in param_defaults and param_defaults[p.name] is not None:
-                p._user_specified = True
-
             # set default to None context to ensure it exists
             if p.getter is None and p._get(context) is None:
-                if p.name in param_defaults and param_defaults[p.name] is not None:
+                if p._user_specified:
                     val = param_defaults[p.name]
                 else:
                     val = copy_parameter_value(p.default_value)
