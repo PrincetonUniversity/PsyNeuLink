@@ -3332,10 +3332,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles = collections.OrderedDict()
 
         self.cycle_vertices = set()
-        # # MODIFIED 5/19/20 OLD:
-        # self.feedback_senders = set()
-        # self.feedback_receivers = set()
-        # MODIFIED 5/19/20 END
 
         self._initialize_parameters(
             **param_defaults,
