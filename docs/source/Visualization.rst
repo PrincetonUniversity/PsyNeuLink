@@ -2,11 +2,12 @@ Visualization
 =============
 
 There are three ways to visualize models composed in PsyNeuLink: statically, using the `show_graph
-<ShowGraph.show_graph>` method of a `Composition`; using the **animate** argument of a Composition's
-`run <Composition.run>` method to output a gif showing the sequence with which its `Nodes <Composition_Nodes>`
-are executed; or interactively to configure the display and plot Component `values <Component.value>` using
-`PsyNeuLinkView <http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/>`_ -- a standalone application that
-interacts closely with the Python script in which a PsyNeuLink model is composed.
+<ShowGraph.show_graph>` method of a `Composition`; using the **animate** argument of a Composition's `run
+<Composition.run>` method to output a gif showing the sequence with which its `Nodes <Composition_Nodes>`
+are executed (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`); or interactively to configure
+the display and plot Component `values <Component.value>` using
+`PsyNeuLinkView <http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/>`_ --
+a standalone application that interacts closely with the Python script in which a PsyNeuLink model is composed.
 
 .. note::
    The `PsyNeuLinkView <http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/>`_ application is still under

@@ -30,7 +30,7 @@ By default, all nodes within a Composition, including any `Compositions nested <
 shown, each displayed as an oval (if the node is a `Mechanism`) or a rectangle (if it is a nested Composition),
 and labeled by its `name <Registry_Naming>`.  Each Composition's `INPUT` Nodes are shown in green, its `OUTPUT`
 Nodes are shown in red, and any that are both (i.e., are `SINGLETON`\\s) are shown in brown.  Projections shown as
-unlabeled arrows, as illustrated for the Composition in the `examples <CShowGraph_Examples_Visualization>`. However,
+unlabeled arrows, as illustrated for the Composition in the `examples <ShowGraph_Examples_Visualization>`. However,
 these and other attributes of the graph can be modified using arguments in the call to the `show_graph
 <ShowGraph.show_graph>` method.
 
