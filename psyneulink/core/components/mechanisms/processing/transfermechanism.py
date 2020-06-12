@@ -688,10 +688,16 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
             and owning_component.parameters.has_integrated._get(context)
         ):
             if owning_component.integrator_function is not None:
+                # force, because integrator_mode is currently False
+                # (will be set after exiting this method)
                 if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
-                    owning_component.reset(owning_component.parameters.value._get(context), context=context)
+                    owning_component.reset(
+                        owning_component.parameters.value._get(context),
+                        force=True,
+                        context=context
+                    )
                 elif owning_component.on_resume_integrator_mode == RESET:
-                    owning_component.reset(context=context)
+                    owning_component.reset(force=True, context=context)
             owning_component._parameter_components.add(owning_component.integrator_function)
         owning_component.parameters.has_initializers._set(True, context)
         if (
@@ -1056,7 +1062,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
         noise = Parameter(0.0, modulable=True)
-        termination_measure = Parameter(Distance(metric=MAX_ABS_DIFF), modulable=False, stateful=False, loggable=False)
+        termination_measure = Parameter(
+            Distance(metric=MAX_ABS_DIFF),
+            modulable=False,
+            stateful=False,
+            loggable=False
+        )
         termination_threshold = Parameter(None, modulable=True)
         termination_comparison_op = Parameter(operator.le, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
@@ -1159,6 +1170,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _parse_arg_initial_value(self, initial_value):
         return self._parse_arg_variable(initial_value)
+
+    def _parse_termination_measure_variable(self, variable):
+        # compares to previous value
+        # NOTE: this method is for shaping, not for computation, and
+        # a previous value should not be passed through here
+        return np.array([variable, variable])
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate FUNCTION and Mechanism params
@@ -1333,20 +1350,16 @@ class TransferMechanism(ProcessingMechanism_Base):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
         if self.initial_value is None:
-            self.parameters.initial_value._set(self.defaults.variable, context)
+            self.defaults.initial_value = copy.deepcopy(self.defaults.variable)
+            self.parameters.initial_value._set(copy.deepcopy(self.defaults.variable), context)
 
-    def _instantiate_integrator_function(self, variable, noise, initializer,  rate,
-                                         context):
+    def _instantiate_integrator_function(self, variable, context):
+
+        noise = copy.deepcopy(self.defaults.noise)
+        rate = copy.deepcopy(self.defaults.integration_rate)
+        initializer = copy.deepcopy(self.defaults.initial_value)
 
         if isinstance(self.integrator_function, type):
-            # KDM 12/4/19: must copy the parameters because they refer
-            # to the exact objects that are the owning mechanism's
-            # parameters, and they get modified during instantiation
-            if isinstance(noise, (np.ndarray, list)):
-                noise = copy.copy(noise)
-            if isinstance(rate, (np.ndarray, list)):
-                rate = copy.copy(rate)
-
             self.integrator_function = self.integrator_function(default_variable=variable,
                                                                 initializer=initializer,
                                                                 noise=noise,
@@ -1365,7 +1378,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             # mech_noise = np.array(noise).squeeze()
             # mech_init_val = np.array(initializer).squeeze()
             # mech_rate = np.array(rate).squeeze()
-            mech_noise, mech_init_val, mech_rate = map(lambda x: np.array(x).squeeze(), [noise, initializer, rate])
+            mech_noise, mech_init_val, mech_rate = noise, initializer, rate
 
             if self.integrator_function.owner is None:
                 self.integrator_function.owner = self
@@ -1511,9 +1524,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             or self._needs_integrator_function_init
         ):
             self._instantiate_integrator_function(variable=function_variable,
-                                                  noise=noise,
-                                                  initializer=initial_value,
-                                                  rate=integration_rate,
                                                   context=context)
             # Update param assignments with ones determined to be relevant (mech vs. fct)
             #    and assigned to integrator_function in _instantiate_integrator_function
@@ -1737,8 +1747,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         return value
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
-        super().reset(*args, context=context)
+    def reset(self, *args, force=False, context=None):
+        super().reset(*args, force=force, context=context)
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):

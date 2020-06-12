@@ -148,7 +148,7 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.component import ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
@@ -477,6 +477,8 @@ class Function_Base(Function):
 
     _model_spec_id_parameters = 'args'
 
+    _specified_variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+
     class Parameters(Function.Parameters):
         """
             Attributes
@@ -572,11 +574,6 @@ class Function_Base(Function):
         except:
             pass
         return new
-
-    def _initialize_parameters(self, context=None, **param_defaults):
-        super()._initialize_parameters(context=context, **param_defaults)
-        # instantiate auxiliary Functions
-        self._instantiate_parameter_classes(context)
 
     @handle_external_context()
     def function(self,

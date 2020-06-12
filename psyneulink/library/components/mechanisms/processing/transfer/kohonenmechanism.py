@@ -254,7 +254,12 @@ class KohonenMechanism(TransferMechanism):
                     :type: ``list``
                     :read only: True
         """
-        learning_function = Parameter(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
+        learning_function = Parameter(
+            Kohonen(distance_function=GAUSSIAN),
+            stateful=False,
+            loggable=False,
+            reference=True
+        )
         learning_rate = Parameter(None, modulable=True)
         enable_learning = True
         matrix = DEFAULT_MATRIX
