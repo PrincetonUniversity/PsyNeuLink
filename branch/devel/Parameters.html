@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.0.0+20.g4269359 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.0.0+27.g17549eb documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.0.0+20
+                  0.8.0.0+27
                 </div>
               
             
@@ -486,6 +486,41 @@ behavior is determined by Port._get_combined_mod_val().</p>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.Parameter.function_arg">
+<code class="descname">function_arg</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.function_arg" title="Permalink to this definition">¶</a></dt>
+<dd><p>TBD</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.Parameter.function_parameter">
+<code class="descname">function_parameter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.function_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>indicates that this Parameter is not a “true” Parameter of a
+Component, but a reference to an equally named Parameter on
+the Component’s function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">False</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Developer Notes:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body">In the future, these will use custom</td>
+</tr>
+</tbody>
+</table>
+<p>default getters and setters that simply reference the
+equivalent Parameters on the function</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -961,7 +996,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.0.0+20.g4269359',
+               VERSION:'0.8.0.0+27.g17549eb',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
