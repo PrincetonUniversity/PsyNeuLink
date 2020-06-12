@@ -1201,6 +1201,7 @@ class ShowGraph():
                             f"PROGRAM ERROR: parameter_CIM of {composition.name} recieves a Projection " \
                             f"from a Node from other than a {ControlMechanism.__name__}."
                         # Skip Projections from controller (handled in _assign_controller_components)
+                        # if self._is_composition_controller(owner):  # FIX: 6/11/20 - REPLACE AFTER TESTS
                         if (hasattr(ctl_mech_output_port_owner, 'composition')
                                 and ctl_mech_output_port_owner.composition):
                             continue
@@ -1546,8 +1547,10 @@ class ShowGraph():
                 # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                 else:
                     ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
+
                 rcvr_label = self._get_graph_node_label(composition, ctl_proj_rcvr_owner, show_types, show_dimensions)
-                if isinstance(ctl_proj_rcvr_owner, (CompositionInterfaceMechanism, Composition)):
+                if (isinstance(ctl_proj_rcvr_owner, CompositionInterfaceMechanism)
+                        or (isinstance(ctl_proj_rcvr_owner, Composition) and show_nested==INSET and show_cim)):
                     ctl_proj_arrowhead = self.default_projection_arrow
 
                 # Get sender and receiver labels for edge
@@ -1952,9 +1955,7 @@ class ShowGraph():
                             # - cims as sources (handled in _assign_cim_compmoents)
                             # - controller (handled in _assign_controller_components)
                             if (isinstance(sndr, CompositionInterfaceMechanism)
-                                    or (isinstance(sndr, ControlMechanism)
-                                        and hasattr(sndr, 'composition')
-                                        and sndr.composition)):
+                                    or self._is_composition_controller(sndr)):
                                 continue
                             if sender is composition.parameter_CIM:
                                 proj_color = self.control_color
@@ -2198,10 +2199,13 @@ class ShowGraph():
         except:
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
 
+    def _is_composition_controller(self, mech):
+        return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
+
     def _trace_senders_for_controller(self, proj):
         """Check whether source sender of a ControlProjection is (at any level of nesting) a Composition controller."""
         owner = proj.sender.owner
-        if isinstance(owner, ControlMechanism) and hasattr(owner, 'composition') and owner.composition:
+        if self._is_composition_controller(owner):
             return True
         if isinstance(owner, CompositionInterfaceMechanism):
             sender_proj = next(v[0] for k,v in owner.port_map.items() if v[1] is proj.sender).path_afferents[0]
