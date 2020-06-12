@@ -1353,8 +1353,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
             # Modulated parameters change shape to array
-            if is_modulated:
-                param = [param]
+            if is_modulated and np.isscalar(param):
+                return [param]
             if not np.isscalar(param) and param is not None:
                 if p.name == 'matrix': # Flatten matrix
                     param = np.asfarray(param).flatten().tolist()
