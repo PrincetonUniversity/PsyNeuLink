@@ -968,8 +968,6 @@ class ShowGraph():
                                     show_dimensions,
                                     show_node_structure,
                                     show_projection_labels,
-                                    proj_color=None,
-                                    proj_arrow=None,
                                     enclosing_g=enclosing_g)
 
     def _assign_cim_components(self,
@@ -1301,7 +1299,7 @@ class ShowGraph():
                         else:
                             label = ''
                         g.edge(sndr_cim_proj_label, rcvr_modulated_mec_proj_label, label=label,
-                               color=proj_color, penwidth=proj_width)
+                               color=proj_color, arrowhead=self.control_projection_arrow, penwidth=proj_width)
 
             # OUTPUT_CIM ----------------------------------------------------------------------------
 
@@ -1819,8 +1817,6 @@ class ShowGraph():
         g.node(label, shape=self.learning_projection_shape, color=proj_color, penwidth=proj_width)
 
         if proj_receiver in active_items:
-            # edge_color = proj_color
-            # edge_width = str(proj_width)
             if self.active_color == BOLD:
                 edge_color = proj_color
             else:
@@ -1882,15 +1878,15 @@ class ShowGraph():
                                show_dimensions,
                                show_node_structure,
                                show_projection_labels,
-                               proj_color=None,
-                               proj_arrow=None,
+                               proj_color_default=None,
+                               proj_arrow_default=None,
                                enclosing_g=None):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
 
-        proj_color = proj_color or self.default_node_color
-        proj_arrow = proj_arrow or self.default_projection_arrow
+        proj_color_default = proj_color_default or self.default_node_color
+        proj_arrow_default = proj_arrow_default or self.default_projection_arrow
 
         # Deal with Projections from outer (enclosing_g) and inner (nested) Compositions
         # If not showing CIMs, then set up to find node for sender in inner or outer Composition
@@ -1911,6 +1907,9 @@ class ShowGraph():
                 senders.update(cims)
 
         for sender in senders:
+
+            proj_color = proj_color_default
+            proj_arrow = proj_arrow_default
 
             # Remove any Compositions from sndrs if show_cim is False and show_nested is True
             #    (since in that case the nodes for Compositions are bypassed)
@@ -1952,6 +1951,8 @@ class ShowGraph():
                                         and hasattr(sndr, 'composition')
                                         and sndr.composition)):
                                 continue
+                            if sender is composition.parameter_CIM:
+                                proj_color = self.control_color
                             assign_proj_to_enclosing_comp = True
 
                         # sender is output_CIM
@@ -2027,8 +2028,10 @@ class ShowGraph():
                             has_learning = None
 
                         edge_label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        is_learning_component = rcvr in composition.learning_components or sndr in composition.learning_components
-
+                        is_learning_component = (rcvr in composition.learning_components
+                                                 or sndr in composition.learning_components)
+                        if isinstance(sender, ControlMechanism):
+                            proj_color = self.control_color
                         # Check if Projection or its receiver is active
                         if any(item in active_items for item in {proj, proj.receiver.owner}):
                             if self.active_color == BOLD:
@@ -2079,7 +2082,8 @@ class ShowGraph():
                             # Render Projection as edge
                             from psyneulink.core.components.projections.modulatory.controlprojection \
                                 import ControlProjection
-                            if isinstance(proj, ControlProjection):
+                            # if isinstance(proj, ControlProjection):
+                            if isinstance(sender, ControlMechanism):
                                 arrowhead=self.control_projection_arrow
                             else:
                                 arrowhead=proj_arrow
