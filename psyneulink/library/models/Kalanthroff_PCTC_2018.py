@@ -18,7 +18,7 @@ inhibition = -1.3        # Inhibition between units within a layer
 inhibition_task = -1.9   # Inhibition between units within task layer
 bias = -0.3              # bias input to color feature layer and word feature layer
 threshold = 0.70
-settle = 200    # Number of trials until system settles
+settle = 200    # Number of trials until Composition settles
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 # 4 Input layers for color, word, task & bias
@@ -270,7 +270,7 @@ conflict_process = pnl.Pathway(
     name='CONFLICT_PROCESS'
 )
 
-# Create system -------------------------------------------------------------------------------------------------------
+# Create Composition --------------------------------------------------------------------------------------------------
 PCTC = pnl.Composition(
     pathways=[
         word_response_process,
@@ -285,12 +285,7 @@ PCTC = pnl.Composition(
     reinitialize_mechanisms_when=pnl.Never(),
     name='PCTC_MODEL')
 
-
-# PCTC.show()
-# PCTC.show_graph(show_dimensions=pnl.ALL)  # show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
-
 # Create threshold function -------------------------------------------------------------------------------------------
-
 
 def pass_threshold(response_layer, thresh, context):
     results1 = response_layer.get_output_values(context)[0][0]  # red response
@@ -326,7 +321,8 @@ initialize_input = trial_dict(1.0, 0.0, 1.0, 0.0, pc, 0.0, bias)
 
 # Run congruent trial -------------------------------------------------------------------------------------------------
 congruent_input = trial_dict(1.0, 0.0, 1.0, 0.0, pc, 0.0, bias)  # specify congruent trial input
-PCTC.run(inputs=initialize_input, num_trials=settle)    # run system to settle for 200 trials with congruent stimuli input
+# run Composition to settle for 200 trials with congruent stimuli input
+PCTC.run(inputs=initialize_input, num_trials=settle)
 
 color_input_weights.parameters.matrix.set(
     np.array([
@@ -343,8 +339,8 @@ word_input_weights.parameters.matrix.set(
     PCTC
 )
 
-PCTC.run(inputs=congruent_input, termination_processing=terminate_trial)  # run system with congruent stimulus input until
-# threshold in of of the response layer units is reached
+# run Composition with congruent stimulus input until threshold in of of the response layer units is reached
+PCTC.run(inputs=congruent_input, termination_processing=terminate_trial)
 
 # Store values from run -----------------------------------------------------------------------------------------------
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')    # Log task output from special logistic function
@@ -392,7 +388,8 @@ word_input_weights.parameters.matrix.set(
 )
 
 neutral_input = trial_dict(1.0, 0.0, 0.0, 0.0, pc, 0.0, bias)  # create neutral stimuli input
-PCTC.run(inputs=initialize_input, num_trials=settle)  # run system to settle for 200 trials with neutral stimuli input
+# run Compositoin to settle for 200 trials with neutral stimuli input
+PCTC.run(inputs=initialize_input, num_trials=settle)
 
 color_input_weights.parameters.matrix.set(
     np.array([
@@ -409,8 +406,8 @@ word_input_weights.parameters.matrix.set(
     PCTC
 )
 
-PCTC.run(inputs=neutral_input, termination_processing=terminate_trial)  # run system with neutral stimulus input until
-# threshold in of of the response layer units is reached
+# run Composition with neutral stimulus input until threshold in of of the response layer units is reached
+PCTC.run(inputs=neutral_input, termination_processing=terminate_trial)
 
 # Store values from neutral run ---------------------------------------------------------------------------------------
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')

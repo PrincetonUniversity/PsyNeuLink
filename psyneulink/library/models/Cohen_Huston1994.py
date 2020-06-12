@@ -235,7 +235,7 @@ task_word_response_process_2 = pnl.Pathway(
         task_layer])
 
 
-# Create system -------------------------------------------------------------------------------------------------------
+# Create Composition --------------------------------------------------------------------------------------------------
 Bidirectional_Stroop = pnl.Composition(
     pathways=[
         color_response_process_1,
@@ -359,8 +359,9 @@ for cond in range(conditions):
     Bidirectional_Stroop.run(inputs=Stimulus[cond][1], termination_processing=terminate_trial)
 
     # Store values from run -----------------------------------------------------------------------------------------------
+    B_S = Bidirectional_Stroop.name
     r = response_layer.log.nparray_dictionary('value')       # Log response output from special logistic function
-    rr = r['value']
+    rr = r[B_S]['value']
     n_r = rr.shape[0]
     rrr = rr.reshape(n_r, 2)
     response_all.append(rrr)  # .shape[0])
