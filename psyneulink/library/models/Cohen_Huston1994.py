@@ -248,12 +248,8 @@ Bidirectional_Stroop = pnl.Composition(
         task_word_response_process_2
     ],
     reinitialize_mechanisms_when=pnl.Never(),
-    name='Bidirectional_Stroop_SYSTEM'
+    name='Bidirectional Stroop Model'
 )
-
-#FIX 6/12/20:
-# response_layer._add_system(Bidirectional_Stroop, pnl.TERMINAL)
-# Bidirectional_Stroop.terminal_mechanisms.append(response_layer)
 
 input_dict = {colors_input_layer: [0, 0, 0],
               words_input_layer: [0, 0, 0],
@@ -268,10 +264,6 @@ for node in Bidirectional_Stroop.mechanisms:
 # # LOGGING:
 colors_hidden_layer.set_log_conditions('value')
 words_hidden_layer.set_log_conditions('value')
-
-# FIX 6/12/20: UNCOMMENTED EVERYTHING BELOW
-# Bidirectional_Stroop.show()
-Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)  # ,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
 
