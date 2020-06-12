@@ -1003,19 +1003,13 @@ class ShowGraph():
             if cim is composition.input_CIM:
                 cim_type_color = self.input_color
             elif cim is composition.parameter_CIM:
-                def check_senders_for_controller(cim):
-                    for input_port in cim.input_ports:
-                        for proj in input_port.path_afferents:
-                            owner = proj.sender.owner
-                            if hasattr(owner, 'composition') and owner.composition:
-                                return True
-                            if isinstance(owner, CompositionInterfaceMechanism):
-                                return check_senders_for_controller(owner)
-                    return False
-                if check_senders_for_controller(cim):
-                    cim_type_color = self.controller_color
-                else:
-                    cim_type_color = self.control_color
+                # Set default parameter_CIM color to control_color
+                cim_type_color = self.control_color
+                # But if any Projection to it is from a controller, use controller_color
+                for input_port in cim.input_ports:
+                    for proj in input_port.path_afferents:
+                        if self._trace_senders_for_controller(proj):
+                            cim_type_color = self.controller_color
             elif cim is composition.output_CIM:
                 cim_type_color = self.output_color
             else:
@@ -1288,15 +1282,19 @@ class ShowGraph():
                             rcvr_modulated_mec_proj_label = rcvr_label
 
                         # Render Projection
+                        if self._trace_senders_for_controller(proj):
+                            ctl_proj_color = self.controller_color
+                        else:
+                            ctl_proj_color = self.control_color
                         if any(item in active_items for item in {proj, proj.receiver.owner}):
                             if self.active_color == BOLD:
-                                proj_color = self.control_color
+                                proj_color = ctl_proj_color
                             else:
                                 proj_color = self.active_color
                             proj_width = str(self.default_width + self.active_thicker_by)
                             composition.active_item_rendered = True
                         else:
-                            proj_color = self.control_color
+                            proj_color = ctl_proj_color
                             proj_width = str(self.default_width)
                         if show_projection_labels:
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
@@ -2192,6 +2190,16 @@ class ShowGraph():
 
         except:
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
+
+    def _trace_senders_for_controller(self, proj):
+        """Check whether source sender of a ControlProjection is (at any level of nesting) a Composition controller."""
+        owner = proj.sender.owner
+        if isinstance(owner, ControlMechanism) and hasattr(owner, 'composition') and owner.composition:
+            return True
+        if isinstance(owner, CompositionInterfaceMechanism):
+            sender_proj = next(v[0] for k,v in owner.port_map.items() if v[1] is proj.sender).path_afferents[0]
+            return self._trace_senders_for_controller(sender_proj)
+        return False
 
     def _get_graph_node_label(self, composition, item, show_types=None, show_dimensions=None):
 
