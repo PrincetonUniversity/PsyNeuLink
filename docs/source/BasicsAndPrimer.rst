@@ -39,8 +39,8 @@ information to a decision layer).
 
 Mechanisms and Projections fall into two broad categories:  `ProcessingMechanisms <ProcessingMechanism>`
 *directly transmit* and possibly *transform* information, and are linked by `PathwayProjections
-<PathwayProjection>` that transmit the information between them. *ModulatoryMechanisms <ModulatoryMechanism>` *modify*
-or *modulate* the transmission and transformation of information, by way of `ModulatoryProjections
+<PathwayProjection>` that transmit the information between them. *ModulatoryMechanisms <ModulatoryMechanism>`
+*modify* or *modulate* the transmission and transformation of information, by way of `ModulatoryProjections
 <ModulatoryProjecdtion>` to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
@@ -109,7 +109,7 @@ with an appropriately-sized input array, for example::
     >> array([[0.5, 0.92414182, 0.99998154, 0.88079708, 0.9994998 ]])
 
 The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its `show_graph
-<Composition.show_graph>` method:
+<ShowGraph.show_graph>` method:
 
 .. _BasicsAndPrimer_Simple_Pathway_Example_Figure:
 
@@ -222,15 +222,19 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
     Stroop_model.add_linear_processing_pathway(decision_pathway)
 
 This is a simplified version the model described in `Cohen et al. (1990) <https://www.researchgate
-.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361>`_,
-a more complete version of which can be found in the `PsyNeuLink Library <https://princetonuniversity.github
-.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.  The figure belows shows the model using the
-Composition's `show_graph <Composition.show_graph>` method.
+.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361>`_
+.
+
+.. FIX: ADD LINK TO STROOP MODEL
+.. a more complete version of which can be found in the
+.. `PsyNeuLink Library <https://princetonuniversity.github.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.
+
+The figure belows shows the model using the Composition's `show_graph <ShowGraph.show_graph>` method.
 
 .. _BasicsAndPrimer_Simple_Stroop_Example_Figure:
 
 .. figure:: _static/BasicsAndPrimer_Stroop_Model.svg
-   :width: 50%
+   :width: 100%
 
    **Stroop Model.** Representation of the Composition in the example above.
 
@@ -276,7 +280,7 @@ Dynamics of Execution
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
-determined by the projections between them (and shown in the `show_graph <Composition.show_graph>` method.  In the
+determined by the projections between them (and shown in the `show_graph <ShowGraph.show_graph>` method.  In the
 ``Stroop_model`` above, the ``decision`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  The
 ``decision`` Mechanism is a `DDM`.  This uses `DriftDiffusionAnalytical` as its default `function <DDM.function>`,
 which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
@@ -315,7 +319,7 @@ creating one or more `Conditions <Condition>` for execution of those Mechanisms 
 in each `trial <TimeScale.TRIAL>`), its behavior relative to one or more other Components (e.g., how many times it
 should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
 criterion for the settling of a recurrent network). For example, the following implements a version of the model above
-that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
+that uses a `leaky competing accumulator <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
 ``task`` Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
 execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli::
 
@@ -414,7 +418,7 @@ the **control_signals** argument specifies the parameters of the Mechanisms it s
 MappingProjections from ``output`` to the ObjectiveMechanism, and from the latter to the ControlMechanism.  The latter
 is then added to the ``Stroop_model`` as its `controller <Composition .controller>` in its constructor.
 The result is shown in the figure below, using the **show_controller** option of the Composition's `show_graph
-<Composition.show_graph>` method:
+<ShowGraph.show_graph>` method:
 
 .. _BasicsAndPrimer_Stroop_Example_With_Control_Figure:
 
@@ -440,6 +444,8 @@ the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Compo
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
 at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
 used to generate an animation of the Composition's execution, as shown below:
+
+.. _BasicsAndPrimer_Stroop_Example_Animation_Figure:
 
 .. figure:: _static/BasicsAndPrimer_Stroop_Model_movie.gif
    :width: 75%
@@ -500,6 +506,7 @@ internal simulations to optimize the amount of control to optimize some criterio
 `expected value of control <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
+.. FIX: ADD LINKS TO SCRIPTS ABOVE
 
 .. _BasicsAndPrimer_Parameters:
 
@@ -729,8 +736,8 @@ a simple three-layered neural network that learns to compute the X-OR operation:
     xor_comp.learn(inputs={input:xor_inputs['stimuli'],
                          target:xor_inputs['targets']})
 
-Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
-components created by the call to ``add_backpropagation_pathway``:
+Calling the Composition's `show_graph <ShowGraph.show_graph>` with ``show_learning=True`` shows the network along with
+all of the learning components created by the call to ``add_backpropagation_pathway``:
 
 .. _BasicsAndPrimer_XOR_MODEL_Figure:
 

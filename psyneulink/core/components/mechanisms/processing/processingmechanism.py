@@ -155,15 +155,15 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                   {NAME: MAX_ABS_VAL,
                                    FUNCTION:lambda x: np.max(np.absolute(x))},
                                   {NAME: MAX_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_VAL).function},
+                                   FUNCTION: OneHot(mode=MAX_VAL)},
                                   {NAME: MAX_ABS_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
+                                   FUNCTION: OneHot(mode=MAX_ABS_VAL)},
                                   {NAME: MAX_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_INDICATOR).function},
+                                   FUNCTION: OneHot(mode=MAX_INDICATOR)},
                                   {NAME: MAX_ABS_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
+                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR)},
                                   {NAME: PROB,
-                                   FUNCTION: SoftMax(output=PROB).function}])
+                                   FUNCTION: SoftMax(output=PROB)}])
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     def __init__(self,

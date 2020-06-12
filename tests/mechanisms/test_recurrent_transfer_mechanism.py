@@ -7,10 +7,10 @@ import psyneulink.core.llvm as pnlvm
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.function import FunctionError, get_matrix
 from psyneulink.core.components.functions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, get_matrix
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX, RESULT

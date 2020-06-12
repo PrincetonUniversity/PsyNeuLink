@@ -434,7 +434,7 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
     # Store seed to the 0-th element
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
     seed_lo = builder.and_(seed, seed.type(0xffffffff))
-    seed_lo = builder.trunc(seed, a_0.type.pointee)
+    seed_lo = builder.trunc(seed_lo, a_0.type.pointee)
     builder.store(seed_lo, a_0)
 
     # clear gauss helpers

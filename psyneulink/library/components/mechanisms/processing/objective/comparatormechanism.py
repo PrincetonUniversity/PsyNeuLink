@@ -329,7 +329,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  default_variable=None,
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
-                 function=LinearCombination(weights=[[-1], [1]]),
+                 function=None,
                  output_ports:tc.optional(tc.any(str, Iterable)) = None,
                  params=None,
                  name=None,
