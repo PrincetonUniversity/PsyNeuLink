@@ -1354,16 +1354,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     pass
             # Modulated parameters change shape to array
             if is_modulated and np.isscalar(param):
-                return [param]
-            if not np.isscalar(param) and param is not None:
-                if p.name == 'matrix': # Flatten matrix
-                    param = np.asfarray(param).flatten().tolist()
-                elif isinstance(param, Component):
-                    param = param._get_param_values(context)
-                elif isinstance(param, TimeScale) and p.name == 'termination_measure': #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
-                    param = []
-                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
-                    param = np.asfarray(param[0]).tolist()
+                param = [param]
+            elif p.name == 'matrix': # Flatten matrix
+                param = np.asfarray(param).flatten().tolist()
+            elif isinstance(param, Component):
+                param = param._get_param_values(context)
+            elif isinstance(param, TimeScale) and p.name == 'termination_measure':
+                #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
+                param = []
             return param
 
         return tuple(map(_get_values, self._get_compilation_params()))
