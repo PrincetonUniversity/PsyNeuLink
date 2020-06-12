@@ -2124,7 +2124,9 @@ class ShowGraph():
         def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
-                if node.name + ' ' in item:  # Space needed to filter out node.name that is a substring of another name
+                quoted_items = item.split('"')[1::2]
+                if ((quoted_items and node.name == quoted_items[0])
+                        or (node.name + ' [' in item)):
                     if node_type in {MECHANISM, BOTH}:
                         if not '->' in item:
                             return i
