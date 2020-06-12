@@ -287,7 +287,7 @@ PCTC = pnl.Composition(
 
 
 # PCTC.show()
-PCTC.show_graph(show_dimensions=pnl.ALL)  # show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
+# PCTC.show_graph(show_dimensions=pnl.ALL)  # show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
 
@@ -348,19 +348,19 @@ PCTC.run(inputs=congruent_input, termination_processing=terminate_trial)  # run 
 
 # Store values from run -----------------------------------------------------------------------------------------------
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')    # Log task output from special logistic function
-tt = t[PCTC]['SPECIAL_LOGISTIC']
+tt = t[PCTC.name]['SPECIAL_LOGISTIC']
 n_con = tt.shape[0]
 ttt_cong = tt.reshape(n_con, 2)
 conflict_con = ttt_cong[200:, 0] * ttt_cong[200:, 1] * 100             # Compute conflict for plotting (as in MATLAB code)
 
 c = color_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')  # Log color output from special logistic function
-cc = c[PCTC]['SPECIAL_LOGISTIC']
+cc = c[PCTC.name]['SPECIAL_LOGISTIC']
 ccc_cong = cc.reshape(n_con, 2)
 w = word_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')   # Log word output from special logistic function
-ww = w[PCTC]['SPECIAL_LOGISTIC']
+ww = w[PCTC.name]['SPECIAL_LOGISTIC']
 www_cong = ww.reshape(n_con, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')       # Log response output from special logistic function
-rr = r[PCTC]['SPECIAL_LOGISTIC']
+rr = r[PCTC.name]['SPECIAL_LOGISTIC']
 rrr_cong = rr.reshape(n_con, 2)
 
 # Clear log & reset --------------------------------------------------------------------------------------------
@@ -414,19 +414,19 @@ PCTC.run(inputs=neutral_input, termination_processing=terminate_trial)  # run sy
 
 # Store values from neutral run ---------------------------------------------------------------------------------------
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-tt = t[PCTC]['SPECIAL_LOGISTIC']
+tt = t[PCTC.name]['SPECIAL_LOGISTIC']
 n_neutral = tt.shape[0]
 ttt_neutral = tt.reshape(n_neutral, 2)
 conflict_neutral = ttt_neutral[200:, 0] * ttt_neutral[200:, 1] * 100
 
 c = color_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-cc = c[PCTC]['SPECIAL_LOGISTIC']
+cc = c[PCTC.name]['SPECIAL_LOGISTIC']
 ccc_neutral = cc.reshape(n_neutral, 2)
 w = word_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-ww = w[PCTC]['SPECIAL_LOGISTIC']
+ww = w[PCTC.name]['SPECIAL_LOGISTIC']
 www_neutral = ww.reshape(n_neutral, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-rr = r[PCTC]['SPECIAL_LOGISTIC']
+rr = r[PCTC.name]['SPECIAL_LOGISTIC']
 rrr_neutral = rr.reshape(n_neutral, 2)
 # Clear log & reset --------------------------------------------------------------------------------------------
 
@@ -480,19 +480,19 @@ PCTC.run(inputs=incongruent_input, termination_processing=terminate_trial)
 # Store values from neutral run ---------------------------------------------------------------------------------------
 
 t = task_demand_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-tt = t[PCTC]['SPECIAL_LOGISTIC']
+tt = t[PCTC.name]['SPECIAL_LOGISTIC']
 n_incon = tt.shape[0]
 ttt_incong = tt.reshape(n_incon, 2)
 conflict_incon = ttt_incong[200:, 0] * ttt_incong[200:, 1] * 100
 
 c = color_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-cc = c[PCTC]['SPECIAL_LOGISTIC']
+cc = c[PCTC.name]['SPECIAL_LOGISTIC']
 ccc_incong = cc.reshape(n_incon, 2)
 w = word_feature_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-ww = w[PCTC]['SPECIAL_LOGISTIC']
+ww = w[PCTC.name]['SPECIAL_LOGISTIC']
 www_incong = ww.reshape(n_incon, 2)
 r = response_layer.log.nparray_dictionary('SPECIAL_LOGISTIC')
-rr = r[PCTC]['SPECIAL_LOGISTIC']
+rr = r[PCTC.name]['SPECIAL_LOGISTIC']
 rrr_incong = rr.reshape(n_incon, 2)
 
 # Plotting ------------------------------------------------------------------------------------------------------------
