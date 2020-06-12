@@ -208,18 +208,17 @@ task_conflict_to_response_weights = pnl.MappingProjection(
 )
 
 # Create pathways -----------------------------------------------------------------------------------------------------
-color_response_process = pnl.Process(
-    pathway=[
-        colors_input_layer,
-        color_input_weights,
-        color_feature_layer,
-        color_response_weights,
-        response_layer
-    ],
+color_response_process = pnl.Pathway(pathway=[
+    colors_input_layer,
+    color_input_weights,
+    color_feature_layer,
+    color_response_weights,
+    response_layer
+],
     name='COLORS_RESPONSE_PROCESS'
 )
 
-word_response_process = pnl.Process(
+word_response_process = pnl.Pathway(
     pathway=[words_input_layer,
              word_input_weights,
              word_feature_layer,
@@ -229,7 +228,7 @@ word_response_process = pnl.Process(
     name='WORDS_RESPONSE_PROCESS'
 )
 
-task_color_process = pnl.Process(
+task_color_process = pnl.Pathway(
     pathway=[task_input_layer,
              task_input_weights,
              task_demand_layer,
@@ -241,7 +240,7 @@ task_color_process = pnl.Process(
     name='TASK_COLOR_PROCESS'
 )
 
-task_word_process = pnl.Process(
+task_word_process = pnl.Pathway(
     pathway=[task_input_layer,
              task_demand_layer,
              task_word_weights,
@@ -252,17 +251,17 @@ task_word_process = pnl.Process(
     name='TASK_WORD_PROCESS'
 )
 
-bias_color_process = pnl.Process(
+bias_color_process = pnl.Pathway(
     pathway=[bias_input, color_feature_layer],
     name='BIAS_COLOR'
 )
 
-bias_word_process = pnl.Process(
+bias_word_process = pnl.Pathway(
     pathway=[bias_input, word_feature_layer],
     name='WORD_COLOR'
 )
 
-conflict_process = pnl.Process(
+conflict_process = pnl.Pathway(
     pathway=[
         task_demand_layer,
         task_conflict_to_response_weights,
@@ -272,8 +271,8 @@ conflict_process = pnl.Process(
 )
 
 # Create system -------------------------------------------------------------------------------------------------------
-PCTC = pnl.System(
-    processes=[
+PCTC = pnl.Composition(
+    pathways=[
         word_response_process,
         color_response_process,
         task_color_process,
@@ -287,8 +286,8 @@ PCTC = pnl.System(
     name='PCTC_MODEL')
 
 
-PCTC.show()
-PCTC.show_graph(show_dimensions=pnl.ALL)  # ,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
+# PCTC.show()
+PCTC.show_graph(show_dimensions=pnl.ALL)  # show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------
 
