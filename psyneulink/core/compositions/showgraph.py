@@ -1913,7 +1913,8 @@ class ShowGraph():
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
 
-        for sender in senders:
+        # Sorted to insure consistency of ordering in g for testing
+        for sender in sorted(senders):
 
             # Remove any Compositions from sndrs if show_cim is False and show_nested is True
             #    (since in that case the nodes for Compositions are bypassed)
@@ -2200,6 +2201,7 @@ class ShowGraph():
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
 
     def _is_composition_controller(self, mech):
+        # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
         return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
 
     def _trace_senders_for_controller(self, proj):
