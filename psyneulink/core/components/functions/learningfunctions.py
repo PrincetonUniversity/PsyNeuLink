@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
@@ -1351,7 +1351,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)
-        col = np.atleast_2d(variable).transpose()
+        col = convert_to_np_array(variable, 2).transpose()
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col

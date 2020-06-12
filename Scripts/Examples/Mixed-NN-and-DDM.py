@@ -28,7 +28,7 @@ comp = pnl.Composition(
     name='Neural Network DDM Process',
     pathways=[
         [myInputLayer,
-         psyneulink.core.components.functions.transferfunctions.get_matrix(pnl.RANDOM_CONNECTIVITY_MATRIX, 2, 5),
+         pnl.get_matrix(pnl.RANDOM_CONNECTIVITY_MATRIX, 2, 5),
          myHiddenLayer,
          pnl.FULL_CONNECTIVITY_MATRIX,
          myDDM]

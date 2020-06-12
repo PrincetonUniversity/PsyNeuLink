@@ -546,6 +546,22 @@ class Parameter(types.SimpleNamespace):
 
             :Developer Notes: Can be manually set, but will trigger a warning unless override=True
 
+        function_arg
+            TBD
+
+            :default: False
+
+        function_parameter
+            indicates that this Parameter is not a "true" Parameter of a
+            Component, but a reference to an equally named Parameter on
+            the Component's function.
+
+            :default: False
+
+            :Developer Notes: In the future, these will use custom
+            default getters and setters that simply reference the
+            equivalent Parameters on the function
+
         pnl_internal
             whether the parameter is an idiosyncrasy of PsyNeuLink or it is more intrinsic to the conceptual operation
             of the Component on which it resides
@@ -648,6 +664,18 @@ class Parameter(types.SimpleNamespace):
 
             :default: None
 
+        reference
+            if False, the Parameter is not used in computation for its
+            owning Component. Instead, it is just meant to store a value
+            that may be used to initialize other Components
+
+            :default: False
+
+            :Developer Notes: Parameters with Function values marked as
+            reference will not be automatically instantiated in
+            _instantiate_parameter_classes or validated for variable
+            shape
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -707,6 +735,7 @@ class Parameter(types.SimpleNamespace):
         spec=None,
         parse_spec=False,
         valid_types=None,
+        reference=False,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -761,6 +790,7 @@ class Parameter(types.SimpleNamespace):
             spec=spec,
             parse_spec=parse_spec,
             valid_types=valid_types,
+            reference=reference,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,

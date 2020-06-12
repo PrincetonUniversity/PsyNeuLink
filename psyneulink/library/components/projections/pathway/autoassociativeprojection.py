@@ -105,7 +105,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
@@ -259,7 +260,7 @@ class AutoAssociativeProjection(MappingProjection):
 
         auto = Parameter(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
         hetero = Parameter(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
-        matrix = Parameter(DEFAULT_MATRIX, function_parameter=True, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
+        matrix = Parameter(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 

@@ -1153,7 +1153,7 @@ class DDM(ProcessingMechanism):
         return mech_out, builder
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         if context.execution_id is NotImplemented:
