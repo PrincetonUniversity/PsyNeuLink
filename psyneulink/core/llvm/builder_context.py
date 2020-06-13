@@ -299,7 +299,7 @@ class LLVMBuilderContext:
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
-            return ir.LiteralStructType([self.int32_ty] * 5)
+            return ir.ArrayType(self.int32_ty, len(Time._time_scale_attr_map))
         assert False, "Don't know how to convert {}".format(type(t))
 
 

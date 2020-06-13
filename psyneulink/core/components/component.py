@@ -1278,7 +1278,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
             elif isinstance(x, Time):
-                return [0] * 5
+                return (getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
             try:
                 return (_convert(i) for i in x)
             except TypeError:
