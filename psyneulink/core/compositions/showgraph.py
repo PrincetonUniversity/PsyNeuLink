@@ -558,6 +558,9 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
+        # MODIFIED 6/13/20 NEW:
+        from psyneulink.core.compositions.composition import Composition
+        # MODIFIED 6/13/20 END
 
         composition = self.composition
 
@@ -692,8 +695,13 @@ class ShowGraph():
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
-            if rcvr not in composition.nodes:
-                continue
+
+            # # MODIFIED 6/13/20 NEW:
+            # if any(n is rcvr for nested_comp in composition.nodes
+            #        if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+            #     continue
+            # # MODIFIED 6/13/20 END
+
             self._assign_processing_components(G,
                                                rcvr,
                                                composition,
