@@ -1951,8 +1951,12 @@ class ShowGraph():
                             if not sender.afferents:
                                 continue
                             # Insure relevant InputPort of cim has only one afferent
-                            assert len(sender.port_map[proj.receiver][0].path_afferents)==1,\
-                                f"PROGRAM ERROR: {sender} of {composition.name} has more than one afferent Projection."
+                            num_afferents = len(sender.port_map[proj.receiver][0].path_afferents)
+                            if (num_afferents==0 and
+                                    NodeRole.TARGET in composition.get_roles_by_node(proj.receiver.owner)):
+                                continue
+                            assert num_afferents==1, f"PROGRAM ERROR: {sender} of {composition.name} " \
+                                                     f"doesn't have exactly one afferent Projection."
                             sndr = sender.port_map[proj.receiver][0].path_afferents[0].sender.owner
                             # Skip:
                             # - cims as sources (handled in _assign_cim_compmoents)
