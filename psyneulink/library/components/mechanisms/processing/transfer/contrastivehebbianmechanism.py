@@ -331,12 +331,13 @@ Class Reference
 
 from collections.abc import Iterable
 
+import copy
 import numpy as np
 import typecheck as tc
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -930,7 +931,12 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
-        learning_function = Parameter(ContrastiveHebbian, stateful=False, loggable=False)
+        learning_function = Parameter(
+            ContrastiveHebbian,
+            stateful=False,
+            loggable=False,
+            reference=True
+        )
         max_passes = Parameter(1000, stateful=False)
 
         output_activity = Parameter(None, read_only=True, getter=_CHM_output_activity_getter)
@@ -1106,6 +1112,29 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         if self._target_included:
             self.input_ports[TARGET].internal_only = True
 
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        super()._instantiate_attributes_before_function(function=function, context=context)
+
+        # Set minus_phase activity, plus_phase, current_activity and initial_value
+        #    all  to zeros with size of Mechanism's array
+        # Should be OK to use attributes here because initialization should only occur during None context
+        self._set_multiple_parameter_values(
+            context,
+            initial_value=self.input_ports[RECURRENT].socket_template,
+            current_activity=self.input_ports[RECURRENT].socket_template,
+            minus_phase_activity=self.input_ports[RECURRENT].socket_template,
+            plus_phase_activity=self.input_ports[RECURRENT].socket_template,
+            execution_phase=None,
+        )
+        self.defaults.initial_value = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.current_activity = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.minus_phase_activity = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.plus_phase_activity = copy.deepcopy(self.input_ports[RECURRENT].socket_template)
+        self.defaults.execution_phase = None
+
+        if self._target_included:
+            self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
+
     @tc.typecheck
     def _instantiate_recurrent_projection(self,
                                           mech: Mechanism,
@@ -1131,21 +1160,6 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  function_variable=None,
                  runtime_params=None,
                  ):
-
-        if self.initialization_status == ContextFlags.INITIALIZING:
-            # Set minus_phase activity, plus_phase, current_activity and initial_value
-            #    all  to zeros with size of Mechanism's array
-            # Should be OK to use attributes here because initialization should only occur during None context
-            self._set_multiple_parameter_values(
-                context,
-                initial_value=self.input_ports[RECURRENT].socket_template,
-                current_activity=self.input_ports[RECURRENT].socket_template,
-                minus_phase_activity=self.input_ports[RECURRENT].socket_template,
-                plus_phase_activity=self.input_ports[RECURRENT].socket_template,
-                execution_phase=None,
-            )
-            if self._target_included:
-                self.parameters.output_activity._set(self.input_ports[TARGET].socket_template, context)
 
         # Initialize execution_phase as minus_phase
         if self.parameters.execution_phase._get(context) is None:
@@ -1222,7 +1236,7 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 # Use initial_value attribute to initialize, for the minus phase,
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)
-                if not self.continuous:
+                if not self.continuous and self.parameters.integrator_mode._get(context):
                     self.reset(self.initial_value, context=context)
                     self.parameters.current_activity._set(self.parameters.initial_value._get(context), context)
                 self.parameters.current_termination_threshold._set(self.plus_phase_termination_threshold, context)
@@ -1238,6 +1252,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
     def _parse_function_variable(self, variable, context=None):
         function_variable = self.combination_function(variable=variable, context=context)
         return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, context=context)
+
+    def _parse_phase_convergence_function_variable(self, variable):
+        # determines shape only
+        return np.asarray([variable[0], variable[0]])
 
     def combination_function(self, variable=None, context=None):
         # IMPLEMENTATION NOTE: use try and except here for efficiency: care more about execution than initialization

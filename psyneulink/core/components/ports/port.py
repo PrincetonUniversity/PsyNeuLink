@@ -1116,11 +1116,6 @@ class Port_Base(Port):
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
 
-    def _initialize_parameters(self, context=None, **param_defaults):
-        super()._initialize_parameters(context=context, **param_defaults)
-        # instantiate auxiliary Functions
-        self._instantiate_parameter_classes(context)
-
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a Port
             is generally 1D, rather than 2D as in the case of Mechanisms
@@ -1499,10 +1494,10 @@ class Port_Base(Port):
                     self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
 
                 # assign identical default variable to function if it can be modified
-                if self.function._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                if self.function._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                     self.function.defaults.variable = self.defaults.variable.copy()
                 elif (
-                    self.function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
+                    self.function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
                     and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
                 ):
                     self.function.defaults.variable = np.array([self.defaults.variable])

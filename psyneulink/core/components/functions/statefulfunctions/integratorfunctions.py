@@ -263,6 +263,13 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                         _instantiate_attributes_before_function below
         """
 
+
+        super()._validate_params(
+            request_set=request_set,
+            target_set=target_set,
+            context=context
+        )
+
         # Use dict to be able to report names of params that are in violating set
         params_to_check = {}
 
@@ -284,16 +291,12 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             if violators:
                 raise FunctionError(f"The following parameters with len>1 specified for {self.name} "
                                     f"don't have the same length as its {repr(DEFAULT_VARIABLE)} "
-                                    f"({default_variable_len}): {violators}.")
+                                    f"({default_variable_len}): {violators}.", component=self)
 
         # Check that all function_arg params with length > 1 have the same length
         elif any(len(v)!=len(values[0]) for v in values):
             raise FunctionError(f"The parameters with len>1 specified for {self.name} "
                                 f"({list(params_to_check.keys())}) don't all have the same length")
-
-        super()._validate_params(request_set=request_set,
-                         target_set=target_set,
-                         context=context)
     # MODIFIED 6/21/19 END
 
     # MODIFIED 6/21/19 NEW: [JDC]
@@ -1062,6 +1065,11 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(
+            request_set=request_set,
+            target_set=target_set,
+            context=context
+        )
 
         # Handle list or array for rate specification
         if RATE in request_set:
@@ -1076,7 +1084,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]])
                     #       before the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -1090,11 +1098,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                             f"The length ({len(rate)}) of the array specified for the rate parameter ({rate}) "
                             f"of {self.name} must match the length ({np.array(self.defaults.variable).size}) "
                             f"of the default input ({self.defaults.variable}).")
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
 
         # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
         if self.parameters.rate._user_specified:
@@ -1605,7 +1608,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(

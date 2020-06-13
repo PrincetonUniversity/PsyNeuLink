@@ -7984,7 +7984,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             .. note::
                as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
-               correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+               correspond to the `EXECUTION` `LogCondition <LogCondition.EXECUTION>`.
 
         scheduler : Scheduler : default None
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
@@ -7993,14 +7993,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
-            reverting less powerful modes (in the order of the options listed), and to Python if no compilation
+            reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
             mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
             CUDA compilation.
 
-        context : `Context.execution_id>` : default `default_execution_id`
+        context : `execution_id <Context.execution_id>` : default `default_execution_id`
             context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
-        base_context : `Context.execution_id>` : Context(execution_id=None)
+        base_context : `execution_id <Context.execution_id>` : Context(execution_id=None)
             the context corresponding to the execution context from which this execution will be initialized,
             if values currently do not exist for **context**
 
@@ -8034,7 +8034,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         2d list of values of OUTPUT Nodes at end of last trial : list[list]
           each item in the list is the `output_values <Mechanism_Base.output_values>` for an `OUTPUT` `Node
           <Composition_Nodes>` of the Composition, listed in the order listed in `get_nodes_by_role
-          <Composition.get_nodes_by_role>`\(`NodeRole`\.OUTPUT).
+          <Composition.get_nodes_by_role>`\(`NodeRole.OUTPUT <OUTPUT>`).
 
           .. note::
             The `results <Composition.results>` attribute of the Compositon contains a list of the outputs for all
@@ -8365,23 +8365,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each node in the composition that receives inputs from
-                the user. There are several equally valid ways that this dict could be structured:
-                1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
-                the shape of which must match the node's default variable. This is identical to the input dict in
-                `the run method <Composition.run>`;
-                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
-                same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
-                values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
+            inputs: {`Node <Composition_Nodes>`:list }
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` (Mechanism or Composition)
+                in the composition that receives inputs from the user. There are several equally valid ways that this
+                dict can be structured:
 
-            targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each Node <Composition_Nodes>` in the Composition that
+                1. For each pair, the key is the  and the value is an input, the shape of which must match the Node's
+                   default variable. This is identical to the input dict in the `run <Composition.run>` method
+                   (see `Input Dictionary <Composition_Input_Dictionary>` for additional details).
+
+                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
+                   same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
+                   values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
+
+            targets: {`Node <Composition_Nodes>`:list }
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition that
                 receives target values as input to the Composition for training `learning pathways
-                <Composition_Learning_Pathway>` The key of each entry can be either the `TARGET_MECHANISM
+                <Composition_Learning_Pathway>`. The key of each entry can be either the `TARGET_MECHANISM
                 <Composition_Learning_Components>` for a learning pathway or the final Node in that Pathway, and
                 the value is the target value used for that Node on each trial (see `target inputs
-                <Composition_Target_Inputs>` for additonal details concerning the formatting of targets).
+                <Composition_Target_Inputs>` for additional details concerning the formatting of targets).
 
             num_trials : int (default=None)
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -8472,25 +8475,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bin_execute=False,
             ):
         """
-            Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
-            coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
-            termination conditions are met.
+            Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
+            argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
+            `termination conditions <Scheduler_Termination_Conditions>` are met.
 
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list } : default None
-                a dictionary containing a key-value pair for each node in the composition that receives inputs from
-                the user. For each pair, the key is the Node <Compositon_Nodes>` (A `Mechanism <Mechanism>` or
-                `Composition`) and the value is an input, the shape of which must match the Node's default variable.
-                if **inputs** is not specified, the `default_variable <Component_Variable>` for each `INPUT` Node
-                is used as its input;  see
+            inputs: { `Node <Composition_Nodes>`: list } : default None
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition that
+                receives inputs from the user. For each pair, the key is the `Node <Composition_Nodes>` (a `Mechanism
+                <Mechanism>` or `Composition`) and the value is an input, the shape of which must match the Node's
+                default variable. If **inputs** is not specified, the `default_variable <Component_Variable>` for
+                each `INPUT` Node is used as its input (see `Input Formats <Composition_Execution_Inputs>` for
+                additional details).
 
             clamp_input : SOFT_CLAMP : default SOFT_CLAMP
 
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 specifies alternate parameter values to be used only during this `EXECUTION` when the specified
-                `Condition` is met. See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+                `Condition` is met (see `Composition_Runtime_Params` for more details and examples of valid
+                dictionaries).
 
             skip_initialization :  : default False
                 COMMENT:
@@ -8501,10 +8506,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            context : `Context.execution_id>` : default `default_execution_id`
+            context : `execution_id <Context.execution_id>` : default `default_execution_id`
                 `execution context <Composition_Execution_Context>` in which the `Composition` will be executed.
 
-            base_context : `Context.execution_id>` : Context(execution_id=None)
+            base_context : `execution_id <Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the `execution context <Composition_Execution_Context>` from which this
                 execution will be initialized, if values currently do not exist for **context**.
 

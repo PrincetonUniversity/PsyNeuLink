@@ -838,68 +838,84 @@ class TestDuplicatePathwayWarnings:
         B = TransferMechanism()
         P = MappingProjection(sender=A, receiver=B)
         comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[A,P,B])
+
         with pytest.warns(UserWarning) as w:
             comp.add_linear_processing_pathway(pathway=[A,P,B])
-            comp.add_linear_processing_pathway(pathway=[A,P,B])
-        assert (f"Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in  w[0].message.args[0]
-                and  f"already exists in {comp.name}" in  w[0].message.args[0])
+
+        warn_text = w[0].message.args[0]
+        assert "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in warn_text
+        assert f"already exists in {comp.name}" in warn_text
 
     def test_add_processing_pathway_inferred_duplicate_warning(self):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[A,B,C])
+
         with pytest.warns(UserWarning) as w:
             comp.add_linear_processing_pathway(pathway=[A,B,C])
-            comp.add_linear_processing_pathway(pathway=[A,B,C])
-        assert (f"Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in  w[0].message.args[0]
-                and  f"has same Nodes in same order as one already in {comp.name}" in  w[0].message.args[0])
+
+        warn_text = w[0].message.args[0]
+        assert "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in warn_text
+        assert f"has same Nodes in same order as one already in {comp.name}" in warn_text
 
     def test_add_processing_pathway_subset_duplicate_warning(self):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+        comp.add_linear_processing_pathway(pathway=[A,B,C])
+
         with pytest.warns(UserWarning) as w:
-            comp.add_linear_processing_pathway(pathway=[A,B,C])
             comp.add_linear_processing_pathway(pathway=[A,B])
-        assert (f"Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in  w[0].message.args[0]
-                and  f"has same Nodes in same order as one already in {comp.name}" in  w[0].message.args[0])
+
+        warn_text = w[0].message.args[0]
+        assert "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in warn_text
+        assert f"has same Nodes in same order as one already in {comp.name}" in  warn_text
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
         B = TransferMechanism()
         P = MappingProjection(sender=A, receiver=B)
         comp = Composition()
+        comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
+
         with pytest.warns(UserWarning) as w:
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
-            comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
-        assert (f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method"
-                in w[0].message.args[0] and  f"already exists in {comp.name}" in  w[0].message.args[0])
+
+        warn_text = w[0].message.args[0]
+        assert "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method" in warn_text
+        assert f"already exists in {comp.name}" in warn_text
 
     def test_add_backpropagation_pathway_inferred_duplicate_warning(self):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+        comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+
         with pytest.warns(UserWarning) as w:
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-        assert (f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method"
-                in  w[0].message.args[0] and  f"has same Nodes in same order as one already in {comp.name}"
-                in  w[0].message.args[0])
+
+        warn_text = w[0].message.args[0]
+        assert "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method" in warn_text
+        assert f"has same Nodes in same order as one already in {comp.name}" in warn_text
 
     def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self):
         A = TransferMechanism()
         B = TransferMechanism()
         C = TransferMechanism()
         comp = Composition()
+        comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
+
         with pytest.warns(UserWarning) as w:
-            comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
             comp.add_backpropagation_learning_pathway(pathway=[A,B])
-        assert (f"Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method"
-                in  w[0].message.args[0] and  f"has same Nodes in same order as one already in {comp.name}"
-                in  w[0].message.args[0])
+
+        warn_text = w[0].message.args[0]
+        assert "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method" in warn_text
+        assert f"has same Nodes in same order as one already in {comp.name}" in warn_text
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
