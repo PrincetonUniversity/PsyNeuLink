@@ -558,6 +558,9 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
+        # MODIFIED 6/13/20 NEW:
+        from psyneulink.core.compositions.composition import Composition
+        # MODIFIED 6/13/20 END
 
         composition = self.composition
 
@@ -647,7 +650,6 @@ class ShowGraph():
         elif show_nested and show_nested != INSET:
             show_nested = NESTED
 
-
         # Assign nested_args  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # to be passed in call to show_graph for nested Composition(s)
         # Get args passed in from main call to show_graph (to be passed to helper methods)
@@ -693,6 +695,13 @@ class ShowGraph():
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
+
+            # # MODIFIED 6/13/20 NEW:
+            # if any(n is rcvr for nested_comp in composition.nodes
+            #        if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+            #     continue
+            # # MODIFIED 6/13/20 END
+
             self._assign_processing_components(G,
                                                rcvr,
                                                composition,
@@ -814,8 +823,10 @@ class ShowGraph():
         # If rcvr is a learning component and not an INPUT node,
         #    break and handle in _assign_learning_components()
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-        if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]
-                and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
+        if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
+            # MODIFIED 6/13/20 OLD: FIX - MODIFIED TO ALLOW TARGET TO BE MARKED AS INPUT
+                # and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
+            # MODIFIED 6/13/20 END
             return
 
         # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
@@ -1753,8 +1764,12 @@ class ShowGraph():
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
         #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
-        learning_components = [node for node in composition.learning_components
-                               if not NodeRole.INPUT in composition.nodes_to_roles[node]]
+        # # MODIFIED 6/13/20 OLD:
+        # learning_components = [node for node in composition.learning_components
+        #                        if not NodeRole.INPUT in composition.nodes_to_roles[node]]
+        # MODIFIED 6/13/20 NEW:  FIX - MODIFIED TO ALLOW TARGET TO BE MARKED AS INPUT
+        learning_components = [node for node in composition.learning_components]
+        # MODIFIED 6/13/20 END
         # learning_components.extend([node for node in composition.nodes if
         #                             NodeRole.AUTOASSOCIATIVE_LEARNING in
         #                             composition.nodes_to_roles[node]])
@@ -1764,6 +1779,11 @@ class ShowGraph():
             if isinstance(rcvr, MappingProjection):
                 return
 
+            if NodeRole.TARGET in composition.get_roles_by_node(rcvr):
+                rcvr_width = self.bold_width
+            else:
+                rcvr_width = self.default_width
+
             # Get rcvr info
             rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
             if rcvr in active_items:
@@ -1771,11 +1791,11 @@ class ShowGraph():
                     rcvr_color = self.learning_color
                 else:
                     rcvr_color = self.active_color
-                rcvr_width = str(self.default_width + self.active_thicker_by)
+                rcvr_width = str(rcvr_width + self.active_thicker_by)
                 composition.active_item_rendered = True
             else:
                 rcvr_color = self.learning_color
-                rcvr_width = str(self.default_width)
+                rcvr_width = str(rcvr_width)
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             # Implement node for Mechanism
@@ -1892,6 +1912,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
+
         proj_color_default = proj_color or self.default_node_color
         proj_arrow_default = proj_arrow or self.default_projection_arrow
 
@@ -1949,8 +1970,12 @@ class ShowGraph():
                             if not sender.afferents:
                                 continue
                             # Insure relevant InputPort of cim has only one afferent
-                            assert len(sender.port_map[proj.receiver][0].path_afferents)==1,\
-                                f"PROGRAM ERROR: {sender} of {composition.name} has more than one afferent Projection."
+                            num_afferents = len(sender.port_map[proj.receiver][0].path_afferents)
+                            if (num_afferents==0 and
+                                    NodeRole.TARGET in composition.get_roles_by_node(proj.receiver.owner)):
+                                continue
+                            assert num_afferents==1, f"PROGRAM ERROR: {sender} of {composition.name} " \
+                                                     f"doesn't have exactly one afferent Projection."
                             sndr = sender.port_map[proj.receiver][0].path_afferents[0].sender.owner
                             # Skip:
                             # - cims as sources (handled in _assign_cim_compmoents)
