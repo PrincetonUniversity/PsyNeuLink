@@ -1755,8 +1755,12 @@ class ShowGraph():
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
         #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
-        learning_components = [node for node in composition.learning_components
-                               if not NodeRole.INPUT in composition.nodes_to_roles[node]]
+        # # MODIFIED 6/13/20 OLD:
+        # learning_components = [node for node in composition.learning_components
+        #                        if not NodeRole.INPUT in composition.nodes_to_roles[node]]
+        # MODIFIED 6/13/20 NEW:
+        learning_components = [node for node in composition.learning_components]
+        # MODIFIED 6/13/20 END
         # learning_components.extend([node for node in composition.nodes if
         #                             NodeRole.AUTOASSOCIATIVE_LEARNING in
         #                             composition.nodes_to_roles[node]])
@@ -1766,6 +1770,11 @@ class ShowGraph():
             if isinstance(rcvr, MappingProjection):
                 return
 
+            if NodeRole.TARGET in composition.get_roles_by_node(rcvr):
+                rcvr_width = self.bold_width
+            else:
+                rcvr_width = self.default_width
+
             # Get rcvr info
             rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
             if rcvr in active_items:
@@ -1773,11 +1782,11 @@ class ShowGraph():
                     rcvr_color = self.learning_color
                 else:
                     rcvr_color = self.active_color
-                rcvr_width = str(self.default_width + self.active_thicker_by)
+                rcvr_width = str(rcvr_width + self.active_thicker_by)
                 composition.active_item_rendered = True
             else:
                 rcvr_color = self.learning_color
-                rcvr_width = str(self.default_width)
+                rcvr_width = str(rcvr_width)
 
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             # Implement node for Mechanism
@@ -1894,6 +1903,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
+
         proj_color_default = proj_color or self.default_node_color
         proj_arrow_default = proj_arrow or self.default_projection_arrow
 
