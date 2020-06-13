@@ -131,8 +131,8 @@ of the `function <Function_Base.function>` can be modified when it is executed, 
 `parameter specification dictionary <ParameterPort_Specification>` to the **params** argument in the
 call to the `function <Function_Base.function>`.
 
-For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Run_Runtime_Parameters>` in the `Run`
-method of their `Composition`.
+For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Composition_Runtime_Params>` in the
+`Run` method of their `Composition`.
 
 Class Reference
 ---------------
