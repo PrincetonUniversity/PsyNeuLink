@@ -807,8 +807,10 @@ class ShowGraph():
         # If rcvr is a learning component and not an INPUT node,
         #    break and handle in _assign_learning_components()
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-        if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]
-                and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
+        if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
+            # MODIFIED 6/13/20 OLD:
+                # and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
+            # MODIFIED 6/13/20 END
             return
 
         # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
