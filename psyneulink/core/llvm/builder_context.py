@@ -280,7 +280,9 @@ class LLVMBuilderContext:
 
     def convert_python_struct_to_llvm_ir(self, t):
         self._stats["types_converted"] += 1
-        if type(t) is list:
+        if t is None:
+            return ir.LiteralStructType([])
+        elif type(t) is list:
             if len(t) == 0:
                 return ir.LiteralStructType([])
             elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
@@ -294,8 +296,6 @@ class LLVMBuilderContext:
             return self.float_ty
         elif isinstance(t, np.ndarray):
             return self.convert_python_struct_to_llvm_ir(t.tolist())
-        elif t is None:
-            return ir.LiteralStructType([])
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
