@@ -52,7 +52,15 @@ COMMENT:
 The following are the default attribute used to display different types of `Components <Component>` and their `roles
 <NodeRole>` within a Composition:
 
-FIX: MAKE FIGURE THAT HAS ALL THE VARIOUS TYPES USNIG CORRESPONDING NAMES
+FIX: MAKE FIGURE THAT HAS ALL THE VARIOUS TYPES USING CORRESPONDING NAMES
+Input Node
+Singleton Node
+Output Node
+LearningMechanism
+ControlMechanism
+Controller
+Nested Composition
+
 
 Shapes
 ~~~~~~
@@ -1992,7 +2000,8 @@ class ShowGraph():
                                 continue
                             # Insure relevant InputPort of cim has only one afferent
                             assert len(sender.port_map[proj.receiver][0].path_afferents)==1,\
-                                f"PROGRAM ERROR: {sender} of {composition.name} has more than one afferent Projection."
+                                f"PROGRAM ERROR: {sender} of {composition.name} does not have exactly one afferent " \
+                                f"Projection."
                             sndr = sender.port_map[proj.receiver][0].path_afferents[0].sender.owner
                             # Skip:
                             # - cims as sources (handled in _assign_cim_compmoents)
