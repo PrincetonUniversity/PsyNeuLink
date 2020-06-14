@@ -558,6 +558,9 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
+        # MODIFIED 6/13/20 NEW:
+        from psyneulink.core.compositions.composition import Composition
+        # MODIFIED 6/13/20 END
 
         composition = self.composition
 
@@ -647,7 +650,6 @@ class ShowGraph():
         elif show_nested and show_nested != INSET:
             show_nested = NESTED
 
-
         # Assign nested_args  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # to be passed in call to show_graph for nested Composition(s)
         # Get args passed in from main call to show_graph (to be passed to helper methods)
@@ -693,6 +695,13 @@ class ShowGraph():
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
+
+            # # MODIFIED 6/13/20 NEW:
+            # if any(n is rcvr for nested_comp in composition.nodes
+            #        if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+            #     continue
+            # # MODIFIED 6/13/20 END
+
             self._assign_processing_components(G,
                                                rcvr,
                                                composition,
@@ -815,7 +824,7 @@ class ShowGraph():
         #    break and handle in _assign_learning_components()
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
         if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
-            # MODIFIED 6/13/20 OLD:
+            # MODIFIED 6/13/20 OLD: FIX - MODIFIED TO ALLOW TARGET TO BE MARKED AS INPUT
                 # and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
             # MODIFIED 6/13/20 END
             return
@@ -1758,7 +1767,7 @@ class ShowGraph():
         # # MODIFIED 6/13/20 OLD:
         # learning_components = [node for node in composition.learning_components
         #                        if not NodeRole.INPUT in composition.nodes_to_roles[node]]
-        # MODIFIED 6/13/20 NEW:
+        # MODIFIED 6/13/20 NEW:  FIX - MODIFIED TO ALLOW TARGET TO BE MARKED AS INPUT
         learning_components = [node for node in composition.learning_components]
         # MODIFIED 6/13/20 END
         # learning_components.extend([node for node in composition.nodes if

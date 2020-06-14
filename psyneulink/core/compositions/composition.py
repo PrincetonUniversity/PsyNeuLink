@@ -3547,6 +3547,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        # # MODIFIED 6/13/20 NEW:
+        # if any(n is node for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     return
+        # MODIFIED 6/13/20 END
+
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
