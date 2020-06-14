@@ -697,9 +697,9 @@ class ShowGraph():
         for rcvr in rcvrs:
 
             # # MODIFIED 6/13/20 NEW:
-            # if any(n is rcvr for nested_comp in composition.nodes
-            #        if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
-            #     continue
+            if any(n is rcvr for nested_comp in composition.nodes
+                   if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+                continue
             # # MODIFIED 6/13/20 END
 
             self._assign_processing_components(G,
@@ -750,6 +750,7 @@ class ShowGraph():
         if show_learning:
             self._assign_learning_components(G,
                                              processing_graph,
+                                             enclosing_g,
                                              active_items,
                                              show_nested,
                                              show_cim,
@@ -1748,6 +1749,7 @@ class ShowGraph():
     def _assign_learning_components(self,
                                     g,
                                     processing_graph,
+                                    enclosing_g,
                                     active_items,
                                     show_nested,
                                     show_cim,
@@ -1821,7 +1823,8 @@ class ShowGraph():
                                         show_types,
                                         show_dimensions,
                                         show_node_structure,
-                                        show_projection_labels)
+                                        show_projection_labels,
+                                        enclosing_g=enclosing_g)
 
     def _render_projection_as_node(self,
                                    g,
