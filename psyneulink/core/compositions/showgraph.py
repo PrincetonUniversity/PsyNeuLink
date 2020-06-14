@@ -162,7 +162,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, BOTH, COMPONENT, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
+    ALL, BOLD, BOTH, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
     PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME',
@@ -358,8 +358,8 @@ class ShowGraph():
                  input_rank = 'source',
                  control_rank = 'min',
                  learning_rank = 'min',
-                 output_rank = 'max'
-                 ):
+                 output_rank = 'max',
+                ):
 
         self.composition = composition
         self.direction = direction
@@ -684,7 +684,9 @@ class ShowGraph():
             },
             graph_attr={
                 "rankdir": self.direction,
-                'overlap': "False"
+                'overlap': "False",
+                'label' : composition.name,
+                # 'newrank': "True"
             },
         )
         self.G = G
@@ -2148,21 +2150,22 @@ class ShowGraph():
         composition = self.composition
 
         # Sort nodes for display
-        # FIX 5/28/20:  ADD HANDLING OF NESTED COMP:  SEARCH FOR 'subgraph cluster_'
-        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
+        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, COMPOSITION)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
                 quoted_items = item.split('"')[1::2]
                 if ((quoted_items and node.name == quoted_items[0])
-                        or (node.name + ' [' in item)):
-                    if node_type in {MECHANISM, BOTH}:
+                        or (node.name + ' [' in item)) and node_type in {MECHANISM, PROJECTION}:
+                    if node_type in {MECHANISM}:
                         if not '->' in item:
                             return i
-                    elif node_type in {PROJECTION, BOTH}:
+                    elif node_type in {PROJECTION}:
                         if '->' in item:
                             return i
                     else:
-                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
+                        assert False, f'PROGRAM ERROR: node ({node.name}) not Mechanism or Projection in G.body'
+                elif 'subgraph' in item and node_type in {COMPOSITION}:
+                    return i
 
         for node in composition.nodes:
             if isinstance(node, Composition):
@@ -2173,27 +2176,39 @@ class ShowGraph():
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
-            # Put OUTPUT node(s) last (except for ControlMechanisms)
+            # Put OUTPUT node(s) last, except for controller of Composition and nested Compositions (see below)
             if NodeRole.OUTPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
-            # Put ControlMechanism(s) last
+            # Put ControlMechanism(s) last except for nested Compositions (see below)
             if isinstance(node, ControlMechanism):
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
         for proj in composition.projections:
-            # Put ControlProjection(s) last (along with ControlMechanis(s))
-            if isinstance(proj, ControlProjection):
+            # Put ControlProjection(s) last, except for controller of Composition (see below)
+            if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner):
                 i = get_index_of_node_in_G_body(proj, PROJECTION)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
+        # Put controller of Composition, except for nested Composition(s)
         if composition.controller and show_controller:
             i = get_index_of_node_in_G_body(composition.controller, MECHANISM)
             G.body.insert(len(G.body),G.body.pop(i))
+
+        # Put nested Composition(s) very last
+        for node in composition.nodes:
+            if isinstance(node, Composition):
+                i = get_index_of_node_in_G_body(node, COMPOSITION)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+                    while (G.body[i][0:2] != "\t}"):
+                        G.body.insert(len(G.body),G.body.pop(i))
+                    G.body.insert(len(G.body),G.body.pop(i))
+
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
