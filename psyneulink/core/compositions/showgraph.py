@@ -1789,7 +1789,7 @@ class ShowGraph():
                 rcvr_width = self.default_width
 
             # Get rcvr info
-            rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
+            learning_rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.learning_color
@@ -1804,11 +1804,11 @@ class ShowGraph():
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             # Implement node for Mechanism
             if show_node_structure:
-                g.node(rcvr_label,
+                g.node(learning_rcvr_label,
                         rcvr._show_structure(**node_struct_args),
                         rank=self.learning_rank, color=rcvr_color, penwidth=rcvr_width)
             else:
-                g.node(rcvr_label,
+                g.node(learning_rcvr_label,
                         color=rcvr_color, penwidth=rcvr_width,
                         rank=self.learning_rank, shape=self.mechanism_shape)
 
@@ -1816,7 +1816,7 @@ class ShowGraph():
             sndrs = processing_graph[rcvr]
             self._assign_incoming_edges(g,
                                         rcvr,
-                                        rcvr_label,
+                                        learning_rcvr_label,
                                         sndrs,
                                         active_items,
                                         show_nested,
@@ -2119,9 +2119,6 @@ class ShowGraph():
 
                         else:
                             # Render Projection as edge
-                            from psyneulink.core.components.projections.modulatory.controlprojection \
-                                import ControlProjection
-
                             if show_projection_labels:
                                 label = proc_mech_label
                             else:
