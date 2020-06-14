@@ -3547,6 +3547,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        # # MODIFIED 6/13/20 NEW:
+        # if any(n is node for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     return
+        # MODIFIED 6/13/20 END
+
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
@@ -4414,6 +4419,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      reference_value=input_port.defaults.value,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
+
+                    # MODIFIED 6/13/20 NEW:
+                    if NodeRole.TARGET in self.get_roles_by_node(node):
+                        interface_input_port.parameters.require_projection_in_composition.set(False, override=True)
+                    # MODIFIED 6/13/20 END
 
                     # add port to the input CIM
                     self.input_CIM.add_ports([interface_input_port],
