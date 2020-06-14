@@ -1287,15 +1287,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
-        blacklist = {"previous_time", "previous_value", "previous_v",
+        blacklist = {# Stateful parameters
+                     "previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions", "variable",
-                     "value", "saved_values", "saved_samples", "grid",
+                     "num_executions_before_finished", "num_executions",
+                     "variable", "value", "saved_values", "saved_samples",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "search_space",
+                     "modulated_mechanisms", "search_space", "grid",
                      "activation_derivative_fct", "input_specification",
                      # Shape mismatch
                      "costs", "auto", "hetero",
