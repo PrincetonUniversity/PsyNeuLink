@@ -1360,15 +1360,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 param = np.asfarray(param).flatten().tolist()
             elif isinstance(param, Component):
                 param = param._get_param_values(context)
-            elif isinstance(param, TimeScale) and p.name == 'termination_measure':
-                #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
-                param = []
             return param
 
         return tuple(map(_get_values, self._get_compilation_params()))
 
     def _get_param_initializer(self, context):
-        return pnlvm._tupleize(self._get_param_values(context))
+        def _convert(x):
+            if isinstance(x, Enum):
+                return x.value
+            try:
+                return (_convert(i) for i in x)
+            except TypeError:
+                return x
+        return pnlvm._tupleize(_convert(self._get_param_values(context)))
 
     def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
         assert "reset" in tags

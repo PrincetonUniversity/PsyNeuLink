@@ -10,6 +10,7 @@
 
 import atexit
 import ctypes
+import enum
 import functools
 import inspect
 from llvmlite import ir
@@ -292,6 +293,10 @@ class LLVMBuilderContext:
         elif type(t) is tuple:
             elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
             return ir.LiteralStructType(elems_t)
+        elif isinstance(t, enum.Enum):
+            # FIXME: Consider enums of non-int type
+            assert all(round(x.value) == x.value for x in type(t))
+            return self.int32_ty
         elif isinstance(t, (int, float, np.number)):
             return self.float_ty
         elif isinstance(t, np.ndarray):
