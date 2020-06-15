@@ -1005,7 +1005,11 @@ class Log:
                     self._get_parameter_from_item_string(entry).clear_log(contexts)
                 else:
                     # Delete the data for the entry but leave the entry itself in the log to which it belongs
+                    # MODIFIED 6/15/20 OLD:
                     raise LogError('delete_entry=False currently unimplemented')
+                    # # MODIFIED 6/15/20 NEW:
+                    # warnings.warn('delete_entry=False currently unimplemented in Log.clear_entries()')
+                    # MODIFIED 6/15/20 END
                 assert True
 
     @tc.typecheck
