@@ -2049,9 +2049,8 @@ class TestBackProp:
                                         sender=hidden_autodiff,
                                         receiver=output_autodiff)
     
-            xor_autodiff = pnl.AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=10,
-                                      optimizer_type='sgd')
+            xor_autodiff = pnl.AutodiffComposition(learning_rate=10,
+                                                   optimizer_type='sgd')
     
             xor_autodiff.add_node(input_autodiff)
             xor_autodiff.add_node(hidden_autodiff)

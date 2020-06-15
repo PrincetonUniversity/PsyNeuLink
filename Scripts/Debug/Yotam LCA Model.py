@@ -147,7 +147,7 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 	}
 
 	# Build network
-	mnet = pnl.AutodiffComposition(param_init_from_pnl=True,
+	mnet = pnl.AutodiffComposition(
                            patience=patience,
                            min_delta=min_delt,
                            learning_rate=learning_rate,
@@ -273,7 +273,7 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 	}
 
 	# Build network
-	mnet = pnl.AutodiffComposition(param_init_from_pnl=True,
+	mnet = pnl.AutodiffComposition(
                            patience=patience,
                            min_delta=min_delt,
                            learning_rate=learning_rate,
