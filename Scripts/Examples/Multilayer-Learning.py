@@ -105,8 +105,8 @@ Middle_Weights.set_log_conditions('mod_matrix')
 
 comp.reportOutputPref = True
 # Shows graph will full information:
-comp.show_graph(show_dimensions=pnl.ALL)
-comp.show_graph(show_learning=pnl.ALL)
+# comp.show_graph(show_dimensions=pnl.ALL)
+comp.show_graph(show_learning=pnl.ALL, show_node_structure=True)
 # comp.show_graph(show_learning=pnl.ALL, show_processes=True)
 # comp.show_graph(show_learning=pnl.ALL, show_dimensions=pnl.ALL, show_mechanism_structure=True)
 # Shows minimal graph:
