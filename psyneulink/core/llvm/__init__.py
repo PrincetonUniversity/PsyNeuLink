@@ -91,9 +91,9 @@ class LLVMBinaryFunction:
     def cuda_call(self, *args, threads=1):
         self._cuda_kernel(*args, block=(1, 1, 1), grid=(threads, 1))
 
-    def cuda_wrap_call(self, *args):
+    def cuda_wrap_call(self, *args, threads=1):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
-        self.cuda_call(*wrap_args)
+        self.cuda_call(*wrap_args, threads)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
