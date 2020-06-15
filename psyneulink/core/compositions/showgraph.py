@@ -959,14 +959,14 @@ class ShowGraph():
                    rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
                    shape=self.struct_shape,
                    color=rcvr_color,
-                   rank=rcvr_rank,
-                   penwidth=rcvr_penwidth)
+                   penwidth=rcvr_penwidth,
+                   rank=rcvr_rank)
         else:
             g.node(rcvr_label,
                    shape=node_shape,
                    color=rcvr_color,
-                   rank=rcvr_rank,
-                   penwidth=rcvr_penwidth)
+                   penwidth=rcvr_penwidth,
+                   rank=rcvr_rank)
 
         # Implement sender edges from Nodes within Composition
         sndrs = processing_graph[rcvr]
@@ -1789,7 +1789,9 @@ class ShowGraph():
                 rcvr_width = self.default_width
 
             # Get rcvr info
-            learning_rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
+            learning_rcvr_label = self._get_graph_node_label(composition,
+                                                             rcvr,
+                                                             show_types, show_dimensions)
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.learning_color
@@ -1805,12 +1807,17 @@ class ShowGraph():
             # Implement node for Mechanism
             if show_node_structure:
                 g.node(learning_rcvr_label,
-                        rcvr._show_structure(**node_struct_args),
-                        rank=self.learning_rank, color=rcvr_color, penwidth=rcvr_width)
+                       rcvr._show_structure(**node_struct_args),
+                       shape=self.struct_shape,
+                       color=rcvr_color,
+                       penwidth=rcvr_width,
+                       rank=self.learning_rank)
             else:
                 g.node(learning_rcvr_label,
-                        color=rcvr_color, penwidth=rcvr_width,
-                        rank=self.learning_rank, shape=self.mechanism_shape)
+                       shape=self.mechanism_shape,
+                       color=rcvr_color,
+                       penwidth=rcvr_width,
+                       rank=self.learning_rank)
 
             # Implement sender edges
             sndrs = processing_graph[rcvr]
