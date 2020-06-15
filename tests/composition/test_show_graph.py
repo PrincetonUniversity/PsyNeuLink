@@ -272,18 +272,11 @@ class TestControl:
         icomp = Composition(name="NESTED COMPOSITION")
         p = icomp.add_backpropagation_learning_pathway(pathway=[ia, ib])
         ocomp = Composition(name='COMPOSITION',
-                            pathways=[
-                                [input_mech,
-                                internal_mech,
-                                icomp,
-                                output_mech],
-                                # [target,p.target]
-                            ],
+                            pathways=[input_mech, internal_mech, icomp, output_mech],
                             controller=OptimizationControlMechanism(
                                 name='CONTROLLER',
                                 objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
-                                                                       monitor=[input_mech,
-                                                                                output_mech]),
+                                                                       monitor=[input_mech, output_mech]),
                                 control=(SLOPE, internal_mech))
                             )
         ocomp.add_node(target)
