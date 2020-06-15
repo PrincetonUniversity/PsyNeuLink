@@ -360,10 +360,12 @@ for cond in range(conditions):
     response_all2.append(rrr.shape[0])
 
     # Clear log & reset ----------------------------------------------------------------------------------------
-    response_layer.log.clear_entries(delete_entry=False)
-    colors_hidden_layer.log.clear_entries(delete_entry=False)
-    words_hidden_layer.log.clear_entries(delete_entry=False)
-    task_layer.log.clear_entries(delete_entry=False)
+    # # MODIFIED 6/15/20 OLD:
+    # response_layer.log.clear_entries(delete_entry=False)
+    # colors_hidden_layer.log.clear_entries(delete_entry=False)
+    # words_hidden_layer.log.clear_entries(delete_entry=False)
+    # task_layer.log.clear_entries(delete_entry=False)
+    # MODIFIED 6/15/20 END
     colors_hidden_layer.reset([[0, 0, 0]])
     words_hidden_layer.reset([[0, 0, 0]])
     response_layer.reset([[0, 0]])
@@ -404,17 +406,19 @@ for cond in range(conditions):
 
     # Store values from run -----------------------------------------------------------------------------------------------
     r2 = response_layer.log.nparray_dictionary('value')       # Log response output from special logistic function
-    rr2 = r2['value']
+    rr2 = r2[Bidirectional_Stroop.name]['value']
     n_r2 = rr2.shape[0]
     rrr2 = rr2.reshape(n_r2, 2)
     response_all3.append(rrr2)  # .shape[0])
     response_all4.append(rrr2.shape[0])
 
     # Clear log & reset ----------------------------------------------------------------------------------------
-    response_layer.log.clear_entries(delete_entry=False)
-    colors_hidden_layer.log.clear_entries(delete_entry=False)
-    words_hidden_layer.log.clear_entries(delete_entry=False)
-    task_layer.log.clear_entries(delete_entry=False)
+    # # MODIFIED 6/15/20 OLD:
+    # response_layer.log.clear_entries(delete_entry=False)
+    # colors_hidden_layer.log.clear_entries(delete_entry=False)
+    # words_hidden_layer.log.clear_entries(delete_entry=False)
+    # task_layer.log.clear_entries(delete_entry=False)
+    # MODIFIED 6/15/20 END
     colors_hidden_layer.reset([[0, 0, 0]])
     words_hidden_layer.reset([[0, 0, 0]])
     response_layer.reset([[0, 0]])
