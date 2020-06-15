@@ -225,7 +225,6 @@ class AutodiffComposition(Composition):
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     def __init__(self,
-                 param_init_from_pnl=True,
                  learning_rate=None,
                  optimizer_type='sgd',
                  weight_decay=0,
@@ -255,11 +254,6 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
         self.disable_learning = disable_learning
-        # user indication of how to initialize pytorch parameters
-        self.param_init_from_pnl = param_init_from_pnl
-
-        if param_init_from_pnl is False:
-            warnings.warn("WARNING: Autodiffcomposition.param_init_from_pnl is deprecated! Please do not use it!")
 
         # keeps track of average loss per epoch
         self.losses = []
