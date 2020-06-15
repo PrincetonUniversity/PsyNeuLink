@@ -336,27 +336,30 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
+    # Index all pointer arguments
+    args = kernel_func.args
+    indexed_args = []
+
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
-    is_comp_run = len(kernel_func.args) == 7
+    is_comp_run = len(args) == 7
     if is_comp_run:
-        runs_count = kernel_func.args[5]
-        input_count = kernel_func.args[6]
+        runs_count = args[5]
+        input_count = args[6]
 
-    # Index all pointer arguments
-    indexed_args = []
-    for i, arg in enumerate(kernel_func.args):
+    for i, arg in enumerate(args):
         # Don't adjust #inputs and #trials
         if isinstance(arg.type, ir.PointerType):
             offset = global_id
-            # #runs and #trials needs to be the same
-            if is_comp_run and i >= 5:
-                offset = ir.IntType(32)(0)
-            # data arrays need special handling
-            elif is_comp_run and i == 4:  # data_out
-                offset = builder.mul(global_id, builder.load(runs_count))
-            elif is_comp_run and i == 3:  # data_in
-                offset = builder.mul(global_id, builder.load(input_count))
+            if is_comp_run:
+                # #runs and #trials needs to be the same
+                if i >= 5:
+                    offset = ir.IntType(32)(0)
+                # data arrays need special handling
+                elif is_comp_run and i == 4:  # data_out
+                    offset = builder.mul(global_id, builder.load(runs_count))
+                elif is_comp_run and i == 3:  # data_in
+                    offset = builder.mul(global_id, builder.load(input_count))
 
             arg = builder.gep(arg, [offset])
 
