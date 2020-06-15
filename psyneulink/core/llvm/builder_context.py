@@ -10,6 +10,7 @@
 
 import atexit
 import ctypes
+import enum
 import functools
 import inspect
 from llvmlite import ir
@@ -280,7 +281,9 @@ class LLVMBuilderContext:
 
     def convert_python_struct_to_llvm_ir(self, t):
         self._stats["types_converted"] += 1
-        if type(t) is list:
+        if t is None:
+            return ir.LiteralStructType([])
+        elif type(t) is list:
             if len(t) == 0:
                 return ir.LiteralStructType([])
             elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
@@ -290,16 +293,18 @@ class LLVMBuilderContext:
         elif type(t) is tuple:
             elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
             return ir.LiteralStructType(elems_t)
+        elif isinstance(t, enum.Enum):
+            # FIXME: Consider enums of non-int type
+            assert all(round(x.value) == x.value for x in type(t))
+            return self.int32_ty
         elif isinstance(t, (int, float, np.number)):
             return self.float_ty
         elif isinstance(t, np.ndarray):
             return self.convert_python_struct_to_llvm_ir(t.tolist())
-        elif t is None:
-            return ir.LiteralStructType([])
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
-            return ir.LiteralStructType([self.int32_ty] * 5)
+            return ir.ArrayType(self.int32_ty, len(Time._time_scale_attr_map))
         assert False, "Don't know how to convert {}".format(type(t))
 
 

@@ -3547,6 +3547,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except AttributeError:
             pass
 
+        # # MODIFIED 6/13/20 NEW:
+        # if any(n is node for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     return
+        # MODIFIED 6/13/20 END
+
         node._check_for_composition(context=context)
 
         # Add node to Composition's graph
@@ -4415,6 +4420,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
 
+                    # MODIFIED 6/13/20 NEW:
+                    if NodeRole.TARGET in self.get_roles_by_node(node):
+                        interface_input_port.parameters.require_projection_in_composition.set(False, override=True)
+                    # MODIFIED 6/13/20 END
+
                     # add port to the input CIM
                     self.input_CIM.add_ports([interface_input_port],
                                              context=context)
@@ -4971,7 +4981,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
+        # #      that projects directly to the Target node of a nested Composition
+        # # If receiver_mechanism is a Target Node in a nested Composition
+        # if any((n is receiver_mechanism and receiver_mechanism in nested_comp.get_nodes_by_role(NodeRole.TARGET))
+        #        for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     # cim_target_input_port = receiver_mechanism.afferents[0].sender.owner.port_map[receiver.input_port][0]
+        #     cim = next((proj.sender.owner for proj in receiver_mechanism.afferents
+        #                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism)), None)
+        #     assert cim, f'PROGRAM ERROR: Target mechanisms {receiver_mechanism.name} ' \
+        #                 f'does not receive projection from input_CIM'
+        #     cim_target_input_port = cim.port_map[receiver.input_port][0]
+        #     projection.receiver._remove_projection_to_port(projection)
+        #     # self.remove_projection(projection)
+        #     projection = MappingProjection(sender=sender, receiver=cim_target_input_port)
+        #     receiver_mechanism = cim
+        #     receiver = cim_target_input_port
+
+        # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if (sender_mechanism != self.input_CIM
                 and receiver_mechanism != self.output_CIM
@@ -4989,8 +5016,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
             self._validate_projection(projection,
                                       sender, receiver,
@@ -5005,7 +5030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection._activate_for_compositions(comp)
 
         # Note: do all of the following even if Projection is a existing_projections,
-        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
+        #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
         # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
@@ -5023,6 +5048,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return projection
 
+    def _add_projection(self, projection):
+        self.projections.append(projection)
+
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
         if projection in [vertex.component for vertex in self.graph.vertices]:
@@ -5033,9 +5061,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.projections.remove(projection)
 
         # step 3 - TBI? remove Projection from afferents & efferents lists of any node
-
-    def _add_projection(self, projection):
-        self.projections.append(projection)
 
     def _validate_projection(self,
                              projection,
@@ -9652,7 +9677,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             yield self.controller
 
     def show_graph(self, **kwargs):
-        from psyneulink.core.compositions.showgraph import ShowGraph
         return self._show_graph(**kwargs)
 
     def _set_up_animation(self, context):
