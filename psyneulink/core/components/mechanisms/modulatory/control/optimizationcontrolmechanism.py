@@ -983,12 +983,15 @@ class OptimizationControlMechanism(ControlMechanism):
             old_composition = context.composition
             context.composition = self.agent_rep
 
+            # We shouldn't get this far if execution mode is not Python
+            exec_mode = self.parameters.comp_execution_mode._get(context)
+            assert exec_mode == "Python"
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
                                              base_context=context,
                                              context=new_context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(context),
+                                             execution_mode=exec_mode,
                                              return_results=return_results)
             context.composition = old_composition
 

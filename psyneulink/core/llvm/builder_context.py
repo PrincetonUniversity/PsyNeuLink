@@ -337,8 +337,17 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
     # Index all pointer arguments
-    args = kernel_func.args
+    args = list(kernel_func.args)
     indexed_args = []
+
+    is_grid_evaluate = len(args) == 8
+    if is_grid_evaluate:
+        # There are 8 arguments to evaluate:
+        # param, state, allocations, output, input, comp_state, comp_param, comp_data
+        # state (#1) needs to be copied, compoition state and data are copied in evaluate
+        private_state = builder.alloca(args[0].type.pointee)
+        builder.store(builder.load(args[0]), private_state)
+        args[0] = private_state
 
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
@@ -360,6 +369,10 @@ def _gen_cuda_kernel_wrapper_module(function):
                     offset = builder.mul(global_id, builder.load(runs_count))
                 elif is_comp_run and i == 3:  # data_in
                     offset = builder.mul(global_id, builder.load(input_count))
+            elif is_grid_evaluate:
+                # all but #2 and #3 are shared
+                if i != 2 and i != 3:
+                    offset = ir.IntType(32)(0)
 
             arg = builder.gep(arg, [offset])
 

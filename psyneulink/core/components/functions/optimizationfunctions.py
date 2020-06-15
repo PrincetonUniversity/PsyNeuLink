@@ -1588,6 +1588,11 @@ class GridSearch(OptimizationFunction):
         builder.store(builder.load(min_value_ptr), out_value_ptr)
         return builder
 
+    def _run_cuda_grid(self, ocm, variable, context):
+        assert ocm is ocm.agent_rep.controller
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        return comp_exec.cuda_evaluate(variable, self.search_space)
+
     def _function(self,
                  variable=None,
                  context=None,
@@ -1712,11 +1717,17 @@ class GridSearch(OptimizationFunction):
                 "PROGRAM ERROR: bad value for {} arg of {}: {}, {}". \
                     format(repr(DIRECTION), self.name, direction)
 
-            last_sample, last_value, all_samples, all_values = super()._function(
-                variable=variable,
-                context=context,
-                params=params,
-            )
+
+            ocm = self.objective_function.__self__ if self._is_composition_optimize() else None
+            if ocm is not None and \
+               ocm.parameters.comp_execution_mode._get(context).startswith("PTX"):
+                    all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
+            else:
+                last_sample, last_value, all_samples, all_values = super()._function(
+                    variable=variable,
+                    context=context,
+                    params=params,
+                )
 
             optimal_value_count = 1
             value_sample_pairs = zip(all_values, all_samples)

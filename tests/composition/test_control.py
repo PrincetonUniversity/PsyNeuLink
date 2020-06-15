@@ -1616,6 +1616,7 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -1623,6 +1624,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_after(self, benchmark, mode):
+        # OCM default mode is Python
+        mode, ocm_mode = (mode + "-Python").split('-')[0:2]
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -1642,7 +1645,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                                features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               control_signals=[control_signal])
+                                               control_signals=[control_signal],
+                                               comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
@@ -1659,6 +1663,7 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -1666,6 +1671,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_before(self, benchmark, mode):
+        # OCM default mode is Python
+        mode, ocm_mode = (mode + "-Python").split('-')[0:2]
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -1685,7 +1692,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                                features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               control_signals=[control_signal])
+                                               control_signals=[control_signal],
+                                               comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
