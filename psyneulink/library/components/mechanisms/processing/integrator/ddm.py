@@ -739,11 +739,7 @@ class DDM(ProcessingMechanism):
                  default_variable=None,
                  size=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
-                 function=DriftDiffusionAnalytical(drift_rate=1.0,
-                                                   starting_point=0.0,
-                                                   threshold=1.0,
-                                                   noise=0.5,
-                                                   t0=.200),
+                 function=None,
                  input_ports=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  seed=None,
@@ -941,7 +937,7 @@ class DDM(ProcessingMechanism):
         functions = {DriftDiffusionAnalytical,
                      DriftDiffusionIntegrator}
 
-        if FUNCTION in target_set:
+        if FUNCTION in target_set and target_set[FUNCTION] is not None:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
             fun = target_set[FUNCTION]
