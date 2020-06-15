@@ -1278,7 +1278,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
             elif isinstance(x, Time):
-                return [0] * 5
+                return (getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
             try:
                 return (_convert(i) for i in x)
             except TypeError:
@@ -1287,15 +1287,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
-        blacklist = {"previous_time", "previous_value", "previous_v",
+        blacklist = {# Stateful parameters
+                     "previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions", "variable",
-                     "value", "saved_values", "saved_samples", "grid",
+                     "num_executions_before_finished", "num_executions",
+                     "variable", "value", "saved_values", "saved_samples",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "search_space",
+                     "modulated_mechanisms", "search_space", "grid",
                      "activation_derivative_fct", "input_specification",
                      # Shape mismatch
                      "costs", "auto", "hetero",
@@ -1353,23 +1354,25 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
             # Modulated parameters change shape to array
-            if is_modulated:
+            if is_modulated and np.isscalar(param):
                 param = [param]
-            if not np.isscalar(param) and param is not None:
-                if p.name == 'matrix': # Flatten matrix
-                    param = np.asfarray(param).flatten().tolist()
-                elif isinstance(param, Component):
-                    param = param._get_param_values(context)
-                elif isinstance(param, TimeScale) and p.name == 'termination_measure': #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
-                    param = []
-                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
-                    param = np.asfarray(param[0]).tolist()
+            elif p.name == 'matrix': # Flatten matrix
+                param = np.asfarray(param).flatten().tolist()
+            elif isinstance(param, Component):
+                param = param._get_param_values(context)
             return param
 
         return tuple(map(_get_values, self._get_compilation_params()))
 
     def _get_param_initializer(self, context):
-        return pnlvm._tupleize(self._get_param_values(context))
+        def _convert(x):
+            if isinstance(x, Enum):
+                return x.value
+            try:
+                return (_convert(i) for i in x)
+            except TypeError:
+                return x
+        return pnlvm._tupleize(_convert(self._get_param_values(context)))
 
     def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
         assert "reset" in tags

@@ -162,7 +162,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, BOTH, COMPONENT, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
+    ALL, BOLD, BOTH, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
     PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME',
@@ -358,8 +358,8 @@ class ShowGraph():
                  input_rank = 'source',
                  control_rank = 'min',
                  learning_rank = 'min',
-                 output_rank = 'max'
-                 ):
+                 output_rank = 'max',
+                ):
 
         self.composition = composition
         self.direction = direction
@@ -684,7 +684,9 @@ class ShowGraph():
             },
             graph_attr={
                 "rankdir": self.direction,
-                'overlap': "False"
+                'overlap': "False",
+                'label' : composition.name,
+                # 'newrank': "True"
             },
         )
         self.G = G
@@ -697,9 +699,9 @@ class ShowGraph():
         for rcvr in rcvrs:
 
             # # MODIFIED 6/13/20 NEW:
-            # if any(n is rcvr for nested_comp in composition.nodes
-            #        if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
-            #     continue
+            if any(n is rcvr for nested_comp in composition.nodes
+                   if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+                continue
             # # MODIFIED 6/13/20 END
 
             self._assign_processing_components(G,
@@ -750,6 +752,7 @@ class ShowGraph():
         if show_learning:
             self._assign_learning_components(G,
                                              processing_graph,
+                                             enclosing_g,
                                              active_items,
                                              show_nested,
                                              show_cim,
@@ -953,17 +956,19 @@ class ShowGraph():
 
         if show_node_structure and isinstance(rcvr, Mechanism):
             g.node(rcvr_label,
-                   rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
+                   rcvr._show_structure(**node_struct_args,
+                                        node_border=rcvr_penwidth,
+                                        condition=condition),
                    shape=self.struct_shape,
                    color=rcvr_color,
-                   rank=rcvr_rank,
-                   penwidth=rcvr_penwidth)
+                   penwidth=rcvr_penwidth,
+                   rank=rcvr_rank)
         else:
             g.node(rcvr_label,
                    shape=node_shape,
                    color=rcvr_color,
-                   rank=rcvr_rank,
-                   penwidth=rcvr_penwidth)
+                   penwidth=rcvr_penwidth,
+                   rank=rcvr_rank)
 
         # Implement sender edges from Nodes within Composition
         sndrs = processing_graph[rcvr]
@@ -1748,6 +1753,7 @@ class ShowGraph():
     def _assign_learning_components(self,
                                     g,
                                     processing_graph,
+                                    enclosing_g,
                                     active_items,
                                     show_nested,
                                     show_cim,
@@ -1785,7 +1791,9 @@ class ShowGraph():
                 rcvr_width = self.default_width
 
             # Get rcvr info
-            rcvr_label = self._get_graph_node_label(composition, rcvr, show_types, show_dimensions)
+            learning_rcvr_label = self._get_graph_node_label(composition,
+                                                             rcvr,
+                                                             show_types, show_dimensions)
             if rcvr in active_items:
                 if self.active_color == BOLD:
                     rcvr_color = self.learning_color
@@ -1800,19 +1808,25 @@ class ShowGraph():
             # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
             # Implement node for Mechanism
             if show_node_structure:
-                g.node(rcvr_label,
-                        rcvr._show_structure(**node_struct_args),
-                        rank=self.learning_rank, color=rcvr_color, penwidth=rcvr_width)
+                g.node(learning_rcvr_label,
+                       rcvr._show_structure(**node_struct_args,
+                                            node_border=rcvr_width),
+                       shape=self.struct_shape,
+                       color=rcvr_color,
+                       penwidth=rcvr_width,
+                       rank=self.learning_rank)
             else:
-                g.node(rcvr_label,
-                        color=rcvr_color, penwidth=rcvr_width,
-                        rank=self.learning_rank, shape=self.mechanism_shape)
+                g.node(learning_rcvr_label,
+                       shape=self.mechanism_shape,
+                       color=rcvr_color,
+                       penwidth=rcvr_width,
+                       rank=self.learning_rank)
 
             # Implement sender edges
             sndrs = processing_graph[rcvr]
             self._assign_incoming_edges(g,
                                         rcvr,
-                                        rcvr_label,
+                                        learning_rcvr_label,
                                         sndrs,
                                         active_items,
                                         show_nested,
@@ -1821,7 +1835,8 @@ class ShowGraph():
                                         show_types,
                                         show_dimensions,
                                         show_node_structure,
-                                        show_projection_labels)
+                                        show_projection_labels,
+                                        enclosing_g=enclosing_g)
 
     def _render_projection_as_node(self,
                                    g,
@@ -1933,6 +1948,7 @@ class ShowGraph():
                             if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
+            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMOSITION (NOT IN processing_graph)
 
         # Sorted to insure consistency of ordering in g for testing
         for sender in sorted(senders):
@@ -2114,9 +2130,6 @@ class ShowGraph():
 
                         else:
                             # Render Projection as edge
-                            from psyneulink.core.components.projections.modulatory.controlprojection \
-                                import ControlProjection
-
                             if show_projection_labels:
                                 label = proc_mech_label
                             else:
@@ -2145,21 +2158,22 @@ class ShowGraph():
         composition = self.composition
 
         # Sort nodes for display
-        # FIX 5/28/20:  ADD HANDLING OF NESTED COMP:  SEARCH FOR 'subgraph cluster_'
-        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
+        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, COMPOSITION)):
             """Get index of node in G.body"""
             for i, item in enumerate(G.body):
                 quoted_items = item.split('"')[1::2]
                 if ((quoted_items and node.name == quoted_items[0])
-                        or (node.name + ' [' in item)):
-                    if node_type in {MECHANISM, BOTH}:
+                        or (node.name + ' [' in item)) and node_type in {MECHANISM, PROJECTION}:
+                    if node_type in {MECHANISM}:
                         if not '->' in item:
                             return i
-                    elif node_type in {PROJECTION, BOTH}:
+                    elif node_type in {PROJECTION}:
                         if '->' in item:
                             return i
                     else:
-                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
+                        assert False, f'PROGRAM ERROR: node ({node.name}) not Mechanism or Projection in G.body'
+                elif 'subgraph' in item and node_type in {COMPOSITION}:
+                    return i
 
         for node in composition.nodes:
             if isinstance(node, Composition):
@@ -2170,27 +2184,39 @@ class ShowGraph():
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(0,G.body.pop(i))
-            # Put OUTPUT node(s) last (except for ControlMechanisms)
+            # Put OUTPUT node(s) last, except for controller of Composition and nested Compositions (see below)
             if NodeRole.OUTPUT in roles:
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
-            # Put ControlMechanism(s) last
+            # Put ControlMechanism(s) last except for nested Compositions (see below)
             if isinstance(node, ControlMechanism):
                 i = get_index_of_node_in_G_body(node, MECHANISM)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
         for proj in composition.projections:
-            # Put ControlProjection(s) last (along with ControlMechanis(s))
-            if isinstance(proj, ControlProjection):
+            # Put ControlProjection(s) last, except for controller of Composition (see below)
+            if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner):
                 i = get_index_of_node_in_G_body(proj, PROJECTION)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
 
+        # Put controller of Composition, except for nested Composition(s)
         if composition.controller and show_controller:
             i = get_index_of_node_in_G_body(composition.controller, MECHANISM)
             G.body.insert(len(G.body),G.body.pop(i))
+
+        # Put nested Composition(s) very last
+        for node in composition.nodes:
+            if isinstance(node, Composition):
+                i = get_index_of_node_in_G_body(node, COMPOSITION)
+                if i is not None:
+                    G.body.insert(len(G.body),G.body.pop(i))
+                    while (G.body[i][0:2] != "\t}"):
+                        G.body.insert(len(G.body),G.body.pop(i))
+                    G.body.insert(len(G.body),G.body.pop(i))
+
 
         # GENERATE OUTPUT ---------------------------------------------------------------------
 
