@@ -956,7 +956,9 @@ class ShowGraph():
 
         if show_node_structure and isinstance(rcvr, Mechanism):
             g.node(rcvr_label,
-                   rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
+                   rcvr._show_structure(**node_struct_args,
+                                        node_border=rcvr_penwidth,
+                                        condition=condition),
                    shape=self.struct_shape,
                    color=rcvr_color,
                    penwidth=rcvr_penwidth,
@@ -1807,7 +1809,8 @@ class ShowGraph():
             # Implement node for Mechanism
             if show_node_structure:
                 g.node(learning_rcvr_label,
-                       rcvr._show_structure(**node_struct_args),
+                       rcvr._show_structure(**node_struct_args,
+                                            node_border=rcvr_width),
                        shape=self.struct_shape,
                        color=rcvr_color,
                        penwidth=rcvr_width,
@@ -1945,6 +1948,7 @@ class ShowGraph():
                             if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
+            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMOSITION (NOT IN processing_graph)
 
         # Sorted to insure consistency of ordering in g for testing
         for sender in sorted(senders):

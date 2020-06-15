@@ -4981,21 +4981,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
-        # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
-        #      that projects directly to the Target node of a nested Composition
-        # If receiver_mechanism is a Target Node in a nested Composition
-        if any((n is receiver_mechanism and receiver_mechanism in nested_comp.get_nodes_by_role(NodeRole.TARGET))
-               for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
-            # cim_target_input_port = receiver_mechanism.afferents[0].sender.owner.port_map[receiver.input_port][0]
-            cim = next((proj.sender.owner for proj in receiver_mechanism.afferents
-                        if isinstance(proj.sender.owner, CompositionInterfaceMechanism)), None)
-            assert cim, f'PROGRAM ERROR: Target mechanisms {receiver_mechanism.name} ' \
-                        f'does not receive projection from input_CIM'
-            cim_target_input_port = cim.port_map[receiver.input_port][0]
-            projection.receiver._remove_projection_to_port(projection)
-            projection = MappingProjection(sender=sender, receiver=cim_target_input_port)
-            receiver_mechanism = cim
-            receiver = cim_target_input_port
+        # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
+        # #      that projects directly to the Target node of a nested Composition
+        # # If receiver_mechanism is a Target Node in a nested Composition
+        # if any((n is receiver_mechanism and receiver_mechanism in nested_comp.get_nodes_by_role(NodeRole.TARGET))
+        #        for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     # cim_target_input_port = receiver_mechanism.afferents[0].sender.owner.port_map[receiver.input_port][0]
+        #     cim = next((proj.sender.owner for proj in receiver_mechanism.afferents
+        #                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism)), None)
+        #     assert cim, f'PROGRAM ERROR: Target mechanisms {receiver_mechanism.name} ' \
+        #                 f'does not receive projection from input_CIM'
+        #     cim_target_input_port = cim.port_map[receiver.input_port][0]
+        #     projection.receiver._remove_projection_to_port(projection)
+        #     # self.remove_projection(projection)
+        #     projection = MappingProjection(sender=sender, receiver=cim_target_input_port)
+        #     receiver_mechanism = cim
+        #     receiver = cim_target_input_port
 
         # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
