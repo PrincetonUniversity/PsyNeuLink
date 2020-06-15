@@ -10,6 +10,11 @@ import psyneulink as pnl
 # Define Variables ----------------------------------------------------------------------------------------------------
 import psyneulink.core.components.functions.transferfunctions
 
+print("\n***********************************************************************************************************"
+      "\nWARNING:  THIS SCRIPT RUNS BUT DOES NOT PRODUCE CORRECT RESULTS BECAUSE"
+      "\n          THE CALLS TO Log.clear_entries(delete_entry=False) RELY ON DEPRECATED FUNCTIONALITY"
+      "\n***********************************************************************************************************\n")
+
 rate = 0.1          # modified from the original code from 0.01 to 0.1
 inhibition = -2.0   # lateral inhibition
 bias = 4.0          # bias is positive since Logistic equation has - sing already implemented
@@ -451,3 +456,9 @@ plt.legend(['color naming', 'word reading'])
 plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
 plt.ylabel('reaction time in ms')
 plt.show()
+
+print("\n***********************************************************************************************************"
+      "\nWARNING:  THIS SCRIPT RUNS BUT DOES NOT PRODUCE CORRECT RESULTS BECAUSE"
+      "\n          THE CALLS TO Log.clear_entries(delete_entry=False) RELY ON DEPRECATED FUNCTIONALITY"
+      "\n***********************************************************************************************************\n")
+
