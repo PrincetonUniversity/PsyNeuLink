@@ -55,8 +55,8 @@ Below the Graph of the model is shown.
    :align: center
    :alt: Cohen&Huston System Graph
 
-System
-~~~~~~
+Composition
+~~~~~~~~~~~
 
 **COLOR INPUT LAYER**:  a `TransferMechanism` with **size** = 3 (one element for the input to each color in the
 *HIDDEN COLOR LAYER*, respectively), and assigned a `Linear` function with **slope** = 1.0 and **intercept** = 0.0.
