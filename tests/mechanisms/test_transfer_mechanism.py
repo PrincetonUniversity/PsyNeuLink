@@ -1963,20 +1963,34 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-    def test_termination_measures(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism")
+    @pytest.mark.parametrize('bin_execute', ['Python',
+                                             # 'LLVM' mode is not supported
+                                             # the comparison values and checks
+                                             # are not synced between binary
+                                             # and Python structures
+                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    def test_termination_measures(self, bin_execute):
         stim_input = ProcessingMechanism(size=2, name='Stim Input')
         stim_percept = TransferMechanism(name='Stimulus', size=2, function=Logistic)
         instruction_input = ProcessingMechanism(size=2, function=Linear(slope=10))
         attention = LCAMechanism(name='Attention', size=2, function=Logistic,
-                                     leak=8, competition=8, self_excitation=0, noise=0, time_step_size=.1,
-                                     termination_threshold=3,
-                                     termination_measure = TimeScale.TRIAL)
+                                 leak=8, competition=8, self_excitation=0,
+                                 noise=0, time_step_size=.1,
+                                 termination_threshold=3,
+                                 termination_measure=TimeScale.TRIAL)
         decision = TransferMechanism(name='Decision', size=2,
-                                         integrator_mode=True,
-                                         execute_until_finished=False,
-                                         termination_threshold=0.65,
-                                         termination_measure=max,
-                                         termination_comparison_op=GREATER_THAN)
+                                     integrator_mode=True,
+                                     execute_until_finished=False,
+                                     termination_threshold=0.65,
+                                     termination_measure=max,
+                                     termination_comparison_op=GREATER_THAN)
         response = ProcessingMechanism(size=2, name='Response')
 
         comp = Composition()
@@ -1984,13 +1998,14 @@ class TestOnResumeIntegratorMode:
         comp.add_linear_processing_pathway([instruction_input, attention, stim_percept])
         inputs = {stim_input: [[1, 1], [1, 1]],
                   instruction_input: [[1, -1], [-1, 1]]}
-        result = comp.run(inputs=inputs)
+        result = comp.run(inputs=inputs, bin_execute=bin_execute)
 
         assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
-        assert decision.num_executions.time_step == 1
-        assert decision.num_executions.pass_ == 2
-        assert decision.num_executions.trial== 1
-        assert decision.num_executions.run == 2
+        if bin_execute == 'Python':
+            assert decision.num_executions.time_step == 1
+            assert decision.num_executions.pass_ == 2
+            assert decision.num_executions.trial== 1
+            assert decision.num_executions.run == 2
 
 
 class TestClip:
