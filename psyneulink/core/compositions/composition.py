@@ -413,6 +413,9 @@ the Composition, and provides the result to the `controller <Composition.control
 
 A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
+COMMENT:
+The Node is assigned the `NodeRole` `CONTROLLER`.
+COMMENT
 
 COMMENT:
 TBI FOR COMPOSITION
@@ -2872,6 +2875,12 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
         than the Composition's `controller <Composition.controller>` (if it has one).
 
+    COMMENT:
+    CONTROLLER
+        A `Node <Composition_Nodes>` that is the `controller <Composition.controller>` of a Composition.
+        This role cannot be modified programmatically.
+    COMMENT
+
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
         <Composition.controller>`.
@@ -2930,12 +2939,13 @@ class NodeRole(Enum):
     FEEDBACK_SENDER = 5
     FEEDBACK_RECEIVER = 6
     CONTROL_OBJECTIVE = 7
-    CONTROLLER_OBJECTIVE = 8
-    LEARNING = 9
-    TARGET = 10
-    LEARNING_OBJECTIVE = 11
-    OUTPUT = 12
-    TERMINAL = 13
+    # CONTROLLER = 8
+    CONTROLLER_OBJECTIVE = 9
+    LEARNING = 10
+    TARGET = 11
+    LEARNING_OBJECTIVE = 12
+    OUTPUT = 13
+    TERMINAL = 14
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
@@ -4288,7 +4298,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _add_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-        self.nodes_to_roles[node].add(role)
+        try:
+            self.nodes_to_roles[node].add(role)
+        except KeyError:
+            raise CompositionError(f"Attempt to assign {role} to '{node.name}' that is not a Node in {self.name}.")
 
     def _remove_node_role(self, node, role):
         if role not in NodeRole:
@@ -6904,6 +6917,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
+        COMMENT:
+        The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
+        COMMENT
+
         """
 
         if not isinstance(controller, ControlMechanism):
@@ -6948,6 +6965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller.composition = self
         self.controller = controller
+        # self._add_node_role(controller, NodeRole.CONTROLLER)
 
         # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
 
